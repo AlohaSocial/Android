@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import social.aloha.core.data.AccountMaintenance
 import social.aloha.core.data.AccountRepository
+import social.aloha.core.data.timeline.CacheSweeper
 import social.aloha.core.model.SignedInAccount
 
 /** What the root of the app shows. */
@@ -30,12 +31,20 @@ sealed interface AppSession {
 }
 
 @HiltViewModel
-class AppViewModel @Inject constructor(accounts: AccountRepository, maintenance: AccountMaintenance) : ViewModel() {
+class AppViewModel @Inject constructor(
+    accounts: AccountRepository,
+    maintenance: AccountMaintenance,
+    sweeper: CacheSweeper,
+) : ViewModel() {
     private val signingInAgain = MutableStateFlow(false)
 
     init {
-        // once per launch, off the main thread: moved API bases are found and stale capabilities detected again
-        viewModelScope.launch { maintenance.checkAll() }
+        // once per launch, off the main thread: moved API bases are found, stale capabilities detected
+        // again, and the cache trimmed within its budget
+        viewModelScope.launch {
+            maintenance.checkAll()
+            sweeper.sweep()
+        }
         // a new sign-in that succeeded ends the request for one
         viewModelScope.launch {
             accounts.activeAccount.filterNotNull().filter { !it.needsReauth }.collect { signingInAgain.value = false }

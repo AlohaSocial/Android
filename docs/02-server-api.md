@@ -10,7 +10,7 @@ This is the Apple app's specification, carried over as the product contract for 
 | Caching | Nextcloud Social 0.26.97 sends no `ETag` on the polling routes (`Cache-Control: no-store`). |
 | Boosts | `reblog` is always `null`; a boost is not visible as a boost. |
 | Media | `POST /api/v2/media` answers 200 synchronously; `focus` is stored; `hls_url` and video `meta` are empty without ffmpeg on the server. |
-| Pagination | `Link` headers point at the app path even through the root rules; `limit=0` answers 400. |
+| Pagination | `Link` headers point at the app path even through the root rules; `limit=0` answers 400. `min_id` answers with the posts immediately above the anchor and `since_id` with the newest above it, as on Mastodon, so a refresh asks with `since_id` and a full page leaves a gap between it and the cache. |
 | New accounts | `verify_credentials`, `accounts/lookup` and the first post answer 500 until the avatar cache job runs. |
 | Places and reactions | `place_*` is never stored; reactions come only from `/statuses/{id}/reactions`. |
 | Web-server rules | Show the server's own `contrib/webserver` files; the snippet described here is outdated. |

@@ -22,4 +22,24 @@ internal object DatabaseModule {
 
     @Provides
     fun accountDao(database: AccountsDatabase): AccountDao = database.accountDao()
+
+    // disposable: a schema change drops the cache instead of migrating it
+    @Provides
+    @Singleton
+    fun cacheDatabase(@ApplicationContext context: Context): CacheDatabase =
+        Room.databaseBuilder(context, CacheDatabase::class.java, CacheDatabase.FILE_NAME)
+            .fallbackToDestructiveMigration(dropAllTables = true)
+            .build()
+
+    @Provides
+    fun timelineDao(database: CacheDatabase): TimelineDao = database.timelineDao()
+
+    @Provides
+    fun statusDao(database: CacheDatabase): StatusDao = database.statusDao()
+
+    @Provides
+    fun filterDao(database: CacheDatabase): FilterDao = database.filterDao()
+
+    @Provides
+    fun cacheAccountDao(database: CacheDatabase): CacheAccountDao = database.cacheAccountDao()
 }
