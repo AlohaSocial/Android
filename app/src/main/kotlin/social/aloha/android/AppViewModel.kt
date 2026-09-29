@@ -5,11 +5,13 @@ package social.aloha.android
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation3.runtime.NavKey
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
@@ -57,10 +59,15 @@ class AppViewModel @Inject constructor(
     private val accounts: AccountRepository,
     private val removal: AccountRemoval,
     private val caches: DeviceCaches,
+    private val links: LinkOpener,
     maintenance: AccountMaintenance,
     sweeper: CacheSweeper,
 ) : ViewModel() {
     private val signingInAgain = MutableStateFlow(false)
+    private val external = MutableStateFlow<String?>(null)
+
+    /** A link another app asked to open, waiting for the shell to open it. */
+    val pendingLink: StateFlow<String?> = external.asStateFlow()
     private val adding = MutableStateFlow(false)
 
     init {
@@ -96,6 +103,21 @@ class AppViewModel @Inject constructor(
                 )
             }
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), emptyList())
+
+    fun openExternal(address: String) {
+        external.value = address
+    }
+
+    fun externalHandled() {
+        external.value = null
+    }
+
+    /**
+     * Where [address] opens in the app: a post, a profile or a hashtag the reader's server can find;
+     * null for the browser. The screen asks, so an answer arriving after it has gone lands nowhere.
+     */
+    suspend fun destination(address: String, fromPost: Boolean): NavKey? =
+        accounts.activeAccount.value?.let { links.destination(it, address, fromPost) }
 
     fun signInAgain() {
         signingInAgain.value = true

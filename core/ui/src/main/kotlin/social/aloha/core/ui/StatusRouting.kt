@@ -24,6 +24,9 @@ public interface StatusNavigation {
     public fun openProfile(accountId: String?, acct: String?)
 
     public fun openTag(name: String)
+
+    /** A web address: in the app when it is a post, profile or hashtag the server finds, else the browser. */
+    public fun openWeb(url: String)
 }
 
 /**
@@ -59,7 +62,7 @@ public abstract class RoutedStatusActions(
     override fun onLink(target: RichLinkTarget): Unit = when (target) {
         is RichLinkTarget.Mention -> navigation().openProfile(target.accountId, target.acct)
         is RichLinkTarget.Hashtag -> navigation().openTag(target.name)
-        is RichLinkTarget.Web -> openInBrowser(context, target.url)
+        is RichLinkTarget.Web -> navigation().openWeb(target.url)
     }
 
     // until there is a media viewer the post itself opens; within its own thread that is where the reader is

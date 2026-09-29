@@ -49,6 +49,7 @@ import social.aloha.core.html.RichTextCache
 import social.aloha.core.media.ImagePrefetcher
 import social.aloha.core.model.AccessToken
 import social.aloha.core.model.ServerCapabilities
+import social.aloha.core.model.TimelineKey
 import social.aloha.core.model.TimelineSource
 import social.aloha.core.network.RateLimiter
 import social.aloha.core.testing.FakeSecretCipher
@@ -99,18 +100,20 @@ class TimelineViewModelTest {
             ),
             AccessToken(MockCredentials.ACCESS_TOKEN, ""),
         )
-        viewModel = TimelineViewModel(
-            accounts,
-            TimelineRepository(cache.timelineDao(), statuses, clients, accounts, clock, Dispatchers.IO),
-            TimelineRowBuilder(RichTextCache(), FilterRepository(cache.filterDao(), clients), clock),
-            StatusInteractions(statuses, clients),
-            TimelinePositions(cache.positionDao(), clients),
-            settings,
-            clock,
-            ApplicationProvider.getApplicationContext<Context>().let { ImagePrefetcher(it, ImageLoader(it)) },
-        )
-        viewModel.onColors(RichTextColors(Color.Blue, Color.Gray, Color.LightGray))
+        viewModel = create(TimelineFeed.Home)
     }
+
+    private fun create(feed: TimelineFeed) = TimelineViewModel(
+        feed,
+        accounts,
+        TimelineRepository(cache.timelineDao(), statuses, clients, accounts, clock, Dispatchers.IO),
+        TimelineRowBuilder(RichTextCache(), FilterRepository(cache.filterDao(), clients), clock),
+        StatusInteractions(statuses, clients),
+        TimelinePositions(cache.positionDao(), clients),
+        settings,
+        clock,
+        ApplicationProvider.getApplicationContext<Context>().let { ImagePrefetcher(it, ImageLoader(it)) },
+    ).apply { onColors(RichTextColors(Color.Blue, Color.Gray, Color.LightGray)) }
 
     @After
     fun close() {
@@ -200,5 +203,21 @@ class TimelineViewModelTest {
         accounts.updateCapabilities(account.id, account.capabilities.copy(localFeed = false, federatedFeed = false))
         val state = await { it.sources == listOf(TimelineSource.Home) }
         assertEquals(TimelineSource.Home, state.source)
+    }
+
+    @Test
+    fun `a hashtag reads its own public timeline, with no sources to choose and nothing hidden`() = runBlocking {
+        val tag = create(TimelineFeed.Tag("surf"))
+        val state = withTimeout(10.seconds) { tag.uiState.first { it.loadedOnce && it.items.isNotEmpty() } }
+        assertEquals(TimelineSource.Hashtag("surf"), state.source)
+        assertEquals(emptyList<TimelineSource>(), state.sources)
+        // stored under the hashtag's own timeline, apart from home's
+        val reader = accounts.activeAccount.value!!
+        assertTrue(
+            cache.timelineDao().entries(
+                reader.id,
+                TimelineKey.home(TimelineSource.Hashtag("surf")).storageKey,
+            ).isNotEmpty(),
+        )
     }
 }

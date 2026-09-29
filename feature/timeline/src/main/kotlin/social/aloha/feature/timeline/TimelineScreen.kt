@@ -81,6 +81,7 @@ import social.aloha.core.ui.NearEndEffect
 import social.aloha.core.ui.StatusActions
 import social.aloha.core.ui.StatusCard
 import social.aloha.core.ui.StatusRowUi
+import social.aloha.core.ui.readingColumn
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -91,13 +92,18 @@ internal fun TimelineScreen(
     modifier: Modifier = Modifier,
     snackbars: SnackbarHostState = remember { SnackbarHostState() },
     listState: LazyListState = rememberLazyListState(),
-    accountButton: @Composable () -> Unit = {},
+    title: String = stringResource(R.string.timeline_title),
+    navigationIcon: @Composable () -> Unit = {},
+    showOptions: Boolean = true,
 ) {
-    val title = stringResource(R.string.timeline_title)
     Scaffold(
         modifier = modifier.semantics { paneTitle = title },
         topBar = {
-            TopAppBar(title = { Text(title) }, navigationIcon = accountButton, actions = { Options(state, actions) })
+            TopAppBar(
+                title = { Text(title) },
+                navigationIcon = navigationIcon,
+                actions = { if (showOptions) Options(state, actions) },
+            )
         },
         snackbarHost = { SnackbarHost(snackbars) },
     ) { padding ->
@@ -134,7 +140,7 @@ private fun Rows(
 ) {
     LazyColumn(
         state = listState,
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.readingColumn(),
         contentPadding = PaddingValues(bottom = AlohaSpacing.xl),
     ) {
         items(state.items, key = { it.key }, contentType = { it::class }) { item ->

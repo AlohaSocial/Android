@@ -42,4 +42,6 @@
     <string name="accounts_sign_out_confirm">Sign out</string>
     <!-- Button that cancels a dialog -->
     <string name="accounts_cancel">Cancel</string>
+    <!-- Shown in the right-hand pane on a wide screen before a post or profile is opened -->
+    <string name="detail_nothing_open">Choose a post or a profile to read it here.</string>
 </resources>

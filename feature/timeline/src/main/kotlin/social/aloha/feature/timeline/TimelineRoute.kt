@@ -3,6 +3,8 @@
 
 package social.aloha.feature.timeline
 
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -19,6 +21,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
 import social.aloha.core.data.timeline.Toggle
+import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.ui.DeleteStatusDialog
 import social.aloha.core.ui.R as UiR
 import social.aloha.core.ui.RichTextColors
@@ -30,9 +33,11 @@ import social.aloha.core.ui.StatusRowUi
 public fun TimelineRoute(
     navigation: StatusNavigation,
     modifier: Modifier = Modifier,
-    accountButton: @Composable () -> Unit = {},
+    feed: TimelineFeed = TimelineFeed.Home,
+    navigationIcon: @Composable () -> Unit = {},
 ) {
-    val viewModel: TimelineViewModel = hiltViewModel()
+    val viewModel =
+        hiltViewModel<TimelineViewModel, TimelineViewModel.Factory>(key = feed.toString()) { it.create(feed) }
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val snackbars = remember { SnackbarHostState() }
@@ -73,7 +78,19 @@ public fun TimelineRoute(
         }
     }
 
-    TimelineScreen(state, viewModel, rowActions, modifier, snackbars, accountButton = accountButton)
+    TimelineScreen(
+        state,
+        viewModel,
+        rowActions,
+        modifier,
+        snackbars,
+        title = when (feed) {
+            TimelineFeed.Home -> stringResource(R.string.timeline_title)
+            is TimelineFeed.Tag -> "#${feed.name}"
+        },
+        navigationIcon = navigationIcon,
+        showOptions = feed == TimelineFeed.Home,
+    )
 
     deleting?.let { row ->
         DeleteStatusDialog(
@@ -84,4 +101,17 @@ public fun TimelineRoute(
             onDismiss = { deleting = null },
         )
     }
+}
+
+/** One hashtag's public posts, read like home, with a way back. */
+@Composable
+public fun TagRoute(name: String, navigation: StatusNavigation, onBack: () -> Unit, modifier: Modifier = Modifier) {
+    TimelineRoute(
+        navigation,
+        modifier,
+        feed = TimelineFeed.Tag(name),
+        navigationIcon = {
+            IconButton(onClick = onBack) { Icon(AlohaIcons.Back, stringResource(R.string.timeline_back)) }
+        },
+    )
 }

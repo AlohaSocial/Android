@@ -41,9 +41,13 @@ fun AlohaRoot(viewModel: AppViewModel = hiltViewModel()) {
         is AppSession.SignedIn -> key(current.accountId) {
             Column {
                 if (current.needsReauth) ReauthBanner(current.handle, onSignInAgain = viewModel::signInAgain)
+                val pending by viewModel.pendingLink.collectAsStateWithLifecycle()
                 AlohaApp(
                     readerId = current.accountId,
                     serverAccountId = current.serverAccountId,
+                    pendingLink = pending,
+                    onPendingLinkTaken = viewModel::externalHandled,
+                    resolveLink = viewModel::destination,
                     accountButton = { onProfile -> AccountSwitcher(viewModel, onProfile) },
                 )
             }

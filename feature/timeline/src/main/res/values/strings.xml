@@ -45,4 +45,6 @@
     <string name="timeline_swipe_favourite">Favourite</string>
     <!-- Swipe action on a post, read aloud: boost it -->
     <string name="timeline_swipe_boost">Boost</string>
+    <!-- Button that goes back from a hashtag's timeline -->
+    <string name="timeline_back">Back</string>
 </resources>

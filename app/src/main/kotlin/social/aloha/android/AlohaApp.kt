@@ -5,6 +5,7 @@ package social.aloha.android
 
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -13,12 +14,21 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2
+import androidx.compose.material3.adaptive.navigation3.ListDetailSceneStrategy
+import androidx.compose.material3.adaptive.navigation3.rememberListDetailSceneStrategy
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
+import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffoldDefaults
+import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteType
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.paneTitle
@@ -29,6 +39,9 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
+import androidx.window.core.layout.WindowSizeClass
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.launch
 import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaPreviews
 import social.aloha.core.designsystem.AlohaSpacing
@@ -40,6 +53,7 @@ import social.aloha.core.navigation.PeopleKey
 import social.aloha.core.navigation.PeopleKind
 import social.aloha.core.navigation.PhotosKey
 import social.aloha.core.navigation.ProfileKey
+import social.aloha.core.navigation.RouteResolver
 import social.aloha.core.navigation.ShortsKey
 import social.aloha.core.navigation.StatusListKey
 import social.aloha.core.navigation.StatusListKind
@@ -48,12 +62,14 @@ import social.aloha.core.navigation.ThreadKey
 import social.aloha.core.navigation.TopLevelKey
 import social.aloha.core.navigation.VideoKey
 import social.aloha.core.ui.StatusNavigation
+import social.aloha.core.ui.openInBrowser
 import social.aloha.feature.profile.PeopleRoute
 import social.aloha.feature.profile.ProfileNavigation
 import social.aloha.feature.profile.ProfileRoute
 import social.aloha.feature.thread.StatusListRoute
 import social.aloha.feature.thread.ThreadNavigation
 import social.aloha.feature.thread.ThreadRoute
+import social.aloha.feature.timeline.TagRoute
 import social.aloha.feature.timeline.TimelineRoute
 
 private data class TopLevelDestination(
@@ -83,21 +99,41 @@ private val destinations = listOf(
 
 /**
  * The shell: a navigation suite (bar, rail or drawer by window size) around a
- * Navigation 3 display. [home] draws the home destination; destinations not yet
- * built are placeholders.
+ * Navigation 3 display. From medium widths the display is list-detail: a
+ * destination stays on the left while the post, profile or list it opened reads
+ * on the right; on a phone each takes the screen in turn. [home] draws the home
+ * destination; destinations not yet built are placeholders.
  */
+@OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @Composable
 fun AlohaApp(
     readerId: String,
     serverAccountId: String,
+    pendingLink: String? = null,
+    onPendingLinkTaken: () -> Unit = {},
+    resolveLink: suspend (address: String, fromPost: Boolean) -> NavKey? = { _, _ -> null },
     accountButton: @Composable (onProfile: () -> Unit) -> Unit = {},
     home: @Composable (StatusNavigation, accountButton: @Composable () -> Unit) -> Unit = { navigation, button ->
-        TimelineRoute(navigation, accountButton = button)
+        TimelineRoute(navigation, navigationIcon = button)
     },
 ) {
     val backStack = rememberNavBackStack(HomeKey)
     // a detail opened from a destination keeps that destination selected
     val current = backStack.lastOrNull { it is TopLevelKey }
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    // in the app where the link points at something the reader's server finds, else the browser
+    val open: (String, Boolean) -> Unit = { address, fromPost ->
+        scope.launch {
+            val destination = runCatching { resolveLink(address, fromPost) }.getOrNull()
+            ensureActive()
+            if (destination != null) {
+                backStack.push(destination)
+            } else {
+                RouteResolver.browsable(address)?.let { openInBrowser(context, it) }
+            }
+        }
+    }
     val statusNavigation = remember(backStack, readerId) {
         object : ThreadNavigation, ProfileNavigation {
             override fun openThread(statusId: String) {
@@ -123,9 +159,29 @@ fun AlohaApp(
             override fun openTag(name: String) {
                 backStack.push(TagKey(readerId, name))
             }
+
+            override fun openWeb(url: String) = open(url, true)
         }
     }
+    LaunchedEffect(pendingLink) {
+        pendingLink?.let {
+            onPendingLinkTaken()
+            open(it, false)
+        }
+    }
+    val adaptive = currentWindowAdaptiveInfoV2()
+    // a rail on medium widths, the full drawer with labels once there is room for it
+    val suiteType = if (adaptive.windowSizeClass.isWidthAtLeastBreakpoint(
+            WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND,
+        )
+    ) {
+        NavigationSuiteType.NavigationDrawer
+    } else {
+        NavigationSuiteScaffoldDefaults.navigationSuiteType(adaptive)
+    }
+    val panes = rememberListDetailSceneStrategy<NavKey>()
     NavigationSuiteScaffold(
+        layoutType = suiteType,
         navigationSuiteItems = {
             destinations.forEach { destination ->
                 val selected = destination.key == current
@@ -148,14 +204,15 @@ fun AlohaApp(
         NavDisplay(
             backStack = backStack,
             onBack = { backStack.removeLastOrNull() },
+            sceneStrategies = listOf(panes),
             entryDecorators = listOf(
                 rememberSaveableStateHolderNavEntryDecorator(),
                 rememberViewModelStoreNavEntryDecorator(),
             ),
             entryProvider = entryProvider {
-                entry<HomeKey> {
+                entry<HomeKey>(metadata = ListDetailSceneStrategy.listPane(detailPlaceholder = { NothingOpen() })) {
                     home(statusNavigation) {
-                        accountButton { backStack.add(AccountKey(readerId, id = serverAccountId)) }
+                        accountButton { backStack.push(AccountKey(readerId, id = serverAccountId)) }
                     }
                 }
                 entry<PhotosKey> { Placeholder(stringResource(R.string.destination_photos)) }
@@ -163,13 +220,33 @@ fun AlohaApp(
                 entry<ShortsKey> { Placeholder(stringResource(R.string.destination_shorts)) }
                 entry<NotificationsKey> { Placeholder(stringResource(R.string.destination_notifications)) }
                 entry<ProfileKey> { ProfileRoute(AccountKey(readerId, id = serverAccountId), statusNavigation) }
-                entry<ThreadKey> { ThreadRoute(it, statusNavigation) }
-                entry<StatusListKey> { StatusListRoute(it, statusNavigation) }
-                entry<AccountKey> { ProfileRoute(it, statusNavigation) }
-                entry<PeopleKey> { PeopleRoute(it, statusNavigation) }
-                entry<TagKey> { Placeholder("#${it.name}") }
+                entry<ThreadKey>(metadata = ListDetailSceneStrategy.detailPane()) { ThreadRoute(it, statusNavigation) }
+                entry<StatusListKey>(metadata = ListDetailSceneStrategy.detailPane()) {
+                    StatusListRoute(it, statusNavigation)
+                }
+                entry<AccountKey>(metadata = ListDetailSceneStrategy.detailPane()) {
+                    ProfileRoute(it, statusNavigation)
+                }
+                entry<PeopleKey>(metadata = ListDetailSceneStrategy.detailPane()) { PeopleRoute(it, statusNavigation) }
+                entry<TagKey>(metadata = ListDetailSceneStrategy.detailPane()) {
+                    TagRoute(it.name, statusNavigation, onBack = statusNavigation::back)
+                }
             },
         )
+    }
+}
+
+/** The detail pane before anything is opened in it. */
+@Composable
+private fun NothingOpen() {
+    Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surfaceContainerLow) {
+        Box(Modifier.fillMaxSize().padding(AlohaSpacing.l), contentAlignment = Alignment.Center) {
+            Text(
+                stringResource(R.string.detail_nothing_open),
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
     }
 }
 

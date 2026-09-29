@@ -48,7 +48,10 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.navigation3)
     implementation(libs.androidx.navigation3.ui)
     implementation(libs.compose.material3.adaptive.navigation.suite)
+    implementation(libs.compose.material3.adaptive.navigation3)
     implementation(libs.androidx.profileinstaller)
     implementation(libs.kotlinx.serialization.json)
+    testImplementation(project(":core:testing"))
+    testImplementation(project(":core:database"))
     baselineProfile(project(":benchmark"))
 }

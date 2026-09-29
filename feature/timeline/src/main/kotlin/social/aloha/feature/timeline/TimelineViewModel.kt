@@ -6,10 +6,12 @@ package social.aloha.feature.timeline
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import coil3.size.Size
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Clock
 import java.time.Duration
-import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
@@ -24,6 +26,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -61,8 +64,9 @@ import social.aloha.core.ui.minuteTicks
  * brings wait behind the pill until the person asks for them, so the list never moves under a reader.
  */
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
-@HiltViewModel
-internal class TimelineViewModel @Inject constructor(
+@HiltViewModel(assistedFactory = TimelineViewModel.Factory::class)
+internal class TimelineViewModel @AssistedInject constructor(
+    @Assisted private val feed: TimelineFeed,
     accounts: AccountRepository,
     private val timelines: TimelineRepository,
     private val rows: TimelineRowBuilder,
@@ -73,6 +77,11 @@ internal class TimelineViewModel @Inject constructor(
     private val prefetcher: ImagePrefetcher,
 ) : ViewModel(),
     TimelineScreenActions {
+    @AssistedFactory
+    interface Factory {
+        fun create(feed: TimelineFeed): TimelineViewModel
+    }
+
     /** What the timeline is doing, as opposed to what it holds. */
     private data class Control(
         val refreshing: Boolean = false,
@@ -101,8 +110,14 @@ internal class TimelineViewModel @Inject constructor(
     private val account: StateFlow<SignedInAccount?> =
         accounts.activeAccount.stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
-    private val accountSettings: Flow<AccountSettings> =
-        account.filterNotNull().map { it.id }.distinctUntilChanged().flatMapLatest(settings::settings)
+    /** The reading settings; a hashtag's timeline is read as it is, with nothing of home's hidden. */
+    private val accountSettings: Flow<AccountSettings> = when (feed) {
+        TimelineFeed.Home -> account.filterNotNull().map {
+            it.id
+        }.distinctUntilChanged().flatMapLatest(settings::settings)
+
+        is TimelineFeed.Tag -> flowOf(AccountSettings())
+    }
 
     private val key: Flow<TimelineKey> = combine(account.filterNotNull(), accountSettings) { account, settings ->
         TimelineKey(FeedMode.Home, sourceOf(account, settings))
@@ -156,7 +171,7 @@ internal class TimelineViewModel @Inject constructor(
         ->
         TimelineUiState(
             source = sourceOf(account, settings),
-            sources = homeSources(account.capabilities),
+            sources = if (feed == TimelineFeed.Home) homeSources(account.capabilities) else emptyList(),
             items = items,
             loadedOnce = control.loadedOnce,
             refreshing = control.refreshing,
@@ -388,8 +403,12 @@ internal class TimelineViewModel @Inject constructor(
     }
 
     /** The chosen source where the server serves it; a choice it no longer serves falls back to Following. */
-    private fun sourceOf(account: SignedInAccount, settings: AccountSettings): TimelineSource =
-        settings.homeSource.takeIf { it in homeSources(account.capabilities) } ?: TimelineSource.Home
+    private fun sourceOf(account: SignedInAccount, settings: AccountSettings): TimelineSource = when (feed) {
+        TimelineFeed.Home -> settings.homeSource.takeIf { it in homeSources(account.capabilities) }
+            ?: TimelineSource.Home
+
+        is TimelineFeed.Tag -> TimelineSource.Hashtag(feed.name)
+    }
 
     private companion object {
         val STALE_MILLIS = Duration.ofSeconds(60).toMillis()

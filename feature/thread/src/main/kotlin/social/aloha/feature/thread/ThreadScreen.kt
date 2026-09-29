@@ -60,6 +60,7 @@ import social.aloha.core.ui.ProvideLinkRouting
 import social.aloha.core.ui.StatusActions
 import social.aloha.core.ui.StatusCard
 import social.aloha.core.ui.fullDate
+import social.aloha.core.ui.readingColumn
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -115,7 +116,7 @@ private fun Posts(
 ) {
     LazyColumn(
         state = listState,
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.readingColumn(),
         contentPadding = PaddingValues(bottom = AlohaSpacing.xl),
     ) {
         items(state.items, key = { it.key }, contentType = { it::class }) { item ->

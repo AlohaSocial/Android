@@ -10,6 +10,13 @@ import social.aloha.core.model.ServerCapabilities
 import social.aloha.core.model.TimelineSource
 import social.aloha.core.ui.StatusRowUi
 
+/** What a timeline screen reads: home, from the source chosen for it, or one hashtag's public posts. */
+public sealed interface TimelineFeed {
+    public data object Home : TimelineFeed
+
+    public data class Tag(val name: String) : TimelineFeed
+}
+
 /**
  * Where the home screen's posts can come from: the people followed, this server, or everyone it knows;
  * the last two only where the server serves them (mastodon.social, for one, disables both).
