@@ -4,6 +4,7 @@
 plugins {
     alias(libs.plugins.aloha.android.library)
     alias(libs.plugins.aloha.android.compose)
+    alias(libs.plugins.aloha.screenshot)
 }
 
 dependencies {
