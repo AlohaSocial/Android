@@ -7,6 +7,7 @@ import androidx.compose.runtime.Immutable
 import java.time.Instant
 import social.aloha.core.data.Trouble
 import social.aloha.core.model.ServerCapabilities
+import social.aloha.core.model.SwipeAction
 import social.aloha.core.model.TimelineSource
 import social.aloha.core.ui.StatusRowUi
 
@@ -62,6 +63,8 @@ internal data class TimelineUiState(
     val restoreTo: Restore? = null,
     val scrollToTop: Boolean = false,
     val actionFailed: Boolean = false,
+    val swipeTowardsEnd: SwipeAction = SwipeAction.Favourite,
+    val swipeTowardsStart: SwipeAction = SwipeAction.Boost,
 ) {
     @Immutable
     data class Restore(val index: Int, val offset: Int)
@@ -79,6 +82,7 @@ internal interface TimelineScreenActions {
     fun onScrolled(rowId: String, offset: Int)
     fun onNearEnd()
     fun onFillGap(gapId: String)
-    fun onSwipeFavourite(row: StatusRowUi)
-    fun onSwipeBoost(row: StatusRowUi)
+
+    /** A swipe that changes the post; a reply opens the post instead, which the screen does. */
+    fun onSwipe(row: StatusRowUi, action: SwipeAction)
 }

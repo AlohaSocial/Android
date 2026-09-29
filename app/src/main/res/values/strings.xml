@@ -30,6 +30,8 @@
     <string name="accounts_needs_reauth">Needs a new sign-in</string>
     <!-- Opens the profile of the account in use -->
     <string name="accounts_profile">Your profile</string>
+    <!-- Opens the settings -->
+    <string name="accounts_settings">Settings</string>
     <!-- Starts signing in to one more account -->
     <string name="accounts_add">Add account</string>
     <!-- Signs the account in use out of this device; %s is its handle -->

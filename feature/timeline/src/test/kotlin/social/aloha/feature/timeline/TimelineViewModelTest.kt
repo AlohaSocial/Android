@@ -49,6 +49,7 @@ import social.aloha.core.html.RichTextCache
 import social.aloha.core.media.ImagePrefetcher
 import social.aloha.core.model.AccessToken
 import social.aloha.core.model.ServerCapabilities
+import social.aloha.core.model.SwipeAction
 import social.aloha.core.model.TimelineKey
 import social.aloha.core.model.TimelineSource
 import social.aloha.core.network.RateLimiter
@@ -78,6 +79,7 @@ class TimelineViewModelTest {
         ClientFactory(OkHttpClient(), RateLimiter(nowMillis = clock::millis), Dispatchers.IO, accounts)
     private val statuses = StatusRepository(cache.statusDao(), clock)
     private val settings = AccountSettingsStore(InMemoryDataStore(emptyMap()))
+    private val preferences = AppPreferences(InMemoryDataStore(emptyPreferences()))
     private val timeline = NumberedTimeline().apply { newest = 100 }
     private val server = MockWebServer().apply { dispatcher = timeline }
     private lateinit var viewModel: TimelineViewModel
@@ -111,6 +113,7 @@ class TimelineViewModelTest {
         StatusInteractions(statuses, clients),
         TimelinePositions(cache.positionDao(), clients),
         settings,
+        preferences,
         clock,
         ApplicationProvider.getApplicationContext<Context>().let { ImagePrefetcher(it, ImageLoader(it)) },
     ).apply { onColors(RichTextColors(Color.Blue, Color.Gray, Color.LightGray)) }
@@ -219,5 +222,13 @@ class TimelineViewModelTest {
                 TimelineKey.home(TimelineSource.Hashtag("surf")).storageKey,
             ).isNotEmpty(),
         )
+    }
+
+    @Test
+    fun `a swipe does what the settings chose`() = runBlocking {
+        preferences.setSwipeTowardsEnd(SwipeAction.Reply)
+        preferences.setSwipeTowardsStart(SwipeAction.None)
+        val state = await { it.swipeTowardsEnd == SwipeAction.Reply }
+        assertEquals(SwipeAction.None, state.swipeTowardsStart)
     }
 }

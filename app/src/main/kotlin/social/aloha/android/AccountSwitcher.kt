@@ -48,7 +48,7 @@ import social.aloha.core.ui.Avatar
  * to switch to, the reader's own profile, another account to add, and signing out of this one.
  */
 @Composable
-internal fun AccountSwitcher(viewModel: AppViewModel, onProfile: () -> Unit) {
+internal fun AccountSwitcher(viewModel: AppViewModel, onProfile: () -> Unit, onSettings: () -> Unit) {
     val accounts by viewModel.switcher.collectAsStateWithLifecycle()
     var open by remember { mutableStateOf(false) }
     val active = accounts.firstOrNull { it.active } ?: return
@@ -66,6 +66,10 @@ internal fun AccountSwitcher(viewModel: AppViewModel, onProfile: () -> Unit) {
             onProfile = {
                 open = false
                 onProfile()
+            },
+            onSettings = {
+                open = false
+                onSettings()
             },
             onAdd = {
                 open = false
@@ -86,6 +90,7 @@ internal fun AccountSheet(
     accounts: List<SwitcherAccount>,
     onSwitch: (String) -> Unit,
     onProfile: () -> Unit,
+    onSettings: () -> Unit,
     onAdd: () -> Unit,
     onSignOut: () -> Unit,
     onDismiss: () -> Unit,
@@ -106,6 +111,7 @@ internal fun AccountSheet(
             items(accounts, key = { it.id }) { account -> AccountLine(account) { onSwitch(account.id) } }
             item { HorizontalDivider(Modifier.padding(vertical = AlohaSpacing.xs)) }
             item { Action(AlohaIcons.Profile, stringResource(R.string.accounts_profile), onProfile) }
+            item { Action(AlohaIcons.Settings, stringResource(R.string.accounts_settings), onSettings) }
             item { Action(AlohaIcons.AddAccount, stringResource(R.string.accounts_add), onAdd) }
             item {
                 Action(AlohaIcons.SignOut, stringResource(R.string.accounts_sign_out, active.handle)) {

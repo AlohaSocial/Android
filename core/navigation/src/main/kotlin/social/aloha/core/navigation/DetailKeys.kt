@@ -34,3 +34,11 @@ public enum class PeopleKind { Followers, Following }
 /** An account's followers or the accounts it follows, as [readerId] sees them. */
 @Serializable
 public data class PeopleKey(val readerId: String, val accountId: String, val kind: PeopleKind) : NavKey
+
+/** The settings: its sections, each opened by [SettingsSectionKey]. */
+@Serializable
+public data object SettingsKey : NavKey
+
+/** One settings section, by the key it registers under. */
+@Serializable
+public data class SettingsSectionKey(val section: String) : NavKey

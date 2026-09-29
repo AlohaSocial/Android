@@ -47,10 +47,12 @@ import social.aloha.core.data.timeline.Toggle
 import social.aloha.core.data.trouble
 import social.aloha.core.datastore.AccountSettings
 import social.aloha.core.datastore.AccountSettingsStore
+import social.aloha.core.datastore.AppPreferences
 import social.aloha.core.media.ImagePrefetcher
 import social.aloha.core.model.FeedMode
 import social.aloha.core.model.SignedInAccount
 import social.aloha.core.model.Status
+import social.aloha.core.model.SwipeAction
 import social.aloha.core.model.TimelineKey
 import social.aloha.core.model.TimelineSource
 import social.aloha.core.network.ApiError
@@ -73,6 +75,7 @@ internal class TimelineViewModel @AssistedInject constructor(
     private val interactions: StatusInteractions,
     private val positions: TimelinePositions,
     private val settings: AccountSettingsStore,
+    preferences: AppPreferences,
     private val clock: Clock,
     private val prefetcher: ImagePrefetcher,
 ) : ViewModel(),
@@ -123,6 +126,10 @@ internal class TimelineViewModel @AssistedInject constructor(
         TimelineKey(FeedMode.Home, sourceOf(account, settings))
     }.distinctUntilChanged()
 
+    /** What a swipe does each way, as the settings chose for the device. */
+    private val swipes: Flow<Pair<SwipeAction, SwipeAction>> =
+        combine(preferences.swipeTowardsEnd, preferences.swipeTowardsStart) { end, start -> end to start }
+
     /** What of [Control] the rows are built from; the rest changes the screen without rebuilding them. */
     private data class Shaping(val held: Set<String>, val loadingGaps: Set<String>, val scrollToTop: Boolean)
 
@@ -159,13 +166,13 @@ internal class TimelineViewModel @AssistedInject constructor(
     val uiState: StateFlow<TimelineUiState> = combine(
         items,
         control,
-        accountSettings,
+        combine(accountSettings, swipes, ::Pair),
         account.filterNotNull(),
         minuteTicks(clock),
     ) {
             (items, pending, scrollToTop),
             control,
-            settings,
+            (settings, swipes),
             account,
             now,
         ->
@@ -185,6 +192,8 @@ internal class TimelineViewModel @AssistedInject constructor(
             restoreTo = control.restoreTo,
             scrollToTop = scrollToTop,
             actionFailed = control.actionFailed,
+            swipeTowardsEnd = swipes.first,
+            swipeTowardsStart = swipes.second,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_MILLIS), TimelineUiState())
 
@@ -301,9 +310,14 @@ internal class TimelineViewModel @AssistedInject constructor(
         }
     }
 
-    override fun onSwipeFavourite(row: StatusRowUi) = onToggle(row.statusId, Toggle.Favourite)
-
-    override fun onSwipeBoost(row: StatusRowUi) = onToggle(row.statusId, Toggle.Boost)
+    override fun onSwipe(row: StatusRowUi, action: SwipeAction) {
+        when (action) {
+            SwipeAction.Favourite -> onToggle(row.statusId, Toggle.Favourite)
+            SwipeAction.Boost -> onToggle(row.statusId, Toggle.Boost)
+            SwipeAction.Bookmark -> onToggle(row.statusId, Toggle.Bookmark)
+            SwipeAction.Reply, SwipeAction.None -> Unit
+        }
+    }
 
     fun onToggle(statusId: String, toggle: Toggle) = act(statusId) { account, status ->
         interactions.toggle(account, status, toggle)

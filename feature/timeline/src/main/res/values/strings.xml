@@ -47,4 +47,19 @@
     <string name="timeline_swipe_boost">Boost</string>
     <!-- Button that goes back from a hashtag's timeline -->
     <string name="timeline_back">Back</string>
+    <!-- What a swipe on a post does: bookmark it -->
+    <string name="timeline_swipe_bookmark">Bookmark</string>
+    <!-- What a swipe on a post does: open it to reply -->
+    <string name="timeline_swipe_reply">Reply</string>
+    <!-- What a swipe on a post does: nothing, the post stays still -->
+    <string name="timeline_swipe_none">Nothing</string>
+    <!-- Title of the timeline section in the settings -->
+    <string name="timeline_settings_title">Timeline</string>
+    <!-- Heading of the choice for a swipe from the start of a post towards its end -->
+    <string name="timeline_settings_swipe_end">Swipe towards the end</string>
+    <!-- Heading of the choice for a swipe from the end of a post towards its start -->
+    <string name="timeline_settings_swipe_start">Swipe towards the start</string>
+    <!-- Supporting text under the show-boosts and show-replies settings -->
+    <string name="timeline_settings_account">For the account in use</string>
 </resources>
+

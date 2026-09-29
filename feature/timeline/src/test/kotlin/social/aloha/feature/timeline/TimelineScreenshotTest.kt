@@ -22,6 +22,7 @@ import social.aloha.core.designsystem.AlohaTheme
 import social.aloha.core.designsystem.ThemeMode
 import social.aloha.core.designsystem.ThemeSettings
 import social.aloha.core.html.RichTextCache
+import social.aloha.core.model.SwipeAction
 import social.aloha.core.model.TimelineSource
 import social.aloha.core.testing.StatusSamples
 import social.aloha.core.ui.RichLinkTarget
@@ -63,8 +64,7 @@ class TimelineScreenshotTest {
         override fun onScrolled(rowId: String, offset: Int) = Unit
         override fun onNearEnd() = Unit
         override fun onFillGap(gapId: String) = Unit
-        override fun onSwipeFavourite(row: StatusRowUi) = Unit
-        override fun onSwipeBoost(row: StatusRowUi) = Unit
+        override fun onSwipe(row: StatusRowUi, action: SwipeAction) = Unit
     }
 
     @Composable

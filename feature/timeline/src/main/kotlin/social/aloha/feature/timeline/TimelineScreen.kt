@@ -75,6 +75,7 @@ import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.designsystem.LocalAlohaSemanticColors
 import social.aloha.core.model.SensitiveMediaPolicy
+import social.aloha.core.model.SwipeAction
 import social.aloha.core.model.TimelineSource
 import social.aloha.core.ui.ListProgress
 import social.aloha.core.ui.NearEndEffect
@@ -145,7 +146,20 @@ private fun Rows(
     ) {
         items(state.items, key = { it.key }, contentType = { it::class }) { item ->
             when (item) {
-                is TimelineItem.Post -> SwipeRow(item.row, actions) {
+                is TimelineItem.Post -> SwipeRow(
+                    item.row,
+                    state.swipeTowardsEnd,
+                    state.swipeTowardsStart,
+                    onSwipe = { row, action ->
+                        if (action ==
+                            SwipeAction.Reply
+                        ) {
+                            rowActions.onReply(row)
+                        } else {
+                            actions.onSwipe(row, action)
+                        }
+                    },
+                ) {
                     StatusCard(item.row, state.now, SensitiveMediaPolicy.Blur, rowActions)
                 }
 
@@ -160,42 +174,40 @@ private fun Rows(
 }
 
 /**
- * Swiping a post towards the end favourites it, towards the start boosts it; the row springs back
- * either way. The two actions become a choice with the settings screen.
+ * Swiping a post across does what the settings chose for each direction (favouriting towards the end
+ * and boosting towards the start until chosen otherwise); a direction set to nothing stays still, and
+ * the row springs back either way.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun SwipeRow(row: StatusRowUi, actions: TimelineScreenActions, content: @Composable () -> Unit) {
+private fun SwipeRow(
+    row: StatusRowUi,
+    towardsEnd: SwipeAction,
+    towardsStart: SwipeAction,
+    onSwipe: (StatusRowUi, SwipeAction) -> Unit,
+    content: @Composable () -> Unit,
+) {
     val current by rememberUpdatedState(row)
     val swipe = rememberSwipeToDismissBoxState()
     val scope = rememberCoroutineScope()
-    val semantic = LocalAlohaSemanticColors.current
     SwipeToDismissBox(
         state = swipe,
+        enableDismissFromStartToEnd = towardsEnd != SwipeAction.None,
+        enableDismissFromEndToStart = towardsStart != SwipeAction.None,
         backgroundContent = {
-            val towardsEnd = swipe.dismissDirection == SwipeToDismissBoxValue.StartToEnd
+            val end = swipe.dismissDirection == SwipeToDismissBoxValue.StartToEnd
             Row(
                 Modifier.fillMaxSize().background(
                     MaterialTheme.colorScheme.surfaceContainerHigh,
                 ).padding(horizontal = AlohaSpacing.l),
-                horizontalArrangement = if (towardsEnd) Arrangement.Start else Arrangement.End,
+                horizontalArrangement = if (end) Arrangement.Start else Arrangement.End,
                 verticalAlignment = Alignment.CenterVertically,
-            ) {
-                if (towardsEnd) {
-                    Icon(
-                        AlohaIcons.Favourited,
-                        stringResource(R.string.timeline_swipe_favourite),
-                        tint = semantic.favourite,
-                    )
-                } else {
-                    Icon(AlohaIcons.Boosted, stringResource(R.string.timeline_swipe_boost), tint = semantic.boost)
-                }
-            }
+            ) { SwipeIcon(if (end) towardsEnd else towardsStart) }
         },
         onDismiss = { value ->
             when (value) {
-                SwipeToDismissBoxValue.StartToEnd -> actions.onSwipeFavourite(current)
-                SwipeToDismissBoxValue.EndToStart -> actions.onSwipeBoost(current)
+                SwipeToDismissBoxValue.StartToEnd -> onSwipe(current, towardsEnd)
+                SwipeToDismissBoxValue.EndToStart -> onSwipe(current, towardsStart)
                 SwipeToDismissBoxValue.Settled -> Unit
             }
             scope.launch { swipe.reset() }
@@ -203,6 +215,29 @@ private fun SwipeRow(row: StatusRowUi, actions: TimelineScreenActions, content: 
     ) {
         Surface(color = MaterialTheme.colorScheme.background) { content() }
     }
+}
+
+@Composable
+private fun SwipeIcon(action: SwipeAction) {
+    val semantic = LocalAlohaSemanticColors.current
+    val muted = MaterialTheme.colorScheme.onSurfaceVariant
+    val (icon, tint) = when (action) {
+        SwipeAction.Favourite -> AlohaIcons.Favourited to semantic.favourite
+        SwipeAction.Boost -> AlohaIcons.Boosted to semantic.boost
+        SwipeAction.Bookmark -> AlohaIcons.Bookmarked to semantic.bookmark
+        SwipeAction.Reply -> AlohaIcons.Reply to muted
+        SwipeAction.None -> return
+    }
+    Icon(icon, stringResource(swipeLabel(action)), tint = tint)
+}
+
+/** What each swipe choice is called, here and in the settings. */
+internal fun swipeLabel(action: SwipeAction): Int = when (action) {
+    SwipeAction.Favourite -> R.string.timeline_swipe_favourite
+    SwipeAction.Boost -> R.string.timeline_swipe_boost
+    SwipeAction.Bookmark -> R.string.timeline_swipe_bookmark
+    SwipeAction.Reply -> R.string.timeline_swipe_reply
+    SwipeAction.None -> R.string.timeline_swipe_none
 }
 
 @Composable

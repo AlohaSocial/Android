@@ -54,6 +54,8 @@ import social.aloha.core.navigation.PeopleKind
 import social.aloha.core.navigation.PhotosKey
 import social.aloha.core.navigation.ProfileKey
 import social.aloha.core.navigation.RouteResolver
+import social.aloha.core.navigation.SettingsKey
+import social.aloha.core.navigation.SettingsSectionKey
 import social.aloha.core.navigation.ShortsKey
 import social.aloha.core.navigation.StatusListKey
 import social.aloha.core.navigation.StatusListKind
@@ -66,6 +68,9 @@ import social.aloha.core.ui.openInBrowser
 import social.aloha.feature.profile.PeopleRoute
 import social.aloha.feature.profile.ProfileNavigation
 import social.aloha.feature.profile.ProfileRoute
+import social.aloha.feature.settings.SettingsPlaceholder
+import social.aloha.feature.settings.SettingsRoute
+import social.aloha.feature.settings.SettingsSectionRoute
 import social.aloha.feature.thread.StatusListRoute
 import social.aloha.feature.thread.ThreadNavigation
 import social.aloha.feature.thread.ThreadRoute
@@ -112,7 +117,7 @@ fun AlohaApp(
     pendingLink: String? = null,
     onPendingLinkTaken: () -> Unit = {},
     resolveLink: suspend (address: String, fromPost: Boolean) -> NavKey? = { _, _ -> null },
-    accountButton: @Composable (onProfile: () -> Unit) -> Unit = {},
+    accountButton: @Composable (onProfile: () -> Unit, onSettings: () -> Unit) -> Unit = { _, _ -> },
     home: @Composable (StatusNavigation, accountButton: @Composable () -> Unit) -> Unit = { navigation, button ->
         TimelineRoute(navigation, navigationIcon = button)
     },
@@ -212,13 +217,27 @@ fun AlohaApp(
             entryProvider = entryProvider {
                 entry<HomeKey>(metadata = ListDetailSceneStrategy.listPane(detailPlaceholder = { NothingOpen() })) {
                     home(statusNavigation) {
-                        accountButton { backStack.push(AccountKey(readerId, id = serverAccountId)) }
+                        accountButton({
+                            backStack.push(AccountKey(readerId, id = serverAccountId))
+                        }, { backStack.push(SettingsKey) })
                     }
                 }
                 entry<PhotosKey> { Placeholder(stringResource(R.string.destination_photos)) }
                 entry<VideoKey> { Placeholder(stringResource(R.string.destination_video)) }
                 entry<ShortsKey> { Placeholder(stringResource(R.string.destination_shorts)) }
                 entry<NotificationsKey> { Placeholder(stringResource(R.string.destination_notifications)) }
+                entry<SettingsKey>(
+                    metadata = ListDetailSceneStrategy.listPane(detailPlaceholder = {
+                        SettingsPlaceholder()
+                    }),
+                ) {
+                    SettingsRoute(onBack = {
+                        backStack.removeLastOrNull()
+                    }, onSection = { backStack.push(SettingsSectionKey(it)) })
+                }
+                entry<SettingsSectionKey>(metadata = ListDetailSceneStrategy.detailPane()) {
+                    SettingsSectionRoute(it.section, onBack = { backStack.removeLastOrNull() })
+                }
                 entry<ProfileKey> { ProfileRoute(AccountKey(readerId, id = serverAccountId), statusNavigation) }
                 entry<ThreadKey>(metadata = ListDetailSceneStrategy.detailPane()) { ThreadRoute(it, statusNavigation) }
                 entry<StatusListKey>(metadata = ListDetailSceneStrategy.detailPane()) {

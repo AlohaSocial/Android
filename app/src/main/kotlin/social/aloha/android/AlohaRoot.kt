@@ -48,7 +48,7 @@ fun AlohaRoot(viewModel: AppViewModel = hiltViewModel()) {
                     pendingLink = pending,
                     onPendingLinkTaken = viewModel::externalHandled,
                     resolveLink = viewModel::destination,
-                    accountButton = { onProfile -> AccountSwitcher(viewModel, onProfile) },
+                    accountButton = { onProfile, onSettings -> AccountSwitcher(viewModel, onProfile, onSettings) },
                 )
             }
         }
