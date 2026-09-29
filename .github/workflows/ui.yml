@@ -27,6 +27,12 @@ jobs:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
           persist-credentials: false
+      # the emulator's userdata partition needs about 7.4 GB, more than the runner has left after
+      # the release builds; these preinstalled toolchains are never used here
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/.ghcup /opt/hostedtoolcache/CodeQL
+          df -h /
       - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
         with:
           distribution: temurin
@@ -40,12 +46,25 @@ jobs:
         run: curl -fsSL "https://get.maestro.mobile.dev" | bash
       - name: Release builds signed with the debug key for the emulator
         run: ./gradlew assembleGenericRelease assembleGplayRelease -Paloha.signReleaseWithDebugKey=true
+      # built before the emulator starts, so the connected run below only installs and measures:
+      # R8 and a running emulator together exhaust the runner's memory
+      - name: Benchmark builds
+        run: ./gradlew :app:assembleGenericBenchmarkRelease :benchmark:assembleGenericBenchmarkRelease
       - uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
         with:
           api-level: 36
           arch: x86_64
           target: google_apis
           script: |
-            adb install -r app/build/outputs/apk/generic/release/*.apk && "$HOME/.maestro/bin/maestro" test .maestro
-            adb install -r app/build/outputs/apk/gplay/release/*.apk && "$HOME/.maestro/bin/maestro" test .maestro
+            adb install -r app/build/outputs/apk/generic/release/*.apk
+            "$HOME/.maestro/bin/maestro" test .maestro || { mkdir -p build/maestro && adb exec-out screencap -p > build/maestro/generic.png; adb shell uiautomator dump /sdcard/ui.xml && adb pull /sdcard/ui.xml build/maestro/generic.xml; exit 1; }
+            adb install -r app/build/outputs/apk/gplay/release/*.apk
+            "$HOME/.maestro/bin/maestro" test .maestro || { mkdir -p build/maestro && adb exec-out screencap -p > build/maestro/gplay.png; adb shell uiautomator dump /sdcard/ui.xml && adb pull /sdcard/ui.xml build/maestro/gplay.xml; exit 1; }
             ./gradlew :benchmark:connectedGenericBenchmarkReleaseAndroidTest -Pandroid.testInstrumentationRunnerArguments.androidx.benchmark.suppressErrors=EMULATOR
+      # the screen and its view hierarchy when a flow failed, to see what the assertion saw
+      - if: failure()
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        with:
+          name: maestro-debug
+          path: build/maestro
+          if-no-files-found: ignore
