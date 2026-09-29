@@ -1,0 +1,17 @@
+# SPDX-FileCopyrightText: 2026 Aloha Social contributors
+# SPDX-License-Identifier: MIT
+#
+# Release-build smoke: the app starts past R8 and the navigation keys
+# survive serialisation. Grows with the app: sign-in against the mock, timeline.
+appId: social.aloha.android
+---
+- launchApp:
+    clearState: true
+- assertVisible: "Home"
+- tapOn: "Photos"
+- assertVisible: "Photos"
+- tapOn: "Notifications"
+- assertVisible: "Notifications"
+- stopApp
+- launchApp
+- assertVisible: "Home"
