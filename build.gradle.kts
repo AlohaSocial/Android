@@ -14,5 +14,6 @@ plugins {
     alias(libs.plugins.ktlint) apply false
     alias(libs.plugins.roborazzi) apply false
     alias(libs.plugins.baselineprofile) apply false
+    alias(libs.plugins.room) apply false
     alias(libs.plugins.aloha.architecture)
 }
