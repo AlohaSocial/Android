@@ -1,0 +1,21 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/index.php/apps/social/api/v1/preferences"
+  },
+  "status": 200,
+  "headers": {
+    "content-type": "application/json; charset=utf-8",
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "x-ratelimit-limit": "300",
+    "x-ratelimit-remaining": "254",
+    "x-ratelimit-reset": "1790637300"
+  },
+  "body": {
+    "posting:default:visibility": "public",
+    "posting:default:sensitive": false,
+    "posting:default:language": "en",
+    "reading:expand:media": "default",
+    "reading:expand:spoilers": false
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/.well-known/host-meta"
+  },
+  "status": 200,
+  "headers": {
+    "content-type": "application/xrd+xml",
+    "cache-control": "no-cache, no-store, must-revalidate"
+  },
+  "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<XRD xmlns=\"http://docs.oasis-open.org/ns/xri/xrd-1.0\">\n  <Link rel=\"lrdd\"  template=\"http://nextcloud.local/.well-known/webfinger?resource={uri}\"/>\n</XRD>\n"
+}

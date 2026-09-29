@@ -1,0 +1,34 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/index.php/apps/social/api/v1/starter_packs"
+  },
+  "status": 200,
+  "headers": {
+    "content-type": "application/json; charset=utf-8",
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "x-ratelimit-limit": "300",
+    "x-ratelimit-remaining": "193",
+    "x-ratelimit-reset": "1790637300"
+  },
+  "body": [
+    {
+      "id": "fediverse-projects",
+      "name": "The projects behind the network",
+      "description": "The official accounts of the software this app talks to. A reasonable first follow for anyone who wants to know what is changing under them.",
+      "source": "builtin",
+      "size": 3,
+      "accounts": [],
+      "unresolved": []
+    },
+    {
+      "id": "photography",
+      "name": "Photography",
+      "description": "Where the pictures are. Pixelfed is the photo-sharing side of the same network, and these are its own accounts.",
+      "source": "builtin",
+      "size": 2,
+      "accounts": [],
+      "unresolved": []
+    }
+  ]
+}

@@ -37,8 +37,7 @@ jobs:
         run: >
           ./gradlew --write-verification-metadata sha256,pgp --export-keys
           assembleGenericDebug assembleGplayDebug assembleGenericRelease assembleGplayRelease :benchmark:assemble
-          detekt ktlintCheck lint alohaArchitectureCheck testGenericDebugUnitTest testGplayDebugUnitTest
-          verifyRoborazziGenericDebug
+          detekt ktlintCheck lint alohaArchitectureCheck alohaUnitTests alohaScreenshotTests
       - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
           name: verification-metadata

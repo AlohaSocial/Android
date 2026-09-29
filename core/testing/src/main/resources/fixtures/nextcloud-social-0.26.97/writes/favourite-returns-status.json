@@ -1,0 +1,97 @@
+{
+  "request": {
+    "method": "POST",
+    "path": "/index.php/apps/social/api/v1/statuses/1790637117344364158/favourite"
+  },
+  "status": 200,
+  "headers": {
+    "content-type": "application/json; charset=utf-8",
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "x-ratelimit-limit": "300",
+    "x-ratelimit-remaining": "180",
+    "x-ratelimit-reset": "1790637300"
+  },
+  "body": {
+    "id": "1790637117344364158",
+    "nid": "1790637117344364158",
+    "local": true,
+    "archived": false,
+    "view_count": null,
+    "tagged_people": [],
+    "interest": null,
+    "content": "<p>Bob's own post <a href=\"http://nextcloud.local/index.php/apps/social/timeline/tags/aloha\" class=\"mention hashtag\" rel=\"nofollow noopener noreferrer\" target=\"_blank\">#aloha</a></p>",
+    "sensitive": false,
+    "spoiler_text": "",
+    "visibility": "public",
+    "language": "en",
+    "place": null,
+    "in_reply_to_id": null,
+    "in_reply_to_account_id": null,
+    "quote": null,
+    "quote_approval": {
+      "automatic": [
+        "public"
+      ],
+      "manual": [],
+      "current_user": "automatic"
+    },
+    "reply_approval": null,
+    "interaction_policy": null,
+    "dislikes_count": null,
+    "disliked": null,
+    "video": null,
+    "mentions": [],
+    "emojis": [],
+    "tags": [
+      {
+        "name": "aloha",
+        "url": "http://nextcloud.local/index.php/apps/social/timeline/tags/aloha"
+      }
+    ],
+    "replies_count": 0,
+    "reblogs_count": 0,
+    "favourites_count": 1,
+    "favourited": true,
+    "reblogged": false,
+    "muted": false,
+    "bookmarked": false,
+    "pinned": false,
+    "card": null,
+    "reactions": [],
+    "poll": null,
+    "uri": "http://nextcloud.local/index.php/apps/social/@bob/17906371177254273993",
+    "url": "http://nextcloud.local/index.php/apps/social/@bob/17906371177254273993",
+    "reblog": null,
+    "media_attachments": [],
+    "created_at": "2026-09-28T23:11:57.000Z",
+    "edited_at": null,
+    "noindex": false,
+    "account": {
+      "id": "7",
+      "nid": "7",
+      "username": "bob",
+      "acct": "bob",
+      "display_name": "bob",
+      "locked": false,
+      "bot": false,
+      "discoverable": false,
+      "indexable": false,
+      "group": false,
+      "created_at": "2026-09-28T23:06:03.000Z",
+      "note": "",
+      "url": "http://nextcloud.local/index.php/apps/social/@bob",
+      "avatar": "",
+      "avatar_static": "",
+      "header": "http://nextcloud.local/index.php/avatar/bob/128",
+      "header_static": "http://nextcloud.local/index.php/avatar/bob/128",
+      "followers_count": 1,
+      "following_count": 2,
+      "statuses_count": 4,
+      "last_status_at": null,
+      "emojis": [],
+      "fields": [],
+      "pronouns": "",
+      "support_link": ""
+    }
+  }
+}

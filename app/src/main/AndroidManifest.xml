@@ -32,11 +32,34 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+
+        <!-- The OAuth callback: exported so the browser can deliver it, draws nothing, finishes at once. -->
+        <activity
+            android:name=".OAuthRedirectActivity"
+            android:allowTaskReparenting="false"
+            android:excludeFromRecents="true"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:noHistory="true"
+            android:taskAffinity=""
+            android:theme="@android:style/Theme.Translucent.NoTitleBar">
+            <!-- The verified App Link: only this app can receive a code sent here. -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" />
+                <data android:host="aloha.social" />
+                <data android:path="/oauth/callback" />
+            </intent-filter>
+            <!-- The fallback where link verification failed; the server appends a slash, so any path. -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="alohasocial" />
+                <data android:host="oauth-callback" />
             </intent-filter>
         </activity>
     </application>

@@ -1,0 +1,24 @@
+{
+  "request": {
+    "method": "POST",
+    "path": "/index.php/apps/social/api/v1/apps"
+  },
+  "status": 200,
+  "headers": {
+    "content-type": "application/json; charset=utf-8",
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "x-ratelimit-limit": "300",
+    "x-ratelimit-remaining": "264",
+    "x-ratelimit-reset": "1790637300"
+  },
+  "body": {
+    "id": "2",
+    "name": "Aloha fixture capture",
+    "website": "https://aloha.social",
+    "scopes": "read write follow push",
+    "client_id": "REDACTED",
+    "client_secret": "REDACTED",
+    "redirect_uri": "urn:ietf:wg:oauth:2.0:oob",
+    "vapid_key": ""
+  }
+}

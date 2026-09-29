@@ -1,0 +1,39 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/index.php/apps/social/.well-known/nodeinfo/2.0"
+  },
+  "status": 200,
+  "headers": {
+    "content-type": "application/json; charset=utf-8",
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "x-ratelimit-limit": "300",
+    "x-ratelimit-remaining": "273",
+    "x-ratelimit-reset": "1790637300"
+  },
+  "body": {
+    "version": "2.0",
+    "software": {
+      "name": "nextcloud-social",
+      "version": "0.26.97"
+    },
+    "protocols": [
+      "activitypub"
+    ],
+    "services": {
+      "inbound": [],
+      "outbound": []
+    },
+    "usage": {
+      "users": {
+        "total": 10188
+      },
+      "localPosts": 18
+    },
+    "openRegistrations": false,
+    "metadata": {
+      "nodeName": "Nextcloud Social",
+      "nodeDescription": "a safe home for your data"
+    }
+  }
+}

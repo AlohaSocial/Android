@@ -22,8 +22,12 @@ complexity:
     thresholdInClasses: 15
     thresholdInInterfaces: 15
     thresholdInObjects: 15
+    # a class implementing an interface does not grow more responsibilities by doing so
+    ignoreOverridden: true
   CyclomaticComplexMethod:
     threshold: 10
+    # a flat table of single-expression branches is a lookup, not a tangle
+    ignoreSimpleWhenEntries: true
   LongParameterList:
     functionThreshold: 5
     constructorThreshold: 7
@@ -39,6 +43,9 @@ naming:
     constantPattern: '[A-Z][A-Za-z0-9_]*'
 
 style:
+  ReturnCount:
+    # an early `?: return` guard reads better than nesting the rest of the function
+    excludeGuardClauses: true
   MagicNumber:
     ignorePropertyDeclaration: true
     ignoreCompanionObjectPropertyDeclaration: true

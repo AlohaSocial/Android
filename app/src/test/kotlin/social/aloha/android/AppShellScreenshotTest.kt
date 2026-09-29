@@ -5,7 +5,9 @@ package social.aloha.android
 
 import android.app.Application
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.performClick
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.captureRoboImage
 import org.junit.Rule
@@ -38,10 +40,16 @@ class AppShellScreenshotTest {
     @Config(qualifiers = RobolectricDeviceQualifiers.Pixel7)
     fun shellOnPhoneDark() = capture("shell-phone-dark", ThemeMode.Dark)
 
-    private fun capture(name: String, mode: ThemeMode = ThemeMode.Light) {
+    /** Every destination's selected icon differs in shape, not only colour; Shorts is the one that did not. */
+    @Test
+    @Config(qualifiers = RobolectricDeviceQualifiers.Pixel7)
+    fun shellOnPhoneShortsSelected() = capture("shell-phone-shorts", select = "Shorts")
+
+    private fun capture(name: String, mode: ThemeMode = ThemeMode.Light, select: String? = null) {
         compose.setContent {
             AlohaTheme(ThemeSettings(mode = mode)) { AlohaApp() }
         }
+        select?.let { compose.onNodeWithText(it).performClick() }
         compose.onRoot().captureRoboImage("src/test/screenshots/$name.png")
     }
 }

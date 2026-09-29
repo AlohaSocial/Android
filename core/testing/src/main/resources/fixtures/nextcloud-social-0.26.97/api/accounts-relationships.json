@@ -1,0 +1,70 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/index.php/apps/social/api/v1/accounts/relationships?id[]=7&id[]=8&id[]=5"
+  },
+  "status": 200,
+  "headers": {
+    "content-type": "application/json; charset=utf-8",
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "x-ratelimit-limit": "300",
+    "x-ratelimit-remaining": "259",
+    "x-ratelimit-reset": "1790637300"
+  },
+  "body": [
+    {
+      "id": "5",
+      "following": false,
+      "showing_reblogs": true,
+      "notifying": false,
+      "followed_by": true,
+      "blocking": false,
+      "blocked_by": false,
+      "muting": false,
+      "muting_notifications": false,
+      "requested": false,
+      "domain_blocking": false,
+      "endorsed": false,
+      "requested_by": false,
+      "note": "",
+      "mute_expires_at": null,
+      "languages": null
+    },
+    {
+      "id": "7",
+      "following": true,
+      "showing_reblogs": true,
+      "notifying": false,
+      "followed_by": true,
+      "blocking": false,
+      "blocked_by": false,
+      "muting": false,
+      "muting_notifications": false,
+      "requested": false,
+      "domain_blocking": false,
+      "endorsed": false,
+      "requested_by": false,
+      "note": "",
+      "mute_expires_at": null,
+      "languages": null
+    },
+    {
+      "id": "8",
+      "following": true,
+      "showing_reblogs": true,
+      "notifying": false,
+      "followed_by": false,
+      "blocking": false,
+      "blocked_by": false,
+      "muting": false,
+      "muting_notifications": false,
+      "requested": false,
+      "domain_blocking": false,
+      "endorsed": false,
+      "requested_by": false,
+      "note": "",
+      "mute_expires_at": null,
+      "languages": null
+    }
+  ]
+}

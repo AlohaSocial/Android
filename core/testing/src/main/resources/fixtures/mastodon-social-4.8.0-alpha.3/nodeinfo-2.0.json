@@ -1,0 +1,39 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/nodeinfo/2.0"
+  },
+  "status": 200,
+  "headers": {
+    "etag": "W/\"e62365320f424f39a24f89cfd9e8a9c6\"",
+    "content-type": "application/json; charset=utf-8",
+    "cache-control": "max-age=1800, public"
+  },
+  "body": {
+    "version": "2.0",
+    "software": {
+      "name": "mastodon",
+      "version": "4.8.0-alpha.3+pr-40283-c9a1947"
+    },
+    "protocols": [
+      "activitypub"
+    ],
+    "services": {
+      "outbound": [],
+      "inbound": []
+    },
+    "usage": {
+      "users": {
+        "total": 3413975,
+        "activeMonth": 268257,
+        "activeHalfyear": 640086
+      },
+      "localPosts": 189949068
+    },
+    "openRegistrations": true,
+    "metadata": {
+      "nodeName": "Mastodon",
+      "nodeDescription": "The original server of Mastodon, operated by Mastodon GmbH for the common good.\r\n\r\n"
+    }
+  }
+}

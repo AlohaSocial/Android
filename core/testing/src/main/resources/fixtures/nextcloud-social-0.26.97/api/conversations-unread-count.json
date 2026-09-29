@@ -1,0 +1,17 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/index.php/apps/social/api/v1/conversations/unread_count"
+  },
+  "status": 200,
+  "headers": {
+    "content-type": "application/json; charset=utf-8",
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "x-ratelimit-limit": "300",
+    "x-ratelimit-remaining": "248",
+    "x-ratelimit-reset": "1790637300"
+  },
+  "body": {
+    "count": 1
+  }
+}

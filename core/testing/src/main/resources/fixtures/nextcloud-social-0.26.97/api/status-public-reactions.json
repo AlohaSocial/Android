@@ -1,0 +1,21 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/index.php/apps/social/api/v1/statuses/1790637085797595891/reactions"
+  },
+  "status": 200,
+  "headers": {
+    "content-type": "application/json; charset=utf-8",
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "x-ratelimit-limit": "300",
+    "x-ratelimit-remaining": "224",
+    "x-ratelimit-reset": "1790637300"
+  },
+  "body": [
+    {
+      "name": "🎉",
+      "count": 1,
+      "me": false
+    }
+  ]
+}

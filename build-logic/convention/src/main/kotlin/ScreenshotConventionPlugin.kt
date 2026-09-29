@@ -8,6 +8,7 @@ import org.gradle.api.tasks.testing.Test
 import org.gradle.kotlin.dsl.dependencies
 import social.aloha.buildlogic.library
 import social.aloha.buildlogic.libs
+import social.aloha.buildlogic.registerScreenshotAggregate
 
 /**
  * Roborazzi screenshot tests on Robolectric (JUnit 4, which Robolectric's runner
@@ -17,6 +18,7 @@ class ScreenshotConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) {
         with(target) {
             pluginManager.apply("io.github.takahirom.roborazzi")
+            registerScreenshotAggregate()
             extensions.getByType(CommonExtension::class.java).testOptions.unitTests.isIncludeAndroidResources = true
             // Robolectric's file-descriptor interceptor reaches into java.base on JDK 17+
             tasks.withType(Test::class.java).configureEach {

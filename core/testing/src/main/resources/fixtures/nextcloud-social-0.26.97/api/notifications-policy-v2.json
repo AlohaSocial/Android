@@ -1,0 +1,25 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/index.php/apps/social/api/v2/notifications/policy"
+  },
+  "status": 200,
+  "headers": {
+    "content-type": "application/json; charset=utf-8",
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "x-ratelimit-limit": "300",
+    "x-ratelimit-remaining": "212",
+    "x-ratelimit-reset": "1790637300"
+  },
+  "body": {
+    "for_not_following": "accept",
+    "for_not_followers": "accept",
+    "for_new_accounts": "accept",
+    "for_private_mentions": "accept",
+    "for_limited_accounts": "accept",
+    "summary": {
+      "pending_requests_count": 0,
+      "pending_notifications_count": 0
+    }
+  }
+}

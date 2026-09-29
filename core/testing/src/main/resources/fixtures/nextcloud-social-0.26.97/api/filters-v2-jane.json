@@ -1,0 +1,34 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/index.php/apps/social/api/v2/filters"
+  },
+  "status": 200,
+  "headers": {
+    "content-type": "application/json; charset=utf-8",
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "x-ratelimit-limit": "300",
+    "x-ratelimit-remaining": "207",
+    "x-ratelimit-reset": "1790637300"
+  },
+  "body": [
+    {
+      "id": "1",
+      "title": "No spoilers",
+      "context": [
+        "home",
+        "public"
+      ],
+      "expires_at": null,
+      "filter_action": "warn",
+      "keywords": [
+        {
+          "id": "1",
+          "keyword": "butler",
+          "whole_word": false
+        }
+      ],
+      "statuses": []
+    }
+  ]
+}

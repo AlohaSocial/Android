@@ -1,0 +1,88 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/index.php/apps/social/api/v1/statuses/1790637112034926731/history"
+  },
+  "status": 200,
+  "headers": {
+    "content-type": "application/json; charset=utf-8",
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "x-ratelimit-limit": "300",
+    "x-ratelimit-remaining": "223",
+    "x-ratelimit-reset": "1790637300"
+  },
+  "body": [
+    {
+      "content": "<p>Frist draft</p>",
+      "spoiler_text": "",
+      "sensitive": false,
+      "created_at": "2026-09-28T23:11:52+00:00",
+      "account": {
+        "id": "6",
+        "nid": "6",
+        "username": "alice",
+        "acct": "alice",
+        "display_name": "alice",
+        "locked": false,
+        "bot": false,
+        "discoverable": false,
+        "indexable": false,
+        "group": false,
+        "created_at": "2026-09-28T23:06:02.000Z",
+        "note": "",
+        "url": "http://nextcloud.local/index.php/apps/social/@alice",
+        "avatar": "",
+        "avatar_static": "",
+        "header": "http://nextcloud.local/index.php/avatar/alice/128",
+        "header_static": "http://nextcloud.local/index.php/avatar/alice/128",
+        "followers_count": 2,
+        "following_count": 2,
+        "statuses_count": 13,
+        "last_status_at": null,
+        "emojis": [],
+        "fields": [],
+        "pronouns": "",
+        "support_link": ""
+      },
+      "poll": null,
+      "media_attachments": [],
+      "emojis": []
+    },
+    {
+      "content": "<p>First draft, edited</p>",
+      "spoiler_text": "",
+      "sensitive": false,
+      "created_at": "2026-09-28T23:11:52Z",
+      "account": {
+        "id": "6",
+        "nid": "6",
+        "username": "alice",
+        "acct": "alice",
+        "display_name": "alice",
+        "locked": false,
+        "bot": false,
+        "discoverable": false,
+        "indexable": false,
+        "group": false,
+        "created_at": "2026-09-28T23:06:02.000Z",
+        "note": "",
+        "url": "http://nextcloud.local/index.php/apps/social/@alice",
+        "avatar": "",
+        "avatar_static": "",
+        "header": "http://nextcloud.local/index.php/avatar/alice/128",
+        "header_static": "http://nextcloud.local/index.php/avatar/alice/128",
+        "followers_count": 2,
+        "following_count": 2,
+        "statuses_count": 13,
+        "last_status_at": null,
+        "emojis": [],
+        "fields": [],
+        "pronouns": "",
+        "support_link": ""
+      },
+      "poll": null,
+      "media_attachments": [],
+      "emojis": []
+    }
+  ]
+}

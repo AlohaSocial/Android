@@ -1,0 +1,20 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/status.php"
+  },
+  "status": 200,
+  "headers": {
+    "content-type": "application/json"
+  },
+  "body": {
+    "installed": true,
+    "maintenance": false,
+    "needsDbUpgrade": false,
+    "version": "36.0.0.0",
+    "versionstring": "36.0.0 dev",
+    "edition": "",
+    "productname": "Nextcloud",
+    "extendedSupport": false
+  }
+}

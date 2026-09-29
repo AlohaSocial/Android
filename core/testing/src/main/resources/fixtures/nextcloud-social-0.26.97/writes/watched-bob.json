@@ -1,0 +1,15 @@
+{
+  "request": {
+    "method": "POST",
+    "path": "/index.php/apps/social/api/v1/statuses/1790637104958214061/watched"
+  },
+  "status": 200,
+  "headers": {
+    "content-type": "application/json; charset=utf-8",
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "x-ratelimit-limit": "600",
+    "x-ratelimit-remaining": "599",
+    "x-ratelimit-reset": "1790637300"
+  },
+  "body": []
+}

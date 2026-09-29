@@ -61,7 +61,7 @@ jobs:
       - name: Android platform 37
         run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-37.0" "build-tools;37.0.0" > /dev/null
       - name: Unit tests
-        run: ./gradlew testGenericDebugUnitTest testGplayDebugUnitTest
+        run: ./gradlew alohaUnitTests
 
   screenshot:
     name: Screenshot comparison
@@ -80,7 +80,7 @@ jobs:
       - name: Android platform 37
         run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-37.0" "build-tools;37.0.0" > /dev/null
       - name: Compare screenshots
-        run: ./gradlew verifyRoborazziGenericDebug
+        run: ./gradlew alohaScreenshotTests
       - name: Keep the differences
         if: failure()
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0

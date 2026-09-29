@@ -1,0 +1,5 @@
+instance-v1.json
+instance-v2.json
+nodeinfo-2.0.json
+nodeinfo-links.json
+oauth-authorization-server.json

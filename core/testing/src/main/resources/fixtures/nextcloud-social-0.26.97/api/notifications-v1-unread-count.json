@@ -1,0 +1,18 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/index.php/apps/social/api/v1/notifications/unread_count"
+  },
+  "status": 200,
+  "headers": {
+    "content-type": "application/json; charset=utf-8",
+    "cache-control": "private, no-cache",
+    "etag": "\"1790637118839388302-0\"",
+    "x-ratelimit-limit": "300",
+    "x-ratelimit-remaining": "213",
+    "x-ratelimit-reset": "1790637300"
+  },
+  "body": {
+    "count": 6
+  }
+}
