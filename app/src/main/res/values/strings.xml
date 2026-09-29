@@ -18,4 +18,8 @@
     <string name="destination_notifications">Notifications</string>
     <!-- Navigation item: the profile of the signed-in account. -->
     <string name="destination_profile">Profile</string>
+    <!-- Banner when the server no longer accepts this account's sign-in; %s is the account's handle -->
+    <string name="reauth_banner">%s needs to sign in again. Nothing was lost.</string>
+    <!-- Button on that banner that starts a new sign-in -->
+    <string name="reauth_sign_in_again">Sign in again</string>
 </resources>

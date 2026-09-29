@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ SPDX-FileCopyrightText: 2026 Aloha Social contributors
+  ~ SPDX-License-Identifier: MIT
+-->
+<resources>
+    <!-- Title of the sign-in screen, where a person adds an account -->
+    <string name="signin_title">Add account</string>
+    <!-- Label of the text field where a person types their server, e.g. cloud.example.com -->
+    <string name="signin_server_label">Your server</string>
+    <!-- Hint under the server field -->
+    <string name="signin_server_supporting">A Nextcloud with Social, or any Mastodon server</string>
+    <!-- Error under the server field when the text cannot be a server address -->
+    <string name="signin_server_invalid">That doesn\'t look like a server address. Try something like cloud.example.com.</string>
+    <!-- Shown under the server field when the address starts with http://; the app only connects over https -->
+    <string name="signin_server_not_secure">Aloha Social only connects over a secure connection (https://), and this address doesn\'t use one.</string>
+    <!-- Button that starts looking for the server -->
+    <string name="signin_continue">Continue</string>
+    <!-- Status while the app looks for the server\'s API; announced by screen readers -->
+    <string name="signin_probing">Looking for your server…</string>
+    <!-- Heading above the list of the server\'s rules on the server card -->
+    <string name="signin_rules">Server rules</string>
+    <!-- Number of people on a server, shown on the server card; %s is the number, already formatted -->
+    <plurals name="signin_user_count">
+        <item quantity="one">%s person</item>
+        <item quantity="other">%s people</item>
+    </plurals>
+    <!-- Label shown on the server card for a Nextcloud Social server -->
+    <string name="signin_nextcloud_social">Nextcloud Social</string>
+    <!-- Button that opens the server\'s sign-in page in the browser -->
+    <string name="signin_sign_in">Sign in</string>
+    <!-- Button that goes back to typing another server -->
+    <string name="signin_other_server">Use another server</string>
+    <!-- Status while the browser is open for signing in; announced by screen readers -->
+    <string name="signin_waiting">Waiting for your server…</string>
+    <!-- Explanation while the browser is open for signing in -->
+    <string name="signin_waiting_detail">Finish in the browser and you\'ll come straight back here.</string>
+    <!-- Button that opens the browser again when a person closed it too early -->
+    <string name="signin_open_browser_again">Open the browser again</string>
+    <!-- Status while the account is being set up after signing in -->
+    <string name="signin_finishing">Setting up your account…</string>
+    <!-- Failure: none of the addresses the app tried answered like a Mastodon API -->
+    <string name="signin_failure_nothing_answered">Couldn\'t find a Mastodon API there. If this is a Nextcloud, its administrator may still need to add the web-server rules.</string>
+    <!-- Failure: the person or the server refused the sign-in; %s is the server\'s own reason -->
+    <string name="signin_failure_refused">Signing in was refused: %s</string>
+    <!-- Failure: the person or the server refused the sign-in and gave no reason -->
+    <string name="signin_failure_refused_no_reason">Signing in was refused.</string>
+    <!-- Failure: the server could not be reached -->
+    <string name="signin_failure_offline">Couldn\'t reach your server. Check your connection and try again.</string>
+    <!-- Failure: the server answered with a problem; %s is the server\'s own words -->
+    <string name="signin_failure_server">Your server had a problem: %s</string>
+    <!-- Failure: the server answered with a problem and gave no detail -->
+    <string name="signin_failure_server_no_detail">Your server had a problem. Try again in a moment.</string>
+    <!-- Heading above the list of addresses the app tried -->
+    <string name="signin_attempted">What was tried</string>
+    <!-- Reason an address was tried: the server\'s own OAuth discovery document named it -->
+    <string name="signin_attempt_discovery">named by the server</string>
+    <!-- Reason an address was tried: the root of the domain -->
+    <string name="signin_attempt_domain_root">the domain root</string>
+    <!-- Reason an address was tried: Nextcloud Social without the web-server rules -->
+    <string name="signin_attempt_app_path">Nextcloud Social without the web-server rules</string>
+    <!-- Reason an address was tried: Nextcloud Social with pretty URLs -->
+    <string name="signin_attempt_pretty_app_path">Nextcloud Social with pretty URLs</string>
+    <!-- Reason an address was tried: the path the person typed -->
+    <string name="signin_attempt_typed_path">the address you typed</string>
+    <!-- Reason an address was tried: Nextcloud Social in the folder the person typed -->
+    <string name="signin_attempt_typed_app_path">Nextcloud Social in that folder</string>
+    <!-- Reason an address was tried: the API address the person entered by hand -->
+    <string name="signin_attempt_manual">the API address you entered</string>
+    <!-- Button that tries the sign-in again -->
+    <string name="signin_try_again">Try again</string>
+    <!-- Button that copies instructions for the server administrator to the clipboard -->
+    <string name="signin_copy_instructions">Copy instructions for your administrator</string>
+    <!-- Confirmation after the instructions were copied; announced by screen readers -->
+    <string name="signin_copied">Instructions copied</string>
+    <!-- Text copied to the clipboard for a server administrator; %1$s is the server, %2$s a link to the rule files -->
+    <string name="signin_admin_instructions">The Aloha Social app could not find the Mastodon client API of Nextcloud Social on %1$s. Mastodon apps expect it at the root of the domain (/api/v1/…), which on Nextcloud needs the web-server rules that come with Nextcloud Social. The rules for Apache and nginx, with notes on proxies and the Authorization header, are here: %2$s</string>
+    <!-- Heading of the section where a person types the API address by hand -->
+    <string name="signin_advanced">Advanced</string>
+    <!-- Spoken state of the Advanced section when its content is shown -->
+    <string name="signin_expanded">Expanded</string>
+    <!-- Spoken state of the Advanced section when its content is hidden -->
+    <string name="signin_collapsed">Collapsed</string>
+    <!-- Button that opens the system picker for a client certificate the server asks for -->
+    <string name="signin_client_certificate">Use a client certificate</string>
+    <!-- Which client certificate was chosen, by its name in the system (%s) -->
+    <string name="signin_client_certificate_chosen">Client certificate: %s</string>
+    <!-- Label of the field where a person types the full API address by hand -->
+    <string name="signin_api_address_label">API address</string>
+    <!-- Button that uses the API address typed by hand -->
+    <string name="signin_use_api_address">Use this address</string>
+    <!-- Heading when a server presents a certificate the phone does not trust -->
+    <string name="signin_certificate_title">This server\'s certificate isn\'t trusted</string>
+    <!-- Explanation of an untrusted certificate; %s is the server name -->
+    <string name="signin_certificate_detail">%s presented a certificate your phone doesn\'t trust. Only trust it if you know this server uses its own certificate, and the fingerprint below matches what its administrator gave you.</string>
+    <!-- Label for the certificate owner -->
+    <string name="signin_certificate_subject">Issued to</string>
+    <!-- Label for the certificate issuer -->
+    <string name="signin_certificate_issuer">Issued by</string>
+    <!-- Label for the certificate expiry date -->
+    <string name="signin_certificate_valid_until">Valid until</string>
+    <!-- Label for the certificate fingerprint -->
+    <string name="signin_certificate_fingerprint">SHA-256 fingerprint</string>
+    <!-- Button that trusts the certificate for this server only -->
+    <string name="signin_certificate_trust">Trust for this server</string>
+    <!-- Button that refuses the certificate -->
+    <string name="signin_certificate_cancel">Don\'t trust</string>
+    <!-- Title of the screen that asks a person to accept the terms before adding an account -->
+    <string name="terms_title">Before you start</string>
+    <!-- Body of the terms screen -->
+    <string name="terms_body">Aloha Social connects you to a server someone else runs. That server\'s own rules apply to what you post there, and its administrator can see what you share with it. The app itself collects nothing about you.</string>
+    <!-- Button that accepts the terms -->
+    <string name="terms_accept">Agree and continue</string>
+</resources>

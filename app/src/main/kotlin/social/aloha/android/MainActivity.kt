@@ -19,7 +19,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             AlohaTheme {
-                AlohaApp()
+                AlohaRoot()
             }
         }
     }
