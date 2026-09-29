@@ -49,7 +49,7 @@ class AppShellScreenshotTest {
     private fun capture(name: String, mode: ThemeMode = ThemeMode.Light, select: String? = null) {
         compose.setContent {
             AlohaTheme(ThemeSettings(mode = mode)) {
-                AlohaApp(home = { Placeholder(stringResource(R.string.destination_home)) })
+                AlohaApp("a", home = { Placeholder(stringResource(R.string.destination_home)) })
             }
         }
         select?.let { compose.onNodeWithText(it).performClick() }

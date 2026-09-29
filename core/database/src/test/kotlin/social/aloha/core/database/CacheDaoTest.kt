@@ -127,7 +127,7 @@ class CacheDaoTest {
                 status("b2", boosted = "alice").copy(reblogOfId = "other"),
             ),
         )
-        assertEquals(listOf("b1"), statuses.boostsOf("a", "inner").map { it.serverId })
+        assertEquals(listOf("b1"), statuses.boostsOfAny("a", listOf("inner")).map { it.serverId })
     }
 
     @Test

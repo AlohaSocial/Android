@@ -76,3 +76,7 @@ private val PostAge.Unit.relative: RelativeDateTimeFormatter.RelativeUnit get() 
     PostAge.Unit.Hours -> RelativeDateTimeFormatter.RelativeUnit.HOURS
     PostAge.Unit.Days -> RelativeDateTimeFormatter.RelativeUnit.DAYS
 }
+
+/** The date and time a post was made, in full, for the post a thread is about. */
+public fun fullDate(instant: Instant, locale: ULocale = ULocale.getDefault()): String =
+    DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT, locale).format(Date.from(instant))

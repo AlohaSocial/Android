@@ -62,7 +62,7 @@ public abstract class RoutedStatusActions(
         is RichLinkTarget.Web -> openInBrowser(context, target.url)
     }
 
-    // the media viewer comes with the thread screen; until then the post itself opens
+    // until there is a media viewer the post itself opens; within its own thread that is where the reader is
     override fun onMedia(row: StatusRowUi, index: Int): Unit = navigation().openThread(row.statusId)
 
     // replying needs the composer; until then the conversation opens

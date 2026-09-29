@@ -169,7 +169,8 @@ public class StatusRowMapper(private val cache: RichTextCache, private val color
         }
     }
 
-    private fun author(account: Account) = StatusRowUi.AuthorUi(
+    /** An account as a row draws it: its name with custom emoji, handle and avatar. */
+    public fun author(account: Account): StatusRowUi.AuthorUi = StatusRowUi.AuthorUi(
         id = account.id,
         name = StatusHtmlParser.parseText(account.bestDisplayName, account.emojis).toAnnotatedString(colors),
         plainName = account.bestDisplayName,

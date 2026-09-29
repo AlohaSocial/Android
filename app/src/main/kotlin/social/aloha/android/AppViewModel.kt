@@ -27,7 +27,7 @@ sealed interface AppSession {
     data object SigningIn : AppSession
 
     /** [needsReauth]: the server refused the token; the cache stays and a banner offers a new sign-in. */
-    data class SignedIn(val handle: String, val needsReauth: Boolean) : AppSession
+    data class SignedIn(val accountId: String, val handle: String, val needsReauth: Boolean) : AppSession
 }
 
 @HiltViewModel
@@ -63,7 +63,7 @@ class AppViewModel @Inject constructor(
         active == null && all.isEmpty() -> AppSession.SigningIn
         active == null -> AppSession.Loading
         again && active.needsReauth -> AppSession.SigningIn
-        else -> AppSession.SignedIn(active.handle, active.needsReauth)
+        else -> AppSession.SignedIn(active.id, active.handle, active.needsReauth)
     }
 
     private companion object {

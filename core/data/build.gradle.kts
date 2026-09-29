@@ -14,6 +14,7 @@ dependencies {
     implementation(project(":core:datastore"))
     implementation(project(":core:html"))
     implementation(libs.kotlinx.serialization.json)
+    testImplementation(project(":core:testing"))
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.turbine)
     testImplementation(libs.junit4)

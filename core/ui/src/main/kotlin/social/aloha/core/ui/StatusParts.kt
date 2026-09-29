@@ -39,6 +39,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -60,14 +61,21 @@ internal fun StatusBody(
     actions: StatusActions,
     canReact: Boolean,
     animateEmoji: Boolean,
+    focused: Boolean = false,
     controls: CardControls = CardControls(),
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(AlohaSpacing.s)) {
         if (row.body.isNotEmpty()) {
+            // the post a thread is about reads larger than the replies around it
+            val style = if (focused) {
+                MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Normal)
+            } else {
+                MaterialTheme.typography.bodyLarge
+            }
             Text(
                 row.body,
                 inlineContent = rememberEmojiContent(row.emojis, animateEmoji),
-                style = MaterialTheme.typography.bodyLarge.contentDirection(),
+                style = style.contentDirection(),
             )
         }
         if (row.media.isNotEmpty()) MediaGrid(row.media, row.sensitive, policy) { actions.onMedia(row, it) }

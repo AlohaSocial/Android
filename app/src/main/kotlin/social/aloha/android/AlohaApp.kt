@@ -24,6 +24,7 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.paneTitle
 import androidx.compose.ui.semantics.semantics
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
+import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
@@ -38,11 +39,16 @@ import social.aloha.core.navigation.NotificationsKey
 import social.aloha.core.navigation.PhotosKey
 import social.aloha.core.navigation.ProfileKey
 import social.aloha.core.navigation.ShortsKey
+import social.aloha.core.navigation.StatusListKey
+import social.aloha.core.navigation.StatusListKind
 import social.aloha.core.navigation.TagKey
 import social.aloha.core.navigation.ThreadKey
 import social.aloha.core.navigation.TopLevelKey
 import social.aloha.core.navigation.VideoKey
 import social.aloha.core.ui.StatusNavigation
+import social.aloha.feature.thread.StatusListRoute
+import social.aloha.feature.thread.ThreadNavigation
+import social.aloha.feature.thread.ThreadRoute
 import social.aloha.feature.timeline.TimelineRoute
 
 private data class TopLevelDestination(
@@ -76,22 +82,30 @@ private val destinations = listOf(
  * built are placeholders.
  */
 @Composable
-fun AlohaApp(home: @Composable (StatusNavigation) -> Unit = { TimelineRoute(it) }) {
+fun AlohaApp(readerId: String, home: @Composable (StatusNavigation) -> Unit = { TimelineRoute(it) }) {
     val backStack = rememberNavBackStack(HomeKey)
     // a detail opened from a destination keeps that destination selected
     val current = backStack.lastOrNull { it is TopLevelKey }
-    val statusNavigation = remember(backStack) {
-        object : StatusNavigation {
+    val statusNavigation = remember(backStack, readerId) {
+        object : ThreadNavigation {
             override fun openThread(statusId: String) {
-                backStack.add(ThreadKey(statusId))
+                backStack.push(ThreadKey(readerId, statusId))
+            }
+
+            override fun openList(statusId: String, kind: StatusListKind) {
+                backStack.push(StatusListKey(readerId, statusId, kind))
+            }
+
+            override fun back() {
+                backStack.removeLastOrNull()
             }
 
             override fun openProfile(accountId: String?, acct: String?) {
-                backStack.add(AccountKey(accountId, acct))
+                backStack.push(AccountKey(readerId, id = accountId, acct = acct))
             }
 
             override fun openTag(name: String) {
-                backStack.add(TagKey(name))
+                backStack.push(TagKey(readerId, name))
             }
         }
     }
@@ -129,7 +143,8 @@ fun AlohaApp(home: @Composable (StatusNavigation) -> Unit = { TimelineRoute(it) 
                 entry<ShortsKey> { Placeholder(stringResource(R.string.destination_shorts)) }
                 entry<NotificationsKey> { Placeholder(stringResource(R.string.destination_notifications)) }
                 entry<ProfileKey> { Placeholder(stringResource(R.string.destination_profile)) }
-                entry<ThreadKey> { Placeholder(stringResource(R.string.destination_thread)) }
+                entry<ThreadKey> { ThreadRoute(it, statusNavigation) }
+                entry<StatusListKey> { StatusListRoute(it, statusNavigation) }
                 entry<AccountKey> { Placeholder(stringResource(R.string.destination_profile)) }
                 entry<TagKey> { Placeholder("#${it.name}") }
             },
@@ -157,5 +172,10 @@ internal fun Placeholder(title: String) {
 @AlohaPreviews
 @Composable
 private fun AlohaAppPreview() {
-    AlohaTheme { AlohaApp(home = { Placeholder(stringResource(R.string.destination_home)) }) }
+    AlohaTheme { AlohaApp("preview", home = { Placeholder(stringResource(R.string.destination_home)) }) }
+}
+
+/** Opens [key] unless it is already on screen: a second copy would make back seem to do nothing. */
+internal fun MutableList<NavKey>.push(key: NavKey) {
+    if (lastOrNull() != key) add(key)
 }

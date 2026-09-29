@@ -38,7 +38,7 @@ fun AlohaRoot(viewModel: AppViewModel = hiltViewModel()) {
 
         is AppSession.SignedIn -> Column {
             if (current.needsReauth) ReauthBanner(current.handle, onSignInAgain = viewModel::signInAgain)
-            AlohaApp()
+            AlohaApp(current.accountId)
         }
     }
 }

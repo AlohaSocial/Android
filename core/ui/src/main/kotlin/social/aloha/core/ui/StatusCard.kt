@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -105,6 +106,7 @@ public enum class StatusMenuItem {
  *
  * @param now the time ages are counted from; the list passes one clock so every row agrees.
  * @param canReact whether the server takes emoji reactions (shown in a thread, where they are fetched).
+ * @param focused the post a thread is about: larger text and the full date it was made.
  */
 @Composable
 public fun StatusCard(
@@ -116,6 +118,7 @@ public fun StatusCard(
     showActions: Boolean = true,
     canReact: Boolean = false,
     animateEmoji: Boolean = true,
+    focused: Boolean = false,
 ) {
     var filterRevealed by rememberSaveable(row.rowId) { mutableStateOf(false) }
     val warning = row.filterWarning
@@ -147,19 +150,50 @@ public fun StatusCard(
             row.context?.let { ContextLineRow(it) }
             Row(horizontalArrangement = Arrangement.spacedBy(AlohaSpacing.s)) {
                 Avatar(row.author.avatarUrl, AVATAR, Modifier.clickable { actions.onProfile(row.author.id) })
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(AlohaSpacing.xs)) {
-                    StatusHeader(row, now, animateEmoji)
-                    row.spoiler?.let {
-                        SpoilerToggle(it, row, spoilerRevealed, animateEmoji) {
-                            spoilerRevealed =
-                                !spoilerRevealed
-                        }
-                    }
-                    if (bodyShown) StatusBody(row, policy, actions, canReact, animateEmoji, controls)
-                    if (showActions) ActionRow(row, actions)
-                }
+                StatusMain(
+                    row,
+                    now,
+                    policy,
+                    actions,
+                    Flags(showActions, canReact, animateEmoji, focused),
+                    controls,
+                )
             }
         }
+    }
+}
+
+/** How a card is drawn, beyond the row it draws. */
+private data class Flags(
+    val showActions: Boolean,
+    val canReact: Boolean,
+    val animateEmoji: Boolean,
+    val focused: Boolean,
+)
+
+@Composable
+private fun RowScope.StatusMain(
+    row: StatusRowUi,
+    now: Instant,
+    policy: SensitiveMediaPolicy,
+    actions: StatusActions,
+    flags: Flags,
+    controls: CardControls,
+) {
+    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(AlohaSpacing.xs)) {
+        StatusHeader(row, now, flags.animateEmoji)
+        row.spoiler?.let { SpoilerToggle(it, row, controls.spoilerRevealed, flags.animateEmoji, controls.onSpoiler) }
+        if (row.spoiler == null || controls.spoilerRevealed) {
+            StatusBody(row, policy, actions, flags.canReact, flags.animateEmoji, flags.focused, controls)
+        }
+        if (flags.focused) {
+            Text(
+                fullDate(row.createdAt),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        if (flags.showActions) ActionRow(row, actions)
     }
 }
 

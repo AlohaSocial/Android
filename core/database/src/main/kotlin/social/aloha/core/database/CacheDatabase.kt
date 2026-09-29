@@ -141,15 +141,22 @@ public interface StatusDao {
     @Query("SELECT * FROM status WHERE accountId = :accountId AND serverId = :serverId")
     public fun observe(accountId: String, serverId: String): Flow<CachedStatusEntity?>
 
+    /** At most 900 ids at a time, under SQLite's limit on bound variables. */
+    @Query("SELECT * FROM status WHERE accountId = :accountId AND serverId IN (:serverIds)")
+    public fun observeMany(accountId: String, serverIds: List<String>): Flow<List<CachedStatusEntity>>
+
     @Upsert
     public suspend fun upsert(status: CachedStatusEntity)
 
     @Upsert
     public suspend fun upsertAll(statuses: List<CachedStatusEntity>)
 
-    /** Every boost of [serverId], which carries a copy of it that must change when it does. */
-    @Query("SELECT * FROM status WHERE accountId = :accountId AND reblogOfId = :serverId")
-    public suspend fun boostsOf(accountId: String, serverId: String): List<CachedStatusEntity>
+    /**
+     * Every boost of any of [serverIds], which carries a copy of what it boosts that must change when it
+     * does; at most as many ids as SQLite binds at once.
+     */
+    @Query("SELECT * FROM status WHERE accountId = :accountId AND reblogOfId IN (:serverIds)")
+    public suspend fun boostsOfAny(accountId: String, serverIds: List<String>): List<CachedStatusEntity>
 
     /** A deleted status, or one that answered 404: gone, with every boost of it, and from every timeline. */
     @Transaction

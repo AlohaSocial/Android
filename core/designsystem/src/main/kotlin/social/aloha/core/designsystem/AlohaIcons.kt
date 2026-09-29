@@ -4,6 +4,7 @@
 package social.aloha.core.designsystem
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.Reply
 import androidx.compose.material.icons.automirrored.outlined.Subject
 import androidx.compose.material.icons.filled.AccountCircle
@@ -112,4 +113,5 @@ public object AlohaIcons {
 
     /** The chosen one of a set of options. */
     public val Check: ImageVector = Icons.Filled.Check
+    public val Back: ImageVector = Icons.AutoMirrored.Outlined.ArrowBack
 }

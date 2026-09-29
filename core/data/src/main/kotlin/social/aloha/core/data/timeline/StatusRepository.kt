@@ -6,8 +6,12 @@ package social.aloha.core.data.timeline
 import java.time.Clock
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import social.aloha.core.database.CachedStatusEntity
@@ -28,6 +32,36 @@ public class StatusRepository @Inject constructor(private val dao: StatusDao, pr
         it?.let { entity -> decoded.of(accountId, entity.serverId, entity.payloadJson, entity.cachedAt) }
     }
 
+    /** The stored copies of [statusIds], by id, as they change; ids not stored are missing from the map. */
+    public fun observe(accountId: String, statusIds: List<String>): Flow<Map<String, Status>> {
+        if (statusIds.isEmpty()) return flowOf(emptyMap())
+        val chunks = statusIds.distinct().chunked(MAXIMUM_BOUND_IDS).map { ids ->
+            dao.observeMany(accountId, ids).map { rows ->
+                rows.mapNotNull { decoded.of(accountId, it.serverId, it.payloadJson, it.cachedAt) }
+            }
+        }
+        return combine(chunks) { parts -> parts.flatMap { it }.associateBy { it.id } }
+    }
+
+    /**
+     * Stores each of [statuses], as [save] does, in one write: a thread can bring hundreds, and encoding
+     * them happens off the caller's thread.
+     */
+    public suspend fun saveAll(accountId: String, statuses: List<Status>) {
+        if (statuses.isEmpty()) return
+        val entities = withContext(Dispatchers.Default) {
+            val byId = statuses.associateBy { it.id }
+            val boosts = byId.keys.chunked(MAXIMUM_BOUND_IDS).flatMap { dao.boostsOfAny(accountId, it) }
+                .filter { it.serverId !in byId }
+                .mapNotNull { boost ->
+                    val boosted = byId[boost.reblogOfId] ?: return@mapNotNull null
+                    decoded.of(accountId, boost.serverId, boost.payloadJson, boost.cachedAt)?.copy(reblog = boosted)
+                }
+            (byId.values + boosts).map { entity(accountId, it) }
+        }
+        dao.upsertAll(entities)
+    }
+
     public suspend fun get(accountId: String, statusId: String): Status? =
         dao.get(accountId, statusId)?.let { decoded.of(accountId, it.serverId, it.payloadJson, it.cachedAt) }
 
@@ -37,7 +71,7 @@ public class StatusRepository @Inject constructor(private val dao: StatusDao, pr
      * favourite shows on the post and on each boost of it alike.
      */
     public suspend fun save(accountId: String, status: Status) {
-        val boosts = dao.boostsOf(accountId, status.id).mapNotNull { boost ->
+        val boosts = dao.boostsOfAny(accountId, listOf(status.id)).mapNotNull { boost ->
             decoded.of(accountId, boost.serverId, boost.payloadJson, boost.cachedAt)?.copy(reblog = status)
         }
         dao.upsertAll(listOf(entity(accountId, status)) + boosts.map { entity(accountId, it) })
@@ -69,6 +103,7 @@ public class StatusRepository @Inject constructor(private val dao: StatusDao, pr
         decoded.of(accountId, statusId, payloadJson, cachedAt)
 
     internal companion object {
+        const val MAXIMUM_BOUND_IDS = 900
         val json = Json {
             ignoreUnknownKeys = true
             encodeDefaults = false
