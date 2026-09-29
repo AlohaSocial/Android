@@ -1,0 +1,93 @@
+# SPDX-FileCopyrightText: 2026 Aloha Social contributors
+# SPDX-License-Identifier: MIT
+#
+# Built on detekt's defaults (buildUponDefaultConfig); only the project's limits
+# and bans are set here. Formatting is ktlint's job, not detekt's.
+
+build:
+  maxIssues: 0
+
+potential-bugs:
+  UnsafeCallOnNullableType:
+    active: true
+
+complexity:
+  LargeClass:
+    threshold: 400
+  LongMethod:
+    threshold: 40
+    ignoreAnnotated: ['Composable']
+  TooManyFunctions:
+    thresholdInFiles: 15
+    thresholdInClasses: 15
+    thresholdInInterfaces: 15
+    thresholdInObjects: 15
+  CyclomaticComplexMethod:
+    threshold: 10
+  LongParameterList:
+    functionThreshold: 5
+    constructorThreshold: 7
+    ignoreAnnotated: ['Composable']
+    ignoreDefaultParameters: true
+  NestedBlockDepth:
+    threshold: 3
+
+naming:
+  FunctionNaming:
+    ignoreAnnotated: ['Composable']
+  TopLevelPropertyNaming:
+    constantPattern: '[A-Z][A-Za-z0-9_]*'
+
+style:
+  MagicNumber:
+    ignorePropertyDeclaration: true
+    ignoreCompanionObjectPropertyDeclaration: true
+    ignoreAnnotated: ['Preview', 'AlohaPreviews']
+    # colour and dimension tokens are the design system's purpose
+    excludes: ['**/test/**', '**/androidTest/**', '**/build-logic/**', '**/core/designsystem/src/main/**']
+  WildcardImport:
+    active: true
+    excludeImports: []
+  UnusedPrivateMember:
+    ignoreAnnotated: ['Preview', 'AlohaPreviews']
+  ForbiddenComment:
+    active: true
+    comments:
+      - value: 'TODO:'
+        reason: 'A TODO carries an issue link: TODO(#123)'
+      - value: 'FIXME'
+        reason: 'Fix it or open an issue'
+  ForbiddenMethodCall:
+    active: true
+    methods:
+      - value: 'kotlin.io.println'
+        reason: 'Use Timber'
+      - value: 'kotlinx.coroutines.runBlocking'
+        reason: 'Blocking bridges are not allowed outside tests'
+      - value: 'java.lang.System.currentTimeMillis'
+        reason: 'Inject a Clock'
+      - value: 'androidx.room.RoomDatabase.Builder.allowMainThreadQueries'
+        reason: 'No database access on the main thread'
+  ForbiddenImport:
+    active: true
+    imports:
+      - value: 'android.webkit.*'
+        reason: 'No WebView; sign-in uses Custom Tabs'
+      - value: 'android.util.Log'
+        reason: 'Use Timber'
+      - value: 'kotlinx.coroutines.GlobalScope'
+        reason: 'Scope work to a lifecycle or an injected scope'
+      - value: 'androidx.security.crypto.*'
+        reason: 'Deprecated; secrets go to the Keystore-wrapped vault'
+      - value: 'io.reactivex.*'
+        reason: 'Coroutines only'
+      - value: 'com.bumptech.glide.*'
+        reason: 'Coil only'
+      - value: 'android.os.AsyncTask'
+        reason: 'Coroutines only'
+      - value: 'androidx.localbroadcastmanager.*'
+        reason: 'Deprecated'
+      - value: 'org.greenrobot.eventbus.*'
+        reason: 'State flows, not an event bus'
+  UnnecessaryAbstractClass:
+    active: true

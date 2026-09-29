@@ -1,0 +1,54 @@
+# SPDX-FileCopyrightText: 2026 Aloha Social contributors
+# SPDX-License-Identifier: MIT
+
+# Build output
+build/
+.gradle/
+.kotlin/
+.cxx/
+.externalNativeBuild/
+captures/
+*.apk
+*.aab
+*.ap_
+*.apks
+*.dex
+*.class
+*.hprof
+*.log
+output-metadata.json
+
+# Local configuration
+local.properties
+.attach_pid*
+
+# IDE (shared code style stays)
+.idea/*
+!.idea/codeStyles/
+*.iml
+.vscode/
+.fleet/
+.navigation/
+
+# Signing and service secrets (CI provides them)
+*.jks
+*.keystore
+keystore.properties
+google-services.json
+/gradle/verification-keyring.gpg
+
+# fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/
+fastlane/test_output/
+fastlane/vendor/
+/.bundle/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Tooling
+/.claude/settings.local.json
+/.claude/worktrees/
