@@ -34,6 +34,7 @@ dependencies {
     implementation(project(":core:platform"))
     implementation(project(":core:data"))
     implementation(project(":core:network"))
+    implementation(project(":core:media"))
     implementation(project(":feature:signin"))
     implementation(libs.androidx.hilt.lifecycle.viewmodel.compose)
     implementation(libs.androidx.core.ktx)

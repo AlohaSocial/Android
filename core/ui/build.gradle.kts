@@ -9,4 +9,5 @@ plugins {
 dependencies {
     implementation(project(":core:designsystem"))
     api(project(":core:html"))
+    api(project(":core:media"))
 }
