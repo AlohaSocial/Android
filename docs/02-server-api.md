@@ -35,6 +35,20 @@ A candidate qualifies when `api/v2/instance`, or `api/v1/instance`, answers with
 
 A hand-typed API address is probed on its own, keeping only scheme, host, port and path: credentials, a query or a fragment typed into it would otherwise be shown back and sent with every request. When no candidate gets any HTTP answer (the name does not resolve, the connection fails or times out), the server is reported unreachable, not as missing its API, so a typo never reads as a missing web-server rule. An untrusted certificate stops the probe with the chain, for the person to decide. A base that stopped answering is probed for anew at most once an hour per host.
 
+### Signing in
+
+- The app registers once per server with both redirect URIs, newline-separated, and the scopes `read write follow push`. A registration the token endpoint refuses with 401 is forgotten, so the next attempt registers again.
+- The redirect is the verified App Link `https://aloha.social/oauth/callback`; the custom scheme `alohasocial://oauth-callback` is used only where link verification failed on the device. Nextcloud Social adds a `/` to the scheme redirect, so it arrives as `alohasocial://oauth-callback/?code=…`.
+- PKCE is S256 only. Verified on 0.26.97: `code_challenge_method=plain` answers 400 `unsupported code_challenge_method`, a wrong verifier answers 401 `invalid code_verifier`, and a code is single-use.
+- The authorisation, token and userinfo endpoints come from the server's metadata only when they are on the API base's origin, and are fixed when the attempt begins; the exchange never fetches metadata again. OAuth requests never follow a redirect, which would carry the code, the secret or the verifier to wherever it points.
+- The attempt in flight (state, verifier, endpoints, NodeInfo) is kept in the encrypted vault, not in saved state, so it survives the process dying while the browser tab is open and never reaches a Bundle.
+- A callback is matched by its `state` before anything else in it is read: one for another attempt, a denial included, is dropped, and the sign-in on screen keeps waiting.
+- A new account that `verify_credentials` answers 500 for is created from `/oauth/userinfo` with its profile pending.
+
+### Capabilities on Android
+
+§4 applies with these differences. A route counts as present on 2xx, 401 or 403 and absent on 404. Pixelfed's `/api/v2/config` `features`, which Nextcloud Social serves publicly, is taken at its word for stories and collections. The Nextcloud theme comes from the public `theming` capability at the Nextcloud root, not the API base, so no app password is needed. On every launch each account's API base is asked for its instance: a base that stopped answering is probed for anew, and capabilities are detected again when the base moved or they are older than a day.
+
 ---
 
 Everything in this document was verified against Nextcloud Social `master`
