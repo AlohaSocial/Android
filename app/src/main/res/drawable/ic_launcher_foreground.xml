@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ SPDX-FileCopyrightText: 2026 Aloha Social contributors
+  ~ SPDX-License-Identifier: MIT
+-->
+<!-- Two speech bubbles, one behind the other, inside the 66 dp safe zone. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#FFFFD9CF"
+        android:pathData="M38,32H62Q70,32 70,40V54Q70,62 62,62H46L38,69V62Q30,62 30,54V40Q30,32 38,32Z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M48,44H72Q80,44 80,52V66Q80,74 72,74V81L64,74H48Q40,74 40,66V52Q40,44 48,44Z" />
+</vector>

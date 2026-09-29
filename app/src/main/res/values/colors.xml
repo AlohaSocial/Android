@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ SPDX-FileCopyrightText: 2026 Aloha Social contributors
+  ~ SPDX-License-Identifier: MIT
+-->
+<resources>
+    <!-- ALOHA_SEED in :core:designsystem -->
+    <color name="aloha_seed">#FFE0654A</color>
+</resources>

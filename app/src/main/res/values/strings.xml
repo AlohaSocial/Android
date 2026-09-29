@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ SPDX-FileCopyrightText: 2026 Aloha Social contributors
+  ~ SPDX-License-Identifier: MIT
+-->
+<resources>
+    <!-- The name under the launcher icon and in system settings. A brand name, not translated. -->
+    <string name="app_name" translatable="false">Aloha Social</string>
+    <!-- Navigation item: the home timeline of the signed-in account. -->
+    <string name="destination_home">Home</string>
+    <!-- Navigation item: the photo mode, a grid of posts with pictures. -->
+    <string name="destination_photos">Photos</string>
+    <!-- Navigation item: the video mode, long videos. -->
+    <string name="destination_video">Video</string>
+    <!-- Navigation item: the shorts mode, short vertical videos. Keep it short, it sits under an icon. -->
+    <string name="destination_shorts">Shorts</string>
+    <!-- Navigation item: mentions, favourites, boosts and follows. -->
+    <string name="destination_notifications">Notifications</string>
+    <!-- Navigation item: the profile of the signed-in account. -->
+    <string name="destination_profile">Profile</string>
+</resources>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ SPDX-FileCopyrightText: 2026 Aloha Social contributors
+  ~ SPDX-License-Identifier: MIT
+-->
+<!-- API 26 to 30: the same exclusions as data_extraction_rules. -->
+<full-backup-content>
+    <exclude domain="file" path="vault" />
+    <exclude domain="database" path="cache.db" />
+    <exclude domain="database" path="cache.db-wal" />
+    <exclude domain="database" path="cache.db-shm" />
+</full-backup-content>
