@@ -1,0 +1,24 @@
+# SPDX-FileCopyrightText: 2026 Aloha Social contributors
+# SPDX-License-Identifier: MIT
+version = 1
+SPDX-PackageName = "Aloha Social for Android"
+SPDX-PackageSupplier = "Aloha Social contributors"
+SPDX-PackageDownloadLocation = "https://github.com/AlohaSocial/Android"
+
+[[annotations]]
+path = ["**/*.md", "LICENSE", "docs/**", "**/src/test/screenshots/**", "config/**/*.json", ".maestro/**"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 Aloha Social contributors"
+SPDX-License-Identifier = "MIT"
+
+[[annotations]]
+path = ["gradlew", "gradlew.bat", "gradle/wrapper/**"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2015-2026 the original authors (Gradle)"
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = ["gradle/verification-metadata.xml", "gradle/verification-keyring.keys"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 Aloha Social contributors"
+SPDX-License-Identifier = "MIT"

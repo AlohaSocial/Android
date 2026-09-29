@@ -1,0 +1,48 @@
+# SPDX-FileCopyrightText: 2026 Aloha Social contributors
+# SPDX-License-Identifier: MIT
+#
+# Regenerates gradle/verification-metadata.xml and the exported keyring on
+# Linux, which resolves the platform-specific artifacts (aapt2 and friends) a
+# Windows or macOS run never sees, and uploads both for review. Run after a
+# dependency change; commit the downloaded files after reading their diff.
+name: verification-metadata
+
+on:
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  write:
+    name: Write dependency checksums and keys
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # check out the repository
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
+      - name: Android platform 37
+        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-37.0" "build-tools;37.0.0" > /dev/null
+      - name: Write checksums for every configuration CI resolves
+        run: >
+          ./gradlew --write-verification-metadata sha256,pgp --export-keys
+          assembleGenericDebug assembleGplayDebug assembleGenericRelease assembleGplayRelease :benchmark:assemble
+          detekt ktlintCheck lint alohaArchitectureCheck testGenericDebugUnitTest testGplayDebugUnitTest
+          verifyRoborazziGenericDebug
+      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        with:
+          name: verification-metadata
+          path: |
+            gradle/verification-metadata.xml
+            gradle/verification-keyring.keys
+          retention-days: 5

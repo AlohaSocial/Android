@@ -1,0 +1,52 @@
+# SPDX-FileCopyrightText: 2026 Aloha Social contributors
+# SPDX-License-Identifier: MIT
+#
+# A debug-signed generic APK per pull request as a GitHub Actions artifact (kept
+# five days) and a comment linking it. No upload server and no keystore.
+name: pr-apk
+
+on:
+  pull_request:
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  apk:
+    name: Debug APK
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # check out the repository
+      pull-requests: write # comment the artifact link on the pull request
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
+      - name: Android platform 37
+        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-37.0" "build-tools;37.0.0" > /dev/null
+      - name: Assemble
+        run: ./gradlew assembleGenericDebug
+      - name: Upload
+        id: upload
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        with:
+          name: aloha-generic-debug-pr${{ github.event.pull_request.number }}
+          path: app/build/outputs/apk/generic/debug/*.apk
+          retention-days: 5
+      - name: Comment
+        if: github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          URL: ${{ steps.upload.outputs.artifact-url }}
+        run: |
+          gh pr comment "$PR" --repo "$GITHUB_REPOSITORY" --edit-last --create-if-none \
+            --body "Debug APK (generic flavor) for ${GITHUB_SHA::8}: $URL — kept for 5 days."

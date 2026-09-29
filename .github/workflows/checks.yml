@@ -1,0 +1,90 @@
+# SPDX-FileCopyrightText: 2026 Aloha Social contributors
+# SPDX-License-Identifier: MIT
+#
+# static: detekt, ktlint, Lint and the module graph at zero findings, and no
+#         baseline file may grow (there is no report server; baselines are the record)
+# unit:   unit tests of both flavors
+# screenshot: Roborazzi comparison against the reference images
+name: checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  static:
+    name: detekt, ktlint, Lint, module graph
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # check out the repository
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
+      - name: Android platform 37
+        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-37.0" "build-tools;37.0.0" > /dev/null
+      - name: detekt, ktlint, Lint, module graph
+        run: ./gradlew detekt ktlintCheck lint alohaArchitectureCheck --continue
+      - name: Baselines never grow
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: scripts/check-baseline-growth.sh "origin/$BASE_REF"
+
+  unit:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # check out the repository
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
+      - name: Android platform 37
+        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-37.0" "build-tools;37.0.0" > /dev/null
+      - name: Unit tests
+        run: ./gradlew testGenericDebugUnitTest testGplayDebugUnitTest
+
+  screenshot:
+    name: Screenshot comparison
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # check out the repository
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
+      - name: Android platform 37
+        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-37.0" "build-tools;37.0.0" > /dev/null
+      - name: Compare screenshots
+        run: ./gradlew verifyRoborazziGenericDebug
+      - name: Keep the differences
+        if: failure()
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        with:
+          name: screenshot-diffs
+          path: "**/build/outputs/roborazzi"
+          retention-days: 5

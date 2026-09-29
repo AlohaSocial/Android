@@ -1,0 +1,32 @@
+// SPDX-FileCopyrightText: 2026 Aloha Social contributors
+// SPDX-License-Identifier: MIT
+{
+  $schema: "https://docs.renovatebot.com/renovate-schema.json",
+  extends: [
+    "config:recommended",
+    ":gitSignOff",
+    "helpers:pinGitHubActionDigests",
+  ],
+  labels: ["dependencies"],
+  schedule: ["before 6am on monday"],
+  packageRules: [
+    {
+      // AGP, Kotlin and KSP move together; one pull request, benchmark re-run
+      groupName: "toolchain",
+      matchPackageNames: [
+        "com.android.tools.build:gradle",
+        "/^org\\.jetbrains\\.kotlin/",
+        "/^com\\.google\\.devtools\\.ksp/",
+      ],
+    },
+    {
+      groupName: "compose bom",
+      matchPackageNames: ["androidx.compose:compose-bom"],
+    },
+    {
+      // detekt 2.0 is alpha; move when it is stable
+      matchPackageNames: ["/^io\\.gitlab\\.arturbosch\\.detekt/"],
+      allowedVersions: "<2.0.0",
+    },
+  ],
+}

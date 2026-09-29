@@ -1,0 +1,51 @@
+# SPDX-FileCopyrightText: 2026 Aloha Social contributors
+# SPDX-License-Identifier: MIT
+#
+# On an emulator: the Maestro smoke flows against the release builds of both
+# flavors (to prove the R8 keep rules) and a startup Macrobenchmark
+# smoke. Budgets are gated on the device-lab run (docs/benchmarking.md), not here.
+name: ui
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 3 * * 1"
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  emulator:
+    name: Emulator smoke
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # check out the repository
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm.rules
+          sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm
+      - name: Maestro
+        run: curl -fsSL "https://get.maestro.mobile.dev" | bash
+      - name: Release builds signed with the debug key for the emulator
+        run: ./gradlew assembleGenericRelease assembleGplayRelease -Paloha.signReleaseWithDebugKey=true
+      - uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
+        with:
+          api-level: 36
+          arch: x86_64
+          target: google_apis
+          script: |
+            adb install -r app/build/outputs/apk/generic/release/*.apk && "$HOME/.maestro/bin/maestro" test .maestro
+            adb install -r app/build/outputs/apk/gplay/release/*.apk && "$HOME/.maestro/bin/maestro" test .maestro
+            ./gradlew :benchmark:connectedGenericBenchmarkReleaseAndroidTest -Pandroid.testInstrumentationRunnerArguments.androidx.benchmark.suppressErrors=EMULATOR

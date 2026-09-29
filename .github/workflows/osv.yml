@@ -1,0 +1,29 @@
+# SPDX-FileCopyrightText: 2026 Aloha Social contributors
+# SPDX-License-Identifier: MIT
+#
+# A weekly OSV scan of the lockfiles and Gradle dependencies. The SARIF report is
+# kept as a run artifact for five days; the upload to code scanning is off while
+# the repository is private, where code scanning is a paid feature.
+name: osv
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "43 4 * * 1"
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  scan:
+    name: OSV scan
+    permissions:
+      actions: read # the reusable workflow reads its own run
+      contents: read # check out the repository
+      security-events: write # the reusable job always requests it; unused while upload-sarif is false
+    uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@a345acffa64b0eaede81a3d9aae6141214d9c8fc # v2.6.0
+    with:
+      upload-sarif: false
