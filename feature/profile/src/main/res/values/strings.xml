@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ SPDX-FileCopyrightText: 2026 Aloha Social contributors
+  ~ SPDX-License-Identifier: MIT
+-->
+<resources>
+    <!-- Button that goes back from a screen -->
+    <string name="profile_back">Back</string>
+    <!-- Button with the profile's other actions -->
+    <string name="profile_more">More</string>
+    <!-- Button that follows the account -->
+    <string name="profile_follow">Follow</string>
+    <!-- Button that follows an account that already follows the reader -->
+    <string name="profile_follow_back">Follow back</string>
+    <!-- Button showing the reader follows the account; tapping it unfollows -->
+    <string name="profile_following">Following</string>
+    <!-- Button showing a follow request is waiting; tapping it withdraws the request -->
+    <string name="profile_requested">Requested</string>
+    <!-- Button that unblocks the account -->
+    <string name="profile_unblock">Unblock</string>
+    <!-- Badge on a profile that follows the reader -->
+    <string name="profile_follows_you">Follows you</string>
+    <!-- Badge on a profile whose followers are approved by hand -->
+    <string name="profile_locked">Approves followers</string>
+    <!-- Badge on an automated account -->
+    <string name="profile_bot">Automated</string>
+    <!-- Read aloud for a profile field whose link the server checked -->
+    <string name="profile_field_verified">verified</string>
+    <!-- Count of the account's posts; %s is the formatted number -->
+    <plurals name="profile_posts">
+        <item quantity="one">%s post</item>
+        <item quantity="other">%s posts</item>
+    </plurals>
+    <!-- Count of accounts it follows; opens the list. %s is the formatted number -->
+    <string name="profile_following_count">%s following</string>
+    <!-- Count of its followers; opens the list. %s is the formatted number -->
+    <plurals name="profile_followers">
+        <item quantity="one">%s follower</item>
+        <item quantity="other">%s followers</item>
+    </plurals>
+    <!-- Menu item that mutes the account -->
+    <string name="profile_mute">Mute</string>
+    <!-- Menu item that unmutes the account -->
+    <string name="profile_unmute">Unmute</string>
+    <!-- Menu item that blocks the account -->
+    <string name="profile_block">Block</string>
+    <!-- Menu item that opens the profile on its own server, in the browser -->
+    <string name="profile_open_in_browser">Open in browser</string>
+    <!-- Title of the dialog confirming a block; %s is the handle -->
+    <string name="profile_block_title">Block %s?</string>
+    <!-- Body of the dialog confirming a block -->
+    <string name="profile_block_body">They can\'t follow you or see your posts, and you won\'t see theirs.</string>
+    <!-- Button that confirms a block -->
+    <string name="profile_block_confirm">Block</string>
+    <!-- Button that cancels a dialog -->
+    <string name="profile_cancel">Cancel</string>
+    <!-- Tab with the account's posts, without its replies -->
+    <string name="profile_tab_posts">Posts</string>
+    <!-- Tab with the account's posts and replies -->
+    <string name="profile_tab_replies">Posts &amp; replies</string>
+    <!-- Tab with the account's posts carrying images or video -->
+    <string name="profile_tab_media">Media</string>
+    <!-- Tab with the account's videos -->
+    <string name="profile_tab_videos">Videos</string>
+    <!-- Tab with the account's media collections -->
+    <string name="profile_tab_collections">Collections</string>
+    <!-- Tab with the account's current stories -->
+    <string name="profile_tab_stories">Stories</string>
+    <!-- Heading of the strip showing twelve weeks of posting -->
+    <string name="profile_highlights">Last 12 weeks</string>
+    <!-- How much the account posted in the last twelve weeks; %d is the number -->
+    <plurals name="profile_highlights_total">
+        <item quantity="one">%d post</item>
+        <item quantity="other">%d posts</item>
+    </plurals>
+    <!-- The account has not posted lately -->
+    <string name="profile_rhythm_quiet">Quiet lately</string>
+    <!-- The account posts more than usual lately -->
+    <string name="profile_rhythm_busier">Posting more lately</string>
+    <!-- The account posts less than usual lately -->
+    <string name="profile_rhythm_slowing">Posting less lately</string>
+    <!-- The account posts about as usual -->
+    <string name="profile_rhythm_steady">Posting steadily</string>
+    <!-- A collection's size; %d is how many posts it holds -->
+    <plurals name="profile_collection_size">
+        <item quantity="one">%d post</item>
+        <item quantity="other">%d posts</item>
+    </plurals>
+    <!-- Shown when a profile tab has nothing -->
+    <string name="profile_empty">Nothing here yet.</string>
+    <!-- Shown when the profile does not exist or is not visible to this account -->
+    <string name="profile_gone">This profile isn\'t available.</string>
+    <!-- Strip shown when the profile could not be refreshed while offline -->
+    <string name="profile_offline">You\'re offline. Showing what is saved on this device.</string>
+    <!-- Strip shown when the profile could not be loaded -->
+    <string name="profile_error">Couldn\'t load this profile. Pull down to try again.</string>
+    <!-- Button that fills a gap of posts not loaded yet -->
+    <string name="profile_gap">Load missing posts</string>
+    <!-- Read aloud while the profile loads -->
+    <string name="profile_loading">Loading the profile</string>
+    <!-- Title of the list of an account's followers -->
+    <string name="profile_followers_title">Followers</string>
+    <!-- Title of the list of accounts an account follows -->
+    <string name="profile_following_title">Following</string>
+    <!-- Shown when a list of accounts could not be loaded -->
+    <string name="profile_people_error">Couldn\'t load this list.</string>
+    <!-- Button that loads a list again after it failed -->
+    <string name="profile_retry">Try again</string>
+</resources>

@@ -36,6 +36,8 @@ import social.aloha.core.designsystem.AlohaTheme
 import social.aloha.core.navigation.AccountKey
 import social.aloha.core.navigation.HomeKey
 import social.aloha.core.navigation.NotificationsKey
+import social.aloha.core.navigation.PeopleKey
+import social.aloha.core.navigation.PeopleKind
 import social.aloha.core.navigation.PhotosKey
 import social.aloha.core.navigation.ProfileKey
 import social.aloha.core.navigation.ShortsKey
@@ -46,6 +48,9 @@ import social.aloha.core.navigation.ThreadKey
 import social.aloha.core.navigation.TopLevelKey
 import social.aloha.core.navigation.VideoKey
 import social.aloha.core.ui.StatusNavigation
+import social.aloha.feature.profile.PeopleRoute
+import social.aloha.feature.profile.ProfileNavigation
+import social.aloha.feature.profile.ProfileRoute
 import social.aloha.feature.thread.StatusListRoute
 import social.aloha.feature.thread.ThreadNavigation
 import social.aloha.feature.thread.ThreadRoute
@@ -87,13 +92,17 @@ fun AlohaApp(readerId: String, home: @Composable (StatusNavigation) -> Unit = { 
     // a detail opened from a destination keeps that destination selected
     val current = backStack.lastOrNull { it is TopLevelKey }
     val statusNavigation = remember(backStack, readerId) {
-        object : ThreadNavigation {
+        object : ThreadNavigation, ProfileNavigation {
             override fun openThread(statusId: String) {
                 backStack.push(ThreadKey(readerId, statusId))
             }
 
             override fun openList(statusId: String, kind: StatusListKind) {
                 backStack.push(StatusListKey(readerId, statusId, kind))
+            }
+
+            override fun openPeople(accountId: String, kind: PeopleKind) {
+                backStack.push(PeopleKey(readerId, accountId, kind))
             }
 
             override fun back() {
@@ -145,7 +154,8 @@ fun AlohaApp(readerId: String, home: @Composable (StatusNavigation) -> Unit = { 
                 entry<ProfileKey> { Placeholder(stringResource(R.string.destination_profile)) }
                 entry<ThreadKey> { ThreadRoute(it, statusNavigation) }
                 entry<StatusListKey> { StatusListRoute(it, statusNavigation) }
-                entry<AccountKey> { Placeholder(stringResource(R.string.destination_profile)) }
+                entry<AccountKey> { ProfileRoute(it, statusNavigation) }
+                entry<PeopleKey> { PeopleRoute(it, statusNavigation) }
                 entry<TagKey> { Placeholder("#${it.name}") }
             },
         )

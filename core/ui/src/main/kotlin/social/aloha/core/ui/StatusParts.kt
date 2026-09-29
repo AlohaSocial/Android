@@ -39,7 +39,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -396,8 +398,7 @@ private fun ReactionLabel(reaction: Reaction) {
  * What people wrote takes its direction from its own first strong character, not from the interface: an
  * English post in an Arabic interface keeps its punctuation at the end, and an Arabic one in English at the start.
  */
-internal fun androidx.compose.ui.text.TextStyle.contentDirection() =
-    copy(textDirection = androidx.compose.ui.text.style.TextDirection.Content)
+public fun TextStyle.contentDirection(): TextStyle = copy(textDirection = TextDirection.Content)
 
 private const val MAX_TILES = 4
 private const val MIN_ASPECT = 0.8f

@@ -27,3 +27,10 @@ public enum class StatusListKind { FavouritedBy, BoostedBy, Quotes, Reactions }
 /** One of a post's [StatusListKind] lists, as [readerId] sees it. */
 @Serializable
 public data class StatusListKey(val readerId: String, val statusId: String, val kind: StatusListKind) : NavKey
+
+/** Who follows an account, or whom it follows. */
+public enum class PeopleKind { Followers, Following }
+
+/** An account's followers or the accounts it follows, as [readerId] sees them. */
+@Serializable
+public data class PeopleKey(val readerId: String, val accountId: String, val kind: PeopleKind) : NavKey

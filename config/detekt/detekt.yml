@@ -32,7 +32,7 @@ complexity:
     functionThreshold: 5
     constructorThreshold: 7
     # an injected constructor is never called by hand: its length is the dependency graph, not a call site
-    ignoreAnnotated: ['Composable', 'Inject']
+    ignoreAnnotated: ['Composable', 'Inject', 'AssistedInject']
     ignoreDefaultParameters: true
   NestedBlockDepth:
     threshold: 3

@@ -56,6 +56,7 @@ import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.model.SensitiveMediaPolicy
 import social.aloha.core.navigation.StatusListKind
+import social.aloha.core.ui.ProvideLinkRouting
 import social.aloha.core.ui.StatusActions
 import social.aloha.core.ui.StatusCard
 import social.aloha.core.ui.fullDate
@@ -100,7 +101,8 @@ internal fun ThreadScreen(
             }
         }
     }
-    state.history?.let { History(it, actions::onHistoryDismissed) }
+    // a link in an older version routes as one in the post does
+    state.history?.let { ProvideLinkRouting(onLink = rowActions::onLink) { History(it, actions::onHistoryDismissed) } }
     FocusOnce(state, listState)
 }
 

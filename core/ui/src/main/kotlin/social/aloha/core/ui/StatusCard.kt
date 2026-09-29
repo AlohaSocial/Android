@@ -133,8 +133,7 @@ public fun StatusCard(
     val controls =
         CardControls(spoilerRevealed, { spoilerRevealed = !spoilerRevealed }, pollChoice, { pollChoice = it })
     val customActions = customActions(row, actions, controls)
-    val uriHandler = remember(row, actions) { RoutingUriHandler { actions.onLink(it) } }
-    CompositionLocalProvider(LocalUriHandler provides uriHandler) {
+    ProvideLinkRouting(onLink = actions::onLink) {
         Column(
             modifier = modifier
                 .fillMaxWidth()
@@ -195,11 +194,6 @@ private fun RowScope.StatusMain(
         }
         if (flags.showActions) ActionRow(row, actions)
     }
-}
-
-/** Link annotations carry an address; this turns a tap on one back into a destination for the screen. */
-private class RoutingUriHandler(private val route: (RichLinkTarget) -> Unit) : UriHandler {
-    override fun openUri(uri: String) = route(RichLinkTarget.parse(uri))
 }
 
 @Composable

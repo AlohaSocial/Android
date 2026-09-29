@@ -37,6 +37,7 @@ dependencies {
     implementation(project(":core:network"))
     implementation(project(":core:media"))
     implementation(project(":feature:signin"))
+    implementation(project(":feature:profile"))
     implementation(project(":feature:thread"))
     implementation(project(":feature:timeline"))
     implementation(libs.androidx.hilt.lifecycle.viewmodel.compose)

@@ -48,7 +48,7 @@ import social.aloha.core.model.Reaction
 import social.aloha.core.model.SensitiveMediaPolicy
 import social.aloha.core.navigation.StatusListKey
 import social.aloha.core.navigation.StatusListKind
-import social.aloha.core.ui.Avatar
+import social.aloha.core.ui.AccountRow
 import social.aloha.core.ui.RichTextColors
 import social.aloha.core.ui.RoutedStatusActions
 import social.aloha.core.ui.StatusActions
@@ -123,7 +123,7 @@ internal fun StatusListScreen(
 
                 is StatusListState.Accounts -> Listed(state.people.isEmpty()) {
                     items(state.people, key = { it.author.id }) { person ->
-                        PersonRow(person) { rowActions.onProfile(person.author.id) }
+                        AccountRow(person.author, person.emojis, onOpen = { rowActions.onProfile(person.author.id) })
                         HorizontalDivider()
                     }
                 }
@@ -169,23 +169,6 @@ private fun Failed(onRetry: () -> Unit) {
     }
 }
 
-@Composable
-private fun PersonRow(person: StatusListState.Person, onOpen: () -> Unit) {
-    ListItem(
-        modifier = Modifier.clickable(onClick = onOpen),
-        leadingContent = { Avatar(person.author.avatarUrl, AVATAR) },
-        headlineContent = {
-            Text(
-                person.author.name,
-                inlineContent = rememberEmojiContent(person.emojis, animate = true),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        },
-        supportingContent = { Text(person.author.handle, maxLines = 1, overflow = TextOverflow.Ellipsis) },
-    )
-}
-
 /** A custom emoji draws as its image, a Unicode one as itself; either reads as its name and count. */
 @Composable
 private fun ReactionRow(reaction: Reaction) {
@@ -204,5 +187,4 @@ private fun ReactionRow(reaction: Reaction) {
     )
 }
 
-private val AVATAR = 40.dp
 private val EMOJI = 32.dp
