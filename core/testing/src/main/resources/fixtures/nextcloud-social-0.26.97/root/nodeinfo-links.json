@@ -1,0 +1,23 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/.well-known/nodeinfo"
+  },
+  "status": 200,
+  "headers": {
+    "content-type": "application/json; charset=utf-8",
+    "cache-control": "no-cache, no-store, must-revalidate"
+  },
+  "body": {
+    "links": [
+      {
+        "rel": "http://nodeinfo.diaspora.software/ns/schema/2.0",
+        "href": "http://nextcloud.local/index.php/apps/social/.well-known/nodeinfo/2.0"
+      },
+      {
+        "rel": "http://nodeinfo.diaspora.software/ns/schema/2.1",
+        "href": "http://nextcloud.local/index.php/apps/social/.well-known/nodeinfo/2.1"
+      }
+    ]
+  }
+}

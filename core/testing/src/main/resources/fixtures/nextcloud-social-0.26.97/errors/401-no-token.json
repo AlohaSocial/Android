@@ -1,0 +1,18 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/index.php/apps/social/api/v1/timelines/home"
+  },
+  "status": 401,
+  "headers": {
+    "content-type": "application/json; charset=utf-8",
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "www-authenticate": "Bearer error=\"invalid_token\"",
+    "x-ratelimit-limit": "60",
+    "x-ratelimit-remaining": "50",
+    "x-ratelimit-reset": "1790637300"
+  },
+  "body": {
+    "error": "the access_token was revoked"
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/index.php/apps/social/api/v1/gifs?q=cat&limit=5"
+  },
+  "status": 200,
+  "headers": {
+    "content-type": "application/json; charset=utf-8",
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "x-ratelimit-limit": "300",
+    "x-ratelimit-remaining": "192",
+    "x-ratelimit-reset": "1790637300"
+  },
+  "body": {
+    "gifs": [
+      {
+        "slug": "noto-1f63a",
+        "title": "smiley cat",
+        "url": "http://nextcloud.local/index.php/apps/social/gif/noto-1f63a",
+        "media_type": "image/webp"
+      },
+      {
+        "slug": "noto-1f638",
+        "title": "smile cat",
+        "url": "http://nextcloud.local/index.php/apps/social/gif/noto-1f638",
+        "media_type": "image/webp"
+      },
+      {
+        "slug": "noto-1f639",
+        "title": "joy cat",
+        "url": "http://nextcloud.local/index.php/apps/social/gif/noto-1f639",
+        "media_type": "image/webp"
+      },
+      {
+        "slug": "noto-1f63b",
+        "title": "heart eyes cat",
+        "url": "http://nextcloud.local/index.php/apps/social/gif/noto-1f63b",
+        "media_type": "image/webp"
+      },
+      {
+        "slug": "noto-1f63c",
+        "title": "smirk cat",
+        "url": "http://nextcloud.local/index.php/apps/social/gif/noto-1f63c",
+        "media_type": "image/webp"
+      }
+    ],
+    "total": 9,
+    "attribution": "Noto Animated Emoji, by Google, licensed CC BY 4.0"
+  }
+}

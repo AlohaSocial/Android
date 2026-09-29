@@ -1,0 +1,21 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/index.php/apps/social/api/v1/markers?timeline[]=home&timeline[]=notifications"
+  },
+  "status": 200,
+  "headers": {
+    "content-type": "application/json; charset=utf-8",
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "x-ratelimit-limit": "300",
+    "x-ratelimit-remaining": "247",
+    "x-ratelimit-reset": "1790637300"
+  },
+  "body": {
+    "home": {
+      "last_read_id": "1790637085797595891",
+      "version": 2,
+      "updated_at": "2026-09-28T23:11:58.000Z"
+    }
+  }
+}

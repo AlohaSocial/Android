@@ -1,0 +1,196 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/index.php/apps/social/api/v1/collections/1"
+  },
+  "status": 200,
+  "headers": {
+    "content-type": "application/json; charset=utf-8",
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "x-ratelimit-limit": "300",
+    "x-ratelimit-remaining": "186",
+    "x-ratelimit-reset": "1790637300"
+  },
+  "body": {
+    "id": "1",
+    "title": "Test album",
+    "description": "Pictures for the fixtures",
+    "visibility": "public",
+    "created_at": "2026-09-28T23:11:55+00:00",
+    "updated_at": "2026-09-28T23:11:55+00:00",
+    "size": 1,
+    "account": {
+      "id": "6",
+      "nid": "6",
+      "username": "alice",
+      "acct": "alice",
+      "display_name": "alice",
+      "locked": false,
+      "bot": false,
+      "discoverable": false,
+      "indexable": false,
+      "group": false,
+      "created_at": "2026-09-28T23:06:02.000Z",
+      "note": "",
+      "url": "http://nextcloud.local/index.php/apps/social/@alice",
+      "avatar": "",
+      "avatar_static": "",
+      "header": "http://nextcloud.local/index.php/avatar/alice/128",
+      "header_static": "http://nextcloud.local/index.php/avatar/alice/128",
+      "followers_count": 2,
+      "following_count": 2,
+      "statuses_count": 13,
+      "last_status_at": null,
+      "emojis": [],
+      "fields": [],
+      "pronouns": "",
+      "support_link": ""
+    },
+    "posts": [
+      {
+        "id": "1790637096330770789",
+        "nid": "1790637096330770789",
+        "local": true,
+        "archived": false,
+        "view_count": null,
+        "tagged_people": [],
+        "interest": null,
+        "content": "<p>Two test pictures <a href=\"http://nextcloud.local/index.php/apps/social/timeline/tags/photography\" class=\"mention hashtag\" rel=\"nofollow noopener noreferrer\" target=\"_blank\">#photography</a></p>",
+        "sensitive": false,
+        "spoiler_text": "",
+        "visibility": "public",
+        "language": "en",
+        "place": null,
+        "in_reply_to_id": null,
+        "in_reply_to_account_id": null,
+        "quote": null,
+        "quote_approval": {
+          "automatic": [
+            "public"
+          ],
+          "manual": [],
+          "current_user": "automatic"
+        },
+        "reply_approval": null,
+        "interaction_policy": null,
+        "dislikes_count": null,
+        "disliked": null,
+        "video": null,
+        "mentions": [],
+        "emojis": [],
+        "tags": [
+          {
+            "name": "photography",
+            "url": "http://nextcloud.local/index.php/apps/social/timeline/tags/photography"
+          }
+        ],
+        "replies_count": 0,
+        "reblogs_count": 1,
+        "favourites_count": 0,
+        "favourited": false,
+        "reblogged": false,
+        "muted": false,
+        "bookmarked": false,
+        "pinned": false,
+        "card": null,
+        "reactions": [],
+        "poll": null,
+        "uri": "http://nextcloud.local/index.php/apps/social/@alice/17906370966999687509",
+        "url": "http://nextcloud.local/index.php/apps/social/@alice/17906370966999687509",
+        "reblog": null,
+        "media_attachments": [
+          {
+            "id": "9",
+            "type": "image",
+            "media_type": "image/jpeg",
+            "url": "http://nextcloud.local/index.php/apps/social/media/48044adf-b771-4343-9607-c7fc93f16ad1.jpeg",
+            "preview_url": "http://nextcloud.local/index.php/apps/social/media/2c66bfd7-0029-47e1-b6ef-23dc7d422e2b.jpeg",
+            "hls_url": null,
+            "remote_url": null,
+            "cache_error": null,
+            "meta": {
+              "original": {
+                "width": 1600,
+                "height": 1200,
+                "size": "1600x1200",
+                "aspect": 1.3333333333333333
+              },
+              "small": {
+                "width": 800,
+                "height": 600,
+                "size": "800x600",
+                "aspect": 1.3333333333333333
+              },
+              "focus": {
+                "x": 0.3,
+                "y": -0.2
+              }
+            },
+            "description": "A test card pattern in bright colours",
+            "blurhash": "LVL4]9|Tnk_gsESdfjn,baayW;jZ"
+          },
+          {
+            "id": "10",
+            "type": "image",
+            "media_type": "image/jpeg",
+            "url": "http://nextcloud.local/index.php/apps/social/media/1e936701-3c1a-49c2-a58a-bc7b0d5a9c27.jpeg",
+            "preview_url": "http://nextcloud.local/index.php/apps/social/media/43d878b8-d9fd-42fa-9f7e-38dea1357b60.jpeg",
+            "hls_url": null,
+            "remote_url": null,
+            "cache_error": null,
+            "meta": {
+              "original": {
+                "width": 1080,
+                "height": 1350,
+                "size": "1080x1350",
+                "aspect": 0.8
+              },
+              "small": {
+                "width": 640,
+                "height": 800,
+                "size": "640x800",
+                "aspect": 0.8
+              },
+              "focus": {
+                "x": 0,
+                "y": 0
+              }
+            },
+            "description": "A Mandelbrot fractal, portrait",
+            "blurhash": "LyLow4+,$SN?w6S]WUjI[ibCSIbW"
+          }
+        ],
+        "created_at": "2026-09-28T23:11:36.000Z",
+        "edited_at": null,
+        "noindex": false,
+        "account": {
+          "id": "6",
+          "nid": "6",
+          "username": "alice",
+          "acct": "alice",
+          "display_name": "alice",
+          "locked": false,
+          "bot": false,
+          "discoverable": false,
+          "indexable": false,
+          "group": false,
+          "created_at": "2026-09-28T23:06:02.000Z",
+          "note": "",
+          "url": "http://nextcloud.local/index.php/apps/social/@alice",
+          "avatar": "",
+          "avatar_static": "",
+          "header": "http://nextcloud.local/index.php/avatar/alice/128",
+          "header_static": "http://nextcloud.local/index.php/avatar/alice/128",
+          "followers_count": 2,
+          "following_count": 2,
+          "statuses_count": 13,
+          "last_status_at": null,
+          "emojis": [],
+          "fields": [],
+          "pronouns": "",
+          "support_link": ""
+        }
+      }
+    ]
+  }
+}

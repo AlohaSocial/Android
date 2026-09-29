@@ -1,0 +1,25 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/index.php/apps/social/api/v1/statuses/1790637085797595891/delivery"
+  },
+  "status": 200,
+  "headers": {
+    "content-type": "application/json; charset=utf-8",
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "x-ratelimit-limit": "300",
+    "x-ratelimit-remaining": "219",
+    "x-ratelimit-reset": "1790637300"
+  },
+  "body": {
+    "id": "1790637085797595891",
+    "delivered": 0,
+    "sending": 0,
+    "waiting": 0,
+    "failing": 0,
+    "abandoned": 0,
+    "total": 0,
+    "retention": 604800,
+    "instances": []
+  }
+}

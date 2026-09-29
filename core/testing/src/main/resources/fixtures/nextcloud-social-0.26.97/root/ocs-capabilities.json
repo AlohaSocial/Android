@@ -1,0 +1,380 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/ocs/v2.php/cloud/capabilities?format=json"
+  },
+  "status": 200,
+  "headers": {
+    "content-type": "application/json; charset=utf-8",
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "etag": "\"88ba2bd81e2033a14cac986c398f056b\""
+  },
+  "body": {
+    "ocs": {
+      "meta": {
+        "status": "ok",
+        "statuscode": 200,
+        "message": "OK"
+      },
+      "data": {
+        "version": {
+          "major": 36,
+          "minor": 0,
+          "micro": 0,
+          "string": "36.0.0 dev",
+          "edition": "",
+          "extendedSupport": false
+        },
+        "capabilities": {
+          "bruteforce": {
+            "delay": 0,
+            "allow-listed": false
+          },
+          "spreed": {
+            "features": [
+              "audio",
+              "video",
+              "chat-v2",
+              "conversation-v4",
+              "guest-signaling",
+              "empty-group-room",
+              "guest-display-names",
+              "multi-room-users",
+              "favorites",
+              "last-room-activity",
+              "no-ping",
+              "system-messages",
+              "delete-messages",
+              "mention-flag",
+              "in-call-flags",
+              "conversation-call-flags",
+              "notification-levels",
+              "invite-groups-and-mails",
+              "locked-one-to-one-rooms",
+              "read-only-rooms",
+              "listable-rooms",
+              "chat-read-marker",
+              "chat-unread",
+              "webinary-lobby",
+              "start-call-flag",
+              "chat-replies",
+              "circles-support",
+              "force-mute",
+              "sip-support",
+              "sip-support-nopin",
+              "chat-read-status",
+              "phonebook-search",
+              "raise-hand",
+              "room-description",
+              "rich-object-sharing",
+              "temp-user-avatar-api",
+              "geo-location-sharing",
+              "voice-message-sharing",
+              "signaling-v3",
+              "publishing-permissions",
+              "clear-history",
+              "direct-mention-flag",
+              "notification-calls",
+              "conversation-permissions",
+              "rich-object-list-media",
+              "rich-object-delete",
+              "unified-search",
+              "chat-permission",
+              "react-permission",
+              "silent-send",
+              "silent-call",
+              "send-call-notification",
+              "talk-polls",
+              "breakout-rooms-v1",
+              "recording-v1",
+              "avatar",
+              "chat-get-context",
+              "single-conversation-status",
+              "chat-keep-notifications",
+              "typing-privacy",
+              "remind-me-later",
+              "bots-v1",
+              "markdown-messages",
+              "media-caption",
+              "session-state",
+              "note-to-self",
+              "recording-consent",
+              "sip-support-dialout",
+              "delete-messages-unlimited",
+              "edit-messages",
+              "silent-send-state",
+              "chat-read-last",
+              "federation-v1",
+              "federation-v2",
+              "ban-v1",
+              "chat-reference-id",
+              "mention-permissions",
+              "edit-messages-note-to-self",
+              "archived-conversations-v2",
+              "talk-polls-drafts",
+              "download-call-participants",
+              "email-csv-import",
+              "conversation-creation-password",
+              "call-notification-state-api",
+              "schedule-meeting",
+              "edit-draft-poll",
+              "conversation-creation-all",
+              "important-conversations",
+              "unbind-conversation",
+              "sip-direct-dialin",
+              "dashboard-event-rooms",
+              "mutual-calendar-events",
+              "upcoming-reminders",
+              "sensitive-conversations",
+              "threads",
+              "pinned-messages",
+              "federated-shared-items",
+              "scheduled-messages",
+              "conversation-presets",
+              "private-reply",
+              "conversation-tags",
+              "preserve-conversation",
+              "bot-features-api",
+              "classified-conversations",
+              "announcement-preset",
+              "promote-demote-owner",
+              "message-expiration",
+              "reactions",
+              "recording-chunked-upload"
+            ],
+            "features-local": [
+              "favorites",
+              "chat-read-status",
+              "listable-rooms",
+              "phonebook-search",
+              "temp-user-avatar-api",
+              "unified-search",
+              "avatar",
+              "remind-me-later",
+              "note-to-self",
+              "archived-conversations-v2",
+              "chat-summary-api",
+              "call-notification-state-api",
+              "schedule-meeting",
+              "conversation-creation-all",
+              "important-conversations",
+              "sip-direct-dialin",
+              "dashboard-event-rooms",
+              "mutual-calendar-events",
+              "upcoming-reminders",
+              "sensitive-conversations",
+              "scheduled-messages",
+              "conversation-presets",
+              "conversation-tags",
+              "recording-chunked-upload",
+              "bot-features-api",
+              "classified-conversations",
+              "announcement-preset"
+            ],
+            "config": {
+              "attachments": {
+                "allowed": false,
+                "conversation-subfolders": true
+              },
+              "call": {
+                "enabled": true,
+                "breakout-rooms": true,
+                "recording": false,
+                "recording-consent": 0,
+                "supported-reactions": [
+                  "❤️",
+                  "🎉",
+                  "👏",
+                  "👋",
+                  "👍",
+                  "👎",
+                  "🔥",
+                  "😂",
+                  "🤩",
+                  "🤔",
+                  "😲",
+                  "😥"
+                ],
+                "can-upload-background": false,
+                "sip-enabled": false,
+                "sip-dialout-enabled": false,
+                "default-phone-region": "",
+                "can-enable-sip": false,
+                "start-without-media": false,
+                "max-duration": 0,
+                "blur-virtual-background": false,
+                "end-to-end-encryption": false,
+                "live-transcription": false,
+                "live-translation": false,
+                "play-sounds": true,
+                "grid-limit": 19,
+                "grid-limit-enforced": false,
+                "predefined-backgrounds": [
+                  "1_office.jpg",
+                  "2_home.jpg",
+                  "3_abstract.jpg",
+                  "4_beach.jpg",
+                  "5_park.jpg",
+                  "6_theater.jpg",
+                  "7_library.jpg",
+                  "8_space_station.jpg"
+                ],
+                "predefined-backgrounds-v2": [
+                  "/apps-extra/spreed/img/backgrounds/1_office.jpg",
+                  "/apps-extra/spreed/img/backgrounds/2_home.jpg",
+                  "/apps-extra/spreed/img/backgrounds/3_abstract.jpg",
+                  "/apps-extra/spreed/img/backgrounds/4_beach.jpg",
+                  "/apps-extra/spreed/img/backgrounds/5_park.jpg",
+                  "/apps-extra/spreed/img/backgrounds/6_theater.jpg",
+                  "/apps-extra/spreed/img/backgrounds/7_library.jpg",
+                  "/apps-extra/spreed/img/backgrounds/8_space_station.jpg"
+                ],
+                "live-transcription-target-language-id": ""
+              },
+              "chat": {
+                "max-length": 32000,
+                "read-privacy": 0,
+                "has-translation-providers": false,
+                "has-translation-task-providers": false,
+                "typing-privacy": 0,
+                "summary-threshold": 100,
+                "style": "split",
+                "matterbridge-enabled": false
+              },
+              "conversations": {
+                "can-create": false,
+                "force-passwords": false,
+                "list-style": "two-lines",
+                "sort-order": "activity",
+                "group-mode": "none",
+                "description-length": 2000,
+                "retention-event": 28,
+                "retention-phone": 7,
+                "retention-instant-meetings": 1,
+                "retention-classified": 3600
+              },
+              "federation": {
+                "enabled": false,
+                "incoming-enabled": false,
+                "outgoing-enabled": false,
+                "only-trusted-servers": true
+              },
+              "previews": {
+                "max-gif-size": 3145728
+              },
+              "signaling": {
+                "session-ping-limit": 200,
+                "mode": "internal",
+                "hello-v2-token-key": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEA4L/dK1zqVzTDWoatP9daA+hwerO\nOAvc+OKVwnODUwwkAK6z7boc9eCbznQXszm/Kj4dwPR1zY1zcIp7CNhVZA==\n-----END PUBLIC KEY-----\n"
+              },
+              "experiments": {
+                "enabled": 0
+              },
+              "feature-hints": {
+                "current": 34,
+                "hidden": 0
+              },
+              "permissions": {
+                "max-default": 510,
+                "max-custom": 511,
+                "default": 502
+              }
+            },
+            "config-local": {
+              "attachments": [
+                "allowed",
+                "folder",
+                "conversation-subfolders"
+              ],
+              "call": [
+                "predefined-backgrounds",
+                "predefined-backgrounds-v2",
+                "can-upload-background",
+                "start-without-media",
+                "blur-virtual-background",
+                "live-transcription-target-language-id",
+                "play-sounds",
+                "grid-limit",
+                "grid-limit-enforced",
+                "external-call-service"
+              ],
+              "chat": [
+                "read-privacy",
+                "has-translation-providers",
+                "has-translation-task-providers",
+                "typing-privacy",
+                "summary-threshold",
+                "style",
+                "matterbridge-enabled"
+              ],
+              "conversations": [
+                "can-create",
+                "list-style",
+                "sort-order",
+                "group-mode",
+                "description-length"
+              ],
+              "federation": [
+                "enabled",
+                "incoming-enabled",
+                "outgoing-enabled",
+                "only-trusted-servers"
+              ],
+              "previews": [
+                "max-gif-size"
+              ],
+              "signaling": [
+                "session-ping-limit",
+                "mode",
+                "hello-v2-token-key"
+              ],
+              "experiments": [
+                "enabled"
+              ],
+              "feature-hints": [
+                "current",
+                "hidden"
+              ],
+              "permissions": []
+            },
+            "version": "26.0.0-dev.0"
+          },
+          "theming": {
+            "name": "Nextcloud",
+            "productName": "Nextcloud",
+            "url": "https://nextcloud.com",
+            "imprintUrl": "",
+            "privacyUrl": "",
+            "slogan": "a safe home for all your data",
+            "color": "#00679e",
+            "color-text": "#ffffff",
+            "color-element": "#00679e",
+            "color-element-bright": "#00679e",
+            "color-element-dark": "#00679e",
+            "logo": "http://nextcloud.local/core/img/logo/logo.svg?v=14",
+            "background": "http://nextcloud.local/apps/theming/img/background/jo-myoung-hee-fluid.webp",
+            "background-text": "#ffffff",
+            "background-plain": false,
+            "background-default": true,
+            "logoheader": "http://nextcloud.local/core/img/logo/logo.svg?v=14",
+            "favicon": "http://nextcloud.local/core/img/logo/logo.svg?v=14",
+            "primaryColor": "#00679e",
+            "backgroundColor": "#00679e",
+            "defaultPrimaryColor": "#00679e",
+            "defaultBackgroundColor": "#00679e",
+            "inverted": false,
+            "cacheBuster": "c9b9d054",
+            "enabledThemes": [],
+            "toastTimeout": 7000,
+            "toastTimeoutValues": [
+              7000,
+              15000,
+              30000,
+              -1
+            ]
+          }
+        }
+      }
+    }
+  }
+}

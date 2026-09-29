@@ -1,0 +1,36 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/index.php/apps/social/api/v1/scheduled_statuses"
+  },
+  "status": 200,
+  "headers": {
+    "content-type": "application/json; charset=utf-8",
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "x-ratelimit-limit": "300",
+    "x-ratelimit-remaining": "217",
+    "x-ratelimit-reset": "1790637300"
+  },
+  "body": [
+    {
+      "id": "1",
+      "scheduled_at": "2026-09-29T23:11:52.000Z",
+      "params": {
+        "text": "Posted tomorrow",
+        "media_ids": [],
+        "poll": null,
+        "in_reply_to_id": null,
+        "quoted_status_id": null,
+        "sensitive": false,
+        "spoiler_text": "",
+        "visibility": "public",
+        "language": "",
+        "application_id": null,
+        "idempotency": null,
+        "scheduled_at": null,
+        "with_rate_limit": null
+      },
+      "media_attachments": []
+    }
+  ]
+}

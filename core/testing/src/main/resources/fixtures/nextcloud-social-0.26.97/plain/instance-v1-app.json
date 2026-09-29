@@ -1,0 +1,95 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/index.php/apps/social/api/v1/instance"
+  },
+  "status": 200,
+  "headers": {
+    "content-type": "application/json; charset=utf-8",
+    "cache-control": "private, no-cache",
+    "etag": "\"dcb95d804d5119f428e890555ddc6853d6df819a\"",
+    "x-ratelimit-limit": "300",
+    "x-ratelimit-remaining": "278",
+    "x-ratelimit-reset": "1790637300"
+  },
+  "body": {
+    "uri": "nextcloud.local",
+    "title": "Nextcloud Social",
+    "version": "4.3.0 (compatible; Nextcloud Social 0.26.97)",
+    "short_description": "a safe home for your data",
+    "description": "a safe home for your data",
+    "email": "",
+    "urls": {},
+    "stats": {
+      "user_count": 10188,
+      "status_count": 18,
+      "domain_count": 0
+    },
+    "thumbnail": "http://nextcloud.local/apps-extra/social/img/social.svg",
+    "languages": [
+      "en"
+    ],
+    "registrations": false,
+    "approval_required": false,
+    "invites_enabled": false,
+    "configuration": {
+      "statuses": {
+        "max_characters": 5000,
+        "max_media_attachments": 10,
+        "characters_reserved_per_url": 23
+      },
+      "media_attachments": {
+        "supported_mime_types": [
+          "image/jpeg",
+          "image/gif",
+          "image/png",
+          "image/webp",
+          "image/avif",
+          "image/heic",
+          "video/mp4",
+          "video/webm",
+          "video/quicktime",
+          "audio/mpeg",
+          "audio/mp4",
+          "audio/ogg",
+          "audio/opus",
+          "audio/wav",
+          "audio/x-wav",
+          "audio/flac",
+          "audio/aac",
+          "application/pdf",
+          "text/plain",
+          "text/markdown",
+          "text/csv",
+          "application/zip",
+          "application/epub+zip",
+          "application/vnd.oasis.opendocument.text",
+          "application/vnd.oasis.opendocument.spreadsheet",
+          "application/vnd.oasis.opendocument.presentation",
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+        ],
+        "image_size_limit": 10485760,
+        "video_size_limit": 2147483648,
+        "image_matrix_limit": 50000000,
+        "video_frame_rate_limit": 0,
+        "video_matrix_limit": 0
+      },
+      "polls": {
+        "max_options": 4,
+        "max_characters_per_option": 100,
+        "min_expiration": 300,
+        "max_expiration": 2629746
+      },
+      "accounts": {
+        "max_featured_tags": 10
+      },
+      "translation": {
+        "enabled": false
+      }
+    },
+    "rules": [],
+    "contact_account": null
+  }
+}

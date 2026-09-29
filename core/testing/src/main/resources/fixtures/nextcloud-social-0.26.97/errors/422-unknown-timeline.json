@@ -1,0 +1,17 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/index.php/apps/social/api/v1/timelines/bogus"
+  },
+  "status": 422,
+  "headers": {
+    "content-type": "application/json; charset=utf-8",
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "x-ratelimit-limit": "60",
+    "x-ratelimit-remaining": "49",
+    "x-ratelimit-reset": "1790637300"
+  },
+  "body": {
+    "error": "unknown timeline"
+  }
+}

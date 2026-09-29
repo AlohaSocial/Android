@@ -1,0 +1,39 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/index.php/apps/social/api/v1/polls/1790637087495743511"
+  },
+  "status": 200,
+  "headers": {
+    "content-type": "application/json; charset=utf-8",
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "x-ratelimit-limit": "300",
+    "x-ratelimit-remaining": "218",
+    "x-ratelimit-reset": "1790637300"
+  },
+  "body": {
+    "id": "1790637087495743511",
+    "expires_at": "2026-09-29T23:11:27Z",
+    "expired": false,
+    "multiple": false,
+    "votes_count": 1,
+    "voters_count": 1,
+    "options": [
+      {
+        "title": "Photos",
+        "votes_count": 1
+      },
+      {
+        "title": "Video",
+        "votes_count": 0
+      },
+      {
+        "title": "Shorts",
+        "votes_count": 0
+      }
+    ],
+    "emojis": [],
+    "voted": false,
+    "own_votes": []
+  }
+}

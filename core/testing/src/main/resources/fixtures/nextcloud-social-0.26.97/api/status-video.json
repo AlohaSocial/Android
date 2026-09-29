@@ -1,0 +1,120 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/index.php/apps/social/api/v1/statuses/1790637104958214061"
+  },
+  "status": 200,
+  "headers": {
+    "content-type": "application/json; charset=utf-8",
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "x-ratelimit-limit": "300",
+    "x-ratelimit-remaining": "238",
+    "x-ratelimit-reset": "1790637300"
+  },
+  "body": {
+    "id": "1790637104958214061",
+    "nid": "1790637104958214061",
+    "local": true,
+    "archived": false,
+    "view_count": 0,
+    "tagged_people": [],
+    "interest": null,
+    "content": "<p>Test video <a href=\"http://nextcloud.local/index.php/apps/social/timeline/tags/video\" class=\"mention hashtag\" rel=\"nofollow noopener noreferrer\" target=\"_blank\">#video</a></p><p>00:00 Intro<br>00:10 Middle<br>00:20 End</p>",
+    "sensitive": false,
+    "spoiler_text": "",
+    "visibility": "public",
+    "language": "en",
+    "place": null,
+    "in_reply_to_id": null,
+    "in_reply_to_account_id": null,
+    "quote": null,
+    "quote_approval": {
+      "automatic": [
+        "public"
+      ],
+      "manual": [],
+      "current_user": "automatic"
+    },
+    "reply_approval": null,
+    "interaction_policy": null,
+    "dislikes_count": 0,
+    "disliked": false,
+    "video": {
+      "title": "Aloha test video"
+    },
+    "mentions": [],
+    "emojis": [],
+    "tags": [
+      {
+        "name": "video",
+        "url": "http://nextcloud.local/index.php/apps/social/timeline/tags/video"
+      }
+    ],
+    "replies_count": 0,
+    "reblogs_count": 0,
+    "favourites_count": 1,
+    "favourited": false,
+    "reblogged": false,
+    "muted": false,
+    "bookmarked": false,
+    "pinned": false,
+    "card": null,
+    "reactions": [],
+    "poll": null,
+    "uri": "http://nextcloud.local/index.php/apps/social/@alice/17906371045255950881",
+    "url": "http://nextcloud.local/index.php/apps/social/@alice/17906371045255950881",
+    "reblog": null,
+    "media_attachments": [
+      {
+        "id": "12",
+        "type": "video",
+        "media_type": "video/mp4",
+        "url": "http://nextcloud.local/index.php/apps/social/media/09c96321-538a-4d33-a3e3-e326ba1c5a56.mp4",
+        "preview_url": "http://nextcloud.local/index.php/apps/social/media/09c96321-538a-4d33-a3e3-e326ba1c5a56.mp4",
+        "hls_url": null,
+        "remote_url": null,
+        "cache_error": null,
+        "meta": {
+          "original": [],
+          "small": [],
+          "focus": {
+            "x": 0,
+            "y": 0
+          }
+        },
+        "description": "A 30 second test pattern with a tone",
+        "blurhash": null
+      }
+    ],
+    "created_at": "2026-09-28T23:11:44.000Z",
+    "edited_at": null,
+    "noindex": false,
+    "account": {
+      "id": "6",
+      "nid": "6",
+      "username": "alice",
+      "acct": "alice",
+      "display_name": "alice",
+      "locked": false,
+      "bot": false,
+      "discoverable": false,
+      "indexable": false,
+      "group": false,
+      "created_at": "2026-09-28T23:06:02.000Z",
+      "note": "",
+      "url": "http://nextcloud.local/index.php/apps/social/@alice",
+      "avatar": "",
+      "avatar_static": "",
+      "header": "http://nextcloud.local/index.php/avatar/alice/128",
+      "header_static": "http://nextcloud.local/index.php/avatar/alice/128",
+      "followers_count": 2,
+      "following_count": 2,
+      "statuses_count": 13,
+      "last_status_at": null,
+      "emojis": [],
+      "fields": [],
+      "pronouns": "",
+      "support_link": ""
+    }
+  }
+}

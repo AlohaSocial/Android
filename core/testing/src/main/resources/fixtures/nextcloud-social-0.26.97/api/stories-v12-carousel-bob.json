@@ -1,0 +1,43 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/index.php/apps/social/api/v1.2/stories/carousel"
+  },
+  "status": 200,
+  "headers": {
+    "content-type": "application/json; charset=utf-8",
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "x-ratelimit-limit": "300",
+    "x-ratelimit-remaining": "188",
+    "x-ratelimit-reset": "1790637300"
+  },
+  "body": {
+    "self": null,
+    "nodes": [
+      {
+        "id": "6",
+        "user": {
+          "id": "6",
+          "username": "alice",
+          "username_acct": "alice",
+          "avatar": "",
+          "local": true,
+          "is_author": false
+        },
+        "nodes": [
+          {
+            "id": "1",
+            "pid": "6",
+            "type": "photo",
+            "src": "http://nextcloud.local/index.php/apps/social/media/cb5b6a0e-ce7a-49fb-bd9a-0e63c9a345c5.jpeg",
+            "duration": 8,
+            "seen": false,
+            "created_at": "2026-09-28T23:11:54+00:00"
+          }
+        ],
+        "url": "http://nextcloud.local/index.php/apps/social/@alice",
+        "seen": false
+      }
+    ]
+  }
+}

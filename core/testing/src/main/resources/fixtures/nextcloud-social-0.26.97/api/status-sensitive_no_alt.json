@@ -1,0 +1,123 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/index.php/apps/social/api/v1/statuses/1790637103267719986"
+  },
+  "status": 200,
+  "headers": {
+    "content-type": "application/json; charset=utf-8",
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "x-ratelimit-limit": "300",
+    "x-ratelimit-remaining": "239",
+    "x-ratelimit-reset": "1790637300"
+  },
+  "body": {
+    "id": "1790637103267719986",
+    "nid": "1790637103267719986",
+    "local": true,
+    "archived": false,
+    "view_count": 0,
+    "tagged_people": [],
+    "interest": null,
+    "content": "<p>A picture without alt text, marked sensitive</p>",
+    "sensitive": true,
+    "spoiler_text": "",
+    "visibility": "public",
+    "language": "en",
+    "place": null,
+    "in_reply_to_id": null,
+    "in_reply_to_account_id": null,
+    "quote": null,
+    "quote_approval": {
+      "automatic": [
+        "public"
+      ],
+      "manual": [],
+      "current_user": "automatic"
+    },
+    "reply_approval": null,
+    "interaction_policy": null,
+    "dislikes_count": null,
+    "disliked": null,
+    "video": null,
+    "mentions": [],
+    "emojis": [],
+    "tags": [],
+    "replies_count": 0,
+    "reblogs_count": 0,
+    "favourites_count": 0,
+    "favourited": false,
+    "reblogged": false,
+    "muted": false,
+    "bookmarked": false,
+    "pinned": false,
+    "card": null,
+    "reactions": [],
+    "poll": null,
+    "uri": "http://nextcloud.local/index.php/apps/social/@alice/17906371033997341160",
+    "url": "http://nextcloud.local/index.php/apps/social/@alice/17906371033997341160",
+    "reblog": null,
+    "media_attachments": [
+      {
+        "id": "11",
+        "type": "image",
+        "media_type": "image/png",
+        "url": "http://nextcloud.local/index.php/apps/social/media/347a8309-ea20-4900-8e4c-aff1e8b6a98b.png",
+        "preview_url": "http://nextcloud.local/index.php/apps/social/media/6bb97fab-b644-4c51-8b1b-8ea5921fdef0.png",
+        "hls_url": null,
+        "remote_url": null,
+        "cache_error": null,
+        "meta": {
+          "original": {
+            "width": 1080,
+            "height": 1080,
+            "size": "1080x1080",
+            "aspect": 1
+          },
+          "small": {
+            "width": 800,
+            "height": 800,
+            "size": "800x800",
+            "aspect": 1
+          },
+          "focus": {
+            "x": 0,
+            "y": 0
+          }
+        },
+        "description": null,
+        "blurhash": "LRF~:K*DD7L+S^o@$T+kR5wiM_IU"
+      }
+    ],
+    "created_at": "2026-09-28T23:11:43.000Z",
+    "edited_at": null,
+    "noindex": false,
+    "account": {
+      "id": "6",
+      "nid": "6",
+      "username": "alice",
+      "acct": "alice",
+      "display_name": "alice",
+      "locked": false,
+      "bot": false,
+      "discoverable": false,
+      "indexable": false,
+      "group": false,
+      "created_at": "2026-09-28T23:06:02.000Z",
+      "note": "",
+      "url": "http://nextcloud.local/index.php/apps/social/@alice",
+      "avatar": "",
+      "avatar_static": "",
+      "header": "http://nextcloud.local/index.php/avatar/alice/128",
+      "header_static": "http://nextcloud.local/index.php/avatar/alice/128",
+      "followers_count": 2,
+      "following_count": 2,
+      "statuses_count": 13,
+      "last_status_at": null,
+      "emojis": [],
+      "fields": [],
+      "pronouns": "",
+      "support_link": ""
+    }
+  }
+}

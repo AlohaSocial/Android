@@ -1,0 +1,24 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/index.php/apps/social/api/v1/lists"
+  },
+  "status": 200,
+  "headers": {
+    "content-type": "application/json; charset=utf-8",
+    "cache-control": "private, no-cache",
+    "etag": "\"e1c064339408d0d30ed26dbb3ef3fab70442c210\"",
+    "x-ratelimit-limit": "300",
+    "x-ratelimit-remaining": "209",
+    "x-ratelimit-reset": "1790637300"
+  },
+  "body": [
+    {
+      "id": "1",
+      "title": "Friends",
+      "replies_policy": "list",
+      "exclusive": false,
+      "nextcloud_group": null
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "request": {
+    "method": "POST",
+    "path": "/index.php/apps/social/api/v1/statuses"
+  },
+  "status": 422,
+  "headers": {
+    "content-type": "application/json; charset=utf-8",
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "x-ratelimit-limit": "30",
+    "x-ratelimit-remaining": "27",
+    "x-ratelimit-reset": "1790637300"
+  },
+  "body": {
+    "error": "unknown visibility: bogus"
+  }
+}

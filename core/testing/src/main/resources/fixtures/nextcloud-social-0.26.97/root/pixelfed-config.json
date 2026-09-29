@@ -1,0 +1,65 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/index.php/apps/social/api/v2/config"
+  },
+  "status": 200,
+  "headers": {
+    "content-type": "application/json; charset=utf-8",
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "x-ratelimit-limit": "300",
+    "x-ratelimit-remaining": "266",
+    "x-ratelimit-reset": "1790637300"
+  },
+  "body": {
+    "open_registration": false,
+    "uploader": {
+      "max_photo_size": 10240,
+      "max_caption_length": 5000,
+      "max_altext_length": 1500,
+      "album_limit": 10,
+      "image_quality": 100,
+      "optimize_image": false,
+      "optimize_video": false,
+      "media_types": "image/jpeg,image/gif,image/png,image/webp,image/avif,image/heic,video/mp4,video/webm,video/quicktime,audio/mpeg,audio/mp4,audio/ogg,audio/opus,audio/wav,audio/x-wav,audio/flac,audio/aac,application/pdf,text/plain,text/markdown,text/csv,application/zip,application/epub+zip,application/vnd.oasis.opendocument.text,application/vnd.oasis.opendocument.spreadsheet,application/vnd.oasis.opendocument.presentation,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      "max_collection_length": 100
+    },
+    "site": {
+      "name": "Nextcloud Social",
+      "domain": "nextcloud.local",
+      "url": "http://nextcloud.local/index.php",
+      "description": "a safe home for your data"
+    },
+    "account": {
+      "max_bio_length": 500,
+      "max_name_length": 255
+    },
+    "features": {
+      "albums": true,
+      "collections": true,
+      "stories": true,
+      "places": true,
+      "hashtags": true,
+      "video": true,
+      "polls": true,
+      "bookmarks": true,
+      "mobile_apis": true,
+      "circles": false,
+      "direct_messages": true,
+      "live_streaming": false,
+      "push_notifications": false,
+      "stories_reactions": true
+    },
+    "limits": {
+      "max_album_length": 10,
+      "max_caption_length": 5000,
+      "max_altext_length": 1500,
+      "story_length": 40,
+      "story_lifetime": 86400
+    },
+    "activitypub": {
+      "enabled": true,
+      "remote_follow": true
+    }
+  }
+}

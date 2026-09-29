@@ -1,0 +1,14 @@
+{
+  "request": {
+    "method": "POST",
+    "path": "/index.php/apps/social/oauth/token"
+  },
+  "status": 200,
+  "headers": {},
+  "body": {
+    "access_token": "REDACTED",
+    "token_type": "Bearer",
+    "scope": "read write follow push",
+    "created_at": 1790636918
+  }
+}

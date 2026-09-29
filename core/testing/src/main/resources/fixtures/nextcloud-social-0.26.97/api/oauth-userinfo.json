@@ -1,0 +1,21 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/index.php/apps/social/oauth/userinfo"
+  },
+  "status": 200,
+  "headers": {
+    "content-type": "application/json; charset=utf-8",
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "x-ratelimit-limit": "300",
+    "x-ratelimit-remaining": "262",
+    "x-ratelimit-reset": "1790637300"
+  },
+  "body": {
+    "sub": "http://nextcloud.local/index.php/apps/social/@alice",
+    "name": "alice",
+    "preferred_username": "alice",
+    "profile": "http://nextcloud.local/index.php/apps/social/@alice",
+    "picture": ""
+  }
+}

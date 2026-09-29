@@ -1,0 +1,47 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/index.php/apps/social/api/v1/accounts/6/highlights"
+  },
+  "status": 200,
+  "headers": {
+    "content-type": "application/json; charset=utf-8",
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "x-ratelimit-limit": "60",
+    "x-ratelimit-remaining": "59",
+    "x-ratelimit-reset": "1790640000"
+  },
+  "body": {
+    "available": true,
+    "since": 1790636762,
+    "weeks": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      13
+    ],
+    "week_starts": 1783555200,
+    "hashtags": [
+      {
+        "name": "aloha",
+        "count": 1
+      },
+      {
+        "name": "android",
+        "count": 1
+      },
+      {
+        "name": "audio",
+        "count": 1
+      }
+    ]
+  }
+}

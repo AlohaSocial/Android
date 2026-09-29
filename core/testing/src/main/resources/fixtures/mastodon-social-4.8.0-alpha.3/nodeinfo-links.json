@@ -1,0 +1,20 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/.well-known/nodeinfo"
+  },
+  "status": 200,
+  "headers": {
+    "cache-control": "max-age=259200, public",
+    "content-type": "application/json; charset=utf-8",
+    "etag": "W/\"2e5c6a3d0480ec4e1aca2c01d42f0238\""
+  },
+  "body": {
+    "links": [
+      {
+        "rel": "http://nodeinfo.diaspora.software/ns/schema/2.0",
+        "href": "https://mastodon.social/nodeinfo/2.0"
+      }
+    ]
+  }
+}

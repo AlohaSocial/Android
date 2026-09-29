@@ -1,0 +1,19 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/index.php/apps/social/api/v1/statuses/1790637112034926731/source"
+  },
+  "status": 200,
+  "headers": {
+    "content-type": "application/json; charset=utf-8",
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "x-ratelimit-limit": "300",
+    "x-ratelimit-remaining": "222",
+    "x-ratelimit-reset": "1790637300"
+  },
+  "body": {
+    "id": "1790637112034926731",
+    "text": "First draft, edited",
+    "spoiler_text": ""
+  }
+}

@@ -1,0 +1,118 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/index.php/apps/social/api/v1/statuses/1790637104870044831"
+  },
+  "status": 200,
+  "headers": {
+    "content-type": "application/json; charset=utf-8",
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "x-ratelimit-limit": "300",
+    "x-ratelimit-remaining": "237",
+    "x-ratelimit-reset": "1790637300"
+  },
+  "body": {
+    "id": "1790637104870044831",
+    "nid": "1790637104870044831",
+    "local": true,
+    "archived": false,
+    "view_count": 0,
+    "tagged_people": [],
+    "interest": null,
+    "content": "<p>Vertical test <a href=\"http://nextcloud.local/index.php/apps/social/timeline/tags/shorts\" class=\"mention hashtag\" rel=\"nofollow noopener noreferrer\" target=\"_blank\">#shorts</a></p>",
+    "sensitive": false,
+    "spoiler_text": "",
+    "visibility": "public",
+    "language": "en",
+    "place": null,
+    "in_reply_to_id": null,
+    "in_reply_to_account_id": null,
+    "quote": null,
+    "quote_approval": {
+      "automatic": [
+        "public"
+      ],
+      "manual": [],
+      "current_user": "automatic"
+    },
+    "reply_approval": null,
+    "interaction_policy": null,
+    "dislikes_count": 0,
+    "disliked": false,
+    "video": null,
+    "mentions": [],
+    "emojis": [],
+    "tags": [
+      {
+        "name": "shorts",
+        "url": "http://nextcloud.local/index.php/apps/social/timeline/tags/shorts"
+      }
+    ],
+    "replies_count": 0,
+    "reblogs_count": 0,
+    "favourites_count": 0,
+    "favourited": false,
+    "reblogged": false,
+    "muted": false,
+    "bookmarked": false,
+    "pinned": false,
+    "card": null,
+    "reactions": [],
+    "poll": null,
+    "uri": "http://nextcloud.local/index.php/apps/social/@alice/17906371044200157676",
+    "url": "http://nextcloud.local/index.php/apps/social/@alice/17906371044200157676",
+    "reblog": null,
+    "media_attachments": [
+      {
+        "id": "13",
+        "type": "video",
+        "media_type": "video/mp4",
+        "url": "http://nextcloud.local/index.php/apps/social/media/9ca843a2-645e-439f-901c-3fd1d58c22b6.mp4",
+        "preview_url": "http://nextcloud.local/index.php/apps/social/media/9ca843a2-645e-439f-901c-3fd1d58c22b6.mp4",
+        "hls_url": null,
+        "remote_url": null,
+        "cache_error": null,
+        "meta": {
+          "original": [],
+          "small": [],
+          "focus": {
+            "x": 0,
+            "y": 0
+          }
+        },
+        "description": "A 12 second vertical test pattern",
+        "blurhash": null
+      }
+    ],
+    "created_at": "2026-09-28T23:11:44.000Z",
+    "edited_at": null,
+    "noindex": false,
+    "account": {
+      "id": "6",
+      "nid": "6",
+      "username": "alice",
+      "acct": "alice",
+      "display_name": "alice",
+      "locked": false,
+      "bot": false,
+      "discoverable": false,
+      "indexable": false,
+      "group": false,
+      "created_at": "2026-09-28T23:06:02.000Z",
+      "note": "",
+      "url": "http://nextcloud.local/index.php/apps/social/@alice",
+      "avatar": "",
+      "avatar_static": "",
+      "header": "http://nextcloud.local/index.php/avatar/alice/128",
+      "header_static": "http://nextcloud.local/index.php/avatar/alice/128",
+      "followers_count": 2,
+      "following_count": 2,
+      "statuses_count": 13,
+      "last_status_at": null,
+      "emojis": [],
+      "fields": [],
+      "pronouns": "",
+      "support_link": ""
+    }
+  }
+}
