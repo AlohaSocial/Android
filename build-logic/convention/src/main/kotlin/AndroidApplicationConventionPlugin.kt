@@ -8,6 +8,7 @@ import org.gradle.kotlin.dsl.configure
 import social.aloha.buildlogic.configureAndroid
 import social.aloha.buildlogic.configureFlavors
 import social.aloha.buildlogic.configureStaticAnalysis
+import social.aloha.buildlogic.registerUnitTestAggregate
 import social.aloha.buildlogic.libs
 import social.aloha.buildlogic.version
 
@@ -30,6 +31,7 @@ class AndroidApplicationConventionPlugin : Plugin<Project> {
                 }
             }
             configureStaticAnalysis()
+            registerUnitTestAggregate()
         }
     }
 }

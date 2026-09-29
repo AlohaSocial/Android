@@ -11,6 +11,7 @@ import social.aloha.buildlogic.configureKotlin
 import social.aloha.buildlogic.configureStaticAnalysis
 import social.aloha.buildlogic.library
 import social.aloha.buildlogic.libs
+import social.aloha.buildlogic.registerUnitTestAggregate
 
 /**
  * A pure Kotlin module (`:core:model`, `:core:html`, …): no Android SDK on the
@@ -26,6 +27,7 @@ class JvmLibraryConventionPlugin : Plugin<Project> {
             }
             configureKotlin()
             configureStaticAnalysis()
+            registerUnitTestAggregate()
             dependencies {
                 add("testImplementation", platform(libs.library("junit-bom")))
                 add("testImplementation", libs.library("junit-jupiter"))

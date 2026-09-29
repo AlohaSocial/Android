@@ -142,6 +142,7 @@
             <trusting group="org.junit" />
             <trusting group="org.junit.jupiter" />
             <trusting group="org.junit.platform" />
+            <trusting group="org.junit.vintage" name="junit-vintage-engine" version="6.1.3" />
             <trusting group="org.opentest4j" />
          </trusted-key>
       </trusted-keys>
