@@ -7,7 +7,7 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":third-party:material-color-utilities"))
+    implementation(libs.materialkolor.utilities)
     api(libs.compose.material3)
     api(libs.compose.material.icons.extended)
     testImplementation(libs.junit4)
