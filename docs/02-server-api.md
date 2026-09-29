@@ -14,6 +14,10 @@ This is the Apple app's specification, carried over as the product contract for 
 | New accounts | `verify_credentials`, `accounts/lookup` and the first post answer 500 until the avatar cache job runs. |
 | Places and reactions | `place_*` is never stored; reactions come only from `/statuses/{id}/reactions`. |
 | Web-server rules | Show the server's own `contrib/webserver` files; the snippet described here is outdated. |
+| Client | Plain OkHttp with kotlinx.serialization, one `ApiClient` per account base. Decoding is lenient (ids, URLs, booleans and dates in any of the shapes servers send) and lossy (a malformed row in a list is dropped and recorded, the rest of the page stays). |
+| Errors | `ApiError` adds three cases to §6: `UntrustedCertificate` (the chain, for the person to decide), `ForeignCursor` (a `Link` cursor on another origin than the API base, never followed) and `UnsafePath` (a path segment from server data that would resolve as `.` or `..`, never sent). 404 and 410 are both `NotFound`. |
+| Rate limiting | A read answered 429 with a `Retry-After` of five seconds or less (or none) is retried once, after the per-host limiter has waited it out; a write never is. |
+| TLS | System CAs, plus certificates a person trusted for one host, kept in app-private storage and never system-wide. A client certificate is picked from the system KeyChain per host and presented to that host only. |
 
 ---
 
