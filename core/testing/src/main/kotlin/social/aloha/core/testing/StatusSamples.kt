@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 Aloha Social contributors
 // SPDX-License-Identifier: MIT
 
-package social.aloha.core.ui
+package social.aloha.core.testing
 
 import java.time.Instant
 import social.aloha.core.model.Account
@@ -15,17 +15,17 @@ import social.aloha.core.model.QuotedStatus
 import social.aloha.core.model.Status
 import social.aloha.core.model.Visibility
 
-/** Statuses for the row tests, dated against [NOW]. */
-internal object StatusSamples {
-    val NOW: Instant = Instant.parse("2026-09-29T12:00:00Z")
-    val alice = Account("1", "alice", "alice", displayName = "Alice Example")
-    val bob = Account("2", "bob", "bob@other.social", displayName = "Bob")
+/** Statuses for the row and screen tests, dated against [NOW]. */
+public object StatusSamples {
+    public val NOW: Instant = Instant.parse("2026-09-29T12:00:00Z")
+    public val alice: Account = Account("1", "alice", "alice", displayName = "Alice Example")
+    public val bob: Account = Account("2", "bob", "bob@other.social", displayName = "Bob")
     private const val BLURHASH = "LEHV6nWB2yk8pyo0adR*.7kCMdnj"
 
     private const val BEACH =
         "<p>Aloha from the <a href=\"https://cloud.example/tags/beach\" class=\"hashtag\">#beach</a>!</p>"
 
-    fun post(content: String = BEACH) = Status(
+    public fun post(content: String = BEACH): Status = Status(
         "10",
         alice,
         url = "https://cloud.example/@alice/10",
@@ -36,7 +36,7 @@ internal object StatusSamples {
         favouritesCount = 12,
     )
 
-    fun image(id: String, alt: String? = "A sunny beach") = MediaAttachment(
+    public fun image(id: String, alt: String? = "A sunny beach"): MediaAttachment = MediaAttachment(
         id,
         AttachmentKind.Image,
         url = "https://cloud.example/m/$id.jpg",
@@ -45,27 +45,27 @@ internal object StatusSamples {
         blurhash = BLURHASH,
     )
 
-    val boost = Status("20", bob, createdAt = NOW.minusSeconds(60), reblog = post())
+    public val boost: Status = Status("20", bob, createdAt = NOW.minusSeconds(60), reblog = post())
 
-    val reply = post().copy(
+    public val reply: Status = post().copy(
         id = "11",
         inReplyToId = "9",
         inReplyToAccountId = "2",
         mentions = listOf(Mention("2", "bob", "bob@other.social")),
     )
 
-    val selfReply = post().copy(id = "12", inReplyToId = "10", inReplyToAccountId = "1")
+    public val selfReply: Status = post().copy(id = "12", inReplyToId = "10", inReplyToAccountId = "1")
 
-    val spoiler = post().copy(id = "13", spoilerText = "Spoilers for the finale")
+    public val spoiler: Status = post().copy(id = "13", spoilerText = "Spoilers for the finale")
 
-    val sensitive = post().copy(id = "14", sensitive = true, mediaAttachments = listOf(image("a")))
+    public val sensitive: Status = post().copy(id = "14", sensitive = true, mediaAttachments = listOf(image("a")))
 
-    val gallery = post().copy(
+    public val gallery: Status = post().copy(
         id = "15",
         mediaAttachments = listOf(image("a"), image("b", alt = null), image("c"), image("d")),
     )
 
-    val poll = post().copy(
+    public val poll: Status = post().copy(
         id = "16",
         content = "<p>Where next?</p>",
         poll = Poll(
@@ -77,9 +77,9 @@ internal object StatusSamples {
         ),
     )
 
-    val pollResults = poll.copy(id = "17", poll = poll.poll!!.copy(voted = true, ownVotes = listOf(1)))
+    public val pollResults: Status = poll.copy(id = "17", poll = poll.poll!!.copy(voted = true, ownVotes = listOf(1)))
 
-    val linked = post().copy(
+    public val linked: Status = post().copy(
         id = "18",
         content = "<p>Worth reading</p>",
         card = Card(
@@ -90,7 +90,7 @@ internal object StatusSamples {
         ),
     )
 
-    val quoting = post().copy(
+    public val quoting: Status = post().copy(
         id = "19",
         content = "<p>So true</p>",
         quote = QuotedStatus(
@@ -99,7 +99,7 @@ internal object StatusSamples {
         ),
     )
 
-    val direct = post().copy(
+    public val direct: Status = post().copy(
         id = "21",
         visibility = Visibility.Direct,
         editedAt = NOW.minusSeconds(100),

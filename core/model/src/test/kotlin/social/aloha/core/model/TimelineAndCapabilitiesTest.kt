@@ -98,9 +98,15 @@ class TimelineAndCapabilitiesTest {
     fun `capabilities go stale after a day and are stale before detection`() {
         val now = Instant.parse("2026-09-29T12:00:00Z")
         assertTrue(ServerCapabilities.minimal("https://x.test/").isStale(now))
-        val fresh = ServerCapabilities(apiBase = "https://x.test/", detectedAt = now.minus(Duration.ofHours(23)))
+        val fresh = ServerCapabilities(
+            apiBase = "https://x.test/",
+            detectedAt = now.minus(Duration.ofHours(23)),
+            format = ServerCapabilities.CURRENT_FORMAT,
+        )
         assertFalse(fresh.isStale(now))
         assertTrue(fresh.copy(detectedAt = now.minus(Duration.ofHours(25))).isStale(now))
+        // written before the newest field was detected: detected again at once
+        assertTrue(fresh.copy(format = 0).isStale(now))
     }
 
     @Test
@@ -125,5 +131,13 @@ class TimelineAndCapabilitiesTest {
         assertTrue(ServerIds.isNewer("1790637085797595892", "1790637085797595891"))
         assertEquals("100", ServerIds.newest(listOf("99", "100", "7")))
         assertEquals(0, ServerIds.compare("42", "42"))
+    }
+
+    @Test
+    fun `capabilities stored before live feeds were read keep both feeds`() {
+        val stored = """{"apiBase":"https://m.test/"}"""
+        val capabilities = Json.decodeFromString(ServerCapabilities.serializer(), stored)
+        assertTrue(capabilities.localFeed)
+        assertTrue(capabilities.federatedFeed)
     }
 }

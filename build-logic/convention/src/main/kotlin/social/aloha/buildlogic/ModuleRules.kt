@@ -6,7 +6,7 @@ package social.aloha.buildlogic
 /**
  * The allowed module graph. `:app` may depend on anything, a feature
  * only on `:core:*`, nothing on a feature, and each core module only on what its
- * row lists.
+ * row lists. Any module's tests may use the shared `:core:testing` support.
  */
 object ModuleRules {
     private const val MODEL = ":core:model"
@@ -29,8 +29,9 @@ object ModuleRules {
 
     private val widget = setOf(":core:data", ":core:navigation", ":core:designsystem", MODEL)
 
-    fun allows(from: String, to: String): Boolean = when {
+    fun allows(from: String, to: String, testOnly: Boolean = false): Boolean = when {
         from == ":app" -> true
+        testOnly && to == ":core:testing" -> true
         from == ":benchmark" -> to == ":app"
         to.startsWith(":feature:") -> false
         from.startsWith(":feature:") -> to.startsWith(":core:")

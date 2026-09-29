@@ -14,17 +14,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonNull
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.jsonArray
-import kotlinx.serialization.json.jsonObject
-import mockwebserver3.Dispatcher
-import mockwebserver3.MockResponse
 import mockwebserver3.MockWebServer
-import mockwebserver3.RecordedRequest
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
 import org.junit.After
@@ -55,44 +45,6 @@ import social.aloha.core.model.SignedInAccount
 import social.aloha.core.model.TimelineKey
 import social.aloha.core.model.TimelineSource
 import social.aloha.core.network.RateLimiter
-
-/**
- * A timeline of numbered statuses, paged the way Mastodon and Nextcloud Social page it (checked against
- * the dev instance): `max_id` answers what lies below, `min_id` the posts immediately above, `since_id`
- * the newest above. New posts are added by raising [newest].
- */
-private class NumberedTimeline(template: JsonObject) : Dispatcher() {
-    @Volatile var newest = 0
-    private val template = JsonObject(template + ("reblog" to JsonNull))
-
-    override fun dispatch(request: RecordedRequest): MockResponse {
-        val url = request.url
-        val limit = url.queryParameter("limit")?.toInt() ?: 20
-        val ids = pick(url, limit)
-        val body = JsonArray(ids.map { JsonObject(template + ("id" to JsonPrimitive(it.toString()))) })
-        val builder = MockResponse.Builder().code(
-            200,
-        ).body(body.toString()).addHeader("content-type", "application/json")
-        ids.lastOrNull()?.let {
-            val next = url.newBuilder().removeAllQueryParameters(
-                "min_id",
-            ).removeAllQueryParameters("since_id").setQueryParameter("max_id", it.toString()).build()
-            builder.addHeader("link", "<$next>; rel=\"next\"")
-        }
-        return builder.build()
-    }
-
-    private fun pick(url: HttpUrl, limit: Int): List<Int> {
-        val max = url.queryParameter("max_id")?.toInt()
-        val min = url.queryParameter("min_id")?.toInt()
-        val since = url.queryParameter("since_id")?.toInt()
-        return when {
-            max != null -> (max - 1 downTo 1).take(limit)
-            min != null -> (min + 1..newest).take(limit).reversed()
-            else -> (newest downTo (since ?: 0) + 1).take(limit)
-        }
-    }
-}
 
 @RunWith(RobolectricTestRunner::class)
 class TimelineRepositoryTest {
@@ -126,13 +78,6 @@ class TimelineRepositoryTest {
         accountsDb.close()
         cache.close()
         servers.forEach { it.close() }
-    }
-
-    private fun template(): JsonObject {
-        val fixture = javaClass.classLoader!!.getResource(
-            "fixtures/nextcloud-social-0.26.97/api/timeline-home.json",
-        )!!.readText()
-        return Json.parseToJsonElement(fixture).jsonObject.getValue("body").jsonArray.first().jsonObject
     }
 
     private suspend fun signedInAt(
@@ -183,7 +128,7 @@ class TimelineRepositoryTest {
 
     @Test
     fun `a busy hour opens a gap under the newest posts, and filling it closes it`() = runBlocking {
-        val timeline = NumberedTimeline(template()).apply { newest = 100 }
+        val timeline = NumberedTimeline().apply { newest = 100 }
         val server = MockWebServer().apply {
             dispatcher = timeline
             start()
@@ -214,7 +159,7 @@ class TimelineRepositoryTest {
 
     @Test
     fun `paging older follows the server's cursor and stops at the end`() = runBlocking {
-        val timeline = NumberedTimeline(template()).apply { newest = 30 }
+        val timeline = NumberedTimeline().apply { newest = 30 }
         val server = MockWebServer().apply {
             dispatcher = timeline
             start()
@@ -228,7 +173,7 @@ class TimelineRepositoryTest {
 
     @Test
     fun `a status updated once is updated in every timeline showing it`() = runBlocking {
-        val timeline = NumberedTimeline(template()).apply { newest = 5 }
+        val timeline = NumberedTimeline().apply { newest = 5 }
         val server = MockWebServer().apply {
             dispatcher = timeline
             start()
@@ -249,7 +194,7 @@ class TimelineRepositoryTest {
 
     @Test
     fun `a second refresh of the same timeline while one is running does not fetch twice`() = runBlocking {
-        val timeline = NumberedTimeline(template()).apply { newest = 5 }
+        val timeline = NumberedTimeline().apply { newest = 5 }
         val server = MockWebServer().apply {
             dispatcher = timeline
             start()

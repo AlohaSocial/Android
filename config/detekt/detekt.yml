@@ -31,7 +31,8 @@ complexity:
   LongParameterList:
     functionThreshold: 5
     constructorThreshold: 7
-    ignoreAnnotated: ['Composable']
+    # an injected constructor is never called by hand: its length is the dependency graph, not a call site
+    ignoreAnnotated: ['Composable', 'Inject']
     ignoreDefaultParameters: true
   NestedBlockDepth:
     threshold: 3
@@ -50,8 +51,8 @@ style:
     ignorePropertyDeclaration: true
     ignoreCompanionObjectPropertyDeclaration: true
     ignoreAnnotated: ['Preview', 'AlohaPreviews']
-    # colour and dimension tokens are the design system's purpose
-    excludes: ['**/test/**', '**/androidTest/**', '**/build-logic/**', '**/core/designsystem/src/main/**']
+    # colour and dimension tokens are the design system's purpose; test fixtures are data
+    excludes: ['**/test/**', '**/androidTest/**', '**/build-logic/**', '**/core/designsystem/src/main/**', '**/core/testing/src/main/**']
   WildcardImport:
     active: true
     excludeImports: []

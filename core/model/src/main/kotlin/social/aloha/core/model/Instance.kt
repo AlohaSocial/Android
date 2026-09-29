@@ -38,6 +38,8 @@ public data class InstanceDescription(
     val translationEnabled: Boolean = false,
     val apiVersions: Map<String, Int> = emptyMap(),
     val limits: ServerLimits = ServerLimits.MastodonDefaults,
+    val localFeed: Boolean = true,
+    val federatedFeed: Boolean = true,
 ) {
     /** The Mastodon API generation this server implements, where it says. */
     val mastodonApiVersion: Int? get() = apiVersions["mastodon"]

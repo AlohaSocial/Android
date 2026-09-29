@@ -15,6 +15,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -31,13 +32,18 @@ import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaPreviews
 import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.designsystem.AlohaTheme
+import social.aloha.core.navigation.AccountKey
 import social.aloha.core.navigation.HomeKey
 import social.aloha.core.navigation.NotificationsKey
 import social.aloha.core.navigation.PhotosKey
 import social.aloha.core.navigation.ProfileKey
 import social.aloha.core.navigation.ShortsKey
+import social.aloha.core.navigation.TagKey
+import social.aloha.core.navigation.ThreadKey
 import social.aloha.core.navigation.TopLevelKey
 import social.aloha.core.navigation.VideoKey
+import social.aloha.core.ui.StatusNavigation
+import social.aloha.feature.timeline.TimelineRoute
 
 private data class TopLevelDestination(
     val key: TopLevelKey,
@@ -66,12 +72,29 @@ private val destinations = listOf(
 
 /**
  * The shell: a navigation suite (bar, rail or drawer by window size) around a
- * Navigation 3 display. Every destination is a placeholder until its phase.
+ * Navigation 3 display. [home] draws the home destination; destinations not yet
+ * built are placeholders.
  */
 @Composable
-fun AlohaApp() {
+fun AlohaApp(home: @Composable (StatusNavigation) -> Unit = { TimelineRoute(it) }) {
     val backStack = rememberNavBackStack(HomeKey)
-    val current = backStack.lastOrNull()
+    // a detail opened from a destination keeps that destination selected
+    val current = backStack.lastOrNull { it is TopLevelKey }
+    val statusNavigation = remember(backStack) {
+        object : StatusNavigation {
+            override fun openThread(statusId: String) {
+                backStack.add(ThreadKey(statusId))
+            }
+
+            override fun openProfile(accountId: String?, acct: String?) {
+                backStack.add(AccountKey(accountId, acct))
+            }
+
+            override fun openTag(name: String) {
+                backStack.add(TagKey(name))
+            }
+        }
+    }
     NavigationSuiteScaffold(
         navigationSuiteItems = {
             destinations.forEach { destination ->
@@ -100,19 +123,22 @@ fun AlohaApp() {
                 rememberViewModelStoreNavEntryDecorator(),
             ),
             entryProvider = entryProvider {
-                entry<HomeKey> { Placeholder(stringResource(R.string.destination_home)) }
+                entry<HomeKey> { home(statusNavigation) }
                 entry<PhotosKey> { Placeholder(stringResource(R.string.destination_photos)) }
                 entry<VideoKey> { Placeholder(stringResource(R.string.destination_video)) }
                 entry<ShortsKey> { Placeholder(stringResource(R.string.destination_shorts)) }
                 entry<NotificationsKey> { Placeholder(stringResource(R.string.destination_notifications)) }
                 entry<ProfileKey> { Placeholder(stringResource(R.string.destination_profile)) }
+                entry<ThreadKey> { Placeholder(stringResource(R.string.destination_thread)) }
+                entry<AccountKey> { Placeholder(stringResource(R.string.destination_profile)) }
+                entry<TagKey> { Placeholder("#${it.name}") }
             },
         )
     }
 }
 
 @Composable
-private fun Placeholder(title: String) {
+internal fun Placeholder(title: String) {
     Surface(Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
@@ -131,5 +157,5 @@ private fun Placeholder(title: String) {
 @AlohaPreviews
 @Composable
 private fun AlohaAppPreview() {
-    AlohaTheme { AlohaApp() }
+    AlohaTheme { AlohaApp(home = { Placeholder(stringResource(R.string.destination_home)) }) }
 }

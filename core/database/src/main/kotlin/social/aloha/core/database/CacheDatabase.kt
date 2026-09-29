@@ -21,11 +21,12 @@ import kotlinx.coroutines.flow.Flow
  * @property cachedAt when it was last written; a status no timeline points at goes a week after that.
  * @property authorId who posted it, and [boostedAuthorId] who posted what it boosts: blocking either
  *   removes it everywhere at once.
+ * @property reblogOfId what a boost boosts, so updating that post updates every boost of it too.
  */
 @Entity(
     tableName = "status",
     primaryKeys = ["accountId", "serverId"],
-    indices = [Index("accountId", "cachedAt")],
+    indices = [Index("accountId", "cachedAt"), Index("accountId", "reblogOfId")],
 )
 public data class CachedStatusEntity(
     val accountId: String,
@@ -36,6 +37,7 @@ public data class CachedStatusEntity(
     val plainText: String,
     val authorId: String,
     val boostedAuthorId: String?,
+    val reblogOfId: String?,
 )
 
 /**
@@ -55,6 +57,18 @@ public data class TimelineEntryEntity(
     val position: Long,
     val isGap: Boolean,
     val insertedAt: Long,
+)
+
+/**
+ * Where a person left a timeline: the row at the top of the screen and how far it was scrolled past.
+ * Kept with the cache because it points into it: clearing the cache clears where it pointed.
+ */
+@Entity(tableName = "timeline_position", primaryKeys = ["accountId", "timelineKey"])
+public data class TimelinePositionEntity(
+    val accountId: String,
+    val timelineKey: String,
+    val statusId: String,
+    val offset: Int,
 )
 
 /** A v2 filter of one account, as JSON, with its expiry lifted out for the sweep. */
@@ -130,18 +144,31 @@ public interface StatusDao {
     @Upsert
     public suspend fun upsert(status: CachedStatusEntity)
 
-    /** A deleted status, or one that answered 404: gone, and from every timeline. */
+    @Upsert
+    public suspend fun upsertAll(statuses: List<CachedStatusEntity>)
+
+    /** Every boost of [serverId], which carries a copy of it that must change when it does. */
+    @Query("SELECT * FROM status WHERE accountId = :accountId AND reblogOfId = :serverId")
+    public suspend fun boostsOf(accountId: String, serverId: String): List<CachedStatusEntity>
+
+    /** A deleted status, or one that answered 404: gone, with every boost of it, and from every timeline. */
     @Transaction
     public suspend fun delete(accountId: String, serverId: String) {
-        deleteStatus(accountId, serverId)
         deleteEntries(accountId, serverId)
+        deleteStatus(accountId, serverId)
     }
 
-    @Query("DELETE FROM status WHERE accountId = :accountId AND serverId = :serverId")
-    public suspend fun deleteStatus(accountId: String, serverId: String)
-
-    @Query("DELETE FROM timeline_entry WHERE accountId = :accountId AND statusId = :serverId")
+    // the boosts' entries go before the boosts, which name them
+    @Query(
+        """
+        DELETE FROM timeline_entry WHERE accountId = :accountId AND (statusId = :serverId OR statusId IN
+            (SELECT serverId FROM status WHERE accountId = :accountId AND reblogOfId = :serverId))
+        """,
+    )
     public suspend fun deleteEntries(accountId: String, serverId: String)
+
+    @Query("DELETE FROM status WHERE accountId = :accountId AND (serverId = :serverId OR reblogOfId = :serverId)")
+    public suspend fun deleteStatus(accountId: String, serverId: String)
 
     /**
      * Everything by [authorId], posted or boosted, gone from every timeline at once: blocking someone and
@@ -197,6 +224,15 @@ public interface FilterDao {
     public suspend fun upsert(filters: List<FilterEntity>)
 }
 
+@Dao
+public interface PositionDao {
+    @Query("SELECT * FROM timeline_position WHERE accountId = :accountId AND timelineKey = :timelineKey")
+    public suspend fun get(accountId: String, timelineKey: String): TimelinePositionEntity?
+
+    @Upsert
+    public suspend fun set(position: TimelinePositionEntity)
+}
+
 /** Removing an account takes everything it cached with it, at once. */
 @Dao
 public interface CacheAccountDao {
@@ -205,7 +241,11 @@ public interface CacheAccountDao {
         deleteEntries(accountId)
         deleteStatuses(accountId)
         deleteFilters(accountId)
+        deletePositions(accountId)
     }
+
+    @Query("DELETE FROM timeline_position WHERE accountId = :accountId")
+    public suspend fun deletePositions(accountId: String)
 
     @Query("DELETE FROM timeline_entry WHERE accountId = :accountId")
     public suspend fun deleteEntries(accountId: String)
@@ -222,7 +262,12 @@ public interface CacheAccountDao {
  * than migrating, and "clear cached content" deletes the file.
  */
 @Database(
-    entities = [CachedStatusEntity::class, TimelineEntryEntity::class, FilterEntity::class],
+    entities = [
+        CachedStatusEntity::class,
+        TimelineEntryEntity::class,
+        FilterEntity::class,
+        TimelinePositionEntity::class,
+    ],
     version = 1,
     exportSchema = true,
 )
@@ -234,6 +279,8 @@ public abstract class CacheDatabase : RoomDatabase() {
     public abstract fun filterDao(): FilterDao
 
     public abstract fun cacheAccountDao(): CacheAccountDao
+
+    public abstract fun positionDao(): PositionDao
 
     public companion object {
         public const val FILE_NAME: String = "cache.db"

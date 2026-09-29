@@ -20,6 +20,7 @@ import social.aloha.core.designsystem.AlohaTheme
 import social.aloha.core.html.RichTextCache
 import social.aloha.core.model.SensitiveMediaPolicy
 import social.aloha.core.model.Status
+import social.aloha.core.testing.StatusSamples
 
 /** What a screen reader can do on a card: whatever a tap on the card's own controls can. */
 @RunWith(RobolectricTestRunner::class)

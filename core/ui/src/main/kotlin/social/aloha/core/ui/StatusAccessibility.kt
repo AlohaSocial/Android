@@ -12,7 +12,10 @@ import androidx.compose.ui.text.LinkAnnotation
 import java.time.Instant
 import social.aloha.core.designsystem.AlohaIcons
 
-internal fun menuItems(row: StatusRowUi): List<Triple<StatusMenuItem, ImageVector, Int>> = buildList {
+internal fun menuItems(
+    row: StatusRowUi,
+    available: Set<StatusMenuItem> = StatusMenuItem.entries.toSet(),
+): List<Triple<StatusMenuItem, ImageVector, Int>> = buildList {
     add(Triple(StatusMenuItem.Share, AlohaIcons.Share, R.string.status_menu_share))
     if (row.url != null) {
         add(Triple(StatusMenuItem.CopyLink, AlohaIcons.CopyLink, R.string.status_menu_copy_link))
@@ -36,7 +39,7 @@ internal fun menuItems(row: StatusRowUi): List<Triple<StatusMenuItem, ImageVecto
         // report, block and mute are never more than two taps away
         add(Triple(StatusMenuItem.Report, AlohaIcons.Report, R.string.status_menu_report))
     }
-}
+}.filter { it.first in available }
 
 /** Who, when and what was said; the content warning instead of the body while it is closed. */
 @Composable
@@ -111,7 +114,9 @@ internal fun customActions(
                 ?: stringResource(R.string.status_media_no_description),
         ) { actions.onMedia(row, index) }
     }
-    val menu = menuItems(row).map { (item, _, text) -> action(stringResource(text)) { actions.onMenu(row, item) } }
+    val menu = menuItems(row, actions.menu).map { (item, _, text) ->
+        action(stringResource(text)) { actions.onMenu(row, item) }
+    }
     val spoiler = spoilerActions(row, controls)
     // behind a closed content warning, only opening it is offered: the rest is not on screen
     if (row.spoiler != null && !controls.spoilerRevealed) return spoiler + base + menu

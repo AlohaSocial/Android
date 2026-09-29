@@ -4,6 +4,7 @@
 package social.aloha.android
 
 import android.app.Application
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
@@ -47,7 +48,9 @@ class AppShellScreenshotTest {
 
     private fun capture(name: String, mode: ThemeMode = ThemeMode.Light, select: String? = null) {
         compose.setContent {
-            AlohaTheme(ThemeSettings(mode = mode)) { AlohaApp() }
+            AlohaTheme(ThemeSettings(mode = mode)) {
+                AlohaApp(home = { Placeholder(stringResource(R.string.destination_home)) })
+            }
         }
         select?.let { compose.onNodeWithText(it).performClick() }
         compose.onRoot().captureRoboImage("src/test/screenshots/$name.png")

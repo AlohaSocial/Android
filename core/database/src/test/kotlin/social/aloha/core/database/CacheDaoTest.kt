@@ -37,7 +37,12 @@ class CacheDaoTest {
         boosted: String? = null,
         cachedAt: Long = 1_000,
         account: String = "a",
-    ) = CachedStatusEntity(account, id, """{"id":"$id"}""", cachedAt, "text", "post $id", author, boosted)
+    ) = CachedStatusEntity(
+        account, id, """{"id":"$id"}""", cachedAt, "text", "post $id", author, boosted,
+        reblogOfId = boosted?.let {
+            "inner-$id"
+        },
+    )
 
     private fun entry(
         id: String,
@@ -110,6 +115,46 @@ class CacheDaoTest {
         database.statusDao().deleteByAuthor("a", "bob")
         assertEquals(listOf("other"), database.timelineDao().entries("a", "home:home").map { it.statusId })
         assertNull(database.statusDao().get("a", "own"))
+    }
+
+    @Test
+    fun `the boosts of a status are found by what they boost`() = runBlocking {
+        val statuses = database.statusDao()
+        statuses.upsertAll(
+            listOf(
+                status("inner"),
+                status("b1", boosted = "alice").copy(reblogOfId = "inner"),
+                status("b2", boosted = "alice").copy(reblogOfId = "other"),
+            ),
+        )
+        assertEquals(listOf("b1"), statuses.boostsOf("a", "inner").map { it.serverId })
+    }
+
+    @Test
+    fun `deleting a status takes its boosts with it, from every timeline`() = runBlocking {
+        val statuses = listOf(
+            status("inner"),
+            status("b1", boosted = "alice").copy(reblogOfId = "inner"),
+            status("b2", boosted = "alice").copy(reblogOfId = "other"),
+        )
+        database.timelineDao().apply(
+            "a",
+            "home:home",
+            statuses,
+            listOf(entry("inner", 3), entry("b1", 2), entry("b2", 1)),
+        )
+        database.statusDao().delete("a", "inner")
+        assertEquals(listOf("b2"), database.timelineDao().entries("a", "home:home").map { it.statusId })
+        assertNull(database.statusDao().get("a", "b1"))
+    }
+
+    @Test
+    fun `a timeline position is kept per account and timeline`() = runBlocking {
+        val positions = database.positionDao()
+        positions.set(TimelinePositionEntity("a", "home:home", "42", 17))
+        positions.set(TimelinePositionEntity("a", "home:home", "43", 0))
+        assertEquals(TimelinePositionEntity("a", "home:home", "43", 0), positions.get("a", "home:home"))
+        assertNull(positions.get("b", "home:home"))
     }
 
     @Test

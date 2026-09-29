@@ -79,6 +79,9 @@ public interface StatusActions {
     public fun onReact(row: StatusRowUi, name: String, add: Boolean)
 
     public fun onMenu(row: StatusRowUi, item: StatusMenuItem)
+
+    /** The menu items this screen can carry out; the others are not offered. */
+    public val menu: Set<StatusMenuItem> get() = StatusMenuItem.entries.toSet()
 }
 
 /** The overflow menu. The author's own items appear only on their own posts. */
@@ -414,7 +417,7 @@ private fun StatusMenu(row: StatusRowUi, actions: StatusActions) {
     var open by remember { mutableStateOf(false) }
     IconButton(onClick = { open = true }) { Icon(AlohaIcons.More, stringResource(R.string.status_action_more)) }
     DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
-        menuItems(row).forEach { (item, icon, text) ->
+        menuItems(row, actions.menu).forEach { (item, icon, text) ->
             DropdownMenuItem(
                 text = { Text(stringResource(text)) },
                 leadingIcon = { Icon(icon, contentDescription = null) },

@@ -135,6 +135,24 @@ class DtoDecodingTest {
     }
 
     @Test
+    fun `live feeds a server disables are not offered, and a server that says nothing keeps them`() {
+        val social = """{"domain":"mastodon.social","configuration":{"timelines_access":
+            {"live_feeds":{"local":"disabled","remote":"disabled"},"hashtag_feeds":{"local":"public"}}}}"""
+        val members = """{"domain":"m.test","configuration":
+            {"timelines_access":{"live_feeds":{"local":"authenticated"}}}}"""
+        val older = """{"domain":"cloud.test","configuration":{}}"""
+        InstanceEndpoints.v2().decode(social).value.let {
+            assertFalse(it.localFeed)
+            assertFalse(it.federatedFeed)
+        }
+        InstanceEndpoints.v2().decode(members).value.let {
+            assertTrue(it.localFeed)
+            assertTrue(it.federatedFeed)
+        }
+        assertTrue(InstanceEndpoints.v2().decode(older).value.localFeed)
+    }
+
+    @Test
     fun `both spellings of the streaming url are read`() {
         val modern = """{"domain":"m.test","configuration":{"urls":{"streaming":"wss://m.test/s"}}}"""
         val legacy = """{"domain":"m.test","configuration":{"urls":{"streaming_api":"wss://m.test/s"}}}"""

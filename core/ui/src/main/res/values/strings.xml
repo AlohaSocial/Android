@@ -137,4 +137,18 @@
     <string name="status_accessibility_header">%1$s, %2$s</string>
     <!-- Read aloud for a post behind a content warning: %1$s the author, %2$s its age, %3$s the warning -->
     <string name="status_accessibility_spoiler">%1$s, %2$s, content warning: %3$s</string>
+    <!-- Title of the dialog confirming the deletion of one's own post -->
+    <string name="status_delete_title">Delete this post?</string>
+    <!-- Body of the dialog confirming the deletion of one's own post -->
+    <string name="status_delete_body">It is removed from your server and from the servers it reached.</string>
+    <!-- Button that confirms deleting a post -->
+    <string name="status_delete_confirm">Delete</string>
+    <!-- Button that cancels a dialog -->
+    <string name="status_cancel">Cancel</string>
+    <!-- Read aloud as a spinner appears while more of a list loads -->
+    <string name="list_loading">Loading</string>
+    <!-- Brief notice after an action on a post failed -->
+    <string name="status_action_failed">That didn\'t go through. Try again.</string>
+    <!-- Brief notice after a post's link was copied -->
+    <string name="status_link_copied">Link copied</string>
 </resources>

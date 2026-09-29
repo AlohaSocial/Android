@@ -9,6 +9,7 @@ import androidx.compose.material.icons.automirrored.outlined.Subject
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.AmpStories
 import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Notifications
@@ -108,4 +109,7 @@ public object AlohaIcons {
     public val Sensitive: ImageVector = Icons.Outlined.VisibilityOff
     public val Thread: ImageVector = Icons.AutoMirrored.Outlined.Subject
     public val Voted: ImageVector = Icons.Filled.CheckCircle
+
+    /** The chosen one of a set of options. */
+    public val Check: ImageVector = Icons.Filled.Check
 }

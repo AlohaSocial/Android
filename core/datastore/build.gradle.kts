@@ -8,6 +8,7 @@ plugins {
 }
 
 dependencies {
+    api(project(":core:model"))
     api(libs.androidx.datastore)
     api(libs.androidx.datastore.preferences)
     api(libs.kotlinx.coroutines.core)

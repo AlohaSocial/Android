@@ -14,8 +14,9 @@ import social.aloha.core.html.RichTextCache
 import social.aloha.core.model.Card
 import social.aloha.core.model.CustomEmoji
 import social.aloha.core.model.QuotedStatus
+import social.aloha.core.testing.StatusSamples
+import social.aloha.core.testing.StatusSamples.NOW
 import social.aloha.core.ui.StatusRowUi.ContextLine
-import social.aloha.core.ui.StatusSamples.NOW
 
 class StatusRowMapperTest {
     private val mapper = StatusRowMapper(RichTextCache(), RichTextColors(Color.Blue, Color.Gray, Color.LightGray))

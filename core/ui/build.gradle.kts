@@ -11,4 +11,7 @@ dependencies {
     implementation(project(":core:designsystem"))
     api(project(":core:html"))
     api(project(":core:media"))
+    implementation(libs.androidx.browser)
+    implementation(libs.androidx.core.ktx)
+    testImplementation(project(":core:testing"))
 }

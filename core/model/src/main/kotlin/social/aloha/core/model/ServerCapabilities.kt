@@ -15,7 +15,11 @@ import kotlinx.serialization.Serializable
  * @property apiBase the resolved prefix Mastodon routes hang off, ending in `/`; not always the root.
  * @property softwareName lowercased, from NodeInfo: `nextcloud-social`, `mastodon`, …
  * @property theme the colour this Nextcloud wears; null on Mastodon and with Theming disabled.
+ * @property localFeed whether the server lets a signed-in reader read its local live feed; Mastodon
+ *   4.5 lets an administrator disable it, and the federated one ([federatedFeed]), as mastodon.social does.
  * @property detectedAt [Instant.EPOCH] until detection ran, which makes the capabilities stale.
+ * @property format the [CURRENT_FORMAT] of the detection that wrote them; capabilities written before a
+ *   field was detected read as stale, so the next launch fills it rather than a day later.
  */
 @Serializable
 public data class ServerCapabilities(
@@ -43,8 +47,11 @@ public data class ServerCapabilities(
     val mediaFromNextcloudFiles: Boolean = false,
     val preferencesWrite: Boolean = false,
     val limits: ServerLimits = ServerLimits.MastodonDefaults,
+    val localFeed: Boolean = true,
+    val federatedFeed: Boolean = true,
     val theme: NextcloudTheme? = null,
     @Serializable(with = InstantSerializer::class) val detectedAt: Instant = Instant.EPOCH,
+    val format: Int = 0,
 ) {
     /**
      * Where the Nextcloud itself lives, as opposed to where its Mastodon API is served. Without the root
@@ -68,7 +75,7 @@ public data class ServerCapabilities(
         }
 
     public fun isStale(now: Instant, maximumAge: Duration = Duration.ofDays(1)): Boolean =
-        Duration.between(detectedAt, now) > maximumAge
+        format < CURRENT_FORMAT || Duration.between(detectedAt, now) > maximumAge
 
     /**
      * These capabilities promoted by what [statuses] show, since nothing announces them: an `hls_url`
@@ -88,6 +95,9 @@ public data class ServerCapabilities(
 
     public companion object {
         private const val APP_PREFIX = "index.php/apps/social/"
+
+        /** Raised whenever detection learns a new field: 1 added the live feeds. */
+        public const val CURRENT_FORMAT: Int = 1
 
         /** The most conservative statement about a server: it speaks the Mastodon API at [apiBase]. */
         public fun minimal(apiBase: String): ServerCapabilities = ServerCapabilities(apiBase = apiBase)

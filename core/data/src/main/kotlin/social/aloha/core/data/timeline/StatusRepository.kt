@@ -31,9 +31,16 @@ public class StatusRepository @Inject constructor(private val dao: StatusDao, pr
     public suspend fun get(accountId: String, statusId: String): Status? =
         dao.get(accountId, statusId)?.let { decoded.of(accountId, it.serverId, it.payloadJson, it.cachedAt) }
 
-    /** Replaces the stored copy, which is what an action the server confirmed or refused does. */
+    /**
+     * Replaces the stored copy, which is what an action the server confirmed or refused does. A boost
+     * carries a copy of what it boosts, so every stored boost of [status] is rewritten with it: a
+     * favourite shows on the post and on each boost of it alike.
+     */
     public suspend fun save(accountId: String, status: Status) {
-        dao.upsert(entity(accountId, status))
+        val boosts = dao.boostsOf(accountId, status.id).mapNotNull { boost ->
+            decoded.of(accountId, boost.serverId, boost.payloadJson, boost.cachedAt)?.copy(reblog = status)
+        }
+        dao.upsertAll(listOf(entity(accountId, status)) + boosts.map { entity(accountId, it) })
     }
 
     /** A deletion, or a 404 on refetch: the status goes, and from every timeline. */
@@ -55,6 +62,7 @@ public class StatusRepository @Inject constructor(private val dao: StatusDao, pr
         plainText = StatusHtmlParser.plainText(status.displayed.content),
         authorId = status.account.id,
         boostedAuthorId = status.reblog?.account?.id,
+        reblogOfId = status.reblog?.id,
     )
 
     internal fun decode(accountId: String, statusId: String, payloadJson: String, cachedAt: Long): Status? =

@@ -75,6 +75,15 @@ public class TimelineRepository @Inject constructor(
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) {
     private val inFlight = ConcurrentHashMap<String, Mutex>()
+    private val fetchedAt = ConcurrentHashMap<String, Long>()
+
+    /**
+     * When [key] last got an answer from the server in this process, or null before it did: a timeline
+     * that has rows but no fetch yet still asks for the head (see [RefreshPlan]).
+     */
+    public fun lastFetched(account: SignedInAccount, key: TimelineKey): Long? = fetchedAt[lockKey(account, key)]
+
+    private fun lockKey(account: SignedInAccount, key: TimelineKey) = "${account.id}|${key.storageKey}"
 
     /**
      * The stored rows, newest first, up to the timeline's cap. ponytail: the window is the whole capped
@@ -127,7 +136,7 @@ public class TimelineRepository @Inject constructor(
     )
 
     private suspend fun fetchAndMerge(fetch: Fetch): PageOutcome {
-        val lock = inFlight.getOrPut("${fetch.account.id}|${fetch.key.storageKey}") { Mutex() }
+        val lock = inFlight.getOrPut(lockKey(fetch.account, fetch.key)) { Mutex() }
         if (!lock.tryLock()) return PageOutcome.Busy
         return try {
             // parsing, encoding and merging a page is not the main thread's work, whoever asked for it
@@ -163,6 +172,7 @@ public class TimelineRepository @Inject constructor(
             kept.map { TimelineEntryEntity(account.id, key.storageKey, it.statusId, it.position, it.isGap, now) },
         )
         latchCapabilities(account, harvest.statuses)
+        fetchedAt[lockKey(account, key)] = clock.millis()
         // a page that landed wholly below the cap was dropped: paging on would only fetch more to drop
         val keptIds = kept.mapTo(HashSet()) { it.statusId }
         val arrived = plan.inserted.filter { it in keptIds }
