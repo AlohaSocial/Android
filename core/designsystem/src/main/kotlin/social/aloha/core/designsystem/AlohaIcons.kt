@@ -5,6 +5,7 @@ package social.aloha.core.designsystem
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.automirrored.outlined.Reply
 import androidx.compose.material.icons.automirrored.outlined.Subject
 import androidx.compose.material.icons.filled.AccountCircle
@@ -22,6 +23,7 @@ import androidx.compose.material.icons.filled.VideoLibrary
 import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material.icons.outlined.AmpStories
 import androidx.compose.material.icons.outlined.BookmarkBorder
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.EditNote
@@ -39,6 +41,7 @@ import androidx.compose.material.icons.outlined.NightsStay
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.NotificationsOff
 import androidx.compose.material.icons.outlined.OpenInBrowser
+import androidx.compose.material.icons.outlined.PersonAdd
 import androidx.compose.material.icons.outlined.PhotoLibrary
 import androidx.compose.material.icons.outlined.Place
 import androidx.compose.material.icons.outlined.PushPin
@@ -114,4 +117,7 @@ public object AlohaIcons {
     /** The chosen one of a set of options. */
     public val Check: ImageVector = Icons.Filled.Check
     public val Back: ImageVector = Icons.AutoMirrored.Outlined.ArrowBack
+    public val Close: ImageVector = Icons.Outlined.Close
+    public val AddAccount: ImageVector = Icons.Outlined.PersonAdd
+    public val SignOut: ImageVector = Icons.AutoMirrored.Outlined.Logout
 }

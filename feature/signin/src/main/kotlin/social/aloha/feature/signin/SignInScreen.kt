@@ -16,6 +16,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -32,17 +34,32 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaSpacing
 
 private val ContentWidth = 560.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun SignInScreen(state: SignInUiState, actions: SignInActions, modifier: Modifier = Modifier) {
+internal fun SignInScreen(
+    state: SignInUiState,
+    actions: SignInActions,
+    modifier: Modifier = Modifier,
+    onCancel: (() -> Unit)? = null,
+) {
     val title = stringResource(R.string.signin_title)
     Scaffold(
         modifier = modifier.semantics { paneTitle = title },
-        topBar = { TopAppBar(title = { Text(title) }) },
+        topBar = {
+            TopAppBar(
+                title = { Text(title) },
+                navigationIcon = {
+                    onCancel?.let {
+                        IconButton(onClick = it) { Icon(AlohaIcons.Close, stringResource(R.string.signin_cancel)) }
+                    }
+                },
+            )
+        },
     ) { padding ->
         Column(
             modifier = Modifier

@@ -6,6 +6,8 @@
 <resources>
     <!-- Title of the sign-in screen, where a person adds an account -->
     <string name="signin_title">Add account</string>
+    <!-- Button that leaves adding an account, back to the accounts already signed in -->
+    <string name="signin_cancel">Cancel</string>
     <!-- Label of the text field where a person types their server, e.g. cloud.example.com -->
     <string name="signin_server_label">Your server</string>
     <!-- Hint under the server field -->

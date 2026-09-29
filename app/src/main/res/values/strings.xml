@@ -16,10 +16,30 @@
     <string name="destination_shorts">Shorts</string>
     <!-- Navigation item: mentions, favourites, boosts and follows. -->
     <string name="destination_notifications">Notifications</string>
-    <!-- Navigation item: the profile of the signed-in account. -->
-    <string name="destination_profile">Profile</string>
     <!-- Banner when the server no longer accepts this account's sign-in; %s is the account's handle -->
     <string name="reauth_banner">%s needs to sign in again. Nothing was lost.</string>
     <!-- Button on that banner that starts a new sign-in -->
     <string name="reauth_sign_in_again">Sign in again</string>
+    <!-- Button in the top bar that opens the accounts; %s is the handle of the account in use -->
+    <string name="accounts_button">Accounts, signed in as %s</string>
+    <!-- Heading of the sheet listing the signed-in accounts -->
+    <string name="accounts_title">Accounts</string>
+    <!-- Read aloud for the account in use, in the list of accounts -->
+    <string name="accounts_active">In use</string>
+    <!-- Marks an account whose server refused its sign-in -->
+    <string name="accounts_needs_reauth">Needs a new sign-in</string>
+    <!-- Opens the profile of the account in use -->
+    <string name="accounts_profile">Your profile</string>
+    <!-- Starts signing in to one more account -->
+    <string name="accounts_add">Add account</string>
+    <!-- Signs the account in use out of this device; %s is its handle -->
+    <string name="accounts_sign_out">Sign out of %s</string>
+    <!-- Title of the dialog confirming a sign-out; %s is the handle -->
+    <string name="accounts_sign_out_title">Sign out of %s?</string>
+    <!-- Body of the dialog confirming a sign-out -->
+    <string name="accounts_sign_out_body">This device forgets the account and what it saved for it. The account and its posts stay on its server.</string>
+    <!-- Button that confirms a sign-out -->
+    <string name="accounts_sign_out_confirm">Sign out</string>
+    <!-- Button that cancels a dialog -->
+    <string name="accounts_cancel">Cancel</string>
 </resources>

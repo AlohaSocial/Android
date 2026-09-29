@@ -27,7 +27,11 @@ import social.aloha.core.ui.StatusNavigation
 import social.aloha.core.ui.StatusRowUi
 
 @Composable
-public fun TimelineRoute(navigation: StatusNavigation, modifier: Modifier = Modifier) {
+public fun TimelineRoute(
+    navigation: StatusNavigation,
+    modifier: Modifier = Modifier,
+    accountButton: @Composable () -> Unit = {},
+) {
     val viewModel: TimelineViewModel = hiltViewModel()
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -69,7 +73,7 @@ public fun TimelineRoute(navigation: StatusNavigation, modifier: Modifier = Modi
         }
     }
 
-    TimelineScreen(state, viewModel, rowActions, modifier, snackbars)
+    TimelineScreen(state, viewModel, rowActions, modifier, snackbars, accountButton = accountButton)
 
     deleting?.let { row ->
         DeleteStatusDialog(

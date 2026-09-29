@@ -87,7 +87,14 @@ private val destinations = listOf(
  * built are placeholders.
  */
 @Composable
-fun AlohaApp(readerId: String, home: @Composable (StatusNavigation) -> Unit = { TimelineRoute(it) }) {
+fun AlohaApp(
+    readerId: String,
+    serverAccountId: String,
+    accountButton: @Composable (onProfile: () -> Unit) -> Unit = {},
+    home: @Composable (StatusNavigation, accountButton: @Composable () -> Unit) -> Unit = { navigation, button ->
+        TimelineRoute(navigation, accountButton = button)
+    },
+) {
     val backStack = rememberNavBackStack(HomeKey)
     // a detail opened from a destination keeps that destination selected
     val current = backStack.lastOrNull { it is TopLevelKey }
@@ -146,12 +153,16 @@ fun AlohaApp(readerId: String, home: @Composable (StatusNavigation) -> Unit = { 
                 rememberViewModelStoreNavEntryDecorator(),
             ),
             entryProvider = entryProvider {
-                entry<HomeKey> { home(statusNavigation) }
+                entry<HomeKey> {
+                    home(statusNavigation) {
+                        accountButton { backStack.add(AccountKey(readerId, id = serverAccountId)) }
+                    }
+                }
                 entry<PhotosKey> { Placeholder(stringResource(R.string.destination_photos)) }
                 entry<VideoKey> { Placeholder(stringResource(R.string.destination_video)) }
                 entry<ShortsKey> { Placeholder(stringResource(R.string.destination_shorts)) }
                 entry<NotificationsKey> { Placeholder(stringResource(R.string.destination_notifications)) }
-                entry<ProfileKey> { Placeholder(stringResource(R.string.destination_profile)) }
+                entry<ProfileKey> { ProfileRoute(AccountKey(readerId, id = serverAccountId), statusNavigation) }
                 entry<ThreadKey> { ThreadRoute(it, statusNavigation) }
                 entry<StatusListKey> { StatusListRoute(it, statusNavigation) }
                 entry<AccountKey> { ProfileRoute(it, statusNavigation) }
@@ -182,7 +193,7 @@ internal fun Placeholder(title: String) {
 @AlohaPreviews
 @Composable
 private fun AlohaAppPreview() {
-    AlohaTheme { AlohaApp("preview", home = { Placeholder(stringResource(R.string.destination_home)) }) }
+    AlohaTheme { AlohaApp("preview", "1", home = { _, _ -> Placeholder(stringResource(R.string.destination_home)) }) }
 }
 
 /** Opens [key] unless it is already on screen: a second copy would make back seem to do nothing. */

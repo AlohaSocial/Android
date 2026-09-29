@@ -134,6 +134,17 @@ class TimelineAndCapabilitiesTest {
     }
 
     @Test
+    fun `a signed-in account reads as user at server, however its handle was stored`() {
+        fun account(handle: String) = SignedInAccount(
+            "a", "mastodon.social", "https://mastodon.social/", "1", handle, "", null, null,
+            ServerCapabilities.minimal("https://mastodon.social/"), needsReauth = false, profilePending = false,
+            addedAt = Instant.EPOCH, nextcloudConnected = false,
+        )
+        assertEquals("@scherzinger@mastodon.social", account("scherzinger").qualifiedHandle)
+        assertEquals("@alice@cloud.example", account("@alice@cloud.example").qualifiedHandle)
+    }
+
+    @Test
     fun `capabilities stored before live feeds were read keep both feeds`() {
         val stored = """{"apiBase":"https://m.test/"}"""
         val capabilities = Json.decodeFromString(ServerCapabilities.serializer(), stored)

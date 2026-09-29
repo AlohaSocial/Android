@@ -91,12 +91,13 @@ internal fun TimelineScreen(
     modifier: Modifier = Modifier,
     snackbars: SnackbarHostState = remember { SnackbarHostState() },
     listState: LazyListState = rememberLazyListState(),
+    accountButton: @Composable () -> Unit = {},
 ) {
     val title = stringResource(R.string.timeline_title)
     Scaffold(
         modifier = modifier.semantics { paneTitle = title },
         topBar = {
-            TopAppBar(title = { Text(title) }, actions = { Options(state, actions) })
+            TopAppBar(title = { Text(title) }, navigationIcon = accountButton, actions = { Options(state, actions) })
         },
         snackbarHost = { SnackbarHost(snackbars) },
     ) { padding ->
