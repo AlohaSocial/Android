@@ -5,16 +5,16 @@ package social.aloha.core.designsystem
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.AmpStories
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.PhotoLibrary
-import androidx.compose.material.icons.filled.Slideshow
 import androidx.compose.material.icons.filled.VideoLibrary
 import androidx.compose.material.icons.outlined.AccountCircle
+import androidx.compose.material.icons.outlined.AmpStories
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.PhotoLibrary
-import androidx.compose.material.icons.outlined.Slideshow
 import androidx.compose.material.icons.outlined.VideoLibrary
 import androidx.compose.ui.graphics.vector.ImageVector
 
@@ -32,8 +32,10 @@ public object AlohaIcons {
     public val PhotosSelected: ImageVector = Icons.Filled.PhotoLibrary
     public val Video: ImageVector = Icons.Outlined.VideoLibrary
     public val VideoSelected: ImageVector = Icons.Filled.VideoLibrary
-    public val Shorts: ImageVector = Icons.Outlined.Slideshow
-    public val ShortsSelected: ImageVector = Icons.Filled.Slideshow
+
+    // stacked portrait cards, as on Apple; Slideshow looks the same filled and outlined
+    public val Shorts: ImageVector = Icons.Outlined.AmpStories
+    public val ShortsSelected: ImageVector = Icons.Filled.AmpStories
     public val Notifications: ImageVector = Icons.Outlined.Notifications
     public val NotificationsSelected: ImageVector = Icons.Filled.Notifications
     public val Profile: ImageVector = Icons.Outlined.AccountCircle
