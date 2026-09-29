@@ -19,6 +19,22 @@ This is the Apple app's specification, carried over as the product contract for 
 | Rate limiting | A read answered 429 with a `Retry-After` of five seconds or less (or none) is retried once, after the per-host limiter has waited it out; a write never is. |
 | TLS | System CAs, plus certificates a person trusted for one host, kept in app-private storage and never system-wide. A client certificate is picked from the system KeyChain per host and presented to that host only. |
 
+### Finding the API base
+
+Mastodon apps build `https://host/api/v1/…`. Nextcloud Social serves its routes under the app path, and at the domain root only where the administrator installed the rewrite rules. A native client can target the app path directly, so the probe tries every shape at once:
+
+| Rank | Candidate | Accepted when |
+|---|---|---|
+| 0 | the `issuer` of `/.well-known/oauth-authorization-server` at the domain root | the issuer is on the host the person typed |
+| 1 | the domain root | |
+| 2 | `/index.php/apps/social/` | |
+| 3 | `/apps/social/` (pretty URLs) | |
+| 4, 5 | a path the person typed, and the app path beneath it | a path was typed |
+
+A candidate qualifies when `api/v2/instance`, or `api/v1/instance`, answers with a non-empty `domain`, so a Nextcloud login page answering 200 does not. The lowest rank that qualifies wins, however fast a worse one answered. Each request has five seconds and the whole probe ten. NodeInfo is read from the domain root's `/.well-known/nodeinfo` directory, with 2.1 then 2.0 as fallbacks, as the cross-check of the software.
+
+A hand-typed API address is probed on its own, keeping only scheme, host, port and path: credentials, a query or a fragment typed into it would otherwise be shown back and sent with every request. When no candidate gets any HTTP answer (the name does not resolve, the connection fails or times out), the server is reported unreachable, not as missing its API, so a typo never reads as a missing web-server rule. An untrusted certificate stops the probe with the chain, for the person to decide. A base that stopped answering is probed for anew at most once an hour per host.
+
 ---
 
 Everything in this document was verified against Nextcloud Social `master`
