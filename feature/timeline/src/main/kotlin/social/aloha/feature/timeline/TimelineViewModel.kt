@@ -105,8 +105,13 @@ internal class TimelineViewModel @AssistedInject constructor(
     private val control = MutableStateFlow(Control())
     private val scrolled = MutableStateFlow<TimelinePosition?>(null)
 
-    /** The stored rows last seen, unfiltered: gaps are filled and pages anchored from these. */
-    @Volatile private var stored: List<TimelineRow> = emptyList()
+    /**
+     * The stored rows last seen, unfiltered, with the timeline they belong to: gaps are filled and pages
+     * anchored from these. One value, so rows another timeline sent late never pass for this one's.
+     */
+    @Volatile private var seen: Pair<TimelineKey?, List<TimelineRow>> = null to emptyList()
+
+    private val stored: List<TimelineRow> get() = seen.second
 
     @Volatile private var cursor: HttpUrl? = null
     private var restoreJob: Job? = null
@@ -157,7 +162,7 @@ internal class TimelineViewModel @AssistedInject constructor(
                     settings,
                     shaping,
                 ->
-                this.stored = stored
+                seen = key to stored
                 val shape = TimelineRowBuilder.Shape(colors, settings, filters, shaping.held, shaping.loadingGaps)
                 val pending = stored.count { it.id in shaping.held }
                 Shown(rows.build(account, key.source, stored, shape), pending, shaping.scrollToTop)
@@ -215,7 +220,7 @@ internal class TimelineViewModel @AssistedInject constructor(
                     }
                     cursor = null
                     prefetchedFrom = -1
-                    stored = emptyList()
+                    seen = null to emptyList()
                     rows.clear()
                     scheduleRestore(account, key)
                     refreshIfStale(account, key)
@@ -375,14 +380,11 @@ internal class TimelineViewModel @AssistedInject constructor(
 
     private suspend fun refresh(account: SignedInAccount, key: TimelineKey) {
         if (control.value.refreshing) return
-        val hadRows = stored.isNotEmpty()
+        val own = seen.rowsOf(key)
+        val hadRows = own.isNotEmpty()
         control.update { it.copy(refreshing = true) }
-        val plan = RefreshPlan.of(
-            timelines.lastFetched(account, key) != null,
-            stored.firstOrNull {
-                it is TimelineRow.Post
-            }?.id,
-        )
+        val newest = own.firstOrNull { it is TimelineRow.Post }?.id
+        val plan = RefreshPlan.of(timelines.lastFetched(account, key) != null, newest)
         val outcome = timelines.refresh(account, key, plan)
         // a reader who switched timeline or account meanwhile gets nothing of this one's paging
         if (!current().shows(account, key)) return
@@ -467,3 +469,7 @@ private fun imagesOf(item: TimelineItem): List<String> = when (item) {
 /** Whether the timeline shown now is still [key] for [account], so a late result may land. */
 private fun Pair<SignedInAccount, TimelineKey>?.shows(account: SignedInAccount, key: TimelineKey): Boolean =
     this != null && first.id == account.id && second == key
+
+/** The rows seen, if they are [key]'s: right after a switch they may still be the previous timeline's. */
+private fun Pair<TimelineKey?, List<TimelineRow>>.rowsOf(key: TimelineKey): List<TimelineRow> =
+    if (first == key) second else emptyList()
