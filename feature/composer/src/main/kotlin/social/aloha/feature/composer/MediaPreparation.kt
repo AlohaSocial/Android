@@ -18,6 +18,8 @@ import androidx.core.graphics.createBitmap
 import androidx.core.graphics.scale
 import java.io.File
 import java.util.UUID
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import social.aloha.core.model.ServerLimits
 import social.aloha.core.ui.copyTo
 import social.aloha.core.ui.extensionFor
@@ -31,6 +33,9 @@ internal sealed interface Preflight {
 
     /** A type the server does not accept; HEIC and HEIF become JPEG instead, the rest is refused. */
     data class Unsupported(val mimeType: String) : Preflight
+
+    /** A video the server takes only as MP4, which it is converted into. */
+    data object ConvertVideo : Preflight
 
     /** Over the server's ceiling for its kind, which is stated so the writer knows what fits. */
     data class TooLarge(val limitBytes: Long) : Preflight
@@ -46,23 +51,31 @@ internal object UploadPreflight {
     private val convertible = setOf("image/heic", "image/heif")
     private val moving = setOf("image/gif", "image/webp")
 
-    fun check(mimeType: String, size: Long, limits: ServerLimits): Preflight {
-        val accepted = limits.supportedMimeTypes.isEmpty() || mimeType in limits.supportedMimeTypes
-        val picture = mimeType.startsWith("image/")
+    fun check(mimeType: String, size: Long, limits: ServerLimits): Preflight =
+        type(mimeType, limits) ?: size(mimeType, size, limits)
+
+    /** What the server makes of the type: null when it takes it as it is. */
+    private fun type(mimeType: String, limits: ServerLimits): Preflight? {
+        val types = limits.supportedMimeTypes
+        val mp4 = types.isEmpty() || "video/mp4" in types
         return when {
-            !accepted && mimeType !in convertible -> Preflight.Unsupported(mimeType)
-
-            !accepted -> Preflight.ShrinkPicture
-
-            // a moving picture would come back as its first frame: refused rather than flattened
-            mimeType in moving && size > limits.imageSizeLimit -> Preflight.TooLarge(limits.imageSizeLimit)
-
-            picture && size > limits.imageSizeLimit -> Preflight.ShrinkPicture
-
-            !picture && size > limits.videoSizeLimit -> Preflight.TooLarge(limits.videoSizeLimit)
-
-            else -> Preflight.Fits
+            types.isEmpty() || mimeType in types -> null
+            mimeType.startsWith("video/") && mp4 -> Preflight.ConvertVideo
+            mimeType in convertible -> Preflight.ShrinkPicture
+            else -> Preflight.Unsupported(mimeType)
         }
+    }
+
+    /** What the server makes of the size, each kind against its own ceiling. */
+    private fun size(mimeType: String, size: Long, limits: ServerLimits): Preflight = when {
+        // a moving picture would come back as its first frame: refused rather than flattened
+        mimeType in moving && size > limits.imageSizeLimit -> Preflight.TooLarge(limits.imageSizeLimit)
+
+        mimeType.startsWith("image/") && size > limits.imageSizeLimit -> Preflight.ShrinkPicture
+
+        !mimeType.startsWith("image/") && size > limits.videoSizeLimit -> Preflight.TooLarge(limits.videoSizeLimit)
+
+        else -> Preflight.Fits
     }
 }
 
@@ -77,7 +90,13 @@ internal data class Prepared(val picked: Picked, val check: Preflight)
  * become JPEG where the server does not take them, and a picture over the server's ceiling is
  * scaled down until it fits. JPEG at 0.92; a PNG stays PNG so a screenshot keeps its transparency.
  */
-internal class MediaPreparation(private val resolver: ContentResolver, private val directory: File) {
+internal class MediaPreparation(
+    private val resolver: ContentResolver,
+    private val directory: File,
+    private val videos: VideoTransformer,
+    /** The app's own camera captures, which are let go of once copied. */
+    private val captures: String,
+) {
     fun copy(uri: Uri): Picked? {
         val mime = resolver.getType(uri) ?: return null
         val name = displayName(uri) ?: "attachment"
@@ -88,15 +107,38 @@ internal class MediaPreparation(private val resolver: ContentResolver, private v
         return Picked(target, name, mime)
     }
 
-    /** [picked] as the server will take it, or why it will not: the file to send, or the refusal. */
-    fun prepare(picked: Picked, limits: ServerLimits): Pair<Picked?, Preflight> =
+    /**
+     * [picked] as the server will take it, or why it will not: the file as it now is (scaled, or
+     * converted to MP4) with the verdict. A file this gives up on, when it made another, is deleted.
+     */
+    suspend fun prepare(picked: Picked, limits: ServerLimits): Prepared =
         when (val check = UploadPreflight.check(picked.mimeType, picked.file.length(), limits)) {
-            Preflight.Fits -> picked to check
-            Preflight.ShrinkPicture -> shrink(picked, limits)?.let { it to Preflight.Fits } ?: (null to check)
-            else -> null to check
+            Preflight.ShrinkPicture -> withContext(Dispatchers.IO) { shrink(picked, limits) }
+                ?.let { Prepared(it, Preflight.Fits) } ?: Prepared(picked, check)
+
+            // converted, it is checked again: an MP4 can still be over the ceiling
+            Preflight.ConvertVideo -> video(picked, null)
+                ?.let { converted ->
+                    picked.file.delete()
+                    prepare(converted, limits)
+                }
+                ?: Prepared(picked, Preflight.Unsupported(picked.mimeType))
+
+            else -> Prepared(picked, check)
         }
 
-    /** Scales [picked] down, a quarter at a time, until it is under the ceiling; null when it cannot be. */
+    /** [picked] as an MP4, trimmed and scaled by [edit]; null when it could not be made. */
+    suspend fun video(picked: Picked, edit: VideoEdit?): Picked? {
+        val target = newFile(".mp4")
+        if (!videos.export(picked.file, edit, target)) return null
+        return Picked(target, rename(picked.fileName, "video/mp4"), "video/mp4")
+    }
+
+    /**
+     * Scales [picked] down, a quarter at a time, until it is under the ceiling; null when it cannot be.
+     * Decoded at most [MAX_EDGE] across, as no server keeps more, so a 50-megapixel photo never sits
+     * in memory whole.
+     */
     private fun shrink(picked: Picked, limits: ServerLimits): Picked? {
         val bitmap = decode(picked.file) ?: return null
         val png = picked.mimeType == "image/png" && "image/png" in limits.supportedMimeTypes

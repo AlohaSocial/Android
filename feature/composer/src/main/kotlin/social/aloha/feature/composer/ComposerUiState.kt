@@ -66,11 +66,14 @@ internal data class ComposerUiState(
     /** How many attachments one post may carry on this server. */
     val maxAttachments: Int = 4,
     val attachFailure: AttachFailure? = null,
+    val editFailure: EditFailure? = null,
     val card: CardUi = CardUi(),
     /** Whether the post is short and plain enough to go out as a card. */
     val cardFits: Boolean = false,
     /** Whether to warn before posting pictures without a description. */
     val warnMissingDescription: Boolean = true,
+    /** Whether a short gets `#shorts`; null until the writer is asked, once. */
+    val tagShorts: Boolean? = null,
     /** How many segments of the thread are already posted; a retry starts after them. */
     val posted: Int = 0,
     val posting: Boolean = false,

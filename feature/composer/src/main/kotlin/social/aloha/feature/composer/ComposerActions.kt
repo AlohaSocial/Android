@@ -42,6 +42,9 @@ internal interface MediaActions {
     /** Opens the file picker for the post being written. */
     fun onPickFiles()
 
+    /** Opens the camera for a photo, a video or a short. */
+    fun onCapture(capture: Capture)
+
     fun onEditMedia(id: String)
 
     fun onRemoveMedia(id: String)

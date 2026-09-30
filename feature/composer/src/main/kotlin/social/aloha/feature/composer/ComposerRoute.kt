@@ -17,14 +17,17 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.core.net.toUri
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import social.aloha.core.model.CustomEmoji
@@ -36,6 +39,8 @@ private class Dialogs(
     val editing: MutableState<String?>,
     val undescribed: MutableState<Boolean>,
     val discarding: MutableState<Boolean>,
+    /** A short just recorded, waiting for the writer's answer about `#shorts`. */
+    val short: MutableState<String?>,
 )
 
 /** The composer for [key]; [onDone] leaves it, once posted or discarded. */
@@ -49,6 +54,7 @@ public fun ComposerRoute(key: ComposerKey, onDone: () -> Unit, modifier: Modifie
         rememberSaveable { mutableStateOf(null) },
         rememberSaveable { mutableStateOf(false) },
         rememberSaveable { mutableStateOf(false) },
+        rememberSaveable { mutableStateOf(null) },
     )
     val actions = rememberActions(viewModel, state, dialogs) { done() }
     val hue = MaterialTheme.colorScheme.primary.toArgb()
@@ -77,10 +83,10 @@ private fun rememberActions(
     val pickMedia = rememberLauncherForActivityResult(
         // the picker takes at least two, and the ViewModel keeps to the room there is
         ActivityResultContracts.PickMultipleVisualMedia(maxOf(2, state.maxAttachments)),
-        viewModel::onPicked,
-    )
+    ) { viewModel.onPicked(it) }
     val pickFiles =
-        rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments(), viewModel::onPicked)
+        rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { viewModel.onPicked(it) }
+    val camera = rememberCamera(viewModel, state, dialogs)
     return remember(viewModel, dialogs) {
         object : ComposerActions {
             override fun onClose() {
@@ -120,6 +126,8 @@ private fun rememberActions(
 
             override fun onPickFiles() = pickFiles.launch(types)
 
+            override fun onCapture(capture: Capture) = camera(capture)
+
             override fun onEditMedia(id: String) {
                 dialogs.editing.value = id
             }
@@ -145,6 +153,40 @@ private fun rememberActions(
     }
 }
 
+/**
+ * The system camera, for a photo, a video or a short. A short is tagged `#shorts` only as the writer
+ * chose; the first time, they are asked.
+ */
+@Composable
+private fun rememberCamera(viewModel: ComposerViewModel, state: ComposerUiState, dialogs: Dialogs): (Capture) -> Unit {
+    val context = LocalContext.current
+    val tag by rememberUpdatedState(state.tagShorts)
+    var target by rememberSaveable { mutableStateOf<String?>(null) }
+    var short by rememberSaveable { mutableStateOf(false) }
+    val onCaptured = { taken: Boolean ->
+        val uri = target?.toUri()
+        if (!taken && uri != null) CaptureFiles.discard(context, uri)
+        if (taken && uri != null) {
+            when {
+                !short -> viewModel.onPicked(listOf(uri))
+                tag == null -> dialogs.short.value = uri.toString()
+                else -> viewModel.onPicked(listOf(uri), tagShort = tag == true)
+            }
+        }
+    }
+    val photo = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture(), onCaptured)
+    val contract = remember { CaptureVideo() }
+    val video = rememberLauncherForActivityResult(contract, onCaptured)
+    return { capture ->
+        val isPhoto = capture == Capture.Photo
+        val uri = CaptureFiles.target(context, if (isPhoto) ".jpg" else ".mp4")
+        target = uri.toString()
+        short = capture is Capture.Short
+        contract.seconds = (capture as? Capture.Short)?.seconds
+        runCatching { if (isPhoto) photo.launch(uri) else video.launch(uri) }
+    }
+}
+
 @Composable
 private fun ComposerDialogs(state: ComposerUiState, viewModel: ComposerViewModel, dialogs: Dialogs, done: () -> Unit) {
     var editing by dialogs.editing
@@ -156,9 +198,14 @@ private fun ComposerDialogs(state: ComposerUiState, viewModel: ComposerViewModel
         if (attachment == null) {
             editing = null
         } else {
-            MediaEditor(attachment) { description, focus, filter ->
+            val info by produceState<VideoInfo?>(null, id) { value = viewModel.edits.info(id) }
+            MediaEditor(attachment, info) { description, focus, change ->
                 viewModel.attachments.describe(id, description, focus)
-                viewModel.attachments.applyFilter(id, filter)
+                when (change) {
+                    is MediaChange.Filter -> viewModel.edits.applyFilter(id, change.filter)
+                    is MediaChange.Video -> viewModel.edits.editVideo(id, change.edit)
+                    null -> Unit
+                }
                 editing = null
             }
         }
@@ -175,6 +222,12 @@ private fun ComposerDialogs(state: ComposerUiState, viewModel: ComposerViewModel
             },
         )
     }
+    dialogs.short.value?.let { recorded ->
+        ShortsDialog { tag ->
+            dialogs.short.value = null
+            viewModel.onPicked(listOf(recorded.toUri()), tagShort = tag, remember = true)
+        }
+    }
     if (discarding) {
         DiscardDialog(
             onDiscard = {
@@ -184,6 +237,22 @@ private fun ComposerDialogs(state: ComposerUiState, viewModel: ComposerViewModel
             onKeep = { discarding = false },
         )
     }
+}
+
+/** Asked once, after the first short: whether shorts get `#shorts`, which then stays the choice. */
+@Composable
+private fun ShortsDialog(onChoice: (Boolean) -> Unit) {
+    AlertDialog(
+        onDismissRequest = { onChoice(false) },
+        title = { Text(stringResource(R.string.composer_shorts_title)) },
+        text = { Text(stringResource(R.string.composer_shorts_body)) },
+        confirmButton = {
+            TextButton(onClick = { onChoice(true) }) { Text(stringResource(R.string.composer_shorts_yes)) }
+        },
+        dismissButton = {
+            TextButton(onClick = { onChoice(false) }) { Text(stringResource(R.string.composer_shorts_no)) }
+        },
+    )
 }
 
 @Composable
@@ -215,8 +284,8 @@ private fun UndescribedDialog(onDescribe: () -> Unit, onPostAnyway: () -> Unit) 
 
 @Composable
 private fun FailureSnackbar(state: ComposerUiState, snackbars: SnackbarHostState, onShown: () -> Unit) {
-    val message = attachMessage(state.attachFailure) ?: postMessage(state.failure)
-    LaunchedEffect(state.failure, state.attachFailure) {
+    val message = attachMessage(state.attachFailure) ?: editMessage(state.editFailure) ?: postMessage(state.failure)
+    LaunchedEffect(state.failure, state.attachFailure, state.editFailure) {
         if (message != null) {
             onShown()
             snackbars.showSnackbar(message)
@@ -232,6 +301,16 @@ private fun attachMessage(failure: AttachFailure?): String? = when (failure) {
         stringResource(R.string.composer_attach_too_large, Attachments.size(failure.limitBytes))
 
     AttachFailure.Unreadable -> stringResource(R.string.composer_attach_unreadable)
+
+    null -> null
+}
+
+@Composable
+private fun editMessage(failure: EditFailure?): String? = when (failure) {
+    is EditFailure.StillTooLarge ->
+        stringResource(R.string.composer_edit_still_too_large, Attachments.size(failure.limitBytes))
+
+    EditFailure.Failed -> stringResource(R.string.composer_edit_failed)
 
     null -> null
 }

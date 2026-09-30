@@ -27,9 +27,16 @@ class UploadPreflightTest {
     }
 
     @Test
-    fun `heic becomes jpeg where the server does not take it, other types are refused`() {
+    fun `heic becomes jpeg and a video becomes mp4 where the server does not take them`() {
         assertEquals(Preflight.ShrinkPicture, UploadPreflight.check("image/heic", 1 * MB, limits))
-        assertEquals(Preflight.Unsupported("video/x-matroska"), UploadPreflight.check("video/x-matroska", MB, limits))
+        assertEquals(Preflight.ConvertVideo, UploadPreflight.check("video/quicktime", MB, limits))
+    }
+
+    @Test
+    fun `a type the server does not take, and that cannot be converted, is refused`() {
+        assertEquals(Preflight.Unsupported("application/pdf"), UploadPreflight.check("application/pdf", MB, limits))
+        val noMp4 = limits.copy(supportedMimeTypes = listOf("image/jpeg"))
+        assertEquals(Preflight.Unsupported("video/quicktime"), UploadPreflight.check("video/quicktime", MB, noMp4))
     }
 
     @Test

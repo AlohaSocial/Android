@@ -202,4 +202,41 @@
     <string name="composer_card_background">Background %1$d</string>
     <!-- Error when the card could not be drawn or uploaded, so nothing was posted -->
     <string name="composer_card_failed">The card couldn\'t be made, so nothing was posted.</string>
+    <!-- A trim, smaller size or filter is being made before the upload -->
+    <string name="composer_media_preparing">Preparing</string>
+    <!-- A video over the server's limit; the placeholder is the limit, like "40 MB" -->
+    <string name="composer_media_oversized">Over this server\'s %1$s: trim it or make it smaller</string>
+    <!-- Heading of the video trim section in the attachment sheet -->
+    <string name="composer_video_trim">Trim and size</string>
+    <!-- The part of the video kept; the placeholders are start and end, like "0:05" -->
+    <string name="composer_video_kept">From %1$s to %2$s</string>
+    <!-- Keep the video at its own size -->
+    <string name="composer_video_original">Original size</string>
+    <!-- Make the video smaller; the placeholder is its shorter side in pixels, like 720 -->
+    <string name="composer_video_size">%1$dp</string>
+    <!-- Roughly how large the video will be; the placeholder is a size, like "12 MB" -->
+    <string name="composer_video_estimate">About %1$s</string>
+    <!-- Snackbar when a trimmed video is still over the server's limit; the placeholder is the limit -->
+    <string name="composer_edit_still_too_large">Still over this server\'s %1$s. Keep less of it, or make it smaller.</string>
+    <!-- Snackbar when a video or picture could not be edited -->
+    <string name="composer_edit_failed">That couldn\'t be changed. It\'s as it was.</string>
+    <!-- Toolbar button that opens the camera menu -->
+    <string name="composer_camera">Camera</string>
+    <!-- Camera menu: take a photo -->
+    <string name="composer_camera_photo">Take a photo</string>
+    <!-- Camera menu: record a video -->
+    <string name="composer_camera_video">Record a video</string>
+    <!-- Camera menu: record a short video that stops after a set time; the placeholder is seconds -->
+    <plurals name="composer_camera_short">
+        <item quantity="one">Record a short, %1$d second</item>
+        <item quantity="other">Record a short, %1$d seconds</item>
+    </plurals>
+    <!-- Title of the dialog asked once after recording the first short -->
+    <string name="composer_shorts_title">Tag shorts with #shorts?</string>
+    <!-- Body of the dialog about tagging shorts -->
+    <string name="composer_shorts_body">Shorts tagged #shorts show in the Shorts feed of people who follow it. Your choice is kept for next time.</string>
+    <!-- Button that tags shorts with #shorts from now on -->
+    <string name="composer_shorts_yes">Tag them</string>
+    <!-- Button that never tags shorts -->
+    <string name="composer_shorts_no">Don\'t tag</string>
 </resources>

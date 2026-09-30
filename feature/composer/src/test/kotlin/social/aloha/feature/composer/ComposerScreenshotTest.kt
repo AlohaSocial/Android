@@ -51,6 +51,7 @@ class ComposerScreenshotTest {
         override fun onAuthor(id: String) = Unit
         override fun onPickMedia() = Unit
         override fun onPickFiles() = Unit
+        override fun onCapture(capture: Capture) = Unit
         override fun onEditMedia(id: String) = Unit
         override fun onRemoveMedia(id: String) = Unit
         override fun onRetryMedia(id: String) = Unit

@@ -4,6 +4,7 @@
 package social.aloha.feature.composer
 
 import android.content.Context
+import android.net.Uri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
@@ -60,7 +61,7 @@ internal class ComposerViewModel @AssistedInject constructor(
     private val lookup: RemoteLookup,
     uploads: MediaUploads,
     clients: ClientFactory,
-    preferences: AppPreferences,
+    private val preferences: AppPreferences,
 ) : ViewModel() {
     @AssistedFactory
     interface Factory {
@@ -81,13 +82,14 @@ internal class ComposerViewModel @AssistedInject constructor(
         get() = spoiler.isNotBlank() || attachments.byPost.value.flatten().isNotEmpty() ||
             segments.any { it.text.isNotBlank() && it.text.trim() != prefill.trim() }
 
+    private val videos = VideoTransformer(context)
+    private val preparation = MediaPreparation(context.contentResolver, File(context.filesDir, UPLOADS), videos)
+
     /** The pictures, videos and files of each post; the screen describes and removes them here. */
-    val attachments = Attachments(
-        uploads,
-        clients,
-        MediaPreparation(context.contentResolver, File(context.filesDir, UPLOADS)),
-        viewModelScope,
-    )
+    val attachments = Attachments(uploads, mediaRepository, preparation, viewModelScope)
+
+    /** Filters, trims and smaller sizes, each uploaded in place of what it changed. */
+    val edits = MediaEdits(attachments, preparation, videos, viewModelScope)
 
     private val control = MutableStateFlow(ComposerUiState())
     private val completions = Completions(compose, viewModelScope)
@@ -106,15 +108,17 @@ internal class ComposerViewModel @AssistedInject constructor(
         val sensitive: Boolean,
         val failure: AttachFailure?,
         val warn: Boolean,
+        val edit: EditFailure?,
+        val tagShorts: Boolean?,
     )
 
     private val media = combine(
         attachments.byPost,
         attachments.sensitive,
         attachments.failure,
-        preferences.warnMissingDescription,
-        ::Media,
-    )
+        edits.failure,
+        combine(preferences.warnMissingDescription, preferences.tagShorts, ::Pair),
+    ) { attachments, sensitive, failure, edit, (warn, tag) -> Media(attachments, sensitive, failure, warn, edit, tag) }
 
     val uiState: StateFlow<ComposerUiState> = combine(
         control,
@@ -143,6 +147,8 @@ internal class ComposerViewModel @AssistedInject constructor(
             mediaSensitive = media.sensitive,
             maxAttachments = limits.maxMediaAttachments,
             attachFailure = media.failure,
+            editFailure = media.edit,
+            tagShorts = media.tagShorts,
             warnMissingDescription = media.warn,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_MILLIS), ComposerUiState())
@@ -218,11 +224,17 @@ internal class ComposerViewModel @AssistedInject constructor(
         get() = reader?.capabilities?.limits?.supportedMimeTypes?.takeIf { it.isNotEmpty() }?.toTypedArray()
             ?: arrayOf("*/*")
 
-    /** Attaches what the writer picked to the post being written, as many as it still has room for. */
-    fun onPicked(uris: List<android.net.Uri>) {
+    /**
+     * Attaches what the writer picked or recorded to the post being written, as many as it has room
+     * for. A short recorded here gets `#shorts` when [tagShort] says so, which is remembered as the
+     * writer's choice when [remember]; never without them having chosen it.
+     */
+    fun onPicked(uris: List<Uri>, tagShort: Boolean = false, remember: Boolean = false) {
         val state = uiState.value
         val room = state.maxAttachments - state.attachments.getOrElse(focused) { emptyList() }.size
         if (room > 0) attachments.add(focused, uris, room)
+        if (remember) viewModelScope.launch { preferences.setTagShorts(tagShort) }
+        if (tagShort && uris.isNotEmpty()) segments.getOrNull(focused)?.let { segments[focused] = tagged(it) }
     }
 
     /** Writes as another signed-in account; a reply is looked up on that account's server first. */
@@ -273,6 +285,7 @@ internal class ComposerViewModel @AssistedInject constructor(
     fun onFailureShown() {
         control.update { it.copy(failure = null) }
         attachments.onFailureShown()
+        edits.onFailureShown()
     }
 
     override fun onCleared() {
@@ -367,3 +380,12 @@ private fun ComposerUiState.segmentAt(index: Int, text: String, spoiler: String,
     mediaIds = media.byPost.value.getOrElse(index) { emptyList() }.mapNotNull(Attachment::mediaId),
     mediaSensitive = media.sensitive.value,
 )
+
+/** [value] ending in `#shorts`, once, with the cursor after it. */
+private fun tagged(value: TextFieldValue): TextFieldValue {
+    if (SHORTS_TAG in value.text) return value
+    val text = value.text.trimEnd().let { if (it.isEmpty()) SHORTS_TAG else "$it $SHORTS_TAG" }
+    return TextFieldValue(text, TextRange(text.length))
+}
+
+private const val SHORTS_TAG = "#shorts"

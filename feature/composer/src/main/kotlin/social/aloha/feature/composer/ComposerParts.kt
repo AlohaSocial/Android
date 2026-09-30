@@ -262,6 +262,7 @@ private fun MediaButtons(state: ComposerUiState, actions: ComposerActions) {
     IconButton(onClick = actions::onPickFiles, enabled = room && !state.posting) {
         Icon(AlohaIcons.AttachFile, stringResource(R.string.composer_add_file))
     }
+    CameraMenu(enabled = room && !state.posting, onCapture = actions::onCapture)
     if (state.cardFits) {
         IconToggleButton(checked = state.card.on, onCheckedChange = actions::onCard) {
             Icon(AlohaIcons.TextCard, stringResource(R.string.composer_card))
@@ -270,6 +271,32 @@ private fun MediaButtons(state: ComposerUiState, actions: ComposerActions) {
     if (attached > 0) {
         IconToggleButton(checked = state.mediaSensitive, onCheckedChange = actions::onSensitive) {
             Icon(AlohaIcons.Sensitive, stringResource(R.string.composer_media_sensitive))
+        }
+    }
+}
+
+/** The camera: a photo, a video, or a short of one of the set lengths. */
+@Composable
+private fun CameraMenu(enabled: Boolean, onCapture: (Capture) -> Unit) {
+    var open by remember { mutableStateOf(false) }
+    IconButton(onClick = { open = true }, enabled = enabled) {
+        Icon(AlohaIcons.Camera, stringResource(R.string.composer_camera))
+    }
+    DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+        val choices = listOf(
+            Capture.Photo to stringResource(R.string.composer_camera_photo),
+            Capture.Video to stringResource(R.string.composer_camera_video),
+        ) + Capture.SHORT_SECONDS.map {
+            Capture.Short(it) to pluralStringResource(R.plurals.composer_camera_short, it, it)
+        }
+        choices.forEach { (capture, label) ->
+            DropdownMenuItem(
+                text = { Text(label) },
+                onClick = {
+                    open = false
+                    onCapture(capture)
+                },
+            )
         }
     }
 }

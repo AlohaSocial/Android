@@ -3,6 +3,7 @@
 
 package social.aloha.feature.composer
 
+import android.text.format.DateUtils
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -28,11 +29,13 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RangeSlider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -61,6 +64,7 @@ import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import java.util.concurrent.TimeUnit
 import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.sync.UploadState
@@ -75,7 +79,7 @@ internal fun MediaStrip(attachments: List<Attachment>, actions: ComposerActions)
 
 @Composable
 private fun MediaTile(attachment: Attachment, actions: ComposerActions) {
-    val status = uploadLabel(attachment.upload)
+    val status = uploadLabel(attachment)
     val edit = stringResource(R.string.composer_media_edit)
     val described = attachment.description.isNotBlank()
     val summary = listOfNotNull(
@@ -108,7 +112,13 @@ private fun MediaTile(attachment: Attachment, actions: ComposerActions) {
                     modifier = Modifier.padding(AlohaSpacing.xs),
                 )
             }
-            UploadOverlay(attachment.upload)
+            if (attachment.preparing) {
+                CircularProgressIndicator(Modifier.size(PROGRESS))
+            } else if (attachment.oversizedLimit == null) {
+                UploadOverlay(attachment.upload)
+            } else {
+                Icon(AlohaIcons.Trim, contentDescription = null)
+            }
             AltBadge(described, Modifier.align(Alignment.BottomStart).padding(AlohaSpacing.xs))
         }
         val failed = attachment.upload is UploadState.Failed || attachment.upload is UploadState.Refused
@@ -165,6 +175,16 @@ private fun AltBadge(described: Boolean, modifier: Modifier = Modifier) {
 }
 
 @Composable
+private fun uploadLabel(attachment: Attachment): String? = when {
+    attachment.preparing -> stringResource(R.string.composer_media_preparing)
+
+    attachment.oversizedLimit != null ->
+        stringResource(R.string.composer_media_oversized, Attachments.size(attachment.oversizedLimit))
+
+    else -> uploadLabel(attachment.upload)
+}
+
+@Composable
 private fun uploadLabel(upload: UploadState): String? = when (upload) {
     UploadState.Queued -> stringResource(R.string.composer_media_waiting)
 
@@ -183,6 +203,13 @@ private fun uploadLabel(upload: UploadState): String? = when (upload) {
     UploadState.Failed -> stringResource(R.string.composer_media_failed)
 }
 
+/** What the editor asks to change beyond the words: a picture's filter, or a video's trim and size. */
+internal sealed interface MediaChange {
+    data class Filter(val filter: PhotoFilter) : MediaChange
+
+    data class Video(val edit: VideoEdit) : MediaChange
+}
+
 /**
  * The description of one attachment and, for a picture, where its crop keeps in frame: a tap on the
  * picture moves the focal point there. A description is what a screen reader says, and what a remote
@@ -191,11 +218,24 @@ private fun uploadLabel(upload: UploadState): String? = when (upload) {
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun MediaEditor(attachment: Attachment, onDone: (String, Focus?, PhotoFilter) -> Unit) {
+internal fun MediaEditor(attachment: Attachment, video: VideoInfo?, onDone: (String, Focus?, MediaChange?) -> Unit) {
     var description by remember(attachment.id) { mutableStateOf(attachment.description) }
     var focus by remember(attachment.id) { mutableStateOf(attachment.focus) }
     var filter by remember(attachment.id) { mutableStateOf(attachment.filter) }
-    ModalBottomSheet(onDismissRequest = { onDone(description, focus, filter) }) {
+    var cut by remember(attachment.id, video) { mutableStateOf(video?.let(VideoEdit::whole)) }
+    val finish = {
+        val change = when {
+            filter != attachment.filter -> MediaChange.Filter(filter)
+
+            // an oversized video is edited whatever was touched; another only when it was
+            video != null && cut != null && (cut != VideoEdit.whole(video) || attachment.oversizedLimit != null) ->
+                MediaChange.Video(checkNotNull(cut))
+
+            else -> null
+        }
+        onDone(description, focus, change)
+    }
+    ModalBottomSheet(onDismissRequest = finish) {
         Column(
             Modifier.padding(horizontal = AlohaSpacing.m).padding(bottom = AlohaSpacing.l),
             verticalArrangement = Arrangement.spacedBy(AlohaSpacing.s),
@@ -207,6 +247,7 @@ internal fun MediaEditor(attachment: Attachment, onDone: (String, Focus?, PhotoF
             )
             if (attachment.isPicture) FocusPicker(attachment, focus, filter) { focus = it }
             if (attachment.filterable) FilterRow(attachment, filter) { filter = it }
+            if (video != null) cut?.let { VideoTrim(attachment, video, it) { changed -> cut = changed } }
             OutlinedTextField(
                 value = description,
                 onValueChange = { description = it.take(Attachments.DESCRIPTION_LIMIT) },
@@ -224,7 +265,7 @@ internal fun MediaEditor(attachment: Attachment, onDone: (String, Focus?, PhotoF
                 minLines = 3,
                 modifier = Modifier.fillMaxWidth(),
             )
-            Button(onClick = { onDone(description, focus, filter) }, modifier = Modifier.align(Alignment.End)) {
+            Button(onClick = finish, modifier = Modifier.align(Alignment.End)) {
                 Text(stringResource(R.string.composer_media_done))
             }
         }
@@ -319,6 +360,58 @@ internal fun CardPreview(card: CardUi, actions: ComposerActions) {
         }
     }
 }
+
+/**
+ * The part of a video to keep, and the size to make it, with how large the result comes to against
+ * the server's ceiling; the size choices offered are only those smaller than the video already is.
+ */
+@Composable
+private fun VideoTrim(attachment: Attachment, video: VideoInfo, edit: VideoEdit, onEdit: (VideoEdit) -> Unit) {
+    val source = (attachment.original ?: attachment.file).length()
+    val estimate = edit.estimate(source, video)
+    val limit = attachment.oversizedLimit
+    Column(verticalArrangement = Arrangement.spacedBy(AlohaSpacing.xs)) {
+        Text(stringResource(R.string.composer_video_trim), style = MaterialTheme.typography.titleSmall)
+        val kept = stringResource(R.string.composer_video_kept, seconds(edit.startMs), seconds(edit.endMs))
+        RangeSlider(
+            modifier = Modifier.semantics { stateDescription = kept },
+            value = edit.startMs.toFloat()..edit.endMs.toFloat(),
+            onValueChange = { range ->
+                onEdit(edit.copy(startMs = range.start.toLong(), endMs = range.endInclusive.toLong()))
+            },
+            valueRange = 0f..video.durationMs.toFloat(),
+        )
+        Text(kept, style = MaterialTheme.typography.bodySmall)
+        Row(Modifier.selectableGroup(), horizontalArrangement = Arrangement.spacedBy(AlohaSpacing.xs)) {
+            val sizes = listOf<Int?>(null) + VideoEdit.SIZES.filter { it < video.shortSide }
+            sizes.forEach { side ->
+                FilterChip(
+                    selected = edit.shortSide == side,
+                    onClick = { onEdit(edit.copy(shortSide = side)) },
+                    label = {
+                        Text(
+                            side?.let { stringResource(R.string.composer_video_size, it) }
+                                ?: stringResource(R.string.composer_video_original),
+                        )
+                    },
+                )
+            }
+        }
+        val over = limit != null && estimate > limit
+        // over the limit is said in words, not only in the error colour
+        Text(
+            stringResource(
+                if (over) R.string.composer_video_estimate_over else R.string.composer_video_estimate,
+                Attachments.size(estimate),
+            ),
+            style = MaterialTheme.typography.bodySmall,
+            color = if (over) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+/** [ms] as a clock reads a length: "1:05". */
+private fun seconds(ms: Long): String = DateUtils.formatElapsedTime(TimeUnit.MILLISECONDS.toSeconds(ms))
 
 /** The eight filters over the picture as it was picked, each named, the chosen one marked. */
 @Composable

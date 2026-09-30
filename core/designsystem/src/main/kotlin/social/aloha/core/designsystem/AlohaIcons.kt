@@ -27,6 +27,7 @@ import androidx.compose.material.icons.outlined.AmpStories
 import androidx.compose.material.icons.outlined.AttachFile
 import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.ContentCut
 import androidx.compose.material.icons.outlined.Create
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
@@ -50,6 +51,7 @@ import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.NotificationsOff
 import androidx.compose.material.icons.outlined.OpenInBrowser
 import androidx.compose.material.icons.outlined.PersonAdd
+import androidx.compose.material.icons.outlined.PhotoCamera
 import androidx.compose.material.icons.outlined.PhotoLibrary
 import androidx.compose.material.icons.outlined.Place
 import androidx.compose.material.icons.outlined.Public
@@ -150,4 +152,6 @@ public object AlohaIcons {
     public val AttachFile: ImageVector = Icons.Outlined.AttachFile
     public val Retry: ImageVector = Icons.Outlined.Refresh
     public val TextCard: ImageVector = Icons.Outlined.TextFields
+    public val Trim: ImageVector = Icons.Outlined.ContentCut
+    public val Camera: ImageVector = Icons.Outlined.PhotoCamera
 }

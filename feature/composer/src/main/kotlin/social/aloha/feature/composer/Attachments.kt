@@ -45,7 +45,13 @@ internal data class Attachment(
     /** The picture as it was picked, kept on disk so a second filter starts from it, not the first. */
     val original: File? = null,
     val filter: PhotoFilter = PhotoFilter.Original,
+    /** A video over the server's ceiling, not uploaded until trimmed or scaled under it. */
+    val oversizedLimit: Long? = null,
+    /** A trim, scale or filter is being made; the upload follows. */
+    val preparing: Boolean = false,
 ) {
+    val isVideo: Boolean get() = mimeType.startsWith("video/")
+
     /** A GIF or animated WebP takes no filter; drawn through one it would lose its motion. */
     val filterable: Boolean get() = isPicture && mimeType != "image/gif" && mimeType != "image/webp"
 
@@ -95,13 +101,40 @@ internal class Attachments(
         scope.launch {
             uris.take(room).forEach { uri ->
                 val limits = account.capabilities.limits
-                val prepared = withContext(Dispatchers.IO) {
-                    preparation.copy(uri)?.let { preparation.prepare(it, limits) }
-                }
+                val copied = withContext(Dispatchers.IO) { preparation.copy(uri) }
+                val prepared = copied?.let { preparation.prepare(it, limits) }
+                val refusal = prepared?.second
                 when {
                     prepared == null -> failures.value = AttachFailure.Unreadable
-                    prepared.first == null -> failures.value = prepared.second.toFailure()
-                    else -> start(account, segment, prepared.first!!)
+
+                    prepared.first != null -> start(account, segment, prepared.first!!)
+
+                    // too long or too large a video waits in the strip for the writer to trim it
+                    check is Preflight.TooLarge && prepared.picked.mimeType.startsWith("video/") -> all.update {
+                        it.appended(
+                            segment,
+                            Attachment(
+                                UUID.randomUUID().toString(),
+                                prepared.picked.file,
+                                prepared.picked.fileName,
+                                prepared.picked.mimeType,
+                                oversizedLimit = check.limitBytes,
+                            ),
+                        )
+                        all.update { lists ->
+                            lists.mapIndexed { i, list ->
+                                if (i ==
+                                    segment
+                                ) {
+                                    list + waiting
+                                } else {
+                                    list
+                                }
+                            }
+                        }
+                    }
+
+                    else -> failures.value = refusal?.toFailure() ?: AttachFailure.Unreadable
                 }
             }
         }
@@ -121,7 +154,7 @@ internal class Attachments(
     }
 
     fun remove(id: String) {
-        find(id)?.let { release(it, forGood = true) }
+        get(id)?.let { release(it, forGood = true) }
         all.update { lists -> lists.map { list -> list.filterNot { it.id == id } } }
     }
 
@@ -130,32 +163,25 @@ internal class Attachments(
     }
 
     /**
-     * Bakes [filter] into [id] and uploads the result in its place: no route replaces the bytes
-     * behind a media id, so a filter after uploading is a second upload. The description carries
-     * over; the first upload is simply let go, for the server's own sweep of unattached media.
+     * Uploads [picked] in [id]'s place, keeping its place in the strip, and changes it with [change]:
+     * no route replaces the bytes behind a media id, so an edit after uploading is a second upload,
+     * and the first is let go for the server's own sweep of unattached media. The file [id] had is
+     * deleted unless [keepFile]. The description goes again, before posting.
      */
-    fun applyFilter(id: String, filter: PhotoFilter) {
+    fun replace(id: String, picked: Picked, keepFile: Boolean, change: (Attachment) -> Attachment) {
         val account = account ?: return
-        val attachment = find(id)?.takeIf { it.filterable && it.filter != filter } ?: return
-        val original = attachment.original ?: attachment.file
+        val attachment = get(id) ?: return
         val segment = all.value.indexOfFirst { list -> list.any { it.id == id } }
-        scope.launch {
-            val picked = Picked(original, attachment.fileName, attachment.mimeType)
-            val result = if (filter == PhotoFilter.Original) {
-                picked
-            } else {
-                withContext(Dispatchers.IO) { preparation.filtered(picked, filter) } ?: return@launch
-            }
-            release(attachment, keepFile = attachment.file == original)
-            val next = attachment.copy(
-                file = result.file,
-                mimeType = result.mimeType,
-                original = original,
-                filter = filter,
-                sentDescription = "",
-            )
-            start(account, segment, result, next)
-        }
+        release(attachment, keepFile = keepFile)
+        val next = change(attachment).copy(
+            file = picked.file,
+            fileName = picked.fileName,
+            mimeType = picked.mimeType,
+            sentDescription = "",
+            oversizedLimit = null,
+            preparing = false,
+        )
+        start(account, segment, picked, next)
     }
 
     /** Attaches [picked], already fit for the server, to post [segment] with [description]; its id. */
@@ -176,7 +202,7 @@ internal class Attachments(
     /** Uploads [id] again, after a failure. */
     fun retry(id: String) {
         val account = account ?: return
-        val attachment = find(id) ?: return
+        val attachment = get(id) ?: return
         val segment = all.value.indexOfFirst { list -> list.any { it.id == id } }
         release(attachment, keepFile = true)
         val again = attachment.copy(sentDescription = "")
@@ -238,9 +264,9 @@ internal class Attachments(
         if (forGood) attachment.original?.takeIf { it != attachment.file }?.delete()
     }
 
-    private fun find(id: String) = all.value.flatten().firstOrNull { it.id == id }
+    operator fun get(id: String): Attachment? = all.value.flatten().firstOrNull { it.id == id }
 
-    private fun change(id: String, change: (Attachment) -> Attachment) {
+    fun change(id: String, change: (Attachment) -> Attachment) {
         all.update { lists -> lists.map { list -> list.map { if (it.id == id) change(it) else it } } }
     }
 
