@@ -42,11 +42,15 @@ fun AlohaRoot(viewModel: AppViewModel = hiltViewModel()) {
             Column {
                 if (current.needsReauth) ReauthBanner(current.handle, onSignInAgain = viewModel::signInAgain)
                 val pending by viewModel.pendingLink.collectAsStateWithLifecycle()
+                val destination by viewModel.pendingDestination.collectAsStateWithLifecycle()
                 AlohaApp(
                     readerId = current.accountId,
                     serverAccountId = current.serverAccountId,
                     pendingLink = pending,
                     onPendingLinkTaken = viewModel::externalHandled,
+                    // only the shell of the account it belongs to takes it, not the one switched away from
+                    pendingDestination = destination?.takeIf { it.first == current.accountId }?.second,
+                    onPendingDestinationTaken = viewModel::destinationHandled,
                     resolveLink = viewModel::destination,
                     accountButton = { onProfile, onSettings -> AccountSwitcher(viewModel, onProfile, onSettings) },
                 )

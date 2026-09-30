@@ -5,6 +5,7 @@ package social.aloha.core.datastore
 
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -28,6 +29,20 @@ public class AppPreferences(private val store: DataStore<Preferences>) {
     /** A swipe towards the start of the line; boosting until chosen otherwise. */
     public val swipeTowardsStart: Flow<SwipeAction> = store.data.map { swipe(it[SWIPE_START], SwipeAction.Boost) }
 
+    /** Whether posting warns when a picture has no description; on until turned off. It never blocks. */
+    public val warnMissingDescription: Flow<Boolean> = store.data.map { it[WARN_DESCRIPTION] ?: true }
+
+    /** Whether a short recorded in the composer gets `#shorts`; null until the person was asked once. */
+    public val tagShorts: Flow<Boolean?> = store.data.map { it[TAG_SHORTS] }
+
+    public suspend fun setTagShorts(tag: Boolean) {
+        store.edit { it[TAG_SHORTS] = tag }
+    }
+
+    public suspend fun setWarnMissingDescription(warn: Boolean) {
+        store.edit { it[WARN_DESCRIPTION] = warn }
+    }
+
     public suspend fun setSwipeTowardsEnd(action: SwipeAction) {
         store.edit { it[SWIPE_END] = action.name }
     }
@@ -48,6 +63,8 @@ public class AppPreferences(private val store: DataStore<Preferences>) {
         val SWIPE_END = stringPreferencesKey("swipe_towards_end")
         val SWIPE_START = stringPreferencesKey("swipe_towards_start")
         val ACTIVE_ACCOUNT = stringPreferencesKey("active_account_id")
+        val WARN_DESCRIPTION = booleanPreferencesKey("warn_missing_description")
+        val TAG_SHORTS = booleanPreferencesKey("tag_shorts")
 
         /** A value a later build wrote, or none at all, reads as the default. */
         fun swipe(stored: String?, default: SwipeAction): SwipeAction =

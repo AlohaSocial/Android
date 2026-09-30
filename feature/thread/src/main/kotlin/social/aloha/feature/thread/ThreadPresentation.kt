@@ -37,6 +37,22 @@ internal object ThreadPresentation {
         return if (status.reblog != null) status.copy(reblog = extended) else extended
     }
 
+    /**
+     * [reactions] as they are once the reader's reaction [name] is added, or taken back unless [add]:
+     * counted, marked as theirs, and gone when nobody is left reacting with it.
+     */
+    fun reacted(reactions: List<Reaction>, name: String, add: Boolean): List<Reaction> {
+        val known = reactions.any { it.name == name }
+        val changed = reactions.map { reaction ->
+            if (reaction.name != name || reaction.me == add) {
+                reaction
+            } else {
+                reaction.copy(count = reaction.count + if (add) 1 else -1, me = add)
+            }
+        }.filter { it.count > 0 }
+        return if (add && !known) changed + Reaction(name, count = 1, me = true) else changed
+    }
+
     /** The lists worth a button: who favourited or boosted, when anyone did; quotes and reactions where served. */
     fun lists(shown: Status, capabilities: ServerCapabilities): Map<StatusListKind, Int?> = buildMap {
         if (shown.favouritesCount > 0) put(StatusListKind.FavouritedBy, shown.favouritesCount)

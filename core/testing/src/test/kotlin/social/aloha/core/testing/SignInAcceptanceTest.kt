@@ -30,10 +30,12 @@ import social.aloha.core.data.Authorization
 import social.aloha.core.data.ClientFactory
 import social.aloha.core.data.SignInCoordinator
 import social.aloha.core.data.SignInResult
+import social.aloha.core.data.compose.Outbox
 import social.aloha.core.data.timeline.CacheSweeper
 import social.aloha.core.data.timeline.StatusRepository
 import social.aloha.core.database.AccountsDatabase
 import social.aloha.core.database.CacheDatabase
+import social.aloha.core.database.OutboxDatabase
 import social.aloha.core.datastore.AccountSettings
 import social.aloha.core.datastore.AccountSettingsStore
 import social.aloha.core.datastore.AppPreferences
@@ -81,11 +83,16 @@ class SignInAcceptanceTest(private val configuration: MockServerConfiguration) {
         CacheDatabase::class.java,
     ).build()
     private val settings = AccountSettingsStore(InMemoryDataStore(emptyMap()))
+    private val outboxDb = Room.inMemoryDatabaseBuilder(
+        ApplicationProvider.getApplicationContext(),
+        OutboxDatabase::class.java,
+    ).build()
     private val removal = AccountRemoval(
         accounts,
         OAuthClient(http, limiter, Dispatchers.IO),
         CacheSweeper(cache.statusDao(), cache.cacheAccountDao(), Clock.systemUTC()),
         settings,
+        Outbox(outboxDb.outboxDao(), Clock.systemUTC()),
     )
 
     @After
@@ -93,6 +100,7 @@ class SignInAcceptanceTest(private val configuration: MockServerConfiguration) {
         scope.cancel()
         database.close()
         cache.close()
+        outboxDb.close()
         mock.close()
     }
 
@@ -118,12 +126,13 @@ class SignInAcceptanceTest(private val configuration: MockServerConfiguration) {
     @Test
     fun `a callback carrying another state is dropped without an exchange`() = runBlocking {
         coordinator.beginAuthorization(finder.found(mock.origin.toString()))
-        val before = mock.requests.size
         assertEquals(
             SignInResult.NotForUs,
             coordinator.complete("alohasocial://oauth-callback/?code=stolen&state=evil"),
         )
-        assertEquals(before, mock.requests.size)
+        // what matters is that the code was never exchanged; counting all requests raced the server,
+        // which records one on its own thread, sometimes after the client already has the answer
+        assertTrue(mock.requests.none { it.url.encodedPath.endsWith("/oauth/token") })
         assertTrue(coordinator.hasPendingAuthorization())
     }
 

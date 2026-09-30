@@ -54,6 +54,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -99,7 +100,7 @@ internal fun ProfileScreen(
     listState: LazyListState = rememberLazyListState(),
 ) {
     val title = state.header?.author?.plainName.orEmpty()
-    var blocking by remember { mutableStateOf(false) }
+    var asking by rememberSaveable { mutableStateOf<Asking?>(null) }
     Scaffold(
         modifier = modifier.semantics { paneTitle = title },
         topBar = {
@@ -110,7 +111,7 @@ internal fun ProfileScreen(
                         Icon(AlohaIcons.Back, stringResource(R.string.profile_back))
                     }
                 },
-                actions = { Menu(state, actions, onBlockAsked = { blocking = true }) },
+                actions = { Menu(state, actions, ask = { asking = it }) },
             )
         },
         snackbarHost = { SnackbarHost(snackbars) },
@@ -126,11 +127,9 @@ internal fun ProfileScreen(
             }
         }
     }
-    if (blocking) {
-        BlockDialog(state.header?.author?.handle.orEmpty(), onConfirm = {
-            blocking = false
-            actions.onBlock(true)
-        }, onDismiss = { blocking = false })
+    asking?.let { question ->
+        val header = state.header ?: return@let
+        RelationDialog(question, header.author.handle, header.domain, state, actions) { asking = null }
     }
     NearEndEffect(listState, state.items.size, actions::onNearEnd)
 }
@@ -234,29 +233,21 @@ private val ProfileTab.label: Int
     }
 
 @Composable
-private fun Menu(state: ProfileUiState, actions: ProfileScreenActions, onBlockAsked: () -> Unit) {
+private fun Menu(state: ProfileUiState, actions: ProfileScreenActions, ask: (Asking) -> Unit) {
     val header = state.header ?: return
     var open by remember { mutableStateOf(false) }
     IconButton(onClick = { open = true }) { Icon(AlohaIcons.More, stringResource(R.string.profile_more)) }
     DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
         val relation = state.relation
         if (!header.isSelf && relation != null) {
+            RelationItems(relation, header.domain, actions, ask) { open = false }
+        }
+        if (!header.isSelf) {
             DropdownMenuItem(
-                text = {
-                    Text(stringResource(if (relation.muting) R.string.profile_unmute else R.string.profile_mute))
-                },
+                text = { Text(stringResource(R.string.profile_report)) },
                 onClick = {
                     open = false
-                    actions.onMute(!relation.muting)
-                },
-            )
-            DropdownMenuItem(
-                text = {
-                    Text(stringResource(if (relation.blocking) R.string.profile_unblock else R.string.profile_block))
-                },
-                onClick = {
-                    open = false
-                    if (relation.blocking) actions.onBlock(false) else onBlockAsked()
+                    actions.onReport()
                 },
             )
         }
@@ -270,17 +261,6 @@ private fun Menu(state: ProfileUiState, actions: ProfileScreenActions, onBlockAs
             )
         }
     }
-}
-
-@Composable
-private fun BlockDialog(handle: String, onConfirm: () -> Unit, onDismiss: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.profile_block_title, handle)) },
-        text = { Text(stringResource(R.string.profile_block_body)) },
-        confirmButton = { TextButton(onClick = onConfirm) { Text(stringResource(R.string.profile_block_confirm)) } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.profile_cancel)) } },
-    )
 }
 
 @Composable

@@ -20,6 +20,10 @@ import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
+import okio.Buffer
+import okio.BufferedSink
+import okio.ForwardingSink
+import okio.buffer
 import social.aloha.core.network.tls.UntrustedServerCertificateException
 
 /** Sends [request], suspending until the answer arrives; cancelling the coroutine cancels the call. */
@@ -103,8 +107,33 @@ private fun MultipartBody.Builder.addPart(part: Part) {
     when (part) {
         is Part.Field -> addFormDataPart(part.name, part.value)
 
-        is Part.FileContent ->
-            addFormDataPart(part.name, part.fileName, part.file.asRequestBody(part.mimeType.toMediaType()))
+        is Part.FileContent -> {
+            val body = part.file.asRequestBody(part.mimeType.toMediaType())
+            addFormDataPart(part.name, part.fileName, part.onProgress?.let { ProgressBody(body, it) } ?: body)
+        }
+    }
+}
+
+/** [body], telling [onProgress] how much of it has been written as it goes out. */
+private class ProgressBody(private val body: RequestBody, private val onProgress: (Long, Long) -> Unit) :
+    RequestBody() {
+    override fun contentType() = body.contentType()
+
+    override fun contentLength() = body.contentLength()
+
+    override fun writeTo(sink: BufferedSink) {
+        val total = contentLength()
+        val counting = object : ForwardingSink(sink) {
+            private var sent = 0L
+
+            override fun write(source: Buffer, byteCount: Long) {
+                super.write(source, byteCount)
+                sent += byteCount
+                onProgress(sent, total)
+            }
+        }.buffer()
+        body.writeTo(counting)
+        counting.flush()
     }
 }
 

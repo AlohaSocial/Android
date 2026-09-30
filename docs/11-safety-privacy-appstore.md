@@ -8,7 +8,7 @@ This is the Apple app's specification, carried over as the product contract for 
 |---|---|
 | Store | Google Play's UGC policy and Data safety form (filled per flavor) instead of App Review; F-Droid for `generic`. |
 | Locking | An opt-in biometric or device-credential app lock; authentication-bound encryption of direct messages is an optional later addition. |
-| Backups | `dataExtractionRules` and `fullBackupContent` keep the token vault and the cache off backups. |
+| Backups | `dataExtractionRules` and `fullBackupContent` keep the token vault, the cache, and the posts not yet out (`outbox.db`, drafts and direct messages among them, with the copies in `files/uploads` they attach) off backups and device transfers. |
 
 ---
 

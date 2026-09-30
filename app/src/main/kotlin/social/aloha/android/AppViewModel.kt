@@ -3,10 +3,14 @@
 
 package social.aloha.android
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation3.runtime.NavKey
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
+import java.io.File
+import java.util.UUID
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -16,14 +20,19 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import social.aloha.core.data.AccountMaintenance
 import social.aloha.core.data.AccountRemoval
 import social.aloha.core.data.AccountRepository
+import social.aloha.core.data.compose.Outbox
 import social.aloha.core.data.timeline.CacheSweeper
 import social.aloha.core.model.SignedInAccount
+import social.aloha.core.navigation.ComposerKey
+import social.aloha.core.navigation.DraftsKey
+import social.aloha.core.sync.PostQueue
 
 /** What the root of the app shows. */
 sealed interface AppSession {
@@ -62,24 +71,43 @@ class AppViewModel @Inject constructor(
     private val links: LinkOpener,
     maintenance: AccountMaintenance,
     sweeper: CacheSweeper,
+    private val outbox: Outbox,
+    private val queue: PostQueue,
+    @ApplicationContext private val context: Context,
 ) : ViewModel() {
     private val signingInAgain = MutableStateFlow(false)
     private val external = MutableStateFlow<String?>(null)
 
     /** A link another app asked to open, waiting for the shell to open it. */
     val pendingLink: StateFlow<String?> = external.asStateFlow()
+    private val destination = MutableStateFlow<Pair<String, NavKey>?>(null)
+
+    /**
+     * A screen of the app's own asked for from outside it, a draft to finish, with the account whose
+     * shell opens it, waiting for that shell.
+     */
+    val pendingDestination: StateFlow<Pair<String, NavKey>?> = destination.asStateFlow()
     private val adding = MutableStateFlow(false)
 
     init {
         // once per launch, off the main thread: moved API bases are found, stale capabilities detected
-        // again, and the cache trimmed within its budget
+        // again, the cache trimmed within its budget, and copies that no post attaches any more deleted
         viewModelScope.launch {
             maintenance.checkAll()
             sweeper.sweep()
+            outbox.sweep(File(context.filesDir, Outbox.UPLOADS))
         }
         // a sign-in that succeeded ends the request for one, and an added account becomes the active one
+        // and what it queued while the sign-in lapsed goes out, as does anything left waiting since last time
         viewModelScope.launch {
-            accounts.activeAccount.filterNotNull().filter { !it.needsReauth }.collect { signingInAgain.value = false }
+            accounts.activeAccount.filterNotNull().filter { !it.needsReauth }.distinctUntilChanged { a, b ->
+                a.id ==
+                    b.id
+            }
+                .collect { account ->
+                    signingInAgain.value = false
+                    queue.resume(account.id)
+                }
         }
         viewModelScope.launch {
             accounts.activeAccount.filterNotNull().map { it.id }.distinctUntilChanged().collect { adding.value = false }
@@ -110,6 +138,39 @@ class AppViewModel @Inject constructor(
 
     fun externalHandled() {
         external.value = null
+    }
+
+    /**
+     * Opens draft [draftId] of [accountId] in the composer, or that account's drafts without one; a
+     * notification asks, so an account no longer signed in here opens nothing.
+     */
+    fun openDraft(accountId: String, draftId: String?) {
+        viewModelScope.launch {
+            if (accounts.all().none { it.id == accountId }) return@launch
+            accounts.activate(accountId)
+            destination.value =
+                accountId to (draftId?.let { ComposerKey(accountId, draftId = it) } ?: DraftsKey(accountId))
+        }
+    }
+
+    /**
+     * Opens the composer on what another app shared, as the active account; one shared before any
+     * account is signed in waits for the sign-in.
+     */
+    fun share(content: SharedContent) {
+        viewModelScope.launch {
+            val account = accounts.activeAccount.filterNotNull().first()
+            destination.value = account.id to ComposerKey(
+                account.id,
+                draftId = UUID.randomUUID().toString(),
+                sharedText = content.text,
+                sharedMedia = content.media.map { it.toString() },
+            )
+        }
+    }
+
+    fun destinationHandled() {
+        destination.value = null
     }
 
     /**

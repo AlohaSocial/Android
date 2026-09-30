@@ -16,11 +16,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
 import social.aloha.core.data.timeline.Toggle
 import social.aloha.core.navigation.AccountKey
 import social.aloha.core.navigation.PeopleKind
+import social.aloha.core.ui.DeleteRequest
 import social.aloha.core.ui.DeleteStatusDialog
 import social.aloha.core.ui.R as UiR
 import social.aloha.core.ui.RichTextColors
@@ -35,7 +37,7 @@ public fun ProfileRoute(key: AccountKey, navigation: ProfileNavigation, modifier
     val context = LocalContext.current
     val snackbars = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
-    var deleting by remember { mutableStateOf<StatusRowUi?>(null) }
+    var deleting by remember { mutableStateOf<DeleteRequest?>(null) }
     val colors = RichTextColors.fromTheme()
     val failed = stringResource(UiR.string.status_action_failed)
     val copied = stringResource(UiR.string.status_link_copied)
@@ -80,17 +82,28 @@ public fun ProfileRoute(key: AccountKey, navigation: ProfileNavigation, modifier
             }
 
             override fun onOpenInBrowser(url: String) = openInBrowser(context, url)
+
+            override fun onEditProfile() = nav.editProfile()
+
+            override fun onReport() {
+                val author = state.header?.author ?: return
+                nav.report(author.id, author.handle, statusId = null)
+            }
         }
+    }
+    // the reader's own profile shows what they just changed when they come back to it
+    LifecycleResumeEffect(state.header?.isSelf) {
+        if (state.header?.isSelf == true) viewModel.onRefresh()
+        onPauseOrDispose {}
     }
 
     ProfileScreen(state, screenActions, rowActions, modifier, snackbars)
 
-    deleting?.let { row ->
+    deleting?.let { request ->
         DeleteStatusDialog(
-            onConfirm = {
-                deleting = null
-                viewModel.onDelete(row.statusId)
-            },
+            request,
+            onDelete = viewModel::onDelete,
+            onRedraft = { nav.editPost(it, redraft = true) },
             onDismiss = { deleting = null },
         )
     }

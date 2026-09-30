@@ -7,6 +7,8 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.ui.text.AnnotatedString
 import java.time.Instant
 import social.aloha.core.data.Trouble
+import social.aloha.core.data.profile.ListChoice
+import social.aloha.core.data.profile.RelationshipChange
 import social.aloha.core.model.CustomEmoji
 import social.aloha.core.model.MediaCollection
 import social.aloha.core.model.ProfileHighlights
@@ -30,10 +32,15 @@ internal data class ProfileHeader(
     val locked: Boolean,
     val url: String?,
     val isSelf: Boolean,
+    /** The account's server when it is not the reader's own, which can then be blocked as a whole. */
+    val domain: String?,
 ) {
     @Immutable
     data class Field(val name: AnnotatedString, val value: AnnotatedString, val verified: Boolean)
 }
+
+/** What the profile asks about before it changes how the reader relates to the account. */
+internal enum class Asking { Block, Mute, BlockDomain, RemoveFollower, Note, Lists }
 
 /** How the reader relates to the account, as far as the controls care. */
 @Immutable
@@ -44,6 +51,11 @@ internal data class Relation(
     val muting: Boolean = false,
     val blocking: Boolean = false,
     val blockedBy: Boolean = false,
+    val showingReblogs: Boolean = true,
+    val notifying: Boolean = false,
+    val domainBlocking: Boolean = false,
+    /** The reader's own note about the account. */
+    val note: String? = null,
 )
 
 @Immutable
@@ -76,6 +88,8 @@ internal data class ProfileUiState(
     val gone: Boolean = false,
     val now: Instant = Instant.EPOCH,
     val actionFailed: Boolean = false,
+    /** The reader's lists, once asked for, each saying whether the account is on it. */
+    val lists: List<ListChoice>? = null,
 )
 
 /** What changes the profile: its tabs and pages, and how the reader relates to the account. */
@@ -88,13 +102,16 @@ internal interface ProfileActions {
 
     fun onFillGap(gapId: String)
 
-    fun onFollow()
+    /** Changes how the reader relates to the account: follow, mute, block, note and the rest. */
+    fun onChange(change: RelationshipChange)
 
-    fun onUnfollow()
+    /** Blocks the account's whole server, or unblocks it. */
+    fun onBlockDomain(block: Boolean)
 
-    fun onMute(mute: Boolean)
+    /** Loads the reader's lists, for putting the account on them. */
+    fun onLists()
 
-    fun onBlock(block: Boolean)
+    fun onListed(listId: String, add: Boolean)
 }
 
 /** What the profile screen asks for: [ProfileActions], and the places it leads. */
@@ -104,4 +121,8 @@ internal interface ProfileScreenActions : ProfileActions {
     fun onPeople(followers: Boolean)
 
     fun onOpenInBrowser(url: String)
+
+    fun onEditProfile()
+
+    fun onReport()
 }

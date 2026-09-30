@@ -21,6 +21,7 @@ import kotlinx.coroutines.launch
 import social.aloha.core.data.timeline.Toggle
 import social.aloha.core.navigation.StatusListKind
 import social.aloha.core.navigation.ThreadKey
+import social.aloha.core.ui.DeleteRequest
 import social.aloha.core.ui.DeleteStatusDialog
 import social.aloha.core.ui.R as UiR
 import social.aloha.core.ui.RichTextColors
@@ -34,7 +35,7 @@ public fun ThreadRoute(key: ThreadKey, navigation: ThreadNavigation, modifier: M
     val context = LocalContext.current
     val snackbars = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
-    var deleting by remember { mutableStateOf<StatusRowUi?>(null) }
+    var deleting by remember { mutableStateOf<DeleteRequest?>(null) }
     val colors = RichTextColors.fromTheme()
     val failed = stringResource(UiR.string.status_action_failed)
     val copied = stringResource(UiR.string.status_link_copied)
@@ -71,6 +72,9 @@ public fun ThreadRoute(key: ThreadKey, navigation: ThreadNavigation, modifier: M
             override fun onPin(row: StatusRowUi) = viewModel.onToggle(row.statusId, Toggle.Pin)
 
             override fun onVote(row: StatusRowUi, choices: List<Int>) = viewModel.onVote(row.statusId, choices)
+
+            // only the focused post has its reactions fetched, so only it offers them
+            override fun onReact(row: StatusRowUi, name: String, add: Boolean) = viewModel.onReact(name, add)
         }
     }
 
@@ -92,12 +96,11 @@ public fun ThreadRoute(key: ThreadKey, navigation: ThreadNavigation, modifier: M
 
     ThreadScreen(state, screenActions, rowActions, modifier, snackbars)
 
-    deleting?.let { row ->
+    deleting?.let { request ->
         DeleteStatusDialog(
-            onConfirm = {
-                deleting = null
-                viewModel.onDelete(row.statusId)
-            },
+            request,
+            onDelete = viewModel::onDelete,
+            onRedraft = { nav.editPost(it, redraft = true) },
             onDismiss = { deleting = null },
         )
     }

@@ -132,4 +132,18 @@ class ExtensionEndpointsTest {
     fun `discover posts name the media kind the server knows`() {
         assertEquals("image", DiscoveryEndpoints.discoverPosts(DiscoverMedia.Images).endpoint.queryValue("media"))
     }
+
+    @Test
+    fun `a reaction is sent as the emoji Nextcloud Social reads`() {
+        assertEquals("🎉", StatusEndpoints.react("1", "🎉").endpoint.formValue("emoji"))
+        assertEquals("🎉", StatusEndpoints.unreact("1", "🎉").endpoint.formValue("emoji"))
+    }
+
+    @Test
+    fun `a profile save without a picture goes as a form, one with a picture as multipart`() {
+        val text = CredentialEndpoints.update(CredentialsUpdate(displayName = "Alice")).endpoint.body
+        assertTrue(text is Body.Form)
+        val picture = ProfilePicture(java.io.File("a.png"), "a.png", "image/png")
+        assertTrue(CredentialEndpoints.update(CredentialsUpdate(avatar = picture)).endpoint.body is Body.Multipart)
+    }
 }

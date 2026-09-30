@@ -106,4 +106,130 @@
     <string name="profile_people_error">Couldn\'t load this list.</string>
     <!-- Button that loads a list again after it failed -->
     <string name="profile_retry">Try again</string>
+    <!-- Menu item, checked when the followed account's boosts show in the reader's home -->
+    <string name="profile_show_boosts">Show their boosts</string>
+    <!-- Menu item, checked when each of the followed account's posts notifies the reader -->
+    <string name="profile_notify">Notify me of their posts</string>
+    <!-- Menu item that opens the reader's lists to put the account on, and that dialog's title -->
+    <string name="profile_lists">Add to lists</string>
+    <!-- Shown when the reader has no lists -->
+    <string name="profile_lists_none">You have no lists yet.</string>
+    <!-- Menu item that opens the reader's private note about the account, and that dialog's title -->
+    <string name="profile_note">Personal note</string>
+    <!-- Label of the note field -->
+    <string name="profile_note_label">Note</string>
+    <!-- Under the note field: nobody else sees it -->
+    <string name="profile_note_private">Only you can see this.</string>
+    <!-- Button that saves the note -->
+    <string name="profile_save">Save</string>
+    <!-- Button that closes the lists dialog -->
+    <string name="profile_done">Done</string>
+    <!-- Title of the mute dialog; the placeholder is the account, like @alice@example.social -->
+    <string name="profile_mute_title">Mute %1$s?</string>
+    <!-- Mute length: until the reader unmutes -->
+    <string name="profile_mute_forever">Until I unmute</string>
+    <!-- Mute length: an hour -->
+    <string name="profile_mute_hour">For an hour</string>
+    <!-- Mute length: a day -->
+    <string name="profile_mute_day">For a day</string>
+    <!-- Mute length: a week -->
+    <string name="profile_mute_week">For a week</string>
+    <!-- Checkbox in the mute dialog: their notifications go quiet too -->
+    <string name="profile_mute_notifications">Hide their notifications too</string>
+    <!-- Menu item that blocks the account's whole server -->
+    <string name="profile_block_domain">Block their server</string>
+    <!-- Menu item that unblocks the account's whole server -->
+    <string name="profile_unblock_domain">Unblock their server</string>
+    <!-- Title of the dialog asking before a whole server is blocked; the placeholder is its domain -->
+    <string name="profile_block_domain_title">Block all of %1$s?</string>
+    <!-- Body of that dialog -->
+    <string name="profile_block_domain_body">Nothing from anyone there shows anywhere, and the followers you have there are removed.</string>
+    <!-- Menu item that makes the account stop following the reader -->
+    <string name="profile_remove_follower">Remove as follower</string>
+    <!-- Title of the dialog asking before a follower is removed; the placeholder is the account -->
+    <string name="profile_remove_follower_title">Remove %1$s as a follower?</string>
+    <!-- Body of that dialog -->
+    <string name="profile_remove_follower_body">They stop following you without being told. They can follow you again.</string>
+    <!-- Button that confirms removing the follower -->
+    <string name="profile_remove_follower_confirm">Remove</string>
+    <!-- Button on one's own profile that opens it for editing -->
+    <string name="profile_edit">Edit profile</string>
+    <!-- Title of the profile editor -->
+    <string name="profile_edit_title">Edit profile</string>
+    <!-- Shown when one's own profile could not be loaded for editing -->
+    <string name="profile_edit_failed">Your profile couldn\'t be loaded.</string>
+    <!-- Label of the display name field -->
+    <string name="profile_edit_name">Display name</string>
+    <!-- Label of the bio field -->
+    <string name="profile_edit_bio">Bio</string>
+    <!-- Heading above the profile's extra fields, like a website or pronouns -->
+    <string name="profile_edit_fields">Extra fields</string>
+    <!-- Label of one extra field's name; the placeholder is its number -->
+    <string name="profile_edit_field_name">Label %1$d</string>
+    <!-- Label of one extra field's content; the placeholder is its number -->
+    <string name="profile_edit_field_value">Content %1$d</string>
+    <!-- Button that picks a new header picture -->
+    <string name="profile_edit_header">Change header</string>
+    <!-- Button that picks a new profile picture -->
+    <string name="profile_edit_avatar">Change picture</string>
+    <!-- Button that removes the header picture -->
+    <string name="profile_edit_remove_header">Remove header</string>
+    <!-- Button that removes the profile picture -->
+    <string name="profile_edit_remove_avatar">Remove picture</string>
+    <!-- Switch: follow requests are approved by hand -->
+    <string name="profile_edit_locked">Approve followers by hand</string>
+    <!-- Switch: the account is marked as a bot -->
+    <string name="profile_edit_bot">This account is a bot</string>
+    <!-- Switch: the profile may be suggested to others -->
+    <string name="profile_edit_discoverable">Suggest my profile to others</string>
+    <!-- Switch: search engines may include one's public posts -->
+    <string name="profile_edit_indexable">Let search engines include my public posts</string>
+    <!-- Switch: media start out marked sensitive -->
+    <string name="profile_edit_sensitive">Mark my media sensitive by default</string>
+    <!-- Button showing who new posts reach by default; the placeholder is one of the three below -->
+    <string name="profile_edit_privacy">New posts: %1$s</string>
+    <!-- Default reach of new posts: everyone -->
+    <string name="profile_edit_privacy_public">Public</string>
+    <!-- Default reach of new posts: everyone, kept off public timelines -->
+    <string name="profile_edit_privacy_unlisted">Quiet public</string>
+    <!-- Default reach of new posts: followers only -->
+    <string name="profile_edit_privacy_private">Followers only</string>
+    <!-- Snackbar when the server keeps the name and picture itself, for a person signed in through a directory -->
+    <string name="profile_edit_managed">Your server manages your name and picture.</string>
+    <!-- Snackbar when the server refused the changes without saying why -->
+    <string name="profile_edit_refused">The server didn\'t take these changes.</string>
+    <!-- Snackbar when the server could not be reached -->
+    <string name="profile_edit_unreached">Your profile couldn\'t be saved. Try again in a moment.</string>
+    <!-- Menu item that opens a report about the account -->
+    <string name="profile_report">Report</string>
+    <!-- Title of the report screen; the placeholder is the account, like @alice@example.social -->
+    <string name="profile_report_title">Report %1$s</string>
+    <!-- Heading above the report's categories -->
+    <string name="profile_report_why">What is wrong?</string>
+    <!-- Report category: spam -->
+    <string name="profile_report_spam">It is spam</string>
+    <!-- Report category: illegal content -->
+    <string name="profile_report_legal">It is illegal</string>
+    <!-- Report category: it breaks the server's rules -->
+    <string name="profile_report_violation">It breaks the server\'s rules</string>
+    <!-- Report category: something else -->
+    <string name="profile_report_other">Something else</string>
+    <!-- Heading above the server's rules, to pick which were broken -->
+    <string name="profile_report_rules">Which rules?</string>
+    <!-- Label of the report's comment field, for the moderators -->
+    <string name="profile_report_comment">Anything the moderators should know</string>
+    <!-- Checkbox: a copy of the report goes to the moderators of the account's own server -->
+    <string name="profile_report_forward">Send a copy to their server\'s moderators too</string>
+    <!-- Button that sends the report -->
+    <string name="profile_report_send">Send report</string>
+    <!-- Shown when the report could not be sent -->
+    <string name="profile_report_failed">That didn\'t go through. Try again in a moment.</string>
+    <!-- Heading once the report is sent -->
+    <string name="profile_report_sent">Thanks, your report is on its way</string>
+    <!-- Body once the report is sent; the placeholder is the account -->
+    <string name="profile_report_sent_body">The moderators decide what happens next. Until then, you can stop seeing %1$s yourself.</string>
+    <!-- Button label once the account is muted after reporting -->
+    <string name="profile_report_muted">Muted</string>
+    <!-- Button label once the account is blocked after reporting -->
+    <string name="profile_report_blocked">Blocked</string>
 </resources>

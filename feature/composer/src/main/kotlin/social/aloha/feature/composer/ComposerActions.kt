@@ -1,0 +1,90 @@
+// SPDX-FileCopyrightText: 2026 Aloha Social contributors
+// SPDX-License-Identifier: MIT
+
+package social.aloha.feature.composer
+
+import androidx.compose.ui.text.input.TextFieldValue
+import java.time.Instant
+import social.aloha.core.model.CustomEmoji
+import social.aloha.core.model.Visibility
+
+/** What the composer's controls do; the screen itself decides nothing. */
+internal interface ComposerActions :
+    MediaActions,
+    LaterActions {
+    fun onClose()
+
+    fun onPost()
+
+    fun onText(index: Int, value: TextFieldValue)
+
+    fun onSpoiler(shown: Boolean, text: String)
+
+    fun onVisibility(visibility: Visibility)
+
+    fun onLanguage(language: String?)
+
+    fun onQuotePolicy(policy: QuotePolicy)
+
+    fun onSuggestion(suggestion: Suggestion)
+
+    fun onEmoji(emoji: CustomEmoji)
+
+    fun onAddSegment()
+
+    fun onRemoveSegment(index: Int)
+
+    fun onAuthor(id: String)
+}
+
+/** What the controls for later do: scheduling, and the posts kept for later. */
+internal interface LaterActions {
+    /** Opens the day and time picker for when the post goes out. */
+    fun onPickSchedule()
+
+    /** Posts at [at], or at once when null. */
+    fun onSchedule(at: Instant?)
+
+    /** Opens the list of posts waiting on the server for their time. */
+    fun onScheduledPosts()
+
+    /** Opens the drafts. */
+    fun onDrafts()
+}
+
+/** What the attachment controls do. */
+internal interface MediaActions {
+    /** Opens the picture and video picker for the post being written. */
+    fun onPickMedia()
+
+    /** Opens the file picker for the post being written. */
+    fun onPickFiles()
+
+    /** Opens the camera for a photo, a video or a short. */
+    fun onCapture(capture: Capture)
+
+    /** Opens the server's GIF library. */
+    fun onGifs()
+
+    /** Asks for the path of a file in the writer's Nextcloud. */
+    fun onNextcloudFile()
+
+    /** Attaches the pictures and videos on the clipboard. */
+    fun onPaste()
+
+    /** Sets the opening post's poll, which takes the place of its media; null removes it. */
+    fun onPoll(poll: PollUi?)
+
+    fun onEditMedia(id: String)
+
+    fun onRemoveMedia(id: String)
+
+    fun onRetryMedia(id: String)
+
+    fun onSensitive(sensitive: Boolean)
+
+    /** Turns the short post into a card, or back into text. */
+    fun onCard(on: Boolean)
+
+    fun onCardBackground(index: Int)
+}

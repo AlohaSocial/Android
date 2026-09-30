@@ -1,0 +1,424 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ SPDX-FileCopyrightText: 2026 Aloha Social contributors
+  ~ SPDX-License-Identifier: MIT
+-->
+<resources>
+    <!-- Title of the screen for writing a new post, read by screen readers -->
+    <string name="composer_title">New post</string>
+    <!-- Title of the screen for writing a reply, read by screen readers -->
+    <string name="composer_title_reply">Reply</string>
+    <!-- Button that closes the composer -->
+    <string name="composer_close">Close</string>
+    <!-- Button that sends the post -->
+    <string name="composer_post">Post</string>
+    <!-- Button that sends the reply -->
+    <string name="composer_post_reply">Reply</string>
+    <!-- Button that sends the rest of a thread after part of it failed -->
+    <string name="composer_post_again">Post the rest</string>
+    <!-- Read aloud while the post is being sent -->
+    <string name="composer_posting">Posting</string>
+    <!-- Placeholder in the empty text box -->
+    <string name="composer_placeholder">What\'s on your mind?</string>
+    <!-- Placeholder in the text box of a further post in a thread -->
+    <string name="composer_placeholder_more">Continue the thread</string>
+    <!-- Label above the text box of the Nth post in a thread -->
+    <string name="composer_segment_label">Post %1$d of the thread</string>
+    <!-- Button that adds another post below, making a thread -->
+    <string name="composer_add_segment">Add to thread</string>
+    <!-- Button that removes a post from the thread -->
+    <string name="composer_remove_segment">Remove this post from the thread</string>
+    <!-- Line above the text box when replying; the placeholder is the handle of the author -->
+    <string name="composer_replying_to">Replying to %1$s</string>
+    <!-- Button that shows the whole text of the post being replied to -->
+    <string name="composer_reply_show">Show the post</string>
+    <!-- Button that hides the text of the post being replied to -->
+    <string name="composer_reply_hide">Hide the post</string>
+    <!-- Button that picks which account the post is sent from; the placeholder is the handle -->
+    <string name="composer_author">Posting as %1$s</string>
+    <!-- Toolbar button that adds or removes a content warning -->
+    <string name="composer_cw">Content warning</string>
+    <!-- Label of the content warning text box -->
+    <string name="composer_cw_label">Content warning</string>
+    <!-- Placeholder of the content warning text box -->
+    <string name="composer_cw_placeholder">What the post is about</string>
+    <!-- Content warning preset: the post spoils a story -->
+    <string name="composer_cw_spoiler">Spoiler</string>
+    <!-- Content warning preset: the post shows or discusses food -->
+    <string name="composer_cw_food">Food</string>
+    <!-- Content warning preset: the post is about politics -->
+    <string name="composer_cw_politics">Politics</string>
+    <!-- Content warning preset: the post is about mental health -->
+    <string name="composer_cw_mental_health">Mental health</string>
+    <!-- Content warning preset: the post shows a face looking into the camera -->
+    <string name="composer_cw_eye_contact">Eye contact</string>
+    <!-- Content warning preset: the post is about work -->
+    <string name="composer_cw_work">Work</string>
+    <!-- Toolbar button that picks who can see the post; the placeholder is the current choice -->
+    <string name="composer_visibility">Visibility: %1$s</string>
+    <!-- Visibility: anyone can see it, in public timelines too -->
+    <string name="composer_visibility_public">Public</string>
+    <!-- Visibility: anyone can see it, but it stays out of public timelines -->
+    <string name="composer_visibility_unlisted">Quiet public</string>
+    <!-- Visibility: only followers can see it -->
+    <string name="composer_visibility_private">Followers</string>
+    <!-- Visibility: only the people mentioned can see it -->
+    <string name="composer_visibility_direct">Mentioned people only</string>
+    <!-- Note under the visibility choices when replying limits them -->
+    <string name="composer_visibility_clamped">A reply can\'t reach further than the post it answers.</string>
+    <!-- Toolbar button that picks the language of the post; the placeholder is the language name -->
+    <string name="composer_language">Language: %1$s</string>
+    <!-- The post's language is not set -->
+    <string name="composer_language_none">Not set</string>
+    <!-- Title of the language list -->
+    <string name="composer_language_title">Language of the post</string>
+    <!-- Toolbar button that opens the custom emoji of the server -->
+    <string name="composer_emoji">Custom emoji</string>
+    <!-- Title of the custom emoji picker -->
+    <string name="composer_emoji_title">Custom emoji</string>
+    <!-- Emoji group for emoji without a category -->
+    <string name="composer_emoji_other">Other</string>
+    <!-- Toolbar button that picks who may quote the post; the placeholder is the current choice -->
+    <string name="composer_quote">Quotes: %1$s</string>
+    <!-- Quote policy: anyone may quote the post -->
+    <string name="composer_quote_anyone">Anyone</string>
+    <!-- Quote policy: only followers may quote the post -->
+    <string name="composer_quote_followers">Followers</string>
+    <!-- Quote policy: nobody may quote the post -->
+    <string name="composer_quote_nobody">Nobody</string>
+    <!-- How many characters are left before the post reaches the server's limit -->
+    <plurals name="composer_remaining">
+        <item quantity="one">%1$d character left</item>
+        <item quantity="other">%1$d characters left</item>
+    </plurals>
+    <!-- Read aloud when the post is too long; the placeholder is how many characters too many -->
+    <plurals name="composer_over">
+        <item quantity="one">%1$d character too many</item>
+        <item quantity="other">%1$d characters too many</item>
+    </plurals>
+    <!-- Hint under the text: a die will be rolled when posting -->
+    <string name="composer_game_dice">A die is rolled when you post</string>
+    <!-- Hint under the text: a coin will be flipped when posting -->
+    <string name="composer_game_flip">A coin is flipped when you post</string>
+    <!-- Hint under the text: one of the options will be picked when posting -->
+    <string name="composer_game_pick">One of the options is picked when you post</string>
+    <!-- Result of a coin flip, written into the post -->
+    <string name="composer_game_heads">heads</string>
+    <!-- Result of a coin flip, written into the post -->
+    <string name="composer_game_tails">tails</string>
+    <!-- Result of a pick, written into the post; first placeholder the choice, second all options -->
+    <string name="composer_game_picked">%1$s (out of %2$s)</string>
+    <!-- Title of the dialog when leaving a composer with text in it -->
+    <string name="composer_leave_title">Keep this post as a draft?</string>
+    <!-- Body of the dialog when leaving a composer with text in it -->
+    <string name="composer_leave_body">You can finish it later from Drafts. Discarded, it is gone.</string>
+    <!-- Title of the dialog when leaving an edit of a post with changes made -->
+    <string name="composer_leave_edit_title">Discard your changes?</string>
+    <!-- Shown above the text while editing a post that is out already -->
+    <string name="composer_edit_note">Followers will see that this post was edited, and what it said before.</string>
+    <!-- Post button label when editing a post that is out already -->
+    <string name="composer_save">Save</string>
+    <!-- Button that keeps the post as a draft and leaves the composer -->
+    <string name="composer_save_draft">Save draft</string>
+    <!-- Button that discards the post -->
+    <string name="composer_discard">Discard</string>
+    <!-- Button that goes back to writing -->
+    <string name="composer_keep_editing">Keep writing</string>
+    <!-- Error when the server refuses the post and says why; the placeholder is its reason -->
+    <string name="composer_refused">The server didn\'t take the post: %1$s</string>
+    <!-- Error when the server refuses the post without saying why -->
+    <string name="composer_refused_unknown">The server didn\'t take the post.</string>
+    <!-- Error when the server cannot be reached while posting -->
+    <string name="composer_unreached">Couldn\'t reach the server. Nothing is lost; try again.</string>
+    <!-- Error when the post being replied to cannot be found from the account chosen -->
+    <string name="composer_reply_not_found">That account\'s server can\'t find the post you\'re replying to.</string>
+    <!-- Toolbar button that picks pictures or videos to attach -->
+    <string name="composer_add_media">Add pictures or videos</string>
+    <!-- Toolbar button that picks any file to attach -->
+    <string name="composer_add_file">Attach a file</string>
+    <!-- Toolbar toggle that marks the attached media as sensitive, hidden until tapped -->
+    <string name="composer_media_sensitive">Mark media as sensitive</string>
+    <!-- What tapping an attachment does, read by screen readers -->
+    <string name="composer_media_edit">Describe</string>
+    <!-- Part of an attachment's spoken summary: it has a description -->
+    <string name="composer_media_described">described</string>
+    <!-- Part of an attachment's spoken summary: it has no description yet -->
+    <string name="composer_media_undescribed">no description</string>
+    <!-- Button on an attachment whose upload failed -->
+    <string name="composer_media_retry">Upload again</string>
+    <!-- Button that removes an attachment; the placeholder is its file name -->
+    <string name="composer_media_remove">Remove %1$s</string>
+    <!-- Badge on an attachment: filled when it has a description, outlined when not. Keep it short. -->
+    <string name="composer_media_alt">ALT</string>
+    <!-- An attachment waits to be uploaded, for a network or for its turn -->
+    <string name="composer_media_waiting">Waiting to upload</string>
+    <!-- An attachment is uploading; the placeholder is how far, in percent -->
+    <string name="composer_media_sending">Uploading, %1$d %%</string>
+    <!-- The server is still converting an uploaded video -->
+    <string name="composer_media_processing">The server is preparing it</string>
+    <!-- The server refused an attachment and said why; the placeholder is its reason -->
+    <string name="composer_media_refused">Not accepted: %1$s</string>
+    <!-- An attachment could not be uploaded -->
+    <string name="composer_media_failed">Couldn\'t upload</string>
+    <!-- Title of the sheet for describing an attachment -->
+    <string name="composer_media_editor_title">Describe this for people who can\'t see it</string>
+    <!-- Label of the description field of an attachment -->
+    <string name="composer_media_description">Description</string>
+    <!-- Button that closes the attachment's description sheet -->
+    <string name="composer_media_done">Done</string>
+    <!-- Hint under the picture in the description sheet -->
+    <string name="composer_media_focus_hint">Tap the picture on what a cropped preview should keep in view.</string>
+    <!-- Snackbar when a picked file is of a type the server does not take -->
+    <string name="composer_attach_unsupported">This server doesn\'t take files of that type.</string>
+    <!-- Snackbar when a picked file is over the server's size limit; the placeholder is the limit, like "40 MB" -->
+    <string name="composer_attach_too_large">That\'s over this server\'s limit of %1$s.</string>
+    <!-- Snackbar when a picked file cannot be read -->
+    <string name="composer_attach_unreadable">That file couldn\'t be read.</string>
+    <!-- Title of the dialog when posting pictures without descriptions -->
+    <string name="composer_undescribed_title">Some media have no description</string>
+    <!-- Body of the dialog when posting pictures without descriptions -->
+    <string name="composer_undescribed_body">People who use a screen reader will hear nothing for them.</string>
+    <!-- Button that goes back to describe the media -->
+    <string name="composer_undescribed_add">Add descriptions</string>
+    <!-- Button that posts without descriptions -->
+    <string name="composer_undescribed_post">Post anyway</string>
+    <!-- Title of the writing section in settings -->
+    <string name="composer_settings_title">Writing</string>
+    <!-- Setting: warn before posting media without descriptions -->
+    <string name="composer_settings_warn_description">Warn about media without a description</string>
+    <!-- Summary under the setting that warns about media without descriptions -->
+    <string name="composer_settings_warn_description_summary">A reminder before posting; it never stops the post.</string>
+    <!-- Picture filter: the picture as it was -->
+    <string name="composer_filter_original">Original</string>
+    <!-- Picture filter: black and white -->
+    <string name="composer_filter_mono">Mono</string>
+    <!-- Picture filter: black and white with more contrast -->
+    <string name="composer_filter_noir">Noir</string>
+    <!-- Picture filter: warmer colours -->
+    <string name="composer_filter_warm">Warm</string>
+    <!-- Picture filter: cooler colours -->
+    <string name="composer_filter_cool">Cool</string>
+    <!-- Picture filter: stronger colours -->
+    <string name="composer_filter_vivid">Vivid</string>
+    <!-- Picture filter: paler, softer colours -->
+    <string name="composer_filter_faded">Faded</string>
+    <!-- Picture filter: brown old-photograph tones -->
+    <string name="composer_filter_sepia">Sepia</string>
+    <!-- Toolbar toggle that posts a short text drawn big on colour, as a picture -->
+    <string name="composer_card">Post as a card</string>
+    <!-- One of the card's background colours; the placeholder is its number, 1 to 6 -->
+    <string name="composer_card_background">Background %1$d</string>
+    <!-- Error when the card could not be drawn or uploaded, so nothing was posted -->
+    <string name="composer_card_failed">The card couldn\'t be made, so nothing was posted.</string>
+    <!-- A trim, smaller size or filter is being made before the upload -->
+    <string name="composer_media_preparing">Preparing</string>
+    <!-- A video over the server's limit; the placeholder is the limit, like "40 MB" -->
+    <string name="composer_media_oversized">Over this server\'s %1$s: trim it or make it smaller</string>
+    <!-- Heading of the video trim section in the attachment sheet -->
+    <string name="composer_video_trim">Trim and size</string>
+    <!-- The part of the video kept; the placeholders are start and end, like "0:05" -->
+    <string name="composer_video_kept">From %1$s to %2$s</string>
+    <!-- Keep the video at its own size -->
+    <string name="composer_video_original">Original size</string>
+    <!-- Make the video smaller; the placeholder is its shorter side in pixels, like 720 -->
+    <string name="composer_video_size">%1$dp</string>
+    <!-- Roughly how large the video will be; the placeholder is a size, like "12 MB" -->
+    <string name="composer_video_estimate">About %1$s</string>
+    <!-- Snackbar when a trimmed video is still over the server's limit; the placeholder is the limit -->
+    <string name="composer_edit_still_too_large">Still over this server\'s %1$s. Keep less of it, or make it smaller.</string>
+    <!-- Snackbar when a video or picture could not be edited -->
+    <string name="composer_edit_failed">That couldn\'t be changed. It\'s as it was.</string>
+    <!-- Toolbar button that opens the menu of other ways to attach something: paste, GIFs, Nextcloud files -->
+    <string name="composer_more_sources">More ways to attach</string>
+    <!-- Menu item that attaches the pictures or videos on the clipboard -->
+    <string name="composer_paste">Paste a picture or video</string>
+    <!-- Menu item that opens the server's own GIF library -->
+    <string name="composer_gifs">GIF</string>
+    <!-- Menu item that attaches a file from the writer's own Nextcloud, by its path -->
+    <string name="composer_nextcloud_file">File from Nextcloud</string>
+    <!-- Title of the sheet listing the server's GIFs -->
+    <string name="composer_gifs_title">GIFs</string>
+    <!-- Search field in the GIF sheet -->
+    <string name="composer_gifs_search">Search GIFs</string>
+    <!-- Shown in the GIF sheet when the library could not be loaded -->
+    <string name="composer_gifs_failed">The GIFs couldn\'t be loaded.</string>
+    <!-- Shown in the GIF sheet when nothing matches the search -->
+    <string name="composer_gifs_none">No GIFs found.</string>
+    <!-- Title of the dialog asking for the path of a Nextcloud file -->
+    <string name="composer_file_title">File from Nextcloud</string>
+    <!-- Label of the path field, a path from the root of the writer's Nextcloud files -->
+    <string name="composer_file_path">Path in your files</string>
+    <!-- Example path shown in the empty path field; keep the slashes, translate the folder and file names -->
+    <string name="composer_file_placeholder">Photos/holiday.jpg</string>
+    <!-- Button that attaches the Nextcloud file at the path entered -->
+    <string name="composer_file_attach">Attach</string>
+    <!-- Snackbar when the server could not make the GIF or find the Nextcloud file -->
+    <string name="composer_attach_not_found">The server couldn\'t attach that.</string>
+    <!-- Snackbar when paste was chosen but the clipboard holds no picture or video -->
+    <string name="composer_attach_nothing_to_paste">There\'s no picture or video to paste.</string>
+    <!-- Toolbar toggle that adds a poll to the post, or removes it -->
+    <string name="composer_poll_add_toggle">Poll</string>
+    <!-- Heading of the poll editor under the post -->
+    <string name="composer_poll">Poll</string>
+    <!-- Button that removes the poll -->
+    <string name="composer_poll_remove">Remove the poll</string>
+    <!-- Label of one choice of the poll; the placeholder is its number, 1, 2, 3 -->
+    <string name="composer_poll_option">Choice %1$d</string>
+    <!-- Shown under a poll choice that is too long; the placeholder is the server's limit in characters -->
+    <plurals name="composer_poll_option_long">
+        <item quantity="one">At most %1$d character</item>
+        <item quantity="other">At most %1$d characters</item>
+    </plurals>
+    <!-- Button that removes one choice of the poll; the placeholder is its number -->
+    <string name="composer_poll_option_remove">Remove choice %1$d</string>
+    <!-- Button that adds another choice to the poll -->
+    <string name="composer_poll_add">Add a choice</string>
+    <!-- Button showing how long the poll runs, opening the lengths to choose from; the placeholder is a length like "1 day" -->
+    <string name="composer_poll_duration">Runs for %1$s</string>
+    <!-- Checkbox: voters may pick more than one choice -->
+    <string name="composer_poll_multiple">Several answers allowed</string>
+    <!-- Checkbox: the counts stay hidden until the poll ends -->
+    <string name="composer_poll_hide_totals">Hide the results until it ends</string>
+    <!-- A poll's length in minutes -->
+    <plurals name="composer_poll_minutes">
+        <item quantity="one">%1$d minute</item>
+        <item quantity="other">%1$d minutes</item>
+    </plurals>
+    <!-- A poll's length in hours -->
+    <plurals name="composer_poll_hours">
+        <item quantity="one">%1$d hour</item>
+        <item quantity="other">%1$d hours</item>
+    </plurals>
+    <!-- A poll's length in days -->
+    <plurals name="composer_poll_days">
+        <item quantity="one">%1$d day</item>
+        <item quantity="other">%1$d days</item>
+    </plurals>
+    <!-- Toolbar button that opens the day and time picker for scheduling the post -->
+    <string name="composer_schedule">Schedule</string>
+    <!-- Chip under the post showing when it goes out; the placeholder is a date and time -->
+    <string name="composer_scheduled_for">Goes out %1$s</string>
+    <!-- Button next to the scheduled time that posts at once instead -->
+    <string name="composer_schedule_clear">Post now instead</string>
+    <!-- Button in the date picker that goes on to picking the time -->
+    <string name="composer_schedule_next">Next</string>
+    <!-- Title of the time picker when scheduling -->
+    <string name="composer_schedule_time">What time?</string>
+    <!-- Shown in the time picker when the time chosen is less than five minutes away -->
+    <string name="composer_schedule_too_soon">Pick a time at least five minutes from now.</string>
+    <!-- Button that confirms the scheduled time -->
+    <string name="composer_schedule_confirm">Schedule</string>
+    <!-- Button in the time picker that goes back to picking the day -->
+    <string name="composer_schedule_back">Back</string>
+    <!-- Button that closes a picker without choosing -->
+    <string name="composer_cancel">Cancel</string>
+    <!-- Post button label when the post will go to the outbox, its attachments not uploaded yet -->
+    <string name="composer_post_later">Send later</string>
+    <!-- Shown as the composer closes on a post that goes out once there is a network -->
+    <string name="composer_queued">Your post goes out as soon as there is a connection.</string>
+    <!-- Post button label when the post is scheduled -->
+    <string name="composer_post_schedule">Schedule</string>
+    <!-- Overflow menu button in the composer's top bar -->
+    <string name="composer_more">More</string>
+    <!-- Menu item that opens the list of scheduled posts -->
+    <string name="composer_scheduled_posts">Scheduled posts</string>
+    <!-- Back button on the lists the composer opens: drafts and scheduled posts -->
+    <string name="composer_back">Back</string>
+    <!-- Shown when the scheduled posts could not be loaded -->
+    <string name="scheduled_failed">Your scheduled posts couldn\'t be loaded.</string>
+    <!-- Button that tries loading the scheduled posts again -->
+    <string name="scheduled_retry">Try again</string>
+    <!-- Shown when nothing is scheduled -->
+    <string name="scheduled_none">Nothing is scheduled.</string>
+    <!-- How many attachments a draft or a scheduled post carries -->
+    <plurals name="composer_media_count">
+        <item quantity="one">%1$d attachment</item>
+        <item quantity="other">%1$d attachments</item>
+    </plurals>
+    <!-- Spoken labels of a scheduled post's buttons; the placeholder is the start of its text -->
+    <string name="scheduled_move_one">Change the time of \u201c%1$s\u201d</string>
+    <string name="scheduled_delete_one">Delete \u201c%1$s\u201d</string>
+    <!-- Button that picks another time for a scheduled post -->
+    <string name="scheduled_move">Change time</string>
+    <!-- Button that deletes a scheduled post, and the confirm button of the dialog asking -->
+    <string name="scheduled_delete">Delete</string>
+    <!-- Title of the dialog asking before a scheduled post is deleted -->
+    <string name="scheduled_delete_title">Delete this scheduled post?</string>
+    <!-- Body of the dialog asking before a scheduled post is deleted -->
+    <string name="scheduled_delete_body">It will never go out.</string>
+    <!-- Snackbar when the server did not take a change to a scheduled post -->
+    <string name="scheduled_change_failed">That didn\'t work. Try again in a moment.</string>
+    <!-- Title of the drafts list, and the menu item that opens it -->
+    <string name="drafts_title">Drafts</string>
+    <!-- Shown when there are no drafts -->
+    <string name="drafts_none">No drafts.</string>
+    <!-- When a draft was last changed; the placeholder is a date and time -->
+    <string name="drafts_saved">Saved %1$s</string>
+    <!-- When a draft of a reply was last changed; the placeholder is a date and time -->
+    <string name="drafts_reply_saved">Reply, saved %1$s</string>
+    <!-- Shown in place of the text of a draft that has none, only media or a poll -->
+    <string name="drafts_no_text">No text</string>
+    <!-- How many posts a drafted thread has -->
+    <plurals name="drafts_segments">
+        <item quantity="one">%1$d post</item>
+        <item quantity="other">Thread of %1$d posts</item>
+    </plurals>
+    <!-- A post in the drafts list waiting for a network to go out -->
+    <string name="drafts_queued">Goes out when there is a connection</string>
+    <!-- A post in the drafts list going out right now -->
+    <string name="drafts_sending">Sending…</string>
+    <!-- A post in the drafts list waiting for its account to sign in again -->
+    <string name="drafts_paused">Waiting for you to sign in again</string>
+    <!-- A post the server refused; the placeholder is the server's reason, as it gave it -->
+    <string name="drafts_failed">Not sent: %1$s</string>
+    <!-- A post the server refused without a reason -->
+    <string name="drafts_failed_unknown">Not sent. Open it to try again.</string>
+    <!-- Button on a paused post that sends the waiting posts again -->
+    <string name="drafts_resume">Send</string>
+    <!-- Shown for a draft with a poll -->
+    <string name="drafts_poll">Poll</string>
+    <!-- Spoken label of a draft's delete button; the placeholder is the start of its text -->
+    <string name="drafts_delete_one">Delete the draft \u201c%1$s\u201d</string>
+    <!-- Button that deletes a draft, and the confirm button of the dialog asking -->
+    <string name="drafts_delete">Delete</string>
+    <!-- Title of the dialog asking before a draft is deleted -->
+    <string name="drafts_delete_title">Delete this draft?</string>
+    <!-- Body of the dialog asking before a draft is deleted -->
+    <string name="drafts_delete_body">It and what it attached are gone for good.</string>
+    <!-- How much of an attachment's description is written, against the limit, like "12 of 1500 characters" -->
+    <plurals name="composer_media_description_count">
+        <item quantity="one">%1$d of %2$d character</item>
+        <item quantity="other">%1$d of %2$d characters</item>
+    </plurals>
+    <!-- Screen-reader actions setting a picture's focal point: its middle, and near each edge -->
+    <string name="composer_media_focus_centre">Focus on the middle</string>
+    <string name="composer_media_focus_top">Focus near the top</string>
+    <string name="composer_media_focus_bottom">Focus near the bottom</string>
+    <string name="composer_media_focus_left">Focus near the left</string>
+    <string name="composer_media_focus_right">Focus near the right</string>
+    <!-- What stage an attachment's upload is at, for a screen reader -->
+    <string name="composer_media_stage_waiting">Waiting to upload</string>
+    <string name="composer_media_stage_uploading">Uploading</string>
+    <string name="composer_media_stage_processing">The server is preparing it</string>
+    <!-- A trimmed video's size estimate when it is still over the server's limit; the placeholder is a size -->
+    <string name="composer_video_estimate_over">About %1$s, still over the server\'s limit</string>
+    <!-- Toolbar button that opens the camera menu -->
+    <string name="composer_camera">Camera</string>
+    <!-- Camera menu: take a photo -->
+    <string name="composer_camera_photo">Take a photo</string>
+    <!-- Camera menu: record a video -->
+    <string name="composer_camera_video">Record a video</string>
+    <!-- Camera menu: record a short video that stops after a set time; the placeholder is seconds -->
+    <plurals name="composer_camera_short">
+        <item quantity="one">Record a short, %1$d second</item>
+        <item quantity="other">Record a short, %1$d seconds</item>
+    </plurals>
+    <!-- Title of the dialog asked once after recording the first short -->
+    <string name="composer_shorts_title">Tag shorts with #shorts?</string>
+    <!-- Body of the dialog about tagging shorts -->
+    <string name="composer_shorts_body">Shorts tagged #shorts show in the Shorts feed of people who follow it. Your choice is kept for next time.</string>
+    <!-- Button that tags shorts with #shorts from now on -->
+    <string name="composer_shorts_yes">Tag them</string>
+    <!-- Button that never tags shorts -->
+    <string name="composer_shorts_no">Don\'t tag</string>
+</resources>

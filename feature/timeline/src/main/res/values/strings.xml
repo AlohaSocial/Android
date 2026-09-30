@@ -4,6 +4,8 @@
   ~ SPDX-License-Identifier: MIT
 -->
 <resources>
+    <!-- Floating button on the home timeline that opens the composer for a new post -->
+    <string name="timeline_compose">New post</string>
     <!-- Title of the home timeline screen -->
     <string name="timeline_title">Home</string>
     <!-- Source switch: the people the reader follows -->

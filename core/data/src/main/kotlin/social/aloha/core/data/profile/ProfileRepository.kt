@@ -11,6 +11,7 @@ import social.aloha.core.data.ClientFactory
 import social.aloha.core.data.answer
 import social.aloha.core.data.timeline.StatusRepository
 import social.aloha.core.model.Account
+import social.aloha.core.model.AccountList
 import social.aloha.core.model.MediaCollection
 import social.aloha.core.model.ProfileHighlights
 import social.aloha.core.model.Relationship
@@ -22,13 +23,38 @@ import social.aloha.core.network.ApiResult
 import social.aloha.core.network.Paginated
 import social.aloha.core.network.endpoints.AccountAction
 import social.aloha.core.network.endpoints.AccountEndpoints
+import social.aloha.core.network.endpoints.BlockEndpoints
 import social.aloha.core.network.endpoints.CollectionEndpoints
+import social.aloha.core.network.endpoints.ListEndpoints
 import social.aloha.core.network.endpoints.Paging
 import social.aloha.core.network.endpoints.ProfileEndpoints
 import social.aloha.core.network.endpoints.StoryEndpoints
 
 /** What the reader can change about how they relate to an account. */
-public enum class RelationshipChange { Follow, Unfollow, Mute, Unmute, Block, Unblock }
+public sealed interface RelationshipChange {
+    /** Follows, or changes an existing follow: whether their boosts show, whether each post notifies. */
+    public data class Follow(val reblogs: Boolean = true, val notify: Boolean = false) : RelationshipChange
+
+    public data object Unfollow : RelationshipChange
+
+    /** Mutes, with their notifications too when [notifications], for [durationSeconds] or for good. */
+    public data class Mute(val notifications: Boolean = true, val durationSeconds: Long? = null) : RelationshipChange
+
+    public data object Unmute : RelationshipChange
+
+    public data object Block : RelationshipChange
+
+    public data object Unblock : RelationshipChange
+
+    /** Makes them stop following the reader, without blocking them. */
+    public data object RemoveFollower : RelationshipChange
+
+    /** The reader's own note about them, seen by nobody else. */
+    public data class Note(val text: String) : RelationshipChange
+}
+
+/** One of the reader's lists, and whether the account is on it. */
+public data class ListChoice(val list: AccountList, val member: Boolean)
 
 /** One page of accounts, and where the next begins; none at the end. */
 public data class AccountPage(val accounts: List<Account>, val next: HttpUrl?)
@@ -66,17 +92,71 @@ public class ProfileRepository @Inject constructor(
         clients.answer(
             reader,
             when (change) {
-                RelationshipChange.Follow -> AccountEndpoints.follow(id)
+                is RelationshipChange.Follow -> AccountEndpoints.follow(id, change.reblogs, change.notify)
                 RelationshipChange.Unfollow -> AccountEndpoints.action(id, AccountAction.Unfollow)
-                RelationshipChange.Mute -> AccountEndpoints.mute(id, notifications = true)
+                is RelationshipChange.Mute -> AccountEndpoints.mute(id, change.notifications, change.durationSeconds)
                 RelationshipChange.Unmute -> AccountEndpoints.action(id, AccountAction.Unmute)
                 RelationshipChange.Block -> AccountEndpoints.action(id, AccountAction.Block)
                 RelationshipChange.Unblock -> AccountEndpoints.action(id, AccountAction.Unblock)
+                RelationshipChange.RemoveFollower -> AccountEndpoints.action(id, AccountAction.RemoveFromFollowers)
+                is RelationshipChange.Note -> ProfileEndpoints.setNote(id, change.text)
             },
         ).also { answer ->
-            val hides = change == RelationshipChange.Block || change == RelationshipChange.Mute
+            val hides = change == RelationshipChange.Block || change is RelationshipChange.Mute
             if (hides && answer is Answer.Got) statuses.removeAuthor(reader.id, id)
         }
+
+    /**
+     * Blocks, or with [block] false unblocks, the whole server [domain] of account [id]: nothing from
+     * it shows, and the reader's followers there are removed. The relationship as it then is.
+     */
+    public suspend fun blockDomain(
+        reader: SignedInAccount,
+        id: String,
+        domain: String,
+        block: Boolean,
+    ): Answer<Relationship> {
+        val request = if (block) BlockEndpoints.blockDomain(domain) else BlockEndpoints.unblockDomain(domain)
+        return when (val answer = clients.answer(reader, request)) {
+            is Answer.Got -> {
+                // at least this account's posts go from the cache; the rest of its server goes on refresh
+                if (block) statuses.removeAuthor(reader.id, id)
+                relationship(reader, id)?.let { Answer.Got(it) } ?: Answer.Missed(ApiError.NotFound)
+            }
+
+            is Answer.Missed -> answer
+        }
+    }
+
+    /** The reader's lists, each saying whether account [id] is on it. */
+    public suspend fun lists(reader: SignedInAccount, id: String): Answer<List<ListChoice>> {
+        val all = clients.answer(reader, ListEndpoints.all())
+        val holding = clients.answer(reader, ProfileEndpoints.listsContaining(id))
+        return when {
+            all is Answer.Missed -> all
+
+            holding is Answer.Missed -> holding
+
+            else -> {
+                val on = (holding as Answer.Got).value.mapTo(HashSet()) { it.id }
+                Answer.Got((all as Answer.Got).value.map { ListChoice(it, it.id in on) })
+            }
+        }
+    }
+
+    /** Puts account [id] on list [listId], or takes it off unless [add]. */
+    public suspend fun setListed(reader: SignedInAccount, listId: String, id: String, add: Boolean): Answer<Unit> =
+        clients.answer(
+            reader,
+            if (add) {
+                ListEndpoints.addAccounts(
+                    listId,
+                    listOf(id),
+                )
+            } else {
+                ListEndpoints.removeAccounts(listId, listOf(id))
+            },
+        )
 
     /** Nextcloud Social's twelve weeks of posting, for its own accounts; null elsewhere or when it has none. */
     public suspend fun highlights(reader: SignedInAccount, id: String): ProfileHighlights? {

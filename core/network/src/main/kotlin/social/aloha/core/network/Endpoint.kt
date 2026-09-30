@@ -44,11 +44,13 @@ public sealed interface Part {
 
     public data class Field(override val name: String, val value: String) : Part
 
+    /** A file streamed from disk; [onProgress] hears how many of its bytes have gone, and of how many. */
     public data class FileContent(
         override val name: String,
         val file: File,
         val fileName: String,
         val mimeType: String,
+        val onProgress: ((sent: Long, total: Long) -> Unit)? = null,
     ) : Part
 }
 

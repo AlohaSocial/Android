@@ -45,6 +45,7 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import androidx.window.core.layout.WindowSizeClass
+import java.util.UUID
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import social.aloha.core.designsystem.AlohaIcons
@@ -52,13 +53,18 @@ import social.aloha.core.designsystem.AlohaPreviews
 import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.designsystem.AlohaTheme
 import social.aloha.core.navigation.AccountKey
+import social.aloha.core.navigation.ComposerKey
+import social.aloha.core.navigation.DraftsKey
+import social.aloha.core.navigation.EditProfileKey
 import social.aloha.core.navigation.HomeKey
 import social.aloha.core.navigation.NotificationsKey
 import social.aloha.core.navigation.PeopleKey
 import social.aloha.core.navigation.PeopleKind
 import social.aloha.core.navigation.PhotosKey
 import social.aloha.core.navigation.ProfileKey
+import social.aloha.core.navigation.ReportKey
 import social.aloha.core.navigation.RouteResolver
+import social.aloha.core.navigation.ScheduledPostsKey
 import social.aloha.core.navigation.SettingsKey
 import social.aloha.core.navigation.SettingsSectionKey
 import social.aloha.core.navigation.ShortsKey
@@ -70,9 +76,14 @@ import social.aloha.core.navigation.TopLevelKey
 import social.aloha.core.navigation.VideoKey
 import social.aloha.core.ui.StatusNavigation
 import social.aloha.core.ui.openInBrowser
+import social.aloha.feature.composer.ComposerRoute
+import social.aloha.feature.composer.DraftsRoute
+import social.aloha.feature.composer.ScheduledPostsRoute
+import social.aloha.feature.profile.EditProfileRoute
 import social.aloha.feature.profile.PeopleRoute
 import social.aloha.feature.profile.ProfileNavigation
 import social.aloha.feature.profile.ProfileRoute
+import social.aloha.feature.profile.ReportRoute
 import social.aloha.feature.settings.SettingsPlaceholder
 import social.aloha.feature.settings.SettingsRoute
 import social.aloha.feature.settings.SettingsSectionRoute
@@ -121,6 +132,8 @@ fun AlohaApp(
     serverAccountId: String,
     pendingLink: String? = null,
     onPendingLinkTaken: () -> Unit = {},
+    pendingDestination: NavKey? = null,
+    onPendingDestinationTaken: () -> Unit = {},
     resolveLink: suspend (address: String, fromPost: Boolean) -> NavKey? = { _, _ -> null },
     accountButton: @Composable (onProfile: () -> Unit, onSettings: () -> Unit) -> Unit = { _, _ -> },
     home: @Composable (StatusNavigation, accountButton: @Composable () -> Unit) -> Unit = { navigation, button ->
@@ -162,6 +175,10 @@ fun AlohaApp(
                 backStack.removeLastOrNull()
             }
 
+            override fun editProfile() {
+                backStack.push(EditProfileKey(readerId))
+            }
+
             override fun openProfile(accountId: String?, acct: String?) {
                 backStack.push(AccountKey(readerId, id = accountId, acct = acct))
             }
@@ -171,8 +188,28 @@ fun AlohaApp(
             }
 
             override fun openWeb(url: String) = open(url, true)
+
+            override fun openComposer(replyToId: String?) {
+                // the draft's id goes with the key, so a composer restored after the app was stopped finds it
+                backStack.push(ComposerKey(readerId, replyToId, draftId = UUID.randomUUID().toString()))
+            }
+
+            override fun report(accountId: String, handle: String, statusId: String?) {
+                backStack.push(ReportKey(readerId, accountId, handle, statusId))
+            }
+
+            override fun editPost(statusId: String, redraft: Boolean) {
+                backStack.push(
+                    if (redraft) {
+                        ComposerKey(readerId, redraftId = statusId, draftId = UUID.randomUUID().toString())
+                    } else {
+                        ComposerKey(readerId, editId = statusId)
+                    },
+                )
+            }
         }
     }
+    PushWhenAsked(pendingDestination, onPendingDestinationTaken) { backStack.push(it) }
     LaunchedEffect(pendingLink) {
         pendingLink?.let {
             onPendingLinkTaken()
@@ -246,6 +283,30 @@ fun AlohaApp(
                     SettingsSectionRoute(it.section, onBack = { backStack.removeLastOrNull() })
                 }
                 entry<ProfileKey> { ProfileRoute(AccountKey(readerId, id = serverAccountId), statusNavigation) }
+                // a screen that closes itself takes its own entry away, so a second tap never closes what is under it
+                entry<ComposerKey> {
+                    ComposerRoute(
+                        it,
+                        onDone = { backStack.remove(it) },
+                        onScheduledPosts = { backStack.push(ScheduledPostsKey(it.readerId)) },
+                        onDrafts = { backStack.push(DraftsKey(it.readerId)) },
+                    )
+                }
+                entry<DraftsKey> { drafts ->
+                    DraftsRoute(
+                        drafts,
+                        onBack = { backStack.remove(drafts) },
+                        onOpen = { id ->
+                            // the draft opens in place of the list, and of the composer the list was opened from
+                            backStack.remove(drafts)
+                            if (backStack.lastOrNull() is ComposerKey) backStack.removeLastOrNull()
+                            backStack.push(ComposerKey(drafts.readerId, draftId = id))
+                        },
+                    )
+                }
+                entry<ReportKey> { ReportRoute(it, onDone = { backStack.remove(it) }) }
+                entry<EditProfileKey> { EditProfileRoute(it, onDone = { backStack.remove(it) }) }
+                entry<ScheduledPostsKey> { ScheduledPostsRoute(it, onBack = { backStack.remove(it) }) }
                 entry<ThreadKey>(metadata = ListDetailSceneStrategy.detailPane()) { ThreadRoute(it, statusNavigation) }
                 entry<StatusListKey>(metadata = ListDetailSceneStrategy.detailPane()) {
                     StatusListRoute(it, statusNavigation)
@@ -315,4 +376,15 @@ private fun suiteInsets(type: NavigationSuiteType): WindowInsets = when (type) {
     NavigationSuiteType.None -> WindowInsets(0)
 
     else -> WindowInsets.systemBars.only(WindowInsetsSides.Start)
+}
+
+/** Opens [destination] once it is asked for from outside the app, and says it was taken. */
+@Composable
+private fun PushWhenAsked(destination: NavKey?, onTaken: () -> Unit, push: (NavKey) -> Unit) {
+    LaunchedEffect(destination) {
+        if (destination != null) {
+            onTaken()
+            push(destination)
+        }
+    }
 }

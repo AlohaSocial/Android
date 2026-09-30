@@ -141,6 +141,14 @@
     <string name="status_delete_title">Delete this post?</string>
     <!-- Body of the dialog confirming the deletion of one's own post -->
     <string name="status_delete_body">It is removed from your server and from the servers it reached.</string>
+    <!-- Button that opens the reactions to choose from, under a post -->
+    <string name="status_react">Add a reaction</string>
+    <!-- Title of the dialog confirming that one's own post is deleted to be written again -->
+    <string name="status_redraft_title">Delete and write again?</string>
+    <!-- Body of that dialog: the post comes back as a new one, and goes with its likes, boosts and replies once that is out -->
+    <string name="status_redraft_body">The post opens as a new one to change. Once that is posted, the original is deleted, with its favourites, boosts and replies.</string>
+    <!-- Button that confirms deleting a post to write it again -->
+    <string name="status_redraft_confirm">Delete and redraft</string>
     <!-- Button that confirms deleting a post -->
     <string name="status_delete_confirm">Delete</string>
     <!-- Button that cancels a dialog -->

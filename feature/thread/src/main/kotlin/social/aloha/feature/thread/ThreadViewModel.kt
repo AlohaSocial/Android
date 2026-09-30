@@ -133,6 +133,17 @@ internal class ThreadViewModel @AssistedInject constructor(
         interactions.toggle(account, status, toggle)
     }
 
+    /** Reacts to the focused post, shown at once and taken back if the server refuses. */
+    fun onReact(name: String, add: Boolean) {
+        val before = control.value.reactions.orEmpty()
+        control.update { it.copy(reactions = ThreadPresentation.reacted(before, name, add)) }
+        act(key.statusId) { account, status ->
+            interactions.react(account, status.displayed.id, name, add)?.also {
+                control.update { state -> state.copy(reactions = before) }
+            }
+        }
+    }
+
     fun onVote(statusId: String, choices: List<Int>) = act(statusId) { account, status ->
         interactions.vote(account, status, choices)
     }
@@ -231,6 +242,7 @@ internal class ThreadViewModel @AssistedInject constructor(
             now = snapshot.now,
             lists = focused?.let { ThreadPresentation.lists(it.displayed, account.capabilities) }.orEmpty(),
             edited = focused?.displayed?.isEdited == true,
+            canReact = account.capabilities.let { it.emojiReactions || it.isNextcloudSocial },
             history = control.history,
             actionFailed = control.actionFailed,
         )

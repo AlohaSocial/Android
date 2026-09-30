@@ -4,6 +4,7 @@
 package social.aloha.core.network.endpoints
 
 import java.time.Instant
+import java.util.Locale
 import java.util.UUID
 import social.aloha.core.model.Visibility
 import social.aloha.core.network.QueryItem
@@ -20,6 +21,8 @@ import social.aloha.core.network.repeatedQuery
  * @property quotePolicy who may quote the new post: `public`, `followers` or `nobody`.
  * @property placeId a place the server already knows; otherwise [placeName] and [placeCountry] make one.
  * @property postAs a team account handle to post as; null posts as yourself.
+ * @property mediaAttributes the descriptions and focal points of media already attached, sent with an
+ *   edit: once attached, a medium cannot be changed on its own.
  */
 public data class StatusPost(
     val text: String,
@@ -47,6 +50,7 @@ public data class StatusPost(
     val videoCategory: String? = null,
     val videoLicence: String? = null,
     val contentType: String? = null,
+    val mediaAttributes: List<MediaAttribute> = emptyList(),
 ) {
     internal fun formItems(): List<QueryItem> = listOf(
         QueryItem("status", text),
@@ -55,7 +59,7 @@ public data class StatusPost(
     ) + queryOf("spoiler_text", spoilerText) + queryOf("language", language) +
         queryOf("in_reply_to_id", inReplyToId) +
         repeatedQuery("media_ids", mediaIds) + pollItems() + queryOf("scheduled_at", scheduledAt?.toString()) +
-        extras()
+        mediaAttributes.flatMap(MediaAttribute::items) + extras()
 
     /** A poll and media are mutually exclusive, as Mastodon requires; with media, the poll is dropped. */
     private fun pollItems(): List<QueryItem> {
@@ -89,5 +93,24 @@ public data class StatusPost(
 
     private companion object {
         const val DEFAULT_POLL_SECONDS = 86_400L
+    }
+}
+
+/** A description and focal point for medium [id], `x,y` in −1…1 as Mastodon has it. */
+public data class MediaAttribute(val id: String, val description: String, val focus: Pair<Double, Double>? = null) {
+    internal fun items(): List<QueryItem> = listOf(
+        QueryItem("media_attributes[][id]", id),
+        QueryItem("media_attributes[][description]", description),
+    ) + focus.let { point ->
+        if (point == null) {
+            emptyList()
+        } else {
+            listOf(
+                QueryItem(
+                    "media_attributes[][focus]",
+                    String.format(Locale.ROOT, "%.2f,%.2f", point.first, point.second),
+                ),
+            )
+        }
     }
 }

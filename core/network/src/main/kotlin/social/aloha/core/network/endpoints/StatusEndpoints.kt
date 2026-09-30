@@ -95,13 +95,16 @@ public object StatusEndpoints {
         TranslationDto.serializer(),
     ) { it.toDomain() }
 
-    /** An emoji reaction. Nextcloud Social takes Unicode emoji only. */
+    /**
+     * An emoji reaction. Nextcloud Social takes Unicode emoji only, and reads it from `emoji`: a
+     * `name` answers 422 "not an emoji this app can draw".
+     */
     public fun react(id: String, emoji: String): ApiRequest<Unit> = unitRequest(
-        Endpoint("api/v1/statuses/$id/react", HttpMethod.POST, body = Body.Form(listOf(QueryItem("name", emoji)))),
+        Endpoint("api/v1/statuses/$id/react", HttpMethod.POST, body = Body.Form(listOf(QueryItem("emoji", emoji)))),
     )
 
     public fun unreact(id: String, emoji: String): ApiRequest<Unit> = unitRequest(
-        Endpoint("api/v1/statuses/$id/unreact", HttpMethod.POST, body = Body.Form(listOf(QueryItem("name", emoji)))),
+        Endpoint("api/v1/statuses/$id/unreact", HttpMethod.POST, body = Body.Form(listOf(QueryItem("emoji", emoji)))),
     )
 
     public fun vote(pollId: String, choices: List<Int>): ApiRequest<Poll> = request(

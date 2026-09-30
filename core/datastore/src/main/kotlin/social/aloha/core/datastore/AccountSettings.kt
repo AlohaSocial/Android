@@ -25,12 +25,16 @@ import social.aloha.core.model.TimelineSource
  * read at all is replaced by defaults for every account.
  *
  * @property homeSource what the home screen showed last: the people followed, this server, or everyone.
+ * @property recentTags the hashtags this account used last, newest first, offered first when writing.
+ * @property recentFilePaths the Nextcloud files this account attached last, by path, newest first.
  */
 @Serializable
 public data class AccountSettings(
     val showBoosts: Boolean = true,
     val showReplies: Boolean = true,
     val homeSource: TimelineSource = TimelineSource.Home,
+    val recentTags: List<String> = emptyList(),
+    val recentFilePaths: List<String> = emptyList(),
 )
 
 /**

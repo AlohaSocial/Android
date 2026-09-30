@@ -5,26 +5,59 @@ package social.aloha.core.model
 
 import java.text.BreakIterator
 
+/** How a server measures a post against its `max_characters`. */
+public enum class LengthRule {
+    /**
+     * Mastodon's: grapheme clusters, the unit a person counts, so an emoji is one; a URL costs the
+     * flat `characters_reserved_per_url` however long it is; a remote mention costs only its `@user`.
+     */
+    Mastodon,
+
+    /**
+     * Nextcloud Social's: Unicode code points, everything at its full length. It advertises a URL
+     * cost too but does not apply it, so a client charging the flat rate lets through a post the
+     * server refuses.
+     */
+    CodePoints,
+}
+
 /**
- * Mastodon's character counting in one place. A URL costs a fixed number of characters however long
- * it is, and the content warning counts against the same budget as the body. Everything is counted in
- * grapheme clusters, the unit a person counts, never in UTF-16 units, so an emoji counts as one.
+ * Character counting in one place, by the rule of the server the post goes to. The content warning
+ * counts against the same budget as the body on every server.
  */
 public object CharacterCount {
     /** What the server's own linkifier treats as a URL. */
     private val urlPattern = Regex("""https?://[^\s<]+""")
 
-    public fun count(text: String, spoilerText: String, limits: ServerLimits): Int =
-        weighted(text, limits) + graphemes(spoilerText)
+    /** A mention of someone on another server: `@user@domain`, not preceded by a word or a slash. */
+    private val remoteMention = Regex("""(?<![\w/])(@\w+)@[\w.-]*\w""")
 
-    public fun remaining(text: String, spoilerText: String, limits: ServerLimits): Int =
-        limits.maxStatusCharacters - count(text, spoilerText, limits)
+    public fun count(
+        text: String,
+        spoilerText: String,
+        limits: ServerLimits,
+        rule: LengthRule = LengthRule.Mastodon,
+    ): Int = when (rule) {
+        LengthRule.Mastodon -> weighted(text, limits) + graphemes(spoilerText)
+        LengthRule.CodePoints -> codePoints(text) + codePoints(spoilerText)
+    }
 
-    /** The body's cost, with each URL charged the flat rate. */
+    public fun remaining(
+        text: String,
+        spoilerText: String,
+        limits: ServerLimits,
+        rule: LengthRule = LengthRule.Mastodon,
+    ): Int = limits.maxStatusCharacters - count(text, spoilerText, limits, rule)
+
+    /** The body's cost on Mastodon: each URL at the flat rate, each remote mention by its `@user`. */
     private fun weighted(text: String, limits: ServerLimits): Int {
         val urls = urlPattern.findAll(text).map { it.value }.toList()
-        return graphemes(text) - urls.sumOf(::graphemes) + urls.size * limits.charactersReservedPerUrl
+        val withoutUrls = urlPattern.replace(text, "")
+        val shortened = remoteMention.replace(withoutUrls) { it.groupValues[1] }
+        return graphemes(shortened) + urls.size * limits.charactersReservedPerUrl
     }
+
+    private fun codePoints(text: String): Int = text.codePointCount(0, text.length)
 
     /** The number of user-perceived characters in [text]. */
     public fun graphemes(text: String): Int {

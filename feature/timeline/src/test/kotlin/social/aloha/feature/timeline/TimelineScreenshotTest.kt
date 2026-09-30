@@ -80,7 +80,8 @@ class TimelineScreenshotTest {
         state: @Composable () -> TimelineUiState,
     ) {
         compose.enableAccessibilityChecks()
-        compose.setContent { AlohaTheme(settings) { TimelineScreen(state(), NoActions, NoActions) } }
+        // home always offers a new post
+        compose.setContent { AlohaTheme(settings) { TimelineScreen(state(), NoActions, NoActions, onCompose = {}) } }
         compose.onRoot().tryPerformAccessibilityChecks()
         compose.onRoot().captureRoboImage("src/test/screenshots/$name.png")
     }

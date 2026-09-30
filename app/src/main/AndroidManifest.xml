@@ -23,6 +23,18 @@
         android:theme="@style/Theme.Aloha.Starting"
         tools:targetApi="33">
 
+        <!-- WorkManager starts on first use, with the Hilt factory the application hands it -->
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            android:exported="false"
+            tools:node="merge">
+            <meta-data
+                android:name="androidx.work.WorkManagerInitializer"
+                android:value="androidx.startup"
+                tools:node="remove" />
+        </provider>
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -45,6 +57,20 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="alohasocial" />
                 <data android:host="open" />
+            </intent-filter>
+            <!-- a link, text, pictures or videos from another app become a new post -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+                <data android:mimeType="image/*" />
+                <data android:mimeType="video/*" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND_MULTIPLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="image/*" />
+                <data android:mimeType="video/*" />
             </intent-filter>
         </activity>
 

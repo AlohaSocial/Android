@@ -42,3 +42,47 @@ public data object SettingsKey : NavKey
 /** One settings section, by the key it registers under. */
 @Serializable
 public data class SettingsSectionKey(val section: String) : NavKey
+
+/**
+ * A new post written as [readerId]; an answer to [replyToId] on that account's server when given,
+ * draft [draftId] carried on with, the reader's own post [editId] edited, or their post [redraftId]
+ * deleted and written again. What another app shared starts a new post: [sharedText], and the
+ * content addresses of [sharedMedia].
+ */
+@Serializable
+public data class ComposerKey(
+    val readerId: String,
+    val replyToId: String? = null,
+    val draftId: String? = null,
+    val editId: String? = null,
+    val redraftId: String? = null,
+    val sharedText: String? = null,
+    val sharedMedia: List<String> = emptyList(),
+) : NavKey
+
+/**
+ * A report by [readerId] about account [accountId], known as [handle], from its post [statusId] when
+ * it was opened from one.
+ */
+@Serializable
+public data class ReportKey(
+    val readerId: String,
+    val accountId: String,
+    val handle: String,
+    val statusId: String? = null,
+) : NavKey {
+    /** An account on another server, whose moderators can be sent a copy. */
+    val remote: Boolean get() = handle.removePrefix("@").contains('@')
+}
+
+/** [readerId]'s own profile, being edited. */
+@Serializable
+public data class EditProfileKey(val readerId: String) : NavKey
+
+/** The drafts of [readerId], and the posts waiting to be sent. */
+@Serializable
+public data class DraftsKey(val readerId: String) : NavKey
+
+/** The posts [readerId] has waiting on the server for their time. */
+@Serializable
+public data class ScheduledPostsKey(val readerId: String) : NavKey

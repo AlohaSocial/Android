@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ SPDX-FileCopyrightText: 2026 Aloha Social contributors
+  ~ SPDX-License-Identifier: MIT
+-->
+<resources>
+    <!-- Title of the notification shown while a picture or video is being uploaded -->
+    <string name="upload_title">Uploading</string>
+    <!-- Name of the notification channel for uploads, shown in the system's notification settings -->
+    <string name="upload_channel">Uploads</string>
+    <!-- Description of the uploads notification channel in the system's notification settings -->
+    <string name="upload_channel_description">Progress of pictures and videos being uploaded for a post</string>
+    <!-- Title of the notification shown while queued posts go out -->
+    <string name="outbox_sending">Sending your posts</string>
+    <!-- Title of the notification when the server refused a queued post -->
+    <string name="outbox_refused">A post couldn\'t be sent</string>
+    <!-- Body of that notification when the server gave no reason -->
+    <string name="outbox_refused_unknown">The server refused it. Tap to fix it.</string>
+    <!-- Title of the notification when an account must sign in again before its queued posts go out -->
+    <string name="outbox_paused">Posts waiting for you to sign in</string>
+    <!-- Body of that notification; the placeholder is the account, like @alice@example.social -->
+    <string name="outbox_paused_body">Sign in to %1$s again to send them.</string>
+    <!-- Name of the notification channel for posts sent later, in the system's notification settings -->
+    <string name="outbox_channel">Posts sent later</string>
+    <!-- Description of that channel in the system's notification settings -->
+    <string name="outbox_channel_description">Posts that were written offline and are going out, or need you</string>
+</resources>

@@ -22,6 +22,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
 import social.aloha.core.data.timeline.Toggle
 import social.aloha.core.designsystem.AlohaIcons
+import social.aloha.core.ui.DeleteRequest
 import social.aloha.core.ui.DeleteStatusDialog
 import social.aloha.core.ui.R as UiR
 import social.aloha.core.ui.RichTextColors
@@ -42,7 +43,7 @@ public fun TimelineRoute(
     val context = LocalContext.current
     val snackbars = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
-    var deleting by remember { mutableStateOf<StatusRowUi?>(null) }
+    var deleting by remember { mutableStateOf<DeleteRequest?>(null) }
     val colors = RichTextColors.fromTheme()
     val failed = stringResource(UiR.string.status_action_failed)
     val copied = stringResource(UiR.string.status_link_copied)
@@ -90,14 +91,14 @@ public fun TimelineRoute(
         },
         navigationIcon = navigationIcon,
         showOptions = feed == TimelineFeed.Home,
+        onCompose = if (feed == TimelineFeed.Home) ({ nav.openComposer(null) }) else null,
     )
 
-    deleting?.let { row ->
+    deleting?.let { request ->
         DeleteStatusDialog(
-            onConfirm = {
-                deleting = null
-                viewModel.onDelete(row.statusId)
-            },
+            request,
+            onDelete = viewModel::onDelete,
+            onRedraft = { nav.editPost(it, redraft = true) },
             onDismiss = { deleting = null },
         )
     }

@@ -133,6 +133,7 @@ private fun Posts(
                             if (item.focused) heading()
                             if (item.depth > 0) stateDescription = level
                         },
+                        canReact = item.focused && state.canReact,
                         focused = item.focused,
                     )
                     if (item.focused) Footer(state, actions)

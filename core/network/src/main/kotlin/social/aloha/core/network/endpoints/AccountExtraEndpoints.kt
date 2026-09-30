@@ -85,10 +85,19 @@ public object CredentialEndpoints {
     private fun account(endpoint: Endpoint): ApiRequest<Account> =
         request(endpoint, AccountDto.serializer()) { it.toDomain() }
 
-    /** Multipart even without a picture: one encoding for every save. */
-    public fun update(changes: CredentialsUpdate): ApiRequest<Account> = account(
-        Endpoint("api/v1/accounts/update_credentials", HttpMethod.PATCH, body = Body.Multipart(changes.parts())),
-    )
+    /**
+     * A form when no picture goes, multipart only with one: a PHP server reads a multipart body for
+     * `POST` alone, so Nextcloud Social answers a multipart `PATCH` with 200 and changes nothing.
+     */
+    public fun update(changes: CredentialsUpdate): ApiRequest<Account> {
+        val parts = changes.parts()
+        val body = if (parts.any { it is Part.FileContent }) {
+            Body.Multipart(parts)
+        } else {
+            Body.Form(parts.filterIsInstance<Part.Field>().map { QueryItem(it.name, it.value) })
+        }
+        return account(Endpoint("api/v1/accounts/update_credentials", HttpMethod.PATCH, body = body))
+    }
 
     /** Removes the picture; the server falls back to the initials it draws. */
     public fun deleteAvatar(): ApiRequest<Account> = account(Endpoint("api/v1/profile/avatar", HttpMethod.DELETE))
