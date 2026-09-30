@@ -139,6 +139,9 @@ internal class TextCards(
         }
     }
 
+    /** Whether the post can go: no card wanted where one [fits], or it is drawn and attached. */
+    suspend fun ready(fits: Boolean, text: String): Boolean = !card.value.on || !fits || attach(text)
+
     /**
      * Draws [text] full size and attaches it to the first post, waiting until the server has it;
      * false when it could not be drawn or uploaded. The same card is not uploaded twice.

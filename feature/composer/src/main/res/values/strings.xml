@@ -112,6 +112,12 @@
     <string name="composer_leave_title">Keep this post as a draft?</string>
     <!-- Body of the dialog when leaving a composer with text in it -->
     <string name="composer_leave_body">You can finish it later from Drafts. Discarded, it is gone.</string>
+    <!-- Title of the dialog when leaving an edit of a post with changes made -->
+    <string name="composer_leave_edit_title">Discard your changes?</string>
+    <!-- Shown above the text while editing a post that is out already -->
+    <string name="composer_edit_note">Followers will see that this post was edited, and what it said before.</string>
+    <!-- Post button label when editing a post that is out already -->
+    <string name="composer_save">Save</string>
     <!-- Button that keeps the post as a draft and leaves the composer -->
     <string name="composer_save_draft">Save draft</string>
     <!-- Button that discards the post -->

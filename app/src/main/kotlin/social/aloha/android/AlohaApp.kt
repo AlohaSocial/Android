@@ -45,6 +45,7 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import androidx.window.core.layout.WindowSizeClass
+import java.util.UUID
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import social.aloha.core.designsystem.AlohaIcons
@@ -182,6 +183,16 @@ fun AlohaApp(
 
             override fun openComposer(replyToId: String?) {
                 backStack.push(ComposerKey(readerId, replyToId))
+            }
+
+            override fun editPost(statusId: String, redraft: Boolean) {
+                backStack.push(
+                    if (redraft) {
+                        ComposerKey(readerId, redraftId = statusId, draftId = UUID.randomUUID().toString())
+                    } else {
+                        ComposerKey(readerId, editId = statusId)
+                    },
+                )
             }
         }
     }

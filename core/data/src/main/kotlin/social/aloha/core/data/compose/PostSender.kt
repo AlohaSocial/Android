@@ -8,6 +8,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import social.aloha.core.data.Answer
 import social.aloha.core.data.map
+import social.aloha.core.data.timeline.StatusInteractions
 import social.aloha.core.model.SignedInAccount
 import social.aloha.core.network.ApiError
 
@@ -23,6 +24,7 @@ public data class Sent(val post: DraftPost, val error: ApiError?)
 public class PostSender @Inject constructor(
     private val compose: ComposeRepository,
     private val scheduled: ScheduledPosts,
+    private val interactions: StatusInteractions,
 ) {
     /**
      * Sends the segments of [post] after its [DraftPost.postedIds] as [reader]; [onProgress] hears of
@@ -49,6 +51,9 @@ public class PostSender @Inject constructor(
                 is Answer.Missed -> return Sent(current, made.error)
             }
         }
+        // a post written again replaces its original only once it is out: until then, nothing is lost.
+        // ponytail: a server that keeps the original's media from the new post refuses it with a 422
+        current.replaces?.let { interactions.deleted(reader, it) }
         return Sent(current, null)
     }
 

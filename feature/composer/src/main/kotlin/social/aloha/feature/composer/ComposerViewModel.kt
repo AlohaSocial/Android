@@ -46,6 +46,7 @@ import social.aloha.core.data.compose.MediaRepository
 import social.aloha.core.data.compose.Outbox
 import social.aloha.core.data.compose.PostSender
 import social.aloha.core.data.di.ApplicationScope
+import social.aloha.core.data.timeline.StatusInteractions
 import social.aloha.core.datastore.AppPreferences
 import social.aloha.core.html.StatusHtmlParser
 import social.aloha.core.model.CharacterCount
@@ -74,6 +75,7 @@ internal class ComposerViewModel @AssistedInject constructor(
     sender: PostSender,
     outbox: Outbox,
     queue: PostQueue,
+    interactions: StatusInteractions,
     @ApplicationScope appScope: CoroutineScope,
     private val lookup: RemoteLookup,
     uploads: MediaUploads,
@@ -118,10 +120,14 @@ internal class ComposerViewModel @AssistedInject constructor(
 
     private val control = MutableStateFlow(ComposerUiState())
     private val completions = Completions(compose, viewModelScope)
-    private val poster = ThreadPoster(sender, gameWords(context))
+    private val poster = ThreadPoster(sender, interactions, gameWords(context))
 
     /** The post kept as a draft while it is written, and when the composer closes. */
-    val drafts = DraftKeeper(outbox, queue, appScope, key.draftId)
+    val drafts = DraftKeeper(outbox, queue, appScope, key.draftId, editing = key.editId != null)
+    private val opener = PostOpener(compose, interactions, drafts)
+
+    /** The writer's own post being edited, by its id. */
+    private var editing: String? = null
 
     /** The opening post's poll, which takes the place of its media. */
     val poll = MutableStateFlow<PollUi?>(null)
@@ -186,6 +192,10 @@ internal class ComposerViewModel @AssistedInject constructor(
         val cw = if (state.spoilerShown) text.spoiler else ""
         state.copy(
             remaining = text.segments.map { CharacterCount.remaining(it, cw, limits, rule) },
+            empty = text.segments.withIndex().any { (index, segment) ->
+                segment.isBlank() && media.attachments.getOrElse(index) { emptyList() }.isEmpty() &&
+                    !(index == 0 && poll != null)
+            },
             games = text.segments.flatMap(ComposerGames::kinds).distinct(),
             suggestions = found,
             // the card is an attachment only to the server; the strip shows what the writer attached
@@ -335,7 +345,7 @@ internal class ComposerViewModel @AssistedInject constructor(
         control.update { it.copy(posting = true, failure = null) }
         viewModelScope.launch {
             val state = uiState.value
-            if (state.card.on && state.cardFits && !cards.attach(segments.first().text)) {
+            if (!cards.ready(state.cardFits, segments.first().text)) {
                 control.update { it.copy(posting = false, failure = PostFailure.CardFailed) }
                 return@launch
             }
@@ -343,13 +353,12 @@ internal class ComposerViewModel @AssistedInject constructor(
             val post = state.draft(segments.map { it.text }, spoiler, parent?.id, attachments.byPost.value)
             // what was described since uploading goes first: a post must not go out without it
             val failure = if (attachments.sync(account)) {
-                poster.send(account, post) { posted -> control.update { it.copy(posted = posted) } }
+                poster.send(account, post, editing) { posted -> control.update { it.copy(posted = posted) } }
             } else {
                 OFFLINE
             }
             // no network, or what it attaches is not up yet: it goes out later, from the outbox
-            if (failure == OFFLINE) {
-                drafts.queue(account.id, poster.prepare(post))
+            if (failure == OFFLINE && drafts.queue(account.id, poster.prepare(post))) {
                 control.update { it.copy(posting = false, queued = true, done = true) }
                 return@launch
             }
@@ -375,14 +384,14 @@ internal class ComposerViewModel @AssistedInject constructor(
 
     private suspend fun start() {
         val account = accounts.all().firstOrNull { it.id == key.readerId } ?: return
-        val opened = drafts.open()
-        if (opened is Opened.Sending) {
-            // ponytail: closes without a word; the drafts list shows it as sending
+        val opened = opener.open(account, key)
+        if (opened !is Opened.Writing) {
+            // ponytail: closes without a word; a post going out shows as sending in the drafts list
             control.update { it.copy(done = true) }
             return
         }
-        val entry = (opened as Opened.Writing).entry
-        val draft = entry?.post
+        editing = opened.editing
+        val draft = opened.post
         (draft?.replyToId ?: key.replyToId)?.let { id -> parent = (compose.status(account, id) as? Answer.Got)?.value }
         use(account)
         val preferences = compose.preferences(account)
@@ -393,9 +402,10 @@ internal class ComposerViewModel @AssistedInject constructor(
             spoiler = draft.spoiler.orEmpty()
             poll.value = draft.poll?.toUi()
             scheduledAt.value = draft.scheduledAt
-            poster.postedIds = draft.postedIds
-            attachments.restore(draft)
-            control.update { it.restored(entry) }
+            poster.adopt(draft)
+            // an edit's media, and those a redraft takes over, are the original post's: described already
+            attachments.restore(draft, attached = editing != null || draft.replaces != null)
+            control.update { it.restored(draft, opened.entry, editing != null) }
         } else {
             parent?.let { status ->
                 segments[0] = prefilled(status, account)

@@ -114,13 +114,19 @@ internal data class ComposerUiState(
     /** How many segments of the thread are already posted; a retry starts after them. */
     val posted: Int = 0,
     val posting: Boolean = false,
+    /** Some post of the thread holds nothing to send: no text, no media, no poll. */
+    val empty: Boolean = false,
     val failure: PostFailure? = null,
     val done: Boolean = false,
     /** The post went to the outbox, to go out with a network. */
     val queued: Boolean = false,
+    /** The writer's own post, out already, is being edited: one post, same visibility, same author. */
+    val editing: Boolean = false,
+    /** The writer's own post this one writes again, deleted once this one is out. */
+    val replaces: String? = null,
 ) {
     val canPost: Boolean
-        get() = ready && author != null && !posting && remaining.all { it >= 0 } && (uploaded || canWait) &&
+        get() = ready && author != null && !posting && !empty && remaining.all { it >= 0 } && (uploaded || canWait) &&
             poll?.ready(maxPollOptionCharacters) != false
 
     /** Every attachment is on the server, ready to be attached. */

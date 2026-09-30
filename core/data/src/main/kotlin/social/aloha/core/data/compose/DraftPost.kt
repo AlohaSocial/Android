@@ -4,10 +4,15 @@
 package social.aloha.core.data.compose
 
 import java.io.File
+import java.time.Duration
 import java.time.Instant
 import kotlinx.serialization.Serializable
+import social.aloha.core.model.AttachmentKind
 import social.aloha.core.model.InstantSerializer
+import social.aloha.core.model.MediaAttachment
+import social.aloha.core.model.Status
 import social.aloha.core.model.Visibility
+import social.aloha.core.network.endpoints.MediaAttribute
 import social.aloha.core.network.endpoints.StatusPost
 
 /**
@@ -30,9 +35,14 @@ public data class DraftPost(
     val poll: DraftPoll? = null,
     @Serializable(with = InstantSerializer::class) val scheduledAt: Instant? = null,
     val postedIds: List<String> = emptyList(),
+    /** The writer's own post this one writes again, deleted only once this one is out. */
+    val replaces: String? = null,
 ) {
-    /** Segment [index] as the server takes it, answering [inReplyToId]; the poll and time go with the first. */
-    public fun statusPost(index: Int, inReplyToId: String?): StatusPost {
+    /**
+     * Segment [index] as the server takes it, answering [inReplyToId]; the poll and time go with the
+     * first. An edit carries the media's descriptions with it, as attached media cannot be changed alone.
+     */
+    public fun statusPost(index: Int, inReplyToId: String?, editing: Boolean = false): StatusPost {
         val segment = segments[index]
         val mediaIds = segment.media.mapNotNull(DraftMedia::mediaId)
         val poll = poll.takeIf { index == 0 }
@@ -52,6 +62,7 @@ public data class DraftPost(
             scheduledAt = scheduledAt.takeIf { index == 0 },
             idempotencyKey = requireNotNull(segment.key) { "a segment is keyed before it is sent" },
             quotePolicy = quotePolicy.takeIf { index == 0 },
+            mediaAttributes = if (editing) segment.media.mapNotNull(DraftMedia::attribute) else emptyList(),
         )
     }
 
@@ -100,3 +111,48 @@ public data class DraftPoll(
     val multiple: Boolean = false,
     val hideTotals: Boolean = false,
 )
+
+private fun DraftMedia.attribute(): MediaAttribute? = mediaId?.let { id ->
+    MediaAttribute(id, description, focus?.let { (x, y) -> x.toDouble() to y.toDouble() })
+}
+
+/**
+ * [status] as a post to write again: its [text] and [spoiler] as its author wrote them (the source,
+ * not the rendered content), its media by the ids the server keeps, and its poll lasting as long as
+ * it did, within what the server allows by then.
+ */
+public fun draftOf(status: Status, text: String, spoiler: String): DraftPost = DraftPost(
+    segments = listOf(
+        DraftSegment(
+            text,
+            status.mediaAttachments.map { media ->
+                DraftMedia(
+                    fileName = media.url?.substringAfterLast('/')?.substringBefore('?') ?: media.id,
+                    mimeType = mimeTypeOf(media),
+                    mediaId = media.id,
+                    previewUrl = media.previewUrl ?: media.url,
+                    description = media.description.orEmpty(),
+                )
+            },
+        ),
+    ),
+    replyToId = status.inReplyToId,
+    spoiler = spoiler.takeIf { it.isNotBlank() },
+    visibility = status.visibility,
+    language = status.language,
+    mediaSensitive = status.sensitive && status.mediaAttachments.isNotEmpty() && spoiler.isBlank(),
+    poll = status.poll?.let { poll ->
+        val lasted = poll.expiresAt?.let { Duration.between(status.createdAt, it).seconds }
+        DraftPoll(poll.options.map { it.title }, lasted ?: DAY_SECONDS, poll.multiple)
+    },
+)
+
+/** What kind of file the server made [media] from, as far as its type tells. */
+public fun mimeTypeOf(media: MediaAttachment): String = when (media.type) {
+    AttachmentKind.Image -> "image/jpeg"
+    AttachmentKind.Gifv, AttachmentKind.Video -> "video/mp4"
+    AttachmentKind.Audio -> "audio/mpeg"
+    else -> "application/octet-stream"
+}
+
+private const val DAY_SECONDS = 86_400L

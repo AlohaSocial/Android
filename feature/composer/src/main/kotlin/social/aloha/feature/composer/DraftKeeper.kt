@@ -17,15 +17,6 @@ import social.aloha.core.model.OutboxState
 import social.aloha.core.sync.PostQueue
 import social.aloha.core.sync.UploadState
 
-/** What opening the composer on a draft found. */
-internal sealed interface Opened {
-    /** A new post, or a draft to carry on with. */
-    data class Writing(val entry: OutboxEntry?) : Opened
-
-    /** The post is going out right now and cannot be changed. */
-    data object Sending : Opened
-}
-
 /**
  * The post being written as a draft in the [Outbox]: kept a moment after each change, and when the
  * composer closes with something written, so leaving never loses it; forgotten once posted or
@@ -33,9 +24,12 @@ internal sealed interface Opened {
  */
 internal class DraftKeeper(
     private val outbox: Outbox,
-    private val queue: PostQueue,
+    private val postQueue: PostQueue,
     private val scope: CoroutineScope,
+    /** The draft's id, given with the composer's key so that a restored composer finds it again. */
     draftId: String?,
+    /** An edit is never a draft: it changes a post that is out, or nothing. */
+    private val editing: Boolean = false,
 ) {
     val id: String = draftId ?: UUID.randomUUID().toString()
     private var finished = false
@@ -46,25 +40,29 @@ internal class DraftKeeper(
     /** Queued, the post goes out later from its files, which stay for it. */
     private var queued = false
 
-    /** Takes the draft back from the outbox for editing, as it was before, with why it was refused. */
-    suspend fun open(): Opened {
-        if (!saved) return Opened.Writing(null)
-        val entry = outbox.get(id)
+    /**
+     * Takes the draft back from the outbox for editing, as it was before, with why it was refused;
+     * nothing when there is none, or it is another account's.
+     */
+    suspend fun open(accountId: String): Opened {
+        val entry = outbox.get(id)?.takeIf { it.accountId == accountId } ?: return Opened.Writing(null)
         if (!outbox.reopen(id)) return Opened.Sending
-        return Opened.Writing(entry)
+        saved = true
+        return Opened.Writing(entry.post, entry)
     }
 
-    /** Hands [post], keyed and its games played, to the outbox, to go out with a network. */
-    suspend fun queue(accountId: String, post: DraftPost) {
+    /** Hands [post], keyed and its games played, to the outbox, to go out with a network; not an edit. */
+    suspend fun queue(accountId: String, post: DraftPost): Boolean {
+        if (editing) return false
         finished = true
         queued = true
-        outbox.queue(id, accountId, post)
-        this.queue.drain(accountId)
+        postQueue.queue(id, accountId, post)
+        return true
     }
 
     /** Keeps [post] as the draft of [accountId]; nothing written forgets it. */
     suspend fun save(accountId: String?, post: DraftPost?) {
-        if (finished || accountId == null) return
+        if (finished || editing || accountId == null) return
         if (post != null) {
             outbox.saveDraft(id, accountId, post)
             saved = true
@@ -77,7 +75,8 @@ internal class DraftKeeper(
     /** The composer closes: [post] is kept, when there is one; whether its files must stay for it. */
     fun leave(accountId: String?, post: DraftPost?): Boolean {
         if (queued) return true
-        if (finished || accountId == null || post == null) return false
+        if (finished || editing) return false
+        if (accountId == null || post == null) return false
         finished = true
         scope.launch { outbox.saveDraft(id, accountId, post) }
         return true
@@ -116,29 +115,34 @@ internal fun ComposerUiState.draft(
     mediaSensitive = mediaSensitive,
     poll = poll?.let { DraftPoll(it.choices, it.seconds, it.multiple, it.hideTotals) },
     scheduledAt = scheduledAt,
+    replaces = replaces,
 )
 
 /**
- * This state with the choices [entry] was left with, where they are still allowed, and why the server
- * refused it when it did.
+ * This state with the choices [draft] was left with, where they are still allowed, and why the server
+ * refused it when its outbox [entry] did.
  */
-internal fun ComposerUiState.restored(entry: OutboxEntry): ComposerUiState {
-    val draft = entry.post
-    return copy(
-        visibility = draft.visibility.takeIf { it in visibilities } ?: visibility,
-        language = draft.language,
-        spoilerShown = draft.spoiler != null,
-        quotePolicy = QuotePolicy.entries.firstOrNull { it.wire == draft.quotePolicy } ?: QuotePolicy.Anyone,
-        posted = draft.postedIds.size,
-        failure = PostFailure.Refused(entry.error).takeIf { entry.state == OutboxState.Failed },
-    )
-}
+internal fun ComposerUiState.restored(draft: DraftPost, entry: OutboxEntry?, editing: Boolean): ComposerUiState = copy(
+    visibility = draft.visibility.takeIf { it in visibilities } ?: visibility,
+    language = draft.language,
+    spoilerShown = draft.spoiler != null,
+    quotePolicy = QuotePolicy.entries.firstOrNull { it.wire == draft.quotePolicy } ?: QuotePolicy.Anyone,
+    posted = draft.postedIds.size,
+    failure = PostFailure.Refused(entry?.error).takeIf { entry?.state == OutboxState.Failed },
+    editing = editing,
+    replaces = draft.replaces,
+)
 
-/** Puts back the attachments [draft] kept, each in its post: uploaded already, or uploading again. */
-internal fun Attachments.restore(draft: DraftPost) {
+/**
+ * Puts back the attachments [draft] kept, each in its post: uploaded already, or uploading again;
+ * [attached] to the post being edited.
+ */
+internal fun Attachments.restore(draft: DraftPost, attached: Boolean) {
     sensitive.value = draft.mediaSensitive
     resize(draft.segments.size)
-    draft.segments.forEachIndexed { index, segment -> segment.media.forEach { put(index, it.toAttachment()) } }
+    draft.segments.forEachIndexed { index, segment ->
+        segment.media.forEach { put(index, it.toAttachment().copy(attached = attached)) }
+    }
 }
 
 internal fun DraftPoll.toUi() =

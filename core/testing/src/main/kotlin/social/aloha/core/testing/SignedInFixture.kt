@@ -21,6 +21,7 @@ import social.aloha.core.data.compose.ComposeRepository
 import social.aloha.core.data.compose.Outbox
 import social.aloha.core.data.compose.PostSender
 import social.aloha.core.data.compose.ScheduledPosts
+import social.aloha.core.data.timeline.StatusInteractions
 import social.aloha.core.data.timeline.StatusRepository
 import social.aloha.core.data.timeline.TimelineRepository
 import social.aloha.core.database.AccountsDatabase
@@ -75,7 +76,7 @@ public class SignedInFixture(private val context: Context) : Closeable {
                 clock,
                 scope,
             )
-        PostSender(compose, ScheduledPosts(clients))
+        PostSender(compose, ScheduledPosts(clients), StatusInteractions(statuses, clients))
     }
 
     /** Signs `@alice` in on the server at [apiBase], with the token the mock server accepts. */

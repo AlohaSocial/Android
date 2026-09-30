@@ -336,7 +336,8 @@ private fun CameraMenu(enabled: Boolean, onCapture: (Capture) -> Unit) {
 private fun VisibilityMenu(state: ComposerUiState, onVisibility: (Visibility) -> Unit) {
     var open by remember { mutableStateOf(false) }
     val current = stringResource(state.visibility.label)
-    IconButton(onClick = { open = true }) {
+    // who a post reaches is settled once it is out; an edit cannot change it
+    IconButton(onClick = { open = true }, enabled = !state.editing) {
         Icon(state.visibility.icon, stringResource(R.string.composer_visibility, current))
     }
     DropdownMenu(expanded = open, onDismissRequest = { open = false }) {

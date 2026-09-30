@@ -21,6 +21,7 @@ import kotlinx.coroutines.launch
 import social.aloha.core.data.timeline.Toggle
 import social.aloha.core.navigation.AccountKey
 import social.aloha.core.navigation.PeopleKind
+import social.aloha.core.ui.DeleteRequest
 import social.aloha.core.ui.DeleteStatusDialog
 import social.aloha.core.ui.R as UiR
 import social.aloha.core.ui.RichTextColors
@@ -35,7 +36,7 @@ public fun ProfileRoute(key: AccountKey, navigation: ProfileNavigation, modifier
     val context = LocalContext.current
     val snackbars = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
-    var deleting by remember { mutableStateOf<StatusRowUi?>(null) }
+    var deleting by remember { mutableStateOf<DeleteRequest?>(null) }
     val colors = RichTextColors.fromTheme()
     val failed = stringResource(UiR.string.status_action_failed)
     val copied = stringResource(UiR.string.status_link_copied)
@@ -85,12 +86,11 @@ public fun ProfileRoute(key: AccountKey, navigation: ProfileNavigation, modifier
 
     ProfileScreen(state, screenActions, rowActions, modifier, snackbars)
 
-    deleting?.let { row ->
+    deleting?.let { request ->
         DeleteStatusDialog(
-            onConfirm = {
-                deleting = null
-                viewModel.onDelete(row.statusId)
-            },
+            request,
+            onDelete = viewModel::onDelete,
+            onRedraft = { nav.editPost(it, redraft = true) },
             onDismiss = { deleting = null },
         )
     }

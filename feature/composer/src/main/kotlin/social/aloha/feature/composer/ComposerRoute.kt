@@ -309,6 +309,7 @@ private fun ComposerDialogs(state: ComposerUiState, viewModel: ComposerViewModel
     }
     if (discarding) {
         LeaveDialog(
+            state.editing,
             onSave = {
                 discarding = false
                 done()
@@ -399,13 +400,16 @@ private fun ShortsDialog(onChoice: (Boolean) -> Unit) {
 }
 
 @Composable
-private fun LeaveDialog(onSave: () -> Unit, onDiscard: () -> Unit, onKeep: () -> Unit) {
+private fun LeaveDialog(editing: Boolean, onSave: () -> Unit, onDiscard: () -> Unit, onKeep: () -> Unit) {
+    // an edit is never kept as a draft: the post stays as it was, or changes
     AlertDialog(
         onDismissRequest = onKeep,
-        title = { Text(stringResource(R.string.composer_leave_title)) },
-        text = { Text(stringResource(R.string.composer_leave_body)) },
+        title = {
+            Text(stringResource(if (editing) R.string.composer_leave_edit_title else R.string.composer_leave_title))
+        },
+        text = if (editing) null else ({ Text(stringResource(R.string.composer_leave_body)) }),
         confirmButton = {
-            TextButton(onClick = onSave) { Text(stringResource(R.string.composer_save_draft)) }
+            if (!editing) TextButton(onClick = onSave) { Text(stringResource(R.string.composer_save_draft)) }
         },
         dismissButton = {
             // the dialog lays its buttons out in a row that wraps, so three fit a narrow phone

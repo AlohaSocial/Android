@@ -69,7 +69,7 @@ public fun StatusListRoute(key: StatusListKey, navigation: ThreadNavigation, mod
     val rowActions = remember(context) {
         object : RoutedStatusActions(context, navigation = {
             nav
-        }, onCopied = {}, onDeleteAsked = { nav.openThread(it.statusId) }) {
+        }, onCopied = {}, onDeleteAsked = { nav.openThread(it.row.statusId) }) {
             override fun onBoost(row: StatusRowUi) = nav.openThread(row.statusId)
 
             override fun onFavourite(row: StatusRowUi) = nav.openThread(row.statusId)

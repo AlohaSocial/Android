@@ -71,7 +71,11 @@ internal fun ComposerScreen(
         modifier = modifier.semantics { paneTitle = title },
         topBar = {
             TopAppBar(
-                title = { state.author?.let { AuthorPicker(it, state.authors, state.posted == 0, actions::onAuthor) } },
+                title = {
+                    state.author?.let {
+                        AuthorPicker(it, state.authors, state.posted == 0 && !state.editing, actions::onAuthor)
+                    }
+                },
                 navigationIcon = {
                     IconButton(onClick = actions::onClose) {
                         Icon(AlohaIcons.Close, stringResource(R.string.composer_close))
@@ -108,6 +112,13 @@ internal fun ComposerScreen(
 @Composable
 private fun Writing(state: ComposerUiState, segments: List<TextFieldValue>, spoiler: String, actions: ComposerActions) {
     state.reply?.let { ReplyLine(it) }
+    if (state.editing) {
+        Text(
+            stringResource(R.string.composer_edit_note),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
     if (state.spoilerShown) SpoilerField(spoiler) { actions.onSpoiler(true, it) }
     segments.forEachIndexed { index, value ->
         SegmentField(index, segments.size, value, state, actions)
@@ -115,7 +126,9 @@ private fun Writing(state: ComposerUiState, segments: List<TextFieldValue>, spoi
     }
     GamesHint(state.games)
     state.scheduledAt?.let { ScheduleLine(it, actions::onPickSchedule) { actions.onSchedule(null) } }
-    TextButton(onClick = actions::onAddSegment, enabled = !state.posting && state.scheduledAt == null) {
+    // an edit changes one post; a scheduled one cannot be answered yet
+    val threadable = !state.posting && state.scheduledAt == null && !state.editing
+    TextButton(onClick = actions::onAddSegment, enabled = threadable) {
         Icon(AlohaIcons.AddToThread, contentDescription = null)
         Text(stringResource(R.string.composer_add_segment), Modifier.padding(start = AlohaSpacing.xs))
     }
@@ -150,6 +163,7 @@ private fun ComposerMenu(actions: ComposerActions) {
 private fun PostButton(state: ComposerUiState, actions: ComposerActions) {
     val posting = stringResource(R.string.composer_posting)
     val label = when {
+        state.editing -> R.string.composer_save
         state.posted > 0 -> R.string.composer_post_again
         state.scheduledAt != null -> R.string.composer_post_schedule
         !state.uploaded && state.canWait -> R.string.composer_post_later

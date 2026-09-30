@@ -45,10 +45,17 @@ public data class SettingsSectionKey(val section: String) : NavKey
 
 /**
  * A new post written as [readerId]; an answer to [replyToId] on that account's server when given,
- * draft [draftId] carried on with when given.
+ * draft [draftId] carried on with, the reader's own post [editId] edited, or their post [redraftId]
+ * deleted and written again.
  */
 @Serializable
-public data class ComposerKey(val readerId: String, val replyToId: String? = null, val draftId: String? = null) : NavKey
+public data class ComposerKey(
+    val readerId: String,
+    val replyToId: String? = null,
+    val draftId: String? = null,
+    val editId: String? = null,
+    val redraftId: String? = null,
+) : NavKey
 
 /** The drafts of [readerId], and the posts waiting to be sent. */
 @Serializable

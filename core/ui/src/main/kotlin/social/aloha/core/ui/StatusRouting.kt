@@ -30,20 +30,27 @@ public interface StatusNavigation {
 
     /** The composer: a new post, or a reply to [replyToId] when given. */
     public fun openComposer(replyToId: String?)
+
+    /** The composer on the reader's own post [statusId]: edited, or deleted and written again when [redraft]. */
+    public fun editPost(statusId: String, redraft: Boolean)
 }
+
+/** A delete the person asked for, of [row]; with [redraft] the post is written again after. */
+public data class DeleteRequest(val row: StatusRowUi, val redraft: Boolean)
 
 /**
  * The part of a row's actions every screen showing posts shares: links, the thread, profiles, and the
  * menu items that leave the app (share, copy, the browser). A screen supplies what changes a post.
  *
  * @param onCopied the link is on the clipboard, which the screen confirms.
- * @param onDeleteAsked the person asked to delete a post, which the screen confirms first.
+ * @param onDeleteAsked the person asked to delete a post, or to write it again, which the screen
+ *   confirms first.
  */
 public abstract class RoutedStatusActions(
     private val context: Context,
     private val navigation: () -> StatusNavigation,
     private val onCopied: () -> Unit,
-    private val onDeleteAsked: (StatusRowUi) -> Unit,
+    private val onDeleteAsked: (DeleteRequest) -> Unit,
 ) : StatusActions {
     override val menu: Set<StatusMenuItem> = setOf(
         StatusMenuItem.Share,
@@ -51,6 +58,8 @@ public abstract class RoutedStatusActions(
         StatusMenuItem.OpenInBrowser,
         StatusMenuItem.MuteConversation,
         StatusMenuItem.Pin,
+        StatusMenuItem.Edit,
+        StatusMenuItem.Redraft,
         StatusMenuItem.Delete,
     )
 
@@ -92,7 +101,11 @@ public abstract class RoutedStatusActions(
 
             StatusMenuItem.Pin -> onPin(row)
 
-            StatusMenuItem.Delete -> onDeleteAsked(row)
+            StatusMenuItem.Edit -> navigation().editPost(row.statusId, redraft = false)
+
+            StatusMenuItem.Redraft -> onDeleteAsked(DeleteRequest(row, redraft = true))
+
+            StatusMenuItem.Delete -> onDeleteAsked(DeleteRequest(row, redraft = false))
 
             else -> Unit
         }
@@ -125,14 +138,35 @@ private fun copy(context: Context, url: String) {
     context.getSystemService<ClipboardManager>()?.setPrimaryClip(ClipData.newPlainText(url, url))
 }
 
-/** Asks before one's own post is deleted, since it cannot be undone. */
+/**
+ * Asks before one's own post is deleted, since it cannot be undone: then [onDelete] deletes it, or,
+ * for a redraft, [onRedraft] opens the composer that deletes it and writes it again. Either way the
+ * dialog then goes, through [onDismiss].
+ */
 @Composable
-public fun DeleteStatusDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
+public fun DeleteStatusDialog(
+    request: DeleteRequest,
+    onDelete: (statusId: String) -> Unit,
+    onRedraft: (statusId: String) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val redraft = request.redraft
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.status_delete_title)) },
-        text = { Text(stringResource(R.string.status_delete_body)) },
-        confirmButton = { TextButton(onClick = onConfirm) { Text(stringResource(R.string.status_delete_confirm)) } },
+        title = {
+            Text(stringResource(if (redraft) R.string.status_redraft_title else R.string.status_delete_title))
+        },
+        text = {
+            Text(stringResource(if (redraft) R.string.status_redraft_body else R.string.status_delete_body))
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                onDismiss()
+                if (redraft) onRedraft(request.row.statusId) else onDelete(request.row.statusId)
+            }) {
+                Text(stringResource(if (redraft) R.string.status_redraft_confirm else R.string.status_delete_confirm))
+            }
+        },
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.status_cancel)) } },
     )
 }

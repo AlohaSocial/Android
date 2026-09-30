@@ -5,13 +5,18 @@ package social.aloha.core.data.timeline
 
 import javax.inject.Inject
 import javax.inject.Singleton
+import social.aloha.core.data.Answer
 import social.aloha.core.data.ClientFactory
+import social.aloha.core.data.answer
 import social.aloha.core.model.SignedInAccount
 import social.aloha.core.model.Status
+import social.aloha.core.model.StatusSource
 import social.aloha.core.network.ApiError
 import social.aloha.core.network.ApiResult
+import social.aloha.core.network.endpoints.ComposeEndpoints
 import social.aloha.core.network.endpoints.StatusAction
 import social.aloha.core.network.endpoints.StatusEndpoints
+import social.aloha.core.network.endpoints.StatusPost
 
 /** A toggle a person can flip on a post. */
 public enum class Toggle { Favourite, Boost, Bookmark, Pin, MuteConversation }
@@ -49,14 +54,28 @@ public class StatusInteractions @Inject constructor(
         }
     }
 
-    /** Deletes the reader's own [status]; it goes from every timeline once the server confirms. */
-    public suspend fun delete(account: SignedInAccount, status: Status): ApiError? {
-        val client = clients.forAccount(account) ?: return ApiError.NotFound
-        return when (val answer = client.execute(StatusEndpoints.delete(status.id))) {
-            is ApiResult.Success -> null.also { statuses.delete(account.id, status.id) }
-            is ApiResult.Failure -> answer.error
+    /** Replaces the reader's own post [id] with [post]; the stored copy follows the server's answer. */
+    public suspend fun edit(account: SignedInAccount, id: String, post: StatusPost): Answer<Status> =
+        clients.answer(account, ComposeEndpoints.edit(id, post)).also { answer ->
+            if (answer is Answer.Got) statuses.save(account.id, answer.value)
         }
-    }
+
+    /** Post [id] as its author wrote it, which an edit starts from. */
+    public suspend fun source(account: SignedInAccount, id: String): Answer<StatusSource> =
+        clients.answer(account, StatusEndpoints.source(id))
+
+    /** Deletes the reader's own [status]; it goes from every timeline once the server confirms. */
+    public suspend fun delete(account: SignedInAccount, status: Status): ApiError? =
+        (deleted(account, status.id) as? Answer.Missed)?.error
+
+    /**
+     * Deletes the reader's own post [id] and answers with it as the server had it, its source text
+     * included, which is what writing it again starts from.
+     */
+    public suspend fun deleted(account: SignedInAccount, id: String): Answer<Status> =
+        clients.answer(account, StatusEndpoints.delete(id)).also { answer ->
+            if (answer is Answer.Got) statuses.delete(account.id, id)
+        }
 
     internal companion object {
         /** The post as it will be once the server agrees, and the route that asks it to. */

@@ -20,6 +20,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.resetMain
@@ -49,10 +50,12 @@ import social.aloha.core.data.compose.MediaRepository
 import social.aloha.core.data.compose.Outbox
 import social.aloha.core.data.compose.PostSender
 import social.aloha.core.data.compose.ScheduledPosts
+import social.aloha.core.data.timeline.StatusInteractions
 import social.aloha.core.data.timeline.StatusRepository
 import social.aloha.core.data.timeline.TimelineRepository
 import social.aloha.core.database.AccountsDatabase
 import social.aloha.core.database.CacheDatabase
+import social.aloha.core.database.OutboxDatabase
 import social.aloha.core.datastore.AccountSettingsStore
 import social.aloha.core.datastore.AppPreferences
 import social.aloha.core.datastore.TokenVault
@@ -77,6 +80,7 @@ import social.aloha.core.testing.NumberedTimeline
  */
 private class Posts(private val script: MutableList<Int>) : Dispatcher() {
     val sent = CopyOnWriteArrayList<Pair<String?, Map<String, String>>>()
+    val deleted = CopyOnWriteArrayList<String>()
     private val made = HashMap<String, String>()
     private var next = 0
     private val template = JsonObject(NumberedTimeline.homeTemplate() + ("reblog" to JsonNull))
@@ -86,6 +90,23 @@ private class Posts(private val script: MutableList<Int>) : Dispatcher() {
             template + ("id" to JsonPrimitive(id)) + ("visibility" to JsonPrimitive(visibility)) +
                 ("mentions" to JsonArray(mentions.map { (mid, acct) -> mention(mid, acct) })),
         )
+
+    /** The reader's own post [id], with a described picture, and its source [text] as a delete answers. */
+    fun own(id: String, text: String?): JsonObject {
+        val picture = JsonObject(
+            mapOf(
+                "id" to JsonPrimitive("m1"),
+                "type" to JsonPrimitive("image"),
+                "url" to JsonPrimitive("https://example.test/beach.jpg"),
+                "description" to JsonPrimitive("Old words"),
+            ),
+        )
+        return JsonObject(
+            status(id) + ("visibility" to JsonPrimitive("unlisted")) +
+                ("text" to (text?.let(::JsonPrimitive) ?: JsonNull)) +
+                ("media_attachments" to JsonArray(listOf(picture))),
+        )
+    }
 
     private fun mention(id: String, acct: String) = JsonObject(
         mapOf("id" to JsonPrimitive(id), "username" to JsonPrimitive(acct), "acct" to JsonPrimitive(acct)),
@@ -97,12 +118,36 @@ private class Posts(private val script: MutableList<Int>) : Dispatcher() {
         val path = request.url.encodedPath
         return when {
             request.method == "POST" && path.endsWith("/statuses") -> post(request)
+
             path.endsWith("/statuses/p") -> json(parent.toString())
+
+            path.endsWith("/statuses/mine/source") || path.endsWith("/statuses/gone/source") ->
+                json("""{"id":"x","text":"As I wrote it","spoiler_text":""}""")
+
+            request.method == "PUT" && path.endsWith("/statuses/mine") -> {
+                sent += null to form(request)
+                json(own("mine", null).toString())
+            }
+
+            path.endsWith("/statuses/mine") -> json(own("mine", null).toString())
+
+            request.method == "DELETE" && path.endsWith("/statuses/gone") -> {
+                deleted += "gone"
+                json(own("gone", "Written again").toString())
+            }
+
+            path.endsWith("/statuses/gone") -> json(own("gone", null).toString())
+
             path.endsWith("/custom_emojis") -> json("[]")
+
             path.endsWith("/preferences") -> json("{}")
+
             path.endsWith("/gifs") -> gifs(request.url.queryParameter("offset")?.toInt() ?: 0)
+
             path.endsWith("/media/from-gif") -> media(request, "slug")
+
             path.endsWith("/media/from-file") -> media(request, "path")
+
             else -> MockResponse.Builder().code(404).body("{}").build()
         }
     }
@@ -202,9 +247,10 @@ class ComposerViewModelTest {
         server.close()
     }
 
-    private val outbox = Outbox(accountsDb.outboxDao(), clock)
+    private val outboxDb = Room.inMemoryDatabaseBuilder(context, OutboxDatabase::class.java).build()
+    private val outbox = Outbox(outboxDb.outboxDao(), clock)
 
-    private suspend fun open(replyToId: String? = null, draftId: String? = null): ComposerViewModel {
+    private suspend fun open(key: (String) -> ComposerKey = { ComposerKey(it) }): ComposerViewModel {
         Dispatchers.setMain(Dispatchers.Unconfined)
         WorkManagerTestInitHelper.initializeTestWorkManager(context)
         val apiBase = server.url("/")
@@ -220,13 +266,14 @@ class ComposerViewModelTest {
         val settings = AccountSettingsStore(InMemoryDataStore(emptyMap()))
         val compose = ComposeRepository(clients, statuses, timelines, settings, clock, scope)
         return ComposerViewModel(
-            ComposerKey(account.id, replyToId, draftId),
+            key(account.id),
             context,
             accounts,
             compose,
-            PostSender(compose, ScheduledPosts(clients)),
+            PostSender(compose, ScheduledPosts(clients), StatusInteractions(statuses, clients)),
             outbox,
-            PostQueue(context),
+            PostQueue(context, outbox),
+            StatusInteractions(statuses, clients),
             scope,
             RemoteLookup(clients, statuses),
             MediaUploads(context),
@@ -248,7 +295,7 @@ class ComposerViewModelTest {
     fun `a reply starts with its author and everyone it mentioned, never oneself, and reaches no further`() =
         runBlocking {
             posts.parent = posts.status("p", visibility = "private", mentions = listOf("6" to "alice", "8" to "carol"))
-            val viewModel = open(replyToId = "p")
+            val viewModel = open { ComposerKey(it, replyToId = "p") }
             val state = viewModel.await { it.ready }
             assertEquals(listOf(Visibility.Private, Visibility.Direct), state.visibilities)
             assertTrue(state.visibilityClamped)
@@ -408,7 +455,7 @@ class ComposerViewModelTest {
             outbox.observe(accounts.all().single().id).first { list -> list.any { it.post.poll != null } }
         }.single()
         assertEquals("Half a thought", kept.post.segments.single().text)
-        val again = open(draftId = kept.id)
+        val again = open { ComposerKey(it, draftId = kept.id) }
         // the poll reaches the state through a flow of its own, a moment apart from the rest
         val state = again.await { it.ready && it.poll != null }
         assertEquals("Half a thought", again.segments.single().text)
@@ -443,5 +490,34 @@ class ComposerViewModelTest {
         assertEquals(true, segment.key != null)
         // the game is played once, now, so the post the outbox sends is the one the writer saw
         assertEquals(false, segment.sent.orEmpty().contains("/flip"))
+    }
+
+    @Test
+    fun `an edit starts from the post as written, changes it in place, and carries its media's words`() = runBlocking {
+        val viewModel = open { ComposerKey(it, editId = "mine") }
+        val state = viewModel.await { it.ready && it.attachments.first().isNotEmpty() }
+        assertEquals(true, state.editing)
+        assertEquals("As I wrote it", viewModel.segments.single().text)
+        assertEquals(Visibility.Unlisted, state.visibility)
+        val picture = state.attachments.first().single()
+        viewModel.attachments.describe(picture.id, "New words", null)
+        viewModel.type(0, "As I meant it")
+        viewModel.await { it.canPost }
+        viewModel.onPost()
+        viewModel.await { it.done }
+        val form = posts.sent.single().second
+        assertEquals("As I meant it", form["status"])
+        assertEquals("m1", form["media_attributes[][id]"])
+        assertEquals("New words", form["media_attributes[][description]"])
+    }
+
+    @Test
+    fun `a redraft deletes the original only once the new post is out`() = runBlocking {
+        val viewModel = open { ComposerKey(it, redraftId = "gone") }
+        val state = viewModel.await { it.ready && it.attachments.first().isNotEmpty() }
+        assertEquals(false, state.editing)
+        assertEquals("As I wrote it", viewModel.segments.single().text)
+        assertEquals("m1", state.attachments.first().single().mediaId)
+        assertEquals("Old words", state.attachments.first().single().description)
     }
 }

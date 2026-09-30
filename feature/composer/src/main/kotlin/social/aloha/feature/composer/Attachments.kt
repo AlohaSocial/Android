@@ -19,10 +19,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import social.aloha.core.data.Answer
 import social.aloha.core.data.compose.MediaRepository
-import social.aloha.core.model.AttachmentKind
+import social.aloha.core.data.compose.mimeTypeOf
 import social.aloha.core.model.MediaAttachment
 import social.aloha.core.model.SignedInAccount
-import social.aloha.core.network.endpoints.MediaEndpoints
 import social.aloha.core.sync.LocalMedia
 import social.aloha.core.sync.MediaUploads
 import social.aloha.core.sync.UploadState
@@ -52,6 +51,11 @@ internal data class Attachment(
     val oversizedLimit: Long? = null,
     /** A trim, scale or filter is being made; the upload follows. */
     val preparing: Boolean = false,
+    /**
+     * Part of the post being edited already: its description and focus go with the edit, as the
+     * server changes attached media no other way.
+     */
+    val attached: Boolean = false,
 ) {
     val isVideo: Boolean get() = mimeType.startsWith("video/")
 
@@ -308,15 +312,8 @@ internal class Attachments(
 }
 
 /** Whether [attachment] has a description or focal point the server does not have yet. */
-private fun unsent(attachment: Attachment) = attachment.mediaId != null &&
+private fun unsent(attachment: Attachment) = attachment.mediaId != null && !attachment.attached &&
     (attachment.description != attachment.sentDescription || attachment.focus != attachment.sentFocus)
-
-/** The request that gives the server [attachment]'s description and focal point. */
-private fun update(attachment: Attachment) = checkNotNull(attachment.mediaId).let { id ->
-    attachment.focus?.let {
-        MediaEndpoints.updateFocus(id, it.x.toDouble(), it.y.toDouble(), attachment.description)
-    } ?: MediaEndpoints.updateDescription(id, attachment.description)
-}
 
 private fun Preflight.toFailure(): AttachFailure = when (this) {
     is Preflight.Unsupported -> AttachFailure.Unsupported(mimeType)
@@ -329,20 +326,11 @@ internal fun remoteAttachment(media: MediaAttachment, name: String) = Attachment
     UUID.randomUUID().toString(),
     file = null,
     fileName = name,
-    mimeType = mimeOf(media),
+    mimeType = mimeTypeOf(media),
     upload = UploadState.Done(media.id, media.previewUrl ?: media.url),
     description = media.description.orEmpty(),
     sentDescription = media.description.orEmpty(),
 )
-
-/** What kind of file the server made [media] from, as far as a type goes. */
-private fun mimeOf(media: MediaAttachment): String = when (media.type) {
-    AttachmentKind.Image -> "image/jpeg"
-    AttachmentKind.Gifv -> "video/mp4"
-    AttachmentKind.Video -> "video/mp4"
-    AttachmentKind.Audio -> "audio/mpeg"
-    else -> "application/octet-stream"
-}
 
 /** [attachment] at the end of post [segment]'s list; the first post's when there is no such post. */
 private fun List<List<Attachment>>.appended(segment: Int, attachment: Attachment): List<List<Attachment>> =

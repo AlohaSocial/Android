@@ -4,8 +4,10 @@
 package social.aloha.feature.composer
 
 import java.util.UUID
+import social.aloha.core.data.Answer
 import social.aloha.core.data.compose.DraftPost
 import social.aloha.core.data.compose.PostSender
+import social.aloha.core.data.timeline.StatusInteractions
 import social.aloha.core.data.trouble
 import social.aloha.core.model.SignedInAccount
 import social.aloha.core.network.ApiError
@@ -20,6 +22,7 @@ import social.aloha.core.network.ApiError
  */
 internal class ThreadPoster(
     private val sender: PostSender,
+    private val interactions: StatusInteractions,
     private val words: ComposerGames.Words,
     private val random: () -> Double = Math::random,
     private val newKey: () -> String = { UUID.randomUUID().toString() },
@@ -73,7 +76,22 @@ internal class ThreadPoster(
      * Sends the segments of [post] not yet out as [account]; [onPosted] hears how many are out after
      * each one the server took. The failure that stopped it, or null when all are posted.
      */
-    suspend fun send(account: SignedInAccount, post: DraftPost, onPosted: (Int) -> Unit): PostFailure? {
+    suspend fun send(
+        account: SignedInAccount,
+        post: DraftPost,
+        editing: String?,
+        onPosted: (Int) -> Unit,
+    ): PostFailure? {
+        attempted = true
+        // an edit replaces the one post, as it is, carrying its media's descriptions
+        if (editing != null) {
+            val edited = interactions.edit(
+                account,
+                editing,
+                prepare(post).statusPost(0, post.replyToId, editing = true),
+            )
+            return (edited as? Answer.Missed)?.error?.let(::failureOf)
+        }
         val sent = sender.send(account, prepare(post)) { progress ->
             if (progress.postedIds.size > posted) {
                 postedIds = progress.postedIds
