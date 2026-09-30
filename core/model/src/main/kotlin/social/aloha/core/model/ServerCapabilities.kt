@@ -66,6 +66,9 @@ public data class ServerCapabilities(
 
     val isNextcloudSocial: Boolean get() = "nextcloud" in softwareName && "social" in softwareName
 
+    /** How this server measures a post against its character limit. */
+    val lengthRule: LengthRule get() = if (isNextcloudSocial) LengthRule.CodePoints else LengthRule.Mastodon
+
     /** Which sync tier applies. They compose: streaming serves the foreground, polling the rest. */
     val syncTier: SyncTier
         get() = when {

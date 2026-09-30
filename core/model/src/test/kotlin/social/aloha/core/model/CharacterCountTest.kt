@@ -48,6 +48,24 @@ class CharacterCountTest {
     }
 
     @Test
+    fun `a remote mention costs only its local part on mastodon`() {
+        assertEquals(count("@bob hi"), count("@bob@remote.example hi"))
+        // inside a link it is part of the link, which costs the flat rate
+        assertEquals(23, count("https://x.test/@bob@remote.example"))
+    }
+
+    @Test
+    fun `nextcloud social counts code points, links and mentions at full length`() {
+        fun codePoints(text: String, spoiler: String = "") =
+            CharacterCount.count(text, spoiler, limits, LengthRule.CodePoints)
+        assertEquals(30, codePoints("See https://example.test/a/b/c"))
+        assertEquals(20, codePoints("@bob@remote.example!"))
+        // a family emoji is one character to a person and seven code points to the server
+        assertEquals(7, codePoints("👨‍👩‍👧‍👦"))
+        assertEquals(7, codePoints("Hello", spoiler = "CW"))
+    }
+
+    @Test
     fun `counting holds at the nextcloud ceiling`() {
         val nextcloud = limits.copy(maxStatusCharacters = 5000)
         assertEquals(0, CharacterCount.remaining("é".repeat(5000), "", nextcloud))
