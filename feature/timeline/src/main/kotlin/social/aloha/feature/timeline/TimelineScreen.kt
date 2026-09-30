@@ -21,6 +21,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.grid.LazyGridState
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
@@ -100,6 +102,7 @@ internal fun TimelineScreen(
     modifier: Modifier = Modifier,
     snackbars: SnackbarHostState = remember { SnackbarHostState() },
     listState: LazyListState = rememberLazyListState(),
+    gridState: LazyGridState = rememberLazyGridState(),
     title: String = stringResource(R.string.timeline_title),
     navigationIcon: @Composable () -> Unit = {},
     showOptions: Boolean = true,
@@ -111,7 +114,10 @@ internal fun TimelineScreen(
             TopAppBar(
                 title = { Text(title) },
                 navigationIcon = navigationIcon,
-                actions = { if (showOptions) Options(state, actions) },
+                actions = {
+                    state.grid?.let { LayoutToggle(it, actions::onGrid) }
+                    if (showOptions) Options(state, actions)
+                },
             )
         },
         snackbarHost = { SnackbarHost(snackbars) },
@@ -136,14 +142,7 @@ internal fun TimelineScreen(
             ) {
                 // the app is fully drawn once the reader sees posts, or learns there are none
                 ReportDrawnWhen { state.items.isNotEmpty() || state.loadedOnce }
-                when {
-                    state.items.isNotEmpty() -> Rows(state, actions, rowActions, listState)
-
-                    state.loadedOnce ->
-                        EmptyState(state.source, TimelineSource.Local in state.sources, state.sparse, actions)
-
-                    else -> Skeleton()
-                }
+                Content(state, actions, rowActions, listState, gridState)
                 NewPostsPill(
                     state.pending,
                     state.pendingAvatars,
@@ -153,7 +152,23 @@ internal fun TimelineScreen(
             }
         }
     }
-    ListEffects(state, actions, listState)
+    // the grid keeps its own position and paging; the list's effects follow the list alone
+    if (state.grid != true) ListEffects(state, actions, listState)
+}
+
+/** The posts as a list or a grid, what an empty timeline says, or their shapes while the first page loads. */
+@Composable
+private fun Content(
+    state: TimelineUiState,
+    actions: TimelineScreenActions,
+    rowActions: StatusActions,
+    listState: LazyListState,
+    gridState: LazyGridState,
+) = when {
+    state.items.isNotEmpty() && state.grid == true -> PhotoGrid(state, actions, rowActions, gridState)
+    state.items.isNotEmpty() -> Rows(state, actions, rowActions, listState)
+    state.loadedOnce -> EmptyState(state.source, TimelineSource.Local in state.sources, state.sparse, actions)
+    else -> Skeleton()
 }
 
 @Composable
@@ -265,7 +280,7 @@ internal fun swipeLabel(action: SwipeAction): Int = when (action) {
 }
 
 @Composable
-private fun GapRow(gap: TimelineItem.Gap, actions: TimelineScreenActions) {
+internal fun GapRow(gap: TimelineItem.Gap, actions: TimelineScreenActions) {
     if (gap.loading) {
         ListProgress(size = GAP_PROGRESS)
     } else {

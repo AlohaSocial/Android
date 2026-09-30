@@ -68,6 +68,8 @@ internal data class TimelineUiState(
     val reachedEnd: Boolean = false,
     /** A media mode the server cannot narrow: the device filters, so pages may be sparse. */
     val sparse: Boolean = false,
+    /** Photos can be a grid or a feed; null for a timeline that is always a list. */
+    val grid: Boolean? = null,
     val showBoosts: Boolean = true,
     val showReplies: Boolean = true,
     val now: Instant = Instant.EPOCH,
@@ -90,6 +92,7 @@ internal interface TimelineScreenActions {
     fun onSource(source: TimelineSource)
     fun onShowBoosts(show: Boolean)
     fun onShowReplies(show: Boolean)
+    fun onGrid(grid: Boolean)
     fun onScrolled(rowId: String, offset: Int)
     fun onNearEnd()
     fun onFillGap(gapId: String)

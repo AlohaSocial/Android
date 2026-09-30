@@ -61,6 +61,7 @@ class TimelineScreenshotTest {
         override fun onSource(source: TimelineSource) = Unit
         override fun onShowBoosts(show: Boolean) = Unit
         override fun onShowReplies(show: Boolean) = Unit
+        override fun onGrid(grid: Boolean) = Unit
         override fun onScrolled(rowId: String, offset: Int) = Unit
         override fun onNearEnd() = Unit
         override fun onFillGap(gapId: String) = Unit
@@ -102,6 +103,20 @@ class TimelineScreenshotTest {
     fun gapLargeFont() = capture("timeline-gap-font200") {
         val posts = posts()
         loaded(listOf(posts[0], TimelineItem.Gap("gap", loading = false), posts[1])).copy(source = TimelineSource.Local)
+    }
+
+    @Test
+    fun photoGrid() = capture("photos-grid") {
+        val mapper = StatusRowMapper(cache, RichTextColors.fromTheme())
+        // one picture, a stack of four, a sensitive one, and a picture without a description
+        val photos = listOf(
+            StatusSamples.post().copy(mediaAttachments = listOf(StatusSamples.image("a"))),
+            StatusSamples.gallery,
+            StatusSamples.sensitive,
+            StatusSamples.post().copy(mediaAttachments = listOf(StatusSamples.image("b", alt = null))),
+        ).mapIndexed { index, status -> TimelineItem.Post(mapper.map(status.copy(id = "photo$index"), "1", null)) }
+        loaded(photos + photos.mapIndexed { index, item -> TimelineItem.Post(item.row.copy(rowId = "more$index")) })
+            .copy(grid = true)
     }
 
     @Test

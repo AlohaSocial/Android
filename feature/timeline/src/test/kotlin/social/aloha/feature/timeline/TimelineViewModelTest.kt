@@ -262,6 +262,12 @@ class TimelineViewModelTest {
         val stored = settings.settings(account.id).first()
         assertEquals(TimelineSource.Local, stored.modeSources[FeedMode.Photos.key])
         assertEquals(TimelineSource.Federated, stored.homeSource)
+        // photos start as a grid, and a feed chosen instead is kept; home is always a list
+        assertEquals(true, state.grid)
+        photos.onGrid(false)
+        withTimeout(10.seconds) { photos.uiState.first { it.grid == false } }
+        assertEquals(false, preferences.photosGrid.first())
+        assertEquals(null, await { it.loadedOnce }.grid)
     }
 
     @Test

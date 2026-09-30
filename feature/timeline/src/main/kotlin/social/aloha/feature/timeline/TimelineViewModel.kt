@@ -72,7 +72,7 @@ internal class TimelineViewModel @AssistedInject constructor(
     private val interactions: StatusInteractions,
     private val positions: TimelinePositions,
     private val settings: AccountSettingsStore,
-    preferences: AppPreferences,
+    private val preferences: AppPreferences,
     private val clock: Clock,
     private val prefetcher: ImagePrefetcher,
     private val signals: TimelineSignals,
@@ -166,16 +166,19 @@ internal class TimelineViewModel @AssistedInject constructor(
         }
         .flowOn(Dispatchers.Default)
 
+    /** Grid or feed, for Photos only: every other timeline is a list. */
+    private val grid: Flow<Boolean?> = if (feed.mode == FeedMode.Photos) preferences.photosGrid else flowOf(null)
+
     val uiState: StateFlow<TimelineUiState> = combine(
         items,
         combine(pager.states, control, ::Pair),
-        combine(accountSettings, swipes, ::Pair),
+        combine(accountSettings, swipes, grid, ::Triple),
         account.filterNotNull(),
         minuteTicks(clock),
     ) {
             shown,
             (paging, control),
-            (settings, swipes),
+            (settings, swipes, grid),
             account,
             now,
         ->
@@ -191,6 +194,7 @@ internal class TimelineViewModel @AssistedInject constructor(
             loadingOlder = paging.loadingOlder,
             reachedEnd = paging.reachedEnd,
             sparse = TimelineFilters.forMode(feed.mode, account.capabilities).isEmpty && feed.mode != FeedMode.Home,
+            grid = grid,
             showBoosts = settings.showBoosts,
             showReplies = settings.showReplies,
             now = now,
@@ -281,6 +285,10 @@ internal class TimelineViewModel @AssistedInject constructor(
     override fun onShowBoosts(show: Boolean) = updateSettings { it.copy(showBoosts = show) }
 
     override fun onShowReplies(show: Boolean) = updateSettings { it.copy(showReplies = show) }
+
+    override fun onGrid(grid: Boolean) {
+        viewModelScope.launch { preferences.setPhotosGrid(grid) }
+    }
 
     private fun updateSettings(change: (AccountSettings) -> AccountSettings) {
         viewModelScope.launch { account.value?.let { settings.update(it.id, change) } }

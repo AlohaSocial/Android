@@ -47,6 +47,13 @@ public class AppPreferences(private val store: DataStore<Preferences>) {
         store.edit { it[WIFI_ONLY_SYNC] = wifiOnly }
     }
 
+    /** Whether Photos shows as a grid, as it does until the person picks the feed. */
+    public val photosGrid: Flow<Boolean> = store.data.map { it[PHOTOS_GRID] ?: true }
+
+    public suspend fun setPhotosGrid(grid: Boolean) {
+        store.edit { it[PHOTOS_GRID] = grid }
+    }
+
     /** The daily window in which no notification is raised; none until chosen. */
     public val quietHours: Flow<QuietHours?> = store.data.map { stored ->
         val from = stored[QUIET_FROM]
@@ -124,6 +131,7 @@ public class AppPreferences(private val store: DataStore<Preferences>) {
         val WARN_DESCRIPTION = booleanPreferencesKey("warn_missing_description")
         val TAG_SHORTS = booleanPreferencesKey("tag_shorts")
         val WIFI_ONLY_SYNC = booleanPreferencesKey("wifi_only_sync")
+        val PHOTOS_GRID = booleanPreferencesKey("photos_grid")
         val QUIET_FROM = intPreferencesKey("quiet_from_hour")
         val QUIET_UNTIL = intPreferencesKey("quiet_until_hour")
         val ASKED_NOTIFICATIONS = booleanPreferencesKey("asked_for_notifications")

@@ -51,6 +51,21 @@
     <string name="timeline_empty_explore">See what\'s happening on this server</string>
     <!-- Text of an empty public timeline -->
     <string name="timeline_empty_public">No posts here yet.</string>
+    <!-- Button in the photos toolbar that shows the photos as a grid of squares -->
+    <string name="photos_show_grid">Show as grid</string>
+    <!-- Button in the photos toolbar that shows the photos one below the other, with their posts -->
+    <string name="photos_show_feed">Show as feed</string>
+    <!-- A square in the photo grid, read aloud: %1$s is who posted, %2$d how many pictures the post holds -->
+    <plurals name="photos_cell">
+        <item quantity="one">Photo by %1$s</item>
+        <item quantity="other">%2$d photos by %1$s</item>
+    </plurals>
+    <!-- Read aloud for a square in the photo grid whose picture has no description -->
+    <string name="photos_cell_no_alt">no description</string>
+    <!-- Read aloud for a square in the photo grid whose picture is marked sensitive and hidden -->
+    <string name="photos_cell_sensitive">marked sensitive</string>
+    <!-- What tapping a square in the photo grid does, read aloud -->
+    <string name="photos_cell_open">open the photos</string>
     <!-- Under an empty photos, video or shorts timeline: the server cannot pick such posts itself -->
     <string name="timeline_empty_sparse">This server cannot pick these posts out itself, so the app looks through recent posts for them, and there may be few.</string>
     <!-- Read aloud while the first page of the timeline loads -->

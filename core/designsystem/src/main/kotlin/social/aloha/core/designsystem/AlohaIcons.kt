@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Collections
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.PhotoLibrary
@@ -43,6 +44,7 @@ import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material.icons.outlined.FilterAlt
 import androidx.compose.material.icons.outlined.Flag
 import androidx.compose.material.icons.outlined.FormatQuote
+import androidx.compose.material.icons.outlined.GridView
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Inventory2
@@ -134,6 +136,13 @@ public object AlohaIcons {
     public val Delete: ImageVector = Icons.Outlined.Delete
     public val Redraft: ImageVector = Icons.Outlined.EditNote
     public val Sensitive: ImageVector = Icons.Outlined.VisibilityOff
+
+    /** A post holding more than one picture, on its square in a grid. */
+    public val Stack: ImageVector = Icons.Filled.Collections
+
+    /** Show as a grid of squares; the feed is [Feed]. */
+    public val Grid: ImageVector = Icons.Outlined.GridView
+    public val Feed: ImageVector = Icons.Outlined.ViewAgenda
     public val Thread: ImageVector = Icons.AutoMirrored.Outlined.Subject
     public val Voted: ImageVector = Icons.Filled.CheckCircle
 
