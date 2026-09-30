@@ -24,8 +24,10 @@ android {
 }
 
 baselineProfile {
-    // generated on a device by :benchmark, checked in under src/<flavor>/generated/baselineProfiles
+    // generated on a device by :benchmark, checked in under src/main/generated/baselineProfiles: both
+    // flavours run the same code, so one profile serves every variant
     automaticGenerationDuringBuild = false
+    mergeIntoMain = true
 }
 
 dependencies {

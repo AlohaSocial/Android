@@ -30,8 +30,12 @@ class StartupBenchmark {
         startupMode = StartupMode.COLD,
         iterations = 10,
     ) {
-        pressHome()
+        goHome()
         startActivityAndWait()
+        // the trace has to reach past `reportFullyDrawn` and the frame after it, which come later
+        // than the first frame; signed out there is no timeline, and the wait only runs out
+        timeline()
+        device.waitForIdle()
     }
 }
 

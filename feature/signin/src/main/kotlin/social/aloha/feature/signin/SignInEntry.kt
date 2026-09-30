@@ -11,6 +11,7 @@ import android.content.ContextWrapper
 import android.content.Intent
 import android.security.KeyChain
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.ReportDrawn
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -37,6 +38,8 @@ import kotlinx.coroutines.launch
 @Composable
 public fun SignInEntry(modifier: Modifier = Modifier, onCancel: (() -> Unit)? = null) {
     onCancel?.let { BackHandler(onBack = it) }
+    // signed out, the first screen is the whole app: it is fully drawn once it shows
+    ReportDrawn()
     val terms: TermsViewModel = hiltViewModel()
     val accepted by terms.accepted.collectAsStateWithLifecycle()
     when (accepted) {
