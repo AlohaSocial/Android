@@ -3,6 +3,7 @@
 
 package social.aloha.feature.timeline
 
+import androidx.activity.compose.ReportDrawnWhen
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
@@ -57,6 +58,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
@@ -116,6 +118,8 @@ internal fun TimelineScreen(
                 onRefresh = actions::onRefresh,
                 modifier = Modifier.fillMaxSize(),
             ) {
+                // the app is fully drawn once the reader sees posts, or learns there are none
+                ReportDrawnWhen { state.items.isNotEmpty() || state.loadedOnce }
                 when {
                     state.items.isNotEmpty() -> Rows(state, actions, rowActions, listState)
                     state.loadedOnce -> EmptyState(state.source, TimelineSource.Local in state.sources, actions)
@@ -141,7 +145,7 @@ private fun Rows(
 ) {
     LazyColumn(
         state = listState,
-        modifier = Modifier.readingColumn(),
+        modifier = Modifier.readingColumn().testTag(TIMELINE_LIST),
         contentPadding = PaddingValues(bottom = AlohaSpacing.xl),
     ) {
         items(state.items, key = { it.key }, contentType = { it::class }) { item ->
@@ -428,3 +432,6 @@ private val SKELETON_NAME = 120.dp
 private val SKELETON_SHORT = 180.dp
 private val SKELETON_LINE = 14.dp
 private val GAP_PROGRESS = 24.dp
+
+/** The home list's test tag, which the scroll benchmark finds it by. */
+internal const val TIMELINE_LIST = "timeline"
