@@ -33,7 +33,8 @@ public class ApiClient internal constructor(
 ) {
     /**
      * @param onUnauthorised told when the server answers 401 to a request that carried this account's
-     *   credential: the token was revoked and the account needs a new sign-in.
+     *   token: it was revoked and the account needs a new sign-in. A 401 to the Nextcloud app password
+     *   says nothing about the sign-in and is not told.
      */
     public constructor(
         apiBase: HttpUrl,
@@ -70,7 +71,9 @@ public class ApiClient internal constructor(
         val authorization = authorization(request.endpoint.authentication)
             ?: return ApiResult.Failure(ApiError.Unauthorised(message = null))
         val result = executor.execute(request, url, authorization)
-        val revoked = (result as? ApiResult.Failure)?.error is ApiError.Unauthorised && authorization.isNotEmpty()
+        // only the sign-in's own token answers for the sign-in: a refused app password is the Nextcloud's
+        val revoked = (result as? ApiResult.Failure)?.error is ApiError.Unauthorised &&
+            request.endpoint.authentication == Authentication.Bearer && authorization.isNotEmpty()
         if (revoked) onUnauthorised()
         return result
     }

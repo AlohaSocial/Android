@@ -84,6 +84,20 @@ class ApiClientTest {
     }
 
     @Test
+    fun `a refused token asks for a new sign-in, a refused app password does not`() = runTest {
+        var told = 0
+        val credentials = Credentials("secret-token", "Basic YWxpY2U6cHc=")
+        val client =
+            ApiClient(base, { credentials }, OkHttpClient(), rateLimiter, Dispatchers.IO, onUnauthorised = { told++ })
+        respond("""{"error":"invalid"}""", code = 401)
+        client.execute(emojis(Authentication.NextcloudSession))
+        assertEquals(0, told)
+        respond("""{"error":"invalid"}""", code = 401)
+        client.execute(emojis())
+        assertEquals(1, told)
+    }
+
+    @Test
     fun `a public route sends no credential`() = runTest {
         respond("[]")
         client().execute(emojis(Authentication.None))
