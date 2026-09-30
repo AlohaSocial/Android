@@ -34,6 +34,7 @@ import org.robolectric.RobolectricTestRunner
 import social.aloha.core.data.AccountRepository
 import social.aloha.core.data.ClientFactory
 import social.aloha.core.data.NewAccount
+import social.aloha.core.data.sync.TimelineSignals
 import social.aloha.core.data.timeline.FilterRepository
 import social.aloha.core.data.timeline.StatusInteractions
 import social.aloha.core.data.timeline.StatusRepository
@@ -80,6 +81,7 @@ class TimelineViewModelTest {
     private val statuses = StatusRepository(cache.statusDao(), clock)
     private val settings = AccountSettingsStore(InMemoryDataStore(emptyMap()))
     private val preferences = AppPreferences(InMemoryDataStore(emptyPreferences()))
+    private val signals = TimelineSignals()
     private val timeline = NumberedTimeline().apply { newest = 100 }
     private val server = MockWebServer().apply { dispatcher = timeline }
     private lateinit var viewModel: TimelineViewModel
@@ -116,6 +118,7 @@ class TimelineViewModelTest {
         preferences,
         clock,
         ApplicationProvider.getApplicationContext<Context>().let { ImagePrefetcher(it, ImageLoader(it)) },
+        signals,
     ).apply { onColors(RichTextColors(Color.Blue, Color.Gray, Color.LightGray)) }
 
     @After
@@ -158,6 +161,21 @@ class TimelineViewModelTest {
         viewModel.onScrolledToTop()
         assertFalse(await { !it.scrollToTop }.scrollToTop)
     }
+
+    @Test
+    fun `a timeline on screen refreshes when a poll says it is due, and holds what came behind the pill`() =
+        runBlocking {
+            await { it.loadedOnce && it.items.isNotEmpty() }
+            val account = accounts.activeAccount.value!!
+            viewModel.onShown(isShown = true)
+            assertTrue(signals.onScreen(account.id))
+            timeline.newest = 102
+            signals.markDue(account.id)
+            assertEquals("100", await { it.pending == 2 }.postIds().first())
+            viewModel.onShown(isShown = false)
+            // one off screen is not kept fresh: it refreshes when it is shown again
+            assertFalse(signals.onScreen(account.id))
+        }
 
     @Test
     fun `nearing the end loads the next page below`() = runBlocking {

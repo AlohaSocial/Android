@@ -16,12 +16,16 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 import social.aloha.core.designsystem.AlohaTheme
 import social.aloha.core.sync.PostQueue
+import social.aloha.core.sync.SyncEngine
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     private val app: AppViewModel by viewModels()
+
+    @Inject lateinit var sync: SyncEngine
 
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
@@ -34,6 +38,22 @@ class MainActivity : ComponentActivity() {
                 Box(Modifier.fillMaxSize().semantics { testTagsAsResourceId = true }) { AlohaRoot(app) }
             }
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        sync.setForeground(true)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        // turned or resized, the app stays in front and its polls keep going
+        if (!isChangingConfigurations) sync.setForeground(false)
+    }
+
+    override fun onUserInteraction() {
+        super.onUserInteraction()
+        sync.noteInteraction()
     }
 
     override fun onNewIntent(intent: Intent) {

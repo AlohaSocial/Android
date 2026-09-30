@@ -16,6 +16,7 @@ import kotlinx.serialization.SerializationException
 import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
+import social.aloha.core.model.PollFrequency
 import social.aloha.core.model.TimelineSource
 
 /**
@@ -27,6 +28,7 @@ import social.aloha.core.model.TimelineSource
  * @property homeSource what the home screen showed last: the people followed, this server, or everyone.
  * @property recentTags the hashtags this account used last, newest first, offered first when writing.
  * @property recentFilePaths the Nextcloud files this account attached last, by path, newest first.
+ * @property pollFrequency how often this account's server is asked what is new while the app is open.
  */
 @Serializable
 public data class AccountSettings(
@@ -35,6 +37,7 @@ public data class AccountSettings(
     val homeSource: TimelineSource = TimelineSource.Home,
     val recentTags: List<String> = emptyList(),
     val recentFilePaths: List<String> = emptyList(),
+    val pollFrequency: PollFrequency = PollFrequency.Normal,
 )
 
 /**

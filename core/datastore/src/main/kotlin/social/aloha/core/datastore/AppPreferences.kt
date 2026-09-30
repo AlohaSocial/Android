@@ -35,6 +35,16 @@ public class AppPreferences(private val store: DataStore<Preferences>) {
     /** Whether a short recorded in the composer gets `#shorts`; null until the person was asked once. */
     public val tagShorts: Flow<Boolean?> = store.data.map { it[TAG_SHORTS] }
 
+    /**
+     * Whether timelines wait for Wi-Fi before they refresh on their own; off until turned on. The unread
+     * count and notifications are asked for on any network, since a wrong badge costs more than the bytes.
+     */
+    public val wifiOnlySync: Flow<Boolean> = store.data.map { it[WIFI_ONLY_SYNC] ?: false }
+
+    public suspend fun setWifiOnlySync(wifiOnly: Boolean) {
+        store.edit { it[WIFI_ONLY_SYNC] = wifiOnly }
+    }
+
     public suspend fun setTagShorts(tag: Boolean) {
         store.edit { it[TAG_SHORTS] = tag }
     }
@@ -65,6 +75,7 @@ public class AppPreferences(private val store: DataStore<Preferences>) {
         val ACTIVE_ACCOUNT = stringPreferencesKey("active_account_id")
         val WARN_DESCRIPTION = booleanPreferencesKey("warn_missing_description")
         val TAG_SHORTS = booleanPreferencesKey("tag_shorts")
+        val WIFI_ONLY_SYNC = booleanPreferencesKey("wifi_only_sync")
 
         /** A value a later build wrote, or none at all, reads as the default. */
         fun swipe(stored: String?, default: SwipeAction): SwipeAction =

@@ -35,6 +35,7 @@ import kotlinx.coroutines.launch
 import okhttp3.HttpUrl
 import social.aloha.core.data.AccountRepository
 import social.aloha.core.data.Trouble
+import social.aloha.core.data.sync.TimelineSignals
 import social.aloha.core.data.timeline.PageOutcome
 import social.aloha.core.data.timeline.RefreshPlan
 import social.aloha.core.data.timeline.StatusInteractions
@@ -78,6 +79,7 @@ internal class TimelineViewModel @AssistedInject constructor(
     preferences: AppPreferences,
     private val clock: Clock,
     private val prefetcher: ImagePrefetcher,
+    private val signals: TimelineSignals,
 ) : ViewModel(),
     TimelineScreenActions {
     @AssistedFactory
@@ -205,6 +207,12 @@ internal class TimelineViewModel @AssistedInject constructor(
                 .distinctUntilChanged { a, b -> a.first.id == b.first.id && a.second == b.second }
                 .collect { (account, key) ->
                     control.value = Control()
+                    // a timeline on screen that switched account is now kept fresh for the new one
+                    shownFor?.takeIf { it != account.id }?.let {
+                        signals.noteShown(it, isShown = false)
+                        shownFor = account.id
+                        signals.noteShown(account.id, isShown = true)
+                    }
                     cursor = null
                     prefetchedFrom = -1
                     stored = emptyList()
@@ -214,16 +222,34 @@ internal class TimelineViewModel @AssistedInject constructor(
                     rows.refreshFilters(account)
                 }
         }
+        viewModelScope.launch {
+            signals.timelineDue.collect { id ->
+                // a timeline off screen is not fetched for; it refreshes itself when it comes back
+                if (shownFor == null) return@collect
+                current()?.takeIf { (account) -> account.id == id }?.let { (account, key) -> refresh(account, key) }
+            }
+        }
+    }
+
+    private var shownFor: String? = null
+
+    /**
+     * The screen came into view or left it. Coming into view refreshes unless this timeline fetched
+     * within the last minute; while in view, the poll keeps it fresh.
+     */
+    fun onShown(isShown: Boolean) {
+        if (isShown) {
+            shownFor = account.value?.id?.also { signals.noteShown(it, isShown = true) }
+            viewModelScope.launch { current()?.let { (account, key) -> refreshIfStale(account, key) } }
+        } else {
+            shownFor?.let { signals.noteShown(it, isShown = false) }
+            shownFor = null
+        }
     }
 
     /** Rows are rendered with the theme's colours, which only the screen knows. */
     fun onColors(value: RichTextColors) {
         colors.value = value
-    }
-
-    /** The screen came into view: refresh unless this timeline fetched within the last minute. */
-    fun onAppear() {
-        viewModelScope.launch { current()?.let { (account, key) -> refreshIfStale(account, key) } }
     }
 
     override fun onRefresh() {
