@@ -126,12 +126,13 @@ class SignInAcceptanceTest(private val configuration: MockServerConfiguration) {
     @Test
     fun `a callback carrying another state is dropped without an exchange`() = runBlocking {
         coordinator.beginAuthorization(finder.found(mock.origin.toString()))
-        val before = mock.requests.size
         assertEquals(
             SignInResult.NotForUs,
             coordinator.complete("alohasocial://oauth-callback/?code=stolen&state=evil"),
         )
-        assertEquals(before, mock.requests.size)
+        // what matters is that the code was never exchanged; counting all requests raced the server,
+        // which records one on its own thread, sometimes after the client already has the answer
+        assertTrue(mock.requests.none { it.url.encodedPath.endsWith("/oauth/token") })
         assertTrue(coordinator.hasPendingAuthorization())
     }
 
