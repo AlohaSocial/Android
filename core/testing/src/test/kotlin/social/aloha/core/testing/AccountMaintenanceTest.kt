@@ -74,7 +74,9 @@ class AccountMaintenanceTest {
             displayName = "alice",
             avatarUrl = null,
             headerUrl = null,
-            capabilities = ServerCapabilities.minimal(apiBase).copy(detectedAt = detectedAt),
+            capabilities = ServerCapabilities.minimal(
+                apiBase,
+            ).copy(detectedAt = detectedAt, format = ServerCapabilities.CURRENT_FORMAT),
             profilePending = false,
         ),
         AccessToken(MockCredentials.ACCESS_TOKEN, ""),

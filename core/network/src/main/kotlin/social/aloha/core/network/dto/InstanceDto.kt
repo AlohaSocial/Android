@@ -143,6 +143,8 @@ internal fun InstanceV2Dto.toDomain(): InstanceDescription = InstanceDescription
     translationEnabled = configuration?.translation?.enabled ?: false,
     apiVersions = apiVersions.orEmpty(),
     limits = configuration.toLimits(),
+    localFeed = configuration?.timelinesAccess?.liveFeeds?.local.readable(),
+    federatedFeed = configuration?.timelinesAccess?.liveFeeds?.remote.readable(),
 )
 
 internal fun InstanceV1Dto.toDomain(): InstanceDescription = InstanceDescription(

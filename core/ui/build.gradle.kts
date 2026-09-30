@@ -4,8 +4,14 @@
 plugins {
     alias(libs.plugins.aloha.android.library)
     alias(libs.plugins.aloha.android.compose)
+    alias(libs.plugins.aloha.screenshot)
 }
 
 dependencies {
     implementation(project(":core:designsystem"))
+    api(project(":core:html"))
+    api(project(":core:media"))
+    implementation(libs.androidx.browser)
+    implementation(libs.androidx.core.ktx)
+    testImplementation(project(":core:testing"))
 }

@@ -32,6 +32,20 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <!-- Fediverse links other apps hand over: web+ap:// and the app's own alohasocial://open?url= -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="web+ap" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="alohasocial" />
+                <data android:host="open" />
+            </intent-filter>
         </activity>
 
         <!-- The OAuth callback: exported so the browser can deliver it, draws nothing, finishes at once. -->

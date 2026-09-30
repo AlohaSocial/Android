@@ -87,8 +87,11 @@ public class CapabilityDetector internal constructor(executor: RequestExecutor, 
             mediaFromNextcloudFiles = found.fromFile,
             preferencesWrite = nextcloud,
             limits = instance.limits,
+            localFeed = instance.localFeed,
+            federatedFeed = instance.federatedFeed,
             theme = found.theme,
             detectedAt = now(),
+            format = ServerCapabilities.CURRENT_FORMAT,
         )
     }
 

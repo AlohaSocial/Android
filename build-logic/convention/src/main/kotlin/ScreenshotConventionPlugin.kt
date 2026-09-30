@@ -31,6 +31,8 @@ class ScreenshotConventionPlugin : Plugin<Project> {
                 add("testImplementation", libs.library("roborazzi-compose"))
                 add("testImplementation", libs.library("roborazzi-junit-rule"))
                 add("testImplementation", libs.library("compose-ui-test-junit4"))
+                // the Accessibility Test Framework checks every screenshot test can run
+                add("testImplementation", libs.library("compose-ui-test-junit4-accessibility"))
                 add("debugImplementation", libs.library("compose-ui-test-manifest"))
             }
         }

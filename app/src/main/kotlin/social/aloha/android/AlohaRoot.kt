@@ -14,6 +14,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -34,11 +35,22 @@ fun AlohaRoot(viewModel: AppViewModel = hiltViewModel()) {
     when (val current = session) {
         AppSession.Loading -> Unit
 
-        AppSession.SigningIn -> SignInEntry()
+        is AppSession.SigningIn -> SignInEntry(onCancel = if (current.adding) viewModel::cancelAdding else null)
 
-        is AppSession.SignedIn -> Column {
-            if (current.needsReauth) ReauthBanner(current.handle, onSignInAgain = viewModel::signInAgain)
-            AlohaApp()
+        // a switch starts the shell afresh for that account: its own back stack, painted from its cache
+        is AppSession.SignedIn -> key(current.accountId) {
+            Column {
+                if (current.needsReauth) ReauthBanner(current.handle, onSignInAgain = viewModel::signInAgain)
+                val pending by viewModel.pendingLink.collectAsStateWithLifecycle()
+                AlohaApp(
+                    readerId = current.accountId,
+                    serverAccountId = current.serverAccountId,
+                    pendingLink = pending,
+                    onPendingLinkTaken = viewModel::externalHandled,
+                    resolveLink = viewModel::destination,
+                    accountButton = { onProfile, onSettings -> AccountSwitcher(viewModel, onProfile, onSettings) },
+                )
+            }
         }
     }
 }

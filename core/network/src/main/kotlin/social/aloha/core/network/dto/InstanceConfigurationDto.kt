@@ -27,7 +27,21 @@ internal data class InstanceConfigurationDto(
     @Serializable(with = AccountsConfigOrNull::class) val accounts: AccountsConfigDto? = null,
     @Serializable(with = TranslationConfigOrNull::class) val translation: TranslationConfigDto? = null,
     @Serializable(with = VapidOrNull::class) val vapid: VapidDto? = null,
+    @SerialName("timelines_access") @Serializable(with = TimelinesAccessOrNull::class)
+    val timelinesAccess: TimelinesAccessDto? = null,
 )
+
+/**
+ * Who may read the live feeds (Mastodon 4.5+): `public`, `authenticated` or `disabled`, for this
+ * server's posts (`local`) and everyone else's (`remote`). mastodon.social disables both.
+ */
+@Serializable
+internal data class TimelinesAccessDto(
+    @SerialName("live_feeds") @Serializable(with = FeedAccessOrNull::class) val liveFeeds: FeedAccessDto? = null,
+)
+
+@Serializable
+internal data class FeedAccessDto(val local: String? = null, val remote: String? = null)
 
 /**
  * `urls`, an empty object on Nextcloud Social, which is the signal that there is no streaming. v1 spells
@@ -100,6 +114,14 @@ internal object AccountsConfigOrNull : KSerializer<AccountsConfigDto?> by OrNull
 
 internal object TranslationConfigOrNull : KSerializer<TranslationConfigDto?> by
 OrNullSerializer(TranslationConfigDto.serializer())
+
+internal object TimelinesAccessOrNull : KSerializer<TimelinesAccessDto?> by
+OrNullSerializer(TimelinesAccessDto.serializer())
+
+internal object FeedAccessOrNull : KSerializer<FeedAccessDto?> by OrNullSerializer(FeedAccessDto.serializer())
+
+/** A feed a signed-in reader cannot read is `disabled`; anything else, or nothing said, is readable. */
+internal fun String?.readable(): Boolean = this != "disabled"
 
 internal object VapidOrNull : KSerializer<VapidDto?> by OrNullSerializer(VapidDto.serializer())
 

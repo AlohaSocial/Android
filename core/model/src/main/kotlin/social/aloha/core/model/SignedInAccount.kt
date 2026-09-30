@@ -28,4 +28,7 @@ public data class SignedInAccount(
     val profilePending: Boolean,
     val addedAt: Instant,
     val nextcloudConnected: Boolean,
-)
+) {
+    /** `@user@server`, the handle as other servers know it; the stored [handle] is the bare username. */
+    val qualifiedHandle: String get() = if ('@' in handle) "@${handle.removePrefix("@")}" else "@$handle@$host"
+}

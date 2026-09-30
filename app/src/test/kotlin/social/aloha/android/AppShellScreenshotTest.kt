@@ -4,12 +4,15 @@
 package social.aloha.android
 
 import android.app.Application
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
+import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.captureRoboImage
+import com.github.takahirom.roborazzi.captureScreenRoboImage
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -20,7 +23,7 @@ import social.aloha.core.designsystem.AlohaTheme
 import social.aloha.core.designsystem.ThemeMode
 import social.aloha.core.designsystem.ThemeSettings
 
-/** The empty shell on a phone (navigation bar) and a tablet (navigation rail). */
+/** The empty shell on a phone (navigation bar) and a tablet (navigation rail), and the accounts sheet. */
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(sdk = [36], application = Application::class)
@@ -45,9 +48,27 @@ class AppShellScreenshotTest {
     @Config(qualifiers = RobolectricDeviceQualifiers.Pixel7)
     fun shellOnPhoneShortsSelected() = capture("shell-phone-shorts", select = "Shorts")
 
+    /** The sheet is a window of its own, which only a capture of the whole screen includes. */
+    @OptIn(ExperimentalRoborazziApi::class)
+    @Test
+    @Config(qualifiers = RobolectricDeviceQualifiers.Pixel7)
+    fun accounts() {
+        val accounts = listOf(
+            SwitcherAccount("a", "Alice Example", "@alice@cloud.example", null, active = true, needsReauth = false),
+            SwitcherAccount("b", "Alice at work", "@alice@mastodon.example", null, active = false, needsReauth = true),
+        )
+        compose.setContent {
+            AlohaTheme(ThemeSettings(mode = ThemeMode.Light)) { AccountSheet(accounts, {}, {}, {}, {}, {}, {}) }
+        }
+        compose.waitForIdle()
+        captureScreenRoboImage("src/test/screenshots/shell-accounts.png")
+    }
+
     private fun capture(name: String, mode: ThemeMode = ThemeMode.Light, select: String? = null) {
         compose.setContent {
-            AlohaTheme(ThemeSettings(mode = mode)) { AlohaApp() }
+            AlohaTheme(ThemeSettings(mode = mode)) {
+                AlohaApp("a", "1", home = { _, _ -> Placeholder(stringResource(R.string.destination_home)) })
+            }
         }
         select?.let { compose.onNodeWithText(it).performClick() }
         compose.onRoot().captureRoboImage("src/test/screenshots/$name.png")

@@ -10,6 +10,7 @@ import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
 import android.security.KeyChain
+import androidx.activity.compose.BackHandler
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -30,20 +31,23 @@ import kotlinx.coroutines.launch
 /**
  * Where a person without an account starts: the terms, once per version, then sign-in. Signing in
  * makes an account active, and the app leaves this screen by itself.
+ *
+ * @param onCancel given when an account is being added beside others: the screen offers a way back.
  */
 @Composable
-public fun SignInEntry(modifier: Modifier = Modifier) {
+public fun SignInEntry(modifier: Modifier = Modifier, onCancel: (() -> Unit)? = null) {
+    onCancel?.let { BackHandler(onBack = it) }
     val terms: TermsViewModel = hiltViewModel()
     val accepted by terms.accepted.collectAsStateWithLifecycle()
     when (accepted) {
         null -> Unit
         false -> TermsScreen(onAccept = terms::accept, modifier = modifier)
-        true -> SignInRoute(modifier)
+        true -> SignInRoute(modifier, onCancel)
     }
 }
 
 @Composable
-private fun SignInRoute(modifier: Modifier) {
+private fun SignInRoute(modifier: Modifier, onCancel: (() -> Unit)?) {
     val viewModel: SignInViewModel = hiltViewModel()
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val browserUrl by viewModel.pendingBrowserUrl.collectAsStateWithLifecycle()
@@ -79,7 +83,7 @@ private fun SignInRoute(modifier: Modifier) {
             }
         }
     }
-    SignInScreen(state, actions, modifier)
+    SignInScreen(state, actions, modifier, onCancel)
 }
 
 private tailrec fun Context.findActivity(): Activity? = when (this) {

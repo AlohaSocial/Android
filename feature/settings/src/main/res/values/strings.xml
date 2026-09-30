@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ SPDX-FileCopyrightText: 2026 Aloha Social contributors
+  ~ SPDX-License-Identifier: MIT
+-->
+<resources>
+    <!-- Title of the settings screen -->
+    <string name="settings_title">Settings</string>
+    <!-- Button that goes back from a settings screen -->
+    <string name="settings_back">Back</string>
+    <!-- Shown beside the list of settings sections on a wide screen before one is opened -->
+    <string name="settings_choose">Choose a section.</string>
+    <!-- Title of the settings section about the app -->
+    <string name="settings_about">About</string>
+    <!-- The app's version in the about section; %s is the version name -->
+    <string name="settings_version">Version %s</string>
+    <!-- Row in the about section that opens the app's source code -->
+    <string name="settings_source">Source code</string>
+</resources>

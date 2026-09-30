@@ -12,6 +12,7 @@ import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import social.aloha.core.html.RichTextCache
 
 /** A scope that lives as long as the process, for state shared across screens. */
 @Qualifier
@@ -25,4 +26,9 @@ internal object DataModule {
     @Singleton
     @ApplicationScope
     fun applicationScope(): CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+
+    /** One parse cache for the process, so a post seen on two screens is parsed once. */
+    @Provides
+    @Singleton
+    fun richTextCache(): RichTextCache = RichTextCache()
 }

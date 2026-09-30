@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ SPDX-FileCopyrightText: 2026 Aloha Social contributors
+  ~ SPDX-License-Identifier: MIT
+-->
+<resources>
+    <!-- Title of the home timeline screen -->
+    <string name="timeline_title">Home</string>
+    <!-- Source switch: the people the reader follows -->
+    <string name="timeline_source_home">Following</string>
+    <!-- Source switch: everyone on the reader's own server -->
+    <string name="timeline_source_local">This server</string>
+    <!-- Source switch: everyone the reader's server knows of -->
+    <string name="timeline_source_federated">Everywhere</string>
+    <!-- Menu of timeline options -->
+    <string name="timeline_options">Timeline options</string>
+    <!-- Timeline option: show boosts of other people's posts -->
+    <string name="timeline_show_boosts">Show boosts</string>
+    <!-- Timeline option: show replies to other people -->
+    <string name="timeline_show_replies">Show replies</string>
+    <!-- Pill above the list when new posts arrived while reading; %d is how many -->
+    <plurals name="timeline_new_posts">
+        <item quantity="one">%d new post</item>
+        <item quantity="other">%d new posts</item>
+    </plurals>
+    <!-- Strip over the timeline when the server cannot be reached; the cached posts stay -->
+    <string name="timeline_offline">You\'re offline. These are the posts saved on this device.</string>
+    <!-- Strip over the timeline when the server answered with an error -->
+    <string name="timeline_error">Couldn\'t refresh. Pull down to try again.</string>
+    <!-- Strip over the timeline when the server asks the app to slow down -->
+    <string name="timeline_rate_limited">Your server asked the app to slow down. Try again in a moment.</string>
+    <!-- A row standing for posts not loaded yet between two parts of the timeline -->
+    <string name="timeline_gap">Load missing posts</string>
+    <!-- Title of the empty timeline -->
+    <string name="timeline_empty_title">Nothing here yet</string>
+    <!-- Text of the empty home timeline -->
+    <string name="timeline_empty_home">Follow people and their posts show up here.</string>
+    <!-- Button in the empty home timeline that switches to the reader's server's public posts -->
+    <string name="timeline_empty_explore">See what\'s happening on this server</string>
+    <!-- Text of an empty public timeline -->
+    <string name="timeline_empty_public">No posts here yet.</string>
+    <!-- Read aloud while the first page of the timeline loads -->
+    <string name="timeline_loading">Loading posts</string>
+    <!-- Swipe action on a post, read aloud: favourite it -->
+    <string name="timeline_swipe_favourite">Favourite</string>
+    <!-- Swipe action on a post, read aloud: boost it -->
+    <string name="timeline_swipe_boost">Boost</string>
+    <!-- Button that goes back from a hashtag's timeline -->
+    <string name="timeline_back">Back</string>
+    <!-- What a swipe on a post does: bookmark it -->
+    <string name="timeline_swipe_bookmark">Bookmark</string>
+    <!-- What a swipe on a post does: open it to reply -->
+    <string name="timeline_swipe_reply">Reply</string>
+    <!-- What a swipe on a post does: nothing, the post stays still -->
+    <string name="timeline_swipe_none">Nothing</string>
+    <!-- Title of the timeline section in the settings -->
+    <string name="timeline_settings_title">Timeline</string>
+    <!-- Heading of the choice for a swipe from the start of a post towards its end -->
+    <string name="timeline_settings_swipe_end">Swipe towards the end</string>
+    <!-- Heading of the choice for a swipe from the end of a post towards its start -->
+    <string name="timeline_settings_swipe_start">Swipe towards the start</string>
+    <!-- Supporting text under the show-boosts and show-replies settings -->
+    <string name="timeline_settings_account">For the account in use</string>
+</resources>
+

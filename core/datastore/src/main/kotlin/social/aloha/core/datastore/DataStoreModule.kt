@@ -7,6 +7,7 @@ import android.content.Context
 import androidx.datastore.core.CorruptionException
 import androidx.datastore.core.DataStoreFactory
 import androidx.datastore.core.Serializer
+import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.preferencesDataStoreFile
 import dagger.Module
@@ -51,4 +52,14 @@ internal object DataStoreModule {
     @Singleton
     fun appPreferences(@ApplicationContext context: Context): AppPreferences =
         AppPreferences(PreferenceDataStoreFactory.create { context.preferencesDataStoreFile("app") })
+
+    // an unreadable file starts over from the defaults rather than failing every screen that reads it
+    @Provides
+    @Singleton
+    fun accountSettings(@ApplicationContext context: Context): AccountSettingsStore = AccountSettingsStore(
+        DataStoreFactory.create(
+            AccountSettingsSerializer,
+            corruptionHandler = ReplaceFileCorruptionHandler { AccountSettingsSerializer.defaultValue },
+        ) { File(context.filesDir, "datastore/account_settings.json") },
+    )
 }

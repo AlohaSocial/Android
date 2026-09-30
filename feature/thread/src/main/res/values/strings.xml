@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ SPDX-FileCopyrightText: 2026 Aloha Social contributors
+  ~ SPDX-License-Identifier: MIT
+-->
+<resources>
+    <!-- Title of the screen showing one post and the conversation around it -->
+    <string name="thread_title">Post</string>
+    <!-- Button that goes back from a screen -->
+    <string name="thread_back">Back</string>
+    <!-- Row under a reply chain too deep to indent further; opens it as its own conversation. %d is how many replies -->
+    <plurals name="thread_more_replies">
+        <item quantity="one">Show %d more reply</item>
+        <item quantity="other">Show %d more replies</item>
+    </plurals>
+    <!-- Button under the post: how many favourited it; opens the list of who did -->
+    <plurals name="thread_favourites">
+        <item quantity="one">%d favourite</item>
+        <item quantity="other">%d favourites</item>
+    </plurals>
+    <!-- Button under the post: how many boosted it; opens the list of who did -->
+    <plurals name="thread_boosts">
+        <item quantity="one">%d boost</item>
+        <item quantity="other">%d boosts</item>
+    </plurals>
+    <!-- Button under the post that opens the posts quoting it -->
+    <string name="thread_quotes">Quotes</string>
+    <!-- Button under the post that opens its emoji reactions -->
+    <string name="thread_reactions">Reactions</string>
+    <!-- Button under an edited post that opens its earlier versions -->
+    <string name="thread_edit_history">Edit history</string>
+    <!-- Heading of the sheet listing a post's earlier versions -->
+    <string name="thread_history_title">Edit history</string>
+    <!-- The first version of an edited post, in its history -->
+    <string name="thread_history_original">Original</string>
+    <!-- Strip shown when the conversation could not be loaded while offline -->
+    <string name="thread_offline">You\'re offline. Showing what is saved on this device.</string>
+    <!-- Strip shown when the conversation could not be loaded -->
+    <string name="thread_error">Couldn\'t load the conversation. Pull down to try again.</string>
+    <!-- Shown when the post was deleted or is not visible to this account -->
+    <string name="thread_gone">This post is no longer available.</string>
+    <!-- Read aloud on a reply: how deep it sits under the post the thread is about, 1 for a direct reply -->
+    <string name="thread_reply_level">Reply, level %1$d</string>
+    <!-- Read aloud while the conversation loads -->
+    <string name="thread_loading">Loading the conversation</string>
+    <!-- Title of the list of accounts that favourited a post -->
+    <string name="thread_list_favourited_by">Favourited by</string>
+    <!-- Title of the list of accounts that boosted a post -->
+    <string name="thread_list_boosted_by">Boosted by</string>
+    <!-- Title of the list of posts quoting a post -->
+    <string name="thread_list_quotes">Quotes</string>
+    <!-- Title of the list of a post's emoji reactions -->
+    <string name="thread_list_reactions">Reactions</string>
+    <!-- Shown when one of a post's lists is empty -->
+    <string name="thread_list_empty">Nothing here yet.</string>
+    <!-- Shown when one of a post's lists could not be loaded -->
+    <string name="thread_list_error">Couldn\'t load this list.</string>
+    <!-- Button that loads a list again after it failed -->
+    <string name="thread_retry">Try again</string>
+    <!-- Read aloud for one reaction in the list: %1$s the emoji or its name, %2$d how many reacted -->
+    <plurals name="thread_reaction_count">
+        <item quantity="one">%1$s, %2$d reaction</item>
+        <item quantity="other">%1$s, %2$d reactions</item>
+    </plurals>
+</resources>

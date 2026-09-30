@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ SPDX-FileCopyrightText: 2026 Aloha Social contributors
+  ~ SPDX-License-Identifier: MIT
+-->
+<resources>
+    <!-- Age of a post less than a minute old, in the timeline and read aloud -->
+    <string name="status_age_now">now</string>
+    <!-- Line above a boosted post; %s is the name of the person who boosted it -->
+    <string name="status_context_boosted">Boosted by %s</string>
+    <!-- Line above a post pinned to a profile -->
+    <string name="status_context_pinned">Pinned</string>
+    <!-- Line above a reply someone wrote to their own post -->
+    <string name="status_context_thread">Continued thread</string>
+    <!-- Line above a reply; %s is the handle it replies to, e.g. @alice@example.social -->
+    <string name="status_context_replying_to">Replying to %s</string>
+    <!-- Line above a reply to someone the post does not name -->
+    <string name="status_context_replying">Replying</string>
+    <!-- Badge after the name of an automated account -->
+    <string name="status_bot">Automated account</string>
+    <!-- Badge on a post that was edited after it was published -->
+    <string name="status_edited">Edited</string>
+    <!-- Badge on a post only followers can see -->
+    <string name="status_visibility_private">Followers only</string>
+    <!-- Badge on a direct message -->
+    <string name="status_visibility_direct">Direct message</string>
+    <!-- Badge on a post that is public but kept out of public timelines -->
+    <string name="status_visibility_unlisted">Quiet public</string>
+    <!-- Button text that shows a post hidden behind a content warning -->
+    <string name="status_spoiler_show">Show post</string>
+    <!-- Button text that hides a post again behind its content warning -->
+    <string name="status_spoiler_hide">Hide post</string>
+    <!-- A row standing in for a post hidden by a filter; %s is the name of the filter -->
+    <string name="status_filtered">Filtered: %s</string>
+    <!-- Button that reveals a post hidden by a filter -->
+    <string name="status_filtered_show">Show anyway</string>
+    <!-- Cover over sensitive media -->
+    <string name="status_sensitive_cover">Sensitive content</string>
+    <!-- Hint under the sensitive-media cover -->
+    <string name="status_sensitive_show">Tap to show</string>
+    <!-- Notice where the reader's settings hide sensitive media entirely -->
+    <string name="status_sensitive_hidden">Media hidden by your settings</string>
+    <!-- Badge on an image that has a text description for screen readers -->
+    <string name="status_alt_badge">ALT</string>
+    <!-- Read aloud for an image without a description -->
+    <string name="status_media_no_description">Image without a description</string>
+    <!-- Read aloud for a video; the description follows when there is one -->
+    <string name="status_media_video">Video</string>
+    <!-- Read aloud for the number of attachments on a post -->
+    <plurals name="status_media_count">
+        <item quantity="one">%d attachment</item>
+        <item quantity="other">%d attachments</item>
+    </plurals>
+    <!-- Line under a poll: the number of voters -->
+    <plurals name="status_poll_voters">
+        <item quantity="one">%s voter</item>
+        <item quantity="other">%s voters</item>
+    </plurals>
+    <!-- Line under a poll that has closed -->
+    <string name="status_poll_closed">Closed</string>
+    <!-- Mark next to the poll option the reader voted for -->
+    <string name="status_poll_your_vote">Your vote</string>
+    <!-- Button that sends a vote in a poll -->
+    <string name="status_poll_vote">Vote</string>
+    <!-- Read aloud for a poll option; %1$s is the option, %2$s its share of the votes, e.g. 40 % -->
+    <string name="status_poll_option">%1$s, %2$s</string>
+    <!-- Read aloud to say a post has a poll -->
+    <string name="status_poll">Poll</string>
+    <!-- Line inside a quoted post that was withdrawn by its author -->
+    <string name="status_quote_withdrawn">The quoted post was withdrawn.</string>
+    <!-- Screen-reader action that picks one option of a poll before voting; %s is the option -->
+    <string name="status_action_choose">Choose %s</string>
+    <!-- Screen-reader action that takes back one chosen option of a poll; %s is the option -->
+    <string name="status_action_unchoose">Remove choice %s</string>
+    <!-- Screen-reader action that opens the post a post quotes -->
+    <string name="status_action_open_quote">Open quoted post</string>
+    <!-- Screen-reader action that opens a post's link preview; %s is the link's title or address -->
+    <string name="status_action_open_card">Open link: %s</string>
+    <!-- Read aloud for a quoted post; %s is the name of its author -->
+    <string name="status_quote">Quoted post by %s</string>
+    <!-- Read aloud for a place tagged on a post; %s is the place -->
+    <string name="status_place">Place: %s</string>
+    <!-- Badge on a post its author archived off their profile -->
+    <string name="status_archived">Archived</string>
+    <!-- Read aloud for a reaction; %1$s is the emoji, %2$d how many reacted with it -->
+    <string name="status_reaction">%1$s, %2$d</string>
+    <!-- Action: reply to a post -->
+    <string name="status_action_reply">Reply</string>
+    <!-- Action: boost a post, sharing it with one's followers -->
+    <string name="status_action_boost">Boost</string>
+    <!-- Action: undo a boost -->
+    <string name="status_action_unboost">Undo boost</string>
+    <!-- Action: favourite a post -->
+    <string name="status_action_favourite">Favourite</string>
+    <!-- Action: undo a favourite -->
+    <string name="status_action_unfavourite">Remove favourite</string>
+    <!-- Action: bookmark a post -->
+    <string name="status_action_bookmark">Bookmark</string>
+    <!-- Action: remove a bookmark -->
+    <string name="status_action_unbookmark">Remove bookmark</string>
+    <!-- Button that opens the menu of further actions on a post -->
+    <string name="status_action_more">More actions</string>
+    <!-- Action: open the author's profile -->
+    <string name="status_action_profile">Open profile</string>
+    <!-- Read-only count of dislikes a federated video carries; %d is the count -->
+    <plurals name="status_dislikes">
+        <item quantity="one">%d dislike elsewhere</item>
+        <item quantity="other">%d dislikes elsewhere</item>
+    </plurals>
+    <!-- Read aloud after an action's name: how many; %1$s is the action, %2$d the count -->
+    <string name="status_action_count">%1$s, %2$d</string>
+    <!-- Menu item: share a post's link with another app -->
+    <string name="status_menu_share">Share</string>
+    <!-- Menu item: copy a post's link -->
+    <string name="status_menu_copy_link">Copy link</string>
+    <!-- Menu item: open a post on its server in the browser -->
+    <string name="status_menu_open_in_browser">Open in browser</string>
+    <!-- Menu item: translate a post -->
+    <string name="status_menu_translate">Translate</string>
+    <!-- Menu item: stop notifications from a conversation -->
+    <string name="status_menu_mute_conversation">Mute conversation</string>
+    <!-- Menu item: notifications from a muted conversation again -->
+    <string name="status_menu_unmute_conversation">Unmute conversation</string>
+    <!-- Menu item: report a post to its server's moderators -->
+    <string name="status_menu_report">Report post</string>
+    <!-- Menu item on one's own post: change it -->
+    <string name="status_menu_edit">Edit</string>
+    <!-- Menu item on one's own post: delete it -->
+    <string name="status_menu_delete">Delete</string>
+    <!-- Menu item on one's own post: delete it and start a new one with its text -->
+    <string name="status_menu_redraft">Delete and redraft</string>
+    <!-- Menu item on one's own post: pin it to the profile -->
+    <string name="status_menu_pin">Pin to profile</string>
+    <!-- Menu item on one's own post: unpin it from the profile -->
+    <string name="status_menu_unpin">Unpin from profile</string>
+    <!-- Read aloud for a whole post: %1$s the author, %2$s how old it is -->
+    <string name="status_accessibility_header">%1$s, %2$s</string>
+    <!-- Read aloud for a post behind a content warning: %1$s the author, %2$s its age, %3$s the warning -->
+    <string name="status_accessibility_spoiler">%1$s, %2$s, content warning: %3$s</string>
+    <!-- Title of the dialog confirming the deletion of one's own post -->
+    <string name="status_delete_title">Delete this post?</string>
+    <!-- Body of the dialog confirming the deletion of one's own post -->
+    <string name="status_delete_body">It is removed from your server and from the servers it reached.</string>
+    <!-- Button that confirms deleting a post -->
+    <string name="status_delete_confirm">Delete</string>
+    <!-- Button that cancels a dialog -->
+    <string name="status_cancel">Cancel</string>
+    <!-- Read aloud as a spinner appears while more of a list loads -->
+    <string name="list_loading">Loading</string>
+    <!-- Brief notice after an action on a post failed -->
+    <string name="status_action_failed">That didn\'t go through. Try again.</string>
+    <!-- Brief notice after a post's link was copied -->
+    <string name="status_link_copied">Link copied</string>
+</resources>

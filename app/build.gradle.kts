@@ -30,11 +30,17 @@ baselineProfile {
 
 dependencies {
     implementation(project(":core:designsystem"))
+    implementation(project(":core:ui"))
     implementation(project(":core:navigation"))
     implementation(project(":core:platform"))
     implementation(project(":core:data"))
     implementation(project(":core:network"))
+    implementation(project(":core:media"))
     implementation(project(":feature:signin"))
+    implementation(project(":feature:profile"))
+    implementation(project(":feature:settings"))
+    implementation(project(":feature:thread"))
+    implementation(project(":feature:timeline"))
     implementation(libs.androidx.hilt.lifecycle.viewmodel.compose)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.core.splashscreen)
@@ -43,7 +49,10 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.navigation3)
     implementation(libs.androidx.navigation3.ui)
     implementation(libs.compose.material3.adaptive.navigation.suite)
+    implementation(libs.compose.material3.adaptive.navigation3)
     implementation(libs.androidx.profileinstaller)
     implementation(libs.kotlinx.serialization.json)
+    testImplementation(project(":core:testing"))
+    testImplementation(project(":core:database"))
     baselineProfile(project(":benchmark"))
 }

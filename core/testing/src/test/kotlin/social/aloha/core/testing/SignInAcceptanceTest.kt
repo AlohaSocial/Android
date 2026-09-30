@@ -19,16 +19,23 @@ import okhttp3.OkHttpClient
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.ParameterizedRobolectricTestRunner
+import social.aloha.core.data.AccountRemoval
 import social.aloha.core.data.AccountRepository
 import social.aloha.core.data.Authorization
 import social.aloha.core.data.ClientFactory
 import social.aloha.core.data.SignInCoordinator
 import social.aloha.core.data.SignInResult
+import social.aloha.core.data.timeline.CacheSweeper
+import social.aloha.core.data.timeline.StatusRepository
 import social.aloha.core.database.AccountsDatabase
+import social.aloha.core.database.CacheDatabase
+import social.aloha.core.datastore.AccountSettings
+import social.aloha.core.datastore.AccountSettingsStore
 import social.aloha.core.datastore.AppPreferences
 import social.aloha.core.datastore.TokenVault
 import social.aloha.core.network.ApiResult
@@ -69,11 +76,23 @@ class SignInAcceptanceTest(private val configuration: MockServerConfiguration) {
         clients = ClientFactory(http, limiter, Dispatchers.IO, accounts),
     )
     private val finder = testServerFinder(http, limiter)
+    private val cache = Room.inMemoryDatabaseBuilder(
+        ApplicationProvider.getApplicationContext(),
+        CacheDatabase::class.java,
+    ).build()
+    private val settings = AccountSettingsStore(InMemoryDataStore(emptyMap()))
+    private val removal = AccountRemoval(
+        accounts,
+        OAuthClient(http, limiter, Dispatchers.IO),
+        CacheSweeper(cache.statusDao(), cache.cacheAccountDao(), Clock.systemUTC()),
+        settings,
+    )
 
     @After
     fun close() {
         scope.cancel()
         database.close()
+        cache.close()
         mock.close()
     }
 
@@ -106,6 +125,30 @@ class SignInAcceptanceTest(private val configuration: MockServerConfiguration) {
         )
         assertEquals(before, mock.requests.size)
         assertTrue(coordinator.hasPendingAuthorization())
+    }
+
+    @Test
+    fun `signing out revokes the token and forgets the account, its cache and its settings`() = runBlocking {
+        val server = finder.found(mock.origin.toString())
+        val authorize = (coordinator.beginAuthorization(server) as Authorization.Started).url.toHttpUrl()
+        val state = authorize.queryParameter("state") ?: error("state")
+        val account = (
+            coordinator.complete(
+                "alohasocial://oauth-callback/?code=mock-code&state=$state",
+            ) as SignInResult.SignedIn
+            ).account
+        val statuses = StatusRepository(cache.statusDao(), Clock.systemUTC())
+        statuses.save(account.id, StatusSamples.post())
+        settings.update(account.id) { it.copy(showBoosts = false) }
+
+        removal.signOut(account)
+
+        val revoke = mock.requests.last { it.url.encodedPath.endsWith("/oauth/revoke") }
+        assertTrue(revoke.body?.utf8().orEmpty().contains("token=${MockCredentials.ACCESS_TOKEN}"))
+        assertNull(accounts.token(account.id))
+        assertTrue(accounts.all().none { it.id == account.id })
+        assertNull(statuses.get(account.id, StatusSamples.post().id))
+        assertEquals(AccountSettings(), settings.settings(account.id).first())
     }
 
     companion object {

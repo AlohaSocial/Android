@@ -24,8 +24,9 @@ class ArchitectureConventionPlugin : Plugin<Project> {
             edges.set(
                 target.subprojects.flatMap { module ->
                     module.configurations.flatMap { configuration ->
+                        val scope = if (configuration.name.contains("test", ignoreCase = true)) "test" else "main"
                         configuration.dependencies.withType(ProjectDependency::class.java)
-                            .map { "${module.path} ${it.path}" }
+                            .map { "${module.path} ${it.path} $scope" }
                     }
                 }.distinct().sorted(),
             )
@@ -45,8 +46,9 @@ abstract class ArchitectureCheckTask : DefaultTask() {
     @TaskAction
     fun check() {
         val violations = edges.get().map { it.split(' ') }
-            .filter { (from, to) -> from != to && !ModuleRules.allows(from, to) }
+            .filter { (from, to, scope) -> from != to && !ModuleRules.allows(from, to, testOnly = scope == "test") }
             .map { (from, to) -> "$from -> $to" }
+            .distinct()
         if (violations.isNotEmpty()) {
             throw GradleException("Module graph violations (allowed edges: ModuleRules.kt):\n" + violations.joinToString("\n"))
         }
