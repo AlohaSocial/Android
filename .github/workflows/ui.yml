@@ -68,3 +68,4 @@ jobs:
           name: maestro-debug
           path: build/maestro
           if-no-files-found: ignore
+          retention-days: 5
