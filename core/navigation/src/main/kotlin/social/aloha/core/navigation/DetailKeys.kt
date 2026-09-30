@@ -86,3 +86,11 @@ public data class DraftsKey(val readerId: String) : NavKey
 /** The posts [readerId] has waiting on the server for their time. */
 @Serializable
 public data class ScheduledPostsKey(val readerId: String) : NavKey
+
+/** What decides which notifications [readerId]'s server holds back. */
+@Serializable
+public data class NotificationPolicyKey(val readerId: String) : NavKey
+
+/** The senders whose notifications [readerId]'s server holds back, to let through or drop. */
+@Serializable
+public data class NotificationRequestsKey(val readerId: String) : NavKey

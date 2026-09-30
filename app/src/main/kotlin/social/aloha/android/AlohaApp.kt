@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.systemBars
+import androidx.compose.material3.Badge
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -52,11 +53,14 @@ import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaPreviews
 import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.designsystem.AlohaTheme
+import social.aloha.core.designsystem.badgeCount
 import social.aloha.core.navigation.AccountKey
 import social.aloha.core.navigation.ComposerKey
 import social.aloha.core.navigation.DraftsKey
 import social.aloha.core.navigation.EditProfileKey
 import social.aloha.core.navigation.HomeKey
+import social.aloha.core.navigation.NotificationPolicyKey
+import social.aloha.core.navigation.NotificationRequestsKey
 import social.aloha.core.navigation.NotificationsKey
 import social.aloha.core.navigation.PeopleKey
 import social.aloha.core.navigation.PeopleKind
@@ -79,6 +83,9 @@ import social.aloha.core.ui.openInBrowser
 import social.aloha.feature.composer.ComposerRoute
 import social.aloha.feature.composer.DraftsRoute
 import social.aloha.feature.composer.ScheduledPostsRoute
+import social.aloha.feature.notifications.NotificationsRoute
+import social.aloha.feature.notifications.PolicyRoute
+import social.aloha.feature.notifications.RequestsRoute
 import social.aloha.feature.profile.EditProfileRoute
 import social.aloha.feature.profile.PeopleRoute
 import social.aloha.feature.profile.ProfileNavigation
@@ -134,6 +141,7 @@ fun AlohaApp(
     onPendingLinkTaken: () -> Unit = {},
     pendingDestination: NavKey? = null,
     onPendingDestinationTaken: () -> Unit = {},
+    unreadNotifications: Int = 0,
     resolveLink: suspend (address: String, fromPost: Boolean) -> NavKey? = { _, _ -> null },
     accountButton: @Composable (onProfile: () -> Unit, onSettings: () -> Unit) -> Unit = { _, _ -> },
     home: @Composable (StatusNavigation, accountButton: @Composable () -> Unit) -> Unit = { navigation, button ->
@@ -234,6 +242,7 @@ fun AlohaApp(
                 val selected = destination.key == current
                 item(
                     selected = selected,
+                    badge = { DestinationBadge(destination.key, unreadNotifications) },
                     onClick = {
                         if (!selected) {
                             backStack.clear()
@@ -269,7 +278,28 @@ fun AlohaApp(
                 entry<PhotosKey> { Placeholder(stringResource(R.string.destination_photos)) }
                 entry<VideoKey> { Placeholder(stringResource(R.string.destination_video)) }
                 entry<ShortsKey> { Placeholder(stringResource(R.string.destination_shorts)) }
-                entry<NotificationsKey> { Placeholder(stringResource(R.string.destination_notifications)) }
+                entry<NotificationsKey>(
+                    metadata = ListDetailSceneStrategy.listPane(detailPlaceholder = { NothingOpen() }),
+                ) {
+                    NotificationsRoute(
+                        statusNavigation,
+                        onPolicy = { backStack.push(NotificationPolicyKey(readerId)) },
+                        onRequests = { backStack.push(NotificationRequestsKey(readerId)) },
+                        navigationIcon = {
+                            accountButton({
+                                backStack.push(AccountKey(readerId, id = serverAccountId))
+                            }, { backStack.push(SettingsKey) })
+                        },
+                    )
+                }
+                entry<NotificationPolicyKey>(metadata = ListDetailSceneStrategy.detailPane()) {
+                    PolicyRoute(it, onBack = { backStack.remove(it) })
+                }
+                entry<NotificationRequestsKey>(metadata = ListDetailSceneStrategy.detailPane()) {
+                    RequestsRoute(it, onOpenProfile = { id -> statusNavigation.openProfile(id, null) }, onBack = {
+                        backStack.remove(it)
+                    })
+                }
                 entry<SettingsKey>(
                     metadata = ListDetailSceneStrategy.listPane(detailPlaceholder = {
                         SettingsPlaceholder()
@@ -387,4 +417,10 @@ private fun PushWhenAsked(destination: NavKey?, onTaken: () -> Unit, push: (NavK
             push(destination)
         }
     }
+}
+
+/** The unread notifications on their destination; nothing on the others, nor with none unread. */
+@Composable
+private fun DestinationBadge(key: TopLevelKey, unreadNotifications: Int) {
+    if (key == NotificationsKey && unreadNotifications > 0) Badge { Text(badgeCount(unreadNotifications)) }
 }

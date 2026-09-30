@@ -31,7 +31,6 @@ import social.aloha.core.network.unitRequest
 
 public object NotificationEndpoints {
     private const val GROUPED_LIMIT = 40
-    private const val REQUESTS_LIMIT = 40
 
     /** Grouped notifications (Mastodon 4.3); the page is `notification_groups`. */
     public fun grouped(
@@ -73,10 +72,34 @@ public object NotificationEndpoints {
         unitRequest(Endpoint("api/v1/notifications/$id/dismiss", HttpMethod.POST))
 
     public fun clear(): ApiRequest<Unit> = unitRequest(Endpoint("api/v1/notifications/clear", HttpMethod.POST))
+}
+
+/** What the server holds back: the policy that decides it, and the senders whose notifications wait. */
+public object NotificationFilteringEndpoints {
+    private const val REQUESTS_LIMIT = 40
 
     /** The v2 route is where a 4.3 client looks; the v1 spelling is for servers written against 4.2. */
     public fun policy(v2: Boolean): ApiRequest<NotificationPolicy> = request(
         Endpoint(if (v2) "api/v2/notifications/policy" else "api/v1/notifications/policy"),
+        NotificationPolicyDto.serializer(),
+    ) { it.toDomain() }
+
+    /**
+     * Sets the five decisions; the v2 route only, since the v1 one of Mastodon 4.2 took booleans for a
+     * different set of senders.
+     */
+    public fun updatePolicy(policy: NotificationPolicy): ApiRequest<NotificationPolicy> = request(
+        Endpoint(
+            "api/v2/notifications/policy",
+            HttpMethod.PATCH,
+            body = Body.Form(
+                queryOf("for_not_following", policy.forNotFollowing.wire) +
+                    queryOf("for_not_followers", policy.forNotFollowers.wire) +
+                    queryOf("for_new_accounts", policy.forNewAccounts.wire) +
+                    queryOf("for_private_mentions", policy.forPrivateMentions.wire) +
+                    queryOf("for_limited_accounts", policy.forLimitedAccounts.wire),
+            ),
+        ),
         NotificationPolicyDto.serializer(),
     ) { it.toDomain() }
 
@@ -90,6 +113,16 @@ public object NotificationEndpoints {
 
     public fun dismissRequest(id: String): ApiRequest<Unit> =
         unitRequest(Endpoint("api/v1/notifications/requests/$id/dismiss", HttpMethod.POST))
+
+    /** Accepts every request in [ids] at once (Mastodon 4.3); a server without the route answers 404. */
+    public fun acceptRequests(ids: List<String>): ApiRequest<Unit> = unitRequest(
+        Endpoint("api/v1/notifications/requests/accept", HttpMethod.POST, body = Body.Form(repeatedQuery("id", ids))),
+    )
+
+    /** Dismisses every request in [ids] at once (Mastodon 4.3); a server without the route answers 404. */
+    public fun dismissRequests(ids: List<String>): ApiRequest<Unit> = unitRequest(
+        Endpoint("api/v1/notifications/requests/dismiss", HttpMethod.POST, body = Body.Form(repeatedQuery("id", ids))),
+    )
 }
 
 public object MarkerEndpoints {

@@ -43,6 +43,7 @@ import social.aloha.core.network.endpoints.ListEndpoints
 import social.aloha.core.network.endpoints.MarkerEndpoints
 import social.aloha.core.network.endpoints.MediaEndpoints
 import social.aloha.core.network.endpoints.NotificationEndpoints
+import social.aloha.core.network.endpoints.NotificationFilteringEndpoints
 import social.aloha.core.network.endpoints.PlaceEndpoints
 import social.aloha.core.network.endpoints.PollEndpoints
 import social.aloha.core.network.endpoints.ProfileEndpoints
@@ -117,8 +118,8 @@ class CorpusDecodingTest {
             "api/lists-jane.json" to ListEndpoints.all(),
             "api/markers.json" to MarkerEndpoints.read(),
             "api/mutes.json" to BlockEndpoints.mutes(),
-            "api/notifications-policy-v2.json" to NotificationEndpoints.policy(v2 = true),
-            "api/notifications-requests.json" to NotificationEndpoints.requests(),
+            "api/notifications-policy-v2.json" to NotificationFilteringEndpoints.policy(v2 = true),
+            "api/notifications-requests.json" to NotificationFilteringEndpoints.requests(),
             "api/notifications-v1-jane.json" to NotificationEndpoints.flat(),
             "api/notifications-v1-unread-count.json" to NotificationEndpoints.unreadCount(grouped = false),
             "api/notifications-v1.json" to NotificationEndpoints.flat(),

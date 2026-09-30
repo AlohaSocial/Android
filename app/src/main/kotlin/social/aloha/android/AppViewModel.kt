@@ -28,6 +28,7 @@ import social.aloha.core.data.AccountMaintenance
 import social.aloha.core.data.AccountRemoval
 import social.aloha.core.data.AccountRepository
 import social.aloha.core.data.compose.Outbox
+import social.aloha.core.data.sync.UnreadCounts
 import social.aloha.core.data.timeline.CacheSweeper
 import social.aloha.core.model.SignedInAccount
 import social.aloha.core.navigation.ComposerKey
@@ -73,6 +74,7 @@ class AppViewModel @Inject constructor(
     sweeper: CacheSweeper,
     private val outbox: Outbox,
     private val queue: PostQueue,
+    private val unread: UnreadCounts,
     @ApplicationContext private val context: Context,
 ) : ViewModel() {
     private val signingInAgain = MutableStateFlow(false)
@@ -117,6 +119,11 @@ class AppViewModel @Inject constructor(
     val session: StateFlow<AppSession> =
         combine(accounts.accounts, accounts.activeAccount, signingInAgain, adding, ::sessionOf)
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), AppSession.Loading)
+
+    /** The active account's unread notifications, as its server last said. */
+    val unreadNotifications: StateFlow<Int> =
+        combine(accounts.activeAccount, unread.all) { active, counts -> active?.let { counts[it.id] } ?: 0 }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), 0)
 
     val switcher: StateFlow<List<SwitcherAccount>> =
         combine(accounts.accounts, accounts.activeAccount) { all, active ->

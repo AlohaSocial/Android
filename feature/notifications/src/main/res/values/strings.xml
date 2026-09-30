@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ SPDX-FileCopyrightText: 2026 Aloha Social contributors
+  ~ SPDX-License-Identifier: MIT
+-->
+<resources>
+    <!-- Title of the notifications screen -->
+    <string name="notifications_title">Notifications</string>
+    <!-- Filter chip that shows every kind of notification -->
+    <string name="notifications_filter_all">All</string>
+    <!-- Filter chip that shows only mentions -->
+    <string name="notifications_filter_mentions">Mentions</string>
+    <!-- Filter chip that shows only boosts of the person's posts -->
+    <string name="notifications_filter_boosts">Boosts</string>
+    <!-- Filter chip that shows only favourites of the person's posts -->
+    <string name="notifications_filter_favourites">Favourites</string>
+    <!-- Filter chip that shows only new followers and follow requests -->
+    <string name="notifications_filter_follows">Follows</string>
+    <!-- Filter chip that shows only ended polls -->
+    <string name="notifications_filter_polls">Polls</string>
+    <!-- Filter chip that shows only edits of posts the person interacted with -->
+    <string name="notifications_filter_updates">Updates</string>
+    <!-- Stands in for an account the notification does not name -->
+    <string name="notifications_someone">Someone</string>
+    <!-- The people in a grouped notification: %1$s is the newest one's name, %2$d how many others -->
+    <plurals name="notifications_and_others">
+        <item quantity="one">%1$s and %2$d other</item>
+        <item quantity="other">%1$s and %2$d others</item>
+    </plurals>
+    <!-- Button in a grouped notification that lists everyone in it; %d is how many others -->
+    <plurals name="notifications_others">
+        <item quantity="one">Show %d other</item>
+        <item quantity="other">Show all %d others</item>
+    </plurals>
+    <!-- %s is who did it, one name or "Alice and 3 others" -->
+    <string name="notifications_mention">%s mentioned you</string>
+    <!-- %s is who did it, one name or "Alice and 3 others" -->
+    <string name="notifications_reblog">%s boosted your post</string>
+    <!-- %s is who did it, one name or "Alice and 3 others" -->
+    <string name="notifications_favourite">%s favourited your post</string>
+    <!-- %s is who did it, one name or "Alice and 3 others" -->
+    <string name="notifications_follow">%s followed you</string>
+    <!-- %s is who asked -->
+    <string name="notifications_follow_request">%s asked to follow you</string>
+    <!-- A poll the person voted in or wrote has ended -->
+    <string name="notifications_poll">A poll has ended</string>
+    <!-- %s is someone whose posts the person asked to be told about -->
+    <string name="notifications_status">%s posted</string>
+    <!-- %s is who edited a post the person interacted with -->
+    <string name="notifications_update">%s edited a post</string>
+    <!-- The server's moderators took an action on the person's account -->
+    <string name="notifications_moderation">Your server\'s moderators took action on your account</string>
+    <!-- Some follow relationships were cut because a server was blocked -->
+    <string name="notifications_severed">Some of your follows were removed because a server was blocked</string>
+    <!-- For server administrators: %s signed up -->
+    <string name="notifications_admin_sign_up">%s signed up</string>
+    <!-- For server administrators: %s filed a report -->
+    <string name="notifications_admin_report">%s filed a report</string>
+    <!-- The person's year in review is ready -->
+    <string name="notifications_annual_report">Your year in review is ready</string>
+    <!-- Spoken before a notification the person has not seen yet -->
+    <string name="notifications_unread">New</string>
+    <!-- Shown when there are no notifications yet -->
+    <string name="notifications_empty">Nothing yet. Mentions, boosts, favourites and follows land here.</string>
+    <!-- Shown when the chosen filters match no notification -->
+    <string name="notifications_empty_filtered">No notifications of this kind.</string>
+    <!-- The notifications could not be loaded without a network -->
+    <string name="notifications_offline">You are offline. What loaded before stays here.</string>
+    <!-- The server asked the app to slow down -->
+    <string name="notifications_rate_limited">Your server asked to slow down. Notifications refresh again shortly.</string>
+    <!-- The notifications could not be loaded -->
+    <string name="notifications_error">Notifications could not be loaded. Pull to try again.</string>
+    <!-- Top bar action opening the notification requests; %d is how many senders wait there -->
+    <plurals name="notifications_requests_action">
+        <item quantity="one">%d filtered sender</item>
+        <item quantity="other">%d filtered senders</item>
+    </plurals>
+    <!-- Top bar action opening the filtered senders when none is counted -->
+    <string name="notifications_requests_open">Filtered senders</string>
+    <!-- Top bar action opening the rules that filter notifications -->
+    <string name="notifications_policy_action">Filtering rules</string>
+    <!-- Title of the sheet listing everyone in a grouped notification -->
+    <string name="notifications_group_title">Everyone in this notification</string>
+    <!-- The list of everyone in a grouped notification could not be loaded -->
+    <string name="notifications_group_error">They could not be loaded.</string>
+    <!-- Top bar action that loads the newest notifications, for anyone who cannot pull the list down -->
+    <string name="notifications_refresh">Refresh</string>
+    <!-- Button letting one sender's notifications through, as read aloud: %s is the sender -->
+    <string name="requests_accept_from">Let notifications from %s through</string>
+    <!-- Button dropping one sender's held notifications, as read aloud: %s is the sender -->
+    <string name="requests_dismiss_from">Dismiss notifications from %s</string>
+    <!-- Button that goes back from a notifications screen -->
+    <string name="notifications_back">Back</string>
+
+    <!-- Title of the screen with the rules that filter notifications -->
+    <string name="policy_title">Filtering rules</string>
+    <!-- Explains the rules at the top of the screen -->
+    <string name="policy_intro">Decide what happens to notifications from people you may not know. Filtered ones wait under filtered senders.</string>
+    <!-- A rule: notifications from accounts the person does not follow -->
+    <string name="policy_not_following">From people you don\'t follow</string>
+    <!-- A rule: notifications from accounts that do not follow the person -->
+    <string name="policy_not_followers">From people who don\'t follow you</string>
+    <!-- A rule: notifications from accounts created recently -->
+    <string name="policy_new_accounts">From new accounts</string>
+    <!-- A rule: private mentions the person did not start -->
+    <string name="policy_private_mentions">Private mentions you did not ask for</string>
+    <!-- A rule: notifications from accounts the moderators limited -->
+    <string name="policy_limited_accounts">From accounts moderators limited</string>
+    <!-- Choice: show the notification as usual -->
+    <string name="policy_accept">Show</string>
+    <!-- Choice: keep the notification under filtered senders -->
+    <string name="policy_filter">Filter</string>
+    <!-- Choice: never show the notification -->
+    <string name="policy_drop">Ignore</string>
+    <!-- Footnote on a Nextcloud Social server, which keeps ignored notifications as filtered -->
+    <string name="policy_drop_filters">On your server, Ignore works like Filter: those notifications wait under filtered senders rather than going away.</string>
+    <!-- The rules could not be loaded -->
+    <string name="policy_error">The filtering rules could not be loaded.</string>
+    <!-- A change of a rule was not saved -->
+    <string name="policy_save_failed">That change was not saved.</string>
+
+    <!-- Title of the screen with the senders whose notifications are held back -->
+    <string name="requests_title">Filtered senders</string>
+    <!-- How many notifications one filtered sender has waiting -->
+    <plurals name="requests_count">
+        <item quantity="one">%d notification</item>
+        <item quantity="other">%d notifications</item>
+    </plurals>
+    <!-- Button letting one sender's notifications through -->
+    <string name="requests_accept">Let through</string>
+    <!-- Button dropping one sender's held notifications -->
+    <string name="requests_dismiss">Dismiss</string>
+    <!-- Button letting every listed sender's notifications through -->
+    <string name="requests_accept_all">Let all through</string>
+    <!-- Button dropping every listed sender's held notifications -->
+    <string name="requests_dismiss_all">Dismiss all</string>
+    <!-- Shown when no sender is held back -->
+    <string name="requests_empty">No one is filtered.</string>
+    <!-- The filtered senders could not be loaded -->
+    <string name="requests_error">The filtered senders could not be loaded.</string>
+    <!-- Letting through or dismissing did not reach the server -->
+    <string name="requests_failed">That did not reach your server. Try again.</string>
+
+    <!-- Title of the settings section for notifications and refreshing -->
+    <string name="settings_notifications">Notifications</string>
+    <!-- Heading of the choice of how often the app checks for new activity -->
+    <string name="settings_poll_frequency">Check for new activity</string>
+    <!-- Choice: check twice as often as normal -->
+    <string name="settings_poll_frequent">Often</string>
+    <!-- Choice: the normal pace -->
+    <string name="settings_poll_normal">Normally</string>
+    <!-- Choice: check a third as often, to save battery -->
+    <string name="settings_poll_battery">Rarely, to save battery</string>
+    <!-- Choice: only check when the person refreshes -->
+    <string name="settings_poll_manual">Only when I refresh</string>
+    <!-- Switch: refresh timelines only on Wi-Fi -->
+    <string name="settings_wifi_only">Refresh timelines on Wi-Fi only</string>
+    <!-- Explains the Wi-Fi-only switch -->
+    <string name="settings_wifi_only_summary">Notifications and the badge still update on mobile data.</string>
+</resources>

@@ -34,6 +34,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import social.aloha.core.data.sync.SyncSettings
 import social.aloha.core.data.sync.TimelineSignals
+import social.aloha.core.data.sync.UnreadCounts
 import social.aloha.core.datastore.AccountSettingsStore
 import social.aloha.core.datastore.AppPreferences
 import social.aloha.core.model.PollFrequency
@@ -81,12 +82,14 @@ class SyncEngineTest {
         AppPreferences(InMemoryDataStore(emptyPreferences())),
     )
     private val signals = TimelineSignals()
+    private val unread = UnreadCounts()
     private val heard = CopyOnWriteArrayList<Int>()
     private val engine = SyncEngine(
         fixture.accounts,
         fixture.clients,
         settings,
         signals,
+        unread,
         object : DeviceConditions {
             override val online = MutableStateFlow(true)
             override val metered = false
@@ -120,7 +123,7 @@ class SyncEngineTest {
         answers += listOf(Counts.Answer.Count(3), Counts.Answer.Count(3), Counts.Answer.Count(5))
         val account = fixture.signIn(server.url("/"))
         repeat(3) { engine.poll(account, PollScope.Full) }
-        assertEquals(mapOf(account.id to 5), engine.unreadCounts.value)
+        assertEquals(mapOf(account.id to 5), unread.all.value)
         assertEquals(listOf(3, 5), heard)
         assertEquals(List(3) { "/api/v1/notifications/unread_count" }, counts.asked)
     }

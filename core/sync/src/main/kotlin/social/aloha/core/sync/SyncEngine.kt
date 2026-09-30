@@ -11,16 +11,19 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -31,6 +34,8 @@ import social.aloha.core.data.answer
 import social.aloha.core.data.di.ApplicationScope
 import social.aloha.core.data.sync.SyncSettings
 import social.aloha.core.data.sync.TimelineSignals
+import social.aloha.core.data.sync.UnreadCounts
+import social.aloha.core.model.PollFrequency
 import social.aloha.core.model.SignedInAccount
 import social.aloha.core.network.ApiError
 import social.aloha.core.network.Backoff
@@ -53,6 +58,7 @@ public class SyncEngine @Inject internal constructor(
     private val clients: ClientFactory,
     private val settings: SyncSettings,
     private val timelines: TimelineSignals,
+    private val counts: UnreadCounts,
     private val device: DeviceConditions,
     private val listeners: Set<@JvmSuppressWildcards PollListener>,
     private val background: BackgroundRefresh,
@@ -60,7 +66,6 @@ public class SyncEngine @Inject internal constructor(
     private val clock: Clock,
 ) {
     private val foreground = MutableStateFlow(false)
-    private val counts = MutableStateFlow<Map<String, Int>>(emptyMap())
     private val lastPoll = ConcurrentHashMap<String, Long>()
     private val failures = ConcurrentHashMap<String, Int>()
     private val slowUntil = ConcurrentHashMap<String, Long>()
@@ -72,9 +77,6 @@ public class SyncEngine @Inject internal constructor(
 
     @Volatile private var lastInteraction = clock.millis()
     private var loop: Job? = null
-
-    /** Each account's unread count as its server last said; the badge reads it. */
-    public val unreadCounts: StateFlow<Map<String, Int>> = counts
 
     /**
      * The app came to the foreground or left it; polling runs only while it is in front. The first call
@@ -96,11 +98,31 @@ public class SyncEngine @Inject internal constructor(
         lastInteraction = clock.millis()
     }
 
+    /** Polls each account on its own loop, started again when the accounts or their pace change. */
+    @OptIn(ExperimentalCoroutinesApi::class)
     private suspend fun run() {
-        combine(foreground, device.online, accounts.accounts) { inFront, online, all ->
-            counts.update { known -> known.filterKeys { id -> all.any { it.id == id } } }
-            if (inFront && online) all.filterNot { it.needsReauth }.map { it.id } else emptyList()
-        }.distinctUntilChanged().collectLatest { ids -> coroutineScope { ids.forEach { launch { tick(it) } } } }
+        val paced: Flow<Map<String, PollFrequency>> = accounts.accounts.flatMapLatest { all ->
+            counts.retain(all.map { it.id }.toSet())
+            val polled = all.filterNot { it.needsReauth }
+            if (polled.isEmpty()) {
+                flowOf(emptyMap())
+            } else {
+                combine(polled.map { account -> settings.pollFrequency(account.id).map { account.id to it } }) {
+                    it.toMap()
+                }
+            }
+        }
+        combine(foreground, device.online, paced) { inFront, online, pace ->
+            if (inFront &&
+                online
+            ) {
+                pace
+            } else {
+                emptyMap()
+            }
+        }
+            .distinctUntilChanged()
+            .collectLatest { pace -> coroutineScope { pace.keys.forEach { launch { tick(it) } } } }
     }
 
     private suspend fun tick(accountId: String) {
@@ -149,11 +171,16 @@ public class SyncEngine @Inject internal constructor(
     }
 
     private suspend fun counted(account: SignedInAccount, count: Int, pollScope: PollScope) {
-        val previous = counts.value[account.id]
-        counts.update { it + (account.id to count) }
+        val previous = counts.of(account.id)
+        counts.set(account.id, count)
         failures.remove(account.id)
         if (pollScope == PollScope.Full && timelines.onScreen(account.id)) timelines.markDue(account.id)
-        if (previous != count) listeners.forEach { it.onUnreadChanged(account, count) }
+        // ponytail: an unchanged count asks for nothing, so a group that grew while another was read goes
+        // unraised until the count moves; comparing each group's newest id per poll is the upgrade
+        if (previous == count && account.id !in unsettled) return
+        // every listener is told, even after one could not finish
+        val settled = listeners.map { it.onUnreadChanged(account, count) }.all { it }
+        if (settled) unsettled -= account.id else unsettled += account.id
     }
 
     /**
