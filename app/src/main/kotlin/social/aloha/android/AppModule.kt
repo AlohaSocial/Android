@@ -7,15 +7,22 @@ import android.content.Context
 import android.content.pm.verify.domain.DomainVerificationManager
 import android.content.pm.verify.domain.DomainVerificationUserState
 import android.os.Build
+import coil3.ImageLoader
+import coil3.request.ImageRequest
+import coil3.request.SuccessResult
+import coil3.request.allowHardware
+import coil3.toBitmap
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import javax.inject.Provider
 import social.aloha.core.data.CleartextAllowed
 import social.aloha.core.data.RedirectUriProvider
 import social.aloha.core.network.di.UserAgent
 import social.aloha.core.network.oauth.OAuthIdentity
+import social.aloha.core.sync.AvatarSource
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -51,5 +58,14 @@ object AppModule {
         return state.hostToStateMap[APP_LINK_HOST] == DomainVerificationUserState.DOMAIN_STATE_VERIFIED
     }
 
+    /** Avatars for the notifications the device raises, through the app's one image loader and its cache. */
+    @Provides
+    fun avatars(@ApplicationContext context: Context, loader: Provider<ImageLoader>): AvatarSource =
+        AvatarSource { url ->
+            val request = ImageRequest.Builder(context).data(url).size(AVATAR_PIXELS).allowHardware(false).build()
+            (loader.get().execute(request) as? SuccessResult)?.image?.toBitmap()
+        }
+
     private const val APP_LINK_HOST = "aloha.social"
+    private const val AVATAR_PIXELS = 256
 }

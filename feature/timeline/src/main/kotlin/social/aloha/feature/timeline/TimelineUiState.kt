@@ -54,6 +54,8 @@ internal data class TimelineUiState(
     val loadedOnce: Boolean = false,
     val refreshing: Boolean = false,
     val pending: Int = 0,
+    /** Who posted what waits behind the pill, newest first, a few at most. */
+    val pendingAvatars: List<String?> = emptyList(),
     val trouble: Trouble? = null,
     val loadingOlder: Boolean = false,
     val reachedEnd: Boolean = false,

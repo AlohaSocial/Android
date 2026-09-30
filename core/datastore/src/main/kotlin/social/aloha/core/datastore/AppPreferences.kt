@@ -9,8 +9,10 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.core.stringSetPreferencesKey
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import social.aloha.core.model.QuietHours
 import social.aloha.core.model.SwipeAction
 
 /**
@@ -34,6 +36,62 @@ public class AppPreferences(private val store: DataStore<Preferences>) {
 
     /** Whether a short recorded in the composer gets `#shorts`; null until the person was asked once. */
     public val tagShorts: Flow<Boolean?> = store.data.map { it[TAG_SHORTS] }
+
+    /**
+     * Whether timelines wait for Wi-Fi before they refresh on their own; off until turned on. The unread
+     * count and notifications are asked for on any network, since a wrong badge costs more than the bytes.
+     */
+    public val wifiOnlySync: Flow<Boolean> = store.data.map { it[WIFI_ONLY_SYNC] ?: false }
+
+    public suspend fun setWifiOnlySync(wifiOnly: Boolean) {
+        store.edit { it[WIFI_ONLY_SYNC] = wifiOnly }
+    }
+
+    /** The daily window in which no notification is raised; none until chosen. */
+    public val quietHours: Flow<QuietHours?> = store.data.map { stored ->
+        val from = stored[QUIET_FROM]
+        val until = stored[QUIET_UNTIL]
+        if (from != null && until != null) QuietHours(from, until) else null
+    }
+
+    public suspend fun setQuietHours(hours: QuietHours?) {
+        store.edit {
+            if (hours == null) {
+                it.remove(QUIET_FROM)
+                it.remove(QUIET_UNTIL)
+            } else {
+                it[QUIET_FROM] = hours.fromHour
+                it[QUIET_UNTIL] = hours.untilHour
+            }
+        }
+    }
+
+    /** The accounts whose server pushes to this device. */
+    public val pushAccounts: Flow<Set<String>> = store.data.map { it[PUSH_ACCOUNTS].orEmpty() }
+
+    public suspend fun setPush(accountId: String, active: Boolean) {
+        store.edit {
+            val now = it[PUSH_ACCOUNTS].orEmpty()
+            it[PUSH_ACCOUNTS] = if (active) now + accountId else now - accountId
+        }
+    }
+
+    /** The endpoint push registration [instance] was last subscribed with, so the same one is not sent again. */
+    public fun pushEndpoint(instance: String): Flow<String?> = store.data.map {
+        it[stringPreferencesKey(ENDPOINT + instance)]
+    }
+
+    public suspend fun setPushEndpoint(instance: String, endpoint: String?) {
+        val key = stringPreferencesKey(ENDPOINT + instance)
+        store.edit { if (endpoint == null) it.remove(key) else it[key] = endpoint }
+    }
+
+    /** Whether the person was asked to allow notifications; a second ask goes to the system settings. */
+    public val askedForNotifications: Flow<Boolean> = store.data.map { it[ASKED_NOTIFICATIONS] ?: false }
+
+    public suspend fun setAskedForNotifications() {
+        store.edit { it[ASKED_NOTIFICATIONS] = true }
+    }
 
     public suspend fun setTagShorts(tag: Boolean) {
         store.edit { it[TAG_SHORTS] = tag }
@@ -65,6 +123,12 @@ public class AppPreferences(private val store: DataStore<Preferences>) {
         val ACTIVE_ACCOUNT = stringPreferencesKey("active_account_id")
         val WARN_DESCRIPTION = booleanPreferencesKey("warn_missing_description")
         val TAG_SHORTS = booleanPreferencesKey("tag_shorts")
+        val WIFI_ONLY_SYNC = booleanPreferencesKey("wifi_only_sync")
+        val QUIET_FROM = intPreferencesKey("quiet_from_hour")
+        val QUIET_UNTIL = intPreferencesKey("quiet_until_hour")
+        val ASKED_NOTIFICATIONS = booleanPreferencesKey("asked_for_notifications")
+        val PUSH_ACCOUNTS = stringSetPreferencesKey("push_accounts")
+        const val ENDPOINT = "push_endpoint:"
 
         /** A value a later build wrote, or none at all, reads as the default. */
         fun swipe(stored: String?, default: SwipeAction): SwipeAction =

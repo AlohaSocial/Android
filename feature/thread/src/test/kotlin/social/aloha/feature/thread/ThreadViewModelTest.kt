@@ -88,6 +88,13 @@ private class Conversation : Dispatcher() {
             "/statuses/f",
         ) -> status("f", "a1", "edited_at" to JsonPrimitive("2026-09-29T11:00:00.000Z")).toString()
 
+        path.endsWith("/statuses/p") ->
+            status("p", null, "favourites_count" to JsonPrimitive(2), "reblogs_count" to JsonPrimitive(0)).toString()
+
+        path.endsWith("/favourited_by") ->
+            """[{"id":"1","username":"a","acct":"a","avatar":"https://x.test/a.png"},""" +
+                """{"id":"2","username":"b","acct":"b","avatar":"https://x.test/b.png"}]"""
+
         path.endsWith("/context") -> JsonObject(
             mapOf(
                 "ancestors" to JsonArray(listOf(status("a1", null))),
@@ -186,6 +193,17 @@ class ThreadViewModelTest {
         assertEquals(listOf(false, true, false, false), state.posts().map { it.focused })
         assertTrue(state.edited)
     }
+
+    @Test
+    fun `who favourited the focused post shows beside its count, and nobody is asked for boosts it has none of`() =
+        runBlocking {
+            val state = open("p").await { StatusListKind.FavouritedBy in it.people }
+            assertEquals(
+                listOf("https://x.test/a.png", "https://x.test/b.png"),
+                state.people[StatusListKind.FavouritedBy],
+            )
+            assertTrue(StatusListKind.BoostedBy !in state.people)
+        }
 
     @Test
     fun `reactions, which the status never carries on Nextcloud Social, come from their own route`() = runBlocking {

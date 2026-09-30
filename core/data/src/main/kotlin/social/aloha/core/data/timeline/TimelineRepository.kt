@@ -86,21 +86,24 @@ public class TimelineRepository @Inject constructor(
     private fun lockKey(account: SignedInAccount, key: TimelineKey) = "${account.id}|${key.storageKey}"
 
     /**
-     * The stored rows, newest first, up to the timeline's cap. ponytail: the window is the whole capped
-     * list (500 home rows at most); a Room `PagingSource` as the reader is the upgrade when that is too
-     * much to hold.
+     * The stored rows, newest first, up to the timeline's cap, or up to [limit] where fewer are wanted.
+     * ponytail: the window is the whole capped list (500 home rows at most); a Room `PagingSource` as the
+     * reader is the upgrade when that is too much to hold.
      */
-    public fun observe(account: SignedInAccount, key: TimelineKey): Flow<List<TimelineRow>> =
-        dao.observeRows(account.id, key.storageKey, CachePolicy.rowsFor(key.storageKey)).map { records ->
-            records.mapNotNull { record ->
-                if (record.isGap) {
-                    TimelineRow.Gap(record.statusId)
-                } else {
-                    record.payloadJson?.let { statuses.decode(account.id, record.statusId, it, record.cachedAt ?: 0) }
-                        ?.let(TimelineRow::Post)
-                }
+    public fun observe(
+        account: SignedInAccount,
+        key: TimelineKey,
+        limit: Int = CachePolicy.rowsFor(key.storageKey),
+    ): Flow<List<TimelineRow>> = dao.observeRows(account.id, key.storageKey, limit).map { records ->
+        records.mapNotNull { record ->
+            if (record.isGap) {
+                TimelineRow.Gap(record.statusId)
+            } else {
+                record.payloadJson?.let { statuses.decode(account.id, record.statusId, it, record.cachedAt ?: 0) }
+                    ?.let(TimelineRow::Post)
             }
-        }.flowOn(ioDispatcher)
+        }
+    }.flowOn(ioDispatcher)
 
     /** The head of the timeline, or what is newer than its top row, as [plan] says. */
     public suspend fun refresh(account: SignedInAccount, key: TimelineKey, plan: RefreshPlan): PageOutcome =

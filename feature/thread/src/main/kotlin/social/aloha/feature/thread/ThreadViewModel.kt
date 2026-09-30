@@ -41,6 +41,7 @@ import social.aloha.core.model.Reaction
 import social.aloha.core.model.SignedInAccount
 import social.aloha.core.model.Status
 import social.aloha.core.model.StatusEdit
+import social.aloha.core.navigation.StatusListKind
 import social.aloha.core.navigation.ThreadKey
 import social.aloha.core.network.ApiError
 import social.aloha.core.ui.RichTextColors
@@ -75,6 +76,7 @@ internal class ThreadViewModel @AssistedInject constructor(
         val reactions: List<Reaction>? = null,
         val history: List<EditVersion>? = null,
         val actionFailed: Boolean = false,
+        val people: Map<StatusListKind, List<String?>> = emptyMap(),
     )
 
     private val colors = MutableStateFlow<RichTextColors?>(null)
@@ -203,12 +205,28 @@ internal class ThreadViewModel @AssistedInject constructor(
         }
     }
 
-    /** What only the focused post shows: its card when the post carries none, and its reactions. */
+    /** What only the focused post shows: its card when the post carries none, who liked it, its reactions. */
     private fun loadExtras(account: SignedInAccount, focused: Status) {
         val shown = focused.displayed
         if (shown.card == null) {
             viewModelScope.launch {
                 threads.card(account, shown.id)?.let { card -> control.update { it.copy(card = card) } }
+            }
+        }
+        // the first few who favourited and boosted it, drawn beside the counts
+        listOfNotNull(
+            StatusListKind.FavouritedBy.takeIf { shown.favouritesCount > 0 },
+            StatusListKind.BoostedBy.takeIf { shown.reblogsCount > 0 },
+        ).forEach { kind ->
+            viewModelScope.launch {
+                val answer = if (kind == StatusListKind.FavouritedBy) {
+                    threads.favouritedBy(account, shown.id, limit = PEOPLE)
+                } else {
+                    threads.boostedBy(account, shown.id, limit = PEOPLE)
+                }
+                (answer as? Answer.Got)?.value?.map { it.avatar }?.let { avatars ->
+                    control.update { it.copy(people = it.people + (kind to avatars)) }
+                }
             }
         }
         val capabilities = account.capabilities
@@ -245,6 +263,7 @@ internal class ThreadViewModel @AssistedInject constructor(
             canReact = account.capabilities.let { it.emojiReactions || it.isNextcloudSocial },
             history = control.history,
             actionFailed = control.actionFailed,
+            people = control.people,
         )
     }
 
@@ -258,6 +277,7 @@ internal class ThreadViewModel @AssistedInject constructor(
     }
 
     private companion object {
+        const val PEOPLE = 4
         const val STOP_MILLIS = 5_000L
     }
 }

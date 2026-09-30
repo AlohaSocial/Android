@@ -19,6 +19,7 @@ import social.aloha.core.model.StatusEdit
 import social.aloha.core.network.ApiError
 import social.aloha.core.network.ApiRequest
 import social.aloha.core.network.ApiResult
+import social.aloha.core.network.endpoints.Paging
 import social.aloha.core.network.endpoints.StatusEndpoints
 import social.aloha.core.network.endpoints.StatusExtraEndpoints
 
@@ -68,11 +69,17 @@ public class ThreadRepository @Inject constructor(
     public suspend fun history(account: SignedInAccount, statusId: String): Answer<List<StatusEdit>> =
         clients.answer(account, StatusEndpoints.history(statusId))
 
-    public suspend fun favouritedBy(account: SignedInAccount, statusId: String): Answer<List<Account>> =
-        clients.answer(account, StatusEndpoints.favouritedBy(statusId))
+    public suspend fun favouritedBy(
+        account: SignedInAccount,
+        statusId: String,
+        limit: Int = Paging.DEFAULT_LIMIT,
+    ): Answer<List<Account>> = clients.answer(account, StatusEndpoints.favouritedBy(statusId, limit))
 
-    public suspend fun boostedBy(account: SignedInAccount, statusId: String): Answer<List<Account>> =
-        clients.answer(account, StatusEndpoints.rebloggedBy(statusId))
+    public suspend fun boostedBy(
+        account: SignedInAccount,
+        statusId: String,
+        limit: Int = Paging.DEFAULT_LIMIT,
+    ): Answer<List<Account>> = clients.answer(account, StatusEndpoints.rebloggedBy(statusId, limit))
 
     public suspend fun quotes(account: SignedInAccount, statusId: String): Answer<List<Status>> =
         when (val answer = clients.answer(account, StatusExtraEndpoints.quotes(statusId))) {

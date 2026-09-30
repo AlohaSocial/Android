@@ -44,6 +44,8 @@ internal data class ThreadUiState(
     val gone: Boolean = false,
     val now: Instant = Instant.EPOCH,
     val lists: Map<StatusListKind, Int?> = emptyMap(),
+    /** Avatars of the first few in a list, for the lists that show who. */
+    val people: Map<StatusListKind, List<String?>> = emptyMap(),
     val edited: Boolean = false,
     val history: List<EditVersion>? = null,
     val actionFailed: Boolean = false,

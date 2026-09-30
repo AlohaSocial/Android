@@ -8,8 +8,10 @@ plugins {
 
 dependencies {
     implementation(project(":core:data"))
+    implementation(project(":core:navigation"))
     api(libs.androidx.work.runtime)
     implementation(libs.androidx.hilt.work)
+    implementation(libs.unifiedpush.connector)
     ksp(libs.androidx.hilt.compiler)
     testImplementation(project(":core:testing"))
     testImplementation(libs.kotlinx.coroutines.test)

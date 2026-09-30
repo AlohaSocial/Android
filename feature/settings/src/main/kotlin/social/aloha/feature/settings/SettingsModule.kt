@@ -22,5 +22,9 @@ internal abstract class SettingsModule {
         @Provides
         @IntoSet
         fun about(): SettingsSection = AboutSection
+
+        @Provides
+        @IntoSet
+        fun nextcloud(): SettingsSection = NextcloudSection
     }
 }

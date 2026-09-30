@@ -7,9 +7,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.automirrored.outlined.Reply
+import androidx.compose.material.icons.automirrored.outlined.Rule
 import androidx.compose.material.icons.automirrored.outlined.Subject
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.AmpStories
+import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
@@ -29,6 +31,7 @@ import androidx.compose.material.icons.outlined.AmpStories
 import androidx.compose.material.icons.outlined.AttachFile
 import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.Cloud
 import androidx.compose.material.icons.outlined.ContentCut
 import androidx.compose.material.icons.outlined.Create
 import androidx.compose.material.icons.outlined.Delete
@@ -140,6 +143,9 @@ public object AlohaIcons {
     public val Close: ImageVector = Icons.Outlined.Close
     public val Settings: ImageVector = Icons.Outlined.Settings
     public val About: ImageVector = Icons.Outlined.Info
+    public val Nextcloud: ImageVector = Icons.Outlined.Cloud
+    public val Rules: ImageVector = Icons.AutoMirrored.Outlined.Rule
+    public val NewPosts: ImageVector = Icons.Filled.ArrowUpward
     public val Timeline: ImageVector = Icons.Outlined.ViewAgenda
     public val AddAccount: ImageVector = Icons.Outlined.PersonAdd
     public val SignOut: ImageVector = Icons.AutoMirrored.Outlined.Logout

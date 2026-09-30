@@ -9,9 +9,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
@@ -57,8 +59,10 @@ import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.model.SensitiveMediaPolicy
 import social.aloha.core.navigation.StatusListKind
 import social.aloha.core.ui.ProvideLinkRouting
+import social.aloha.core.ui.StackedAvatars
 import social.aloha.core.ui.StatusActions
 import social.aloha.core.ui.StatusCard
+import social.aloha.core.ui.TroubleStrip
 import social.aloha.core.ui.fullDate
 import social.aloha.core.ui.readingColumn
 
@@ -159,7 +163,14 @@ private fun Footer(state: ThreadUiState, actions: ThreadScreenActions) {
         horizontalArrangement = Arrangement.spacedBy(AlohaSpacing.xs),
     ) {
         state.lists.forEach { (kind, count) ->
-            OutlinedButton(onClick = { actions.onList(kind) }) { Text(listLabel(kind, count)) }
+            // who favourited or boosted shows as the people themselves, still one button with its count
+            OutlinedButton(onClick = { actions.onList(kind) }) {
+                state.people[kind]?.takeIf { it.isNotEmpty() }?.let {
+                    StackedAvatars(it, LIST_AVATAR)
+                    Spacer(Modifier.width(AlohaSpacing.s))
+                }
+                Text(listLabel(kind, count))
+            }
         }
         if (state.edited) {
             OutlinedButton(onClick = actions::onHistory) {
@@ -168,6 +179,8 @@ private fun Footer(state: ThreadUiState, actions: ThreadScreenActions) {
         }
     }
 }
+
+private val LIST_AVATAR = 24.dp
 
 @Composable
 private fun listLabel(kind: StatusListKind, count: Int?): String = when (kind) {
@@ -216,16 +229,7 @@ private fun History(versions: List<EditVersion>, onDismiss: () -> Unit) {
 
 @Composable
 private fun TroubleStrip(trouble: Trouble) {
-    val text = if (trouble == Trouble.Offline) R.string.thread_offline else R.string.thread_error
-    Surface(color = MaterialTheme.colorScheme.secondaryContainer, modifier = Modifier.fillMaxWidth()) {
-        Text(
-            stringResource(text),
-            style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier
-                .padding(horizontal = AlohaSpacing.m, vertical = AlohaSpacing.xs)
-                .semantics { liveRegion = LiveRegionMode.Polite },
-        )
-    }
+    TroubleStrip(stringResource(if (trouble == Trouble.Offline) R.string.thread_offline else R.string.thread_error))
 }
 
 @Composable

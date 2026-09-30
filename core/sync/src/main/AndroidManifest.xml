@@ -9,10 +9,24 @@
     <!-- an upload runs as foreground work, so it finishes with the app in the background -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <!-- polling stops without a network and resumes when one returns -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <!-- to say when a post sent later was refused, or waits for a new sign-in -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application>
+        <!-- push events from the UnifiedPush distributor, handed on by the connector -->
+        <service
+            android:name="social.aloha.core.sync.AlohaPushService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="org.unifiedpush.android.connector.PUSH_EVENT" />
+            </intent-filter>
+        </service>
+        <!-- a notification's buttons: only the app's own notifications send to it -->
+        <receiver
+            android:name="social.aloha.core.sync.NotificationActionReceiver"
+            android:exported="false" />
         <service
             android:name="androidx.work.impl.foreground.SystemForegroundService"
             android:foregroundServiceType="dataSync"

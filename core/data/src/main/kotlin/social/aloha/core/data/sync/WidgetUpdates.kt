@@ -1,0 +1,55 @@
+// SPDX-FileCopyrightText: 2026 Aloha Social contributors
+// SPDX-License-Identifier: MIT
+
+package social.aloha.core.data.sync
+
+import android.appwidget.AppWidgetManager
+import android.content.Context
+import android.content.Intent
+import dagger.hilt.android.qualifiers.ApplicationContext
+import javax.inject.Inject
+import javax.inject.Singleton
+import kotlinx.coroutines.flow.Flow
+import social.aloha.core.datastore.WidgetFeedStore
+import social.aloha.core.model.MentionSnippet
+import social.aloha.core.model.WidgetFeed
+
+/**
+ * What the home screen widgets show, kept where they read it without the network, and the redraw that
+ * follows a change. A redraw reaches every widget of the app on a home screen, whichever kind it is.
+ */
+@Singleton
+public class WidgetUpdates @Inject constructor(
+    @param:ApplicationContext private val context: Context,
+    private val store: WidgetFeedStore,
+) {
+    public fun feed(accountId: String): Flow<WidgetFeed> = store.feed(accountId)
+
+    public suspend fun setUnread(accountId: String, count: Int) {
+        if (store.update(accountId) { it.copy(unread = count) }) redraw()
+    }
+
+    public suspend fun setMentions(accountId: String, mentions: List<MentionSnippet>) {
+        if (store.update(accountId) { it.copy(mentions = mentions) }) redraw()
+    }
+
+    public suspend fun forget(accountId: String) {
+        store.forget(accountId)
+        redraw()
+    }
+
+    /** Asks the app's widgets to draw again; nothing is sent while none is on a home screen. */
+    public fun redraw() {
+        val manager = AppWidgetManager.getInstance(context) ?: return
+        manager.getInstalledProvidersForPackage(context.packageName, null).forEach { provider ->
+            val ids = manager.getAppWidgetIds(provider.provider)
+            if (ids.isNotEmpty()) {
+                context.sendBroadcast(
+                    Intent(AppWidgetManager.ACTION_APPWIDGET_UPDATE)
+                        .setComponent(provider.provider)
+                        .putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids),
+                )
+            }
+        }
+    }
+}

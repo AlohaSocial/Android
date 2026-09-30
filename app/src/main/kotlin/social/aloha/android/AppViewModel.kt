@@ -24,15 +24,22 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import social.aloha.core.data.AccountMaintenance
 import social.aloha.core.data.AccountRemoval
 import social.aloha.core.data.AccountRepository
 import social.aloha.core.data.compose.Outbox
+import social.aloha.core.data.sync.UnreadCounts
 import social.aloha.core.data.timeline.CacheSweeper
 import social.aloha.core.model.SignedInAccount
+import social.aloha.core.navigation.AccountKey
 import social.aloha.core.navigation.ComposerKey
 import social.aloha.core.navigation.DraftsKey
+import social.aloha.core.navigation.NotificationsKey
+import social.aloha.core.navigation.ThreadKey
+import social.aloha.core.sync.LocalNotifications
 import social.aloha.core.sync.PostQueue
+import social.aloha.core.sync.PushRegistrar
 
 /** What the root of the app shows. */
 sealed interface AppSession {
@@ -73,6 +80,9 @@ class AppViewModel @Inject constructor(
     sweeper: CacheSweeper,
     private val outbox: Outbox,
     private val queue: PostQueue,
+    private val unread: UnreadCounts,
+    private val localNotifications: LocalNotifications,
+    private val push: PushRegistrar,
     @ApplicationContext private val context: Context,
 ) : ViewModel() {
     private val signingInAgain = MutableStateFlow(false)
@@ -118,6 +128,11 @@ class AppViewModel @Inject constructor(
         combine(accounts.accounts, accounts.activeAccount, signingInAgain, adding, ::sessionOf)
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), AppSession.Loading)
 
+    /** The active account's unread notifications, as its server last said. */
+    val unreadNotifications: StateFlow<Int> =
+        combine(accounts.activeAccount, unread.all) { active, counts -> active?.let { counts[it.id] } ?: 0 }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), 0)
+
     val switcher: StateFlow<List<SwitcherAccount>> =
         combine(accounts.accounts, accounts.activeAccount) { all, active ->
             all.sortedBy { it.addedAt }.map { account ->
@@ -141,15 +156,32 @@ class AppViewModel @Inject constructor(
     }
 
     /**
-     * Opens draft [draftId] of [accountId] in the composer, or that account's drafts without one; a
-     * notification asks, so an account no longer signed in here opens nothing.
+     * Opens draft [draftId] of [accountId] in the composer, or that account's drafts without one; a new
+     * id is a new post. A notification or a widget asks, so an account no longer signed in here opens
+     * nothing.
      */
-    fun openDraft(accountId: String, draftId: String?) {
+    fun openDraft(accountId: String, draftId: String?) = openAs(accountId) {
+        draftId?.let { ComposerKey(accountId, draftId = it) } ?: DraftsKey(accountId)
+    }
+
+    /**
+     * Opens what a notification is about, as the account it came to: its post, else the profile of
+     * whoever did it. An account no longer signed in here opens nothing.
+     */
+    fun openNotification(accountId: String, statusId: String?, profileId: String?) = openAs(accountId) {
+        statusId?.let { ThreadKey(accountId, it) } ?: profileId?.let { AccountKey(accountId, id = it) }
+            ?: NotificationsKey
+    }
+
+    /**
+     * Switches to [accountId] and opens what [key] names there; what lives outside the app asks for it,
+     * so an account no longer signed in here opens nothing.
+     */
+    private fun openAs(accountId: String, key: () -> NavKey) {
         viewModelScope.launch {
             if (accounts.byId(accountId) == null) return@launch
             accounts.activate(accountId)
-            destination.value =
-                accountId to (draftId?.let { ComposerKey(accountId, draftId = it) } ?: DraftsKey(accountId))
+            destination.value = accountId to key()
         }
     }
 
@@ -203,7 +235,13 @@ class AppViewModel @Inject constructor(
      */
     fun signOut() {
         viewModelScope.launch {
-            accounts.activeAccount.value?.let { removal.signOut(it) }
+            accounts.activeAccount.value?.let {
+                // the server is told to stop pushing while the token still works, but an unreachable one
+                // never keeps the account here for long
+                withTimeoutOrNull(PUSH_FORGET_MILLIS) { push.forget(it) }
+                removal.signOut(it)
+                localNotifications.forget(it.id)
+            }
             if (accounts.all().isEmpty()) caches.clear()
         }
     }
@@ -222,6 +260,7 @@ class AppViewModel @Inject constructor(
     }
 
     private companion object {
+        const val PUSH_FORGET_MILLIS = 5_000L
         const val STOP_TIMEOUT_MILLIS = 5_000L
     }
 }

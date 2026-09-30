@@ -31,6 +31,9 @@ import social.aloha.core.data.ClientFactory
 import social.aloha.core.data.SignInCoordinator
 import social.aloha.core.data.SignInResult
 import social.aloha.core.data.compose.Outbox
+import social.aloha.core.data.nextcloud.NextcloudConnection
+import social.aloha.core.data.notifications.RaisedNotifications
+import social.aloha.core.data.sync.WidgetUpdates
 import social.aloha.core.data.timeline.CacheSweeper
 import social.aloha.core.data.timeline.StatusRepository
 import social.aloha.core.database.AccountsDatabase
@@ -40,6 +43,8 @@ import social.aloha.core.datastore.AccountSettings
 import social.aloha.core.datastore.AccountSettingsStore
 import social.aloha.core.datastore.AppPreferences
 import social.aloha.core.datastore.TokenVault
+import social.aloha.core.datastore.VaultKey
+import social.aloha.core.datastore.WidgetFeedStore
 import social.aloha.core.network.ApiResult
 import social.aloha.core.network.RateLimiter
 import social.aloha.core.network.capabilities.CapabilityDetector
@@ -69,13 +74,14 @@ class SignInAcceptanceTest(private val configuration: MockServerConfiguration) {
     )
     private val http = OkHttpClient()
     private val limiter = RateLimiter(nowMillis = Clock.systemUTC()::millis)
+    private val clients = ClientFactory(http, limiter, Dispatchers.IO, accounts)
     private val coordinator = SignInCoordinator(
         accounts = accounts,
         vault = vault,
         oauth = OAuthClient(http, limiter, Dispatchers.IO),
         detector = CapabilityDetector(http, limiter, Dispatchers.IO) { java.time.Instant.now() },
         redirects = { OAuthIdentity.SCHEME_REDIRECT },
-        clients = ClientFactory(http, limiter, Dispatchers.IO, accounts),
+        clients = clients,
     )
     private val finder = testServerFinder(http, limiter)
     private val cache = Room.inMemoryDatabaseBuilder(
@@ -93,6 +99,9 @@ class SignInAcceptanceTest(private val configuration: MockServerConfiguration) {
         CacheSweeper(cache.statusDao(), cache.cacheAccountDao(), Clock.systemUTC()),
         settings,
         Outbox(outboxDb.outboxDao(), Clock.systemUTC()),
+        NextcloudConnection(clients, accounts, database.accountDao(), vault),
+        WidgetUpdates(ApplicationProvider.getApplicationContext(), WidgetFeedStore(InMemoryDataStore(emptyMap()))),
+        RaisedNotifications(database.raisedDao()),
     )
 
     @After
@@ -137,30 +146,38 @@ class SignInAcceptanceTest(private val configuration: MockServerConfiguration) {
     }
 
     @Test
-    fun `signing out revokes the token and forgets the account, its cache and its settings`() = runBlocking {
-        val server = finder.found(mock.origin.toString())
-        val authorize = (coordinator.beginAuthorization(server) as Authorization.Started).url.toHttpUrl()
-        val state = authorize.queryParameter("state") ?: error("state")
-        val account = (
-            coordinator.complete(
-                "alohasocial://oauth-callback/?code=mock-code&state=$state",
-            ) as SignInResult.SignedIn
-            ).account
-        val statuses = StatusRepository(cache.statusDao(), Clock.systemUTC())
-        statuses.save(account.id, StatusSamples.post())
-        settings.update(account.id) { it.copy(showBoosts = false) }
+    fun `signing out revokes the token and the app password, and forgets the account, its cache and its settings`() =
+        runBlocking {
+            val server = finder.found(mock.origin.toString())
+            val authorize = (coordinator.beginAuthorization(server) as Authorization.Started).url.toHttpUrl()
+            val state = authorize.queryParameter("state") ?: error("state")
+            val account = (
+                coordinator.complete(
+                    "alohasocial://oauth-callback/?code=mock-code&state=$state",
+                ) as SignInResult.SignedIn
+                ).account
+            val statuses = StatusRepository(cache.statusDao(), Clock.systemUTC())
+            statuses.save(account.id, StatusSamples.post())
+            settings.update(account.id) { it.copy(showBoosts = false) }
+            vault.put(VaultKey.AppPassword(account.id), APP_PASSWORD)
 
-        removal.signOut(account)
+            removal.signOut(account)
 
-        val revoke = mock.requests.last { it.url.encodedPath.endsWith("/oauth/revoke") }
-        assertTrue(revoke.body?.utf8().orEmpty().contains("token=${MockCredentials.ACCESS_TOKEN}"))
-        assertNull(accounts.token(account.id))
-        assertTrue(accounts.all().none { it.id == account.id })
-        assertNull(statuses.get(account.id, StatusSamples.post().id))
-        assertEquals(AccountSettings(), settings.settings(account.id).first())
-    }
+            val revoke = mock.requests.last { it.url.encodedPath.endsWith("/oauth/revoke") }
+            assertTrue(revoke.body?.utf8().orEmpty().contains("token=${MockCredentials.ACCESS_TOKEN}"))
+            val handedBack = mock.requests.last { it.url.encodedPath.endsWith("/ocs/v2.php/core/apppassword") }
+            assertEquals("DELETE", handedBack.method)
+            assertEquals(APP_PASSWORD, handedBack.headers["Authorization"])
+            assertNull(accounts.credentials(account.id).nextcloudBasic)
+            assertNull(accounts.token(account.id))
+            assertTrue(accounts.all().none { it.id == account.id })
+            assertNull(statuses.get(account.id, StatusSamples.post().id))
+            assertEquals(AccountSettings(), settings.settings(account.id).first())
+        }
 
     companion object {
+        private const val APP_PASSWORD = "Basic YWxpY2U6YXBwLXBhc3N3b3Jk"
+
         @JvmStatic
         @ParameterizedRobolectricTestRunner.Parameters(name = "{0}")
         fun configurations(): List<Array<Any>> = MockServerConfiguration.entries.map { arrayOf(it) }

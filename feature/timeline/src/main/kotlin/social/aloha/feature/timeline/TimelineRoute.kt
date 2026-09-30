@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
 import social.aloha.core.data.timeline.Toggle
@@ -50,7 +51,10 @@ public fun TimelineRoute(
     val nav by rememberUpdatedState(navigation)
 
     LaunchedEffect(colors) { viewModel.onColors(colors) }
-    LaunchedEffect(Unit) { viewModel.onAppear() }
+    LifecycleResumeEffect(viewModel) {
+        viewModel.onShown(isShown = true)
+        onPauseOrDispose { viewModel.onShown(isShown = false) }
+    }
     LaunchedEffect(state.actionFailed) {
         if (state.actionFailed) {
             viewModel.onActionFailureShown()

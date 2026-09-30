@@ -94,7 +94,7 @@ class TimelineScreenshotTest {
 
     @Test
     fun pendingWhileOffline() = capture("timeline-pending-offline", ThemeSettings(mode = ThemeMode.Dark)) {
-        loaded(posts()).copy(pending = 3, trouble = Trouble.Offline)
+        loaded(posts()).copy(pending = 3, pendingAvatars = listOf(null, null, null), trouble = Trouble.Offline)
     }
 
     @Test
