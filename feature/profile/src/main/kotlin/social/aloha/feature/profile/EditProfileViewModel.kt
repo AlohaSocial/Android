@@ -172,7 +172,7 @@ internal class EditProfileViewModel @AssistedInject constructor(
         }
     }
 
-    private suspend fun reader() = accounts.all().firstOrNull { it.id == key.readerId }
+    private suspend fun reader() = accounts.byId(key.readerId)
 
     /** The picture at [uri], copied where the upload can stream it from. */
     private suspend fun picture(uri: String, name: String): ProfilePicture? = withContext(Dispatchers.IO) {

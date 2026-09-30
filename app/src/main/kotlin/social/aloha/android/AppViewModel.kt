@@ -146,7 +146,7 @@ class AppViewModel @Inject constructor(
      */
     fun openDraft(accountId: String, draftId: String?) {
         viewModelScope.launch {
-            if (accounts.all().none { it.id == accountId }) return@launch
+            if (accounts.byId(accountId) == null) return@launch
             accounts.activate(accountId)
             destination.value =
                 accountId to (draftId?.let { ComposerKey(accountId, draftId = it) } ?: DraftsKey(accountId))

@@ -36,7 +36,7 @@ internal class MediaUploadWorker @AssistedInject constructor(
     override suspend fun getForegroundInfo(): ForegroundInfo = notifications.info(id, name(), percent = null)
 
     override suspend fun doWork(): Result {
-        val account = accounts.all().firstOrNull { it.id == inputData.getString(ACCOUNT) }
+        val account = inputData.getString(ACCOUNT)?.let { accounts.byId(it) }
         val file = inputData.getString(PATH)?.let(::File)?.takeIf(File::exists)
         if (account == null || file == null) return failed(refused = true, message = null)
         tryForeground()

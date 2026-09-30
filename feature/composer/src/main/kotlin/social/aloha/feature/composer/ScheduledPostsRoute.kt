@@ -130,7 +130,7 @@ internal class ScheduledPostsViewModel @AssistedInject constructor(
         }
     }
 
-    private suspend fun reader() = accounts.all().firstOrNull { it.id == key.readerId }
+    private suspend fun reader() = accounts.byId(key.readerId)
 }
 
 @Composable
