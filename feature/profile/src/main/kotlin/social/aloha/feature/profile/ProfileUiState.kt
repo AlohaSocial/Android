@@ -122,6 +122,8 @@ internal interface ProfileScreenActions : ProfileActions {
 
     fun onOpenInBrowser(url: String)
 
+    fun onAlbum(album: MediaCollection)
+
     fun onEditProfile()
 
     fun onReport()

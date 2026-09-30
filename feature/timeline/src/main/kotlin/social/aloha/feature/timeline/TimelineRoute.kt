@@ -69,6 +69,7 @@ public fun TimelineRoute(
             navigation = { nav },
             onCopied = { scope.launch { snackbars.showSnackbar(copied) } },
             onDeleteAsked = { deleting = it },
+            albums = { state.albums },
         ) {
             override fun onBoost(row: StatusRowUi) = viewModel.onToggle(row.statusId, Toggle.Boost)
 
@@ -98,6 +99,7 @@ public fun TimelineRoute(
         navigationIcon = navigationIcon,
         showOptions = feed == TimelineFeed.Home,
         onCompose = if (feed == TimelineFeed.Home) ({ nav.openComposer(null) }) else null,
+        onAlbums = if (feed.mode == FeedMode.Photos && state.albums) ({ nav.openAlbums() }) else null,
     )
 
     deleting?.let { request ->

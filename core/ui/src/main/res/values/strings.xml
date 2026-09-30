@@ -123,6 +123,8 @@
     <string name="status_menu_unmute_conversation">Unmute conversation</string>
     <!-- Menu item: report a post to its server's moderators -->
     <string name="status_menu_report">Report post</string>
+    <!-- Menu item on one's own post with pictures: put it into one of the reader's albums -->
+    <string name="status_menu_add_to_album">Add to album</string>
     <!-- Menu item on one's own post: change it -->
     <string name="status_menu_edit">Edit</string>
     <!-- Menu item on one's own post: delete it -->

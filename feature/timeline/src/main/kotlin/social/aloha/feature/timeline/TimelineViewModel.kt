@@ -195,6 +195,7 @@ internal class TimelineViewModel @AssistedInject constructor(
             reachedEnd = paging.reachedEnd,
             sparse = TimelineFilters.forMode(feed.mode, account.capabilities).isEmpty && feed.mode != FeedMode.Home,
             grid = grid,
+            albums = account.capabilities.collections,
             showBoosts = settings.showBoosts,
             showReplies = settings.showReplies,
             now = now,

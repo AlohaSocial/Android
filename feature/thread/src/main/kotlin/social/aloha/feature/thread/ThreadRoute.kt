@@ -55,6 +55,7 @@ public fun ThreadRoute(key: ThreadKey, navigation: ThreadNavigation, modifier: M
             navigation = { nav },
             onCopied = { scope.launch { snackbars.showSnackbar(copied) } },
             onDeleteAsked = { deleting = it },
+            albums = { state.albums },
         ) {
             // the focused post is already open; a tap on it does nothing
             override fun onOpen(statusId: String) {

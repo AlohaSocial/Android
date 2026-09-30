@@ -24,6 +24,7 @@ import social.aloha.core.data.compose.ScheduledPosts
 import social.aloha.core.data.nextcloud.NextcloudConnection
 import social.aloha.core.data.notifications.NotificationsRepository
 import social.aloha.core.data.notifications.RaisedNotifications
+import social.aloha.core.data.photos.Albums
 import social.aloha.core.data.sync.UnreadCounts
 import social.aloha.core.data.sync.WidgetUpdates
 import social.aloha.core.data.timeline.FilterRepository
@@ -91,6 +92,12 @@ public class SignedInFixture(private val context: Context) : Closeable {
 
     /** Which notifications were raised, beside the accounts. */
     public val raised: RaisedNotifications = RaisedNotifications(database.raisedDao())
+
+    /** The stored posts, in the in-memory cache. */
+    public val statuses: StatusRepository by lazy { StatusRepository(cache.value.statusDao(), clock) }
+
+    /** The reader's albums, their posts stored in [statuses]. */
+    public val albums: Albums by lazy { Albums(clients, statuses) }
 
     /** What sends posts, storing what the server made in an in-memory cache. */
     public val sender: PostSender by lazy {

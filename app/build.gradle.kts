@@ -46,6 +46,7 @@ dependencies {
     implementation(project(":feature:settings"))
     implementation(project(":feature:thread"))
     implementation(project(":feature:timeline"))
+    implementation(project(":feature:photos"))
     implementation(project(":feature:notifications"))
     implementation(project(":widget"))
     implementation(libs.androidx.hilt.lifecycle.viewmodel.compose)

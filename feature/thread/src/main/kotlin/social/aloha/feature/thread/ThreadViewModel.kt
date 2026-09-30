@@ -261,6 +261,7 @@ internal class ThreadViewModel @AssistedInject constructor(
             lists = focused?.let { ThreadPresentation.lists(it.displayed, account.capabilities) }.orEmpty(),
             edited = focused?.displayed?.isEdited == true,
             canReact = account.capabilities.let { it.emojiReactions || it.isNextcloudSocial },
+            albums = account.capabilities.collections,
             history = control.history,
             actionFailed = control.actionFailed,
             people = control.people,

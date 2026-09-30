@@ -70,6 +70,8 @@ internal data class TimelineUiState(
     val sparse: Boolean = false,
     /** Photos can be a grid or a feed; null for a timeline that is always a list. */
     val grid: Boolean? = null,
+    /** Whether the reader's server keeps albums. */
+    val albums: Boolean = false,
     val showBoosts: Boolean = true,
     val showReplies: Boolean = true,
     val now: Instant = Instant.EPOCH,

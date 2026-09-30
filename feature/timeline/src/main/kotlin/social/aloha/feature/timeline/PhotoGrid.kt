@@ -138,6 +138,12 @@ private fun Cell(row: StatusRowUi, onOpen: () -> Unit) {
     }
 }
 
+/** The reader's albums, from Photos. */
+@Composable
+internal fun AlbumsButton(onAlbums: () -> Unit) {
+    IconButton(onClick = onAlbums) { Icon(AlohaIcons.Album, stringResource(R.string.photos_albums)) }
+}
+
 /** Switches Photos between its grid and its feed, naming what a tap switches to. */
 @Composable
 internal fun LayoutToggle(grid: Boolean, onGrid: (Boolean) -> Unit) {

@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.RepeatOn
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.VideoLibrary
 import androidx.compose.material.icons.outlined.AccountCircle
+import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.AddCircleOutline
 import androidx.compose.material.icons.outlined.AddComment
 import androidx.compose.material.icons.outlined.AddPhotoAlternate
@@ -58,6 +59,7 @@ import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.NotificationsOff
 import androidx.compose.material.icons.outlined.OpenInBrowser
 import androidx.compose.material.icons.outlined.PersonAdd
+import androidx.compose.material.icons.outlined.PhotoAlbum
 import androidx.compose.material.icons.outlined.PhotoCamera
 import androidx.compose.material.icons.outlined.PhotoLibrary
 import androidx.compose.material.icons.outlined.Place
@@ -135,6 +137,10 @@ public object AlohaIcons {
     public val Report: ImageVector = Icons.Outlined.Flag
     public val Delete: ImageVector = Icons.Outlined.Delete
     public val Redraft: ImageVector = Icons.Outlined.EditNote
+    public val Add: ImageVector = Icons.Outlined.Add
+
+    /** An album, Pixelfed's collection of posts with pictures. */
+    public val Album: ImageVector = Icons.Outlined.PhotoAlbum
     public val Sensitive: ImageVector = Icons.Outlined.VisibilityOff
 
     /** A post holding more than one picture, on its square in a grid. */

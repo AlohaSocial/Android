@@ -56,6 +56,9 @@ import social.aloha.core.designsystem.AlohaTheme
 import social.aloha.core.designsystem.badgeCount
 import social.aloha.core.model.FeedMode
 import social.aloha.core.navigation.AccountKey
+import social.aloha.core.navigation.AddToAlbumKey
+import social.aloha.core.navigation.AlbumKey
+import social.aloha.core.navigation.AlbumsKey
 import social.aloha.core.navigation.ComposerKey
 import social.aloha.core.navigation.DraftsKey
 import social.aloha.core.navigation.EditProfileKey
@@ -87,6 +90,9 @@ import social.aloha.feature.composer.ScheduledPostsRoute
 import social.aloha.feature.notifications.NotificationsRoute
 import social.aloha.feature.notifications.PolicyRoute
 import social.aloha.feature.notifications.RequestsRoute
+import social.aloha.feature.photos.AddToAlbumRoute
+import social.aloha.feature.photos.AlbumRoute
+import social.aloha.feature.photos.AlbumsRoute
 import social.aloha.feature.profile.EditProfileRoute
 import social.aloha.feature.profile.PeopleRoute
 import social.aloha.feature.profile.ProfileNavigation
@@ -205,6 +211,18 @@ fun AlohaApp(
 
             override fun report(accountId: String, handle: String, statusId: String?) {
                 backStack.push(ReportKey(readerId, accountId, handle, statusId))
+            }
+
+            override fun addToAlbum(statusId: String) {
+                backStack.push(AddToAlbumKey(readerId, statusId))
+            }
+
+            override fun openAlbums() {
+                backStack.push(AlbumsKey(readerId))
+            }
+
+            override fun openAlbum(albumId: String, title: String, own: Boolean) {
+                backStack.push(AlbumKey(readerId, albumId, title, own))
             }
 
             override fun editPost(statusId: String, redraft: Boolean) {
@@ -341,6 +359,17 @@ fun AlohaApp(
                 entry<ReportKey> { ReportRoute(it, onDone = { backStack.remove(it) }) }
                 entry<EditProfileKey> { EditProfileRoute(it, onDone = { backStack.remove(it) }) }
                 entry<ScheduledPostsKey> { ScheduledPostsRoute(it, onBack = { backStack.remove(it) }) }
+                entry<AlbumsKey>(metadata = ListDetailSceneStrategy.detailPane()) {
+                    AlbumsRoute(
+                        it,
+                        onOpen = { album, own -> statusNavigation.openAlbum(album.id, album.title, own) },
+                        onBack = { backStack.remove(it) },
+                    )
+                }
+                entry<AlbumKey>(metadata = ListDetailSceneStrategy.detailPane()) {
+                    AlbumRoute(it, onOpen = statusNavigation::openThread, onBack = { backStack.remove(it) })
+                }
+                entry<AddToAlbumKey> { AddToAlbumRoute(it, onBack = { backStack.remove(it) }) }
                 entry<ThreadKey>(metadata = ListDetailSceneStrategy.detailPane()) { ThreadRoute(it, statusNavigation) }
                 entry<StatusListKey>(metadata = ListDetailSceneStrategy.detailPane()) {
                     StatusListRoute(it, statusNavigation)

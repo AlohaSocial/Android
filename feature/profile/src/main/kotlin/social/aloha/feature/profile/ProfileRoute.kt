@@ -20,6 +20,7 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
 import social.aloha.core.data.timeline.Toggle
+import social.aloha.core.model.MediaCollection
 import social.aloha.core.navigation.AccountKey
 import social.aloha.core.navigation.PeopleKind
 import social.aloha.core.ui.DeleteRequest
@@ -57,6 +58,7 @@ public fun ProfileRoute(key: AccountKey, navigation: ProfileNavigation, modifier
             navigation = { nav },
             onCopied = { scope.launch { snackbars.showSnackbar(copied) } },
             onDeleteAsked = { deleting = it },
+            albums = { ProfileTab.Collections in state.tabs },
         ) {
             override fun onBoost(row: StatusRowUi) = viewModel.onToggle(row.statusId, Toggle.Boost)
 
@@ -82,6 +84,9 @@ public fun ProfileRoute(key: AccountKey, navigation: ProfileNavigation, modifier
             }
 
             override fun onOpenInBrowser(url: String) = openInBrowser(context, url)
+
+            override fun onAlbum(album: MediaCollection) =
+                nav.openAlbum(album.id, album.title, own = state.header?.isSelf == true)
 
             override fun onEditProfile() = nav.editProfile()
 

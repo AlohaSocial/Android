@@ -36,6 +36,15 @@ public interface StatusNavigation {
 
     /** A report about account [accountId], known as [handle], about its post [statusId] when given. */
     public fun report(accountId: String, handle: String, statusId: String?)
+
+    /** The reader's albums, to put their post [statusId] into; only a server with albums offers it. */
+    public fun addToAlbum(statusId: String) {}
+
+    /** The reader's own albums. */
+    public fun openAlbums() {}
+
+    /** Album [albumId], called [title]; the reader changes it when it is their [own]. */
+    public fun openAlbum(albumId: String, title: String, own: Boolean) {}
 }
 
 /** A delete the person asked for, of [row]; with [redraft] the post is written again after. */
@@ -48,24 +57,17 @@ public data class DeleteRequest(val row: StatusRowUi, val redraft: Boolean)
  * @param onCopied the link is on the clipboard, which the screen confirms.
  * @param onDeleteAsked the person asked to delete a post, or to write it again, which the screen
  *   confirms first.
+ * @param albums whether the reader's server keeps albums, which the reader's own posts can go into.
  */
 public abstract class RoutedStatusActions(
     private val context: Context,
     private val navigation: () -> StatusNavigation,
     private val onCopied: () -> Unit,
     private val onDeleteAsked: (DeleteRequest) -> Unit,
+    private val albums: () -> Boolean = { false },
 ) : StatusActions {
-    override val menu: Set<StatusMenuItem> = setOf(
-        StatusMenuItem.Share,
-        StatusMenuItem.CopyLink,
-        StatusMenuItem.OpenInBrowser,
-        StatusMenuItem.MuteConversation,
-        StatusMenuItem.Pin,
-        StatusMenuItem.Edit,
-        StatusMenuItem.Redraft,
-        StatusMenuItem.Delete,
-        StatusMenuItem.Report,
-    )
+    override val menu: Set<StatusMenuItem>
+        get() = if (albums()) SHARED + StatusMenuItem.AddToAlbum else SHARED
 
     public abstract fun onMute(row: StatusRowUi)
 
@@ -113,10 +115,24 @@ public abstract class RoutedStatusActions(
 
             StatusMenuItem.Report -> navigation().report(row.author.id, row.author.handle, row.statusId)
 
+            StatusMenuItem.AddToAlbum -> navigation().addToAlbum(row.statusId)
+
             else -> Unit
         }
     }
 }
+
+private val SHARED = setOf(
+    StatusMenuItem.Share,
+    StatusMenuItem.CopyLink,
+    StatusMenuItem.OpenInBrowser,
+    StatusMenuItem.MuteConversation,
+    StatusMenuItem.Pin,
+    StatusMenuItem.Edit,
+    StatusMenuItem.Redraft,
+    StatusMenuItem.Delete,
+    StatusMenuItem.Report,
+)
 
 /**
  * Opens [url] in a Custom Tab, the browser's view inside the app. Only web links open: a post can carry

@@ -94,3 +94,15 @@ public data class NotificationPolicyKey(val readerId: String) : NavKey
 /** The senders whose notifications [readerId]'s server holds back, to let through or drop. */
 @Serializable
 public data class NotificationRequestsKey(val readerId: String) : NavKey
+
+/** The albums of account [ownerId] as [readerId] sees them, or the reader's own without one. */
+@Serializable
+public data class AlbumsKey(val readerId: String, val ownerId: String? = null) : NavKey
+
+/** One album's posts, as [readerId] sees them; [own] albums can be changed. */
+@Serializable
+public data class AlbumKey(val readerId: String, val albumId: String, val title: String, val own: Boolean) : NavKey
+
+/** Picks which of [readerId]'s albums the reader's post [statusId] goes into. */
+@Serializable
+public data class AddToAlbumKey(val readerId: String, val statusId: String) : NavKey

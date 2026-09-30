@@ -107,6 +107,7 @@ internal fun TimelineScreen(
     navigationIcon: @Composable () -> Unit = {},
     showOptions: Boolean = true,
     onCompose: (() -> Unit)? = null,
+    onAlbums: (() -> Unit)? = null,
 ) {
     Scaffold(
         modifier = modifier.semantics { paneTitle = title },
@@ -115,6 +116,7 @@ internal fun TimelineScreen(
                 title = { Text(title) },
                 navigationIcon = navigationIcon,
                 actions = {
+                    onAlbums?.let { AlbumsButton(it) }
                     state.grid?.let { LayoutToggle(it, actions::onGrid) }
                     if (showOptions) Options(state, actions)
                 },
