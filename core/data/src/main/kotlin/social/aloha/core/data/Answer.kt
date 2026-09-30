@@ -22,10 +22,12 @@ public inline fun <T, R> Answer<T>.map(transform: (T) -> R): Answer<R> = when (t
 }
 
 /** Asks [reader]'s server; an account with no client (signed out meanwhile) reads as not found. */
-public suspend fun <T> ClientFactory.answer(reader: SignedInAccount, request: ApiRequest<T>): Answer<T> {
-    val client = forAccount(reader) ?: return Answer.Missed(ApiError.NotFound)
-    return when (val answer = client.execute(request)) {
-        is ApiResult.Success -> Answer.Got(answer.value)
-        is ApiResult.Failure -> Answer.Missed(answer.error)
-    }
+public suspend fun <T> ClientFactory.answer(reader: SignedInAccount, request: ApiRequest<T>): Answer<T> =
+    forAccount(reader)?.execute(request).toAnswer()
+
+/** What the network said, as an answer; no client at all reads as not found. */
+public fun <T> ApiResult<T>?.toAnswer(): Answer<T> = when (this) {
+    is ApiResult.Success -> Answer.Got(value)
+    is ApiResult.Failure -> Answer.Missed(error)
+    null -> Answer.Missed(ApiError.NotFound)
 }

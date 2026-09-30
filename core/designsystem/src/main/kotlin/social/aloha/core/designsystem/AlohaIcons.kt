@@ -29,6 +29,7 @@ import androidx.compose.material.icons.outlined.AmpStories
 import androidx.compose.material.icons.outlined.AttachFile
 import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.Cloud
 import androidx.compose.material.icons.outlined.ContentCut
 import androidx.compose.material.icons.outlined.Create
 import androidx.compose.material.icons.outlined.Delete
@@ -140,6 +141,7 @@ public object AlohaIcons {
     public val Close: ImageVector = Icons.Outlined.Close
     public val Settings: ImageVector = Icons.Outlined.Settings
     public val About: ImageVector = Icons.Outlined.Info
+    public val Nextcloud: ImageVector = Icons.Outlined.Cloud
     public val Timeline: ImageVector = Icons.Outlined.ViewAgenda
     public val AddAccount: ImageVector = Icons.Outlined.PersonAdd
     public val SignOut: ImageVector = Icons.AutoMirrored.Outlined.Logout

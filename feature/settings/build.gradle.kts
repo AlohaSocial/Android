@@ -5,3 +5,7 @@ plugins {
     alias(libs.plugins.aloha.android.feature)
     alias(libs.plugins.aloha.screenshot)
 }
+
+dependencies {
+    implementation(project(":core:data"))
+}

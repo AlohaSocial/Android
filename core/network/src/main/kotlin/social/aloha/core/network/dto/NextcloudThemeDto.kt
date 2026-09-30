@@ -16,10 +16,11 @@ import social.aloha.core.network.decoding.LenientIntSerializer
 import social.aloha.core.network.decoding.LenientTextSerializer
 import social.aloha.core.network.decoding.LossyListSerializer
 import social.aloha.core.network.decoding.OrNullSerializer
+import social.aloha.core.network.decoding.StringListSerializer
 
 /**
- * Nextcloud's OCS capabilities envelope, unwrapped only as far as `theming`; the rest of `capabilities`
- * belongs to other apps.
+ * Nextcloud's OCS capabilities envelope, unwrapped only as far as `theming` and the notifications app's
+ * `push` list; the rest of `capabilities` belongs to other apps.
  */
 @Serializable
 internal data class OcsCapabilitiesDto(@Serializable(with = OcsOrNull::class) val ocs: OcsDto? = null) {
@@ -35,7 +36,16 @@ internal data class OcsDataDto(
 )
 
 @Serializable
-internal data class CapabilitiesDto(@Serializable(with = ThemingOrNull::class) val theming: NextcloudThemeDto? = null)
+internal data class CapabilitiesDto(
+    @Serializable(with = ThemingOrNull::class) val theming: NextcloudThemeDto? = null,
+    @Serializable(with = NotificationsCapabilityOrNull::class) val notifications: NotificationsCapabilityDto? = null,
+)
+
+/** Present only to a signed-in request: an anonymous one never sees the notifications app. */
+@Serializable
+internal data class NotificationsCapabilityDto(
+    @Serializable(with = StringListSerializer::class) val push: List<String> = emptyList(),
+)
 
 @Serializable
 internal data class NextcloudThemeDto(
@@ -78,6 +88,9 @@ internal object OcsDataOrNull : KSerializer<OcsDataDto?> by OrNullSerializer(Ocs
 internal object CapabilitiesOrNull : KSerializer<CapabilitiesDto?> by OrNullSerializer(CapabilitiesDto.serializer())
 
 internal object ThemingOrNull : KSerializer<NextcloudThemeDto?> by OrNullSerializer(NextcloudThemeDto.serializer())
+
+internal object NotificationsCapabilityOrNull :
+    KSerializer<NotificationsCapabilityDto?> by OrNullSerializer(NotificationsCapabilityDto.serializer())
 
 internal fun NextcloudThemeDto.toDomain(): NextcloudTheme = NextcloudTheme(
     name = name.orEmpty(),

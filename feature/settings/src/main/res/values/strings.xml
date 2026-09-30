@@ -16,4 +16,26 @@
     <string name="settings_version">Version %s</string>
     <!-- Row in the about section that opens the app's source code -->
     <string name="settings_source">Source code</string>
+    <!-- Title of the settings section that connects the account to the Nextcloud its Social server runs on -->
+    <string name="settings_nextcloud">Nextcloud</string>
+    <!-- Explains what connecting the Nextcloud is for, before it is connected -->
+    <string name="settings_nextcloud_about">Connect your Nextcloud to get notifications pushed through it and to attach files from it.</string>
+    <!-- Button that starts connecting the Nextcloud; the approval happens in the browser -->
+    <string name="settings_nextcloud_connect">Connect your Nextcloud</string>
+    <!-- Shown while the app waits for the person to approve the connection in the browser -->
+    <string name="settings_nextcloud_waiting">Approve Aloha Social in the browser that opened. This page updates when you are done.</string>
+    <!-- Button that stops waiting for the approval in the browser -->
+    <string name="settings_nextcloud_cancel">Cancel</string>
+    <!-- Shown once connected; the app password is a credential the Nextcloud created for this device only -->
+    <string name="settings_nextcloud_connected">Connected. Aloha Social holds an app password your Nextcloud created for this device.</string>
+    <!-- Button that disconnects the Nextcloud and gives the app password back to it -->
+    <string name="settings_nextcloud_disconnect">Disconnect</string>
+    <!-- Shown when the account's server is not a Nextcloud, so there is nothing to connect -->
+    <string name="settings_nextcloud_not_available">Your account is not on a Nextcloud, so there is nothing to connect.</string>
+    <!-- Shown when the Nextcloud could not be reached or is in maintenance -->
+    <string name="settings_nextcloud_unavailable">Your Nextcloud cannot be reached right now, or is being maintained. Try again later.</string>
+    <!-- Shown when the person did not approve within five minutes -->
+    <string name="settings_nextcloud_timed_out">The approval did not arrive in time. Try again.</string>
+    <!-- Shown when the Nextcloud answered in a way the app could not use -->
+    <string name="settings_nextcloud_failed">Your Nextcloud did not connect. Try again, or check that it is set up for this address.</string>
 </resources>

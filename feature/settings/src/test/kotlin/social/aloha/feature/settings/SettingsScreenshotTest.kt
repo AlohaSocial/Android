@@ -49,6 +49,22 @@ class SettingsScreenshotTest {
     fun about() = capture("settings-about") { SectionScreen(AboutSection, onBack = {}) }
 
     @Test
+    fun nextcloud() = capture("settings-nextcloud") {
+        NextcloudRows(NextcloudUiState(available = true, phase = NextcloudPhase.TimedOut), {}, {}, {})
+    }
+
+    @Test
+    fun nextcloudWaiting() = capture("settings-nextcloud-waiting") {
+        NextcloudRows(NextcloudUiState(available = true, phase = NextcloudPhase.Waiting), {}, {}, {})
+    }
+
+    @Test
+    @Config(fontScale = 2f)
+    fun nextcloudConnectedLargeFont() = capture("settings-nextcloud-connected-font200") {
+        NextcloudRows(NextcloudUiState(available = true, connected = true), {}, {}, {})
+    }
+
+    @Test
     @Config(qualifiers = RobolectricDeviceQualifiers.MediumTablet)
     fun aboutWide() = capture("settings-about-wide") { SectionScreen(AboutSection, onBack = {}) }
 }

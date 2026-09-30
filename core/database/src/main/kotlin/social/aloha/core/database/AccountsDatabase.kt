@@ -80,6 +80,9 @@ public interface AccountDao {
     @Query("UPDATE account SET needsReauth = :needsReauth WHERE id = :id")
     public suspend fun setNeedsReauth(id: String, needsReauth: Boolean)
 
+    @Query("UPDATE account SET nextcloudConnected = :connected WHERE id = :id")
+    public suspend fun setNextcloudConnected(id: String, connected: Boolean)
+
     @Query("UPDATE account SET needsReauth = 1")
     public suspend fun markAllNeedReauth()
 
