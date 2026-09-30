@@ -121,4 +121,6 @@ internal interface ProfileScreenActions : ProfileActions {
     fun onPeople(followers: Boolean)
 
     fun onOpenInBrowser(url: String)
+
+    fun onEditProfile()
 }

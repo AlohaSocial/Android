@@ -57,6 +57,10 @@ public data class ComposerKey(
     val redraftId: String? = null,
 ) : NavKey
 
+/** [readerId]'s own profile, being edited. */
+@Serializable
+public data class EditProfileKey(val readerId: String) : NavKey
+
 /** The drafts of [readerId], and the posts waiting to be sent. */
 @Serializable
 public data class DraftsKey(val readerId: String) : NavKey

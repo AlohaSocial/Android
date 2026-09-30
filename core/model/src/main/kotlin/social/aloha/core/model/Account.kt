@@ -30,6 +30,8 @@ public data class Account(
     val locked: Boolean = false,
     val bot: Boolean = false,
     val discoverable: Boolean = true,
+    /** Whether search engines may include the account's public posts, as its owner allowed. */
+    val indexable: Boolean = false,
     val suspended: Boolean = false,
     val limited: Boolean = false,
     @Serializable(with = InstantSerializer::class) val createdAt: Instant? = null,

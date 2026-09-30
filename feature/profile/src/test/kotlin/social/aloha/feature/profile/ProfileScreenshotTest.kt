@@ -65,6 +65,7 @@ class ProfileScreenshotTest {
         override fun onBlockDomain(block: Boolean) = Unit
         override fun onLists() = Unit
         override fun onListed(listId: String, add: Boolean) = Unit
+        override fun onEditProfile() = Unit
         override fun onPeople(followers: Boolean) = Unit
         override fun onOpenInBrowser(url: String) = Unit
     }
@@ -147,5 +148,17 @@ class ProfileScreenshotTest {
             PeopleUiState.Person(mapper.author(it), it.emojis)
         }
         PeopleScreen(PeopleKind.Followers, PeopleUiState(people, loading = false, reachedEnd = true), {}, {}, {}, {})
+    }
+
+    @Test
+    fun editProfile() = capture("profile-edit") {
+        val form = ProfileForm(
+            displayName = "Alice Example",
+            note = "Surfs at dawn, writes at dusk.",
+            fields = listOf(AccountField("Pronouns", "she/her"), AccountField("Site", "alice.example")) +
+                List(2) { AccountField("", "") },
+            locked = true,
+        )
+        EditProfileScreen(EditProfileUiState(form = form, original = form.copy(note = "")), {}, {}, {}, {})
     }
 }

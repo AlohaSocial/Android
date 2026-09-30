@@ -55,6 +55,7 @@ import social.aloha.core.designsystem.AlohaTheme
 import social.aloha.core.navigation.AccountKey
 import social.aloha.core.navigation.ComposerKey
 import social.aloha.core.navigation.DraftsKey
+import social.aloha.core.navigation.EditProfileKey
 import social.aloha.core.navigation.HomeKey
 import social.aloha.core.navigation.NotificationsKey
 import social.aloha.core.navigation.PeopleKey
@@ -77,6 +78,7 @@ import social.aloha.core.ui.openInBrowser
 import social.aloha.feature.composer.ComposerRoute
 import social.aloha.feature.composer.DraftsRoute
 import social.aloha.feature.composer.ScheduledPostsRoute
+import social.aloha.feature.profile.EditProfileRoute
 import social.aloha.feature.profile.PeopleRoute
 import social.aloha.feature.profile.ProfileNavigation
 import social.aloha.feature.profile.ProfileRoute
@@ -169,6 +171,10 @@ fun AlohaApp(
 
             override fun back() {
                 backStack.removeLastOrNull()
+            }
+
+            override fun editProfile() {
+                backStack.push(EditProfileKey(readerId))
             }
 
             override fun openProfile(accountId: String?, acct: String?) {
@@ -291,6 +297,7 @@ fun AlohaApp(
                         },
                     )
                 }
+                entry<EditProfileKey> { EditProfileRoute(it, onDone = { backStack.removeLastOrNull() }) }
                 entry<ScheduledPostsKey> { ScheduledPostsRoute(it, onBack = { backStack.removeLastOrNull() }) }
                 entry<ThreadKey>(metadata = ListDetailSceneStrategy.detailPane()) { ThreadRoute(it, statusNavigation) }
                 entry<StatusListKey>(metadata = ListDetailSceneStrategy.detailPane()) {

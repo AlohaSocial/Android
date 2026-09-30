@@ -70,6 +70,13 @@ public interface AccountDao {
     @Query("DELETE FROM account WHERE id = :id")
     public suspend fun delete(id: String)
 
+    /** What the account looks like, as its owner just changed it; nothing else of the row. */
+    @Query(
+        "UPDATE account SET displayName = :displayName, avatarUrl = :avatarUrl, headerUrl = :headerUrl, " +
+            "profilePending = 0 WHERE id = :id",
+    )
+    public suspend fun setProfile(id: String, displayName: String, avatarUrl: String?, headerUrl: String?)
+
     @Query("UPDATE account SET needsReauth = :needsReauth WHERE id = :id")
     public suspend fun setNeedsReauth(id: String, needsReauth: Boolean)
 

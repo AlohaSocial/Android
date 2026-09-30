@@ -11,4 +11,7 @@ public interface ProfileNavigation : StatusNavigation {
     public fun openPeople(accountId: String, kind: PeopleKind)
 
     public fun back()
+
+    /** The reader's own profile, to edit. */
+    public fun editProfile()
 }

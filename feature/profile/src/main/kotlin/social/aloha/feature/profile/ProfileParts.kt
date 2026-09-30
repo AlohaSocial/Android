@@ -121,7 +121,11 @@ internal fun Header(header: ProfileHeader, state: ProfileUiState, actions: Profi
             horizontalArrangement = Arrangement.End,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            if (!header.isSelf) state.relation?.let { RelationButton(it, state.changing, actions) }
+            if (header.isSelf) {
+                OutlinedButton(onClick = actions::onEditProfile) { Text(stringResource(R.string.profile_edit)) }
+            } else {
+                state.relation?.let { RelationButton(it, state.changing, actions) }
+            }
         }
         Column(
             Modifier.padding(horizontal = AlohaSpacing.m),

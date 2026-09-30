@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
 import social.aloha.core.data.timeline.Toggle
@@ -81,7 +82,14 @@ public fun ProfileRoute(key: AccountKey, navigation: ProfileNavigation, modifier
             }
 
             override fun onOpenInBrowser(url: String) = openInBrowser(context, url)
+
+            override fun onEditProfile() = nav.editProfile()
         }
+    }
+    // the reader's own profile shows what they just changed when they come back to it
+    LifecycleResumeEffect(state.header?.isSelf) {
+        if (state.header?.isSelf == true) viewModel.onRefresh()
+        onPauseOrDispose {}
     }
 
     ProfileScreen(state, screenActions, rowActions, modifier, snackbars)
