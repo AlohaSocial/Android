@@ -23,6 +23,7 @@ import social.aloha.core.data.AccountRepository
 import social.aloha.core.data.nextcloud.ConnectResult
 import social.aloha.core.data.nextcloud.ConnectStart
 import social.aloha.core.data.nextcloud.NextcloudConnection
+import social.aloha.core.sync.PushRegistrar
 
 /** Where connecting stands; a phase after a failed attempt says why. */
 internal enum class NextcloudPhase(@param:StringRes val message: Int?) {
@@ -44,6 +45,7 @@ internal data class NextcloudUiState(
 internal class NextcloudViewModel @Inject constructor(
     private val accounts: AccountRepository,
     private val connection: NextcloudConnection,
+    private val push: PushRegistrar,
 ) : ViewModel() {
     private val phase = MutableStateFlow(NextcloudPhase.Idle)
 
@@ -73,8 +75,14 @@ internal class NextcloudViewModel @Inject constructor(
                     pages.send(start.start.loginUrl)
                     phase.value = NextcloudPhase.Waiting
                     when (connection.await(account, start.start)) {
-                        ConnectResult.Connected -> NextcloudPhase.Idle
+                        ConnectResult.Connected -> {
+                            // push through the Nextcloud, where it pushes, starts right away
+                            push.registerAll()
+                            NextcloudPhase.Idle
+                        }
+
                         ConnectResult.TimedOut -> NextcloudPhase.TimedOut
+
                         ConnectResult.Failed -> NextcloudPhase.Failed
                     }
                 }
@@ -96,7 +104,10 @@ internal class NextcloudViewModel @Inject constructor(
 
     fun onDisconnect() {
         val account = accounts.activeAccount.value ?: return
-        viewModelScope.launch { connection.disconnect(account) }
+        viewModelScope.launch {
+            push.forgetNextcloud(account)
+            connection.disconnect(account)
+        }
     }
 
     private companion object {

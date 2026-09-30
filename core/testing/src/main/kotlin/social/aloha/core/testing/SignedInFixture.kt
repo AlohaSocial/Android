@@ -21,6 +21,7 @@ import social.aloha.core.data.compose.ComposeRepository
 import social.aloha.core.data.compose.Outbox
 import social.aloha.core.data.compose.PostSender
 import social.aloha.core.data.compose.ScheduledPosts
+import social.aloha.core.data.nextcloud.NextcloudConnection
 import social.aloha.core.data.notifications.RaisedNotifications
 import social.aloha.core.data.timeline.StatusInteractions
 import social.aloha.core.data.timeline.StatusRepository
@@ -45,9 +46,11 @@ public class SignedInFixture(private val context: Context) : Closeable {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val database = Room.inMemoryDatabaseBuilder(context, AccountsDatabase::class.java).build()
 
+    private val vault = TokenVault(InMemoryDataStore(ByteArray(0)), FakeSecretCipher(), Dispatchers.IO)
+
     public val accounts: AccountRepository = AccountRepository(
         database.accountDao(),
-        TokenVault(InMemoryDataStore(ByteArray(0)), FakeSecretCipher(), Dispatchers.IO),
+        vault,
         AppPreferences(InMemoryDataStore(emptyPreferences())),
         clock,
         scope,
@@ -55,6 +58,11 @@ public class SignedInFixture(private val context: Context) : Closeable {
 
     public val clients: ClientFactory =
         ClientFactory(OkHttpClient(), RateLimiter(nowMillis = clock::millis), Dispatchers.IO, accounts)
+
+    /** The Nextcloud connection of these accounts, on the same database and vault. */
+    public val nextcloud: NextcloudConnection by lazy {
+        NextcloudConnection(clients, accounts, database.accountDao(), vault)
+    }
 
     /** The outbox on the same database. */
     private val outboxDatabase = Room.inMemoryDatabaseBuilder(context, OutboxDatabase::class.java).build()

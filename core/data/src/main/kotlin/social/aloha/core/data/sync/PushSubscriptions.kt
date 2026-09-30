@@ -47,6 +47,20 @@ public class PushSubscriptions @Inject constructor(
         clients.answer(account, PushEndpoints.unsubscribe())
     }
 
+    /** Whether [accountId] is pushed to through [endpoint], the one its registration [instance] last took. */
+    public suspend fun subscribed(accountId: String, instance: String, endpoint: String): Boolean =
+        endpoint.isNotEmpty() && isActive(accountId) && app.pushEndpoint(instance).first() == endpoint
+
+    /** The [endpoint] registration [instance] was subscribed with, or null once it no longer is. */
+    public suspend fun rememberEndpoint(instance: String, endpoint: String?) {
+        app.setPushEndpoint(instance, endpoint)
+    }
+
+    /** [accountId] is pushed to by another route, its Nextcloud, which confirmed the registration. */
+    public suspend fun markActive(accountId: String) {
+        app.setPush(accountId, active = true)
+    }
+
     /** The distributor dropped [accountId]'s registration: polling alone serves it again. */
     public suspend fun lost(accountId: String) {
         app.setPush(accountId, active = false)

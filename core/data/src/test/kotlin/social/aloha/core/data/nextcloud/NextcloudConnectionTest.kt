@@ -53,11 +53,13 @@ private class Nextcloud(var status: String? = READY, var pendingPolls: Int = 1) 
     lateinit var origin: String
     val asked = CopyOnWriteArrayList<String>()
     val authorizations = CopyOnWriteArrayList<String?>()
+    val bodies = CopyOnWriteArrayList<String>()
 
     override fun dispatch(request: RecordedRequest): MockResponse {
         val path = request.url.encodedPath
         asked += "${request.method} $path"
         authorizations += request.headers["Authorization"]
+        bodies += request.body?.utf8().orEmpty()
         return when (path) {
             "/status.php" -> status?.let { json(it) } ?: json("{}", 404)
 
@@ -78,6 +80,12 @@ private class Nextcloud(var status: String? = READY, var pendingPolls: Int = 1) 
 
             "/ocs/v2.php/core/apppassword" -> json("""{"ocs":{"data":[]}}""")
 
+            "/ocs/v2.php/apps/notifications/api/v2/webpush/vapid" -> json("""{"ocs":{"data":{"vapid":"$VAPID"}}}""")
+
+            "/ocs/v2.php/apps/notifications/api/v2/webpush" -> json("""{"ocs":{"data":[]}}""", 201)
+
+            "/ocs/v2.php/apps/notifications/api/v2/webpush/activate" -> json("""{"ocs":{"data":[]}}""", 202)
+
             else -> json("{}", 404)
         }
     }
@@ -88,6 +96,7 @@ private class Nextcloud(var status: String? = READY, var pendingPolls: Int = 1) 
     companion object {
         const val READY = """{"installed":true,"maintenance":false,"version":"36.0.0.0"}"""
         const val MAINTENANCE = """{"installed":true,"maintenance":true,"version":"36.0.0.0"}"""
+        const val VAPID = "BA1Hxzyi1RUM1b5wjxsn7nGxAszw2u61m164i3MrAIxHF6YK5h4SDYic-dRuU_RCPCfA5aq9ojSwk5Y2EmClBPs"
     }
 }
 
@@ -182,6 +191,26 @@ class NextcloudConnectionTest {
         assertEquals(ConnectStart.NotNextcloud, connection.begin(account))
         assertFalse(nextcloud.asked.any { it.endsWith("/login/v2") })
     }
+
+    @Test
+    fun `a connected account registers for the Social app's pushes, activates, and disconnecting removes it first`() =
+        runBlocking {
+            val account = signIn()
+            connection.await(account, (connection.begin(account) as ConnectStart.Opened).start)
+            assertEquals(Nextcloud.VAPID, connection.webPushVapid(account))
+            assertNull(connection.registerWebPush(account, "https://ntfy.example/up1", "pub", "secret"))
+            val registered = nextcloud.bodies.last()
+            listOf("endpoint=https%3A%2F%2Fntfy.example%2Fup1", "uaPublicKey=pub", "auth=secret", "appTypes=social")
+                .forEach { assertTrue(registered, it in registered) }
+            assertNull(connection.activateWebPush(account, "t0k"))
+            assertEquals("activationToken=t0k", nextcloud.bodies.last())
+            connection.disconnect(account)
+            val last = nextcloud.asked.takeLast(2)
+            assertEquals(
+                listOf("DELETE /ocs/v2.php/apps/notifications/api/v2/webpush", "DELETE /ocs/v2.php/core/apppassword"),
+                last,
+            )
+        }
 
     @Test
     fun `the answer is only asked for on the Nextcloud's own origin`() {

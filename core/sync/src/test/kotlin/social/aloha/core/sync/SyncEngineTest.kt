@@ -91,7 +91,7 @@ class SyncEngineTest {
         signals,
         unread,
         push,
-        PushRegistrar(context, fixture.accounts, push),
+        PushRegistrar(context, fixture.accounts, push, fixture.nextcloud),
         object : DeviceConditions {
             override val online = MutableStateFlow(true)
             override val metered = false

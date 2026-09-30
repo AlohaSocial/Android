@@ -14,6 +14,7 @@ import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import social.aloha.core.data.AccountRepository
 import social.aloha.core.data.Answer
 import social.aloha.core.data.ClientFactory
+import social.aloha.core.data.toAnswer
 import social.aloha.core.database.AccountDao
 import social.aloha.core.datastore.TokenVault
 import social.aloha.core.datastore.VaultKey
@@ -22,6 +23,7 @@ import social.aloha.core.model.LoginFlowStart
 import social.aloha.core.model.SignedInAccount
 import social.aloha.core.network.ApiClient
 import social.aloha.core.network.ApiError
+import social.aloha.core.network.ApiRequest
 import social.aloha.core.network.ApiResult
 import social.aloha.core.network.Credentials
 import social.aloha.core.network.endpoints.NextcloudEndpoints
@@ -97,21 +99,52 @@ public class NextcloudConnection @Inject constructor(
     }
 
     /** The push kinds the Nextcloud's notifications app offers this connected account. */
-    public suspend fun pushTypes(account: SignedInAccount): Answer<List<String>> {
-        val client = root(account) ?: return Answer.Missed(ApiError.NotFound)
-        return when (val answer = client.execute(NextcloudEndpoints.pushTypes())) {
-            is ApiResult.Success -> Answer.Got(answer.value)
-            is ApiResult.Failure -> Answer.Missed(answer.error)
+    internal suspend fun pushTypes(account: SignedInAccount): Answer<List<String>> =
+        root(account)?.execute(NextcloudEndpoints.pushTypes()).toAnswer()
+
+    /**
+     * The key a Web Push registration is made for, where the notifications app pushes to this person;
+     * null where it does not (no `webpush` in its push kinds, `webpush_enabled` unset).
+     */
+    public suspend fun webPushVapid(account: SignedInAccount): String? {
+        val kinds = (pushTypes(account) as? Answer.Got)?.value.orEmpty()
+        if ("webpush" !in kinds) return null
+        return (root(account)?.execute(NextcloudEndpoints.webPushVapid()) as? ApiResult.Success)?.value?.ifEmpty {
+            null
         }
     }
 
-    /** Forgets the app password on the device, then gives it back to the Nextcloud. */
+    /** Has the Nextcloud push the Social app's notifications to [endpoint]; activation follows by push. */
+    public suspend fun registerWebPush(
+        account: SignedInAccount,
+        endpoint: String,
+        publicKey: String,
+        auth: String,
+    ): ApiError? = execute(account, NextcloudEndpoints.registerWebPush(endpoint, publicKey, auth))
+
+    /** Confirms the registration with the [token] its first push carried. */
+    public suspend fun activateWebPush(account: SignedInAccount, token: String): ApiError? =
+        execute(account, NextcloudEndpoints.activateWebPush(token))
+
+    /** Removes this device's registration; the Nextcloud stops pushing to it. */
+    public suspend fun unregisterWebPush(account: SignedInAccount) {
+        execute(account, NextcloudEndpoints.unregisterWebPush())
+    }
+
+    /**
+     * Forgets the app password on the device, then gives it back to the Nextcloud, after removing the
+     * push registration it made while the password still works.
+     */
     public suspend fun disconnect(account: SignedInAccount) {
         val basic = vault.get(VaultKey.AppPassword(account.id))
+        if (basic != null) unregisterWebPush(account)
         vault.remove(VaultKey.AppPassword(account.id))
         dao.setNextcloudConnected(account.id, connected = false)
         if (basic != null) revoke(account, basic)
     }
+
+    private suspend fun execute(account: SignedInAccount, request: ApiRequest<Unit>): ApiError? =
+        (root(account)?.execute(request).toAnswer() as? Answer.Missed)?.error
 
     /** Gives [basic] back to [account]'s Nextcloud; one that cannot be reached keeps it until it expires. */
     internal suspend fun revoke(account: SignedInAccount, basic: String) {

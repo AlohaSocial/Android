@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 Aloha Social contributors
 // SPDX-License-Identifier: MIT
 
-package social.aloha.core.data.notifications
+package social.aloha.core.data.sync
 
 import android.content.Context
 import androidx.datastore.preferences.core.emptyPreferences
@@ -18,7 +18,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import social.aloha.core.data.sync.PushSubscriptions
 import social.aloha.core.datastore.AppPreferences
 import social.aloha.core.testing.InMemoryDataStore
 import social.aloha.core.testing.SignedInFixture
@@ -53,14 +52,32 @@ class PushSubscriptionsTest {
             "subscription%5Bendpoint%5D=https%3A%2F%2Fntfy.example%2Fup123",
             "subscription%5Bkeys%5D%5Bp256dh%5D=pub-key",
             "subscription%5Bkeys%5D%5Bauth%5D=auth-secret",
-            "data%5Balerts%5D%5Bmention%5D=true",
             "data%5Bpolicy%5D=all",
         ).forEach { assertTrue(it, it in body) }
+        listOf(
+            "mention", "status", "reblog", "follow", "follow_request", "favourite", "poll", "update",
+            "admin.sign_up", "admin.report",
+        ).forEach { assertTrue(it, "data%5Balerts%5D%5B$it%5D=true" in body) }
         assertTrue(push.isActive(account.id))
         ok()
         push.unsubscribe(account)
         assertEquals("DELETE", server.takeRequest(1, TimeUnit.SECONDS)!!.method)
         assertFalse(push.isActive(account.id))
+    }
+
+    @Test
+    fun `the same endpoint again needs no new subscription, and one no longer used does`() = runBlocking {
+        val account = fixture.signIn(server.url("/"))
+        val endpoint = "https://ntfy.example/up123"
+        ok()
+        push.subscribe(account, endpoint, "pub-key", "auth-secret")
+        assertFalse(push.subscribed(account.id, account.id, endpoint))
+        push.rememberEndpoint(account.id, endpoint)
+        assertTrue(push.subscribed(account.id, account.id, endpoint))
+        assertFalse(push.subscribed(account.id, account.id, "https://ntfy.example/other"))
+        ok()
+        push.unsubscribe(account)
+        assertFalse(push.subscribed(account.id, account.id, endpoint))
     }
 
     @Test

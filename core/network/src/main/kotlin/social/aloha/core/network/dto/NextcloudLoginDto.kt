@@ -30,3 +30,13 @@ internal data class LoginFlowStartDto(val poll: PollDto, val login: String) {
 internal data class AppPasswordGrantDto(val server: String, val loginName: String, val appPassword: String) {
     fun toDomain() = AppPasswordGrant(server, loginName, appPassword)
 }
+
+/** `{"ocs":{"data":{"vapid":"…"}}}` */
+@Serializable
+internal data class OcsVapidDto(val ocs: Ocs? = null) {
+    @Serializable
+    data class Ocs(val data: Data? = null)
+
+    @Serializable
+    data class Data(val vapid: String? = null)
+}
