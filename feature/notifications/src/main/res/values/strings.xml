@@ -146,4 +146,12 @@
     <string name="settings_notification_kinds">Kinds of notifications</string>
     <!-- Explains that row -->
     <string name="settings_notification_kinds_summary">Mentions, follows, favourites and more, for each account, in your phone\'s settings.</string>
+    <!-- Heading of the choice of the app that delivers notifications the moment they happen -->
+    <string name="settings_push">Instant notifications</string>
+    <!-- Choice: no push distributor, the app checks on its own -->
+    <string name="settings_push_off">Off, check regularly</string>
+    <!-- Shown when no UnifiedPush distributor is installed -->
+    <string name="settings_push_none">Install a UnifiedPush app, such as ntfy, to get notifications the moment they happen. Until then, Aloha Social checks for them regularly.</string>
+    <!-- Row that opens the list of UnifiedPush apps in the browser -->
+    <string name="settings_push_find">Find a UnifiedPush app</string>
 </resources>

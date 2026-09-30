@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import social.aloha.core.data.AccountMaintenance
 import social.aloha.core.data.AccountRemoval
 import social.aloha.core.data.AccountRepository
@@ -38,6 +39,7 @@ import social.aloha.core.navigation.NotificationsKey
 import social.aloha.core.navigation.ThreadKey
 import social.aloha.core.sync.LocalNotifications
 import social.aloha.core.sync.PostQueue
+import social.aloha.core.sync.PushRegistrar
 
 /** What the root of the app shows. */
 sealed interface AppSession {
@@ -80,6 +82,7 @@ class AppViewModel @Inject constructor(
     private val queue: PostQueue,
     private val unread: UnreadCounts,
     private val localNotifications: LocalNotifications,
+    private val push: PushRegistrar,
     @ApplicationContext private val context: Context,
 ) : ViewModel() {
     private val signingInAgain = MutableStateFlow(false)
@@ -229,6 +232,9 @@ class AppViewModel @Inject constructor(
     fun signOut() {
         viewModelScope.launch {
             accounts.activeAccount.value?.let {
+                // the server is told to stop pushing while the token still works, but an unreachable one
+                // never keeps the account here for long
+                withTimeoutOrNull(PUSH_FORGET_MILLIS) { push.forget(it) }
                 removal.signOut(it)
                 localNotifications.forget(it.id)
             }
@@ -250,6 +256,7 @@ class AppViewModel @Inject constructor(
     }
 
     private companion object {
+        const val PUSH_FORGET_MILLIS = 5_000L
         const val STOP_TIMEOUT_MILLIS = 5_000L
     }
 }

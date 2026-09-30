@@ -32,6 +32,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import social.aloha.core.data.sync.PushSubscriptions
 import social.aloha.core.data.sync.SyncSettings
 import social.aloha.core.data.sync.TimelineSignals
 import social.aloha.core.data.sync.UnreadCounts
@@ -77,12 +78,11 @@ class SyncEngineTest {
         start()
     }
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-    private val settings = SyncSettings(
-        AccountSettingsStore(InMemoryDataStore(emptyMap())),
-        AppPreferences(InMemoryDataStore(emptyPreferences())),
-    )
+    private val preferences = AppPreferences(InMemoryDataStore(emptyPreferences()))
+    private val settings = SyncSettings(AccountSettingsStore(InMemoryDataStore(emptyMap())), preferences)
     private val signals = TimelineSignals()
     private val unread = UnreadCounts()
+    private val push = PushSubscriptions(fixture.clients, preferences)
     private val heard = CopyOnWriteArrayList<Int>()
     private val engine = SyncEngine(
         fixture.accounts,
@@ -90,6 +90,8 @@ class SyncEngineTest {
         settings,
         signals,
         unread,
+        push,
+        PushRegistrar(context, fixture.accounts, push),
         object : DeviceConditions {
             override val online = MutableStateFlow(true)
             override val metered = false
@@ -101,7 +103,7 @@ class SyncEngineTest {
                 true
             },
         ),
-        BackgroundRefresh(context, fixture.accounts, settings),
+        BackgroundRefresh(context, fixture.accounts, settings, push),
         scope,
         fixture.clock,
     )
@@ -154,6 +156,15 @@ class SyncEngineTest {
         assertTrue("$wait", wait > 29.seconds && wait <= 30.seconds)
         settings.setPollFrequency(account.id, PollFrequency.Manual)
         assertNull(engine.waitBeforeNext(account))
+    }
+
+    @Test
+    fun `an account its server pushes to is polled every ten minutes, as a safety net`() = runBlocking {
+        val account = fixture.signIn(server.url("/"))
+        preferences.setPush(account.id, active = true)
+        engine.poll(account, PollScope.Full)
+        val wait = engine.waitBeforeNext(account)!!
+        assertTrue("$wait", wait > 9.minutes && wait <= 10.minutes)
     }
 
     @Test

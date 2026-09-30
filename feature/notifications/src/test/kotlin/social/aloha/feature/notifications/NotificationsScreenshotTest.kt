@@ -5,6 +5,7 @@ package social.aloha.feature.notifications
 
 import android.Manifest
 import android.app.Application
+import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.test.junit4.accessibility.enableAccessibilityChecks
 import androidx.compose.ui.test.junit4.v2.createComposeRule
@@ -32,6 +33,7 @@ import social.aloha.core.model.PolicyDecision
 import social.aloha.core.model.PollFrequency
 import social.aloha.core.model.QuietHours
 import social.aloha.core.model.Status
+import social.aloha.core.sync.Distributor
 
 /** The notifications screens, each also run through the Accessibility Test Framework checks. */
 @RunWith(RobolectricTestRunner::class)
@@ -125,6 +127,18 @@ class NotificationsScreenshotTest {
 
     @Test
     fun permission() = capture("notifications-permission") { PermissionCard(onTurnOn = {}) }
+
+    @Test
+    fun push() = capture("notifications-push") {
+        Column {
+            PushRows(
+                PushUi(listOf(Distributor("io.heckel.ntfy", "ntfy")), chosen = "io.heckel.ntfy"),
+                onDistributor = {},
+                onFind = {},
+            )
+            PushRows(PushUi(), onDistributor = {}, onFind = {})
+        }
+    }
 
     @Test
     fun empty() = capture("notifications-empty") {

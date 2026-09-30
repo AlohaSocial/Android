@@ -10,6 +10,7 @@ import javax.inject.Singleton
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.minutes
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
@@ -32,6 +33,7 @@ import social.aloha.core.data.Answer
 import social.aloha.core.data.ClientFactory
 import social.aloha.core.data.answer
 import social.aloha.core.data.di.ApplicationScope
+import social.aloha.core.data.sync.PushSubscriptions
 import social.aloha.core.data.sync.SyncSettings
 import social.aloha.core.data.sync.TimelineSignals
 import social.aloha.core.data.sync.UnreadCounts
@@ -59,6 +61,8 @@ public class SyncEngine @Inject internal constructor(
     private val settings: SyncSettings,
     private val timelines: TimelineSignals,
     private val counts: UnreadCounts,
+    private val push: PushSubscriptions,
+    private val registrar: PushRegistrar,
     private val device: DeviceConditions,
     private val listeners: Set<@JvmSuppressWildcards PollListener>,
     private val background: BackgroundRefresh,
@@ -89,6 +93,7 @@ public class SyncEngine @Inject internal constructor(
             if (loop == null) {
                 loop = scope.launch { run() }
                 scope.launch { background.keepScheduled() }
+                scope.launch { keepRegistered() }
             }
         }
     }
@@ -125,6 +130,22 @@ public class SyncEngine @Inject internal constructor(
             .collectLatest { pace -> coroutineScope { pace.keys.forEach { launch { tick(it) } } } }
     }
 
+    /** Registers again for push whenever what decides it changes: an account, its key, its Nextcloud. */
+    private suspend fun keepRegistered() {
+        accounts.accounts
+            .map { all ->
+                all.map {
+                    Triple(
+                        it.id,
+                        it.needsReauth,
+                        it.capabilities.webPushVapidKey to it.nextcloudConnected,
+                    )
+                }
+            }
+            .distinctUntilChanged()
+            .collect { registrar.registerAll() }
+    }
+
     private suspend fun tick(accountId: String) {
         while (true) {
             val wait = accounts.byId(accountId)?.let { waitBeforeNext(it) } ?: return
@@ -136,10 +157,12 @@ public class SyncEngine @Inject internal constructor(
 
     /** How long until [account] is asked again; null when it is asked only by hand. */
     internal suspend fun waitBeforeNext(account: SignedInAccount): Duration? {
-        val paced = scheduler(account).interval ?: return null
+        val scheduled = scheduler(account).interval ?: return null
+        // a pushed account is polled only as a safety net, since a push can be lost
+        val paced = if (push.isActive(account.id)) maxOf(scheduled, PUSHED_FLOOR) else scheduled
         val now = clock.millis()
         val slowed = if ((slowUntil[account.id] ?: 0) > now) paced * 2 else paced
-        val backedOff = failures[account.id]?.let { maxOf(slowed, Backoff.delay(it)) } ?: slowed
+        val backedOff = failures[account.id]?.let { maxOf(slowed, Backoff.delay(it, base = paced)) } ?: slowed
         val held = maxOf(backedOff, ((holdUntil[account.id] ?: 0) - now).milliseconds)
         return held - (now - (lastPoll[account.id] ?: 0)).milliseconds
     }
@@ -207,5 +230,6 @@ public class SyncEngine @Inject internal constructor(
 
     private companion object {
         val SLOWED_FOR = 1.hours
+        val PUSHED_FLOOR = 10.minutes
     }
 }

@@ -15,6 +15,7 @@ import dagger.assisted.AssistedInject
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
@@ -23,8 +24,10 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withTimeoutOrNull
 import social.aloha.core.data.AccountRepository
+import social.aloha.core.data.sync.PushSubscriptions
 import social.aloha.core.data.sync.SyncSettings
 import social.aloha.core.model.PollFrequency
 
@@ -50,23 +53,30 @@ internal class RefreshWorker @AssistedInject constructor(
 
 /**
  * Keeps the periodic refresh scheduled at the pace of the most frequent account, and cancelled when every
- * account refreshes only by hand or none is signed in. WorkManager allows no less than 15 minutes.
+ * account refreshes only by hand or none is signed in. WorkManager allows no less than 15 minutes; an
+ * account its server pushes to needs the refresh only as a safety net, once an hour.
  */
 public class BackgroundRefresh @Inject constructor(
     @param:ApplicationContext private val context: Context,
     private val accounts: AccountRepository,
     private val settings: SyncSettings,
+    private val push: PushSubscriptions,
 ) {
-    /** Runs until cancelled, rescheduling whenever an account or its pace changes. */
+    /** Runs until cancelled, rescheduling whenever an account, its pace or its push changes. */
     @OptIn(ExperimentalCoroutinesApi::class)
     public suspend fun keepScheduled() {
         accounts.accounts.flatMapLatest { all ->
             if (all.isEmpty()) {
                 flowOf(emptyList())
             } else {
-                combine(all.map { settings.pollFrequency(it.id) }) { it.toList() }
+                combine(
+                    all.map { account ->
+                        settings.pollFrequency(account.id).map { account.id to it }
+                    },
+                ) { it.toList() }
+                    .combine(push.active) { paces, pushed -> paces.map { (id, pace) -> Pace(pace, id in pushed) } }
             }
-        }.distinctUntilChanged().collect { frequencies -> schedule(repeatFor(frequencies)) }
+        }.distinctUntilChanged().collect { paces -> schedule(repeatFor(paces)) }
     }
 
     private fun schedule(repeat: Duration?) {
@@ -81,12 +91,17 @@ public class BackgroundRefresh @Inject constructor(
         work.enqueueUniquePeriodicWork(NAME, ExistingPeriodicWorkPolicy.UPDATE, request)
     }
 
+    /** An account's pace, and whether its server pushes to it. */
+    internal data class Pace(val frequency: PollFrequency, val pushed: Boolean = false)
+
     internal companion object {
         const val NAME = "refresh"
         private val FLOOR = 15.minutes
+        private val PUSHED = 1.hours
 
-        /** The fastest non-manual pace wins; null when there is none. */
-        fun repeatFor(frequencies: List<PollFrequency>): Duration? =
-            frequencies.mapNotNull { it.multiplier }.minOrNull()?.let { maxOf(FLOOR, FLOOR * it) }
+        /** The fastest pace of the accounts not asked only by hand wins; null when there is none. */
+        fun repeatFor(paces: List<Pace>): Duration? = paces.mapNotNull { pace ->
+            pace.frequency.multiplier?.let { if (pace.pushed) PUSHED else maxOf(FLOOR, FLOOR * it) }
+        }.minOrNull()
     }
 }

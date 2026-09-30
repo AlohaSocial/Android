@@ -40,21 +40,26 @@ import java.time.ZoneId
 import java.util.Date
 import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import social.aloha.core.data.AccountRepository
 import social.aloha.core.data.sync.SyncSettings
 import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.model.PollFrequency
 import social.aloha.core.model.QuietHours
+import social.aloha.core.sync.Distributor
+import social.aloha.core.sync.PushRegistrar
 import social.aloha.core.ui.ChoiceRows
 import social.aloha.core.ui.SettingsSection
 import social.aloha.core.ui.SwitchRow
+import social.aloha.core.ui.openInBrowser
 
 /** [quiet] is null while there are no quiet hours. */
 internal data class SyncSettingsUi(
@@ -63,12 +68,24 @@ internal data class SyncSettingsUi(
     val quiet: QuietHours? = null,
 )
 
-/** How often the active account is asked what is new, whether timelines wait for Wi-Fi, and quiet hours. */
+/** The push distributors installed, and the one chosen; null for none. */
+internal data class PushUi(val distributors: List<Distributor> = emptyList(), val chosen: String? = null)
+
+/** How the active account's news arrives: the push app, how often it is asked, Wi-Fi only and quiet hours. */
 @HiltViewModel
 internal class NotificationsSettingsViewModel @Inject constructor(
     private val accounts: AccountRepository,
     private val settings: SyncSettings,
+    private val registrar: PushRegistrar,
 ) : ViewModel() {
+    private val pushState = MutableStateFlow(PushUi(registrar.distributors(), registrar.current()))
+    val push: StateFlow<PushUi> = pushState
+
+    fun onDistributor(packageName: String?) {
+        pushState.update { it.copy(chosen = packageName) }
+        viewModelScope.launch { registrar.choose(packageName) }
+    }
+
     @OptIn(ExperimentalCoroutinesApi::class)
     val uiState: StateFlow<SyncSettingsUi> = accounts.activeAccount.filterNotNull().flatMapLatest { account ->
         combine(settings.pollFrequency(account.id), settings.wifiOnly, settings.quietHours, ::SyncSettingsUi)
@@ -102,9 +119,13 @@ internal object NotificationsSettings : SettingsSection {
     override fun Content() {
         val viewModel: NotificationsSettingsViewModel = hiltViewModel()
         val state by viewModel.uiState.collectAsStateWithLifecycle()
+        val push by viewModel.push.collectAsStateWithLifecycle()
         val context = LocalContext.current
-        SyncRows(state, viewModel::onFrequency, viewModel::onWifiOnly, viewModel::onQuietHours) {
-            openSettings(context)
+        Column {
+            PushRows(push, viewModel::onDistributor) { openInBrowser(context, DISTRIBUTORS) }
+            SyncRows(state, viewModel::onFrequency, viewModel::onWifiOnly, viewModel::onQuietHours) {
+                openSettings(context)
+            }
         }
     }
 }
@@ -142,6 +163,26 @@ internal fun SyncRows(
             supportingContent = { Text(stringResource(R.string.settings_notification_kinds_summary)) },
         )
     }
+}
+
+/** Which app delivers pushes; without one, the app polls as it always does. */
+@Composable
+internal fun PushRows(state: PushUi, onDistributor: (String?) -> Unit, onFind: () -> Unit) {
+    if (state.distributors.isEmpty()) {
+        ListItem(
+            modifier = Modifier.clickable(role = Role.Button, onClick = onFind),
+            headlineContent = { Text(stringResource(R.string.settings_push_find)) },
+            supportingContent = { Text(stringResource(R.string.settings_push_none)) },
+        )
+        return
+    }
+    ChoiceRows(
+        stringResource(R.string.settings_push),
+        listOf<Pair<String?, String>>(null to stringResource(R.string.settings_push_off)) +
+            state.distributors.map { it.packageName to it.label },
+        state.chosen,
+        onDistributor,
+    )
 }
 
 @Composable
@@ -194,6 +235,8 @@ private fun HourDialog(hour: Int, onDismiss: () -> Unit, onPick: (Int) -> Unit) 
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.settings_quiet_cancel)) } },
     )
 }
+
+private const val DISTRIBUTORS = "https://unifiedpush.org/users/distributors/"
 
 @Module
 @InstallIn(SingletonComponent::class)

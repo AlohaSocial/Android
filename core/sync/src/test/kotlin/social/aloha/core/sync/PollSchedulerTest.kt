@@ -45,13 +45,4 @@ class PollSchedulerTest {
         assertEquals(PollScope.Full, scheduler.copy(wifiOnly = true).scope)
         assertEquals(PollScope.NotificationsOnly, scheduler.copy(metered = true, wifiOnly = true).scope)
     }
-
-    @Test
-    fun `the background refresh follows the fastest account, never below the fifteen minute floor`() {
-        assertEquals(15.minutes, BackgroundRefresh.repeatFor(listOf(PollFrequency.Frequent)))
-        assertEquals(15.minutes, BackgroundRefresh.repeatFor(listOf(PollFrequency.BatterySaver, PollFrequency.Normal)))
-        assertEquals(45.minutes, BackgroundRefresh.repeatFor(listOf(PollFrequency.BatterySaver, PollFrequency.Manual)))
-        assertNull(BackgroundRefresh.repeatFor(listOf(PollFrequency.Manual)))
-        assertNull(BackgroundRefresh.repeatFor(emptyList()))
-    }
 }
