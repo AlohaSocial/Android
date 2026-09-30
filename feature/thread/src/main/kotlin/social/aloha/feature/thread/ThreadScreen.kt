@@ -59,6 +59,7 @@ import social.aloha.core.navigation.StatusListKind
 import social.aloha.core.ui.ProvideLinkRouting
 import social.aloha.core.ui.StatusActions
 import social.aloha.core.ui.StatusCard
+import social.aloha.core.ui.TroubleStrip
 import social.aloha.core.ui.fullDate
 import social.aloha.core.ui.readingColumn
 
@@ -216,16 +217,7 @@ private fun History(versions: List<EditVersion>, onDismiss: () -> Unit) {
 
 @Composable
 private fun TroubleStrip(trouble: Trouble) {
-    val text = if (trouble == Trouble.Offline) R.string.thread_offline else R.string.thread_error
-    Surface(color = MaterialTheme.colorScheme.secondaryContainer, modifier = Modifier.fillMaxWidth()) {
-        Text(
-            stringResource(text),
-            style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier
-                .padding(horizontal = AlohaSpacing.m, vertical = AlohaSpacing.xs)
-                .semantics { liveRegion = LiveRegionMode.Polite },
-        )
-    }
+    TroubleStrip(stringResource(if (trouble == Trouble.Offline) R.string.thread_offline else R.string.thread_error))
 }
 
 @Composable

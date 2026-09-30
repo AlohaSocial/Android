@@ -85,6 +85,7 @@ import social.aloha.core.ui.NearEndEffect
 import social.aloha.core.ui.StatusActions
 import social.aloha.core.ui.StatusCard
 import social.aloha.core.ui.StatusRowUi
+import social.aloha.core.ui.TroubleStrip
 import social.aloha.core.ui.readingColumn
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -327,7 +328,6 @@ private fun Options(state: TimelineUiState, actions: TimelineScreenActions) {
     }
 }
 
-/** Inline over the kept rows, never a blocking overlay: what is on screen stays readable. */
 @Composable
 private fun TroubleStrip(trouble: Trouble) {
     val text = when (trouble) {
@@ -335,16 +335,7 @@ private fun TroubleStrip(trouble: Trouble) {
         Trouble.RateLimited -> R.string.timeline_rate_limited
         Trouble.Server -> R.string.timeline_error
     }
-    Surface(color = MaterialTheme.colorScheme.secondaryContainer, modifier = Modifier.fillMaxWidth()) {
-        Text(
-            stringResource(text),
-            style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier.padding(horizontal = AlohaSpacing.m, vertical = AlohaSpacing.xs).semantics {
-                liveRegion =
-                    LiveRegionMode.Polite
-            },
-        )
-    }
+    TroubleStrip(stringResource(text))
 }
 
 @Composable
