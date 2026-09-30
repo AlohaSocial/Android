@@ -59,7 +59,7 @@ internal class StatusListViewModel @AssistedInject constructor(
 
     private fun load(colors: RichTextColors) {
         viewModelScope.launch {
-            val account = accounts.all().firstOrNull { it.id == key.readerId }
+            val account = accounts.byId(key.readerId)
             state.value = if (account == null) StatusListState.Failed(Trouble.Server) else fetch(account, colors)
         }
     }

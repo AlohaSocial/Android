@@ -48,7 +48,7 @@ internal class OutboxWorker @AssistedInject constructor(
     override suspend fun getForegroundInfo(): ForegroundInfo = notifications.sending(id)
 
     override suspend fun doWork(): Result {
-        val account = accounts.all().firstOrNull { it.id == inputData.getString(ACCOUNT) } ?: return Result.success()
+        val account = inputData.getString(ACCOUNT)?.let { accounts.byId(it) } ?: return Result.success()
         var outcome: Result? = null
         var foreground = false
         while (outcome == null) {

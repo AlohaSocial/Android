@@ -64,6 +64,9 @@ public class AccountRepository @Inject constructor(
     /** The accounts as they are in the database right now, for work that must not act on a stale list. */
     public suspend fun all(): List<SignedInAccount> = dao.all().map { it.toDomain() }
 
+    /** One account as it is in the database right now, or null once it is signed out. */
+    public suspend fun byId(id: String): SignedInAccount? = dao.get(id)?.toDomain()
+
     /** Stores a newly signed-in account (or refreshes one signed in again) and makes it active. */
     public suspend fun signedIn(account: NewAccount, token: AccessToken): SignedInAccount {
         val existing = dao.find(account.host, account.serverAccountId)
@@ -169,20 +172,18 @@ public class AccountRepository @Inject constructor(
         displayName = displayName,
         avatarUrl = avatarUrl,
         headerUrl = headerUrl,
-        capabilities = capabilities(),
+        capabilities = capabilitiesJson?.let {
+            try {
+                json.decodeFromString(ServerCapabilities.serializer(), it)
+            } catch (_: SerializationException) {
+                null
+            }
+        } ?: ServerCapabilities.minimal(apiBase),
         needsReauth = needsReauth,
         profilePending = profilePending,
         addedAt = Instant.ofEpochMilli(addedAt),
         nextcloudConnected = nextcloudConnected,
     )
-
-    private fun AccountEntity.capabilities(): ServerCapabilities = capabilitiesJson?.let {
-        try {
-            json.decodeFromString(ServerCapabilities.serializer(), it)
-        } catch (_: SerializationException) {
-            null
-        }
-    } ?: ServerCapabilities.minimal(apiBase)
 }
 
 /** What sign-in learned about a new account. */

@@ -326,7 +326,7 @@ internal class ComposerViewModel @AssistedInject constructor(
     fun onAuthor(id: String) {
         if (poster.posted > 0 || control.value.posting) return
         viewModelScope.launch {
-            val next = accounts.all().firstOrNull { it.id == id } ?: return@launch
+            val next = accounts.byId(id) ?: return@launch
             parent?.let { answering ->
                 val there = lookup.post(next, answering.url ?: answering.uri)
                     ?.let { (compose.status(next, it) as? Answer.Got)?.value }
@@ -384,7 +384,7 @@ internal class ComposerViewModel @AssistedInject constructor(
     }
 
     private suspend fun start() {
-        val account = accounts.all().firstOrNull { it.id == key.readerId } ?: return
+        val account = accounts.byId(key.readerId) ?: return
         val opened = opener.open(account, key)
         if (opened !is Opened.Writing) {
             // ponytail: closes without a word; a post going out shows as sending in the drafts list

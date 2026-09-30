@@ -115,7 +115,7 @@ internal class PeopleViewModel @AssistedInject constructor(
         val mapper = mapper ?: return
         state.update { it.copy(loading = true) }
         viewModelScope.launch {
-            val reader = accounts.all().firstOrNull { it.id == key.readerId }
+            val reader = accounts.byId(key.readerId)
             val answer = reader?.let {
                 profiles.people(it, key.accountId, followers = key.kind == PeopleKind.Followers, next)
             }

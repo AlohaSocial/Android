@@ -134,7 +134,7 @@ internal class ReportViewModel @AssistedInject constructor(
         }
     }
 
-    private suspend fun reader() = accounts.all().firstOrNull { it.id == key.readerId }
+    private suspend fun reader() = accounts.byId(key.readerId)
 
     private companion object {
         /** Mastodon's limit on a report's comment. */
