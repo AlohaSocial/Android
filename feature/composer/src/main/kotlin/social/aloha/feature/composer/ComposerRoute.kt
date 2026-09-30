@@ -8,6 +8,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -21,6 +22,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -49,6 +51,8 @@ public fun ComposerRoute(key: ComposerKey, onDone: () -> Unit, modifier: Modifie
         rememberSaveable { mutableStateOf(false) },
     )
     val actions = rememberActions(viewModel, state, dialogs) { done() }
+    val hue = MaterialTheme.colorScheme.primary.toArgb()
+    LaunchedEffect(hue) { viewModel.cards.onHue(hue) }
 
     BackHandler(onBack = actions::onClose)
     LaunchedEffect(state.done) { if (state.done) done() }
@@ -127,6 +131,16 @@ private fun rememberActions(
             override fun onSensitive(sensitive: Boolean) {
                 viewModel.attachments.sensitive.value = sensitive
             }
+
+            override fun onCard(on: Boolean) {
+                viewModel.cards.onCard(on)
+                if (on) viewModel.cards.onText(viewModel.segments.first().text)
+            }
+
+            override fun onCardBackground(index: Int) {
+                viewModel.cards.onBackground(index)
+                viewModel.cards.onText(viewModel.segments.first().text)
+            }
         }
     }
 }
@@ -142,8 +156,9 @@ private fun ComposerDialogs(state: ComposerUiState, viewModel: ComposerViewModel
         if (attachment == null) {
             editing = null
         } else {
-            MediaEditor(attachment) { description, focus ->
+            MediaEditor(attachment) { description, focus, filter ->
                 viewModel.attachments.describe(id, description, focus)
+                viewModel.attachments.applyFilter(id, filter)
                 editing = null
             }
         }
@@ -229,6 +244,8 @@ private fun postMessage(failure: PostFailure?): String? = when (failure) {
     is PostFailure.Unreached -> stringResource(R.string.composer_unreached)
 
     PostFailure.ReplyNotFound -> stringResource(R.string.composer_reply_not_found)
+
+    PostFailure.CardFailed -> stringResource(R.string.composer_card_failed)
 
     null -> null
 }

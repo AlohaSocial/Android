@@ -49,4 +49,9 @@ internal interface MediaActions {
     fun onRetryMedia(id: String)
 
     fun onSensitive(sensitive: Boolean)
+
+    /** Turns the short post into a card, or back into text. */
+    fun onCard(on: Boolean)
+
+    fun onCardBackground(index: Int)
 }

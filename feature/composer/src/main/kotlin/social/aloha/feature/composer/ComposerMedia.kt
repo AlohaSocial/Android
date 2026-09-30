@@ -4,6 +4,7 @@
 package social.aloha.feature.composer
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -11,6 +12,7 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,6 +21,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -40,6 +45,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
@@ -184,10 +191,11 @@ private fun uploadLabel(upload: UploadState): String? = when (upload) {
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun MediaEditor(attachment: Attachment, onDone: (String, Focus?) -> Unit) {
+internal fun MediaEditor(attachment: Attachment, onDone: (String, Focus?, PhotoFilter) -> Unit) {
     var description by remember(attachment.id) { mutableStateOf(attachment.description) }
     var focus by remember(attachment.id) { mutableStateOf(attachment.focus) }
-    ModalBottomSheet(onDismissRequest = { onDone(description, focus) }) {
+    var filter by remember(attachment.id) { mutableStateOf(attachment.filter) }
+    ModalBottomSheet(onDismissRequest = { onDone(description, focus, filter) }) {
         Column(
             Modifier.padding(horizontal = AlohaSpacing.m).padding(bottom = AlohaSpacing.l),
             verticalArrangement = Arrangement.spacedBy(AlohaSpacing.s),
@@ -197,7 +205,8 @@ internal fun MediaEditor(attachment: Attachment, onDone: (String, Focus?) -> Uni
                 style = MaterialTheme.typography.titleLarge,
                 modifier = Modifier.semantics { heading() },
             )
-            if (attachment.isPicture) FocusPicker(attachment, focus) { focus = it }
+            if (attachment.isPicture) FocusPicker(attachment, focus, filter) { focus = it }
+            if (attachment.filterable) FilterRow(attachment, filter) { filter = it }
             OutlinedTextField(
                 value = description,
                 onValueChange = { description = it.take(Attachments.DESCRIPTION_LIMIT) },
@@ -215,7 +224,7 @@ internal fun MediaEditor(attachment: Attachment, onDone: (String, Focus?) -> Uni
                 minLines = 3,
                 modifier = Modifier.fillMaxWidth(),
             )
-            Button(onClick = { onDone(description, focus) }, modifier = Modifier.align(Alignment.End)) {
+            Button(onClick = { onDone(description, focus, filter) }, modifier = Modifier.align(Alignment.End)) {
                 Text(stringResource(R.string.composer_media_done))
             }
         }
@@ -223,14 +232,24 @@ internal fun MediaEditor(attachment: Attachment, onDone: (String, Focus?) -> Uni
 }
 
 @Composable
-private fun FocusPicker(attachment: Attachment, focus: Focus?, onFocus: (Focus) -> Unit) {
+private fun FocusPicker(attachment: Attachment, focus: Focus?, filter: PhotoFilter, onFocus: (Focus) -> Unit) {
     val hint = stringResource(R.string.composer_media_focus_hint)
+    // a tap sets the point; a screen reader or a switch picks it from the middle and the edges
+    val points = listOf(
+        R.string.composer_media_focus_centre to Focus(0f, 0f),
+        R.string.composer_media_focus_top to Focus(0f, EDGE),
+        R.string.composer_media_focus_bottom to Focus(0f, -EDGE),
+        R.string.composer_media_focus_left to Focus(-EDGE, 0f),
+        R.string.composer_media_focus_right to Focus(EDGE, 0f),
+    ).map { (label, point) -> stringResource(label) to point }
     Column(verticalArrangement = Arrangement.spacedBy(AlohaSpacing.xs)) {
         Box(Modifier.fillMaxWidth().heightIn(max = PREVIEW).aspectRatio(1f, matchHeightConstraintsFirst = true)) {
+            // the choice shows over the picture as picked, so trying filters costs nothing
             AsyncImage(
-                attachment.file,
+                attachment.original ?: attachment.file,
                 contentDescription = null,
                 contentScale = ContentScale.Fit,
+                colorFilter = filter.preview(),
                 modifier = Modifier.fillMaxSize().pointerInput(Unit) {
                     detectTapGestures { tap ->
                         // Mastodon's focus runs from −1 to 1 from the centre, with y pointing up
@@ -256,6 +275,107 @@ private fun FocusPicker(attachment: Attachment, focus: Focus?, onFocus: (Focus) 
     }
 }
 
+/**
+ * The card as it will be posted, drawn by the same code as the picture that is uploaded, and its six
+ * backgrounds; the words themselves stay in the box above, so the picture says nothing new aloud.
+ */
+@Composable
+internal fun CardPreview(card: CardUi, actions: ComposerActions) {
+    Column(verticalArrangement = Arrangement.spacedBy(AlohaSpacing.s)) {
+        card.preview?.let { preview ->
+            Image(
+                preview,
+                contentDescription = null,
+                modifier = Modifier.fillMaxWidth().heightIn(max = PREVIEW).aspectRatio(1f, true)
+                    .clip(MaterialTheme.shapes.medium),
+            )
+        }
+        Row(Modifier.selectableGroup(), horizontalArrangement = Arrangement.spacedBy(AlohaSpacing.s)) {
+            card.backgrounds.forEachIndexed { index, colour ->
+                val selected = index == card.background
+                val name = stringResource(R.string.composer_card_background, index + 1)
+                Box(
+                    Modifier
+                        .size(SWATCH_TARGET)
+                        .selectable(selected, role = Role.RadioButton) { actions.onCardBackground(index) }
+                        .semantics { contentDescription = name },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Box(
+                        Modifier
+                            .size(SWATCH)
+                            .clip(CircleShape)
+                            .background(Color(colour))
+                            .then(
+                                if (selected) {
+                                    Modifier.border(3.dp, MaterialTheme.colorScheme.onSurface, CircleShape)
+                                } else {
+                                    Modifier
+                                },
+                            ),
+                    )
+                }
+            }
+        }
+    }
+}
+
+/** The eight filters over the picture as it was picked, each named, the chosen one marked. */
+@Composable
+private fun FilterRow(attachment: Attachment, chosen: PhotoFilter, onFilter: (PhotoFilter) -> Unit) {
+    LazyRow(
+        horizontalArrangement = Arrangement.spacedBy(AlohaSpacing.s),
+        modifier = Modifier.selectableGroup(),
+    ) {
+        items(PhotoFilter.entries, key = { it.name }) { filter ->
+            val selected = filter == chosen
+            Column(
+                Modifier
+                    .clip(MaterialTheme.shapes.small)
+                    .selectable(selected, role = Role.RadioButton) { onFilter(filter) }
+                    .padding(AlohaSpacing.xxs),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                AsyncImage(
+                    attachment.original ?: attachment.file,
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    colorFilter = filter.preview(),
+                    modifier = Modifier
+                        .size(FILTER_TILE)
+                        .clip(MaterialTheme.shapes.small)
+                        .then(
+                            if (selected) {
+                                Modifier.border(2.dp, MaterialTheme.colorScheme.primary, MaterialTheme.shapes.small)
+                            } else {
+                                Modifier
+                            },
+                        ),
+                )
+                Text(stringResource(filter.label), style = MaterialTheme.typography.labelMedium)
+            }
+        }
+    }
+}
+
+private fun PhotoFilter.preview(): ColorFilter? =
+    if (this == PhotoFilter.Original) null else ColorFilter.colorMatrix(ColorMatrix(androidMatrix))
+
+private val PhotoFilter.label: Int
+    get() = when (this) {
+        PhotoFilter.Original -> R.string.composer_filter_original
+        PhotoFilter.Mono -> R.string.composer_filter_mono
+        PhotoFilter.Noir -> R.string.composer_filter_noir
+        PhotoFilter.Warm -> R.string.composer_filter_warm
+        PhotoFilter.Cool -> R.string.composer_filter_cool
+        PhotoFilter.Vivid -> R.string.composer_filter_vivid
+        PhotoFilter.Faded -> R.string.composer_filter_faded
+        PhotoFilter.Sepia -> R.string.composer_filter_sepia
+    }
+
+private val FILTER_TILE = 64.dp
+private val SWATCH = 32.dp
+private val SWATCH_TARGET = 48.dp
 private val TILE = 96.dp
 private val PROGRESS = 36.dp
 private val PREVIEW = 320.dp

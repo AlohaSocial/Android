@@ -42,7 +42,13 @@ internal data class Attachment(
     /** What the server has, so only what changed is sent before posting. */
     val sentDescription: String = "",
     val sentFocus: Focus? = null,
+    /** The picture as it was picked, kept on disk so a second filter starts from it, not the first. */
+    val original: File? = null,
+    val filter: PhotoFilter = PhotoFilter.Original,
 ) {
+    /** A GIF or animated WebP takes no filter; drawn through one it would lose its motion. */
+    val filterable: Boolean get() = isPicture && mimeType != "image/gif" && mimeType != "image/webp"
+
     val isPicture: Boolean get() = mimeType.startsWith("image/")
     val mediaId: String? get() = (upload as? UploadState.Done)?.mediaId
 }
@@ -107,7 +113,7 @@ internal class Attachments(
 
     /** The thread gained or lost a post: [count] lists, the removed post's files let go. */
     fun resize(count: Int, removed: Int? = null) {
-        removed?.let { index -> all.value.getOrNull(index)?.forEach(::release) }
+        removed?.let { index -> all.value.getOrNull(index)?.forEach { release(it, forGood = true) } }
         all.update { lists ->
             val kept = if (removed == null) lists else lists.filterIndexed { i, _ -> i != removed }
             kept.take(count) + List((count - kept.size).coerceAtLeast(0)) { emptyList() }
@@ -115,12 +121,56 @@ internal class Attachments(
     }
 
     fun remove(id: String) {
-        find(id)?.let(::release)
+        find(id)?.let { release(it, forGood = true) }
         all.update { lists -> lists.map { list -> list.filterNot { it.id == id } } }
     }
 
     fun describe(id: String, description: String, focus: Focus?) = change(id) {
         it.copy(description = description.take(DESCRIPTION_LIMIT), focus = focus)
+    }
+
+    /**
+     * Bakes [filter] into [id] and uploads the result in its place: no route replaces the bytes
+     * behind a media id, so a filter after uploading is a second upload. The description carries
+     * over; the first upload is simply let go, for the server's own sweep of unattached media.
+     */
+    fun applyFilter(id: String, filter: PhotoFilter) {
+        val account = account ?: return
+        val attachment = find(id)?.takeIf { it.filterable && it.filter != filter } ?: return
+        val original = attachment.original ?: attachment.file
+        val segment = all.value.indexOfFirst { list -> list.any { it.id == id } }
+        scope.launch {
+            val picked = Picked(original, attachment.fileName, attachment.mimeType)
+            val result = if (filter == PhotoFilter.Original) {
+                picked
+            } else {
+                withContext(Dispatchers.IO) { preparation.filtered(picked, filter) } ?: return@launch
+            }
+            release(attachment, keepFile = attachment.file == original)
+            val next = attachment.copy(
+                file = result.file,
+                mimeType = result.mimeType,
+                original = original,
+                filter = filter,
+                sentDescription = "",
+            )
+            start(account, segment, result, next)
+        }
+    }
+
+    /** Attaches [picked], already fit for the server, to post [segment] with [description]; its id. */
+    fun addPrepared(segment: Int, picked: Picked, description: String): String? {
+        val account = account ?: return null
+        val attachment = Attachment(
+            UUID.randomUUID().toString(),
+            picked.file,
+            picked.fileName,
+            picked.mimeType,
+            description = description,
+            sentDescription = description,
+        )
+        start(account, segment, picked, attachment, isNew = true)
+        return attachment.id
     }
 
     /** Uploads [id] again, after a failure. */
@@ -129,8 +179,8 @@ internal class Attachments(
         val attachment = find(id) ?: return
         val segment = all.value.indexOfFirst { list -> list.any { it.id == id } }
         release(attachment, keepFile = true)
-        all.update { lists -> lists.map { list -> list.filterNot { it.id == id } } }
-        start(account, segment, Picked(attachment.file, attachment.fileName, attachment.mimeType), attachment)
+        val again = attachment.copy(sentDescription = "")
+        start(account, segment, Picked(attachment.file, attachment.fileName, attachment.mimeType), again)
     }
 
     /**
@@ -145,39 +195,53 @@ internal class Attachments(
 
     /** Lets go of everything: the uploads still running and the app's copies of the files. */
     fun clear() {
-        all.value.flatten().forEach(::release)
+        all.value.flatten().forEach { release(it, forGood = true) }
         all.value = listOf(emptyList())
     }
 
-    private fun start(account: SignedInAccount, segment: Int, picked: Picked, before: Attachment? = null) {
-        val attachment = before?.copy(upload = UploadState.Queued, sentDescription = "", sentFocus = null)
+    /**
+     * Uploads [picked] as [before] (a new attachment when null), in its place when it is being
+     * uploaded again, at the end of post [segment] when [isNew]; a description it already has goes
+     * with the upload.
+     */
+    private fun start(
+        account: SignedInAccount,
+        segment: Int,
+        picked: Picked,
+        before: Attachment? = null,
+        isNew: Boolean = before == null,
+    ) {
+        val attachment = before?.copy(upload = UploadState.Queued, sentFocus = null)
             ?: Attachment(UUID.randomUUID().toString(), picked.file, picked.fileName, picked.mimeType)
-        val work = uploads.enqueue(account, LocalMedia(picked.file, picked.fileName, picked.mimeType, null))
+        val description = attachment.sentDescription.takeIf { isNew && it.isNotEmpty() }
+        val work = uploads.enqueue(account, LocalMedia(picked.file, picked.fileName, picked.mimeType, description))
         works[attachment.id] = work
-        all.update { lists ->
-            lists.mapIndexed { index, list -> if (index == segment.coerceAtLeast(0)) list + attachment else list }
+        // one uploaded again keeps its place in the strip; a new one goes at the end
+        if (isNew) {
+            all.update { it.appended(segment, attachment) }
+        } else {
+            all.update { lists -> lists.map { list -> list.map { if (it.id == attachment.id) attachment else it } } }
         }
         watching[attachment.id] = scope.launch {
             uploads.observe(work).collect { state -> change(attachment.id) { it.copy(upload = state) } }
         }
     }
 
-    private fun release(attachment: Attachment, keepFile: Boolean = false) {
+    /**
+     * Lets go of [attachment]: its upload while unfinished and, unless [keepFile], its file; [forGood]
+     * also deletes the original a filter started from.
+     */
+    private fun release(attachment: Attachment, keepFile: Boolean = false, forGood: Boolean = false) {
         watching.remove(attachment.id)?.cancel()
         works.remove(attachment.id)?.let { if (attachment.mediaId == null) uploads.cancel(it) }
         if (!keepFile) attachment.file.delete()
+        if (forGood) attachment.original?.takeIf { it != attachment.file }?.delete()
     }
 
     private fun find(id: String) = all.value.flatten().firstOrNull { it.id == id }
 
     private fun change(id: String, change: (Attachment) -> Attachment) {
         all.update { lists -> lists.map { list -> list.map { if (it.id == id) change(it) else it } } }
-    }
-
-    private fun Preflight.toFailure(): AttachFailure = when (this) {
-        is Preflight.Unsupported -> AttachFailure.Unsupported(mimeType)
-        is Preflight.TooLarge -> AttachFailure.TooLarge(limitBytes)
-        else -> AttachFailure.Unreadable
     }
 
     companion object {
@@ -200,4 +264,10 @@ private fun update(attachment: Attachment) = checkNotNull(attachment.mediaId).le
     attachment.focus?.let {
         MediaEndpoints.updateFocus(id, it.x.toDouble(), it.y.toDouble(), attachment.description)
     } ?: MediaEndpoints.updateDescription(id, attachment.description)
+}
+
+private fun Preflight.toFailure(): AttachFailure = when (this) {
+    is Preflight.Unsupported -> AttachFailure.Unsupported(mimeType)
+    is Preflight.TooLarge -> AttachFailure.TooLarge(limitBytes)
+    else -> AttachFailure.Unreadable
 }

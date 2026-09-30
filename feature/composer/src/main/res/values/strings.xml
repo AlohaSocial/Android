@@ -180,4 +180,26 @@
     <string name="composer_settings_warn_description">Warn about media without a description</string>
     <!-- Summary under the setting that warns about media without descriptions -->
     <string name="composer_settings_warn_description_summary">A reminder before posting; it never stops the post.</string>
+    <!-- Picture filter: the picture as it was -->
+    <string name="composer_filter_original">Original</string>
+    <!-- Picture filter: black and white -->
+    <string name="composer_filter_mono">Mono</string>
+    <!-- Picture filter: black and white with more contrast -->
+    <string name="composer_filter_noir">Noir</string>
+    <!-- Picture filter: warmer colours -->
+    <string name="composer_filter_warm">Warm</string>
+    <!-- Picture filter: cooler colours -->
+    <string name="composer_filter_cool">Cool</string>
+    <!-- Picture filter: stronger colours -->
+    <string name="composer_filter_vivid">Vivid</string>
+    <!-- Picture filter: paler, softer colours -->
+    <string name="composer_filter_faded">Faded</string>
+    <!-- Picture filter: brown old-photograph tones -->
+    <string name="composer_filter_sepia">Sepia</string>
+    <!-- Toolbar toggle that posts a short text drawn big on colour, as a picture -->
+    <string name="composer_card">Post as a card</string>
+    <!-- One of the card's background colours; the placeholder is its number, 1 to 6 -->
+    <string name="composer_card_background">Background %1$d</string>
+    <!-- Error when the card could not be drawn or uploaded, so nothing was posted -->
+    <string name="composer_card_failed">The card couldn\'t be made, so nothing was posted.</string>
 </resources>

@@ -6,10 +6,15 @@ package social.aloha.feature.composer
 import android.content.ContentResolver
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Canvas
+import android.graphics.ColorMatrix
+import android.graphics.ColorMatrixColorFilter
 import android.graphics.ImageDecoder
+import android.graphics.Paint
 import android.net.Uri
 import android.os.Build
 import android.provider.OpenableColumns
+import androidx.core.graphics.createBitmap
 import androidx.core.graphics.scale
 import java.io.File
 import java.util.UUID
@@ -120,8 +125,44 @@ internal class MediaPreparation(private val resolver: ContentResolver, private v
         return null
     }
 
+    /**
+     * [original] drawn through [filter] into a new file, or null for a picture a filter cannot touch:
+     * a GIF or animated WebP would come back as its first frame. Never throws; a filter is a
+     * decoration, and losing an upload over one is not worth it.
+     */
+    fun filtered(original: Picked, filter: PhotoFilter): Picked? {
+        if (original.mimeType in UNFILTERABLE) return null
+        val source = decode(original.file) ?: return null
+        val png = original.mimeType == "image/png"
+        val mime = if (png) "image/png" else "image/jpeg"
+        val target = newFile(extensionFor(mime))
+        var drawn: Bitmap? = null
+        return runCatching {
+            val canvas = createBitmap(source.width, source.height).also { drawn = it }
+            val paint = Paint().apply { colorFilter = ColorMatrixColorFilter(ColorMatrix(filter.androidMatrix)) }
+            Canvas(canvas).drawBitmap(source, 0f, 0f, paint)
+            write(canvas, png, target)
+            Picked(target, rename(original.fileName, mime), mime)
+        }.getOrElse {
+            target.delete()
+            null
+        }.also {
+            source.recycle()
+            drawn?.recycle()
+        }
+    }
+
+    private fun newFile(extension: String): File {
+        directory.mkdirs()
+        return File(directory, UUID.randomUUID().toString() + extension)
+    }
+
+    private fun write(bitmap: Bitmap, png: Boolean, target: File) = target.outputStream().use { out ->
+        bitmap.compress(if (png) Bitmap.CompressFormat.PNG else Bitmap.CompressFormat.JPEG, QUALITY, out)
+    }
+
+    /** [file] decoded in ordinary memory (a hardware bitmap cannot be scaled), at most [MAX_EDGE] across. */
     private fun decode(file: File): Bitmap? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-        // in ordinary memory: a hardware bitmap cannot be scaled
         runCatching {
             ImageDecoder.decodeBitmap(ImageDecoder.createSource(file)) { decoder, info, _ ->
                 decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
@@ -144,22 +185,14 @@ internal class MediaPreparation(private val resolver: ContentResolver, private v
             if (cursor.moveToFirst()) cursor.getString(0) else null
         }
 
-    private fun extension(mime: String): String = when (mime) {
-        "image/jpeg" -> ".jpg"
-        "image/png" -> ".png"
-        "image/gif" -> ".gif"
-        "image/webp" -> ".webp"
-        "image/heic", "image/heif" -> ".heic"
-        "video/mp4" -> ".mp4"
-        "video/quicktime" -> ".mov"
-        else -> ""
-    }
+    private fun rename(name: String, mime: String): String = name.substringBeforeLast('.') + extensionFor(mime)
 
-    private fun rename(name: String, mime: String): String = name.substringBeforeLast('.') + extension(mime)
-
-    private companion object {
-        const val QUALITY = 92
-        const val STEP = 0.75
-        const val ATTEMPTS = 6
+    companion object {
+        /** Moving pictures, which a filter would flatten to their first frame. */
+        val UNFILTERABLE = setOf("image/gif", "image/webp")
+        private const val MAX_EDGE = 4_096
+        private const val QUALITY = 92
+        private const val STEP = 0.75
+        private const val ATTEMPTS = 6
     }
 }

@@ -34,6 +34,9 @@ internal sealed interface PostFailure {
 
     /** The post being answered cannot be found from the account chosen. */
     data object ReplyNotFound : PostFailure
+
+    /** The card could not be drawn or uploaded; nothing was posted rather than plain text instead. */
+    data object CardFailed : PostFailure
 }
 
 @Immutable
@@ -63,6 +66,9 @@ internal data class ComposerUiState(
     /** How many attachments one post may carry on this server. */
     val maxAttachments: Int = 4,
     val attachFailure: AttachFailure? = null,
+    val card: CardUi = CardUi(),
+    /** Whether the post is short and plain enough to go out as a card. */
+    val cardFits: Boolean = false,
     /** Whether to warn before posting pictures without a description. */
     val warnMissingDescription: Boolean = true,
     /** How many segments of the thread are already posted; a retry starts after them. */

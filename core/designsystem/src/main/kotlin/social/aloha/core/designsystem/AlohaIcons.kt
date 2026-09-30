@@ -61,6 +61,7 @@ import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.outlined.SmartToy
 import androidx.compose.material.icons.outlined.StarBorder
+import androidx.compose.material.icons.outlined.TextFields
 import androidx.compose.material.icons.outlined.ThumbDown
 import androidx.compose.material.icons.outlined.Translate
 import androidx.compose.material.icons.outlined.VideoLibrary
@@ -148,4 +149,5 @@ public object AlohaIcons {
     public val AddMedia: ImageVector = Icons.Outlined.AddPhotoAlternate
     public val AttachFile: ImageVector = Icons.Outlined.AttachFile
     public val Retry: ImageVector = Icons.Outlined.Refresh
+    public val TextCard: ImageVector = Icons.Outlined.TextFields
 }

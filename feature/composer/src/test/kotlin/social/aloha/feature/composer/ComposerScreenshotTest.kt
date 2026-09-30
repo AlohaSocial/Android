@@ -5,6 +5,7 @@ package social.aloha.feature.composer
 
 import android.app.Application
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.test.junit4.accessibility.enableAccessibilityChecks
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onRoot
@@ -54,6 +55,8 @@ class ComposerScreenshotTest {
         override fun onRemoveMedia(id: String) = Unit
         override fun onRetryMedia(id: String) = Unit
         override fun onSensitive(sensitive: Boolean) = Unit
+        override fun onCard(on: Boolean) = Unit
+        override fun onCardBackground(index: Int) = Unit
     }
 
     private val alice = Author("a", "@alice@cloud.example", "Alice", null)
@@ -124,6 +127,26 @@ class ComposerScreenshotTest {
 
     @Test
     fun posting() = capture("composer-posting") { NewPost(fresh.copy(posting = true)) }
+
+    @Test
+    fun card() = capture("composer-card") {
+        val text = "Paddle out at sunrise, back for breakfast 🌅"
+        val backgrounds = listOf(0xFF8E4A3A.toInt(), 0xFF00605A.toInt(), 0xFF3A3F9F.toInt())
+        ComposerScreen(
+            fresh.copy(
+                cardFits = true,
+                card = CardUi(
+                    on = true,
+                    background = 0,
+                    backgrounds = backgrounds,
+                    preview = CardRenderer.render(text, backgrounds.first(), 360).asImageBitmap(),
+                ),
+            ),
+            listOf(value(text)),
+            spoiler = "",
+            actions = NoActions,
+        )
+    }
 
     // four tiles in the states a writer meets: described, undescribed, uploading and failed
     @Test

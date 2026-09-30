@@ -96,6 +96,9 @@ internal class ComposerViewModel @AssistedInject constructor(
     private var parent: Status? = null
     private var emojiList: List<CustomEmoji> = emptyList()
 
+    /** A short post drawn as a picture, when the writer chooses. */
+    val cards = TextCards(attachments, File(context.filesDir, UPLOADS), viewModelScope)
+
     private data class Written(val segments: List<String>, val spoiler: String)
 
     private data class Media(
@@ -118,7 +121,8 @@ internal class ComposerViewModel @AssistedInject constructor(
         snapshotFlow { Written(segments.map { it.text }, spoiler) },
         completions.suggestions,
         media,
-    ) { state, text, found, media ->
+        cards.state,
+    ) { state, text, found, media, card ->
         val capabilities = reader?.capabilities
         val limits = capabilities?.limits ?: ServerLimits.MastodonDefaults
         val rule = capabilities?.lengthRule ?: LengthRule.Mastodon
@@ -128,7 +132,14 @@ internal class ComposerViewModel @AssistedInject constructor(
             remaining = text.segments.map { CharacterCount.remaining(it, cw, limits, rule) },
             games = text.segments.flatMap(ComposerGames::kinds).distinct(),
             suggestions = found,
-            attachments = media.attachments,
+            // the card is an attachment only to the server; the strip shows what the writer attached
+            attachments = media.attachments.map { list -> list.filterNot { it.id == cards.attachmentId } },
+            card = card,
+            cardFits = TextCards.fits(
+                text.segments.first(),
+                text.segments.size,
+                media.attachments.first().count { it.id != cards.attachmentId },
+            ),
             mediaSensitive = media.sensitive,
             maxAttachments = limits.maxMediaAttachments,
             attachFailure = media.failure,
@@ -138,6 +149,9 @@ internal class ComposerViewModel @AssistedInject constructor(
 
     init {
         viewModelScope.launch { start() }
+        viewModelScope.launch {
+            snapshotFlow { segments.first().text }.collect { if (cards.state.value.on) cards.onText(it) }
+        }
         viewModelScope.launch {
             snapshotFlow { segments.getOrNull(focused)?.let(ComposerText::completing) }.collect { completing ->
                 reader?.let { completions.onTyping(it, completing, emojiList) }
@@ -234,6 +248,11 @@ internal class ComposerViewModel @AssistedInject constructor(
         if (!uiState.value.canPost) return
         control.update { it.copy(posting = true, failure = null) }
         viewModelScope.launch {
+            val state = uiState.value
+            if (state.card.on && state.cardFits && !cards.attach(segments.first().text)) {
+                control.update { it.copy(posting = false, failure = PostFailure.CardFailed) }
+                return@launch
+            }
             // what was described since uploading goes first: a post must not go out without it
             if (!attachments.sync(account)) {
                 control.update { it.copy(posting = false, failure = PostFailure.Unreached(Trouble.Server)) }

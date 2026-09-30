@@ -131,32 +131,51 @@ internal fun SegmentField(
     // a thread's posts are told apart by a label; a single post's field speaks its hint, and what is written
     val label = if (count > 1) stringResource(R.string.composer_segment_label, index + 1) else null
     Column {
-        TextField(
-            value = value,
-            onValueChange = { actions.onText(index, it) },
-            readOnly = posted || state.posting,
-            placeholder = {
-                val hint = if (index == 0) R.string.composer_placeholder else R.string.composer_placeholder_more
-                Text(stringResource(hint))
-            },
-            visualTransformation = highlight,
-            colors = TextFieldDefaults.colors(
-                focusedContainerColor = Color.Transparent,
-                unfocusedContainerColor = Color.Transparent,
-                disabledContainerColor = Color.Transparent,
-            ),
-            textStyle = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.fillMaxWidth().semantics { contentDescription = label },
-        )
+        SegmentText(value, label, index == 0, readOnly = posted || state.posting) { actions.onText(index, it) }
         state.attachments.getOrNull(index)?.takeIf { it.isNotEmpty() }?.let { MediaStrip(it, actions) }
-        if (count > 1) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Counter(state.remaining.getOrElse(index) { 0 }, Modifier.weight(1f))
-                if (index > 0 && !posted) {
-                    IconButton(onClick = { actions.onRemoveSegment(index) }, enabled = !state.posting) {
-                        Icon(AlohaIcons.Remove, stringResource(R.string.composer_remove_segment))
-                    }
-                }
+        if (index == 0 && state.card.on && state.cardFits) CardPreview(state.card, actions)
+        if (count > 1) SegmentFooter(index, posted, state, actions)
+    }
+}
+
+/** A post's text, coloured as it is typed; [label] names it within a thread, [first] picks its hint. */
+@Composable
+private fun SegmentText(
+    value: TextFieldValue,
+    label: String?,
+    first: Boolean,
+    readOnly: Boolean,
+    onText: (TextFieldValue) -> Unit,
+) {
+    val link = MaterialTheme.colorScheme.primary
+    val highlight = remember(link) { HighlightTransformation(link) }
+    TextField(
+        value = value,
+        onValueChange = onText,
+        readOnly = readOnly,
+        label = label?.let { { Text(it) } },
+        placeholder = {
+            Text(stringResource(if (first) R.string.composer_placeholder else R.string.composer_placeholder_more))
+        },
+        visualTransformation = highlight,
+        colors = TextFieldDefaults.colors(
+            focusedContainerColor = Color.Transparent,
+            unfocusedContainerColor = Color.Transparent,
+            disabledContainerColor = Color.Transparent,
+        ),
+        textStyle = MaterialTheme.typography.bodyLarge,
+        modifier = Modifier.fillMaxWidth(),
+    )
+}
+
+/** A post of a thread: what is left of its limit, and removing it while it is not posted yet. */
+@Composable
+private fun SegmentFooter(index: Int, posted: Boolean, state: ComposerUiState, actions: ComposerActions) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Counter(state.remaining.getOrElse(index) { 0 }, Modifier.weight(1f))
+        if (index > 0 && !posted) {
+            IconButton(onClick = { actions.onRemoveSegment(index) }, enabled = !state.posting) {
+                Icon(AlohaIcons.Remove, stringResource(R.string.composer_remove_segment))
             }
         }
     }
@@ -242,6 +261,11 @@ private fun MediaButtons(state: ComposerUiState, actions: ComposerActions) {
     }
     IconButton(onClick = actions::onPickFiles, enabled = room && !state.posting) {
         Icon(AlohaIcons.AttachFile, stringResource(R.string.composer_add_file))
+    }
+    if (state.cardFits) {
+        IconToggleButton(checked = state.card.on, onCheckedChange = actions::onCard) {
+            Icon(AlohaIcons.TextCard, stringResource(R.string.composer_card))
+        }
     }
     if (attached > 0) {
         IconToggleButton(checked = state.mediaSensitive, onCheckedChange = actions::onSensitive) {
