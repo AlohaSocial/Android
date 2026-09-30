@@ -93,16 +93,36 @@ private class Posts(private val script: MutableList<Int>) : Dispatcher() {
             path.endsWith("/statuses/p") -> json(parent.toString())
             path.endsWith("/custom_emojis") -> json("[]")
             path.endsWith("/preferences") -> json("{}")
+            path.endsWith("/gifs") -> gifs(request.url.queryParameter("offset")?.toInt() ?: 0)
+            path.endsWith("/media/from-gif") -> media(request, "slug")
+            path.endsWith("/media/from-file") -> media(request, "path")
             else -> MockResponse.Builder().code(404).body("{}").build()
         }
     }
 
-    private fun post(request: RecordedRequest): MockResponse {
-        val key = request.headers["Idempotency-Key"]
-        val form = request.body?.utf8().orEmpty().split('&').filter { '=' in it }.associate {
+    // two pages of forty and a last of five, the way the library pages
+    private fun gifs(offset: Int): MockResponse {
+        val count = if (offset < GIFS - GIFS % PAGE) PAGE else GIFS % PAGE
+        val gifs = (offset until offset + count).joinToString(",") { """{"slug":"g$it","title":"GIF $it"}""" }
+        return json("""{"gifs":[$gifs],"total":$GIFS,"attribution":"Library"}""")
+    }
+
+    /** Media the server makes itself, named by what was asked for; a path it has no file at is a 422. */
+    private fun media(request: RecordedRequest, field: String): MockResponse {
+        val asked = form(request)[field].orEmpty()
+        if (asked == "missing.jpg") return MockResponse.Builder().code(422).body("""{"error":"not found"}""").build()
+        return json("""{"id":"m-$asked","type":"image","url":"https://example.test/$asked"}""")
+    }
+
+    private fun form(request: RecordedRequest) =
+        request.body?.utf8().orEmpty().split('&').filter { '=' in it }.associate {
             val (k, v) = it.split('=', limit = 2)
             URLDecoder.decode(k, "UTF-8") to URLDecoder.decode(v, "UTF-8")
         }
+
+    private fun post(request: RecordedRequest): MockResponse {
+        val key = request.headers["Idempotency-Key"]
+        val form = form(request)
         sent += key to form
         key?.let { made[it] }?.let { return json(status(it).toString()) }
         return when (script.removeFirstOrNull() ?: 200) {
@@ -120,6 +140,11 @@ private class Posts(private val script: MutableList<Int>) : Dispatcher() {
 
     private fun json(body: String) =
         MockResponse.Builder().code(200).body(body).addHeader("content-type", "application/json").build()
+
+    private companion object {
+        const val GIFS = 85
+        const val PAGE = 40
+    }
 }
 
 // the ViewModel's scope is the main dispatcher, which a JVM test replaces
@@ -274,5 +299,41 @@ class ComposerViewModelTest {
         viewModel.type(0, "👨‍👩‍👧‍👦 https://example.test/a/long/path")
         val state = viewModel.await { it.remaining.first() < 5000 }
         assertEquals(5000 - 7 - 1 - 32, state.remaining.first())
+    }
+
+    @Test
+    fun `the gif library pages to its end, and a gif picked goes out with the post`() = runBlocking {
+        val viewModel = open()
+        viewModel.await { it.ready && it.gifLibrary }
+        viewModel.library.onQuery("")
+        withTimeout(10.seconds) { viewModel.library.gifs.first { it.gifs.size == 40 && !it.loading } }
+        viewModel.library.onMore()
+        withTimeout(10.seconds) { viewModel.library.gifs.first { it.gifs.size == 80 && !it.loading } }
+        viewModel.library.onMore()
+        val all = withTimeout(10.seconds) { viewModel.library.gifs.first { it.end } }
+        assertEquals(85, all.gifs.size)
+        assertEquals("Library", all.attribution)
+        viewModel.library.onGif(all.gifs.first())
+        val attached = viewModel.await { it.attachments.first().isNotEmpty() }.attachments.first().single()
+        assertEquals("m-g0", attached.mediaId)
+        assertEquals("GIF 0", attached.description)
+        viewModel.type(0, "Look")
+        viewModel.await { it.canPost }
+        viewModel.onPost()
+        viewModel.await { it.done }
+        assertEquals("m-g0", posts.sent.single().second["media_ids[]"])
+    }
+
+    @Test
+    fun `a nextcloud file is attached by its path from the root, and one not there says so`() = runBlocking {
+        val viewModel = open()
+        viewModel.await { it.ready }
+        viewModel.library.onNextcloudFile(" /Photos/beach.jpg ")
+        val attached = viewModel.await { it.attachments.first().isNotEmpty() }.attachments.first().single()
+        assertEquals("m-Photos/beach.jpg", attached.mediaId)
+        assertEquals("beach.jpg", attached.fileName)
+        assertEquals(listOf("Photos/beach.jpg"), viewModel.library.recentPaths())
+        viewModel.library.onNextcloudFile("missing.jpg")
+        assertEquals(AttachFailure.NotFound, viewModel.await { it.attachFailure != null }.attachFailure)
     }
 }

@@ -3,6 +3,9 @@
 
 package social.aloha.feature.composer
 
+import android.content.ClipboardManager
+import android.content.Context
+import android.net.Uri
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -33,6 +36,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import social.aloha.core.model.CustomEmoji
 import social.aloha.core.model.Visibility
 import social.aloha.core.navigation.ComposerKey
+import social.aloha.core.ui.isForeignContent
 
 /** Which of the composer's dialogs is open; saved, so turning the phone keeps it open. */
 private class Dialogs(
@@ -41,6 +45,8 @@ private class Dialogs(
     val discarding: MutableState<Boolean>,
     /** A short just recorded, waiting for the writer's answer about `#shorts`. */
     val short: MutableState<String?>,
+    val gifs: MutableState<Boolean>,
+    val nextcloudFile: MutableState<Boolean>,
 )
 
 /** The composer for [key]; [onDone] leaves it, once posted or discarded. */
@@ -55,6 +61,8 @@ public fun ComposerRoute(key: ComposerKey, onDone: () -> Unit, modifier: Modifie
         rememberSaveable { mutableStateOf(false) },
         rememberSaveable { mutableStateOf(false) },
         rememberSaveable { mutableStateOf(null) },
+        rememberSaveable { mutableStateOf(false) },
+        rememberSaveable { mutableStateOf(false) },
     )
     val actions = rememberActions(viewModel, state, dialogs) { done() }
     val hue = MaterialTheme.colorScheme.primary.toArgb()
@@ -87,6 +95,7 @@ private fun rememberActions(
     val pickFiles =
         rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { viewModel.onPicked(it) }
     val camera = rememberCamera(viewModel, state, dialogs)
+    val context = LocalContext.current
     return remember(viewModel, dialogs) {
         object : ComposerActions {
             override fun onClose() {
@@ -127,6 +136,23 @@ private fun rememberActions(
             override fun onPickFiles() = pickFiles.launch(types)
 
             override fun onCapture(capture: Capture) = camera(capture)
+
+            override fun onGifs() {
+                dialogs.gifs.value = true
+            }
+
+            override fun onNextcloudFile() {
+                dialogs.nextcloudFile.value = true
+            }
+
+            override fun onPaste() {
+                val pasted = clipboardMedia(context)
+                if (pasted.isEmpty()) {
+                    viewModel.attachments.failure.value = AttachFailure.NothingToPaste
+                } else {
+                    viewModel.onPicked(pasted)
+                }
+            }
 
             override fun onEditMedia(id: String) {
                 dialogs.editing.value = id
@@ -228,6 +254,7 @@ private fun ComposerDialogs(state: ComposerUiState, viewModel: ComposerViewModel
             viewModel.onPicked(listOf(recorded.toUri()), tagShort = tag, remember = true)
         }
     }
+    LibraryDialogs(viewModel, dialogs)
     if (discarding) {
         DiscardDialog(
             onDiscard = {
@@ -237,6 +264,48 @@ private fun ComposerDialogs(state: ComposerUiState, viewModel: ComposerViewModel
             onKeep = { discarding = false },
         )
     }
+}
+
+@Composable
+private fun LibraryDialogs(viewModel: ComposerViewModel, dialogs: Dialogs) {
+    var gifs by dialogs.gifs
+    var nextcloudFile by dialogs.nextcloudFile
+    if (gifs) {
+        val library by viewModel.library.gifs.collectAsStateWithLifecycle()
+        GifSheet(
+            library,
+            onQuery = viewModel.library::onQuery,
+            onMore = viewModel.library::onMore,
+            onPick = { gif ->
+                gifs = false
+                viewModel.library.onGif(gif)
+            },
+            onDismiss = { gifs = false },
+        )
+    }
+    if (nextcloudFile) {
+        val recent by produceState(emptyList<String>()) { value = viewModel.library.recentPaths() }
+        NextcloudFileDialog(
+            recent,
+            onAttach = { path ->
+                nextcloudFile = false
+                viewModel.library.onNextcloudFile(path)
+            },
+            onDismiss = { nextcloudFile = false },
+        )
+    }
+}
+
+/** The pictures and videos on the clipboard, by the content URIs another app put there. */
+private fun clipboardMedia(context: Context): List<Uri> {
+    val clip = context.getSystemService(ClipboardManager::class.java)?.primaryClip ?: return emptyList()
+    val media = (0 until clip.description.mimeTypeCount).any {
+        val type = clip.description.getMimeType(it)
+        type.startsWith("image/") || type.startsWith("video/")
+    }
+    if (!media) return emptyList()
+    return (0 until clip.itemCount).mapNotNull { clip.getItemAt(it).uri }
+        .filter { isForeignContent(it, context.packageName) }
 }
 
 /** Asked once, after the first short: whether shorts get `#shorts`, which then stays the choice. */
@@ -301,6 +370,10 @@ private fun attachMessage(failure: AttachFailure?): String? = when (failure) {
         stringResource(R.string.composer_attach_too_large, Attachments.size(failure.limitBytes))
 
     AttachFailure.Unreadable -> stringResource(R.string.composer_attach_unreadable)
+
+    AttachFailure.NotFound -> stringResource(R.string.composer_attach_not_found)
+
+    AttachFailure.NothingToPaste -> stringResource(R.string.composer_attach_nothing_to_paste)
 
     null -> null
 }

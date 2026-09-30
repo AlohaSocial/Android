@@ -12,8 +12,10 @@ import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.tryPerformAccessibilityChecks
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
+import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.captureRoboImage
+import com.github.takahirom.roborazzi.captureScreenRoboImage
 import java.io.File
 import org.junit.Rule
 import org.junit.Test
@@ -25,6 +27,7 @@ import social.aloha.core.designsystem.AlohaTheme
 import social.aloha.core.designsystem.ThemeMode
 import social.aloha.core.designsystem.ThemeSettings
 import social.aloha.core.model.CustomEmoji
+import social.aloha.core.model.GifEntry
 import social.aloha.core.model.Visibility
 import social.aloha.core.sync.UploadState
 
@@ -52,6 +55,12 @@ class ComposerScreenshotTest {
         override fun onPickMedia() = Unit
         override fun onPickFiles() = Unit
         override fun onCapture(capture: Capture) = Unit
+
+        override fun onGifs() = Unit
+
+        override fun onNextcloudFile() = Unit
+
+        override fun onPaste() = Unit
         override fun onEditMedia(id: String) = Unit
         override fun onRemoveMedia(id: String) = Unit
         override fun onRetryMedia(id: String) = Unit
@@ -167,5 +176,19 @@ class ComposerScreenshotTest {
                 mediaSensitive = true,
             ),
         )
+    }
+
+    @Test
+    fun gifs() = captureScreen("composer-gifs") {
+        val gifs = (1..9).map { GifEntry("g$it", "Waves $it") }
+        GifSheet(GifsUi("waves", gifs, attribution = "GIFs from the Nextcloud library"), {}, {}, {}, {})
+    }
+
+    // a sheet is a window of its own, so the whole screen is captured
+    @OptIn(ExperimentalRoborazziApi::class)
+    private fun captureScreen(name: String, content: @Composable () -> Unit) {
+        compose.setContent { AlohaTheme(ThemeSettings(mode = ThemeMode.Light)) { content() } }
+        compose.waitForIdle()
+        captureScreenRoboImage("src/test/screenshots/$name.png")
     }
 }

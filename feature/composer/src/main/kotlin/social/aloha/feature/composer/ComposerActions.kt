@@ -45,6 +45,15 @@ internal interface MediaActions {
     /** Opens the camera for a photo, a video or a short. */
     fun onCapture(capture: Capture)
 
+    /** Opens the server's GIF library. */
+    fun onGifs()
+
+    /** Asks for the path of a file in the writer's Nextcloud. */
+    fun onNextcloudFile()
+
+    /** Attaches the pictures and videos on the clipboard. */
+    fun onPaste()
+
     fun onEditMedia(id: String)
 
     fun onRemoveMedia(id: String)

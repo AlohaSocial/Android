@@ -19,6 +19,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import social.aloha.core.data.Answer
 import social.aloha.core.data.compose.MediaRepository
+import social.aloha.core.model.AttachmentKind
+import social.aloha.core.model.MediaAttachment
 import social.aloha.core.model.SignedInAccount
 import social.aloha.core.network.endpoints.MediaEndpoints
 import social.aloha.core.sync.LocalMedia
@@ -33,7 +35,8 @@ internal data class Focus(val x: Float, val y: Float)
 @Immutable
 internal data class Attachment(
     val id: String,
-    val file: File,
+    /** The app's copy of the file; none for one the server made itself, a GIF or a Nextcloud file. */
+    val file: File?,
     val fileName: String,
     val mimeType: String,
     val upload: UploadState = UploadState.Queued,
@@ -52,8 +55,14 @@ internal data class Attachment(
 ) {
     val isVideo: Boolean get() = mimeType.startsWith("video/")
 
+    /** What was picked, before any filter or trim: where an edit starts from, when it is on this device. */
+    val source: File? get() = original ?: file
+
+    /** The server's own preview, for an attachment that never was a file here. */
+    val previewUrl: String? get() = (upload as? UploadState.Done)?.previewUrl
+
     /** A GIF or animated WebP takes no filter; drawn through one it would lose its motion. */
-    val filterable: Boolean get() = isPicture && mimeType != "image/gif" && mimeType != "image/webp"
+    val filterable: Boolean get() = file != null && isPicture && mimeType !in MediaPreparation.UNFILTERABLE
 
     val isPicture: Boolean get() = mimeType.startsWith("image/")
     val mediaId: String? get() = (upload as? UploadState.Done)?.mediaId
@@ -67,6 +76,12 @@ internal sealed interface AttachFailure {
 
     /** The file could not be read from where it was picked. */
     data object Unreadable : AttachFailure
+
+    /** The server could not make the GIF or find the Nextcloud file asked for. */
+    data object NotFound : AttachFailure
+
+    /** The clipboard holds no picture or video. */
+    data object NothingToPaste : AttachFailure
 }
 
 /**
@@ -83,8 +98,8 @@ internal class Attachments(
     private val all = MutableStateFlow<List<List<Attachment>>>(listOf(emptyList()))
     val byPost: StateFlow<List<List<Attachment>>> = all.asStateFlow()
 
-    private val failures = MutableStateFlow<AttachFailure?>(null)
-    val failure: StateFlow<AttachFailure?> = failures.asStateFlow()
+    /** Why the last attachment could not be added; the composer clears it once said. */
+    val failure = MutableStateFlow<AttachFailure?>(null)
 
     /** Whether the media carry a warning of their own, whatever the text says. */
     val sensitive = MutableStateFlow(false)
@@ -103,11 +118,11 @@ internal class Attachments(
                 val limits = account.capabilities.limits
                 val copied = withContext(Dispatchers.IO) { preparation.copy(uri) }
                 val prepared = copied?.let { preparation.prepare(it, limits) }
-                val refusal = prepared?.second
+                val check = prepared?.check
                 when {
-                    prepared == null -> failures.value = AttachFailure.Unreadable
+                    prepared == null -> failure.value = AttachFailure.Unreadable
 
-                    prepared.first != null -> start(account, segment, prepared.first!!)
+                    check == Preflight.Fits -> start(account, segment, prepared.picked)
 
                     // too long or too large a video waits in the strip for the writer to trim it
                     check is Preflight.TooLarge && prepared.picked.mimeType.startsWith("video/") -> all.update {
@@ -121,27 +136,30 @@ internal class Attachments(
                                 oversizedLimit = check.limitBytes,
                             ),
                         )
-                        all.update { lists ->
-                            lists.mapIndexed { i, list ->
-                                if (i ==
-                                    segment
-                                ) {
-                                    list + waiting
-                                } else {
-                                    list
-                                }
-                            }
-                        }
                     }
 
-                    else -> failures.value = refusal?.toFailure() ?: AttachFailure.Unreadable
+                    // refused, the copy goes: nothing else would ever delete it
+                    else -> {
+                        prepared.picked.file.delete()
+                        failure.value = check?.toFailure() ?: AttachFailure.Unreadable
+                    }
                 }
             }
         }
     }
 
-    fun onFailureShown() {
-        failures.value = null
+    /** Attaches [media], which the server already made from a GIF or a Nextcloud file, to post [segment]. */
+    fun addRemote(segment: Int, media: MediaAttachment, name: String) {
+        val attachment = Attachment(
+            UUID.randomUUID().toString(),
+            file = null,
+            fileName = name,
+            mimeType = mimeOf(media),
+            upload = UploadState.Done(media.id, media.previewUrl ?: media.url),
+            description = media.description.orEmpty(),
+            sentDescription = media.description.orEmpty(),
+        )
+        all.update { lists -> lists.mapIndexed { index, list -> if (index == segment) list + attachment else list } }
     }
 
     /** The thread gained or lost a post: [count] lists, the removed post's files let go. */
@@ -203,10 +221,11 @@ internal class Attachments(
     fun retry(id: String) {
         val account = account ?: return
         val attachment = get(id) ?: return
+        val file = attachment.file ?: return
         val segment = all.value.indexOfFirst { list -> list.any { it.id == id } }
         release(attachment, keepFile = true)
         val again = attachment.copy(sentDescription = "")
-        start(account, segment, Picked(attachment.file, attachment.fileName, attachment.mimeType), again)
+        start(account, segment, Picked(file, attachment.fileName, attachment.mimeType), again)
     }
 
     /**
@@ -260,7 +279,7 @@ internal class Attachments(
     private fun release(attachment: Attachment, keepFile: Boolean = false, forGood: Boolean = false) {
         watching.remove(attachment.id)?.cancel()
         works.remove(attachment.id)?.let { if (attachment.mediaId == null) uploads.cancel(it) }
-        if (!keepFile) attachment.file.delete()
+        if (!keepFile) attachment.file?.delete()
         if (forGood) attachment.original?.takeIf { it != attachment.file }?.delete()
     }
 
@@ -296,4 +315,13 @@ private fun Preflight.toFailure(): AttachFailure = when (this) {
     is Preflight.Unsupported -> AttachFailure.Unsupported(mimeType)
     is Preflight.TooLarge -> AttachFailure.TooLarge(limitBytes)
     else -> AttachFailure.Unreadable
+}
+
+/** What kind of file the server made [media] from, as far as a type goes. */
+private fun mimeOf(media: MediaAttachment): String = when (media.type) {
+    AttachmentKind.Image -> "image/jpeg"
+    AttachmentKind.Gifv -> "video/mp4"
+    AttachmentKind.Video -> "video/mp4"
+    AttachmentKind.Audio -> "audio/mpeg"
+    else -> "application/octet-stream"
 }

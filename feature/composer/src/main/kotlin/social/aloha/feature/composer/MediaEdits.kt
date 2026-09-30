@@ -40,7 +40,7 @@ internal class MediaEdits(
     /** Bakes [filter] into picture [id], from the picture as picked; the description carries over. */
     fun applyFilter(id: String, filter: PhotoFilter) {
         val attachment = attachments[id]?.takeIf { it.filterable && it.filter != filter } ?: return
-        val original = attachment.original ?: attachment.file
+        val original = attachment.source ?: return
         val picked = Picked(original, attachment.fileName, attachment.mimeType)
         attachments.change(id) { it.copy(preparing = true) }
         scope.launch {
@@ -63,7 +63,8 @@ internal class MediaEdits(
     /** What video [id] is: its length and frame, which the trim and the sizes are chosen from. */
     suspend fun info(id: String): VideoInfo? {
         val attachment = attachments[id]?.takeIf { it.isVideo } ?: return null
-        return withContext(Dispatchers.IO) { videos.info(attachment.original ?: attachment.file) }
+        val source = attachment.source ?: return null
+        return withContext(Dispatchers.IO) { videos.info(source) }
     }
 
     /**
@@ -72,7 +73,7 @@ internal class MediaEdits(
      */
     fun editVideo(id: String, edit: VideoEdit) {
         val attachment = attachments[id]?.takeIf { it.isVideo } ?: return
-        val original = attachment.original ?: attachment.file
+        val original = attachment.source ?: return
         attachments.change(id) { it.copy(preparing = true) }
         scope.launch {
             val limit = attachments.account?.capabilities?.limits?.videoSizeLimit ?: Long.MAX_VALUE

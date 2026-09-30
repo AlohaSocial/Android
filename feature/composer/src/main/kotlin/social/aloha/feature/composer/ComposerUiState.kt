@@ -65,6 +65,10 @@ internal data class ComposerUiState(
     val mediaSensitive: Boolean = false,
     /** How many attachments one post may carry on this server. */
     val maxAttachments: Int = 4,
+    /** Whether the server has a GIF library of its own to attach from. */
+    val gifLibrary: Boolean = false,
+    /** Whether the server attaches files from the writer's own Nextcloud by path. */
+    val nextcloudFiles: Boolean = false,
     val attachFailure: AttachFailure? = null,
     val editFailure: EditFailure? = null,
     val card: CardUi = CardUi(),

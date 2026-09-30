@@ -220,6 +220,34 @@
     <string name="composer_edit_still_too_large">Still over this server\'s %1$s. Keep less of it, or make it smaller.</string>
     <!-- Snackbar when a video or picture could not be edited -->
     <string name="composer_edit_failed">That couldn\'t be changed. It\'s as it was.</string>
+    <!-- Toolbar button that opens the menu of other ways to attach something: paste, GIFs, Nextcloud files -->
+    <string name="composer_more_sources">More ways to attach</string>
+    <!-- Menu item that attaches the pictures or videos on the clipboard -->
+    <string name="composer_paste">Paste a picture or video</string>
+    <!-- Menu item that opens the server's own GIF library -->
+    <string name="composer_gifs">GIF</string>
+    <!-- Menu item that attaches a file from the writer's own Nextcloud, by its path -->
+    <string name="composer_nextcloud_file">File from Nextcloud</string>
+    <!-- Title of the sheet listing the server's GIFs -->
+    <string name="composer_gifs_title">GIFs</string>
+    <!-- Search field in the GIF sheet -->
+    <string name="composer_gifs_search">Search GIFs</string>
+    <!-- Shown in the GIF sheet when the library could not be loaded -->
+    <string name="composer_gifs_failed">The GIFs couldn\'t be loaded.</string>
+    <!-- Shown in the GIF sheet when nothing matches the search -->
+    <string name="composer_gifs_none">No GIFs found.</string>
+    <!-- Title of the dialog asking for the path of a Nextcloud file -->
+    <string name="composer_file_title">File from Nextcloud</string>
+    <!-- Label of the path field, a path from the root of the writer's Nextcloud files -->
+    <string name="composer_file_path">Path in your files</string>
+    <!-- Example path shown in the empty path field; keep the slashes, translate the folder and file names -->
+    <string name="composer_file_placeholder">Photos/holiday.jpg</string>
+    <!-- Button that attaches the Nextcloud file at the path entered -->
+    <string name="composer_file_attach">Attach</string>
+    <!-- Snackbar when the server could not make the GIF or find the Nextcloud file -->
+    <string name="composer_attach_not_found">The server couldn\'t attach that.</string>
+    <!-- Snackbar when paste was chosen but the clipboard holds no picture or video -->
+    <string name="composer_attach_nothing_to_paste">There\'s no picture or video to paste.</string>
     <!-- Toolbar button that opens the camera menu -->
     <string name="composer_camera">Camera</string>
     <!-- Camera menu: take a photo -->

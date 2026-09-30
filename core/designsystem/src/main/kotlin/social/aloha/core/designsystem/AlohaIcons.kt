@@ -21,6 +21,7 @@ import androidx.compose.material.icons.filled.RepeatOn
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.VideoLibrary
 import androidx.compose.material.icons.outlined.AccountCircle
+import androidx.compose.material.icons.outlined.AddCircleOutline
 import androidx.compose.material.icons.outlined.AddComment
 import androidx.compose.material.icons.outlined.AddPhotoAlternate
 import androidx.compose.material.icons.outlined.AmpStories
@@ -154,4 +155,5 @@ public object AlohaIcons {
     public val TextCard: ImageVector = Icons.Outlined.TextFields
     public val Trim: ImageVector = Icons.Outlined.ContentCut
     public val Camera: ImageVector = Icons.Outlined.PhotoCamera
+    public val AttachMore: ImageVector = Icons.Outlined.AddCircleOutline
 }

@@ -55,9 +55,11 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
@@ -99,7 +101,7 @@ private fun MediaTile(attachment: Attachment, actions: ComposerActions) {
         ) {
             if (attachment.isPicture) {
                 AsyncImage(
-                    attachment.file,
+                    attachment.file ?: attachment.previewUrl,
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize(),
@@ -284,10 +286,21 @@ private fun FocusPicker(attachment: Attachment, focus: Focus?, filter: PhotoFilt
         R.string.composer_media_focus_right to Focus(EDGE, 0f),
     ).map { (label, point) -> stringResource(label) to point }
     Column(verticalArrangement = Arrangement.spacedBy(AlohaSpacing.xs)) {
-        Box(Modifier.fillMaxWidth().heightIn(max = PREVIEW).aspectRatio(1f, matchHeightConstraintsFirst = true)) {
+        Box(
+            Modifier.fillMaxWidth().heightIn(max = PREVIEW).aspectRatio(1f, matchHeightConstraintsFirst = true)
+                .semantics {
+                    contentDescription = hint
+                    customActions = points.map { (label, point) ->
+                        CustomAccessibilityAction(label) {
+                            onFocus(point)
+                            true
+                        }
+                    }
+                },
+        ) {
             // the choice shows over the picture as picked, so trying filters costs nothing
             AsyncImage(
-                attachment.original ?: attachment.file,
+                attachment.source ?: attachment.previewUrl,
                 contentDescription = null,
                 contentScale = ContentScale.Fit,
                 colorFilter = filter.preview(),
@@ -367,7 +380,7 @@ internal fun CardPreview(card: CardUi, actions: ComposerActions) {
  */
 @Composable
 private fun VideoTrim(attachment: Attachment, video: VideoInfo, edit: VideoEdit, onEdit: (VideoEdit) -> Unit) {
-    val source = (attachment.original ?: attachment.file).length()
+    val source = attachment.source?.length() ?: 0L
     val estimate = edit.estimate(source, video)
     val limit = attachment.oversizedLimit
     Column(verticalArrangement = Arrangement.spacedBy(AlohaSpacing.xs)) {
@@ -430,7 +443,7 @@ private fun FilterRow(attachment: Attachment, chosen: PhotoFilter, onFilter: (Ph
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 AsyncImage(
-                    attachment.original ?: attachment.file,
+                    attachment.source,
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     colorFilter = filter.preview(),

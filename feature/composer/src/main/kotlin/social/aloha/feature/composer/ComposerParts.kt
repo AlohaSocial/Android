@@ -263,14 +263,41 @@ private fun MediaButtons(state: ComposerUiState, actions: ComposerActions) {
         Icon(AlohaIcons.AttachFile, stringResource(R.string.composer_add_file))
     }
     CameraMenu(enabled = room && !state.posting, onCapture = actions::onCapture)
+    MoreSourcesMenu(state, enabled = room && !state.posting, actions)
     if (state.cardFits) {
-        IconToggleButton(checked = state.card.on, onCheckedChange = actions::onCard) {
+        OutlinedIconToggleButton(checked = state.card.on, onCheckedChange = actions::onCard) {
             Icon(AlohaIcons.TextCard, stringResource(R.string.composer_card))
         }
     }
     if (attached > 0) {
         IconToggleButton(checked = state.mediaSensitive, onCheckedChange = actions::onSensitive) {
             Icon(AlohaIcons.Sensitive, stringResource(R.string.composer_media_sensitive))
+        }
+    }
+}
+
+/** What else attaches: the clipboard, and what the server offers of its own, GIFs and Nextcloud files. */
+@Composable
+private fun MoreSourcesMenu(state: ComposerUiState, enabled: Boolean, actions: MediaActions) {
+    var open by remember { mutableStateOf(false) }
+    IconButton(onClick = { open = true }, enabled = enabled) {
+        Icon(AlohaIcons.AttachMore, stringResource(R.string.composer_more_sources))
+    }
+    DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+        val choices = listOfNotNull(
+            stringResource(R.string.composer_paste) to actions::onPaste,
+            (stringResource(R.string.composer_gifs) to actions::onGifs).takeIf { state.gifLibrary },
+            (stringResource(R.string.composer_nextcloud_file) to actions::onNextcloudFile)
+                .takeIf { state.nextcloudFiles },
+        )
+        choices.forEach { (label, action) ->
+            DropdownMenuItem(
+                text = { Text(label) },
+                onClick = {
+                    open = false
+                    action()
+                },
+            )
         }
     }
 }

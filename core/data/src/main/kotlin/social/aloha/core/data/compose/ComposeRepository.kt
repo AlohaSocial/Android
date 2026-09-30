@@ -24,13 +24,17 @@ import social.aloha.core.data.timeline.TimelineRow
 import social.aloha.core.datastore.AccountSettingsStore
 import social.aloha.core.model.Account
 import social.aloha.core.model.CustomEmoji
+import social.aloha.core.model.GifLibrary
+import social.aloha.core.model.MediaAttachment
 import social.aloha.core.model.Preferences
 import social.aloha.core.model.SignedInAccount
 import social.aloha.core.model.Status
 import social.aloha.core.model.TimelineKey
 import social.aloha.core.network.endpoints.AccountEndpoints
 import social.aloha.core.network.endpoints.ComposeEndpoints
+import social.aloha.core.network.endpoints.GifEndpoints
 import social.aloha.core.network.endpoints.InstanceEndpoints
+import social.aloha.core.network.endpoints.MediaEndpoints
 import social.aloha.core.network.endpoints.SearchEndpoints
 import social.aloha.core.network.endpoints.StatusEndpoints
 import social.aloha.core.network.endpoints.StatusPost
@@ -99,6 +103,33 @@ public class ComposeRepository @Inject constructor(
     public suspend fun preferences(reader: SignedInAccount): Preferences? =
         (clients.answer(reader, InstanceEndpoints.preferences()) as? Answer.Got)?.value
 
+    /** The server's own GIF library, searched by [query] when there is one, a page from [offset]. */
+    public suspend fun gifs(reader: SignedInAccount, query: String?, offset: Int): Answer<GifLibrary> =
+        clients.answer(reader, GifEndpoints.library(query, offset = offset))
+
+    /** Attaches GIF [slug] as the server's own copy; nothing is downloaded or uploaded. */
+    public suspend fun attachGif(reader: SignedInAccount, slug: String, description: String?): Answer<MediaAttachment> =
+        clients.answer(reader, MediaEndpoints.fromGif(slug, description))
+
+    /**
+     * Attaches the file at [path] in [reader]'s own Nextcloud files, copied server-side, so a picture
+     * already on the Nextcloud never travels to the phone and back. The path is remembered.
+     */
+    public suspend fun attachFile(reader: SignedInAccount, path: String): Answer<MediaAttachment> =
+        clients.answer(reader, MediaEndpoints.fromNextcloudFile(path, null)).also { answer ->
+            if (answer is Answer.Got) {
+                settings.update(reader.id) { current ->
+                    current.copy(
+                        recentFilePaths = (listOf(path) + current.recentFilePaths).distinct().take(RECENT_PATHS),
+                    )
+                }
+            }
+        }
+
+    /** The Nextcloud files [reader] attached last, by path, newest first. */
+    public suspend fun recentPaths(reader: SignedInAccount): List<String> =
+        settings.settings(reader.id).first().recentFilePaths
+
     /** The hashtags [reader] used most recently, newest first, offered before the server's. */
     public suspend fun recentTags(reader: SignedInAccount): List<String> =
         settings.settings(reader.id).first().recentTags
@@ -115,6 +146,7 @@ public class ComposeRepository @Inject constructor(
     private companion object {
         const val COMPLETIONS = 8
         const val RECENT_TAGS = 20
+        const val RECENT_PATHS = 8
         val EMOJI_TTL = Duration.ofHours(24).toMillis()
     }
 }

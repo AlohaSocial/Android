@@ -91,6 +91,9 @@ internal class ComposerViewModel @AssistedInject constructor(
     /** Filters, trims and smaller sizes, each uploaded in place of what it changed. */
     val edits = MediaEdits(attachments, preparation, videos, viewModelScope)
 
+    /** GIFs and Nextcloud files the server attaches itself. */
+    val library = Library(compose, attachments, viewModelScope) { focused.takeIf { room > 0 } }
+
     private val control = MutableStateFlow(ComposerUiState())
     private val completions = Completions(compose, viewModelScope)
     private val poster = ThreadPoster(compose, gameWords(context))
@@ -230,12 +233,13 @@ internal class ComposerViewModel @AssistedInject constructor(
      * writer's choice when [remember]; never without them having chosen it.
      */
     fun onPicked(uris: List<Uri>, tagShort: Boolean = false, remember: Boolean = false) {
-        val state = uiState.value
-        val room = state.maxAttachments - state.attachments.getOrElse(focused) { emptyList() }.size
         if (room > 0) attachments.add(focused, uris, room)
         if (remember) viewModelScope.launch { preferences.setTagShorts(tagShort) }
         if (tagShort && uris.isNotEmpty()) segments.getOrNull(focused)?.let { segments[focused] = tagged(it) }
     }
+
+    private val room: Int
+        get() = uiState.value.maxAttachments - uiState.value.attachments.getOrElse(focused) { emptyList() }.size
 
     /** Writes as another signed-in account; a reply is looked up on that account's server first. */
     fun onAuthor(id: String) {
@@ -284,7 +288,7 @@ internal class ComposerViewModel @AssistedInject constructor(
 
     fun onFailureShown() {
         control.update { it.copy(failure = null) }
-        attachments.onFailureShown()
+        attachments.failure.value = null
         edits.onFailureShown()
     }
 
@@ -333,6 +337,8 @@ internal class ComposerViewModel @AssistedInject constructor(
                 visibility = if (state.visibility in allowed) state.visibility else allowed.first(),
                 visibilityClamped = allowed.size < Visibility.choices.size,
                 quotePolicies = if (quoting) QuotePolicy.entries else emptyList(),
+                gifLibrary = account.capabilities.isNextcloudSocial,
+                nextcloudFiles = account.capabilities.mediaFromNextcloudFiles,
             )
         }
         emojiList = compose.emojis(account)
