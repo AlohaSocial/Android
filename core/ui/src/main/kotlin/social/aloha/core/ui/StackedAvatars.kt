@@ -10,16 +10,23 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 
 /**
- * A few people as overlapping avatars, the first on top, each ringed in the surface colour so the overlap
- * reads. Decoration only: the text beside it names them.
+ * A few people as overlapping avatars, the first on top, each ringed in [ring], the colour behind them,
+ * so the overlap reads. Decoration only: the text beside it names them.
  */
 @Composable
-public fun StackedAvatars(urls: List<String?>, size: Dp, modifier: Modifier = Modifier, maximum: Int = MAXIMUM) {
+public fun StackedAvatars(
+    urls: List<String?>,
+    size: Dp,
+    modifier: Modifier = Modifier,
+    ring: Color = MaterialTheme.colorScheme.surface,
+    maximum: Int = MAXIMUM,
+) {
     val shown = urls.take(maximum)
     Row(modifier, horizontalArrangement = Arrangement.spacedBy(-size / OVERLAP)) {
         shown.forEachIndexed { index, url ->
@@ -28,7 +35,7 @@ public fun StackedAvatars(urls: List<String?>, size: Dp, modifier: Modifier = Mo
                 size,
                 Modifier
                     .zIndex((shown.size - index).toFloat())
-                    .border(RING, MaterialTheme.colorScheme.surface, CircleShape),
+                    .border(RING, ring, CircleShape),
             )
         }
     }

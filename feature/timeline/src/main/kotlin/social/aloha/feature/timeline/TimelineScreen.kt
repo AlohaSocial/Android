@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -26,6 +27,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -82,6 +84,7 @@ import social.aloha.core.model.SwipeAction
 import social.aloha.core.model.TimelineSource
 import social.aloha.core.ui.ListProgress
 import social.aloha.core.ui.NearEndEffect
+import social.aloha.core.ui.StackedAvatars
 import social.aloha.core.ui.StatusActions
 import social.aloha.core.ui.StatusCard
 import social.aloha.core.ui.StatusRowUi
@@ -140,6 +143,7 @@ internal fun TimelineScreen(
                 }
                 NewPostsPill(
                     state.pending,
+                    state.pendingAvatars,
                     actions::onRevealPending,
                     Modifier.align(Alignment.TopCenter).padding(top = AlohaSpacing.s),
                 )
@@ -269,13 +273,36 @@ private fun GapRow(gap: TimelineItem.Gap, actions: TimelineScreenActions) {
 }
 
 @Composable
-private fun NewPostsPill(count: Int, onReveal: () -> Unit, modifier: Modifier) {
+private fun NewPostsPill(count: Int, avatars: List<String?>, onReveal: () -> Unit, modifier: Modifier) {
     AnimatedVisibility(visible = count > 0, modifier = modifier) {
-        Button(onClick = onReveal, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }) {
-            Text(pluralStringResource(R.plurals.timeline_new_posts, count, count))
+        val label = pluralStringResource(R.plurals.timeline_new_posts, count, count)
+        // who posted says it at a glance, beside how many
+        Button(
+            onClick = onReveal,
+            modifier = Modifier.semantics {
+                contentDescription = label
+                liveRegion = LiveRegionMode.Polite
+            },
+            contentPadding = if (avatars.isEmpty()) {
+                ButtonDefaults.ContentPadding
+            } else {
+                ButtonDefaults.ButtonWithIconContentPadding
+            },
+        ) {
+            if (avatars.isEmpty()) {
+                Text(label)
+            } else {
+                Icon(AlohaIcons.NewPosts, contentDescription = null, modifier = Modifier.size(ButtonDefaults.IconSize))
+                Spacer(Modifier.width(ButtonDefaults.IconSpacing))
+                StackedAvatars(avatars, PILL_AVATAR, ring = MaterialTheme.colorScheme.primary)
+                Spacer(Modifier.width(ButtonDefaults.IconSpacing))
+                Text(label)
+            }
         }
     }
 }
+
+private val PILL_AVATAR = 24.dp
 
 @Composable
 private fun SourceRow(source: TimelineSource, sources: List<TimelineSource>, onSource: (TimelineSource) -> Unit) {

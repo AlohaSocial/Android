@@ -144,7 +144,12 @@ internal class TimelineViewModel @AssistedInject constructor(
      * The rows with what they were shaped by, so a revealed pill, its rows and the scroll to them arrive
      * together; the pill counts only held posts already stored, never ones a reveal could not show yet.
      */
-    private data class Shown(val items: List<TimelineItem>, val pending: Int, val scrollToTop: Boolean)
+    private data class Shown(
+        val items: List<TimelineItem>,
+        val pending: Int,
+        val pendingAvatars: List<String?>,
+        val scrollToTop: Boolean,
+    )
 
     private val items: Flow<Shown> = combine(account.filterNotNull(), key) { account, key -> account to key }
         .distinctUntilChanged { a, b -> a.first.id == b.first.id && a.second == b.second }
@@ -164,8 +169,14 @@ internal class TimelineViewModel @AssistedInject constructor(
                 ->
                 seen = key to stored
                 val shape = TimelineRowBuilder.Shape(colors, settings, filters, shaping.held, shaping.loadingGaps)
-                val pending = stored.count { it.id in shaping.held }
-                Shown(rows.build(account, key.source, stored, shape), pending, shaping.scrollToTop)
+                val held = stored.filter { it.id in shaping.held }
+                // the newest few who posted what waits, once each, for the pill to show
+                val avatars = held.filterIsInstance<TimelineRow.Post>()
+                    .map { it.status.displayed.account }
+                    .distinctBy { it.id }
+                    .take(PILL_AVATARS)
+                    .map { it.avatar }
+                Shown(rows.build(account, key.source, stored, shape), held.size, avatars, shaping.scrollToTop)
             }
         }
         .flowOn(Dispatchers.Default)
@@ -177,7 +188,7 @@ internal class TimelineViewModel @AssistedInject constructor(
         account.filterNotNull(),
         minuteTicks(clock),
     ) {
-            (items, pending, scrollToTop),
+            shown,
             control,
             (settings, swipes),
             account,
@@ -186,10 +197,11 @@ internal class TimelineViewModel @AssistedInject constructor(
         TimelineUiState(
             source = sourceOf(account, settings),
             sources = if (feed == TimelineFeed.Home) homeSources(account.capabilities) else emptyList(),
-            items = items,
+            items = shown.items,
             loadedOnce = control.loadedOnce,
             refreshing = control.refreshing,
-            pending = pending,
+            pending = shown.pending,
+            pendingAvatars = shown.pendingAvatars,
             trouble = control.trouble,
             loadingOlder = control.loadingOlder,
             reachedEnd = control.reachedEnd,
@@ -197,7 +209,7 @@ internal class TimelineViewModel @AssistedInject constructor(
             showReplies = settings.showReplies,
             now = now,
             restoreTo = control.restoreTo,
-            scrollToTop = scrollToTop,
+            scrollToTop = shown.scrollToTop,
             actionFailed = control.actionFailed,
             swipeTowardsEnd = swipes.first,
             swipeTowardsStart = swipes.second,
@@ -453,6 +465,7 @@ internal class TimelineViewModel @AssistedInject constructor(
     }
 
     private companion object {
+        const val PILL_AVATARS = 3
         val STALE_MILLIS = Duration.ofSeconds(60).toMillis()
         val PREFETCH_SIZE = Size(PREFETCH_PIXELS, PREFETCH_PIXELS)
         const val PREFETCH_PIXELS = 480
