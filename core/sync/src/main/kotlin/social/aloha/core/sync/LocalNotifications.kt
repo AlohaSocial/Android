@@ -8,7 +8,6 @@ import android.app.Notification
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.os.Build
@@ -28,6 +27,7 @@ import social.aloha.core.model.NotificationItem
 import social.aloha.core.model.NotificationKind
 import social.aloha.core.model.SignedInAccount
 import social.aloha.core.model.Visibility
+import social.aloha.core.navigation.AppIntents
 
 /** Loads an avatar for a notification; null when it cannot, and the notification goes without. */
 public fun interface AvatarSource {
@@ -137,9 +137,7 @@ public class LocalNotifications @Inject constructor(
         account: SignedInAccount,
         item: NotificationItem,
     ) {
-        val author = item.newest
-        val opens = openIntent(account.id, item)
-        if (author == null || opens == null) return plain(builder, item)
+        val author = item.newest ?: return plain(builder, item)
         val icon = author.avatar?.let { avatars.load(it) }?.let(IconCompat::createWithAdaptiveBitmap)
         val person = Person.Builder().setName(author.bestDisplayName).setKey(author.id).setIcon(icon).build()
         val me = Person.Builder().setName(context.getString(R.string.notification_you)).build()
@@ -151,7 +149,7 @@ public class LocalNotifications @Inject constructor(
                 .setPerson(person)
                 .setLongLived(true)
                 .setIcon(icon ?: IconCompat.createWithResource(context, R.drawable.ic_notification))
-                .setIntent(opens)
+                .setIntent(AppIntents.open(context, account.id, item.status?.id, author.id))
                 .build(),
         )
         val style = NotificationCompat.MessagingStyle(me)
@@ -208,22 +206,12 @@ public class LocalNotifications @Inject constructor(
                 PendingIntent.FLAG_UPDATE_CURRENT,
         )
 
-    private fun open(accountId: String, item: NotificationItem): PendingIntent? = openIntent(accountId, item)?.let {
-        PendingIntent.getActivity(
-            context,
-            "$accountId:${item.key}".hashCode(),
-            it,
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
-        )
-    }
-
-    private fun openIntent(accountId: String, item: NotificationItem): Intent? =
-        context.packageManager.getLaunchIntentForPackage(context.packageName)
-            ?.setAction(ACTION_OPEN_NOTIFICATION)
-            ?.putExtra(EXTRA_ACCOUNT, accountId)
-            ?.putExtra(EXTRA_STATUS, item.status?.id)
-            ?.putExtra(EXTRA_PROFILE, item.accounts.firstOrNull()?.id)
-            ?.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
+    private fun open(accountId: String, item: NotificationItem): PendingIntent = PendingIntent.getActivity(
+        context,
+        0,
+        AppIntents.open(context, accountId, item.status?.id, item.newest?.id),
+        PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+    )
 
     private fun summary(account: SignedInAccount) {
         val count = manager.activeNotifications.count { it.tag == tag(account.id) && !it.isGroupSummary() }
@@ -246,10 +234,6 @@ public class LocalNotifications @Inject constructor(
     private fun preview(item: NotificationItem): String? = item.preview(PREVIEW)
 
     public companion object {
-        public const val ACTION_OPEN_NOTIFICATION: String = "social.aloha.action.OPEN_NOTIFICATION"
-        public const val EXTRA_ACCOUNT: String = "account"
-        public const val EXTRA_STATUS: String = "status"
-        public const val EXTRA_PROFILE: String = "profile"
         private const val SUMMARY_ID = 0
         private const val PREVIEW = 500
 

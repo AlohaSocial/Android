@@ -3,15 +3,23 @@
 
 package social.aloha.core.data.notifications
 
+import java.time.Clock
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.flow.first
 import social.aloha.core.data.Answer
 import social.aloha.core.data.ClientFactory
 import social.aloha.core.data.answer
 import social.aloha.core.data.map
 import social.aloha.core.data.sync.UnreadCounts
+import social.aloha.core.data.sync.WidgetUpdates
+import social.aloha.core.data.timeline.FilterEvaluator
+import social.aloha.core.data.timeline.FilterRepository
+import social.aloha.core.html.StatusHtmlParser
 import social.aloha.core.model.Account
+import social.aloha.core.model.FilterContext
+import social.aloha.core.model.MentionSnippet
 import social.aloha.core.model.NotificationItem
 import social.aloha.core.model.NotificationKind
 import social.aloha.core.model.SignedInAccount
@@ -32,7 +40,11 @@ public data class NotificationPage(val items: List<NotificationItem>, val olderT
 public class NotificationsRepository @Inject constructor(
     private val clients: ClientFactory,
     private val unread: UnreadCounts,
+    private val widgets: WidgetUpdates,
+    private val filters: FilterRepository,
+    private val clock: Clock,
 ) {
+    // the marker as the server last confirmed it, per account
     private val written = ConcurrentHashMap<String, String>()
 
     /**
@@ -47,7 +59,7 @@ public class NotificationsRepository @Inject constructor(
     ): Answer<NotificationPage> {
         val anchor = olderThan?.let(PageAnchor::OlderThan) ?: PageAnchor.Cold
         val types = kinds.map { it.wire }
-        return if (account.capabilities.groupedNotifications) {
+        val answer = if (account.capabilities.groupedNotifications) {
             clients.answer(account, NotificationEndpoints.grouped(PAGE, anchor, types)).map { page ->
                 // a group's page_min_id is the oldest notification it covers, where the next page starts
                 val cursor = page.notificationGroups.lastOrNull()?.let { it.pageMinId ?: it.mostRecentNotificationId }
@@ -57,8 +69,48 @@ public class NotificationsRepository @Inject constructor(
             clients.answer(account, NotificationEndpoints.flat(PAGE, anchor, types)).map { page ->
                 NotificationPage(NotificationItem.from(page), page.lastOrNull()?.id.takeIf { page.size >= PAGE })
             }
+        }.map { it.copy(items = filtered(account.id, it.items)) }
+        // the newest page with mentions in it is what the mentions widget shows
+        val newest = olderThan == null && (kinds.isEmpty() || NotificationKind.Mention in kinds)
+        if (newest && answer is Answer.Got) widgets.setMentions(account.id, answer.value.items.mentions())
+        return answer
+    }
+
+    private suspend fun filtered(accountId: String, items: List<NotificationItem>): List<NotificationItem> {
+        val evaluator =
+            FilterEvaluator(filters.observe(accountId).first(), FilterContext.Notifications, clock.instant())
+        return items.mapNotNull { item ->
+            val status = item.status ?: return@mapNotNull item
+            val shown = status.displayed
+            when (
+                val decision = evaluator.decision(
+                    status,
+                    StatusHtmlParser.plainText(shown.content) + " " + shown.spoilerText,
+                )
+            ) {
+                FilterEvaluator.Decision.Hide -> null
+
+                // warned about: what the post says is left behind its filter's title
+                is FilterEvaluator.Decision.Warn ->
+                    item.copy(status = shown.copy(spoilerText = decision.titles.joinToString(), content = ""))
+
+                FilterEvaluator.Decision.Show -> item
+            }
         }
     }
+
+    private fun List<NotificationItem>.mentions(): List<MentionSnippet> =
+        filter { it.kind == NotificationKind.Mention }.mapNotNull { item ->
+            item.status?.let {
+                MentionSnippet(
+                    statusId = it.id,
+                    name = item.newest?.bestDisplayName.orEmpty(),
+                    avatar = item.newest?.avatar,
+                    text = item.preview().orEmpty(),
+                    at = item.latestAt,
+                )
+            }
+        }.take(WIDGET_MENTIONS)
 
     /** Everyone in the group [groupKey], beyond the sample its row shows. */
     public suspend fun groupAccounts(account: SignedInAccount, groupKey: String): Answer<List<Account>> =
@@ -95,5 +147,6 @@ public class NotificationsRepository @Inject constructor(
 
     private companion object {
         const val PAGE = Paging.DEFAULT_LIMIT
+        const val WIDGET_MENTIONS = 5
     }
 }

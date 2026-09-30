@@ -6,6 +6,7 @@ package social.aloha.core.data.notifications
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import java.util.concurrent.CopyOnWriteArrayList
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import mockwebserver3.Dispatcher
 import mockwebserver3.MockResponse
@@ -31,6 +32,8 @@ private class Server : Dispatcher() {
     val asked = CopyOnWriteArrayList<String>()
     var marker = "100"
     var bulk = true
+    var markerTaken = true
+    var filterAction: String? = null
 
     override fun dispatch(request: RecordedRequest): MockResponse {
         val path = request.url.encodedPath
@@ -44,7 +47,14 @@ private class Server : Dispatcher() {
             path.endsWith("/markers") && request.method == "GET" ->
                 json("""{"notifications":{"last_read_id":"$marker","version":1}}""")
 
-            path.endsWith("/markers") -> json("{}")
+            path.endsWith("/markers") -> if (markerTaken) json("{}") else json("{}", 500)
+
+            path.endsWith("/api/v2/filters") -> json(
+                filterAction?.let {
+                    """[{"id":"f1","title":"Greetings","context":["notifications"],"filter_action":"$it",""" +
+                        """"keywords":[{"id":"k1","keyword":"Hello","whole_word":true}],"statuses":[]}]"""
+                } ?: "[]",
+            )
 
             path.endsWith("/requests/accept") || path.endsWith("/requests/dismiss") ->
                 if (bulk) json("{}") else json("""{"error":"Not found"}""", 404)
@@ -86,8 +96,8 @@ class NotificationsRepositoryTest {
         dispatcher = answers
         start()
     }
-    private val unread = UnreadCounts()
-    private val repository = NotificationsRepository(fixture.clients, unread)
+    private val unread = fixture.unread
+    private val repository = fixture.notifications
     private val filtering = NotificationFiltering(fixture.clients)
 
     @After
@@ -114,6 +124,10 @@ class NotificationsRepositoryTest {
         assertNull(page.items[1].groupKey)
         // a short page is the last one
         assertNull(page.olderThan)
+        // the mentions widget shows the mention, as a line of text
+        val account = fixture.accounts.all().single()
+        val mention = fixture.widgets.feed(account.id).first().mentions.single()
+        assertEquals(listOf("s1", "Alice", "Hello"), listOf(mention.statusId, mention.name, mention.text))
     }
 
     @Test
@@ -140,6 +154,32 @@ class NotificationsRepositoryTest {
         repository.readMarker(account)
         repository.markRead(account, "130")
         assertEquals(1, answers.asked.count { it.startsWith("POST") })
+    }
+
+    @Test
+    fun `a read marker the server did not take is sent again`() = runBlocking {
+        val account = signIn(grouped = true)
+        repository.readMarker(account)
+        answers.markerTaken = false
+        repository.markRead(account, "120")
+        answers.markerTaken = true
+        repository.markRead(account, "120")
+        assertEquals(2, answers.asked.count { it.startsWith("POST /api/v1/markers") })
+        repository.markRead(account, "120")
+        assertEquals(2, answers.asked.count { it.startsWith("POST /api/v1/markers") })
+    }
+
+    @Test
+    fun `a filter for notifications hides what it matches, or leaves it behind its title`() = runBlocking {
+        val account = signIn(grouped = true)
+        answers.filterAction = "hide"
+        fixture.filters.refresh(account)
+        val hidden = (repository.page(account, emptySet()) as Answer.Got).value
+        assertEquals(emptyList<String>(), hidden.items.map { it.key })
+        answers.filterAction = "warn"
+        fixture.filters.refresh(account)
+        val warned = (repository.page(account, emptySet()) as Answer.Got).value.items.first().status!!
+        assertEquals(listOf("Greetings", ""), listOf(warned.spoilerText, warned.content))
     }
 
     @Test

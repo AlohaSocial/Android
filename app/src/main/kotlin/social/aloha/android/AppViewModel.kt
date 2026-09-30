@@ -156,28 +156,32 @@ class AppViewModel @Inject constructor(
     }
 
     /**
-     * Opens draft [draftId] of [accountId] in the composer, or that account's drafts without one; a
-     * notification asks, so an account no longer signed in here opens nothing.
+     * Opens draft [draftId] of [accountId] in the composer, or that account's drafts without one; a new
+     * id is a new post. A notification or a widget asks, so an account no longer signed in here opens
+     * nothing.
      */
-    fun openDraft(accountId: String, draftId: String?) {
-        viewModelScope.launch {
-            if (accounts.byId(accountId) == null) return@launch
-            accounts.activate(accountId)
-            destination.value =
-                accountId to (draftId?.let { ComposerKey(accountId, draftId = it) } ?: DraftsKey(accountId))
-        }
+    fun openDraft(accountId: String, draftId: String?) = openAs(accountId) {
+        draftId?.let { ComposerKey(accountId, draftId = it) } ?: DraftsKey(accountId)
     }
 
     /**
      * Opens what a notification is about, as the account it came to: its post, else the profile of
      * whoever did it. An account no longer signed in here opens nothing.
      */
-    fun openNotification(accountId: String, statusId: String?, profileId: String?) {
+    fun openNotification(accountId: String, statusId: String?, profileId: String?) = openAs(accountId) {
+        statusId?.let { ThreadKey(accountId, it) } ?: profileId?.let { AccountKey(accountId, id = it) }
+            ?: NotificationsKey
+    }
+
+    /**
+     * Switches to [accountId] and opens what [key] names there; what lives outside the app asks for it,
+     * so an account no longer signed in here opens nothing.
+     */
+    private fun openAs(accountId: String, key: () -> NavKey) {
         viewModelScope.launch {
             if (accounts.byId(accountId) == null) return@launch
             accounts.activate(accountId)
-            val key = statusId?.let { ThreadKey(accountId, it) } ?: profileId?.let { AccountKey(accountId, id = it) }
-            destination.value = accountId to (key ?: NotificationsKey)
+            destination.value = accountId to key()
         }
     }
 

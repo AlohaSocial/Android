@@ -16,9 +16,10 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import dagger.hilt.android.AndroidEntryPoint
+import java.util.UUID
 import javax.inject.Inject
 import social.aloha.core.designsystem.AlohaTheme
-import social.aloha.core.sync.LocalNotifications
+import social.aloha.core.navigation.AppIntents
 import social.aloha.core.sync.PostQueue
 import social.aloha.core.sync.SyncEngine
 
@@ -76,14 +77,17 @@ class MainActivity : ComponentActivity() {
 
             Intent.ACTION_SEND, Intent.ACTION_SEND_MULTIPLE -> SharedContent.from(intent, packageName)?.let(app::share)
 
-            LocalNotifications.ACTION_OPEN_NOTIFICATION ->
-                intent.getStringExtra(LocalNotifications.EXTRA_ACCOUNT)?.let { account ->
-                    app.openNotification(
-                        account,
-                        intent.getStringExtra(LocalNotifications.EXTRA_STATUS),
-                        intent.getStringExtra(LocalNotifications.EXTRA_PROFILE),
-                    )
-                }
+            AppIntents.ACTION_OPEN -> intent.getStringExtra(AppIntents.EXTRA_ACCOUNT)?.let { account ->
+                app.openNotification(
+                    account,
+                    intent.getStringExtra(AppIntents.EXTRA_STATUS),
+                    intent.getStringExtra(AppIntents.EXTRA_PROFILE),
+                )
+            }
+
+            AppIntents.ACTION_COMPOSE -> intent.getStringExtra(AppIntents.EXTRA_ACCOUNT)?.let {
+                app.openDraft(it, draftId = UUID.randomUUID().toString())
+            }
         }
     }
 }

@@ -31,7 +31,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
-import social.aloha.core.data.notifications.NotificationsRepository
 import social.aloha.core.data.sync.SyncSettings
 import social.aloha.core.data.sync.UnreadCounts
 import social.aloha.core.datastore.AccountSettingsStore
@@ -109,7 +108,7 @@ class NotificationRaiserTest {
 
     private fun raiser(clock: Clock = noon) = NotificationRaiser(
         fixture.accounts,
-        NotificationsRepository(fixture.clients, UnreadCounts()),
+        fixture.notifications,
         fixture.raised,
         settings,
         LocalNotifications(context) { null },

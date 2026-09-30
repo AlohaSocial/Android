@@ -81,9 +81,12 @@ class SyncEngineTest {
     private val preferences = AppPreferences(InMemoryDataStore(emptyPreferences()))
     private val settings = SyncSettings(AccountSettingsStore(InMemoryDataStore(emptyMap())), preferences)
     private val signals = TimelineSignals()
-    private val unread = UnreadCounts()
+    private val unread = fixture.unread
     private val push = PushSubscriptions(fixture.clients, preferences)
     private val heard = CopyOnWriteArrayList<Int>()
+
+    // what the listener answers: false for one that could not finish
+    @Volatile private var settles = true
     private val engine = SyncEngine(
         fixture.accounts,
         fixture.clients,
@@ -92,6 +95,7 @@ class SyncEngineTest {
         unread,
         push,
         PushRegistrar(context, fixture.accounts, push, fixture.nextcloud),
+        fixture.widgets,
         object : DeviceConditions {
             override val online = MutableStateFlow(true)
             override val metered = false
@@ -100,7 +104,7 @@ class SyncEngineTest {
         setOf(
             PollListener { _, count ->
                 heard += count
-                true
+                settles
             },
         ),
         BackgroundRefresh(context, fixture.accounts, settings, push),
@@ -130,6 +134,28 @@ class SyncEngineTest {
         assertEquals(List(3) { "/api/v1/notifications/unread_count" }, counts.asked)
     }
 
+    @Test
+    fun `a listener that could not finish is told again on the next poll, even if the count stays`() = runBlocking {
+        answers += listOf(Counts.Answer.Count(2), Counts.Answer.Count(2), Counts.Answer.Count(2))
+        val account = fixture.signIn(server.url("/"))
+        settles = false
+        engine.poll(account, PollScope.Full)
+        settles = true
+        engine.poll(account, PollScope.Full)
+        engine.poll(account, PollScope.Full)
+        assertEquals(listOf(2, 2), heard)
+    }
+
+    @Test
+    fun `the background refresh leaves an account asked only by hand alone`() = runBlocking {
+        val account = fixture.signIn(server.url("/"))
+        settings.setPollFrequency(account.id, PollFrequency.Manual)
+        engine.refreshInBackground()
+        assertEquals(emptyList<String>(), counts.asked)
+        settings.setPollFrequency(account.id, PollFrequency.Normal)
+        engine.refreshInBackground()
+        assertEquals(1, counts.asked.size)
+    }
 
     @Test
     fun `a timeline on screen is told it is due, but not by a poll that asks for notifications alone`() = runBlocking {

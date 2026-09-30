@@ -47,6 +47,7 @@ dependencies {
     implementation(project(":feature:thread"))
     implementation(project(":feature:timeline"))
     implementation(project(":feature:notifications"))
+    implementation(project(":widget"))
     implementation(libs.androidx.hilt.lifecycle.viewmodel.compose)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.core.splashscreen)

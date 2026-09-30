@@ -22,7 +22,11 @@ import social.aloha.core.data.compose.Outbox
 import social.aloha.core.data.compose.PostSender
 import social.aloha.core.data.compose.ScheduledPosts
 import social.aloha.core.data.nextcloud.NextcloudConnection
+import social.aloha.core.data.notifications.NotificationsRepository
 import social.aloha.core.data.notifications.RaisedNotifications
+import social.aloha.core.data.sync.UnreadCounts
+import social.aloha.core.data.sync.WidgetUpdates
+import social.aloha.core.data.timeline.FilterRepository
 import social.aloha.core.data.timeline.StatusInteractions
 import social.aloha.core.data.timeline.StatusRepository
 import social.aloha.core.data.timeline.TimelineRepository
@@ -32,6 +36,7 @@ import social.aloha.core.database.OutboxDatabase
 import social.aloha.core.datastore.AccountSettingsStore
 import social.aloha.core.datastore.AppPreferences
 import social.aloha.core.datastore.TokenVault
+import social.aloha.core.datastore.WidgetFeedStore
 import social.aloha.core.model.AccessToken
 import social.aloha.core.model.ServerCapabilities
 import social.aloha.core.model.SignedInAccount
@@ -58,6 +63,19 @@ public class SignedInFixture(private val context: Context) : Closeable {
 
     public val clients: ClientFactory =
         ClientFactory(OkHttpClient(), RateLimiter(nowMillis = clock::millis), Dispatchers.IO, accounts)
+
+    /** What the widgets would show, in memory. */
+    public val widgets: WidgetUpdates = WidgetUpdates(context, WidgetFeedStore(InMemoryDataStore(emptyMap())))
+
+    public val unread: UnreadCounts = UnreadCounts(widgets)
+
+    /** The filters of these accounts, in the in-memory cache. */
+    public val filters: FilterRepository by lazy { FilterRepository(cache.value.filterDao(), clients) }
+
+    /** The notifications of these accounts, with [filters] applied. */
+    public val notifications: NotificationsRepository by lazy {
+        NotificationsRepository(clients, unread, widgets, filters, clock)
+    }
 
     /** The Nextcloud connection of these accounts, on the same database and vault. */
     public val nextcloud: NextcloudConnection by lazy {

@@ -62,4 +62,14 @@ internal object DataStoreModule {
             corruptionHandler = ReplaceFileCorruptionHandler { AccountSettingsSerializer.defaultValue },
         ) { File(context.filesDir, "datastore/account_settings.json") },
     )
+
+    // mentions can be private: kept where no backup reaches, and gone with the data if the file breaks
+    @Provides
+    @Singleton
+    fun widgetFeed(@ApplicationContext context: Context): WidgetFeedStore = WidgetFeedStore(
+        DataStoreFactory.create(
+            WidgetFeedSerializer,
+            corruptionHandler = ReplaceFileCorruptionHandler { WidgetFeedSerializer.defaultValue },
+        ) { File(context.noBackupFilesDir, "widget_feed.json") },
+    )
 }

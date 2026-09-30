@@ -47,10 +47,10 @@ import kotlinx.coroutines.launch
 import social.aloha.core.data.AccountRepository
 import social.aloha.core.data.Answer
 import social.aloha.core.data.notifications.NotificationFiltering
+import social.aloha.core.data.previewText
 import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.html.RichTextCache
-import social.aloha.core.html.StatusHtmlParser
 import social.aloha.core.model.NotificationRequest
 import social.aloha.core.navigation.NotificationRequestsKey
 import social.aloha.core.ui.AccountRow
@@ -205,9 +205,11 @@ private fun Requests(
                     style = MaterialTheme.typography.labelMedium,
                     modifier = Modifier.padding(horizontal = AlohaSpacing.m),
                 )
-                request.lastStatus?.let { status ->
+                // what the sender wrote last, never what a content warning keeps back
+                val preview = remember(request.lastStatus) { request.lastStatus?.displayed?.previewText() }
+                preview?.let { text ->
                     Text(
-                        StatusHtmlParser.plainText(status.content),
+                        text,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = PREVIEW_LINES,

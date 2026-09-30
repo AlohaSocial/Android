@@ -85,7 +85,7 @@ class NotificationsViewModelTest {
         dispatcher = notifications
         start()
     }
-    private val unread = UnreadCounts()
+    private val unread = fixture.unread
     private lateinit var viewModel: NotificationsViewModel
 
     @Before
@@ -97,7 +97,7 @@ class NotificationsViewModelTest {
         unread.set(account.id, 2)
         viewModel = NotificationsViewModel(
             fixture.accounts,
-            NotificationsRepository(fixture.clients, unread),
+            fixture.notifications,
             NotificationFiltering(fixture.clients),
             unread,
             SyncSettings(

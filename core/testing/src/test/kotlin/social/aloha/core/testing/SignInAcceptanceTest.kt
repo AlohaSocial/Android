@@ -32,6 +32,8 @@ import social.aloha.core.data.SignInCoordinator
 import social.aloha.core.data.SignInResult
 import social.aloha.core.data.compose.Outbox
 import social.aloha.core.data.nextcloud.NextcloudConnection
+import social.aloha.core.data.notifications.RaisedNotifications
+import social.aloha.core.data.sync.WidgetUpdates
 import social.aloha.core.data.timeline.CacheSweeper
 import social.aloha.core.data.timeline.StatusRepository
 import social.aloha.core.database.AccountsDatabase
@@ -42,6 +44,7 @@ import social.aloha.core.datastore.AccountSettingsStore
 import social.aloha.core.datastore.AppPreferences
 import social.aloha.core.datastore.TokenVault
 import social.aloha.core.datastore.VaultKey
+import social.aloha.core.datastore.WidgetFeedStore
 import social.aloha.core.network.ApiResult
 import social.aloha.core.network.RateLimiter
 import social.aloha.core.network.capabilities.CapabilityDetector
@@ -97,6 +100,8 @@ class SignInAcceptanceTest(private val configuration: MockServerConfiguration) {
         settings,
         Outbox(outboxDb.outboxDao(), Clock.systemUTC()),
         NextcloudConnection(clients, accounts, database.accountDao(), vault),
+        WidgetUpdates(ApplicationProvider.getApplicationContext(), WidgetFeedStore(InMemoryDataStore(emptyMap()))),
+        RaisedNotifications(database.raisedDao()),
     )
 
     @After

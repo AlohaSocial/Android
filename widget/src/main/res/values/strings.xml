@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ SPDX-FileCopyrightText: 2026 Aloha Social contributors
+  ~ SPDX-License-Identifier: MIT
+-->
+<resources>
+    <!-- Name of the widget with the unread notification count, in the widget picker -->
+    <string name="widget_unread_name">Unread notifications</string>
+    <!-- Description of that widget in the widget picker -->
+    <string name="widget_unread_description">How many notifications you have not read yet</string>
+    <!-- Name of the widget with the newest mentions -->
+    <string name="widget_mentions_name">Mentions</string>
+    <!-- Description of that widget in the widget picker -->
+    <string name="widget_mentions_description">The newest posts that mention you</string>
+    <!-- Name of the widget with the newest posts of a timeline -->
+    <string name="widget_latest_name">Latest posts</string>
+    <!-- Description of that widget in the widget picker -->
+    <string name="widget_latest_description">The newest posts of your home, local or federated timeline</string>
+    <!-- Name of the widget that starts a new post -->
+    <string name="widget_compose_name">New post</string>
+    <!-- Description of that widget in the widget picker -->
+    <string name="widget_compose_description">Write a new post in one tap</string>
+    <!-- Under the unread count in its widget, which shows the number above it -->
+    <plurals name="widget_unread">
+        <item quantity="one">unread notification</item>
+        <item quantity="other">unread notifications</item>
+    </plurals>
+    <!-- The unread count as read aloud: %d is how many -->
+    <plurals name="widget_unread_spoken">
+        <item quantity="one">%d unread notification</item>
+        <item quantity="other">%d unread notifications</item>
+    </plurals>
+    <!-- Title in the mentions widget -->
+    <string name="widget_mentions_title">Mentions</string>
+    <!-- Shown in the mentions widget when there are none -->
+    <string name="widget_mentions_empty">No mentions yet.</string>
+    <!-- Title in the latest posts widget -->
+    <string name="widget_latest_title">Latest posts</string>
+    <!-- Shown in the latest posts widget before the app has loaded any -->
+    <string name="widget_latest_empty">Open Aloha Social to load posts.</string>
+    <!-- Action of the new post widget -->
+    <string name="widget_compose_action">New post</string>
+    <!-- Shown by a widget whose account is no longer signed in -->
+    <string name="widget_no_account">This account is no longer signed in. Remove the widget, or place it again.</string>
+    <!-- Title of the screen that sets up a widget being placed -->
+    <string name="widget_configure_title">Set up the widget</string>
+    <!-- Heading of the account choice when setting up a widget -->
+    <string name="widget_configure_account">Account</string>
+    <!-- Heading of the timeline choice when setting up a latest posts widget -->
+    <string name="widget_configure_timeline">Timeline</string>
+    <!-- Places the widget with the choices made -->
+    <string name="widget_configure_done">Add widget</string>
+    <!-- Timeline choice: the people the account follows -->
+    <string name="widget_source_home">Following</string>
+    <!-- Timeline choice: everyone on the account's server -->
+    <string name="widget_source_local">This server</string>
+    <!-- Timeline choice: everyone the account's server knows -->
+    <string name="widget_source_federated">Everyone</string>
+</resources>

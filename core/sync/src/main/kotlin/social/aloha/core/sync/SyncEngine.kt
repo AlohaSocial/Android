@@ -37,6 +37,7 @@ import social.aloha.core.data.sync.PushSubscriptions
 import social.aloha.core.data.sync.SyncSettings
 import social.aloha.core.data.sync.TimelineSignals
 import social.aloha.core.data.sync.UnreadCounts
+import social.aloha.core.data.sync.WidgetUpdates
 import social.aloha.core.model.PollFrequency
 import social.aloha.core.model.SignedInAccount
 import social.aloha.core.network.ApiError
@@ -63,6 +64,7 @@ public class SyncEngine @Inject internal constructor(
     private val counts: UnreadCounts,
     private val push: PushSubscriptions,
     private val registrar: PushRegistrar,
+    private val widgets: WidgetUpdates,
     private val device: DeviceConditions,
     private val listeners: Set<@JvmSuppressWildcards PollListener>,
     private val background: BackgroundRefresh,
@@ -88,6 +90,8 @@ public class SyncEngine @Inject internal constructor(
      */
     public fun setForeground(inFront: Boolean) {
         if (inFront) noteInteraction()
+        // what the timelines just fetched is the freshest the widgets can show
+        if (!inFront && foreground.value) widgets.redraw()
         foreground.value = inFront
         synchronized(this) {
             if (loop == null) {
@@ -194,7 +198,8 @@ public class SyncEngine @Inject internal constructor(
     }
 
     private suspend fun counted(account: SignedInAccount, count: Int, pollScope: PollScope) {
-        val previous = counts.of(account.id)
+        // a process started for background work knows the count only from what the widgets were given
+        val previous = counts.of(account.id) ?: widgets.feed(account.id).first().unread
         counts.set(account.id, count)
         failures.remove(account.id)
         if (pollScope == PollScope.Full && timelines.onScreen(account.id)) timelines.markDue(account.id)
@@ -212,7 +217,9 @@ public class SyncEngine @Inject internal constructor(
      * cache.
      */
     public suspend fun refreshInBackground() {
-        accounts.all().forEach { poll(it, PollScope.NotificationsOnly) }
+        accounts.all()
+            .filter { !it.needsReauth && settings.pollFrequency(it.id).first().multiplier != null }
+            .forEach { poll(it, PollScope.NotificationsOnly) }
     }
 
     internal fun failed(accountId: String, error: ApiError) {
