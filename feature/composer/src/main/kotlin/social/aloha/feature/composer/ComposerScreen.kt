@@ -1,0 +1,176 @@
+// SPDX-FileCopyrightText: 2026 Aloha Social contributors
+// SPDX-License-Identifier: MIT
+
+package social.aloha.feature.composer
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.paneTitle
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.unit.dp
+import social.aloha.core.designsystem.AlohaIcons
+import social.aloha.core.designsystem.AlohaSpacing
+import social.aloha.core.model.CustomEmoji
+import social.aloha.core.model.Visibility
+import social.aloha.core.ui.readingWidth
+
+/**
+ * The composer: who it posts as, the post being answered, the content warning, the text of each post
+ * in the thread, and a toolbar above the keyboard with what is left of the limit. One column centred
+ * at reading width, so a tablet or a phone on its side writes at a width that reads well.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun ComposerScreen(
+    state: ComposerUiState,
+    segments: List<TextFieldValue>,
+    spoiler: String,
+    actions: ComposerActions,
+    modifier: Modifier = Modifier,
+    snackbars: SnackbarHostState = remember { SnackbarHostState() },
+) {
+    val title = stringResource(if (state.reply != null) R.string.composer_title_reply else R.string.composer_title)
+    Scaffold(
+        modifier = modifier.semantics { paneTitle = title },
+        topBar = {
+            TopAppBar(
+                title = { state.author?.let { AuthorPicker(it, state.authors, state.posted == 0, actions::onAuthor) } },
+                navigationIcon = {
+                    IconButton(onClick = actions::onClose) {
+                        Icon(AlohaIcons.Close, stringResource(R.string.composer_close))
+                    }
+                },
+                actions = { PostButton(state, actions) },
+            )
+        },
+        snackbarHost = { SnackbarHost(snackbars) },
+    ) { padding ->
+        Column(
+            Modifier.padding(padding).fillMaxSize().imePadding(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Column(
+                // capped before filling, so a wide window centres a column at reading width
+                Modifier.weight(1f).readingWidth().fillMaxWidth().verticalScroll(rememberScrollState())
+                    .padding(horizontal = AlohaSpacing.m),
+                verticalArrangement = Arrangement.spacedBy(AlohaSpacing.s),
+            ) {
+                state.reply?.let { ReplyLine(it) }
+                if (state.spoilerShown) SpoilerField(spoiler) { actions.onSpoiler(true, it) }
+                segments.forEachIndexed { index, value ->
+                    SegmentField(index, segments.size, value, state, actions)
+                }
+                GamesHint(state.games)
+                TextButton(onClick = actions::onAddSegment, enabled = !state.posting) {
+                    Icon(AlohaIcons.AddToThread, contentDescription = null)
+                    Text(stringResource(R.string.composer_add_segment), Modifier.padding(start = AlohaSpacing.xs))
+                }
+            }
+            if (state.suggestions.isNotEmpty()) {
+                Suggestions(state.suggestions, actions::onSuggestion, Modifier.readingWidth())
+            }
+            HorizontalDivider()
+            Toolbar(state, spoiler, actions, Modifier.readingWidth(), showCounter = segments.size == 1)
+        }
+    }
+}
+
+@Composable
+private fun PostButton(state: ComposerUiState, actions: ComposerActions) {
+    val posting = stringResource(R.string.composer_posting)
+    val label = when {
+        state.posted > 0 -> R.string.composer_post_again
+        state.reply != null -> R.string.composer_post_reply
+        else -> R.string.composer_post
+    }
+    Button(onClick = actions::onPost, enabled = state.canPost, modifier = Modifier.padding(end = AlohaSpacing.s)) {
+        if (state.posting) {
+            CircularProgressIndicator(
+                Modifier.size(PROGRESS).semantics {
+                    contentDescription = posting
+                    liveRegion = LiveRegionMode.Polite
+                },
+                strokeWidth = 2.dp,
+            )
+        } else {
+            Text(stringResource(label))
+        }
+    }
+}
+
+@Composable
+private fun ReplyLine(reply: ReplyContext) {
+    var open by rememberSaveable { mutableStateOf(false) }
+    Column(Modifier.fillMaxWidth().padding(top = AlohaSpacing.s)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                stringResource(R.string.composer_replying_to, reply.author),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.weight(1f),
+            )
+            TextButton(onClick = { open = !open }) {
+                Text(stringResource(if (open) R.string.composer_reply_hide else R.string.composer_reply_show))
+            }
+        }
+        if (open) {
+            Text(
+                reply.excerpt,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
+
+@Composable
+private fun GamesHint(games: List<ComposerGames.Kind>) {
+    games.forEach { kind ->
+        val text = when (kind) {
+            ComposerGames.Kind.Dice -> R.string.composer_game_dice
+            ComposerGames.Kind.Flip -> R.string.composer_game_flip
+            ComposerGames.Kind.Pick -> R.string.composer_game_pick
+        }
+        Text(
+            stringResource(text),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+private val PROGRESS = 20.dp

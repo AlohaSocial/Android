@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ SPDX-FileCopyrightText: 2026 Aloha Social contributors
+  ~ SPDX-License-Identifier: MIT
+-->
+<resources>
+    <!-- Title of the screen for writing a new post, read by screen readers -->
+    <string name="composer_title">New post</string>
+    <!-- Title of the screen for writing a reply, read by screen readers -->
+    <string name="composer_title_reply">Reply</string>
+    <!-- Button that closes the composer -->
+    <string name="composer_close">Close</string>
+    <!-- Button that sends the post -->
+    <string name="composer_post">Post</string>
+    <!-- Button that sends the reply -->
+    <string name="composer_post_reply">Reply</string>
+    <!-- Button that sends the rest of a thread after part of it failed -->
+    <string name="composer_post_again">Post the rest</string>
+    <!-- Read aloud while the post is being sent -->
+    <string name="composer_posting">Posting</string>
+    <!-- Placeholder in the empty text box -->
+    <string name="composer_placeholder">What\'s on your mind?</string>
+    <!-- Placeholder in the text box of a further post in a thread -->
+    <string name="composer_placeholder_more">Continue the thread</string>
+    <!-- Label above the text box of the Nth post in a thread -->
+    <string name="composer_segment_label">Post %1$d of the thread</string>
+    <!-- Button that adds another post below, making a thread -->
+    <string name="composer_add_segment">Add to thread</string>
+    <!-- Button that removes a post from the thread -->
+    <string name="composer_remove_segment">Remove this post from the thread</string>
+    <!-- Line above the text box when replying; the placeholder is the handle of the author -->
+    <string name="composer_replying_to">Replying to %1$s</string>
+    <!-- Button that shows the whole text of the post being replied to -->
+    <string name="composer_reply_show">Show the post</string>
+    <!-- Button that hides the text of the post being replied to -->
+    <string name="composer_reply_hide">Hide the post</string>
+    <!-- Button that picks which account the post is sent from; the placeholder is the handle -->
+    <string name="composer_author">Posting as %1$s</string>
+    <!-- Toolbar button that adds or removes a content warning -->
+    <string name="composer_cw">Content warning</string>
+    <!-- Label of the content warning text box -->
+    <string name="composer_cw_label">Content warning</string>
+    <!-- Placeholder of the content warning text box -->
+    <string name="composer_cw_placeholder">What the post is about</string>
+    <!-- Content warning preset: the post spoils a story -->
+    <string name="composer_cw_spoiler">Spoiler</string>
+    <!-- Content warning preset: the post shows or discusses food -->
+    <string name="composer_cw_food">Food</string>
+    <!-- Content warning preset: the post is about politics -->
+    <string name="composer_cw_politics">Politics</string>
+    <!-- Content warning preset: the post is about mental health -->
+    <string name="composer_cw_mental_health">Mental health</string>
+    <!-- Content warning preset: the post shows a face looking into the camera -->
+    <string name="composer_cw_eye_contact">Eye contact</string>
+    <!-- Content warning preset: the post is about work -->
+    <string name="composer_cw_work">Work</string>
+    <!-- Toolbar button that picks who can see the post; the placeholder is the current choice -->
+    <string name="composer_visibility">Visibility: %1$s</string>
+    <!-- Visibility: anyone can see it, in public timelines too -->
+    <string name="composer_visibility_public">Public</string>
+    <!-- Visibility: anyone can see it, but it stays out of public timelines -->
+    <string name="composer_visibility_unlisted">Quiet public</string>
+    <!-- Visibility: only followers can see it -->
+    <string name="composer_visibility_private">Followers</string>
+    <!-- Visibility: only the people mentioned can see it -->
+    <string name="composer_visibility_direct">Mentioned people only</string>
+    <!-- Note under the visibility choices when replying limits them -->
+    <string name="composer_visibility_clamped">A reply can\'t reach further than the post it answers.</string>
+    <!-- Toolbar button that picks the language of the post; the placeholder is the language name -->
+    <string name="composer_language">Language: %1$s</string>
+    <!-- The post's language is not set -->
+    <string name="composer_language_none">Not set</string>
+    <!-- Title of the language list -->
+    <string name="composer_language_title">Language of the post</string>
+    <!-- Toolbar button that opens the custom emoji of the server -->
+    <string name="composer_emoji">Custom emoji</string>
+    <!-- Title of the custom emoji picker -->
+    <string name="composer_emoji_title">Custom emoji</string>
+    <!-- Emoji group for emoji without a category -->
+    <string name="composer_emoji_other">Other</string>
+    <!-- Toolbar button that picks who may quote the post; the placeholder is the current choice -->
+    <string name="composer_quote">Quotes: %1$s</string>
+    <!-- Quote policy: anyone may quote the post -->
+    <string name="composer_quote_anyone">Anyone</string>
+    <!-- Quote policy: only followers may quote the post -->
+    <string name="composer_quote_followers">Followers</string>
+    <!-- Quote policy: nobody may quote the post -->
+    <string name="composer_quote_nobody">Nobody</string>
+    <!-- How many characters are left before the post reaches the server's limit -->
+    <plurals name="composer_remaining">
+        <item quantity="one">%1$d character left</item>
+        <item quantity="other">%1$d characters left</item>
+    </plurals>
+    <!-- Read aloud when the post is too long; the placeholder is how many characters too many -->
+    <plurals name="composer_over">
+        <item quantity="one">%1$d character too many</item>
+        <item quantity="other">%1$d characters too many</item>
+    </plurals>
+    <!-- Hint under the text: a die will be rolled when posting -->
+    <string name="composer_game_dice">A die is rolled when you post</string>
+    <!-- Hint under the text: a coin will be flipped when posting -->
+    <string name="composer_game_flip">A coin is flipped when you post</string>
+    <!-- Hint under the text: one of the options will be picked when posting -->
+    <string name="composer_game_pick">One of the options is picked when you post</string>
+    <!-- Result of a coin flip, written into the post -->
+    <string name="composer_game_heads">heads</string>
+    <!-- Result of a coin flip, written into the post -->
+    <string name="composer_game_tails">tails</string>
+    <!-- Result of a pick, written into the post; first placeholder the choice, second all options -->
+    <string name="composer_game_picked">%1$s (out of %2$s)</string>
+    <!-- Title of the dialog when leaving a composer with text in it -->
+    <string name="composer_discard_title">Discard this post?</string>
+    <!-- Body of the dialog when leaving a composer with text in it -->
+    <string name="composer_discard_body">What you wrote will be lost.</string>
+    <!-- Button that discards the post -->
+    <string name="composer_discard">Discard</string>
+    <!-- Button that goes back to writing -->
+    <string name="composer_keep_editing">Keep writing</string>
+    <!-- Error when the server refuses the post and says why; the placeholder is its reason -->
+    <string name="composer_refused">The server didn\'t take the post: %1$s</string>
+    <!-- Error when the server refuses the post without saying why -->
+    <string name="composer_refused_unknown">The server didn\'t take the post.</string>
+    <!-- Error when the server cannot be reached while posting -->
+    <string name="composer_unreached">Couldn\'t reach the server. Nothing is lost; try again.</string>
+    <!-- Error when the post being replied to cannot be found from the account chosen -->
+    <string name="composer_reply_not_found">That account\'s server can\'t find the post you\'re replying to.</string>
+</resources>

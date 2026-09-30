@@ -1,0 +1,70 @@
+// SPDX-FileCopyrightText: 2026 Aloha Social contributors
+// SPDX-License-Identifier: MIT
+
+package social.aloha.feature.composer
+
+import androidx.compose.runtime.Immutable
+import social.aloha.core.data.Trouble
+import social.aloha.core.model.CustomEmoji
+import social.aloha.core.model.Visibility
+
+/** One account the post can go out as, for the picker at the top. */
+@Immutable
+internal data class Author(val id: String, val handle: String, val name: String, val avatarUrl: String?)
+
+/** The post being answered, as the collapsible line above the text shows it. */
+@Immutable
+internal data class ReplyContext(val author: String, val excerpt: String)
+
+/** A completion offered for the word at the cursor. */
+@Immutable
+internal data class Suggestion(val replacement: String, val label: String, val imageUrl: String?)
+
+/** Who may quote the post, where the server lets its writer choose. */
+internal enum class QuotePolicy(val wire: String?) { Anyone(null), Followers("followers"), Nobody("nobody") }
+
+/** Why posting stopped. */
+@Immutable
+internal sealed interface PostFailure {
+    /** The server refused the post and said why; the text stays as it was for the writer to fix. */
+    data class Refused(val message: String?) : PostFailure
+
+    /** The server could not be reached or failed; posting again resumes where it stopped. */
+    data class Unreached(val trouble: Trouble) : PostFailure
+
+    /** The post being answered cannot be found from the account chosen. */
+    data object ReplyNotFound : PostFailure
+}
+
+@Immutable
+internal data class ComposerUiState(
+    /** The account, the post being answered and the writer's defaults are in place. */
+    val ready: Boolean = false,
+    val author: Author? = null,
+    val authors: List<Author> = emptyList(),
+    val reply: ReplyContext? = null,
+    val visibility: Visibility = Visibility.Public,
+    val visibilities: List<Visibility> = Visibility.choices,
+    /** Why some visibilities are missing: a reply may not reach further than the post it answers. */
+    val visibilityClamped: Boolean = false,
+    val language: String? = null,
+    val spoilerShown: Boolean = false,
+    val quotePolicies: List<QuotePolicy> = emptyList(),
+    val quotePolicy: QuotePolicy = QuotePolicy.Anyone,
+    /** Characters left in each segment of the thread, negative when over. */
+    val remaining: List<Int> = listOf(0),
+    val games: List<ComposerGames.Kind> = emptyList(),
+    val suggestions: List<Suggestion> = emptyList(),
+    val emojis: List<CustomEmoji> = emptyList(),
+    /** How many segments of the thread are already posted; a retry starts after them. */
+    val posted: Int = 0,
+    val posting: Boolean = false,
+    val failure: PostFailure? = null,
+    val done: Boolean = false,
+) {
+    val canPost: Boolean get() = ready && author != null && !posting && remaining.all { it >= 0 }
+}
+
+/** The visibilities a writer picks between; an unknown one is never offered. */
+internal val Visibility.Companion.choices: List<Visibility>
+    get() = listOf(Visibility.Public, Visibility.Unlisted, Visibility.Private, Visibility.Direct)

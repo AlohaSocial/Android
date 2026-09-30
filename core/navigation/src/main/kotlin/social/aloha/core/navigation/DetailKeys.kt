@@ -42,3 +42,7 @@ public data object SettingsKey : NavKey
 /** One settings section, by the key it registers under. */
 @Serializable
 public data class SettingsSectionKey(val section: String) : NavKey
+
+/** A new post written as [readerId]; an answer to [replyToId] on that account's server when given. */
+@Serializable
+public data class ComposerKey(val readerId: String, val replyToId: String? = null) : NavKey

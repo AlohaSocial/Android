@@ -30,6 +30,7 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -98,6 +99,7 @@ internal fun TimelineScreen(
     title: String = stringResource(R.string.timeline_title),
     navigationIcon: @Composable () -> Unit = {},
     showOptions: Boolean = true,
+    onCompose: (() -> Unit)? = null,
 ) {
     Scaffold(
         modifier = modifier.semantics { paneTitle = title },
@@ -109,6 +111,16 @@ internal fun TimelineScreen(
             )
         },
         snackbarHost = { SnackbarHost(snackbars) },
+        floatingActionButton = {
+            onCompose?.let {
+                ExtendedFloatingActionButton(
+                    onClick = it,
+                    expanded = !listState.canScrollBackward,
+                    icon = { Icon(AlohaIcons.Compose, contentDescription = null) },
+                    text = { Text(stringResource(R.string.timeline_compose)) },
+                )
+            }
+        },
     ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize()) {
             if (state.sources.size > 1) SourceRow(state.source, state.sources, actions::onSource)

@@ -17,7 +17,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.core.content.getSystemService
 import androidx.core.net.toUri
 
-/** Where a post sends the person: its thread, a profile by id or handle, or a hashtag. */
+/** Where a post sends the person: its thread, a profile by id or handle, a hashtag, or a reply to it. */
 public interface StatusNavigation {
     public fun openThread(statusId: String)
 
@@ -27,6 +27,9 @@ public interface StatusNavigation {
 
     /** A web address: in the app when it is a post, profile or hashtag the server finds, else the browser. */
     public fun openWeb(url: String)
+
+    /** The composer: a new post, or a reply to [replyToId] when given. */
+    public fun openComposer(replyToId: String?)
 }
 
 /**
@@ -68,8 +71,7 @@ public abstract class RoutedStatusActions(
     // until there is a media viewer the post itself opens; within its own thread that is where the reader is
     override fun onMedia(row: StatusRowUi, index: Int): Unit = navigation().openThread(row.statusId)
 
-    // replying needs the composer; until then the conversation opens
-    override fun onReply(row: StatusRowUi): Unit = navigation().openThread(row.statusId)
+    override fun onReply(row: StatusRowUi): Unit = navigation().openComposer(row.statusId)
 
     // reacting needs the emoji picker, which comes with the composer
     override fun onReact(row: StatusRowUi, name: String, add: Boolean): Unit = Unit

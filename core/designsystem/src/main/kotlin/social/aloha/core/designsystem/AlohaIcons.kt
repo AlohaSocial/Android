@@ -21,19 +21,24 @@ import androidx.compose.material.icons.filled.RepeatOn
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.VideoLibrary
 import androidx.compose.material.icons.outlined.AccountCircle
+import androidx.compose.material.icons.outlined.AddComment
 import androidx.compose.material.icons.outlined.AmpStories
 import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.Create
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.EditNote
+import androidx.compose.material.icons.outlined.EmojiEmotions
 import androidx.compose.material.icons.outlined.ExpandLess
 import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material.icons.outlined.FilterAlt
 import androidx.compose.material.icons.outlined.Flag
+import androidx.compose.material.icons.outlined.FormatQuote
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Inventory2
+import androidx.compose.material.icons.outlined.Language
 import androidx.compose.material.icons.outlined.Link
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Mail
@@ -45,7 +50,9 @@ import androidx.compose.material.icons.outlined.OpenInBrowser
 import androidx.compose.material.icons.outlined.PersonAdd
 import androidx.compose.material.icons.outlined.PhotoLibrary
 import androidx.compose.material.icons.outlined.Place
+import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material.icons.outlined.PushPin
+import androidx.compose.material.icons.outlined.RemoveCircleOutline
 import androidx.compose.material.icons.outlined.Repeat
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Share
@@ -126,4 +133,13 @@ public object AlohaIcons {
     public val Timeline: ImageVector = Icons.Outlined.ViewAgenda
     public val AddAccount: ImageVector = Icons.Outlined.PersonAdd
     public val SignOut: ImageVector = Icons.AutoMirrored.Outlined.Logout
+
+    // writing a post
+    public val Compose: ImageVector = Icons.Outlined.Create
+    public val VisibilityPublic: ImageVector = Icons.Outlined.Public
+    public val Language: ImageVector = Icons.Outlined.Language
+    public val Emoji: ImageVector = Icons.Outlined.EmojiEmotions
+    public val Quote: ImageVector = Icons.Outlined.FormatQuote
+    public val AddToThread: ImageVector = Icons.Outlined.AddComment
+    public val Remove: ImageVector = Icons.Outlined.RemoveCircleOutline
 }

@@ -38,6 +38,7 @@ dependencies {
     implementation(project(":core:data"))
     implementation(project(":core:network"))
     implementation(project(":core:media"))
+    implementation(project(":feature:composer"))
     implementation(project(":feature:signin"))
     implementation(project(":feature:profile"))
     implementation(project(":feature:settings"))

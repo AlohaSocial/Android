@@ -90,6 +90,7 @@ public fun TimelineRoute(
         },
         navigationIcon = navigationIcon,
         showOptions = feed == TimelineFeed.Home,
+        onCompose = if (feed == TimelineFeed.Home) ({ nav.openComposer(null) }) else null,
     )
 
     deleting?.let { row ->

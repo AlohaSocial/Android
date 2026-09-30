@@ -52,6 +52,7 @@ import social.aloha.core.designsystem.AlohaPreviews
 import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.designsystem.AlohaTheme
 import social.aloha.core.navigation.AccountKey
+import social.aloha.core.navigation.ComposerKey
 import social.aloha.core.navigation.HomeKey
 import social.aloha.core.navigation.NotificationsKey
 import social.aloha.core.navigation.PeopleKey
@@ -70,6 +71,7 @@ import social.aloha.core.navigation.TopLevelKey
 import social.aloha.core.navigation.VideoKey
 import social.aloha.core.ui.StatusNavigation
 import social.aloha.core.ui.openInBrowser
+import social.aloha.feature.composer.ComposerRoute
 import social.aloha.feature.profile.PeopleRoute
 import social.aloha.feature.profile.ProfileNavigation
 import social.aloha.feature.profile.ProfileRoute
@@ -171,6 +173,10 @@ fun AlohaApp(
             }
 
             override fun openWeb(url: String) = open(url, true)
+
+            override fun openComposer(replyToId: String?) {
+                backStack.push(ComposerKey(readerId, replyToId))
+            }
         }
     }
     LaunchedEffect(pendingLink) {
@@ -246,6 +252,7 @@ fun AlohaApp(
                     SettingsSectionRoute(it.section, onBack = { backStack.removeLastOrNull() })
                 }
                 entry<ProfileKey> { ProfileRoute(AccountKey(readerId, id = serverAccountId), statusNavigation) }
+                entry<ComposerKey> { ComposerRoute(it, onDone = { backStack.removeLastOrNull() }) }
                 entry<ThreadKey>(metadata = ListDetailSceneStrategy.detailPane()) { ThreadRoute(it, statusNavigation) }
                 entry<StatusListKey>(metadata = ListDetailSceneStrategy.detailPane()) {
                     StatusListRoute(it, statusNavigation)
