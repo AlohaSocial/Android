@@ -7,9 +7,14 @@ import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.systemBars
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -207,6 +212,8 @@ fun AlohaApp(
         },
     ) {
         NavDisplay(
+            // the navigation already pads its side for the system bars; the screens must not pad it again
+            modifier = Modifier.consumeWindowInsets(suiteInsets(suiteType)),
             backStack = backStack,
             onBack = { backStack.removeLastOrNull() },
             sceneStrategies = listOf(panes),
@@ -295,4 +302,17 @@ private fun AlohaAppPreview() {
 /** Opens [key] unless it is already on screen: a second copy would make back seem to do nothing. */
 internal fun MutableList<NavKey>.push(key: NavKey) {
     if (lastOrNull() != key) add(key)
+}
+
+/** The system bar edge [type] takes up: the bottom for a bar, the start for a rail or drawer. */
+@Composable
+private fun suiteInsets(type: NavigationSuiteType): WindowInsets = when (type) {
+    NavigationSuiteType.NavigationBar,
+    NavigationSuiteType.ShortNavigationBarCompact,
+    NavigationSuiteType.ShortNavigationBarMedium,
+    -> WindowInsets.systemBars.only(WindowInsetsSides.Bottom)
+
+    NavigationSuiteType.None -> WindowInsets(0)
+
+    else -> WindowInsets.systemBars.only(WindowInsetsSides.Start)
 }
