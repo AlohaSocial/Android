@@ -200,4 +200,36 @@
     <string name="profile_edit_refused">The server didn\'t take these changes.</string>
     <!-- Snackbar when the server could not be reached -->
     <string name="profile_edit_unreached">Your profile couldn\'t be saved. Try again in a moment.</string>
+    <!-- Menu item that opens a report about the account -->
+    <string name="profile_report">Report</string>
+    <!-- Title of the report screen; the placeholder is the account, like @alice@example.social -->
+    <string name="profile_report_title">Report %1$s</string>
+    <!-- Heading above the report's categories -->
+    <string name="profile_report_why">What is wrong?</string>
+    <!-- Report category: spam -->
+    <string name="profile_report_spam">It is spam</string>
+    <!-- Report category: illegal content -->
+    <string name="profile_report_legal">It is illegal</string>
+    <!-- Report category: it breaks the server's rules -->
+    <string name="profile_report_violation">It breaks the server\'s rules</string>
+    <!-- Report category: something else -->
+    <string name="profile_report_other">Something else</string>
+    <!-- Heading above the server's rules, to pick which were broken -->
+    <string name="profile_report_rules">Which rules?</string>
+    <!-- Label of the report's comment field, for the moderators -->
+    <string name="profile_report_comment">Anything the moderators should know</string>
+    <!-- Checkbox: a copy of the report goes to the moderators of the account's own server -->
+    <string name="profile_report_forward">Send a copy to their server\'s moderators too</string>
+    <!-- Button that sends the report -->
+    <string name="profile_report_send">Send report</string>
+    <!-- Shown when the report could not be sent -->
+    <string name="profile_report_failed">That didn\'t go through. Try again in a moment.</string>
+    <!-- Heading once the report is sent -->
+    <string name="profile_report_sent">Thanks, your report is on its way</string>
+    <!-- Body once the report is sent; the placeholder is the account -->
+    <string name="profile_report_sent_body">The moderators decide what happens next. Until then, you can stop seeing %1$s yourself.</string>
+    <!-- Button label once the account is muted after reporting -->
+    <string name="profile_report_muted">Muted</string>
+    <!-- Button label once the account is blocked after reporting -->
+    <string name="profile_report_blocked">Blocked</string>
 </resources>

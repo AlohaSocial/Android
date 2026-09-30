@@ -123,4 +123,6 @@ internal interface ProfileScreenActions : ProfileActions {
     fun onOpenInBrowser(url: String)
 
     fun onEditProfile()
+
+    fun onReport()
 }

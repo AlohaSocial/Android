@@ -57,6 +57,21 @@ public data class ComposerKey(
     val redraftId: String? = null,
 ) : NavKey
 
+/**
+ * A report by [readerId] about account [accountId], known as [handle], from its post [statusId] when
+ * it was opened from one.
+ */
+@Serializable
+public data class ReportKey(
+    val readerId: String,
+    val accountId: String,
+    val handle: String,
+    val statusId: String? = null,
+) : NavKey {
+    /** An account on another server, whose moderators can be sent a copy. */
+    val remote: Boolean get() = handle.removePrefix("@").contains('@')
+}
+
 /** [readerId]'s own profile, being edited. */
 @Serializable
 public data class EditProfileKey(val readerId: String) : NavKey

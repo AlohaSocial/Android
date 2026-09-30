@@ -84,6 +84,11 @@ public fun ProfileRoute(key: AccountKey, navigation: ProfileNavigation, modifier
             override fun onOpenInBrowser(url: String) = openInBrowser(context, url)
 
             override fun onEditProfile() = nav.editProfile()
+
+            override fun onReport() {
+                val author = state.header?.author ?: return
+                nav.report(author.id, author.handle, statusId = null)
+            }
         }
     }
     // the reader's own profile shows what they just changed when they come back to it

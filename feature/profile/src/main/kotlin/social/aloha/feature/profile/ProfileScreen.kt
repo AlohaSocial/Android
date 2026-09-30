@@ -242,6 +242,15 @@ private fun Menu(state: ProfileUiState, actions: ProfileScreenActions, ask: (Ask
         if (!header.isSelf && relation != null) {
             RelationItems(relation, header.domain, actions, ask) { open = false }
         }
+        if (!header.isSelf) {
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.profile_report)) },
+                onClick = {
+                    open = false
+                    actions.onReport()
+                },
+            )
+        }
         header.url?.let { url ->
             DropdownMenuItem(
                 text = { Text(stringResource(R.string.profile_open_in_browser)) },

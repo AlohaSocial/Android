@@ -33,6 +33,9 @@ public interface StatusNavigation {
 
     /** The composer on the reader's own post [statusId]: edited, or deleted and written again when [redraft]. */
     public fun editPost(statusId: String, redraft: Boolean)
+
+    /** A report about account [accountId], known as [handle], about its post [statusId] when given. */
+    public fun report(accountId: String, handle: String, statusId: String?)
 }
 
 /** A delete the person asked for, of [row]; with [redraft] the post is written again after. */
@@ -61,6 +64,7 @@ public abstract class RoutedStatusActions(
         StatusMenuItem.Edit,
         StatusMenuItem.Redraft,
         StatusMenuItem.Delete,
+        StatusMenuItem.Report,
     )
 
     public abstract fun onMute(row: StatusRowUi)
@@ -106,6 +110,8 @@ public abstract class RoutedStatusActions(
             StatusMenuItem.Redraft -> onDeleteAsked(DeleteRequest(row, redraft = true))
 
             StatusMenuItem.Delete -> onDeleteAsked(DeleteRequest(row, redraft = false))
+
+            StatusMenuItem.Report -> navigation().report(row.author.id, row.author.handle, row.statusId)
 
             else -> Unit
         }

@@ -62,6 +62,7 @@ import social.aloha.core.navigation.PeopleKey
 import social.aloha.core.navigation.PeopleKind
 import social.aloha.core.navigation.PhotosKey
 import social.aloha.core.navigation.ProfileKey
+import social.aloha.core.navigation.ReportKey
 import social.aloha.core.navigation.RouteResolver
 import social.aloha.core.navigation.ScheduledPostsKey
 import social.aloha.core.navigation.SettingsKey
@@ -82,6 +83,7 @@ import social.aloha.feature.profile.EditProfileRoute
 import social.aloha.feature.profile.PeopleRoute
 import social.aloha.feature.profile.ProfileNavigation
 import social.aloha.feature.profile.ProfileRoute
+import social.aloha.feature.profile.ReportRoute
 import social.aloha.feature.settings.SettingsPlaceholder
 import social.aloha.feature.settings.SettingsRoute
 import social.aloha.feature.settings.SettingsSectionRoute
@@ -188,7 +190,12 @@ fun AlohaApp(
             override fun openWeb(url: String) = open(url, true)
 
             override fun openComposer(replyToId: String?) {
-                backStack.push(ComposerKey(readerId, replyToId))
+                // the draft's id goes with the key, so a composer restored after the app was stopped finds it
+                backStack.push(ComposerKey(readerId, replyToId, draftId = UUID.randomUUID().toString()))
+            }
+
+            override fun report(accountId: String, handle: String, statusId: String?) {
+                backStack.push(ReportKey(readerId, accountId, handle, statusId))
             }
 
             override fun editPost(statusId: String, redraft: Boolean) {
@@ -297,8 +304,9 @@ fun AlohaApp(
                         },
                     )
                 }
-                entry<EditProfileKey> { EditProfileRoute(it, onDone = { backStack.removeLastOrNull() }) }
-                entry<ScheduledPostsKey> { ScheduledPostsRoute(it, onBack = { backStack.removeLastOrNull() }) }
+                entry<ReportKey> { ReportRoute(it, onDone = { backStack.remove(it) }) }
+                entry<EditProfileKey> { EditProfileRoute(it, onDone = { backStack.remove(it) }) }
+                entry<ScheduledPostsKey> { ScheduledPostsRoute(it, onBack = { backStack.remove(it) }) }
                 entry<ThreadKey>(metadata = ListDetailSceneStrategy.detailPane()) { ThreadRoute(it, statusNavigation) }
                 entry<StatusListKey>(metadata = ListDetailSceneStrategy.detailPane()) {
                     StatusListRoute(it, statusNavigation)

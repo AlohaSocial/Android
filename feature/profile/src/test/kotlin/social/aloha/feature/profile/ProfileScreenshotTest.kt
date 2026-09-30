@@ -23,6 +23,7 @@ import social.aloha.core.designsystem.ThemeMode
 import social.aloha.core.designsystem.ThemeSettings
 import social.aloha.core.html.RichTextCache
 import social.aloha.core.model.AccountField
+import social.aloha.core.model.InstanceRule
 import social.aloha.core.model.ProfileHighlights
 import social.aloha.core.navigation.PeopleKind
 import social.aloha.core.testing.StatusSamples
@@ -66,6 +67,7 @@ class ProfileScreenshotTest {
         override fun onLists() = Unit
         override fun onListed(listId: String, add: Boolean) = Unit
         override fun onEditProfile() = Unit
+        override fun onReport() = Unit
         override fun onPeople(followers: Boolean) = Unit
         override fun onOpenInBrowser(url: String) = Unit
     }
@@ -160,5 +162,22 @@ class ProfileScreenshotTest {
             locked = true,
         )
         EditProfileScreen(EditProfileUiState(form = form, original = form.copy(note = "")), {}, {}, {}, {})
+    }
+
+    @Test
+    fun report() = capture("profile-report") {
+        val rules = listOf(InstanceRule("1", "Be kind"), InstanceRule("2", "No spam or ads"))
+        val state = ReportUiState(category = ReportCategory.Violation, rules = rules, broken = setOf("2"))
+        ReportScreen("@bob@remote.example", remote = true, state, NoReport, onDone = {})
+    }
+
+    private object NoReport : ReportActions {
+        override fun onCategory(category: ReportCategory) = Unit
+        override fun onRule(id: String, broken: Boolean) = Unit
+        override fun onComment(comment: String) = Unit
+        override fun onForward(forward: Boolean) = Unit
+        override fun onSend() = Unit
+        override fun onMute() = Unit
+        override fun onBlock() = Unit
     }
 }
