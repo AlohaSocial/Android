@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
@@ -26,9 +27,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -375,8 +378,36 @@ private fun ReactionRow(row: StatusRowUi, canReact: Boolean, actions: StatusActi
                 }
             }
         }
+        if (canReact) AddReaction(row.reactions) { name -> actions.onReact(row, name, add = true) }
     }
 }
+
+/** A reaction of the reader's own, from the ones most reached for; one they gave already is not offered. */
+@Composable
+private fun AddReaction(reactions: List<Reaction>, onReact: (String) -> Unit) {
+    var open by remember { mutableStateOf(false) }
+    val given = reactions.filter { it.me }.mapTo(HashSet()) { it.name }
+    Box {
+        AssistChip(
+            onClick = { open = true },
+            label = { Icon(AlohaIcons.AddReaction, stringResource(R.string.status_react)) },
+        )
+        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+            // Nextcloud Social takes Unicode emoji only, so a short row of them rather than a picker
+            Row {
+                QUICK_REACTIONS.filterNot { it in given }.forEach { emoji ->
+                    TextButton(onClick = {
+                        open = false
+                        onReact(emoji)
+                    }) { Text(emoji, style = MaterialTheme.typography.titleLarge) }
+                }
+            }
+        }
+    }
+}
+
+private val QUICK_REACTIONS =
+    listOf("\u2764\uFE0F", "\uD83D\uDC4D", "\uD83D\uDE02", "\uD83D\uDE2E", "\uD83D\uDE22", "\uD83C\uDF89")
 
 @Composable
 private fun ReactionLabel(reaction: Reaction) {

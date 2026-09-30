@@ -47,6 +47,8 @@ internal data class ThreadUiState(
     val edited: Boolean = false,
     val history: List<EditVersion>? = null,
     val actionFailed: Boolean = false,
+    /** Whether the reader's server takes emoji reactions, which the focused post then offers. */
+    val canReact: Boolean = false,
 )
 
 /** What a pushed list of the focused post shows. */

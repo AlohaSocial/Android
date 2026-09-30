@@ -24,6 +24,7 @@ import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material.icons.outlined.AddCircleOutline
 import androidx.compose.material.icons.outlined.AddComment
 import androidx.compose.material.icons.outlined.AddPhotoAlternate
+import androidx.compose.material.icons.outlined.AddReaction
 import androidx.compose.material.icons.outlined.AmpStories
 import androidx.compose.material.icons.outlined.AttachFile
 import androidx.compose.material.icons.outlined.BookmarkBorder
@@ -160,4 +161,5 @@ public object AlohaIcons {
     public val AttachMore: ImageVector = Icons.Outlined.AddCircleOutline
     public val Poll: ImageVector = Icons.Outlined.Poll
     public val Schedule: ImageVector = Icons.Outlined.Schedule
+    public val AddReaction: ImageVector = Icons.Outlined.AddReaction
 }

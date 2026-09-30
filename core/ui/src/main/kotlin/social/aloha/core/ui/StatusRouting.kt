@@ -82,7 +82,7 @@ public abstract class RoutedStatusActions(
 
     override fun onReply(row: StatusRowUi): Unit = navigation().openComposer(row.statusId)
 
-    // reacting needs the emoji picker, which comes with the composer
+    // only a thread's focused post has its reactions fetched, and offers them; its screen reacts
     override fun onReact(row: StatusRowUi, name: String, add: Boolean): Unit = Unit
 
     override fun onMenu(row: StatusRowUi, item: StatusMenuItem) {

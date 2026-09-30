@@ -72,6 +72,9 @@ public fun ThreadRoute(key: ThreadKey, navigation: ThreadNavigation, modifier: M
             override fun onPin(row: StatusRowUi) = viewModel.onToggle(row.statusId, Toggle.Pin)
 
             override fun onVote(row: StatusRowUi, choices: List<Int>) = viewModel.onVote(row.statusId, choices)
+
+            // only the focused post has its reactions fetched, so only it offers them
+            override fun onReact(row: StatusRowUi, name: String, add: Boolean) = viewModel.onReact(name, add)
         }
     }
 

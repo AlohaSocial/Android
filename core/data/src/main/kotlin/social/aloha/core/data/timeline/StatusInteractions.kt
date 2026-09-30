@@ -44,6 +44,12 @@ public class StatusInteractions @Inject constructor(
         }
     }
 
+    /** Reacts to post [statusId] with emoji [name], or takes the reaction back unless [add]. */
+    public suspend fun react(account: SignedInAccount, statusId: String, name: String, add: Boolean): ApiError? {
+        val request = if (add) StatusEndpoints.react(statusId, name) else StatusEndpoints.unreact(statusId, name)
+        return (clients.answer(account, request) as? Answer.Missed)?.error
+    }
+
     /** Votes [choices] in [status]'s poll; the poll the server answers with replaces the stored one. */
     public suspend fun vote(account: SignedInAccount, status: Status, choices: List<Int>): ApiError? {
         val poll = status.poll ?: return ApiError.NotFound

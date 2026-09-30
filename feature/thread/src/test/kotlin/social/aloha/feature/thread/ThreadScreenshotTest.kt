@@ -84,7 +84,11 @@ class ThreadScreenshotTest {
         return ThreadUiState(
             items = listOf(
                 ThreadItem.Post(row("a1"), focused = false, depth = 0),
-                ThreadItem.Post(row("f", listOf(Reaction("🎉", 2))), focused = true, depth = 0),
+                ThreadItem.Post(
+                    row("f", listOf(Reaction("🎉", 2), Reaction("❤️", 1, me = true))),
+                    focused = true,
+                    depth = 0,
+                ),
                 ThreadItem.Post(row("r1"), focused = false, depth = 1),
                 ThreadItem.Post(row("r2"), focused = false, depth = 2),
                 ThreadItem.More("r2", count = 7, depth = 5),
@@ -97,6 +101,7 @@ class ThreadScreenshotTest {
                 StatusListKind.Reactions to 2,
             ),
             edited = true,
+            canReact = true,
         )
     }
 
