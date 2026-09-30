@@ -2,7 +2,8 @@
 # SPDX-License-Identifier: MIT
 #
 # A debug-signed generic APK per pull request as a GitHub Actions artifact (kept
-# five days) and a comment linking it. No upload server and no keystore.
+# five days) and a comment linking it. Each new build replaces the pull request's
+# earlier APK and comment, so only the latest is kept. No upload server and no keystore.
 name: pr-apk
 
 on:
@@ -20,7 +21,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read # check out the repository
-      pull-requests: write # comment the artifact link on the pull request
+      actions: write # delete the pull request's earlier APK artifacts
+      pull-requests: write # replace the comment linking the artifact
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
@@ -41,12 +43,23 @@ jobs:
           name: aloha-generic-debug-pr${{ github.event.pull_request.number }}
           path: app/build/outputs/apk/generic/debug/*.apk
           retention-days: 5
-      - name: Comment
+      # a fork's token cannot delete or comment, so its pull request keeps the artifact alone
+      - name: Replace the earlier APK and comment
         if: github.event.pull_request.head.repo.full_name == github.repository
         env:
           GH_TOKEN: ${{ github.token }}
           PR: ${{ github.event.pull_request.number }}
+          # the pushed commit, not the merge commit GitHub builds a pull request on
+          SHA: ${{ github.event.pull_request.head.sha }}
+          NAME: aloha-generic-debug-pr${{ github.event.pull_request.number }}
+          ID: ${{ steps.upload.outputs.artifact-id }}
           URL: ${{ steps.upload.outputs.artifact-url }}
         run: |
-          gh pr comment "$PR" --repo "$GITHUB_REPOSITORY" --edit-last --create-if-none \
-            --body "Debug APK (generic flavor) for ${GITHUB_SHA::8}: $URL — kept for 5 days."
+          gh api --paginate "repos/$GITHUB_REPOSITORY/actions/artifacts?name=$NAME&per_page=100" \
+            --jq ".artifacts[] | select(.id != $ID) | .id" |
+            while read -r id; do gh api -X DELETE "repos/$GITHUB_REPOSITORY/actions/artifacts/$id"; done
+          gh api --paginate "repos/$GITHUB_REPOSITORY/issues/$PR/comments?per_page=100" \
+            --jq '.[] | select(.user.login == "github-actions[bot]" and (.body | startswith("Debug APK"))) | .id' |
+            while read -r id; do gh api -X DELETE "repos/$GITHUB_REPOSITORY/issues/comments/$id"; done
+          gh pr comment "$PR" --repo "$GITHUB_REPOSITORY" \
+            --body "Debug APK (generic flavor) for ${SHA::8}: $URL - kept for 5 days."
