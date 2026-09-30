@@ -56,13 +56,29 @@ internal data class ComposerUiState(
     val games: List<ComposerGames.Kind> = emptyList(),
     val suggestions: List<Suggestion> = emptyList(),
     val emojis: List<CustomEmoji> = emptyList(),
+    /** The attachments of each segment of the thread. */
+    val attachments: List<List<Attachment>> = listOf(emptyList()),
+    /** Whether the media carry a warning of their own, whatever the text says. */
+    val mediaSensitive: Boolean = false,
+    /** How many attachments one post may carry on this server. */
+    val maxAttachments: Int = 4,
+    val attachFailure: AttachFailure? = null,
+    /** Whether to warn before posting pictures without a description. */
+    val warnMissingDescription: Boolean = true,
     /** How many segments of the thread are already posted; a retry starts after them. */
     val posted: Int = 0,
     val posting: Boolean = false,
     val failure: PostFailure? = null,
     val done: Boolean = false,
 ) {
-    val canPost: Boolean get() = ready && author != null && !posting && remaining.all { it >= 0 }
+    val canPost: Boolean
+        get() = ready && author != null && !posting && remaining.all { it >= 0 } && uploaded
+
+    /** Every attachment is on the server, ready to be attached. */
+    val uploaded: Boolean get() = attachments.flatten().all { it.mediaId != null }
+
+    /** Some attachment has no description, which a screen reader then cannot describe. */
+    val undescribed: Boolean get() = attachments.flatten().any { it.description.isBlank() }
 }
 
 /** The visibilities a writer picks between; an unknown one is never offered. */

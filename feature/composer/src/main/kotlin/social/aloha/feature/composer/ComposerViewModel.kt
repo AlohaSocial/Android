@@ -19,6 +19,7 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import java.io.File
 import java.util.Locale
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -29,8 +30,11 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import social.aloha.core.data.AccountRepository
 import social.aloha.core.data.Answer
+import social.aloha.core.data.ClientFactory
 import social.aloha.core.data.RemoteLookup
+import social.aloha.core.data.Trouble
 import social.aloha.core.data.compose.ComposeRepository
+import social.aloha.core.datastore.AppPreferences
 import social.aloha.core.html.StatusHtmlParser
 import social.aloha.core.model.CharacterCount
 import social.aloha.core.model.CustomEmoji
@@ -40,6 +44,7 @@ import social.aloha.core.model.SignedInAccount
 import social.aloha.core.model.Status
 import social.aloha.core.model.Visibility
 import social.aloha.core.navigation.ComposerKey
+import social.aloha.core.sync.MediaUploads
 
 /**
  * One new post, or a thread of them, written as one of the signed-in accounts. The text lives in
@@ -53,6 +58,9 @@ internal class ComposerViewModel @AssistedInject constructor(
     private val accounts: AccountRepository,
     private val compose: ComposeRepository,
     private val lookup: RemoteLookup,
+    uploads: MediaUploads,
+    clients: ClientFactory,
+    preferences: AppPreferences,
 ) : ViewModel() {
     @AssistedFactory
     interface Factory {
@@ -70,7 +78,16 @@ internal class ComposerViewModel @AssistedInject constructor(
 
     /** Whether leaving would lose something the writer wrote. */
     val hasWriting: Boolean
-        get() = spoiler.isNotBlank() || segments.any { it.text.isNotBlank() && it.text.trim() != prefill.trim() }
+        get() = spoiler.isNotBlank() || attachments.byPost.value.flatten().isNotEmpty() ||
+            segments.any { it.text.isNotBlank() && it.text.trim() != prefill.trim() }
+
+    /** The pictures, videos and files of each post; the screen describes and removes them here. */
+    val attachments = Attachments(
+        uploads,
+        clients,
+        MediaPreparation(context.contentResolver, File(context.filesDir, UPLOADS)),
+        viewModelScope,
+    )
 
     private val control = MutableStateFlow(ComposerUiState())
     private val completions = Completions(compose, viewModelScope)
@@ -81,11 +98,27 @@ internal class ComposerViewModel @AssistedInject constructor(
 
     private data class Written(val segments: List<String>, val spoiler: String)
 
+    private data class Media(
+        val attachments: List<List<Attachment>>,
+        val sensitive: Boolean,
+        val failure: AttachFailure?,
+        val warn: Boolean,
+    )
+
+    private val media = combine(
+        attachments.byPost,
+        attachments.sensitive,
+        attachments.failure,
+        preferences.warnMissingDescription,
+        ::Media,
+    )
+
     val uiState: StateFlow<ComposerUiState> = combine(
         control,
         snapshotFlow { Written(segments.map { it.text }, spoiler) },
         completions.suggestions,
-    ) { state, text, found ->
+        media,
+    ) { state, text, found, media ->
         val capabilities = reader?.capabilities
         val limits = capabilities?.limits ?: ServerLimits.MastodonDefaults
         val rule = capabilities?.lengthRule ?: LengthRule.Mastodon
@@ -95,6 +128,11 @@ internal class ComposerViewModel @AssistedInject constructor(
             remaining = text.segments.map { CharacterCount.remaining(it, cw, limits, rule) },
             games = text.segments.flatMap(ComposerGames::kinds).distinct(),
             suggestions = found,
+            attachments = media.attachments,
+            mediaSensitive = media.sensitive,
+            maxAttachments = limits.maxMediaAttachments,
+            attachFailure = media.failure,
+            warnMissingDescription = media.warn,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_MILLIS), ComposerUiState())
 
@@ -152,11 +190,25 @@ internal class ComposerViewModel @AssistedInject constructor(
         if (index == null) {
             segments.add(TextFieldValue())
             focused = segments.lastIndex
+            attachments.resize(segments.size)
         } else if (index in 1..segments.lastIndex && index >= poster.posted) {
             segments.removeAt(index)
             poster.forgetFrom(index)
+            attachments.resize(segments.size, removed = index)
             focused = index - 1
         }
+    }
+
+    /** The types the author's server takes, for the file picker; anything when it does not say. */
+    val acceptedTypes: Array<String>
+        get() = reader?.capabilities?.limits?.supportedMimeTypes?.takeIf { it.isNotEmpty() }?.toTypedArray()
+            ?: arrayOf("*/*")
+
+    /** Attaches what the writer picked to the post being written, as many as it still has room for. */
+    fun onPicked(uris: List<android.net.Uri>) {
+        val state = uiState.value
+        val room = state.maxAttachments - state.attachments.getOrElse(focused) { emptyList() }.size
+        if (room > 0) attachments.add(focused, uris, room)
     }
 
     /** Writes as another signed-in account; a reply is looked up on that account's server first. */
@@ -181,8 +233,13 @@ internal class ComposerViewModel @AssistedInject constructor(
         val account = reader ?: return
         if (!uiState.value.canPost) return
         control.update { it.copy(posting = true, failure = null) }
-        val thread = segments.indices.map(::segmentAt)
         viewModelScope.launch {
+            // what was described since uploading goes first: a post must not go out without it
+            if (!attachments.sync(account)) {
+                control.update { it.copy(posting = false, failure = PostFailure.Unreached(Trouble.Server)) }
+                return@launch
+            }
+            val thread = segments.indices.map { control.value.segmentAt(it, segments[it].text, spoiler, attachments) }
             val failure = poster.send(account, thread, parent?.id) { posted ->
                 control.update { it.copy(posted = posted) }
             }
@@ -194,18 +251,14 @@ internal class ComposerViewModel @AssistedInject constructor(
         }
     }
 
-    fun onFailureShown() = control.update { it.copy(failure = null) }
+    fun onFailureShown() {
+        control.update { it.copy(failure = null) }
+        attachments.onFailureShown()
+    }
 
-    private fun segmentAt(index: Int): Segment {
-        val state = control.value
-        return Segment(
-            text = segments[index].text,
-            spoiler = spoiler.trim().takeIf { state.spoilerShown && it.isNotEmpty() },
-            visibility = state.visibility,
-            language = state.language,
-            // who may quote is the opening post's choice; the rest of the thread keeps the default
-            quotePolicy = if (index == 0) state.quotePolicy else QuotePolicy.Anyone,
-        )
+    override fun onCleared() {
+        // a post that went out needs its files no more; one given up takes its uploads with it
+        attachments.clear()
     }
 
     private suspend fun start() {
@@ -231,6 +284,7 @@ internal class ComposerViewModel @AssistedInject constructor(
     /** Makes [account] the one written as: its limits, its emoji, what its server allows. */
     private suspend fun use(account: SignedInAccount) {
         reader = account
+        attachments.account = account
         completions.forget()
         val answering = parent?.displayed
         // a reply may not reach further than the post it answers
@@ -255,6 +309,7 @@ internal class ComposerViewModel @AssistedInject constructor(
 
     private companion object {
         const val STOP_MILLIS = 5_000L
+        const val UPLOADS = "uploads"
     }
 }
 
@@ -280,4 +335,16 @@ private fun gameWords(context: Context) = ComposerGames.Words(
     heads = context.getString(R.string.composer_game_heads),
     tails = context.getString(R.string.composer_game_tails),
     picked = { choice, options -> context.getString(R.string.composer_game_picked, choice, options) },
+)
+
+/** Segment [index] of the thread as it will be sent, from this state and what was typed. */
+private fun ComposerUiState.segmentAt(index: Int, text: String, spoiler: String, media: Attachments) = Segment(
+    text = text,
+    spoiler = spoiler.trim().takeIf { spoilerShown && it.isNotEmpty() },
+    visibility = visibility,
+    language = language,
+    // who may quote is the opening post's choice; the rest of the thread keeps the default
+    quotePolicy = if (index == 0) quotePolicy else QuotePolicy.Anyone,
+    mediaIds = media.byPost.value.getOrElse(index) { emptyList() }.mapNotNull(Attachment::mediaId),
+    mediaSensitive = media.sensitive.value,
 )

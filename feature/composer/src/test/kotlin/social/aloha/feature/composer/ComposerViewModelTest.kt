@@ -57,6 +57,7 @@ import social.aloha.core.model.ServerLimits
 import social.aloha.core.model.Visibility
 import social.aloha.core.navigation.ComposerKey
 import social.aloha.core.network.RateLimiter
+import social.aloha.core.sync.MediaUploads
 import social.aloha.core.testing.FakeSecretCipher
 import social.aloha.core.testing.InMemoryDataStore
 import social.aloha.core.testing.MockCredentials
@@ -182,7 +183,10 @@ class ComposerViewModelTest {
             accounts,
             compose,
             RemoteLookup(clients, statuses),
-        )
+            MediaUploads(context),
+            clients,
+            AppPreferences(InMemoryDataStore(emptyPreferences())),
+        ).also(opened::add)
     }
 
     private suspend fun ComposerViewModel.await(predicate: (ComposerUiState) -> Boolean): ComposerUiState =

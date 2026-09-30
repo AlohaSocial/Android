@@ -39,6 +39,8 @@ dependencies {
     implementation(project(":core:network"))
     implementation(project(":core:media"))
     implementation(project(":feature:composer"))
+    implementation(project(":core:sync"))
+    implementation(libs.androidx.hilt.work)
     implementation(project(":feature:signin"))
     implementation(project(":feature:profile"))
     implementation(project(":feature:settings"))

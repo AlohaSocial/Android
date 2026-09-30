@@ -22,7 +22,9 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.VideoLibrary
 import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material.icons.outlined.AddComment
+import androidx.compose.material.icons.outlined.AddPhotoAlternate
 import androidx.compose.material.icons.outlined.AmpStories
+import androidx.compose.material.icons.outlined.AttachFile
 import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Create
@@ -52,6 +54,7 @@ import androidx.compose.material.icons.outlined.PhotoLibrary
 import androidx.compose.material.icons.outlined.Place
 import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material.icons.outlined.PushPin
+import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.RemoveCircleOutline
 import androidx.compose.material.icons.outlined.Repeat
 import androidx.compose.material.icons.outlined.Settings
@@ -142,4 +145,7 @@ public object AlohaIcons {
     public val Quote: ImageVector = Icons.Outlined.FormatQuote
     public val AddToThread: ImageVector = Icons.Outlined.AddComment
     public val Remove: ImageVector = Icons.Outlined.RemoveCircleOutline
+    public val AddMedia: ImageVector = Icons.Outlined.AddPhotoAlternate
+    public val AttachFile: ImageVector = Icons.Outlined.AttachFile
+    public val Retry: ImageVector = Icons.Outlined.Refresh
 }

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ SPDX-FileCopyrightText: 2026 Aloha Social contributors
+  ~ SPDX-License-Identifier: MIT
+-->
+<resources>
+    <!-- Title of the notification shown while a picture or video is being uploaded -->
+    <string name="upload_title">Uploading</string>
+    <!-- Name of the notification channel for uploads, shown in the system's notification settings -->
+    <string name="upload_channel">Uploads</string>
+    <!-- Description of the uploads notification channel in the system's notification settings -->
+    <string name="upload_channel_description">Progress of pictures and videos being uploaded for a post</string>
+</resources>

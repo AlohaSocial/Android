@@ -124,4 +124,60 @@
     <string name="composer_unreached">Couldn\'t reach the server. Nothing is lost; try again.</string>
     <!-- Error when the post being replied to cannot be found from the account chosen -->
     <string name="composer_reply_not_found">That account\'s server can\'t find the post you\'re replying to.</string>
+    <!-- Toolbar button that picks pictures or videos to attach -->
+    <string name="composer_add_media">Add pictures or videos</string>
+    <!-- Toolbar button that picks any file to attach -->
+    <string name="composer_add_file">Attach a file</string>
+    <!-- Toolbar toggle that marks the attached media as sensitive, hidden until tapped -->
+    <string name="composer_media_sensitive">Mark media as sensitive</string>
+    <!-- What tapping an attachment does, read by screen readers -->
+    <string name="composer_media_edit">Describe</string>
+    <!-- Part of an attachment's spoken summary: it has a description -->
+    <string name="composer_media_described">described</string>
+    <!-- Part of an attachment's spoken summary: it has no description yet -->
+    <string name="composer_media_undescribed">no description</string>
+    <!-- Button on an attachment whose upload failed -->
+    <string name="composer_media_retry">Upload again</string>
+    <!-- Button that removes an attachment; the placeholder is its file name -->
+    <string name="composer_media_remove">Remove %1$s</string>
+    <!-- Badge on an attachment: filled when it has a description, outlined when not. Keep it short. -->
+    <string name="composer_media_alt">ALT</string>
+    <!-- An attachment waits to be uploaded, for a network or for its turn -->
+    <string name="composer_media_waiting">Waiting to upload</string>
+    <!-- An attachment is uploading; the placeholder is how far, in percent -->
+    <string name="composer_media_sending">Uploading, %1$d %%</string>
+    <!-- The server is still converting an uploaded video -->
+    <string name="composer_media_processing">The server is preparing it</string>
+    <!-- The server refused an attachment and said why; the placeholder is its reason -->
+    <string name="composer_media_refused">Not accepted: %1$s</string>
+    <!-- An attachment could not be uploaded -->
+    <string name="composer_media_failed">Couldn\'t upload</string>
+    <!-- Title of the sheet for describing an attachment -->
+    <string name="composer_media_editor_title">Describe this for people who can\'t see it</string>
+    <!-- Label of the description field of an attachment -->
+    <string name="composer_media_description">Description</string>
+    <!-- Button that closes the attachment's description sheet -->
+    <string name="composer_media_done">Done</string>
+    <!-- Hint under the picture in the description sheet -->
+    <string name="composer_media_focus_hint">Tap the picture on what a cropped preview should keep in view.</string>
+    <!-- Snackbar when a picked file is of a type the server does not take -->
+    <string name="composer_attach_unsupported">This server doesn\'t take files of that type.</string>
+    <!-- Snackbar when a picked file is over the server's size limit; the placeholder is the limit, like "40 MB" -->
+    <string name="composer_attach_too_large">That\'s over this server\'s limit of %1$s.</string>
+    <!-- Snackbar when a picked file cannot be read -->
+    <string name="composer_attach_unreadable">That file couldn\'t be read.</string>
+    <!-- Title of the dialog when posting pictures without descriptions -->
+    <string name="composer_undescribed_title">Some media have no description</string>
+    <!-- Body of the dialog when posting pictures without descriptions -->
+    <string name="composer_undescribed_body">People who use a screen reader will hear nothing for them.</string>
+    <!-- Button that goes back to describe the media -->
+    <string name="composer_undescribed_add">Add descriptions</string>
+    <!-- Button that posts without descriptions -->
+    <string name="composer_undescribed_post">Post anyway</string>
+    <!-- Title of the writing section in settings -->
+    <string name="composer_settings_title">Writing</string>
+    <!-- Setting: warn before posting media without descriptions -->
+    <string name="composer_settings_warn_description">Warn about media without a description</string>
+    <!-- Summary under the setting that warns about media without descriptions -->
+    <string name="composer_settings_warn_description_summary">A reminder before posting; it never stops the post.</string>
 </resources>

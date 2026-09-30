@@ -8,7 +8,7 @@ import social.aloha.core.model.CustomEmoji
 import social.aloha.core.model.Visibility
 
 /** What the composer's controls do; the screen itself decides nothing. */
-internal interface ComposerActions {
+internal interface ComposerActions : MediaActions {
     fun onClose()
 
     fun onPost()
@@ -32,4 +32,21 @@ internal interface ComposerActions {
     fun onRemoveSegment(index: Int)
 
     fun onAuthor(id: String)
+}
+
+/** What the attachment controls do. */
+internal interface MediaActions {
+    /** Opens the picture and video picker for the post being written. */
+    fun onPickMedia()
+
+    /** Opens the file picker for the post being written. */
+    fun onPickFiles()
+
+    fun onEditMedia(id: String)
+
+    fun onRemoveMedia(id: String)
+
+    fun onRetryMedia(id: String)
+
+    fun onSensitive(sensitive: Boolean)
 }

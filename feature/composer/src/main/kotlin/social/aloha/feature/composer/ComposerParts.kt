@@ -15,11 +15,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.FilledTonalIconToggleButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedIconToggleButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -146,6 +148,7 @@ internal fun SegmentField(
             textStyle = MaterialTheme.typography.bodyLarge,
             modifier = Modifier.fillMaxWidth().semantics { contentDescription = label },
         )
+        state.attachments.getOrNull(index)?.takeIf { it.isNotEmpty() }?.let { MediaStrip(it, actions) }
         if (count > 1) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Counter(state.remaining.getOrElse(index) { 0 }, Modifier.weight(1f))
@@ -190,23 +193,35 @@ internal fun Toolbar(
     var emojis by remember { mutableStateOf(false) }
     var languages by remember { mutableStateOf(false) }
     Row(modifier.fillMaxWidth().padding(horizontal = AlohaSpacing.xs), verticalAlignment = Alignment.CenterVertically) {
-        IconToggleButton(checked = state.spoilerShown, onCheckedChange = { actions.onSpoiler(it, spoiler) }) {
-            Icon(AlohaIcons.ContentWarning, stringResource(R.string.composer_cw))
+        // more controls than a narrow phone is wide: they scroll, and the count stays in view
+        Row(
+            Modifier.weight(1f).horizontalScroll(rememberScrollState()),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            MediaButtons(state, actions)
+            OutlinedIconToggleButton(
+                checked = state.spoilerShown,
+                onCheckedChange = { actions.onSpoiler(it, spoiler) },
+            ) {
+                Icon(AlohaIcons.ContentWarning, stringResource(R.string.composer_cw))
+            }
+            VisibilityMenu(state, actions::onVisibility)
+            IconButton(onClick = { languages = true }) {
+                val name = languageName(state.language) ?: stringResource(R.string.composer_language_none)
+                Icon(AlohaIcons.Language, stringResource(R.string.composer_language, name))
+            }
+            if (state.emojis.isNotEmpty()) {
+                IconButton(onClick = {
+                    emojis = true
+                }) { Icon(AlohaIcons.Emoji, stringResource(R.string.composer_emoji)) }
+            }
+            if (state.quotePolicies.isNotEmpty()) QuoteMenu(state, actions::onQuotePolicy)
         }
-        VisibilityMenu(state, actions::onVisibility)
-        IconButton(onClick = { languages = true }) {
-            val name = languageName(state.language) ?: stringResource(R.string.composer_language_none)
-            Icon(AlohaIcons.Language, stringResource(R.string.composer_language, name))
-        }
-        if (state.emojis.isNotEmpty()) {
-            IconButton(onClick = { emojis = true }) { Icon(AlohaIcons.Emoji, stringResource(R.string.composer_emoji)) }
-        }
-        if (state.quotePolicies.isNotEmpty()) QuoteMenu(state, actions::onQuotePolicy)
         // in a thread each post shows its own count instead
         if (showCounter) {
             Counter(
                 state.remaining.firstOrNull() ?: 0,
-                Modifier.weight(1f).padding(end = AlohaSpacing.s),
+                Modifier.padding(horizontal = AlohaSpacing.s),
                 alignEnd = true,
             )
         }
@@ -214,6 +229,24 @@ internal fun Toolbar(
     if (emojis) EmojiSheet(state.emojis, onPick = actions::onEmoji, onDismiss = { emojis = false })
     if (languages) {
         LanguageDialog(state.language, onPick = actions::onLanguage, onDismiss = { languages = false })
+    }
+}
+
+/** Adding pictures, videos or files, while the post has room for them, and marking them sensitive. */
+@Composable
+private fun MediaButtons(state: ComposerUiState, actions: ComposerActions) {
+    val attached = state.attachments.maxOfOrNull { it.size } ?: 0
+    val room = state.attachments.any { it.size < state.maxAttachments }
+    IconButton(onClick = actions::onPickMedia, enabled = room && !state.posting) {
+        Icon(AlohaIcons.AddMedia, stringResource(R.string.composer_add_media))
+    }
+    IconButton(onClick = actions::onPickFiles, enabled = room && !state.posting) {
+        Icon(AlohaIcons.AttachFile, stringResource(R.string.composer_add_file))
+    }
+    if (attached > 0) {
+        IconToggleButton(checked = state.mediaSensitive, onCheckedChange = actions::onSensitive) {
+            Icon(AlohaIcons.Sensitive, stringResource(R.string.composer_media_sensitive))
+        }
     }
 }
 

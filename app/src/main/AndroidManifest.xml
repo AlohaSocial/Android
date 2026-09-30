@@ -23,6 +23,18 @@
         android:theme="@style/Theme.Aloha.Starting"
         tools:targetApi="33">
 
+        <!-- WorkManager starts on first use, with the Hilt factory the application hands it -->
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            android:exported="false"
+            tools:node="merge">
+            <meta-data
+                android:name="androidx.work.WorkManagerInitializer"
+                android:value="androidx.startup"
+                tools:node="remove" />
+        </provider>
+
         <activity
             android:name=".MainActivity"
             android:exported="true"

@@ -13,6 +13,7 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.captureRoboImage
+import java.io.File
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -24,6 +25,7 @@ import social.aloha.core.designsystem.ThemeMode
 import social.aloha.core.designsystem.ThemeSettings
 import social.aloha.core.model.CustomEmoji
 import social.aloha.core.model.Visibility
+import social.aloha.core.sync.UploadState
 
 /** The composer in its states, each also run through the Accessibility Test Framework checks. */
 @RunWith(RobolectricTestRunner::class)
@@ -46,6 +48,12 @@ class ComposerScreenshotTest {
         override fun onAddSegment() = Unit
         override fun onRemoveSegment(index: Int) = Unit
         override fun onAuthor(id: String) = Unit
+        override fun onPickMedia() = Unit
+        override fun onPickFiles() = Unit
+        override fun onEditMedia(id: String) = Unit
+        override fun onRemoveMedia(id: String) = Unit
+        override fun onRetryMedia(id: String) = Unit
+        override fun onSensitive(sensitive: Boolean) = Unit
     }
 
     private val alice = Author("a", "@alice@cloud.example", "Alice", null)
@@ -116,4 +124,24 @@ class ComposerScreenshotTest {
 
     @Test
     fun posting() = capture("composer-posting") { NewPost(fresh.copy(posting = true)) }
+
+    // four tiles in the states a writer meets: described, undescribed, uploading and failed
+    @Test
+    fun media() = capture("composer-media") {
+        fun tile(id: String, upload: UploadState, description: String = "") =
+            Attachment(id, File("$id.jpg"), "$id.jpg", "image/jpeg", upload, description)
+        NewPost(
+            fresh.copy(
+                attachments = listOf(
+                    listOf(
+                        tile("beach", UploadState.Done("1", null), "Surfers at sunrise on a wide beach"),
+                        tile("board", UploadState.Done("2", null)),
+                        tile("wave", UploadState.Sending(0.4f)),
+                        tile("sunset", UploadState.Failed),
+                    ),
+                ),
+                mediaSensitive = true,
+            ),
+        )
+    }
 }

@@ -19,6 +19,9 @@ internal data class Segment(
     val visibility: Visibility,
     val language: String?,
     val quotePolicy: QuotePolicy,
+    val mediaIds: List<String> = emptyList(),
+    /** The media warn on their own, text or no text. */
+    val mediaSensitive: Boolean = false,
 )
 
 /**
@@ -80,8 +83,9 @@ internal class ThreadPoster(
             text = current.text,
             visibility = segment.visibility,
             spoilerText = segment.spoiler,
-            // a content warning hides the text; the server needs to know the post is sensitive
-            sensitive = segment.spoiler != null,
+            // a content warning hides the text, so the post is sensitive; media may be on their own
+            sensitive = segment.spoiler != null || (segment.mediaSensitive && segment.mediaIds.isNotEmpty()),
+            mediaIds = segment.mediaIds,
             language = segment.language,
             inReplyToId = inReplyToId,
             idempotencyKey = current.key,
