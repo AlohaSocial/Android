@@ -68,6 +68,8 @@ internal object ProfilePresentation {
             locked = account.locked,
             url = account.url,
             isSelf = isSelf,
+            // the reader's server names its own accounts without one
+            domain = account.acct.substringAfter('@', "").ifEmpty { null },
         )
     }
 
@@ -78,6 +80,10 @@ internal object ProfilePresentation {
         muting = relationship.muting,
         blocking = relationship.blocking,
         blockedBy = relationship.blockedBy,
+        showingReblogs = relationship.showingReblogs,
+        notifying = relationship.notifying,
+        domainBlocking = relationship.domainBlocking,
+        note = relationship.note,
     )
 
     /**

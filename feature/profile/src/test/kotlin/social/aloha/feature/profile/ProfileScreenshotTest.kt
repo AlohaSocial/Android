@@ -17,6 +17,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
+import social.aloha.core.data.profile.RelationshipChange
 import social.aloha.core.designsystem.AlohaTheme
 import social.aloha.core.designsystem.ThemeMode
 import social.aloha.core.designsystem.ThemeSettings
@@ -60,10 +61,10 @@ class ProfileScreenshotTest {
         override fun onTab(tab: ProfileTab) = Unit
         override fun onNearEnd() = Unit
         override fun onFillGap(gapId: String) = Unit
-        override fun onFollow() = Unit
-        override fun onUnfollow() = Unit
-        override fun onMute(mute: Boolean) = Unit
-        override fun onBlock(block: Boolean) = Unit
+        override fun onChange(change: RelationshipChange) = Unit
+        override fun onBlockDomain(block: Boolean) = Unit
+        override fun onLists() = Unit
+        override fun onListed(listId: String, add: Boolean) = Unit
         override fun onPeople(followers: Boolean) = Unit
         override fun onOpenInBrowser(url: String) = Unit
     }

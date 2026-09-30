@@ -33,6 +33,7 @@ import okhttp3.HttpUrl
 import social.aloha.core.data.AccountRepository
 import social.aloha.core.data.Answer
 import social.aloha.core.data.Trouble
+import social.aloha.core.data.profile.ListChoice
 import social.aloha.core.data.profile.ProfileRepository
 import social.aloha.core.data.profile.RelationshipChange
 import social.aloha.core.data.timeline.FilterRepository
@@ -96,6 +97,7 @@ internal class ProfileViewModel @AssistedInject constructor(
         val collections: List<MediaCollection>? = null,
         val stories: List<Story>? = null,
         val actionFailed: Boolean = false,
+        val lists: List<ListChoice>? = null,
     )
 
     /** What is drawn, as opposed to what the screen is doing. */
@@ -214,13 +216,46 @@ internal class ProfileViewModel @AssistedInject constructor(
         }
     }
 
-    override fun onFollow() = change(RelationshipChange.Follow)
+    override fun onChange(change: RelationshipChange) = relate { reader, id -> profiles.change(reader, id, change) }
 
-    override fun onUnfollow() = change(RelationshipChange.Unfollow)
+    override fun onBlockDomain(block: Boolean) = relate { reader, id ->
+        val domain = target.value?.acct?.substringAfter('@', "")?.ifEmpty { null }
+        domain?.let { profiles.blockDomain(reader, id, it, block) } ?: Answer.Missed(ApiError.NotFound)
+    }
 
-    override fun onMute(mute: Boolean) = change(if (mute) RelationshipChange.Mute else RelationshipChange.Unmute)
+    override fun onLists() {
+        val reader = reader.value ?: return
+        val account = target.value ?: return
+        control.update { it.copy(lists = null) }
+        viewModelScope.launch {
+            val lists = profiles.lists(reader, account.id)
+            control.update {
+                if (lists is Answer.Got) {
+                    it.copy(
+                        lists = lists.value,
+                    )
+                } else {
+                    it.copy(lists = emptyList(), actionFailed = true)
+                }
+            }
+        }
+    }
 
-    override fun onBlock(block: Boolean) = change(if (block) RelationshipChange.Block else RelationshipChange.Unblock)
+    /** Puts the account on list [listId] or takes it off, shown at once and put back if refused. */
+    override fun onListed(listId: String, add: Boolean) {
+        val reader = reader.value ?: return
+        val account = target.value ?: return
+        fun mark(member: Boolean) = control.update { state ->
+            state.copy(lists = state.lists?.map { if (it.list.id == listId) it.copy(member = member) else it })
+        }
+        mark(add)
+        viewModelScope.launch {
+            if (profiles.setListed(reader, listId, account.id, add) is Answer.Missed) {
+                mark(!add)
+                control.update { it.copy(actionFailed = true) }
+            }
+        }
+    }
 
     fun onToggle(statusId: String, toggle: Toggle) = act(statusId) { reader, status ->
         interactions.toggle(reader, status, toggle)
@@ -244,12 +279,12 @@ internal class ProfileViewModel @AssistedInject constructor(
         }
     }
 
-    private fun change(change: RelationshipChange) {
+    private fun relate(change: suspend (SignedInAccount, String) -> Answer<Relationship>) {
         val reader = reader.value ?: return
         val account = target.value ?: return
         control.update { it.copy(changing = true) }
         viewModelScope.launch {
-            val answer = profiles.change(reader, account.id, change)
+            val answer = change(reader, account.id)
             control.update {
                 when (answer) {
                     is Answer.Got -> it.copy(changing = false, relationship = answer.value)
@@ -349,6 +384,7 @@ internal class ProfileViewModel @AssistedInject constructor(
             gone = control.gone,
             now = now,
             actionFailed = control.actionFailed,
+            lists = control.lists,
         )
     }
 

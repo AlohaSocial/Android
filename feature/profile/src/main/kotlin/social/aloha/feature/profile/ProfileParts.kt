@@ -77,6 +77,7 @@ import java.text.NumberFormat
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import social.aloha.core.data.Trouble
+import social.aloha.core.data.profile.RelationshipChange
 import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.model.MediaCollection
@@ -154,17 +155,22 @@ internal fun Header(header: ProfileHeader, state: ProfileUiState, actions: Profi
 @Composable
 private fun RelationButton(relation: Relation, changing: Boolean, actions: ProfileScreenActions) {
     when {
-        relation.blocking -> OutlinedButton(onClick = { actions.onBlock(false) }, enabled = !changing) {
+        relation.blocking -> OutlinedButton(onClick = {
+            actions.onChange(RelationshipChange.Unblock)
+        }, enabled = !changing) {
             Text(stringResource(R.string.profile_unblock))
         }
 
         relation.blockedBy -> Unit
 
-        relation.following || relation.requested -> OutlinedButton(onClick = actions::onUnfollow, enabled = !changing) {
+        relation.following || relation.requested -> OutlinedButton(
+            onClick = { actions.onChange(RelationshipChange.Unfollow) },
+            enabled = !changing,
+        ) {
             Text(stringResource(if (relation.following) R.string.profile_following else R.string.profile_requested))
         }
 
-        else -> Button(onClick = actions::onFollow, enabled = !changing) {
+        else -> Button(onClick = { actions.onChange(RelationshipChange.Follow()) }, enabled = !changing) {
             Text(stringResource(if (relation.followedBy) R.string.profile_follow_back else R.string.profile_follow))
         }
     }

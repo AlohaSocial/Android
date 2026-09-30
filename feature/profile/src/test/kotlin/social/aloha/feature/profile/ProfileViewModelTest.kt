@@ -14,6 +14,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.resetMain
@@ -38,6 +39,7 @@ import social.aloha.core.data.AccountRepository
 import social.aloha.core.data.ClientFactory
 import social.aloha.core.data.NewAccount
 import social.aloha.core.data.profile.ProfileRepository
+import social.aloha.core.data.profile.RelationshipChange
 import social.aloha.core.data.timeline.FilterRepository
 import social.aloha.core.data.timeline.StatusInteractions
 import social.aloha.core.data.timeline.StatusRepository
@@ -76,6 +78,9 @@ private class Bob : Dispatcher() {
     )
 
     @Volatile var following = false
+
+    /** What changed the relationship: method, path and form, in order. */
+    val changes: MutableList<String> = java.util.concurrent.CopyOnWriteArrayList()
     val statusQueries: MutableList<String> = java.util.concurrent.CopyOnWriteArrayList()
 
     override fun dispatch(request: RecordedRequest): MockResponse {
@@ -87,6 +92,17 @@ private class Bob : Dispatcher() {
             }
 
             path.endsWith("/accounts/7/follow") -> json(relationship(following = true).also { following = true })
+
+            path.endsWith("/accounts/7/mute") || path.endsWith("/domain_blocks") ||
+                ("/lists/" in path && path.endsWith("/accounts"))
+            -> {
+                changes += "${request.method} $path ${request.body?.utf8().orEmpty()}"
+                json(if (path.endsWith("/mute")) relationship(following) else "{}")
+            }
+
+            path.endsWith("/accounts/7/lists") -> json("""[{"id":"l1","title":"Surf"}]""")
+
+            path.endsWith("/lists") -> json("""[{"id":"l1","title":"Surf"},{"id":"l2","title":"Friends"}]""")
 
             path.endsWith("/accounts/relationships") -> json("[${relationship(following)}]")
 
@@ -183,7 +199,7 @@ class ProfileViewModelTest {
     fun `following shows once the server agrees`() = runBlocking {
         val viewModel = open(id = "7")
         viewModel.await { it.relation != null }
-        viewModel.onFollow()
+        viewModel.onChange(RelationshipChange.Follow())
         assertTrue(viewModel.await { it.relation?.following == true && !it.changing }.relation!!.following)
     }
 
@@ -215,5 +231,37 @@ class ProfileViewModelTest {
     fun `a profile the server cannot find says so rather than loading for ever`() = runBlocking {
         val state = open(acct = "nobody@nowhere.example").await { !it.loading }
         assertTrue(state.gone)
+    }
+
+    @Test
+    fun `a mute lasts as long as asked, and their notifications go quiet with it`() = runBlocking {
+        val viewModel = open(id = "7")
+        viewModel.await { it.relation != null }
+        viewModel.onChange(RelationshipChange.Mute(notifications = true, durationSeconds = 86_400))
+        viewModel.await { !it.changing }
+        withTimeout(10.seconds) { while (bob.changes.isEmpty()) delay(10) }
+        assertEquals("POST /api/v1/accounts/7/mute notifications=true&duration=86400", bob.changes.single())
+    }
+
+    @Test
+    fun `the lists say where the account is, and a tick puts it on another`() = runBlocking {
+        val viewModel = open(id = "7")
+        viewModel.await { it.relation != null }
+        viewModel.onLists()
+        val lists = viewModel.await { it.lists != null }.lists!!
+        assertEquals(listOf("Surf" to true, "Friends" to false), lists.map { it.list.title to it.member })
+        viewModel.onListed("l2", add = true)
+        assertTrue(viewModel.await { state -> state.lists?.all { it.member } == true }.lists!!.all { it.member })
+        withTimeout(10.seconds) { while (bob.changes.isEmpty()) delay(10) }
+        assertEquals("POST /api/v1/lists/l2/accounts account_ids%5B%5D=7", bob.changes.single())
+    }
+
+    @Test
+    fun `blocking their server blocks the domain of their handle`() = runBlocking {
+        val viewModel = open(id = "7")
+        viewModel.await { it.relation != null }
+        viewModel.onBlockDomain(true)
+        withTimeout(10.seconds) { while (bob.changes.isEmpty()) delay(10) }
+        assertEquals("POST /api/v1/domain_blocks domain=remote.example", bob.changes.single())
     }
 }
