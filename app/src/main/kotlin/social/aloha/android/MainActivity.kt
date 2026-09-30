@@ -17,6 +17,7 @@ import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import dagger.hilt.android.AndroidEntryPoint
 import social.aloha.core.designsystem.AlohaTheme
+import social.aloha.core.sync.PostQueue
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -40,8 +41,17 @@ class MainActivity : ComponentActivity() {
         deliver(intent)
     }
 
-    /** A link another app handed over; what it opens is decided in the app, never trusted as given. */
+    /**
+     * A link another app handed over, or a post the outbox asks about; what either opens is decided in
+     * the app, never trusted as given.
+     */
     private fun deliver(intent: Intent) {
-        if (intent.action == Intent.ACTION_VIEW) intent.dataString?.let(app::openExternal)
+        when (intent.action) {
+            Intent.ACTION_VIEW -> intent.dataString?.let(app::openExternal)
+
+            PostQueue.ACTION_OPEN_DRAFT -> intent.getStringExtra(PostQueue.EXTRA_ACCOUNT)?.let { account ->
+                app.openDraft(account, intent.getStringExtra(PostQueue.EXTRA_DRAFT))
+            }
+        }
     }
 }

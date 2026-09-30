@@ -127,6 +127,8 @@ fun AlohaApp(
     serverAccountId: String,
     pendingLink: String? = null,
     onPendingLinkTaken: () -> Unit = {},
+    pendingDestination: NavKey? = null,
+    onPendingDestinationTaken: () -> Unit = {},
     resolveLink: suspend (address: String, fromPost: Boolean) -> NavKey? = { _, _ -> null },
     accountButton: @Composable (onProfile: () -> Unit, onSettings: () -> Unit) -> Unit = { _, _ -> },
     home: @Composable (StatusNavigation, accountButton: @Composable () -> Unit) -> Unit = { navigation, button ->
@@ -183,6 +185,7 @@ fun AlohaApp(
             }
         }
     }
+    PushWhenAsked(pendingDestination, onPendingDestinationTaken) { backStack.push(it) }
     LaunchedEffect(pendingLink) {
         pendingLink?.let {
             onPendingLinkTaken()
@@ -347,4 +350,15 @@ private fun suiteInsets(type: NavigationSuiteType): WindowInsets = when (type) {
     NavigationSuiteType.None -> WindowInsets(0)
 
     else -> WindowInsets.systemBars.only(WindowInsetsSides.Start)
+}
+
+/** Opens [destination] once it is asked for from outside the app, and says it was taken. */
+@Composable
+private fun PushWhenAsked(destination: NavKey?, onTaken: () -> Unit, push: (NavKey) -> Unit) {
+    LaunchedEffect(destination) {
+        if (destination != null) {
+            onTaken()
+            push(destination)
+        }
+    }
 }

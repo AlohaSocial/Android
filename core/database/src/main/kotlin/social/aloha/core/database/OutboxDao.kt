@@ -74,7 +74,7 @@ public interface OutboxDao {
     @Query("UPDATE outbox SET state = :to, updatedAt = :now WHERE accountId = :accountId AND state = :from")
     public suspend fun moveAll(accountId: String, from: String, to: String, now: Long)
 
-    @Query("SELECT * FROM outbox WHERE accountId = :accountId AND state = 'Queued' ORDER BY createdAt LIMIT 1")
+    @Query("SELECT * FROM outbox WHERE accountId = :accountId AND state = 'Queued' ORDER BY createdAt, rowid LIMIT 1")
     public suspend fun oldestQueued(accountId: String): OutboxEntity?
 
     /** The oldest queued post of [accountId], marked as going out, so no edit can race the sending. */

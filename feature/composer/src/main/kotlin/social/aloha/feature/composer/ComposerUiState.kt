@@ -8,6 +8,7 @@ import java.time.Instant
 import social.aloha.core.data.Trouble
 import social.aloha.core.model.CustomEmoji
 import social.aloha.core.model.Visibility
+import social.aloha.core.sync.UploadState
 
 /** One account the post can go out as, for the picker at the top. */
 @Immutable
@@ -115,13 +116,25 @@ internal data class ComposerUiState(
     val posting: Boolean = false,
     val failure: PostFailure? = null,
     val done: Boolean = false,
+    /** The post went to the outbox, to go out with a network. */
+    val queued: Boolean = false,
 ) {
     val canPost: Boolean
-        get() = ready && author != null && !posting && remaining.all { it >= 0 } && uploaded &&
+        get() = ready && author != null && !posting && remaining.all { it >= 0 } && (uploaded || canWait) &&
             poll?.ready(maxPollOptionCharacters) != false
 
     /** Every attachment is on the server, ready to be attached. */
     val uploaded: Boolean get() = attachments.flatten().all { it.mediaId != null }
+
+    /**
+     * What is not on the server waits for a network, or gave up waiting, with its file here: the post
+     * can go to the outbox, which uploads it later. One uploading now is waited for instead.
+     */
+    val canWait: Boolean
+        get() = attachments.flatten().all {
+            it.mediaId != null ||
+                (it.file != null && (it.upload is UploadState.Queued || it.upload is UploadState.Failed))
+        }
 
     /** Some attachment has no description, which a screen reader then cannot describe. */
     val undescribed: Boolean get() = attachments.flatten().any { it.description.isBlank() }

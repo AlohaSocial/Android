@@ -152,6 +152,7 @@ private fun PostButton(state: ComposerUiState, actions: ComposerActions) {
     val label = when {
         state.posted > 0 -> R.string.composer_post_again
         state.scheduledAt != null -> R.string.composer_post_schedule
+        !state.uploaded && state.canWait -> R.string.composer_post_later
         state.reply != null -> R.string.composer_post_reply
         else -> R.string.composer_post
     }

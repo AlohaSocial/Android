@@ -61,6 +61,50 @@ public class Outbox @Inject constructor(private val dao: OutboxDao, private val 
         )
     }
 
+    /** Queues [post] as [id] of [accountId], to go out after what the account queued before it. */
+    public suspend fun queue(id: String, accountId: String, post: DraftPost) {
+        val now = clock.millis()
+        val existing = dao.get(id)
+        if (existing?.state == OutboxState.Sending.name) return
+        val content = json.encodeToString(DraftPost.serializer(), post)
+        // queued now, it goes behind what is already waiting, however long ago it was first drafted
+        dao.upsert(OutboxEntity(id, accountId, OutboxState.Queued.name, content, createdAt = now, updatedAt = now))
+    }
+
+    /**
+     * The next post [accountId] queued, marked as going out so no edit can race it; one left going out
+     * by a sender that stopped half way is queued again first, its progress kept.
+     */
+    public suspend fun claim(accountId: String): OutboxEntry? {
+        val now = clock.millis()
+        dao.moveAll(accountId, OutboxState.Sending.name, OutboxState.Queued.name, now)
+        return dao.claim(accountId, now)?.let(::entry)
+    }
+
+    /** Keeps how far sending [id] got, so sending again starts from there. */
+    public suspend fun progress(id: String, post: DraftPost) {
+        dao.setContent(id, json.encodeToString(DraftPost.serializer(), post), clock.millis())
+    }
+
+    /** Puts [id] back in the queue, or in [state] with what the server said. */
+    public suspend fun settle(id: String, state: OutboxState = OutboxState.Queued, error: String? = null) {
+        dao.setState(id, state.name, error, clock.millis())
+    }
+
+    /**
+     * Stops [accountId]'s queue until it signs in again, everything waiting [paused]; or lets its
+     * paused posts go out again.
+     */
+    public suspend fun setPaused(accountId: String, paused: Boolean) {
+        val (from, to) = if (paused) {
+            OutboxState.Queued to OutboxState.Paused
+        } else {
+            OutboxState.Paused to
+                OutboxState.Queued
+        }
+        dao.moveAll(accountId, from.name, to.name, clock.millis())
+    }
+
     /** Takes [id] back for editing; false while it is going out, when nothing may change it. */
     public suspend fun reopen(id: String): Boolean = dao.get(id) == null || dao.reopen(id, clock.millis()) > 0
 

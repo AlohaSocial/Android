@@ -13,6 +13,8 @@ import social.aloha.core.data.compose.DraftPost
 import social.aloha.core.data.compose.DraftSegment
 import social.aloha.core.data.compose.Outbox
 import social.aloha.core.data.compose.OutboxEntry
+import social.aloha.core.model.OutboxState
+import social.aloha.core.sync.PostQueue
 import social.aloha.core.sync.UploadState
 
 /** What opening the composer on a draft found. */
@@ -29,16 +31,35 @@ internal sealed interface Opened {
  * composer closes with something written, so leaving never loses it; forgotten once posted or
  * discarded. Writing on leaving runs in [scope], which outlives the composer.
  */
-internal class DraftKeeper(private val outbox: Outbox, private val scope: CoroutineScope, draftId: String?) {
+internal class DraftKeeper(
+    private val outbox: Outbox,
+    private val queue: PostQueue,
+    private val scope: CoroutineScope,
+    draftId: String?,
+) {
     val id: String = draftId ?: UUID.randomUUID().toString()
     private var finished = false
-    private var saved = draftId != null
 
-    /** Takes the draft back from the outbox for editing. */
+    /** Whether the outbox holds the draft, so that forgetting it has something to delete. */
+    private var saved = false
+
+    /** Queued, the post goes out later from its files, which stay for it. */
+    private var queued = false
+
+    /** Takes the draft back from the outbox for editing, as it was before, with why it was refused. */
     suspend fun open(): Opened {
         if (!saved) return Opened.Writing(null)
+        val entry = outbox.get(id)
         if (!outbox.reopen(id)) return Opened.Sending
-        return Opened.Writing(outbox.get(id))
+        return Opened.Writing(entry)
+    }
+
+    /** Hands [post], keyed and its games played, to the outbox, to go out with a network. */
+    suspend fun queue(accountId: String, post: DraftPost) {
+        finished = true
+        queued = true
+        outbox.queue(id, accountId, post)
+        this.queue.drain(accountId)
     }
 
     /** Keeps [post] as the draft of [accountId]; nothing written forgets it. */
@@ -55,6 +76,7 @@ internal class DraftKeeper(private val outbox: Outbox, private val scope: Corout
 
     /** The composer closes: [post] is kept, when there is one; whether its files must stay for it. */
     fun leave(accountId: String?, post: DraftPost?): Boolean {
+        if (queued) return true
         if (finished || accountId == null || post == null) return false
         finished = true
         scope.launch { outbox.saveDraft(id, accountId, post) }
@@ -96,14 +118,21 @@ internal fun ComposerUiState.draft(
     scheduledAt = scheduledAt,
 )
 
-/** This state with the choices [draft] was left with, where they are still allowed. */
-internal fun ComposerUiState.restored(draft: DraftPost) = copy(
-    visibility = draft.visibility.takeIf { it in visibilities } ?: visibility,
-    language = draft.language,
-    spoilerShown = draft.spoiler != null,
-    quotePolicy = QuotePolicy.entries.firstOrNull { it.wire == draft.quotePolicy } ?: QuotePolicy.Anyone,
-    posted = draft.postedIds.size,
-)
+/**
+ * This state with the choices [entry] was left with, where they are still allowed, and why the server
+ * refused it when it did.
+ */
+internal fun ComposerUiState.restored(entry: OutboxEntry): ComposerUiState {
+    val draft = entry.post
+    return copy(
+        visibility = draft.visibility.takeIf { it in visibilities } ?: visibility,
+        language = draft.language,
+        spoilerShown = draft.spoiler != null,
+        quotePolicy = QuotePolicy.entries.firstOrNull { it.wire == draft.quotePolicy } ?: QuotePolicy.Anyone,
+        posted = draft.postedIds.size,
+        failure = PostFailure.Refused(entry.error).takeIf { entry.state == OutboxState.Failed },
+    )
+}
 
 /** Puts back the attachments [draft] kept, each in its post: uploaded already, or uploading again. */
 internal fun Attachments.restore(draft: DraftPost) {

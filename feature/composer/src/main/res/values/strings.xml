@@ -306,6 +306,10 @@
     <string name="composer_schedule_back">Back</string>
     <!-- Button that closes a picker without choosing -->
     <string name="composer_cancel">Cancel</string>
+    <!-- Post button label when the post will go to the outbox, its attachments not uploaded yet -->
+    <string name="composer_post_later">Send later</string>
+    <!-- Shown as the composer closes on a post that goes out once there is a network -->
+    <string name="composer_queued">Your post goes out as soon as there is a connection.</string>
     <!-- Post button label when the post is scheduled -->
     <string name="composer_post_schedule">Schedule</string>
     <!-- Overflow menu button in the composer's top bar -->
@@ -353,8 +357,22 @@
         <item quantity="one">%1$d post</item>
         <item quantity="other">Thread of %1$d posts</item>
     </plurals>
+    <!-- A post in the drafts list waiting for a network to go out -->
+    <string name="drafts_queued">Goes out when there is a connection</string>
+    <!-- A post in the drafts list going out right now -->
+    <string name="drafts_sending">Sending…</string>
+    <!-- A post in the drafts list waiting for its account to sign in again -->
+    <string name="drafts_paused">Waiting for you to sign in again</string>
+    <!-- A post the server refused; the placeholder is the server's reason, as it gave it -->
+    <string name="drafts_failed">Not sent: %1$s</string>
+    <!-- A post the server refused without a reason -->
+    <string name="drafts_failed_unknown">Not sent. Open it to try again.</string>
+    <!-- Button on a paused post that sends the waiting posts again -->
+    <string name="drafts_resume">Send</string>
     <!-- Shown for a draft with a poll -->
     <string name="drafts_poll">Poll</string>
+    <!-- Spoken label of a draft's delete button; the placeholder is the start of its text -->
+    <string name="drafts_delete_one">Delete the draft \u201c%1$s\u201d</string>
     <!-- Button that deletes a draft, and the confirm button of the dialog asking -->
     <string name="drafts_delete">Delete</string>
     <!-- Title of the dialog asking before a draft is deleted -->

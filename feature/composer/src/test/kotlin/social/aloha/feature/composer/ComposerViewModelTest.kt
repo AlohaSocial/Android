@@ -10,6 +10,7 @@ import androidx.datastore.preferences.core.emptyPreferences
 import androidx.lifecycle.viewModelScope
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
+import androidx.work.testing.WorkManagerTestInitHelper
 import java.net.URLDecoder
 import java.time.Clock
 import java.util.concurrent.CopyOnWriteArrayList
@@ -56,12 +57,14 @@ import social.aloha.core.datastore.AccountSettingsStore
 import social.aloha.core.datastore.AppPreferences
 import social.aloha.core.datastore.TokenVault
 import social.aloha.core.model.AccessToken
+import social.aloha.core.model.OutboxState
 import social.aloha.core.model.ServerCapabilities
 import social.aloha.core.model.ServerLimits
 import social.aloha.core.model.Visibility
 import social.aloha.core.navigation.ComposerKey
 import social.aloha.core.network.RateLimiter
 import social.aloha.core.sync.MediaUploads
+import social.aloha.core.sync.PostQueue
 import social.aloha.core.testing.FakeSecretCipher
 import social.aloha.core.testing.InMemoryDataStore
 import social.aloha.core.testing.MockCredentials
@@ -203,6 +206,7 @@ class ComposerViewModelTest {
 
     private suspend fun open(replyToId: String? = null, draftId: String? = null): ComposerViewModel {
         Dispatchers.setMain(Dispatchers.Unconfined)
+        WorkManagerTestInitHelper.initializeTestWorkManager(context)
         val apiBase = server.url("/")
         val capabilities = ServerCapabilities.minimal(apiBase.toString()).copy(
             softwareName = "nextcloud-social",
@@ -222,6 +226,7 @@ class ComposerViewModelTest {
             compose,
             PostSender(compose, ScheduledPosts(clients)),
             outbox,
+            PostQueue(context),
             scope,
             RemoteLookup(clients, statuses),
             MediaUploads(context),
@@ -421,5 +426,22 @@ class ComposerViewModelTest {
         viewModel.onPost()
         viewModel.await { it.done }
         assertEquals(emptyList<Any>(), withTimeout(10.seconds) { outbox.observe(reader).first { it.isEmpty() } })
+    }
+
+    @Test
+    fun `a post with no network goes to the outbox, keyed, and out later`() = runBlocking {
+        val viewModel = open()
+        viewModel.await { it.ready }
+        viewModel.type(0, "From the reef /flip")
+        viewModel.await { it.canPost }
+        server.close()
+        viewModel.onPost()
+        assertEquals(true, viewModel.await { it.done }.queued)
+        val queued = outbox.observe(accounts.all().single().id).first().single()
+        assertEquals(OutboxState.Queued, queued.state)
+        val segment = queued.post.segments.single()
+        assertEquals(true, segment.key != null)
+        // the game is played once, now, so the post the outbox sends is the one the writer saw
+        assertEquals(false, segment.sent.orEmpty().contains("/flip"))
     }
 }

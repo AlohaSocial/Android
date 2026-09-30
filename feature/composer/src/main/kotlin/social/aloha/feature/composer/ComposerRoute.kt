@@ -3,9 +3,13 @@
 
 package social.aloha.feature.composer
 
+import android.Manifest
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -31,6 +35,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -84,6 +89,7 @@ public fun ComposerRoute(
     LaunchedEffect(hue) { viewModel.cards.onHue(hue) }
 
     BackHandler(onBack = actions::onClose)
+    QueuedEffect(state.queued)
     LaunchedEffect(state.done) { if (state.done) done() }
     FailureSnackbar(state, snackbars, viewModel::onFailureShown)
     ComposerScreen(state, viewModel.segments, viewModel.spoiler, actions, modifier, snackbars)
@@ -314,6 +320,24 @@ private fun ComposerDialogs(state: ComposerUiState, viewModel: ComposerViewModel
             },
             onKeep = { discarding = false },
         )
+    }
+}
+
+/**
+ * Says a queued post goes out later, and asks, once, to be allowed to say so again when it cannot go
+ * out: the notification is the only word the writer gets once the composer has gone.
+ */
+@Composable
+private fun QueuedEffect(queued: Boolean) {
+    val context = LocalContext.current
+    val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {}
+    LaunchedEffect(queued) {
+        if (!queued) return@LaunchedEffect
+        Toast.makeText(context, R.string.composer_queued, Toast.LENGTH_LONG).show()
+        val asked = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) !=
+            PackageManager.PERMISSION_GRANTED
+        if (asked) permission.launch(Manifest.permission.POST_NOTIFICATIONS)
     }
 }
 

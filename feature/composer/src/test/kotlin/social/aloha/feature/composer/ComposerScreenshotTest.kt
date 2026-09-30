@@ -253,41 +253,48 @@ class ComposerScreenshotTest {
         )
     }
 
+    // a draft of each kind, and a post in each state of the outbox
     @Test
     fun drafts() = capture("drafts") {
+        DraftsScreen(sampleDrafts(), DraftsActions({}, {}, {}, {}))
+    }
+
+    private fun sampleDrafts(): List<OutboxEntry> {
         val at = Instant.parse("2030-06-01T07:30:00Z")
-        DraftsScreen(
-            listOf(
-                OutboxEntry(
-                    "1",
-                    "a",
-                    OutboxState.Draft,
-                    DraftPost(
-                        segments = listOf(
-                            DraftSegment("Sunrise paddle out, who is in?"),
-                            DraftSegment("Bring a board"),
-                        ),
-                        poll = DraftPoll(listOf("Yes", "No"), 3_600),
-                    ),
-                    at,
-                    null,
+        return listOf(
+            OutboxEntry(
+                "1",
+                "a",
+                OutboxState.Draft,
+                DraftPost(
+                    segments = listOf(DraftSegment("Sunrise paddle out, who is in?"), DraftSegment("Bring a board")),
+                    poll = DraftPoll(listOf("Yes", "No"), 3_600),
                 ),
-                OutboxEntry(
-                    "2",
-                    "a",
-                    OutboxState.Draft,
-                    DraftPost(
-                        segments = listOf(DraftSegment("", listOf(DraftMedia("wave.jpg", "image/jpeg")))),
-                        replyToId = "9",
-                        spoiler = "Wipeout",
-                    ),
-                    at.minusSeconds(86_400),
-                    null,
-                ),
+                at,
+                null,
             ),
-            onBack = {},
-            onOpen = {},
-            onDelete = {},
+            OutboxEntry(
+                "2",
+                "a",
+                OutboxState.Draft,
+                DraftPost(
+                    segments = listOf(DraftSegment("", listOf(DraftMedia("wave.jpg", "image/jpeg")))),
+                    replyToId = "9",
+                    spoiler = "Wipeout",
+                ),
+                at.minusSeconds(86_400),
+                null,
+            ),
+            OutboxEntry("3", "a", OutboxState.Queued, DraftPost(listOf(DraftSegment("On the way"))), at, null),
+            OutboxEntry(
+                "4",
+                "a",
+                OutboxState.Failed,
+                DraftPost(listOf(DraftSegment("Too long, way too long"))),
+                at,
+                "Text character limit of 500 exceeded",
+            ),
+            OutboxEntry("5", "a", OutboxState.Paused, DraftPost(listOf(DraftSegment("Later"))), at, null),
         )
     }
 

@@ -230,13 +230,20 @@ internal class Attachments(
 
     /**
      * Sends every description and focal point the server does not have yet, as [account]; false when
-     * one could not be sent, which leaves the post unsent rather than posted with the wrong text.
+     * something is not uploaded yet or one could not be sent, which leaves the post unsent rather than
+     * posted without it or with the wrong text.
      */
-    suspend fun sync(account: SignedInAccount): Boolean = all.value.flatten().filter(::unsent).all { attachment ->
-        val sent = clients.answer(account, update(attachment)) is Answer.Got
-        if (sent) change(attachment.id) { it.copy(sentDescription = it.description, sentFocus = it.focus) }
-        sent
-    }
+    suspend fun sync(account: SignedInAccount): Boolean = all.value.flatten().all { it.mediaId != null } &&
+        all.value.flatten().filter(::unsent).all { attachment ->
+            val sent = media.describe(
+                account,
+                checkNotNull(attachment.mediaId),
+                attachment.description,
+                attachment.focus?.let { it.x to it.y },
+            ) is Answer.Got
+            if (sent) change(attachment.id) { it.copy(sentDescription = it.description, sentFocus = it.focus) }
+            sent
+        }
 
     /** Lets go of everything: the uploads still running and, unless a draft [keepFiles], the files. */
     fun clear(keepFiles: Boolean = false) {

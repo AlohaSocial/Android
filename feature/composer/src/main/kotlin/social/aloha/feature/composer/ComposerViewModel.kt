@@ -58,6 +58,7 @@ import social.aloha.core.model.Status
 import social.aloha.core.model.Visibility
 import social.aloha.core.navigation.ComposerKey
 import social.aloha.core.sync.MediaUploads
+import social.aloha.core.sync.PostQueue
 
 /**
  * One new post, or a thread of them, written as one of the signed-in accounts. The text lives in
@@ -72,6 +73,7 @@ internal class ComposerViewModel @AssistedInject constructor(
     private val compose: ComposeRepository,
     sender: PostSender,
     outbox: Outbox,
+    queue: PostQueue,
     @ApplicationScope appScope: CoroutineScope,
     private val lookup: RemoteLookup,
     uploads: MediaUploads,
@@ -119,7 +121,7 @@ internal class ComposerViewModel @AssistedInject constructor(
     private val poster = ThreadPoster(sender, gameWords(context))
 
     /** The post kept as a draft while it is written, and when the composer closes. */
-    val drafts = DraftKeeper(outbox, appScope, key.draftId)
+    val drafts = DraftKeeper(outbox, queue, appScope, key.draftId)
 
     /** The opening post's poll, which takes the place of its media. */
     val poll = MutableStateFlow<PollUi?>(null)
@@ -337,19 +339,23 @@ internal class ComposerViewModel @AssistedInject constructor(
                 control.update { it.copy(posting = false, failure = PostFailure.CardFailed) }
                 return@launch
             }
-            // what was described since uploading goes first: a post must not go out without it
-            if (!attachments.sync(account)) {
-                control.update { it.copy(posting = false, failure = PostFailure.Unreached(Trouble.Server)) }
-                return@launch
-            }
             // the card is attached for the server alone, so the post takes every attachment there is
             val post = state.draft(segments.map { it.text }, spoiler, parent?.id, attachments.byPost.value)
-            val failure = poster.send(account, post) { posted ->
-                control.update { it.copy(posted = posted) }
+            // what was described since uploading goes first: a post must not go out without it
+            val failure = if (attachments.sync(account)) {
+                poster.send(account, post) { posted -> control.update { it.copy(posted = posted) } }
+            } else {
+                OFFLINE
             }
-            if (failure == null) drafts.posted()
+            // no network, or what it attaches is not up yet: it goes out later, from the outbox
+            if (failure == OFFLINE) {
+                drafts.queue(account.id, poster.prepare(post))
+                control.update { it.copy(posting = false, queued = true, done = true) }
+                return@launch
+            }
             control.update { it.copy(posting = false, failure = failure, done = failure == null) }
             if (failure == null) {
+                drafts.posted()
                 compose.refreshHome(account)
                 compose.rememberTags(account, post.segments.flatMap { ComposerText.hashtags(it.text) })
             }
@@ -375,7 +381,8 @@ internal class ComposerViewModel @AssistedInject constructor(
             control.update { it.copy(done = true) }
             return
         }
-        val draft = (opened as Opened.Writing).entry?.post
+        val entry = (opened as Opened.Writing).entry
+        val draft = entry?.post
         (draft?.replyToId ?: key.replyToId)?.let { id -> parent = (compose.status(account, id) as? Answer.Got)?.value }
         use(account)
         val preferences = compose.preferences(account)
@@ -388,7 +395,7 @@ internal class ComposerViewModel @AssistedInject constructor(
             scheduledAt.value = draft.scheduledAt
             poster.postedIds = draft.postedIds
             attachments.restore(draft)
-            control.update { it.restored(draft) }
+            control.update { it.restored(entry) }
         } else {
             parent?.let { status ->
                 segments[0] = prefilled(status, account)
@@ -433,6 +440,9 @@ internal class ComposerViewModel @AssistedInject constructor(
 }
 
 private const val EXCERPT = 140
+
+/** What stops a post that the outbox then sends. */
+private val OFFLINE = PostFailure.Unreached(Trouble.Offline)
 
 /** The writer's own defaults from their server: the visibility where it is allowed, and the language. */
 private fun ComposerUiState.withDefaults(preferences: Preferences?) = copy(
