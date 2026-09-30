@@ -16,6 +16,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.resetMain
@@ -49,6 +50,7 @@ import social.aloha.core.datastore.TokenVault
 import social.aloha.core.html.RichTextCache
 import social.aloha.core.media.ImagePrefetcher
 import social.aloha.core.model.AccessToken
+import social.aloha.core.model.FeedMode
 import social.aloha.core.model.ServerCapabilities
 import social.aloha.core.model.SwipeAction
 import social.aloha.core.model.TimelineKey
@@ -240,6 +242,26 @@ class TimelineViewModelTest {
                 TimelineKey.home(TimelineSource.Hashtag("surf")).storageKey,
             ).isNotEmpty(),
         )
+    }
+
+    @Test
+    fun `a mode reads its own kind of post from a source of its own, with nothing of home's hidden`() = runBlocking {
+        timeline.media = { if (it % 2 == 0) listOf(NumberedTimeline.image(it)) else emptyList() }
+        val account = accounts.activeAccount.filterNotNull().first()
+        settings.update(account.id) { it.copy(showBoosts = false, homeSource = TimelineSource.Federated) }
+        val photos = create(TimelineFeed.Mode(FeedMode.Photos))
+        val state = withTimeout(10.seconds) { photos.uiState.first { it.loadedOnce && it.items.isNotEmpty() } }
+        assertEquals((100 downTo 62 step 2).map(Int::toString), state.postIds())
+        // home's choice of source is home's: the mode starts on the people followed
+        assertEquals(TimelineSource.Home, state.source)
+        assertTrue(state.showBoosts)
+        // this server narrows nothing, so an empty photos timeline would say why
+        assertTrue(state.sparse)
+        photos.onSource(TimelineSource.Local)
+        withTimeout(10.seconds) { photos.uiState.first { it.source == TimelineSource.Local } }
+        val stored = settings.settings(account.id).first()
+        assertEquals(TimelineSource.Local, stored.modeSources[FeedMode.Photos.key])
+        assertEquals(TimelineSource.Federated, stored.homeSource)
     }
 
     @Test

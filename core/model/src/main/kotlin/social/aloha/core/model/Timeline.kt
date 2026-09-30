@@ -131,28 +131,22 @@ public data class TimelineFilters(
 }
 
 /**
- * How hard the client works to fill a page when the server cannot narrow for it, capped at
- * [MAXIMUM_UPSTREAM_PAGES] upstream pages per visible page.
+ * How hard the client works to fill a page of a mode, capped at [MAXIMUM_UPSTREAM_PAGES] upstream pages
+ * per visible page. The device filters every mode but home, since even a server that narrows leaves
+ * some of it (`only_media` includes video, `only_video` every video that is not a short, and Mastodon
+ * ignores `only_media` on home); where the server narrowed, the first page mostly fills and fetching
+ * stops there.
  */
 public object OverFetch {
     public const val MAXIMUM_UPSTREAM_PAGES: Int = 5
 
     @Suppress("MagicNumber") // the table is the specification
-    public fun multiplier(mode: FeedMode, serverFilters: TimelineFilters): Int {
-        if (!serverFilters.isEmpty) return 1
-        return when (mode) {
-            FeedMode.Home -> 1
-
-            FeedMode.Photos -> 3
-
-            FeedMode.Video -> 5
-
-            FeedMode.Shorts -> 8
-
-            FeedMode.News -> 1
-
-            // hidden entirely without server support
-            FeedMode.Audio -> 5
-        }
+    public fun multiplier(mode: FeedMode): Int = when (mode) {
+        FeedMode.Home -> 1
+        FeedMode.Photos -> 3
+        FeedMode.Video -> 5
+        FeedMode.Shorts -> 8
+        FeedMode.News -> 1
+        FeedMode.Audio -> 5
     }
 }

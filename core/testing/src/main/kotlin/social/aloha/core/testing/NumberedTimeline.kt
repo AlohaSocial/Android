@@ -20,11 +20,17 @@ import okhttp3.HttpUrl
  * the dev instance): `max_id` answers what lies below, `min_id` the posts immediately above, `since_id`
  * the newest above. New posts are added by raising [newest]. Favouriting, boosting and bookmarking answer
  * as the server would, or with a server error while [failActions] is set; filters and markers answer empty.
+ * [media] gives a status its attachments; with [narrows] set the server honours `only_media` and
+ * `only_video` as Nextcloud Social does, leaving out what does not match before it pages.
  */
 public class NumberedTimeline(template: JsonObject = homeTemplate()) : Dispatcher() {
     @Volatile public var newest: Int = 0
 
     @Volatile public var failActions: Boolean = false
+
+    @Volatile public var media: (Int) -> List<JsonObject> = { emptyList() }
+
+    @Volatile public var narrows: Boolean = false
     private val template = JsonObject(template + ("reblog" to JsonNull))
 
     override fun dispatch(request: RecordedRequest): MockResponse {
@@ -40,7 +46,7 @@ public class NumberedTimeline(template: JsonObject = homeTemplate()) : Dispatche
 
     private fun page(url: HttpUrl): MockResponse {
         val ids = pick(url, url.queryParameter("limit")?.toInt() ?: DEFAULT_LIMIT)
-        val body = JsonArray(ids.map { status(it.toString()) })
+        val body = JsonArray(ids.map { status(it) })
         val builder = MockResponse.Builder().code(
             OK,
         ).body(body.toString()).addHeader("content-type", "application/json")
@@ -57,6 +63,19 @@ public class NumberedTimeline(template: JsonObject = homeTemplate()) : Dispatche
 
     private fun status(id: String, changes: Map<String, JsonPrimitive> = emptyMap()) =
         JsonObject(template + ("id" to JsonPrimitive(id)) + changes)
+
+    private fun status(id: Int) = JsonObject(status(id.toString()) + ("media_attachments" to JsonArray(media(id))))
+
+    /** Whether the server lets [id] through the narrowing [url] asks for. */
+    private fun passes(url: HttpUrl, id: Int): Boolean {
+        if (!narrows) return true
+        val types = media(id).map { it["type"].toString().trim('"') }
+        return when {
+            url.queryParameter("only_video") == "true" -> "video" in types
+            url.queryParameter("only_media") == "true" -> types.isNotEmpty()
+            else -> true
+        }
+    }
 
     private fun action(id: String, action: String): MockResponse {
         if (failActions) return MockResponse.Builder().code(SERVER_ERROR).body("{}").build()
@@ -82,13 +101,37 @@ public class NumberedTimeline(template: JsonObject = homeTemplate()) : Dispatche
         val min = url.queryParameter("min_id")?.toInt()
         val since = url.queryParameter("since_id")?.toInt()
         return when {
-            max != null -> (max - 1 downTo 1).take(limit)
-            min != null -> (min + 1..newest).take(limit).reversed()
-            else -> (newest downTo (since ?: 0) + 1).take(limit)
+            max != null -> (max - 1 downTo 1).filter { passes(url, it) }.take(limit)
+            min != null -> (min + 1..newest).filter { passes(url, it) }.take(limit).reversed()
+            else -> (newest downTo (since ?: 0) + 1).filter { passes(url, it) }.take(limit)
         }
     }
 
     public companion object {
+        /** A photo attachment of status [id]. */
+        public fun image(id: Int): JsonObject =
+            attachment(id, "image", mapOf("width" to JsonPrimitive(800), "height" to JsonPrimitive(600)))
+
+        /** A video attachment of status [id], [duration] seconds long; null leaves the length out. */
+        public fun video(id: Int, width: Int, height: Int, duration: Double?): JsonObject {
+            val original = buildMap {
+                put("width", JsonPrimitive(width))
+                put("height", JsonPrimitive(height))
+                duration?.let { put("duration", JsonPrimitive(it)) }
+            }
+            return attachment(id, "video", original)
+        }
+
+        private fun attachment(id: Int, type: String, original: Map<String, JsonPrimitive>): JsonObject = JsonObject(
+            mapOf(
+                "id" to JsonPrimitive("m$id"),
+                "type" to JsonPrimitive(type),
+                "url" to JsonPrimitive("https://media.example/$id"),
+                "preview_url" to JsonPrimitive("https://media.example/$id/preview"),
+                "meta" to JsonObject(mapOf("original" to JsonObject(original))),
+            ),
+        )
+
         private val ACTION = Regex(".*/api/v1/statuses/([^/]+)/(\\w+)")
         private const val DEFAULT_LIMIT = 20
         private const val OK = 200

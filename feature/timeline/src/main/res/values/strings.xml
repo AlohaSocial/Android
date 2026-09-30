@@ -8,6 +8,16 @@
     <string name="timeline_compose">New post</string>
     <!-- Title of the home timeline screen -->
     <string name="timeline_title">Home</string>
+    <!-- Title of the timeline of posts with photos -->
+    <string name="timeline_title_photos">Photos</string>
+    <!-- Title of the timeline of posts with videos -->
+    <string name="timeline_title_video">Video</string>
+    <!-- Title of the timeline of short vertical videos -->
+    <string name="timeline_title_shorts">Shorts</string>
+    <!-- Title of the timeline of posts that share a link to an article -->
+    <string name="timeline_title_news">News</string>
+    <!-- Title of the timeline of posts with audio -->
+    <string name="timeline_title_audio">Audio</string>
     <!-- Source switch: the people the reader follows -->
     <string name="timeline_source_home">Following</string>
     <!-- Source switch: everyone on the reader's own server -->
@@ -41,6 +51,8 @@
     <string name="timeline_empty_explore">See what\'s happening on this server</string>
     <!-- Text of an empty public timeline -->
     <string name="timeline_empty_public">No posts here yet.</string>
+    <!-- Under an empty photos, video or shorts timeline: the server cannot pick such posts itself -->
+    <string name="timeline_empty_sparse">This server cannot pick these posts out itself, so the app looks through recent posts for them, and there may be few.</string>
     <!-- Read aloud while the first page of the timeline loads -->
     <string name="timeline_loading">Loading posts</string>
     <!-- Swipe action on a post, read aloud: favourite it -->

@@ -54,6 +54,7 @@ import social.aloha.core.designsystem.AlohaPreviews
 import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.designsystem.AlohaTheme
 import social.aloha.core.designsystem.badgeCount
+import social.aloha.core.model.FeedMode
 import social.aloha.core.navigation.AccountKey
 import social.aloha.core.navigation.ComposerKey
 import social.aloha.core.navigation.DraftsKey
@@ -98,6 +99,7 @@ import social.aloha.feature.thread.StatusListRoute
 import social.aloha.feature.thread.ThreadNavigation
 import social.aloha.feature.thread.ThreadRoute
 import social.aloha.feature.timeline.TagRoute
+import social.aloha.feature.timeline.TimelineFeed
 import social.aloha.feature.timeline.TimelineRoute
 
 private data class TopLevelDestination(
@@ -144,9 +146,8 @@ fun AlohaApp(
     unreadNotifications: Int = 0,
     resolveLink: suspend (address: String, fromPost: Boolean) -> NavKey? = { _, _ -> null },
     accountButton: @Composable (onProfile: () -> Unit, onSettings: () -> Unit) -> Unit = { _, _ -> },
-    home: @Composable (StatusNavigation, accountButton: @Composable () -> Unit) -> Unit = { navigation, button ->
-        TimelineRoute(navigation, navigationIcon = button)
-    },
+    timeline: @Composable (TimelineFeed, StatusNavigation, accountButton: @Composable () -> Unit) -> Unit =
+        { feed, navigation, button -> TimelineRoute(navigation, feed = feed, navigationIcon = button) },
 ) {
     val backStack = rememberNavBackStack(HomeKey)
     // a detail opened from a destination keeps that destination selected
@@ -268,16 +269,19 @@ fun AlohaApp(
                 rememberViewModelStoreNavEntryDecorator(),
             ),
             entryProvider = entryProvider {
-                entry<HomeKey>(metadata = ListDetailSceneStrategy.listPane(detailPlaceholder = { NothingOpen() })) {
-                    home(statusNavigation) {
+                // home and each mode: the same account button, each timeline of its own
+                val modeEntry = @Composable { feed: TimelineFeed ->
+                    timeline(feed, statusNavigation) {
                         accountButton({
                             backStack.push(AccountKey(readerId, id = serverAccountId))
                         }, { backStack.push(SettingsKey) })
                     }
                 }
-                entry<PhotosKey> { Placeholder(stringResource(R.string.destination_photos)) }
-                entry<VideoKey> { Placeholder(stringResource(R.string.destination_video)) }
-                entry<ShortsKey> { Placeholder(stringResource(R.string.destination_shorts)) }
+                val listPane = ListDetailSceneStrategy.listPane(detailPlaceholder = { NothingOpen() })
+                entry<HomeKey>(metadata = listPane) { modeEntry(TimelineFeed.Home) }
+                entry<PhotosKey>(metadata = listPane) { modeEntry(TimelineFeed.Mode(FeedMode.Photos)) }
+                entry<VideoKey>(metadata = listPane) { modeEntry(TimelineFeed.Mode(FeedMode.Video)) }
+                entry<ShortsKey>(metadata = listPane) { modeEntry(TimelineFeed.Mode(FeedMode.Shorts)) }
                 entry<NotificationsKey>(
                     metadata = ListDetailSceneStrategy.listPane(detailPlaceholder = { NothingOpen() }),
                 ) {
@@ -387,7 +391,9 @@ internal fun Placeholder(title: String) {
 @AlohaPreviews
 @Composable
 private fun AlohaAppPreview() {
-    AlohaTheme { AlohaApp("preview", "1", home = { _, _ -> Placeholder(stringResource(R.string.destination_home)) }) }
+    AlohaTheme {
+        AlohaApp("preview", "1", timeline = { _, _, _ -> Placeholder(stringResource(R.string.destination_home)) })
+    }
 }
 
 /** Opens [key] unless it is already on screen: a second copy would make back seem to do nothing. */

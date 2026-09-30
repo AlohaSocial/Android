@@ -166,6 +166,9 @@ class ContentClassifierTest {
         assertTrue(ContentKind.Photo.belongs(FeedMode.Photos))
         assertTrue(ContentKind.Text.belongs(FeedMode.Home))
         assertFalse(ContentKind.Text.belongs(FeedMode.Photos))
+        // a clip the server did not describe is a video until a player says whether it is a short
+        assertTrue(ContentKind.Undetermined.belongs(FeedMode.Video))
+        assertFalse(ContentKind.Undetermined.belongs(FeedMode.Shorts))
     }
 
     @Test

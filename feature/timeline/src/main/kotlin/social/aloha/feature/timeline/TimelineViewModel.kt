@@ -11,7 +11,6 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Clock
-import java.time.Duration
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
@@ -32,20 +31,15 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import okhttp3.HttpUrl
 import social.aloha.core.data.AccountRepository
-import social.aloha.core.data.Trouble
 import social.aloha.core.data.sync.TimelineSignals
-import social.aloha.core.data.timeline.PageOutcome
-import social.aloha.core.data.timeline.RefreshPlan
 import social.aloha.core.data.timeline.StatusInteractions
-import social.aloha.core.data.timeline.TimelineMerge
+import social.aloha.core.data.timeline.TimelinePager
 import social.aloha.core.data.timeline.TimelinePosition
 import social.aloha.core.data.timeline.TimelinePositions
 import social.aloha.core.data.timeline.TimelineRepository
 import social.aloha.core.data.timeline.TimelineRow
 import social.aloha.core.data.timeline.Toggle
-import social.aloha.core.data.trouble
 import social.aloha.core.datastore.AccountSettings
 import social.aloha.core.datastore.AccountSettingsStore
 import social.aloha.core.datastore.AppPreferences
@@ -54,6 +48,7 @@ import social.aloha.core.model.FeedMode
 import social.aloha.core.model.SignedInAccount
 import social.aloha.core.model.Status
 import social.aloha.core.model.SwipeAction
+import social.aloha.core.model.TimelineFilters
 import social.aloha.core.model.TimelineKey
 import social.aloha.core.model.TimelineSource
 import social.aloha.core.network.ApiError
@@ -62,9 +57,10 @@ import social.aloha.core.ui.StatusRowUi
 import social.aloha.core.ui.minuteTicks
 
 /**
- * The home screen's timeline, cache first. What is stored is drawn at once; a fetch runs when the
- * timeline has never fetched in this process or its last fetch is over a minute old. Posts a refresh
- * brings wait behind the pill until the person asks for them, so the list never moves under a reader.
+ * A timeline screen, cache first: home, a media mode's, or a hashtag's. What is stored is drawn at once;
+ * a fetch runs when the timeline has never fetched in this process or its last fetch is over a minute
+ * old. Posts a refresh brings wait behind the pill until the person asks for them, so the list never
+ * moves under a reader.
  */
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 @HiltViewModel(assistedFactory = TimelineViewModel.Factory::class)
@@ -87,15 +83,8 @@ internal class TimelineViewModel @AssistedInject constructor(
         fun create(feed: TimelineFeed): TimelineViewModel
     }
 
-    /** What the timeline is doing, as opposed to what it holds. */
+    /** The screen's own requests, beside what the [pager] is doing. */
     private data class Control(
-        val refreshing: Boolean = false,
-        val loadedOnce: Boolean = false,
-        val trouble: Trouble? = null,
-        val loadingOlder: Boolean = false,
-        val reachedEnd: Boolean = false,
-        val loadingGaps: Set<String> = emptySet(),
-        val held: Set<String> = emptySet(),
         val restoreTo: TimelineUiState.Restore? = null,
         val scrollToTop: Boolean = false,
         val actionFailed: Boolean = false,
@@ -104,33 +93,28 @@ internal class TimelineViewModel @AssistedInject constructor(
     private val colors = MutableStateFlow<RichTextColors?>(null)
     private val control = MutableStateFlow(Control())
     private val scrolled = MutableStateFlow<TimelinePosition?>(null)
-
-    /**
-     * The stored rows last seen, unfiltered, with the timeline they belong to: gaps are filled and pages
-     * anchored from these. One value, so rows another timeline sent late never pass for this one's.
-     */
-    @Volatile private var seen: Pair<TimelineKey?, List<TimelineRow>> = null to emptyList()
-
-    private val stored: List<TimelineRow> get() = seen.second
-
-    @Volatile private var cursor: HttpUrl? = null
+    private val pager = TimelinePager(timelines, clock, viewModelScope) { current() }
     private var restoreJob: Job? = null
     private var prefetchedFrom = -1
 
     private val account: StateFlow<SignedInAccount?> =
         accounts.activeAccount.stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
-    /** The reading settings; a hashtag's timeline is read as it is, with nothing of home's hidden. */
-    private val accountSettings: Flow<AccountSettings> = when (feed) {
-        TimelineFeed.Home -> account.filterNotNull().map {
-            it.id
-        }.distinctUntilChanged().flatMapLatest(settings::settings)
+    private val storedSettings: Flow<AccountSettings> =
+        account.filterNotNull().map { it.id }.distinctUntilChanged().flatMapLatest(settings::settings)
 
+    /**
+     * The reading settings. Hiding boosts and replies is home's: a mode shows what it is made of, and a
+     * hashtag's timeline is read as it is.
+     */
+    private val accountSettings: Flow<AccountSettings> = when (feed) {
+        TimelineFeed.Home -> storedSettings
+        is TimelineFeed.Mode -> storedSettings.map { it.copy(showBoosts = true, showReplies = true) }
         is TimelineFeed.Tag -> flowOf(AccountSettings())
     }
 
     private val key: Flow<TimelineKey> = combine(account.filterNotNull(), accountSettings) { account, settings ->
-        TimelineKey(FeedMode.Home, sourceOf(account, settings))
+        TimelineKey(feed.mode, sourceOf(account, settings))
     }.distinctUntilChanged()
 
     /** What a swipe does each way, as the settings chose for the device. */
@@ -155,11 +139,13 @@ internal class TimelineViewModel @AssistedInject constructor(
         .distinctUntilChanged { a, b -> a.first.id == b.first.id && a.second == b.second }
         .flatMapLatest { (account, key) ->
             combine(
-                timelines.observe(account, key),
+                pager.observe(account, key),
                 rows.filters(account.id),
                 colors.filterNotNull(),
                 accountSettings,
-                control.map { Shaping(it.held, it.loadingGaps, it.scrollToTop) }.distinctUntilChanged(),
+                combine(pager.states, control) { paging, control ->
+                    Shaping(paging.held, paging.loadingGaps, control.scrollToTop)
+                }.distinctUntilChanged(),
             ) {
                     stored,
                     filters,
@@ -167,7 +153,6 @@ internal class TimelineViewModel @AssistedInject constructor(
                     settings,
                     shaping,
                 ->
-                seen = key to stored
                 val shape = TimelineRowBuilder.Shape(colors, settings, filters, shaping.held, shaping.loadingGaps)
                 val held = stored.filter { it.id in shaping.held }
                 // the newest few who posted what waits, once each, for the pill to show
@@ -183,28 +168,29 @@ internal class TimelineViewModel @AssistedInject constructor(
 
     val uiState: StateFlow<TimelineUiState> = combine(
         items,
-        control,
+        combine(pager.states, control, ::Pair),
         combine(accountSettings, swipes, ::Pair),
         account.filterNotNull(),
         minuteTicks(clock),
     ) {
             shown,
-            control,
+            (paging, control),
             (settings, swipes),
             account,
             now,
         ->
         TimelineUiState(
             source = sourceOf(account, settings),
-            sources = if (feed == TimelineFeed.Home) homeSources(account.capabilities) else emptyList(),
+            sources = if (feed is TimelineFeed.Tag) emptyList() else homeSources(account.capabilities),
             items = shown.items,
-            loadedOnce = control.loadedOnce,
-            refreshing = control.refreshing,
+            loadedOnce = paging.loadedOnce,
+            refreshing = paging.refreshing,
             pending = shown.pending,
             pendingAvatars = shown.pendingAvatars,
-            trouble = control.trouble,
-            loadingOlder = control.loadingOlder,
-            reachedEnd = control.reachedEnd,
+            trouble = paging.trouble,
+            loadingOlder = paging.loadingOlder,
+            reachedEnd = paging.reachedEnd,
+            sparse = TimelineFilters.forMode(feed.mode, account.capabilities).isEmpty && feed.mode != FeedMode.Home,
             showBoosts = settings.showBoosts,
             showReplies = settings.showReplies,
             now = now,
@@ -230,12 +216,10 @@ internal class TimelineViewModel @AssistedInject constructor(
                         shownFor = account.id
                         signals.noteShown(account.id, isShown = true)
                     }
-                    cursor = null
                     prefetchedFrom = -1
-                    seen = null to emptyList()
                     rows.clear()
                     scheduleRestore(account, key)
-                    refreshIfStale(account, key)
+                    pager.start(account, key)
                     rows.refreshFilters(account)
                 }
         }
@@ -243,7 +227,7 @@ internal class TimelineViewModel @AssistedInject constructor(
             signals.timelineDue.collect { id ->
                 // a timeline off screen is not fetched for; it refreshes itself when it comes back
                 if (shownFor == null) return@collect
-                current()?.takeIf { (account) -> account.id == id }?.let { (account, key) -> refresh(account, key) }
+                current()?.takeIf { (account) -> account.id == id }?.let { pager.refresh() }
             }
         }
     }
@@ -257,7 +241,7 @@ internal class TimelineViewModel @AssistedInject constructor(
     fun onShown(isShown: Boolean) {
         if (isShown) {
             shownFor = account.value?.id?.also { signals.noteShown(it, isShown = true) }
-            viewModelScope.launch { current()?.let { (account, key) -> refreshIfStale(account, key) } }
+            viewModelScope.launch { current()?.let { (account, key) -> pager.refreshIfStale(account, key) } }
         } else {
             shownFor?.let { signals.noteShown(it, isShown = false) }
             shownFor = null
@@ -269,12 +253,11 @@ internal class TimelineViewModel @AssistedInject constructor(
         colors.value = value
     }
 
-    override fun onRefresh() {
-        viewModelScope.launch { current()?.let { (account, key) -> refresh(account, key) } }
-    }
+    override fun onRefresh() = pager.refresh()
 
     override fun onRevealPending() {
-        control.update { it.copy(held = emptySet(), scrollToTop = true) }
+        pager.reveal()
+        control.update { it.copy(scrollToTop = true) }
     }
 
     override fun onScrolledToTop() {
@@ -289,8 +272,10 @@ internal class TimelineViewModel @AssistedInject constructor(
         control.update { it.copy(actionFailed = false) }
     }
 
-    override fun onSource(source: TimelineSource) {
-        viewModelScope.launch { account.value?.let { settings.update(it.id) { s -> s.copy(homeSource = source) } } }
+    override fun onSource(source: TimelineSource) = when (feed) {
+        TimelineFeed.Home -> updateSettings { it.copy(homeSource = source) }
+        is TimelineFeed.Mode -> updateSettings { it.copy(modeSources = it.modeSources + (feed.mode.key to source)) }
+        is TimelineFeed.Tag -> Unit
     }
 
     override fun onShowBoosts(show: Boolean) = updateSettings { it.copy(showBoosts = show) }
@@ -313,45 +298,9 @@ internal class TimelineViewModel @AssistedInject constructor(
     }
 
     /** The list came within ten rows of its end: the next page, unless one is on its way or there is none. */
-    override fun onNearEnd() {
-        val state = control.value
-        if (state.loadingOlder || state.reachedEnd) return
-        val oldest = stored.lastOrNull { it is TimelineRow.Post }?.id ?: return
-        control.update { it.copy(loadingOlder = true) }
-        viewModelScope.launch {
-            val (account, key) = current() ?: return@launch
-            val outcome = timelines.older(account, key, cursor, oldest)
-            if (!current().shows(account, key)) return@launch
-            control.update { it.copy(loadingOlder = false) }
-            when (outcome) {
-                is PageOutcome.Loaded -> {
-                    cursor = outcome.nextCursor
-                    control.update { it.copy(reachedEnd = outcome.reachedEnd, trouble = null) }
-                }
+    override fun onNearEnd() = pager.older()
 
-                is PageOutcome.Failed -> control.update { it.copy(trouble = outcome.error.trouble) }
-
-                PageOutcome.Busy -> Unit
-            }
-        }
-    }
-
-    override fun onFillGap(gapId: String) {
-        val index = stored.indexOfFirst { it.id == gapId }.takeIf { it >= 0 } ?: return
-        val above = stored.subList(0, index).lastOrNull { it is TimelineRow.Post }?.id
-        control.update { it.copy(loadingGaps = it.loadingGaps + gapId) }
-        viewModelScope.launch {
-            val (account, key) = current() ?: return@launch
-            val outcome = timelines.fillGap(account, key, gapId, above)
-            if (!current().shows(account, key)) return@launch
-            control.update { state ->
-                state.copy(
-                    loadingGaps = state.loadingGaps - gapId,
-                    trouble = (outcome as? PageOutcome.Failed)?.error?.trouble,
-                )
-            }
-        }
-    }
+    override fun onFillGap(gapId: String) = pager.fillGap(gapId)
 
     override fun onSwipe(row: StatusRowUi, action: SwipeAction) {
         when (action) {
@@ -385,64 +334,13 @@ internal class TimelineViewModel @AssistedInject constructor(
         return account to key.first()
     }
 
-    private suspend fun refreshIfStale(account: SignedInAccount, key: TimelineKey) {
-        val last = timelines.lastFetched(account, key)
-        if (last == null || clock.millis() - last > STALE_MILLIS) refresh(account, key)
-    }
-
-    private suspend fun refresh(account: SignedInAccount, key: TimelineKey) {
-        if (control.value.refreshing) return
-        val own = seen.rowsOf(key)
-        val hadRows = own.isNotEmpty()
-        control.update { it.copy(refreshing = true) }
-        val newest = own.firstOrNull { it is TimelineRow.Post }?.id
-        val plan = RefreshPlan.of(timelines.lastFetched(account, key) != null, newest)
-        val outcome = timelines.refresh(account, key, plan)
-        // a reader who switched timeline or account meanwhile gets nothing of this one's paging
-        if (!current().shows(account, key)) return
-        control.update { state ->
-            when (outcome) {
-                is PageOutcome.Loaded -> {
-                    if (plan.direction == TimelineMerge.Direction.Cold) cursor = outcome.nextCursor
-                    // a refresh over rows being read holds what it brought behind the pill
-                    val held = if (hadRows && plan.direction != TimelineMerge.Direction.Cold) {
-                        state.held + outcome.arrived
-                    } else {
-                        state.held
-                    }
-                    state.copy(
-                        refreshing = false,
-                        loadedOnce = true,
-                        trouble = null,
-                        held = held,
-                        reachedEnd =
-                            state.reachedEnd || (!hadRows && outcome.reachedEnd),
-                    )
-                }
-
-                is PageOutcome.Failed -> state.copy(
-                    refreshing = false,
-                    loadedOnce = true,
-                    trouble = outcome.error.trouble,
-                )
-
-                PageOutcome.Busy -> state.copy(refreshing = false)
-            }
-        }
-    }
-
     /** Waits for the first rows, then asks the screen to scroll to where this timeline was left. */
     private fun scheduleRestore(account: SignedInAccount, key: TimelineKey) {
         restoreJob?.cancel()
         restoreJob = viewModelScope.launch {
+            // the read marker is home's own: another mode's timeline of the same source starts where it was left
             val saved = positions.saved(account, key)
-                ?: if (key.source ==
-                    TimelineSource.Home
-                ) {
-                    positions.homeMarker(account)?.let { TimelinePosition(it, 0) }
-                } else {
-                    null
-                }
+                ?: positions.homeMarker(account)?.takeIf { key == TimelineKey.home() }?.let { TimelinePosition(it, 0) }
             saved ?: return@launch
             val shown = items.first { it.items.isNotEmpty() }.items
             val index = shown.indexOfFirst { it.key == saved.statusId }
@@ -453,20 +351,21 @@ internal class TimelineViewModel @AssistedInject constructor(
     private suspend fun savePosition(position: TimelinePosition) {
         val (account, key) = current() ?: return
         positions.save(account, key, position)
-        if (key.source == TimelineSource.Home) positions.markHomeRead(account, position.statusId)
+        if (key == TimelineKey.home()) positions.markHomeRead(account, position.statusId)
     }
 
     /** The chosen source where the server serves it; a choice it no longer serves falls back to Following. */
-    private fun sourceOf(account: SignedInAccount, settings: AccountSettings): TimelineSource = when (feed) {
-        TimelineFeed.Home -> settings.homeSource.takeIf { it in homeSources(account.capabilities) }
-            ?: TimelineSource.Home
-
-        is TimelineFeed.Tag -> TimelineSource.Hashtag(feed.name)
+    private fun sourceOf(account: SignedInAccount, settings: AccountSettings): TimelineSource {
+        val chosen = when (feed) {
+            TimelineFeed.Home -> settings.homeSource
+            is TimelineFeed.Mode -> settings.modeSources[feed.mode.key]
+            is TimelineFeed.Tag -> return TimelineSource.Hashtag(feed.name)
+        }
+        return chosen?.takeIf { it in homeSources(account.capabilities) } ?: TimelineSource.Home
     }
 
     private companion object {
         const val PILL_AVATARS = 3
-        val STALE_MILLIS = Duration.ofSeconds(60).toMillis()
         val PREFETCH_SIZE = Size(PREFETCH_PIXELS, PREFETCH_PIXELS)
         const val PREFETCH_PIXELS = 480
         const val STOP_MILLIS = 5_000L
@@ -478,11 +377,3 @@ private fun imagesOf(item: TimelineItem): List<String> = when (item) {
     is TimelineItem.Post -> listOfNotNull(item.row.author.avatarUrl) + item.row.media.mapNotNull { it.previewUrl }
     is TimelineItem.Gap -> emptyList()
 }
-
-/** Whether the timeline shown now is still [key] for [account], so a late result may land. */
-private fun Pair<SignedInAccount, TimelineKey>?.shows(account: SignedInAccount, key: TimelineKey): Boolean =
-    this != null && first.id == account.id && second == key
-
-/** The rows seen, if they are [key]'s: right after a switch they may still be the previous timeline's. */
-private fun Pair<TimelineKey?, List<TimelineRow>>.rowsOf(key: TimelineKey): List<TimelineRow> =
-    if (first == key) second else emptyList()

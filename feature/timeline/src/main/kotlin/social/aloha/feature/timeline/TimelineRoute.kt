@@ -23,6 +23,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
 import social.aloha.core.data.timeline.Toggle
 import social.aloha.core.designsystem.AlohaIcons
+import social.aloha.core.model.FeedMode
 import social.aloha.core.ui.DeleteRequest
 import social.aloha.core.ui.DeleteStatusDialog
 import social.aloha.core.ui.R as UiR
@@ -91,6 +92,7 @@ public fun TimelineRoute(
         snackbars,
         title = when (feed) {
             TimelineFeed.Home -> stringResource(R.string.timeline_title)
+            is TimelineFeed.Mode -> stringResource(modeTitle(feed.mode))
             is TimelineFeed.Tag -> "#${feed.name}"
         },
         navigationIcon = navigationIcon,
@@ -106,6 +108,15 @@ public fun TimelineRoute(
             onDismiss = { deleting = null },
         )
     }
+}
+
+private fun modeTitle(mode: FeedMode): Int = when (mode) {
+    FeedMode.Home -> R.string.timeline_title
+    FeedMode.Photos -> R.string.timeline_title_photos
+    FeedMode.Video -> R.string.timeline_title_video
+    FeedMode.Shorts -> R.string.timeline_title_shorts
+    FeedMode.News -> R.string.timeline_title_news
+    FeedMode.Audio -> R.string.timeline_title_audio
 }
 
 /** One hashtag's public posts, read like home, with a way back. */

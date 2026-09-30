@@ -195,15 +195,16 @@ public class TimelineRepository @Inject constructor(
     }
 
     /**
-     * One visible page. Where the server cannot narrow a media mode, the client filters and fetches on,
-     * at most [OverFetch.MAXIMUM_UPSTREAM_PAGES] upstream pages, stopping at a short page so nothing
-     * is skipped. `pageWasFull` is about what the server sent, not what survived the filter.
+     * One visible page. A media mode keeps only what belongs in it, whatever the server narrowed, and
+     * fetches on until the page is full: at most [OverFetch.MAXIMUM_UPSTREAM_PAGES] upstream pages,
+     * stopping at a short page so nothing is skipped. `pageWasFull` is about what the server sent, not
+     * what survived the filter, and the cursor is the last upstream page's.
      */
     private suspend fun harvest(client: ApiClient, fetch: Fetch): ApiResult<Harvest> {
         val mode = fetch.key.mode
         val serverFilters = TimelineFilters.forMode(mode, fetch.account.capabilities)
-        val onDevice = mode != FeedMode.Home && serverFilters.isEmpty
-        val budget = upstreamPages(mode, serverFilters, onDevice)
+        val onDevice = mode != FeedMode.Home
+        val budget = minOf(OverFetch.MAXIMUM_UPSTREAM_PAGES, OverFetch.multiplier(mode))
         val request = TimelineEndpoints.timeline(fetch.key.source, serverFilters, Paging.DEFAULT_LIMIT, fetch.anchor)
         val kept = mutableListOf<Status>()
         var last = Harvest(emptyList(), pageWasFull = false, nextCursor = fetch.cursor)
@@ -212,17 +213,12 @@ public class TimelineRepository @Inject constructor(
                 is ApiResult.Failure -> return result
                 is ApiResult.Success -> result.value
             }
-            // on the device, only what belongs in the mode is kept; the server has already narrowed otherwise
             kept += fetched.statuses.filter { !onDevice || it.belongs(mode) }
             last = fetched
-            // the budget is one page when the server narrowed; a filtered page stops once it is full
             if (fetched.isLastUpstream || kept.size >= Paging.DEFAULT_LIMIT) break
         }
         return ApiResult.Success(last.copy(statuses = kept))
     }
-
-    private fun upstreamPages(mode: FeedMode, serverFilters: TimelineFilters, onDevice: Boolean): Int =
-        if (onDevice) minOf(OverFetch.MAXIMUM_UPSTREAM_PAGES, OverFetch.multiplier(mode, serverFilters)) else 1
 
     /** One upstream page: the request, or the cursor that continues it. */
     private suspend fun page(

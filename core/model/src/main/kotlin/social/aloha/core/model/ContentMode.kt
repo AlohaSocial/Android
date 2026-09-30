@@ -47,11 +47,14 @@ public enum class ContentKind {
     Undetermined,
     ;
 
-    /** Whether a status of this kind appears in [mode]. A short is also a video. */
+    /**
+     * Whether a status of this kind appears in [mode]. A short is also a video, and so is a clip not yet
+     * decided: a server without ffmpeg describes none of its videos, and Video mode must not be empty.
+     */
     public fun belongs(mode: FeedMode): Boolean = when (mode) {
         FeedMode.Home -> true
         FeedMode.Photos -> this == Photo
-        FeedMode.Video -> this == Video || this == Short
+        FeedMode.Video -> this == Video || this == Short || this == Undetermined
         FeedMode.Shorts -> this == Short
         FeedMode.News -> this == News
         FeedMode.Audio -> this == Audio

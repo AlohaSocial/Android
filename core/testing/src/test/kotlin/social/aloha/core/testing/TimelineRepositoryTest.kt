@@ -242,4 +242,74 @@ class TimelineRepositoryTest {
         assertTrue(posts.all { it.status.displayed.mediaAttachments.isNotEmpty() })
         mock.close()
     }
+
+    private fun numbered(configure: NumberedTimeline.() -> Unit): MockWebServer {
+        val timeline = NumberedTimeline().apply(configure)
+        return MockWebServer().apply {
+            dispatcher = timeline
+            start()
+        }.also { servers += it }
+    }
+
+    @Test
+    fun `a mode filtered on the device pages on from the last page it read, skipping and repeating nothing`() =
+        runBlocking {
+            // every third post has a photo: a visible page takes three upstream pages to fill
+            val server = numbered {
+                newest = 100
+                media = { if (it % 3 == 0) listOf(NumberedTimeline.image(it)) else emptyList() }
+            }
+            val account = signedInAt(server.url("/"))
+            val photos = TimelineKey(FeedMode.Photos, TimelineSource.Home)
+            val first = timelines.refresh(account, photos, RefreshPlan.of(false, null)) as PageOutcome.Loaded
+            assertEquals((99 downTo 42 step 3).map(Int::toString), rows(account, photos).ids())
+            val second = timelines.older(account, photos, first.nextCursor, oldestId = "42") as PageOutcome.Loaded
+            assertEquals((99 downTo 3 step 3).map(Int::toString), rows(account, photos).ids())
+            assertTrue(second.reachedEnd)
+            // the posts left out are still cached for home, only without a place in the photos timeline
+            assertEquals(emptyList<String>(), rows(account).ids())
+        }
+
+    @Test
+    fun `a server that narrows to video still leaves the device to pick out the shorts`() = runBlocking {
+        val server = numbered {
+            newest = 40
+            narrows = true
+            media = {
+                when {
+                    it % 2 == 0 -> listOf(NumberedTimeline.video(it, width = 1080, height = 1920, duration = 20.0))
+                    it % 4 == 1 -> listOf(NumberedTimeline.video(it, width = 1920, height = 1080, duration = 600.0))
+                    else -> listOf(NumberedTimeline.image(it))
+                }
+            }
+        }
+        val capabilities = ServerCapabilities.minimal(server.url("/").toString())
+            .copy(onlyMediaFilter = true, onlyVideoFilter = true)
+        val account = signedInAt(server.url("/"), capabilities)
+        val shorts = TimelineKey(FeedMode.Shorts, TimelineSource.Home)
+        timelines.refresh(account, shorts, RefreshPlan.of(false, null))
+        assertEquals((40 downTo 2 step 2).map(Int::toString), rows(account, shorts).ids())
+        assertEquals("true", server.takeRequest().url.queryParameter("only_video"))
+    }
+
+    @Test
+    fun `photos keep only photos where the server's only_media lets video through`() = runBlocking {
+        val server = numbered {
+            newest = 20
+            narrows = true
+            media = {
+                if (it % 2 == 0) {
+                    listOf(NumberedTimeline.image(it))
+                } else {
+                    listOf(NumberedTimeline.video(it, width = 1920, height = 1080, duration = 600.0))
+                }
+            }
+        }
+        val capabilities = ServerCapabilities.minimal(server.url("/").toString()).copy(onlyMediaFilter = true)
+        val account = signedInAt(server.url("/"), capabilities)
+        val photos = TimelineKey(FeedMode.Photos, TimelineSource.Home)
+        timelines.refresh(account, photos, RefreshPlan.of(false, null))
+        assertEquals((20 downTo 2 step 2).map(Int::toString), rows(account, photos).ids())
+        assertEquals("true", server.takeRequest().url.queryParameter("only_media"))
+    }
 }

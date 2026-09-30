@@ -138,7 +138,10 @@ internal fun TimelineScreen(
                 ReportDrawnWhen { state.items.isNotEmpty() || state.loadedOnce }
                 when {
                     state.items.isNotEmpty() -> Rows(state, actions, rowActions, listState)
-                    state.loadedOnce -> EmptyState(state.source, TimelineSource.Local in state.sources, actions)
+
+                    state.loadedOnce ->
+                        EmptyState(state.source, TimelineSource.Local in state.sources, state.sparse, actions)
+
                     else -> Skeleton()
                 }
                 NewPostsPill(
@@ -366,7 +369,7 @@ private fun TroubleStrip(trouble: Trouble) {
 }
 
 @Composable
-private fun EmptyState(source: TimelineSource, canExplore: Boolean, actions: TimelineScreenActions) {
+private fun EmptyState(source: TimelineSource, canExplore: Boolean, sparse: Boolean, actions: TimelineScreenActions) {
     Column(
         Modifier.fillMaxSize().padding(AlohaSpacing.l),
         verticalArrangement = Arrangement.spacedBy(AlohaSpacing.s, Alignment.CenterVertically),
@@ -388,6 +391,14 @@ private fun EmptyState(source: TimelineSource, canExplore: Boolean, actions: Tim
             }
         } else {
             Text(stringResource(R.string.timeline_empty_public), style = MaterialTheme.typography.bodyMedium)
+        }
+        // said once, where it explains the emptiness: the server leaves the narrowing to the device
+        if (sparse) {
+            Text(
+                stringResource(R.string.timeline_empty_sparse),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 }
