@@ -27,6 +27,11 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
+import social.aloha.core.data.compose.DraftMedia
+import social.aloha.core.data.compose.DraftPoll
+import social.aloha.core.data.compose.DraftPost
+import social.aloha.core.data.compose.DraftSegment
+import social.aloha.core.data.compose.OutboxEntry
 import social.aloha.core.designsystem.AlohaTheme
 import social.aloha.core.designsystem.ThemeMode
 import social.aloha.core.designsystem.ThemeSettings
@@ -34,6 +39,7 @@ import social.aloha.core.model.AttachmentKind
 import social.aloha.core.model.CustomEmoji
 import social.aloha.core.model.GifEntry
 import social.aloha.core.model.MediaAttachment
+import social.aloha.core.model.OutboxState
 import social.aloha.core.model.ScheduledStatus
 import social.aloha.core.model.ScheduledStatusParams
 import social.aloha.core.model.Visibility
@@ -83,6 +89,8 @@ class ComposerScreenshotTest {
         override fun onSchedule(at: Instant?) = Unit
 
         override fun onScheduledPosts() = Unit
+
+        override fun onDrafts() = Unit
         override fun onEditMedia(id: String) = Unit
         override fun onRemoveMedia(id: String) = Unit
         override fun onRetryMedia(id: String) = Unit
@@ -242,6 +250,44 @@ class ComposerScreenshotTest {
             onDelete = {},
             onRetry = {},
             snackbars = SnackbarHostState(),
+        )
+    }
+
+    @Test
+    fun drafts() = capture("drafts") {
+        val at = Instant.parse("2030-06-01T07:30:00Z")
+        DraftsScreen(
+            listOf(
+                OutboxEntry(
+                    "1",
+                    "a",
+                    OutboxState.Draft,
+                    DraftPost(
+                        segments = listOf(
+                            DraftSegment("Sunrise paddle out, who is in?"),
+                            DraftSegment("Bring a board"),
+                        ),
+                        poll = DraftPoll(listOf("Yes", "No"), 3_600),
+                    ),
+                    at,
+                    null,
+                ),
+                OutboxEntry(
+                    "2",
+                    "a",
+                    OutboxState.Draft,
+                    DraftPost(
+                        segments = listOf(DraftSegment("", listOf(DraftMedia("wave.jpg", "image/jpeg")))),
+                        replyToId = "9",
+                        spoiler = "Wipeout",
+                    ),
+                    at.minusSeconds(86_400),
+                    null,
+                ),
+            ),
+            onBack = {},
+            onOpen = {},
+            onDelete = {},
         )
     }
 

@@ -146,7 +146,7 @@ private fun TimeDialog(
 
 /** A thread cannot be scheduled: nothing could answer a post that is not there yet. */
 @Composable
-internal fun ScheduleButton(state: ComposerUiState, actions: ScheduleActions) {
+internal fun ScheduleButton(state: ComposerUiState, actions: LaterActions) {
     if (state.remaining.size == 1 && state.posted == 0) {
         IconButton(onClick = actions::onPickSchedule, enabled = !state.posting) {
             Icon(AlohaIcons.Schedule, stringResource(R.string.composer_schedule))

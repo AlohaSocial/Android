@@ -3,113 +3,89 @@
 
 package social.aloha.feature.composer
 
-import java.time.Instant
 import java.util.UUID
-import social.aloha.core.data.Answer
-import social.aloha.core.data.compose.ComposeRepository
-import social.aloha.core.data.compose.ScheduledPosts
-import social.aloha.core.data.map
+import social.aloha.core.data.compose.DraftPost
+import social.aloha.core.data.compose.PostSender
 import social.aloha.core.data.trouble
 import social.aloha.core.model.SignedInAccount
-import social.aloha.core.model.Visibility
 import social.aloha.core.network.ApiError
-import social.aloha.core.network.endpoints.StatusPost
-
-/** One segment of a thread as the writer left it, before its games are played. */
-internal data class Segment(
-    val text: String,
-    val spoiler: String?,
-    val visibility: Visibility,
-    val language: String?,
-    val quotePolicy: QuotePolicy,
-    val mediaIds: List<String> = emptyList(),
-    /** The media warn on their own, text or no text. */
-    val mediaSensitive: Boolean = false,
-    val poll: PollUi? = null,
-    /** When the server posts it; the post is then scheduled, not posted. */
-    val scheduledAt: Instant? = null,
-)
 
 /**
- * Posts a thread, segment by segment, each answering the one before, and stops at the first the
- * server does not take; the segments already posted stay posted, and sending again carries on from
- * the one that failed. A segment keeps one idempotency key, and the result of every game it played,
- * for as long as it stays as written: sending again after a timeout carries the same key, so the
- * server answers with the post it already made rather than making a second, and a die rolled once
- * stays rolled. Any change to the segment mints a new key and plays its games afresh.
+ * Posts a thread through [PostSender], which stops at the first segment the server does not take;
+ * sending again carries on from the one that failed. A segment keeps one idempotency key, and the
+ * result of every game it played, for as long as it and the post stay as written: sending again
+ * after a timeout carries the same key, so the server answers with the post it already made rather
+ * than making a second, and a die rolled once stays rolled. Any change mints a new key and plays its
+ * games afresh.
  */
 internal class ThreadPoster(
-    private val compose: ComposeRepository,
-    private val scheduled: ScheduledPosts,
+    private val sender: PostSender,
     private val words: ComposerGames.Words,
     private val random: () -> Double = Math::random,
     private val newKey: () -> String = { UUID.randomUUID().toString() },
 ) {
-    private class Minted(val segment: Segment, val key: String, val text: String)
+    private class Minted(val written: Any, val key: String, val text: String)
 
     private val minted = HashMap<Int, Minted>()
-    private val postedIds = mutableListOf<String>()
+
+    /** The segments already out, which sending again starts after. */
+    var postedIds: List<String> = emptyList()
 
     /** How many segments are posted. */
     val posted: Int get() = postedIds.size
 
-    /**
-     * Sends the segments not yet posted as [account], the first answering [inReplyToId]; [onPosted]
-     * hears of each one the server took. The failure that stopped it, or null when all are posted.
-     */
-    suspend fun send(
-        account: SignedInAccount,
-        segments: List<Segment>,
-        inReplyToId: String?,
-        onPosted: (Int) -> Unit,
-    ): PostFailure? {
-        var answering = postedIds.lastOrNull() ?: inReplyToId
-        for (index in posted..segments.lastIndex) {
-            val post = post(index, segments[index], answering)
-            // a scheduled post is one alone: nothing can answer a post that is not there yet
-            val made = if (post.scheduledAt != null) {
-                scheduled.schedule(account, post).map { it.id }
-            } else {
-                compose.post(account, post).map { it.id }
-            }
-            when (made) {
-                is Answer.Got -> {
-                    postedIds += made.value
-                    answering = made.value
-                    onPosted(posted)
-                }
+    /** Sending began: from now on the post is kept with its keys, whatever became of the attempt. */
+    private var attempted = false
 
-                is Answer.Missed -> return failureOf(made.error)
+    /**
+     * [post] as a draft keeps it: once sending began, with the keys the server may already know and
+     * the segments already out, so sending it again later never makes a post twice.
+     */
+    fun keep(post: DraftPost): DraftPost = if (attempted) prepare(post) else post
+
+    /** Carries on with [post], a draft kept after sending began: its keys, games and posted segments. */
+    fun adopt(post: DraftPost) {
+        postedIds = post.postedIds
+        attempted = post.segments.any { it.key != null }
+        val shared = post.copy(segments = emptyList(), postedIds = emptyList())
+        post.segments.forEachIndexed { index, segment ->
+            val key = segment.key ?: return@forEachIndexed
+            minted[index] = Minted(shared to segment.copy(sent = null, key = null), key, segment.sent ?: segment.text)
+        }
+    }
+
+    /** [post] as it goes out: each segment keyed and its games played, the ones already out marked. */
+    fun prepare(post: DraftPost): DraftPost {
+        val shared = post.copy(segments = emptyList(), postedIds = emptyList())
+        return post.copy(
+            postedIds = postedIds,
+            segments = post.segments.mapIndexed { index, segment ->
+                val written = shared to segment.copy(sent = null, key = null)
+                val current = minted[index]?.takeIf { it.written == written }
+                    ?: Minted(written, newKey(), ComposerGames.play(segment.text, words, random))
+                        .also { minted[index] = it }
+                segment.copy(sent = current.text, key = current.key)
+            },
+        )
+    }
+
+    /**
+     * Sends the segments of [post] not yet out as [account]; [onPosted] hears how many are out after
+     * each one the server took. The failure that stopped it, or null when all are posted.
+     */
+    suspend fun send(account: SignedInAccount, post: DraftPost, onPosted: (Int) -> Unit): PostFailure? {
+        val sent = sender.send(account, prepare(post)) { progress ->
+            if (progress.postedIds.size > posted) {
+                postedIds = progress.postedIds
+                onPosted(posted)
             }
         }
-        return null
+        return sent.error?.let(::failureOf)
     }
 
     /** Forgets the segments from [index] on, which were removed; posted ones are never forgotten. */
     fun forgetFrom(index: Int) {
         minted.keys.removeAll { it >= maxOf(index, posted) }
-    }
-
-    private fun post(index: Int, segment: Segment, inReplyToId: String?): StatusPost {
-        val current = minted[index]?.takeIf { it.segment == segment }
-            ?: Minted(segment, newKey(), ComposerGames.play(segment.text, words, random)).also { minted[index] = it }
-        return StatusPost(
-            text = current.text,
-            visibility = segment.visibility,
-            spoilerText = segment.spoiler,
-            // a content warning hides the text, so the post is sensitive; media may be on their own
-            sensitive = segment.spoiler != null || (segment.mediaSensitive && segment.mediaIds.isNotEmpty()),
-            mediaIds = segment.mediaIds,
-            language = segment.language,
-            inReplyToId = inReplyToId,
-            idempotencyKey = current.key,
-            quotePolicy = segment.quotePolicy.wire,
-            pollOptions = segment.poll?.choices.orEmpty(),
-            pollExpiresInSeconds = segment.poll?.seconds,
-            pollMultiple = segment.poll?.multiple == true,
-            pollHideTotals = segment.poll?.hideTotals == true,
-            scheduledAt = segment.scheduledAt,
-        )
     }
 
     private fun failureOf(error: ApiError): PostFailure = when (error) {

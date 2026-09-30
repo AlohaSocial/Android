@@ -43,9 +43,16 @@ public data object SettingsKey : NavKey
 @Serializable
 public data class SettingsSectionKey(val section: String) : NavKey
 
-/** A new post written as [readerId]; an answer to [replyToId] on that account's server when given. */
+/**
+ * A new post written as [readerId]; an answer to [replyToId] on that account's server when given,
+ * draft [draftId] carried on with when given.
+ */
 @Serializable
-public data class ComposerKey(val readerId: String, val replyToId: String? = null) : NavKey
+public data class ComposerKey(val readerId: String, val replyToId: String? = null, val draftId: String? = null) : NavKey
+
+/** The drafts of [readerId], and the posts waiting to be sent. */
+@Serializable
+public data class DraftsKey(val readerId: String) : NavKey
 
 /** The posts [readerId] has waiting on the server for their time. */
 @Serializable

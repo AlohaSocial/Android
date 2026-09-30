@@ -23,25 +23,35 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
 import java.time.Instant
 import java.util.Locale
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import social.aloha.core.data.AccountRepository
 import social.aloha.core.data.Answer
-import social.aloha.core.data.ClientFactory
 import social.aloha.core.data.RemoteLookup
 import social.aloha.core.data.Trouble
 import social.aloha.core.data.compose.ComposeRepository
-import social.aloha.core.data.compose.ScheduledPosts
+import social.aloha.core.data.compose.DraftPost
+import social.aloha.core.data.compose.MediaRepository
+import social.aloha.core.data.compose.Outbox
+import social.aloha.core.data.compose.PostSender
+import social.aloha.core.data.di.ApplicationScope
 import social.aloha.core.datastore.AppPreferences
 import social.aloha.core.html.StatusHtmlParser
 import social.aloha.core.model.CharacterCount
 import social.aloha.core.model.CustomEmoji
 import social.aloha.core.model.LengthRule
+import social.aloha.core.model.Preferences
 import social.aloha.core.model.ServerLimits
 import social.aloha.core.model.SignedInAccount
 import social.aloha.core.model.Status
@@ -60,10 +70,12 @@ internal class ComposerViewModel @AssistedInject constructor(
     @ApplicationContext context: Context,
     private val accounts: AccountRepository,
     private val compose: ComposeRepository,
-    scheduled: ScheduledPosts,
+    sender: PostSender,
+    outbox: Outbox,
+    @ApplicationScope appScope: CoroutineScope,
     private val lookup: RemoteLookup,
     uploads: MediaUploads,
-    clients: ClientFactory,
+    mediaRepository: MediaRepository,
     private val preferences: AppPreferences,
 ) : ViewModel() {
     @AssistedFactory
@@ -86,7 +98,12 @@ internal class ComposerViewModel @AssistedInject constructor(
             segments.any { it.text.isNotBlank() && it.text.trim() != prefill.trim() }
 
     private val videos = VideoTransformer(context)
-    private val preparation = MediaPreparation(context.contentResolver, File(context.filesDir, UPLOADS), videos)
+    private val preparation = MediaPreparation(
+        context.contentResolver,
+        File(context.filesDir, Outbox.UPLOADS),
+        videos,
+        captures = CaptureFiles.authority(context),
+    )
 
     /** The pictures, videos and files of each post; the screen describes and removes them here. */
     val attachments = Attachments(uploads, mediaRepository, preparation, viewModelScope)
@@ -99,7 +116,10 @@ internal class ComposerViewModel @AssistedInject constructor(
 
     private val control = MutableStateFlow(ComposerUiState())
     private val completions = Completions(compose, viewModelScope)
-    private val poster = ThreadPoster(compose, scheduled, gameWords(context))
+    private val poster = ThreadPoster(sender, gameWords(context))
+
+    /** The post kept as a draft while it is written, and when the composer closes. */
+    val drafts = DraftKeeper(outbox, appScope, key.draftId)
 
     /** The opening post's poll, which takes the place of its media. */
     val poll = MutableStateFlow<PollUi?>(null)
@@ -111,9 +131,25 @@ internal class ComposerViewModel @AssistedInject constructor(
     private var emojiList: List<CustomEmoji> = emptyList()
 
     /** A short post drawn as a picture, when the writer chooses. */
-    val cards = TextCards(attachments, File(context.filesDir, UPLOADS), viewModelScope)
+    val cards = TextCards(attachments, File(context.filesDir, Outbox.UPLOADS), viewModelScope)
 
     private val extras = combine(cards.state, poll, scheduledAt, ::Triple)
+
+    /** The post as a draft, when the writer wrote anything. */
+    private val written: DraftPost?
+        get() = if (hasWriting) {
+            poster.keep(
+                uiState.value.draft(
+                    segments.map {
+                        it.text
+                    },
+                    spoiler,
+                    parent?.id,
+                ),
+            )
+        } else {
+            null
+        }
 
     private data class Written(val segments: List<String>, val spoiler: String)
 
@@ -176,6 +212,17 @@ internal class ComposerViewModel @AssistedInject constructor(
         viewModelScope.launch { start() }
         viewModelScope.launch {
             snapshotFlow { segments.first().text }.collect { if (cards.state.value.on) cards.onText(it) }
+        }
+        viewModelScope.launch {
+            // a moment after each change, so a crash or a killed app loses at most that moment
+            combine(snapshotFlow { Written(segments.map { it.text }, spoiler) }, uiState) { _, state -> state }
+                .filter { it.ready && !it.done }
+                .map { written }
+                .distinctUntilChanged()
+                .collectLatest {
+                    delay(AUTOSAVE_MILLIS)
+                    drafts.save(reader?.id, it)
+                }
         }
         viewModelScope.launch {
             snapshotFlow { segments.getOrNull(focused)?.let(ComposerText::completing) }.collect { completing ->
@@ -295,14 +342,16 @@ internal class ComposerViewModel @AssistedInject constructor(
                 control.update { it.copy(posting = false, failure = PostFailure.Unreached(Trouble.Server)) }
                 return@launch
             }
-            val thread = segments.indices.map { state.segmentAt(it, segments[it].text, spoiler, attachments) }
-            val failure = poster.send(account, thread, parent?.id) { posted ->
+            // the card is attached for the server alone, so the post takes every attachment there is
+            val post = state.draft(segments.map { it.text }, spoiler, parent?.id, attachments.byPost.value)
+            val failure = poster.send(account, post) { posted ->
                 control.update { it.copy(posted = posted) }
             }
+            if (failure == null) drafts.posted()
             control.update { it.copy(posting = false, failure = failure, done = failure == null) }
             if (failure == null) {
                 compose.refreshHome(account)
-                compose.rememberTags(account, thread.flatMap { ComposerText.hashtags(it.text) })
+                compose.rememberTags(account, post.segments.flatMap { ComposerText.hashtags(it.text) })
             }
         }
     }
@@ -314,26 +363,37 @@ internal class ComposerViewModel @AssistedInject constructor(
     }
 
     override fun onCleared() {
-        // a post that went out needs its files no more; one given up takes its uploads with it
-        attachments.clear()
+        // a post that went out needs its files no more, nor one given up; a draft keeps them
+        attachments.clear(keepFiles = drafts.leave(reader?.id, written))
     }
 
     private suspend fun start() {
         val account = accounts.all().firstOrNull { it.id == key.readerId } ?: return
-        key.replyToId?.let { id -> parent = (compose.status(account, id) as? Answer.Got)?.value }
+        val opened = drafts.open()
+        if (opened is Opened.Sending) {
+            // ponytail: closes without a word; the drafts list shows it as sending
+            control.update { it.copy(done = true) }
+            return
+        }
+        val draft = (opened as Opened.Writing).entry?.post
+        (draft?.replyToId ?: key.replyToId)?.let { id -> parent = (compose.status(account, id) as? Answer.Got)?.value }
         use(account)
         val preferences = compose.preferences(account)
-        control.update { state ->
-            val wanted = preferences?.defaultVisibility?.takeIf { it in state.visibilities }
-                ?: state.visibilities.first()
-            state.copy(
-                visibility = wanted,
-                language = preferences?.defaultLanguage ?: Locale.getDefault().language.ifEmpty { null },
-            )
-        }
-        parent?.let { status ->
-            segments[0] = prefilled(status, account)
-            prefill = segments[0].text
+        control.update { it.withDefaults(preferences) }
+        if (draft != null) {
+            segments.clear()
+            segments.addAll(draft.segments.map { TextFieldValue(it.text, TextRange(it.text.length)) })
+            spoiler = draft.spoiler.orEmpty()
+            poll.value = draft.poll?.toUi()
+            scheduledAt.value = draft.scheduledAt
+            poster.postedIds = draft.postedIds
+            attachments.restore(draft)
+            control.update { it.restored(draft) }
+        } else {
+            parent?.let { status ->
+                segments[0] = prefilled(status, account)
+                prefill = segments[0].text
+            }
         }
         control.update { it.copy(ready = true) }
     }
@@ -368,11 +428,17 @@ internal class ComposerViewModel @AssistedInject constructor(
 
     private companion object {
         const val STOP_MILLIS = 5_000L
-        const val UPLOADS = "uploads"
+        const val AUTOSAVE_MILLIS = 2_000L
     }
 }
 
 private const val EXCERPT = 140
+
+/** The writer's own defaults from their server: the visibility where it is allowed, and the language. */
+private fun ComposerUiState.withDefaults(preferences: Preferences?) = copy(
+    visibility = preferences?.defaultVisibility?.takeIf { it in visibilities } ?: visibilities.first(),
+    language = preferences?.defaultLanguage ?: Locale.getDefault().language.ifEmpty { null },
+)
 
 private fun SignedInAccount.toAuthor() = Author(id, qualifiedHandle, displayName.ifBlank { handle }, avatarUrl)
 
@@ -394,20 +460,6 @@ private fun gameWords(context: Context) = ComposerGames.Words(
     heads = context.getString(R.string.composer_game_heads),
     tails = context.getString(R.string.composer_game_tails),
     picked = { choice, options -> context.getString(R.string.composer_game_picked, choice, options) },
-)
-
-/** Segment [index] of the thread as it will be sent, from this state and what was typed. */
-private fun ComposerUiState.segmentAt(index: Int, text: String, spoiler: String, media: Attachments) = Segment(
-    text = text,
-    spoiler = spoiler.trim().takeIf { spoilerShown && it.isNotEmpty() },
-    visibility = visibility,
-    language = language,
-    // who may quote is the opening post's choice; the rest of the thread keeps the default
-    quotePolicy = if (index == 0) quotePolicy else QuotePolicy.Anyone,
-    mediaIds = media.byPost.value.getOrElse(index) { emptyList() }.mapNotNull(Attachment::mediaId),
-    mediaSensitive = media.sensitive.value,
-    poll = poll.takeIf { index == 0 },
-    scheduledAt = scheduledAt.takeIf { index == 0 },
 )
 
 /** [value] ending in `#shorts`, once, with the cursor after it. */

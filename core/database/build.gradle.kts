@@ -8,6 +8,7 @@ plugins {
 }
 
 dependencies {
+    implementation(project(":core:model"))
     api(libs.kotlinx.coroutines.core)
     testImplementation(libs.junit4)
     testImplementation(libs.robolectric)

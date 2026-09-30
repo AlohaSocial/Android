@@ -11,7 +11,7 @@ import social.aloha.core.model.Visibility
 /** What the composer's controls do; the screen itself decides nothing. */
 internal interface ComposerActions :
     MediaActions,
-    ScheduleActions {
+    LaterActions {
     fun onClose()
 
     fun onPost()
@@ -37,8 +37,8 @@ internal interface ComposerActions :
     fun onAuthor(id: String)
 }
 
-/** What the scheduling controls do. */
-internal interface ScheduleActions {
+/** What the controls for later do: scheduling, and the posts kept for later. */
+internal interface LaterActions {
     /** Opens the day and time picker for when the post goes out. */
     fun onPickSchedule()
 
@@ -47,6 +47,9 @@ internal interface ScheduleActions {
 
     /** Opens the list of posts waiting on the server for their time. */
     fun onScheduledPosts()
+
+    /** Opens the drafts. */
+    fun onDrafts()
 }
 
 /** What the attachment controls do. */

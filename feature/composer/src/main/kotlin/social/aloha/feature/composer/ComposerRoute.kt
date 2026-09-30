@@ -10,6 +10,7 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
@@ -53,12 +54,16 @@ private class Dialogs(
 /** The pickers that open over the composer, one at a time. */
 private enum class Picker { Gifs, NextcloudFile, Schedule }
 
-/** The composer for [key]; [onDone] leaves it, once posted or discarded; [onScheduledPosts] opens that list. */
+/**
+ * The composer for [key]; [onDone] leaves it, once posted, discarded or kept as a draft;
+ * [onScheduledPosts] and [onDrafts] open those lists.
+ */
 @Composable
 public fun ComposerRoute(
     key: ComposerKey,
     onDone: () -> Unit,
     onScheduledPosts: () -> Unit,
+    onDrafts: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val viewModel = hiltViewModel<ComposerViewModel, ComposerViewModel.Factory>(key = key.toString()) { it.create(key) }
@@ -73,7 +78,8 @@ public fun ComposerRoute(
         rememberSaveable { mutableStateOf(null) },
     )
     val scheduled by rememberUpdatedState(onScheduledPosts)
-    val actions = rememberActions(viewModel, state, dialogs, { scheduled() }) { done() }
+    val drafts by rememberUpdatedState(onDrafts)
+    val actions = rememberActions(viewModel, state, dialogs, Elsewhere({ scheduled() }, { drafts() })) { done() }
     val hue = MaterialTheme.colorScheme.primary.toArgb()
     LaunchedEffect(hue) { viewModel.cards.onHue(hue) }
 
@@ -84,6 +90,9 @@ public fun ComposerRoute(
     ComposerDialogs(state, viewModel, dialogs) { done() }
 }
 
+/** The lists the composer opens. */
+private class Elsewhere(val scheduledPosts: () -> Unit, val drafts: () -> Unit)
+
 /**
  * The composer's actions, made once; what they decide on (the state, what the pickers accept) is
  * read as it is when they run, never as it was when they were made.
@@ -93,7 +102,7 @@ private fun rememberActions(
     viewModel: ComposerViewModel,
     state: ComposerUiState,
     dialogs: Dialogs,
-    scheduledPosts: () -> Unit,
+    elsewhere: Elsewhere,
     done: () -> Unit,
 ): ComposerActions {
     val current by rememberUpdatedState(state)
@@ -148,7 +157,9 @@ private fun rememberActions(
                 viewModel.scheduledAt.value = at
             }
 
-            override fun onScheduledPosts() = scheduledPosts()
+            override fun onScheduledPosts() = elsewhere.scheduledPosts()
+
+            override fun onDrafts() = elsewhere.drafts()
 
             override fun onPoll(poll: PollUi?) {
                 viewModel.poll.value = poll
@@ -291,9 +302,14 @@ private fun ComposerDialogs(state: ComposerUiState, viewModel: ComposerViewModel
         )
     }
     if (discarding) {
-        DiscardDialog(
+        LeaveDialog(
+            onSave = {
+                discarding = false
+                done()
+            },
             onDiscard = {
                 discarding = false
+                viewModel.drafts.discard()
                 done()
             },
             onKeep = { discarding = false },
@@ -359,13 +375,21 @@ private fun ShortsDialog(onChoice: (Boolean) -> Unit) {
 }
 
 @Composable
-private fun DiscardDialog(onDiscard: () -> Unit, onKeep: () -> Unit) {
+private fun LeaveDialog(onSave: () -> Unit, onDiscard: () -> Unit, onKeep: () -> Unit) {
     AlertDialog(
         onDismissRequest = onKeep,
-        title = { Text(stringResource(R.string.composer_discard_title)) },
-        text = { Text(stringResource(R.string.composer_discard_body)) },
-        confirmButton = { TextButton(onClick = onDiscard) { Text(stringResource(R.string.composer_discard)) } },
-        dismissButton = { TextButton(onClick = onKeep) { Text(stringResource(R.string.composer_keep_editing)) } },
+        title = { Text(stringResource(R.string.composer_leave_title)) },
+        text = { Text(stringResource(R.string.composer_leave_body)) },
+        confirmButton = {
+            TextButton(onClick = onSave) { Text(stringResource(R.string.composer_save_draft)) }
+        },
+        dismissButton = {
+            // the dialog lays its buttons out in a row that wraps, so three fit a narrow phone
+            Row {
+                TextButton(onClick = onDiscard) { Text(stringResource(R.string.composer_discard)) }
+                TextButton(onClick = onKeep) { Text(stringResource(R.string.composer_keep_editing)) }
+            }
+        },
     )
 }
 

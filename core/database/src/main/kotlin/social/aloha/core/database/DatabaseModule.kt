@@ -23,6 +23,14 @@ internal object DatabaseModule {
     @Provides
     fun accountDao(database: AccountsDatabase): AccountDao = database.accountDao()
 
+    @Provides
+    @Singleton
+    fun outboxDatabase(@ApplicationContext context: Context): OutboxDatabase =
+        Room.databaseBuilder(context, OutboxDatabase::class.java, OutboxDatabase.FILE_NAME).build()
+
+    @Provides
+    fun outboxDao(database: OutboxDatabase): OutboxDao = database.outboxDao()
+
     // disposable: a schema change drops the cache instead of migrating it
     @Provides
     @Singleton

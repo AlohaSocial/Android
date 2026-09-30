@@ -12,7 +12,7 @@ class NoSecretsInDatabaseTest {
 
     @Test
     fun `no entity has a field that could hold a secret`() {
-        val fields = listOf(AccountEntity::class.java, ClientRegistrationEntity::class.java)
+        val fields = listOf(AccountEntity::class.java, ClientRegistrationEntity::class.java, OutboxEntity::class.java)
             .flatMap { entity -> entity.declaredFields.map { "${entity.simpleName}.${it.name}" } }
         val offending = fields.filter { field -> forbidden.any { field.substringAfter('.').lowercase().contains(it) } }
         assertTrue("fields that look like secrets: $offending", offending.isEmpty())

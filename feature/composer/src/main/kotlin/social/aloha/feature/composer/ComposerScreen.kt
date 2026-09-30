@@ -121,13 +121,20 @@ private fun Writing(state: ComposerUiState, segments: List<TextFieldValue>, spoi
     }
 }
 
-/** What is kept apart from the post being written: the posts waiting for their time. */
+/** What is kept apart from the post being written: the posts waiting for their time, and the drafts. */
 @Composable
 private fun ComposerMenu(actions: ComposerActions) {
     var open by remember { mutableStateOf(false) }
     Box {
         IconButton(onClick = { open = true }) { Icon(AlohaIcons.More, stringResource(R.string.composer_more)) }
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.drafts_title)) },
+                onClick = {
+                    open = false
+                    actions.onDrafts()
+                },
+            )
             DropdownMenuItem(
                 text = { Text(stringResource(R.string.composer_scheduled_posts)) },
                 onClick = {

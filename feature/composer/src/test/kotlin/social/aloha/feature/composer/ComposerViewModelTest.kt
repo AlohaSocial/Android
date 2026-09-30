@@ -44,6 +44,9 @@ import social.aloha.core.data.ClientFactory
 import social.aloha.core.data.NewAccount
 import social.aloha.core.data.RemoteLookup
 import social.aloha.core.data.compose.ComposeRepository
+import social.aloha.core.data.compose.MediaRepository
+import social.aloha.core.data.compose.Outbox
+import social.aloha.core.data.compose.PostSender
 import social.aloha.core.data.compose.ScheduledPosts
 import social.aloha.core.data.timeline.StatusRepository
 import social.aloha.core.data.timeline.TimelineRepository
@@ -196,7 +199,9 @@ class ComposerViewModelTest {
         server.close()
     }
 
-    private suspend fun open(replyToId: String? = null): ComposerViewModel {
+    private val outbox = Outbox(accountsDb.outboxDao(), clock)
+
+    private suspend fun open(replyToId: String? = null, draftId: String? = null): ComposerViewModel {
         Dispatchers.setMain(Dispatchers.Unconfined)
         val apiBase = server.url("/")
         val capabilities = ServerCapabilities.minimal(apiBase.toString()).copy(
@@ -211,14 +216,16 @@ class ComposerViewModelTest {
         val settings = AccountSettingsStore(InMemoryDataStore(emptyMap()))
         val compose = ComposeRepository(clients, statuses, timelines, settings, clock, scope)
         return ComposerViewModel(
-            ComposerKey(account.id, replyToId),
+            ComposerKey(account.id, replyToId, draftId),
             context,
             accounts,
             compose,
-            ScheduledPosts(clients),
+            PostSender(compose, ScheduledPosts(clients)),
+            outbox,
+            scope,
             RemoteLookup(clients, statuses),
             MediaUploads(context),
-            clients,
+            MediaRepository(clients),
             AppPreferences(InMemoryDataStore(emptyPreferences())),
         ).also(opened::add)
     }
@@ -383,5 +390,36 @@ class ComposerViewModelTest {
         viewModel.onPost()
         viewModel.await { it.done }
         assertEquals(at.toString(), posts.sent.single().second["scheduled_at"])
+    }
+
+    @Test
+    fun `what is written is kept as a draft and comes back as it was`() = runBlocking {
+        val viewModel = open()
+        viewModel.await { it.ready }
+        viewModel.type(0, "Half a thought")
+        viewModel.onVisibility(Visibility.Unlisted)
+        viewModel.poll.value = PollUi(options = listOf("Yes", "No"), seconds = 3_600)
+        val kept = withTimeout(10.seconds) {
+            outbox.observe(accounts.all().single().id).first { list -> list.any { it.post.poll != null } }
+        }.single()
+        assertEquals("Half a thought", kept.post.segments.single().text)
+        val again = open(draftId = kept.id)
+        // the poll reaches the state through a flow of its own, a moment apart from the rest
+        val state = again.await { it.ready && it.poll != null }
+        assertEquals("Half a thought", again.segments.single().text)
+        assertEquals(Visibility.Unlisted, state.visibility)
+        assertEquals(listOf("Yes", "No"), state.poll?.options)
+    }
+
+    @Test
+    fun `a posted draft is gone`() = runBlocking {
+        val viewModel = open()
+        viewModel.await { it.ready }
+        viewModel.type(0, "Out it goes")
+        val reader = accounts.all().single().id
+        withTimeout(10.seconds) { outbox.observe(reader).first { it.isNotEmpty() } }
+        viewModel.onPost()
+        viewModel.await { it.done }
+        assertEquals(emptyList<Any>(), withTimeout(10.seconds) { outbox.observe(reader).first { it.isEmpty() } })
     }
 }

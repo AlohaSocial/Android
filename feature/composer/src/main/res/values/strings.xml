@@ -109,9 +109,11 @@
     <!-- Result of a pick, written into the post; first placeholder the choice, second all options -->
     <string name="composer_game_picked">%1$s (out of %2$s)</string>
     <!-- Title of the dialog when leaving a composer with text in it -->
-    <string name="composer_discard_title">Discard this post?</string>
+    <string name="composer_leave_title">Keep this post as a draft?</string>
     <!-- Body of the dialog when leaving a composer with text in it -->
-    <string name="composer_discard_body">What you wrote will be lost.</string>
+    <string name="composer_leave_body">You can finish it later from Drafts. Discarded, it is gone.</string>
+    <!-- Button that keeps the post as a draft and leaves the composer -->
+    <string name="composer_save_draft">Save draft</string>
     <!-- Button that discards the post -->
     <string name="composer_discard">Discard</string>
     <!-- Button that goes back to writing -->
@@ -336,6 +338,46 @@
     <string name="scheduled_delete_body">It will never go out.</string>
     <!-- Snackbar when the server did not take a change to a scheduled post -->
     <string name="scheduled_change_failed">That didn\'t work. Try again in a moment.</string>
+    <!-- Title of the drafts list, and the menu item that opens it -->
+    <string name="drafts_title">Drafts</string>
+    <!-- Shown when there are no drafts -->
+    <string name="drafts_none">No drafts.</string>
+    <!-- When a draft was last changed; the placeholder is a date and time -->
+    <string name="drafts_saved">Saved %1$s</string>
+    <!-- When a draft of a reply was last changed; the placeholder is a date and time -->
+    <string name="drafts_reply_saved">Reply, saved %1$s</string>
+    <!-- Shown in place of the text of a draft that has none, only media or a poll -->
+    <string name="drafts_no_text">No text</string>
+    <!-- How many posts a drafted thread has -->
+    <plurals name="drafts_segments">
+        <item quantity="one">%1$d post</item>
+        <item quantity="other">Thread of %1$d posts</item>
+    </plurals>
+    <!-- Shown for a draft with a poll -->
+    <string name="drafts_poll">Poll</string>
+    <!-- Button that deletes a draft, and the confirm button of the dialog asking -->
+    <string name="drafts_delete">Delete</string>
+    <!-- Title of the dialog asking before a draft is deleted -->
+    <string name="drafts_delete_title">Delete this draft?</string>
+    <!-- Body of the dialog asking before a draft is deleted -->
+    <string name="drafts_delete_body">It and what it attached are gone for good.</string>
+    <!-- How much of an attachment's description is written, against the limit, like "12 of 1500 characters" -->
+    <plurals name="composer_media_description_count">
+        <item quantity="one">%1$d of %2$d character</item>
+        <item quantity="other">%1$d of %2$d characters</item>
+    </plurals>
+    <!-- Screen-reader actions setting a picture's focal point: its middle, and near each edge -->
+    <string name="composer_media_focus_centre">Focus on the middle</string>
+    <string name="composer_media_focus_top">Focus near the top</string>
+    <string name="composer_media_focus_bottom">Focus near the bottom</string>
+    <string name="composer_media_focus_left">Focus near the left</string>
+    <string name="composer_media_focus_right">Focus near the right</string>
+    <!-- What stage an attachment's upload is at, for a screen reader -->
+    <string name="composer_media_stage_waiting">Waiting to upload</string>
+    <string name="composer_media_stage_uploading">Uploading</string>
+    <string name="composer_media_stage_processing">The server is preparing it</string>
+    <!-- A trimmed video's size estimate when it is still over the server's limit; the placeholder is a size -->
+    <string name="composer_video_estimate_over">About %1$s, still over the server\'s limit</string>
     <!-- Toolbar button that opens the camera menu -->
     <string name="composer_camera">Camera</string>
     <!-- Camera menu: take a photo -->

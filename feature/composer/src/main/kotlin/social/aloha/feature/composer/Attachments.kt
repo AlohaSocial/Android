@@ -148,18 +148,18 @@ internal class Attachments(
         }
     }
 
-    /** Attaches [media], which the server already made from a GIF or a Nextcloud file, to post [segment]. */
-    fun addRemote(segment: Int, media: MediaAttachment, name: String) {
-        val attachment = Attachment(
-            UUID.randomUUID().toString(),
-            file = null,
-            fileName = name,
-            mimeType = mimeOf(media),
-            upload = UploadState.Done(media.id, media.previewUrl ?: media.url),
-            description = media.description.orEmpty(),
-            sentDescription = media.description.orEmpty(),
-        )
-        all.update { lists -> lists.mapIndexed { index, list -> if (index == segment) list + attachment else list } }
+    /**
+     * Puts [attachment] at the end of post [segment] as it is: one on the server already (a GIF, a
+     * Nextcloud file, one a draft kept), or one whose file is uploaded now.
+     */
+    fun put(segment: Int, attachment: Attachment) {
+        val account = account
+        val file = attachment.file
+        if (attachment.mediaId != null) {
+            all.update { it.appended(segment, attachment) }
+        } else if (account != null && file != null && file.exists()) {
+            start(account, segment, Picked(file, attachment.fileName, attachment.mimeType), attachment, isNew = true)
+        }
     }
 
     /** The thread gained or lost a post: [count] lists, the removed post's files let go. */
@@ -238,9 +238,9 @@ internal class Attachments(
         sent
     }
 
-    /** Lets go of everything: the uploads still running and the app's copies of the files. */
-    fun clear() {
-        all.value.flatten().forEach { release(it, forGood = true) }
+    /** Lets go of everything: the uploads still running and, unless a draft [keepFiles], the files. */
+    fun clear(keepFiles: Boolean = false) {
+        all.value.flatten().forEach { release(it, keepFile = keepFiles, forGood = !keepFiles) }
         all.value = listOf(emptyList())
     }
 
@@ -317,6 +317,17 @@ private fun Preflight.toFailure(): AttachFailure = when (this) {
     else -> AttachFailure.Unreadable
 }
 
+/** [media] the server made itself from a GIF or a Nextcloud file, named [name]. */
+internal fun remoteAttachment(media: MediaAttachment, name: String) = Attachment(
+    UUID.randomUUID().toString(),
+    file = null,
+    fileName = name,
+    mimeType = mimeOf(media),
+    upload = UploadState.Done(media.id, media.previewUrl ?: media.url),
+    description = media.description.orEmpty(),
+    sentDescription = media.description.orEmpty(),
+)
+
 /** What kind of file the server made [media] from, as far as a type goes. */
 private fun mimeOf(media: MediaAttachment): String = when (media.type) {
     AttachmentKind.Image -> "image/jpeg"
@@ -325,3 +336,7 @@ private fun mimeOf(media: MediaAttachment): String = when (media.type) {
     AttachmentKind.Audio -> "audio/mpeg"
     else -> "application/octet-stream"
 }
+
+/** [attachment] at the end of post [segment]'s list; the first post's when there is no such post. */
+private fun List<List<Attachment>>.appended(segment: Int, attachment: Attachment): List<List<Attachment>> =
+    mapIndexed { index, list -> if (index == segment.coerceAtLeast(0)) list + attachment else list }

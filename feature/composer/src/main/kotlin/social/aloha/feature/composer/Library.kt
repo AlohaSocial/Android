@@ -67,10 +67,9 @@ internal class Library(
         val answer = compose.attachGif(account, gif.slug, gif.title)
         // the title went out as the description, whether or not the server says so back
         if (answer is Answer.Got) {
-            attachments.addRemote(
+            attachments.put(
                 segment,
-                answer.value.copy(description = answer.value.description ?: gif.title),
-                gif.title,
+                remoteAttachment(answer.value.copy(description = answer.value.description ?: gif.title), gif.title),
             )
         }
         answer is Answer.Got
@@ -80,7 +79,12 @@ internal class Library(
     fun onNextcloudFile(path: String) = attach { account, segment ->
         val clean = path.trim().removePrefix("/")
         val answer = compose.attachFile(account, clean)
-        if (answer is Answer.Got) attachments.addRemote(segment, answer.value, clean.substringAfterLast('/'))
+        if (answer is Answer.Got) {
+            attachments.put(
+                segment,
+                remoteAttachment(answer.value, clean.substringAfterLast('/')),
+            )
+        }
         answer is Answer.Got
     }
 

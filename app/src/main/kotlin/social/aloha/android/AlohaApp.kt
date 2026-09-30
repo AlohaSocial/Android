@@ -53,6 +53,7 @@ import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.designsystem.AlohaTheme
 import social.aloha.core.navigation.AccountKey
 import social.aloha.core.navigation.ComposerKey
+import social.aloha.core.navigation.DraftsKey
 import social.aloha.core.navigation.HomeKey
 import social.aloha.core.navigation.NotificationsKey
 import social.aloha.core.navigation.PeopleKey
@@ -73,6 +74,7 @@ import social.aloha.core.navigation.VideoKey
 import social.aloha.core.ui.StatusNavigation
 import social.aloha.core.ui.openInBrowser
 import social.aloha.feature.composer.ComposerRoute
+import social.aloha.feature.composer.DraftsRoute
 import social.aloha.feature.composer.ScheduledPostsRoute
 import social.aloha.feature.profile.PeopleRoute
 import social.aloha.feature.profile.ProfileNavigation
@@ -258,8 +260,21 @@ fun AlohaApp(
                 entry<ComposerKey> {
                     ComposerRoute(
                         it,
-                        onDone = { backStack.removeLastOrNull() },
+                        onDone = { backStack.remove(it) },
                         onScheduledPosts = { backStack.push(ScheduledPostsKey(it.readerId)) },
+                        onDrafts = { backStack.push(DraftsKey(it.readerId)) },
+                    )
+                }
+                entry<DraftsKey> { drafts ->
+                    DraftsRoute(
+                        drafts,
+                        onBack = { backStack.remove(drafts) },
+                        onOpen = { id ->
+                            // the draft opens in place of the list, and of the composer the list was opened from
+                            backStack.remove(drafts)
+                            if (backStack.lastOrNull() is ComposerKey) backStack.removeLastOrNull()
+                            backStack.push(ComposerKey(drafts.readerId, draftId = id))
+                        },
                     )
                 }
                 entry<ScheduledPostsKey> { ScheduledPostsRoute(it, onBack = { backStack.removeLastOrNull() }) }
