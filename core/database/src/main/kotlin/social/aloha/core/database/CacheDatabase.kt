@@ -133,6 +133,9 @@ public interface TimelineDao {
     }
 }
 
+/** A stored status's classification, as `ContentKind`'s name. */
+public data class StoredKind(val serverId: String, val contentKind: String)
+
 @Dao
 public interface StatusDao {
     @Query("SELECT * FROM status WHERE accountId = :accountId AND serverId = :serverId")
@@ -144,6 +147,10 @@ public interface StatusDao {
     /** At most 900 ids at a time, under SQLite's limit on bound variables. */
     @Query("SELECT * FROM status WHERE accountId = :accountId AND serverId IN (:serverIds)")
     public fun observeMany(accountId: String, serverIds: List<String>): Flow<List<CachedStatusEntity>>
+
+    /** What each of [serverIds] was classified as, where stored; at most 900 ids at a time. */
+    @Query("SELECT serverId, contentKind FROM status WHERE accountId = :accountId AND serverId IN (:serverIds)")
+    public suspend fun kinds(accountId: String, serverIds: List<String>): List<StoredKind>
 
     @Upsert
     public suspend fun upsert(status: CachedStatusEntity)

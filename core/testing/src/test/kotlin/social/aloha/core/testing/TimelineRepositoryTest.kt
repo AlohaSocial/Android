@@ -40,6 +40,7 @@ import social.aloha.core.datastore.AppPreferences
 import social.aloha.core.datastore.TokenVault
 import social.aloha.core.model.AccessToken
 import social.aloha.core.model.FeedMode
+import social.aloha.core.model.MediaDimensions
 import social.aloha.core.model.ServerCapabilities
 import social.aloha.core.model.SignedInAccount
 import social.aloha.core.model.TimelineKey
@@ -311,5 +312,23 @@ class TimelineRepositoryTest {
         timelines.refresh(account, photos, RefreshPlan.of(false, null))
         assertEquals((20 downTo 2 step 2).map(Int::toString), rows(account, photos).ids())
         assertEquals("true", server.takeRequest().url.queryParameter("only_media"))
+    }
+
+    @Test
+    fun `a clip nobody described is a video, and a short once a player has seen it`() = runBlocking {
+        val server = numbered {
+            newest = 4
+            media = { listOf(NumberedTimeline.undescribed(it)) }
+        }
+        val account = signedInAt(server.url("/"))
+        val video = TimelineKey(FeedMode.Video, TimelineSource.Home)
+        val shorts = TimelineKey(FeedMode.Shorts, TimelineSource.Home)
+        timelines.refresh(account, video, RefreshPlan.of(false, null))
+        timelines.refresh(account, shorts, RefreshPlan.of(false, null))
+        assertEquals(listOf("4", "3", "2", "1"), rows(account, video).ids())
+        assertEquals(emptyList<String>(), rows(account, shorts).ids())
+        statuses.reclassify(account.id, "3", "m3", MediaDimensions(width = 720, height = 1280, duration = 15.0))
+        timelines.refresh(account, shorts, RefreshPlan.of(false, null))
+        assertEquals(listOf("3"), rows(account, shorts).ids())
     }
 }

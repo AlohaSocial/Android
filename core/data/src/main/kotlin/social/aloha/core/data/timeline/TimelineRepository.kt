@@ -19,7 +19,6 @@ import social.aloha.core.data.AccountRepository
 import social.aloha.core.data.ClientFactory
 import social.aloha.core.database.TimelineDao
 import social.aloha.core.database.TimelineEntryEntity
-import social.aloha.core.model.ContentClassifier
 import social.aloha.core.model.FeedMode
 import social.aloha.core.model.OverFetch
 import social.aloha.core.model.SignedInAccount
@@ -171,7 +170,7 @@ public class TimelineRepository @Inject constructor(
         dao.apply(
             account.id,
             key.storageKey,
-            harvest.statuses.map { statuses.entity(account.id, it) },
+            statuses.entities(account.id, harvest.statuses),
             kept.map { TimelineEntryEntity(account.id, key.storageKey, it.statusId, it.position, it.isGap, now) },
         )
         latchCapabilities(account, harvest.statuses)
@@ -213,7 +212,8 @@ public class TimelineRepository @Inject constructor(
                 is ApiResult.Failure -> return result
                 is ApiResult.Success -> result.value
             }
-            kept += fetched.statuses.filter { !onDevice || it.belongs(mode) }
+            val kinds = if (onDevice) statuses.kinds(fetch.account.id, fetched.statuses) else emptyMap()
+            kept += fetched.statuses.filter { !onDevice || kinds.getValue(it.id).belongs(mode) }
             last = fetched
             if (fetched.isLastUpstream || kept.size >= Paging.DEFAULT_LIMIT) break
         }
@@ -232,6 +232,4 @@ public class TimelineRepository @Inject constructor(
             Harvest(it.items, pageWasFull = it.rawCount >= Paging.DEFAULT_LIMIT, nextCursor = it.link.next)
         }
     }
-
-    private fun Status.belongs(mode: FeedMode) = ContentClassifier.classify(this).belongs(mode)
 }

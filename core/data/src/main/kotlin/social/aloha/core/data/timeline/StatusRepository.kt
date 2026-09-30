@@ -18,6 +18,8 @@ import social.aloha.core.database.CachedStatusEntity
 import social.aloha.core.database.StatusDao
 import social.aloha.core.html.StatusHtmlParser
 import social.aloha.core.model.ContentClassifier
+import social.aloha.core.model.ContentKind
+import social.aloha.core.model.MediaDimensions
 import social.aloha.core.model.Status
 
 /**
@@ -49,7 +51,7 @@ public class StatusRepository @Inject constructor(private val dao: StatusDao, pr
      */
     public suspend fun saveAll(accountId: String, statuses: List<Status>) {
         if (statuses.isEmpty()) return
-        val entities = withContext(Dispatchers.Default) {
+        val rows = withContext(Dispatchers.Default) {
             val byId = statuses.associateBy { it.id }
             val boosts = byId.keys.chunked(MAXIMUM_BOUND_IDS).flatMap { dao.boostsOfAny(accountId, it) }
                 .filter { it.serverId !in byId }
@@ -57,9 +59,9 @@ public class StatusRepository @Inject constructor(private val dao: StatusDao, pr
                     val boosted = byId[boost.reblogOfId] ?: return@mapNotNull null
                     decoded.of(accountId, boost.serverId, boost.payloadJson, boost.cachedAt)?.copy(reblog = boosted)
                 }
-            (byId.values + boosts).map { entity(accountId, it) }
+            entities(accountId, byId.values + boosts)
         }
-        dao.upsertAll(entities)
+        dao.upsertAll(rows)
     }
 
     public suspend fun get(accountId: String, statusId: String): Status? =
@@ -74,7 +76,47 @@ public class StatusRepository @Inject constructor(private val dao: StatusDao, pr
         val boosts = dao.boostsOfAny(accountId, listOf(status.id)).mapNotNull { boost ->
             decoded.of(accountId, boost.serverId, boost.payloadJson, boost.cachedAt)?.copy(reblog = status)
         }
-        dao.upsertAll(listOf(entity(accountId, status)) + boosts.map { entity(accountId, it) })
+        dao.upsertAll(entities(accountId, listOf(status) + boosts))
+    }
+
+    /**
+     * What each of [statuses] is, for the mode it belongs in. The server's description decides; where
+     * it described too little, what a player saw since and settled through [reclassify] does.
+     */
+    public suspend fun kinds(accountId: String, statuses: List<Status>): Map<String, ContentKind> {
+        val classified = statuses.associate { it.id to ContentClassifier.classify(it) }
+        val open = classified.filterValues { it == ContentKind.Undetermined }.keys.toList()
+        if (open.isEmpty()) return classified
+        val settled = open.chunked(MAXIMUM_BOUND_IDS).flatMap { dao.kinds(accountId, it) }
+            .mapNotNull { stored -> kindOf(stored.contentKind)?.let { stored.serverId to it } }
+            .filter { (_, kind) -> kind != ContentKind.Undetermined }
+        return classified + settled
+    }
+
+    /**
+     * A player has seen the real length and size of [attachmentId] in [statusId], which the server did
+     * not describe: what the post is follows from that, for it and every boost of it, and is kept, so it
+     * is never worked out twice. Null when the post is not stored.
+     */
+    public suspend fun reclassify(
+        accountId: String,
+        statusId: String,
+        attachmentId: String,
+        observed: MediaDimensions,
+    ): ContentKind? {
+        val status = get(accountId, statusId) ?: return null
+        val kind = ContentClassifier.reclassify(status, attachmentId, observed)
+        val shown = status.displayed.id
+        val rows = listOfNotNull(dao.get(accountId, statusId), dao.get(accountId, shown)) +
+            dao.boostsOfAny(accountId, listOf(shown))
+        dao.upsertAll(rows.distinctBy { it.serverId }.map { it.copy(contentKind = kind.name) })
+        return kind
+    }
+
+    /** The rows to store for [statuses], keeping what a player settled about any of them. */
+    internal suspend fun entities(accountId: String, statuses: List<Status>): List<CachedStatusEntity> {
+        val kinds = kinds(accountId, statuses)
+        return statuses.map { entity(accountId, it, kinds.getValue(it.id)) }
     }
 
     /** A deletion, or a 404 on refetch: the status goes, and from every timeline. */
@@ -87,12 +129,12 @@ public class StatusRepository @Inject constructor(private val dao: StatusDao, pr
         dao.deleteByAuthor(accountId, authorId)
     }
 
-    internal fun entity(accountId: String, status: Status): CachedStatusEntity = CachedStatusEntity(
+    private fun entity(accountId: String, status: Status, kind: ContentKind): CachedStatusEntity = CachedStatusEntity(
         accountId = accountId,
         serverId = status.id,
         payloadJson = json.encodeToString(Status.serializer(), status),
         cachedAt = clock.millis(),
-        contentKind = ContentClassifier.classify(status).name,
+        contentKind = kind.name,
         plainText = StatusHtmlParser.plainText(status.displayed.content),
         authorId = status.account.id,
         boostedAuthorId = status.reblog?.account?.id,
@@ -141,3 +183,5 @@ private class DecodedStatuses(private val capacity: Int = CAPACITY) {
         const val LOAD_FACTOR = 0.75f
     }
 }
+
+private fun kindOf(name: String): ContentKind? = ContentKind.entries.firstOrNull { it.name == name }

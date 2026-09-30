@@ -122,6 +122,9 @@ public class NumberedTimeline(template: JsonObject = homeTemplate()) : Dispatche
             return attachment(id, "video", original)
         }
 
+        /** A video attachment of status [id] the server did not describe, as one without ffmpeg sends it. */
+        public fun undescribed(id: Int): JsonObject = attachment(id, "video", emptyMap())
+
         private fun attachment(id: Int, type: String, original: Map<String, JsonPrimitive>): JsonObject = JsonObject(
             mapOf(
                 "id" to JsonPrimitive("m$id"),
