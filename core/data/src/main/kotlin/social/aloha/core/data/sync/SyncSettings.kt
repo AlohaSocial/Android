@@ -10,8 +10,12 @@ import kotlinx.coroutines.flow.map
 import social.aloha.core.datastore.AccountSettingsStore
 import social.aloha.core.datastore.AppPreferences
 import social.aloha.core.model.PollFrequency
+import social.aloha.core.model.QuietHours
 
-/** The settings that decide how often and how much the app asks the servers; the settings screens write them. */
+/**
+ * The settings of sync and notifications: how often and how much the app asks the servers, quiet hours,
+ * and whether the person was asked to allow notifications. The settings screens write them.
+ */
 public class SyncSettings @Inject constructor(
     private val accounts: AccountSettingsStore,
     private val app: AppPreferences,
@@ -27,5 +31,17 @@ public class SyncSettings @Inject constructor(
 
     public suspend fun setWifiOnly(wifiOnly: Boolean) {
         app.setWifiOnlySync(wifiOnly)
+    }
+
+    public val quietHours: Flow<QuietHours?> = app.quietHours
+
+    public suspend fun setQuietHours(hours: QuietHours?) {
+        app.setQuietHours(hours)
+    }
+
+    public val askedForNotifications: Flow<Boolean> = app.askedForNotifications
+
+    public suspend fun setAskedForNotifications() {
+        app.setAskedForNotifications()
     }
 }

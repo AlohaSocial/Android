@@ -7,9 +7,11 @@ import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import dagger.multibindings.IntoSet
 import dagger.multibindings.Multibinds
 import social.aloha.core.sync.AndroidDeviceConditions
 import social.aloha.core.sync.DeviceConditions
+import social.aloha.core.sync.NotificationRaiser
 import social.aloha.core.sync.PollListener
 
 @Module
@@ -21,4 +23,8 @@ internal abstract class SyncModule {
     /** Whoever acts on a moved unread count joins this set; polling needs none to run. */
     @Multibinds
     abstract fun pollListeners(): Set<PollListener>
+
+    @Binds
+    @IntoSet
+    abstract fun raiser(raiser: NotificationRaiser): PollListener
 }

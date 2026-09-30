@@ -3,12 +3,14 @@
 
 package social.aloha.feature.notifications
 
+import android.Manifest
 import android.app.Application
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.test.junit4.accessibility.enableAccessibilityChecks
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.tryPerformAccessibilityChecks
+import androidx.test.core.app.ApplicationProvider
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.captureRoboImage
 import java.time.Instant
@@ -16,6 +18,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import social.aloha.core.designsystem.AlohaTheme
@@ -27,6 +30,7 @@ import social.aloha.core.model.NotificationPolicy
 import social.aloha.core.model.NotificationRequest
 import social.aloha.core.model.PolicyDecision
 import social.aloha.core.model.PollFrequency
+import social.aloha.core.model.QuietHours
 import social.aloha.core.model.Status
 
 /** The notifications screens, each also run through the Accessibility Test Framework checks. */
@@ -38,6 +42,12 @@ class NotificationsScreenshotTest {
     val compose = createComposeRule()
 
     private val now = Instant.parse("2026-09-30T12:00:00Z")
+
+    init {
+        // the card asking for notifications has its own image; the others show the list as it is once allowed
+        shadowOf(ApplicationProvider.getApplicationContext<Application>())
+            .grantPermissions(Manifest.permission.POST_NOTIFICATIONS)
+    }
 
     private fun capture(
         name: String,
@@ -95,6 +105,8 @@ class NotificationsScreenshotTest {
         override fun onPolicy() = Unit
 
         override fun onRequests() = Unit
+
+        override fun onAskedForPermission() = Unit
     }
 
     @Test
@@ -110,6 +122,9 @@ class NotificationsScreenshotTest {
     fun notificationsLargeFont() = capture("notifications-font200") {
         NotificationsScreen(list.copy(kinds = setOf(NotificationKind.Mention)), actions, navigationIcon = {})
     }
+
+    @Test
+    fun permission() = capture("notifications-permission") { PermissionCard(onTurnOn = {}) }
 
     @Test
     fun empty() = capture("notifications-empty") {
@@ -160,6 +175,16 @@ class NotificationsScreenshotTest {
     @Test
     @Config(fontScale = 2f)
     fun syncSettingsLargeFont() = capture("notifications-settings-font200") {
-        SyncRows(SyncSettingsUi(PollFrequency.BatterySaver, wifiOnly = true), onFrequency = {}, onWifiOnly = {})
+        SyncRows(
+            SyncSettingsUi(
+                PollFrequency.BatterySaver,
+                wifiOnly = true,
+                quiet = QuietHours(fromHour = 22, untilHour = 7),
+            ),
+            onFrequency = {},
+            onWifiOnly = {},
+            onQuietHours = {},
+            onKinds = {},
+        )
     }
 }

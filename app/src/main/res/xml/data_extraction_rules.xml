@@ -5,7 +5,8 @@
 -->
 <!--
   API 31+. The vault (tokens, secrets) and the disposable cache never leave the device, nor do the
-  posts not yet out (drafts, direct messages among them) and the copies of what they attach.
+  posts not yet out (drafts, direct messages among them) and the copies of what they attach, nor
+  WorkManager's store, which holds push keys and tokens while their work waits.
 -->
 <data-extraction-rules>
     <cloud-backup>
@@ -17,6 +18,9 @@
         <exclude domain="database" path="outbox.db-wal" />
         <exclude domain="database" path="outbox.db-shm" />
         <exclude domain="file" path="uploads" />
+        <exclude domain="database" path="androidx.work.workdb" />
+        <exclude domain="database" path="androidx.work.workdb-wal" />
+        <exclude domain="database" path="androidx.work.workdb-shm" />
     </cloud-backup>
     <device-transfer>
         <exclude domain="file" path="vault" />
@@ -27,5 +31,8 @@
         <exclude domain="database" path="outbox.db-wal" />
         <exclude domain="database" path="outbox.db-shm" />
         <exclude domain="file" path="uploads" />
+        <exclude domain="database" path="androidx.work.workdb" />
+        <exclude domain="database" path="androidx.work.workdb-wal" />
+        <exclude domain="database" path="androidx.work.workdb-shm" />
     </device-transfer>
 </data-extraction-rules>

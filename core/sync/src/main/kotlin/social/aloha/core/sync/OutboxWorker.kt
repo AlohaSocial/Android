@@ -158,5 +158,5 @@ internal class OutboxWorker @AssistedInject constructor(
 }
 
 /** No answer, too many requests, or a server in trouble: the same post may go later. */
-private val ApiError.isWorthRetrying: Boolean
+internal val ApiError.isWorthRetrying: Boolean
     get() = this is ApiError.Transport || this is ApiError.RateLimited || this is ApiError.Server

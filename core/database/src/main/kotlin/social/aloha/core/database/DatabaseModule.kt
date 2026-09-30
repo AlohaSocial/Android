@@ -52,5 +52,8 @@ internal object DatabaseModule {
     fun cacheAccountDao(database: CacheDatabase): CacheAccountDao = database.cacheAccountDao()
 
     @Provides
+    fun raisedDao(database: AccountsDatabase): RaisedNotificationDao = database.raisedDao()
+
+    @Provides
     fun positionDao(database: CacheDatabase): PositionDao = database.positionDao()
 }

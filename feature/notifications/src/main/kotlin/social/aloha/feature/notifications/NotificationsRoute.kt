@@ -69,6 +69,8 @@ public fun NotificationsRoute(
             override fun onPolicy() = onPolicy()
 
             override fun onRequests() = onRequests()
+
+            override fun onAskedForPermission() = viewModel.onAskedForPermission()
         }
     }
     NotificationsScreen(state, actions, navigationIcon, modifier)

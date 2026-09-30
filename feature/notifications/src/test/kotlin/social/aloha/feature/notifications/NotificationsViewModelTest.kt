@@ -4,6 +4,7 @@
 package social.aloha.feature.notifications
 
 import android.content.Context
+import androidx.datastore.preferences.core.emptyPreferences
 import androidx.test.core.app.ApplicationProvider
 import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.time.Duration.Companion.seconds
@@ -27,9 +28,13 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import social.aloha.core.data.notifications.NotificationFiltering
 import social.aloha.core.data.notifications.NotificationsRepository
+import social.aloha.core.data.sync.SyncSettings
 import social.aloha.core.data.sync.UnreadCounts
+import social.aloha.core.datastore.AccountSettingsStore
+import social.aloha.core.datastore.AppPreferences
 import social.aloha.core.model.NotificationKind
 import social.aloha.core.model.ServerCapabilities
+import social.aloha.core.testing.InMemoryDataStore
 import social.aloha.core.testing.SignedInFixture
 
 private class Notifications : Dispatcher() {
@@ -95,6 +100,10 @@ class NotificationsViewModelTest {
             NotificationsRepository(fixture.clients, unread),
             NotificationFiltering(fixture.clients),
             unread,
+            SyncSettings(
+                AccountSettingsStore(InMemoryDataStore(emptyMap())),
+                AppPreferences(InMemoryDataStore(emptyPreferences())),
+            ),
             fixture.clock,
         )
     }

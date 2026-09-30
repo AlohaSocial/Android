@@ -21,6 +21,7 @@ import social.aloha.core.data.compose.ComposeRepository
 import social.aloha.core.data.compose.Outbox
 import social.aloha.core.data.compose.PostSender
 import social.aloha.core.data.compose.ScheduledPosts
+import social.aloha.core.data.notifications.RaisedNotifications
 import social.aloha.core.data.timeline.StatusInteractions
 import social.aloha.core.data.timeline.StatusRepository
 import social.aloha.core.data.timeline.TimelineRepository
@@ -61,6 +62,9 @@ public class SignedInFixture(private val context: Context) : Closeable {
     public val outbox: Outbox = Outbox(outboxDatabase.outboxDao(), clock)
 
     private val cache = lazy { Room.inMemoryDatabaseBuilder(context, CacheDatabase::class.java).build() }
+
+    /** Which notifications were raised, beside the accounts. */
+    public val raised: RaisedNotifications = RaisedNotifications(database.raisedDao())
 
     /** What sends posts, storing what the server made in an in-memory cache. */
     public val sender: PostSender by lazy {

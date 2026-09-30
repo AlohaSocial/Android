@@ -3,6 +3,7 @@
 
 package social.aloha.core.database
 
+import androidx.room.AutoMigration
 import androidx.room.Dao
 import androidx.room.Database
 import androidx.room.Entity
@@ -99,10 +100,37 @@ public interface AccountDao {
     public suspend fun deleteRegistration(host: String)
 }
 
+/**
+ * A notification row the app raised on the device, with the newest notification it held then. A group
+ * that grows past it is raised again, in place; one that did not stays quiet. It lives with the accounts
+ * rather than in the disposable cache: clearing the cache must not raise everything again.
+ */
+@Entity(tableName = "raised_notification", primaryKeys = ["accountId", "key"])
+public data class RaisedNotificationEntity(val accountId: String, val key: String, val newestId: String)
+
+@Dao
+public interface RaisedNotificationDao {
+    @Query("SELECT * FROM raised_notification WHERE accountId = :accountId AND `key` IN (:keys)")
+    public suspend fun get(accountId: String, keys: List<String>): List<RaisedNotificationEntity>
+
+    @Upsert
+    public suspend fun upsert(raised: List<RaisedNotificationEntity>)
+
+    @Query("DELETE FROM raised_notification WHERE accountId = :accountId")
+    public suspend fun forget(accountId: String)
+}
+
 /** `accounts.db`: durable, versioned, migrated and never destroyed. */
-@Database(entities = [AccountEntity::class, ClientRegistrationEntity::class], version = 1, exportSchema = true)
+@Database(
+    entities = [AccountEntity::class, ClientRegistrationEntity::class, RaisedNotificationEntity::class],
+    version = 2,
+    exportSchema = true,
+    autoMigrations = [AutoMigration(from = 1, to = 2)],
+)
 public abstract class AccountsDatabase : RoomDatabase() {
     public abstract fun accountDao(): AccountDao
+
+    public abstract fun raisedDao(): RaisedNotificationDao
 
     public companion object {
         public const val FILE_NAME: String = "accounts.db"

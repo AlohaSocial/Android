@@ -9,12 +9,14 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Clock
 import java.time.Instant
 import javax.inject.Inject
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -25,9 +27,10 @@ import social.aloha.core.data.Trouble
 import social.aloha.core.data.notifications.NotificationFiltering
 import social.aloha.core.data.notifications.NotificationPage
 import social.aloha.core.data.notifications.NotificationsRepository
+import social.aloha.core.data.notifications.preview
+import social.aloha.core.data.sync.SyncSettings
 import social.aloha.core.data.sync.UnreadCounts
 import social.aloha.core.data.trouble
-import social.aloha.core.html.StatusHtmlParser
 import social.aloha.core.model.Account
 import social.aloha.core.model.NotificationItem
 import social.aloha.core.model.NotificationKind
@@ -64,6 +67,7 @@ internal data class NotificationsUiState(
     val pendingRequests: Int = 0,
     val group: GroupSheet? = null,
     val now: Instant = Instant.EPOCH,
+    val askedForPermission: Boolean = false,
 )
 
 /**
@@ -77,6 +81,7 @@ internal class NotificationsViewModel @Inject constructor(
     private val repository: NotificationsRepository,
     private val filtering: NotificationFiltering,
     unread: UnreadCounts,
+    private val settings: SyncSettings,
     clock: Clock,
 ) : ViewModel() {
     private data class Control(
@@ -96,10 +101,21 @@ internal class NotificationsViewModel @Inject constructor(
     private val control = MutableStateFlow(Control())
     private var shown = false
 
+    // rows are built once for what was loaded, off the main thread; the clock only moves their ages
+    private val rows = control.map { it.items to it.marker }.distinctUntilChanged()
+        .map { (items, marker) -> items.map { it.toRow(marker) } }
+        .flowOn(Dispatchers.Default)
+
     val uiState: StateFlow<NotificationsUiState> =
-        combine(control, account, minuteTicks(clock)) { control, account, now ->
+        combine(control, rows, account, minuteTicks(clock), settings.askedForNotifications) {
+                control,
+                rows,
+                account,
+                now,
+                asked,
+            ->
             NotificationsUiState(
-                rows = control.items.map { it.toRow(control.marker) },
+                rows = rows,
                 kinds = control.kinds,
                 refreshing = control.refreshing,
                 loadedOnce = control.loadedOnce,
@@ -110,6 +126,7 @@ internal class NotificationsViewModel @Inject constructor(
                 pendingRequests = control.pendingRequests,
                 group = control.group,
                 now = now,
+                askedForPermission = asked,
             )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_MILLIS), NotificationsUiState())
 
@@ -183,6 +200,10 @@ internal class NotificationsViewModel @Inject constructor(
         }
     }
 
+    fun onAskedForPermission() {
+        viewModelScope.launch { settings.setAskedForNotifications() }
+    }
+
     fun onGroupClosed() {
         control.update { it.copy(group = null) }
     }
@@ -235,16 +256,12 @@ internal class NotificationsViewModel @Inject constructor(
     private fun NotificationItem.toRow(marker: String?) = NotificationRowUi(
         key = key,
         kind = kind,
-        name = accounts.firstOrNull()?.bestDisplayName,
-        others = (count - 1).coerceAtLeast(0),
+        name = newest?.bestDisplayName,
+        others = others,
         avatars = accounts.map { it.avatar },
-        preview = status?.displayed?.let { shown ->
-            shown.spoilerText.ifBlank {
-                StatusHtmlParser.plainText(shown.content)
-            }.take(PREVIEW_LENGTH).ifBlank { null }
-        },
+        preview = preview(),
         statusId = status?.id,
-        accountId = accounts.firstOrNull()?.id,
+        accountId = newest?.id,
         groupKey = groupKey,
         unread = marker != null && NotificationItem.isNewer(newestId, marker),
         at = latestAt,
@@ -255,6 +272,5 @@ internal class NotificationsViewModel @Inject constructor(
 
     private companion object {
         const val STOP_MILLIS = 5_000L
-        const val PREVIEW_LENGTH = 280
     }
 }

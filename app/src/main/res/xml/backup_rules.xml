@@ -13,4 +13,7 @@
     <exclude domain="database" path="outbox.db-wal" />
     <exclude domain="database" path="outbox.db-shm" />
     <exclude domain="file" path="uploads" />
+    <exclude domain="database" path="androidx.work.workdb" />
+    <exclude domain="database" path="androidx.work.workdb-wal" />
+    <exclude domain="database" path="androidx.work.workdb-shm" />
 </full-backup-content>

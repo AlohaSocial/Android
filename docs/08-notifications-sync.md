@@ -9,6 +9,7 @@ This is the Apple app's specification, carried over as the product contract for 
 | Background | WorkManager, 15-minute floor; the foreground poll table is unchanged. |
 | Push | UnifiedPush against Nextcloud WebPush (verified end to end; the administrator must set `webpush_enabled`) and Mastodon Web Push; the Nextcloud push proxy over FCM follows in a later release. |
 | Payload | A Nextcloud push carries `{nid, app, subject, type, id}`; `id` is Social's object hash, so the client refreshes notifications from its marker. |
+| Local notifications | One notification channel per account and kind (mentions, follows, favourites, boosts, polls, new posts, edits, moderation) in a channel group per account; the system's channel settings are the per-kind, per-account switches. Mentions are `MessagingStyle` with a long-lived conversation shortcut per author. The permission is asked on the notifications tab, and once asked, the button opens the system settings. |
 
 ---
 

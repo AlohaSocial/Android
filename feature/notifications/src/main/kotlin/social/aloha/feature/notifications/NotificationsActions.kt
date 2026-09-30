@@ -22,4 +22,6 @@ internal interface NotificationsActions {
     fun onPolicy()
 
     fun onRequests()
+
+    fun onAskedForPermission()
 }

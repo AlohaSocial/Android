@@ -20,44 +20,11 @@
     <string name="notifications_filter_polls">Polls</string>
     <!-- Filter chip that shows only edits of posts the person interacted with -->
     <string name="notifications_filter_updates">Updates</string>
-    <!-- Stands in for an account the notification does not name -->
-    <string name="notifications_someone">Someone</string>
-    <!-- The people in a grouped notification: %1$s is the newest one's name, %2$d how many others -->
-    <plurals name="notifications_and_others">
-        <item quantity="one">%1$s and %2$d other</item>
-        <item quantity="other">%1$s and %2$d others</item>
-    </plurals>
     <!-- Button in a grouped notification that lists everyone in it; %d is how many others -->
     <plurals name="notifications_others">
         <item quantity="one">Show %d other</item>
         <item quantity="other">Show all %d others</item>
     </plurals>
-    <!-- %s is who did it, one name or "Alice and 3 others" -->
-    <string name="notifications_mention">%s mentioned you</string>
-    <!-- %s is who did it, one name or "Alice and 3 others" -->
-    <string name="notifications_reblog">%s boosted your post</string>
-    <!-- %s is who did it, one name or "Alice and 3 others" -->
-    <string name="notifications_favourite">%s favourited your post</string>
-    <!-- %s is who did it, one name or "Alice and 3 others" -->
-    <string name="notifications_follow">%s followed you</string>
-    <!-- %s is who asked -->
-    <string name="notifications_follow_request">%s asked to follow you</string>
-    <!-- A poll the person voted in or wrote has ended -->
-    <string name="notifications_poll">A poll has ended</string>
-    <!-- %s is someone whose posts the person asked to be told about -->
-    <string name="notifications_status">%s posted</string>
-    <!-- %s is who edited a post the person interacted with -->
-    <string name="notifications_update">%s edited a post</string>
-    <!-- The server's moderators took an action on the person's account -->
-    <string name="notifications_moderation">Your server\'s moderators took action on your account</string>
-    <!-- Some follow relationships were cut because a server was blocked -->
-    <string name="notifications_severed">Some of your follows were removed because a server was blocked</string>
-    <!-- For server administrators: %s signed up -->
-    <string name="notifications_admin_sign_up">%s signed up</string>
-    <!-- For server administrators: %s filed a report -->
-    <string name="notifications_admin_report">%s filed a report</string>
-    <!-- The person's year in review is ready -->
-    <string name="notifications_annual_report">Your year in review is ready</string>
     <!-- Spoken before a notification the person has not seen yet -->
     <string name="notifications_unread">New</string>
     <!-- Shown when there are no notifications yet -->
@@ -157,4 +124,26 @@
     <string name="settings_wifi_only">Refresh timelines on Wi-Fi only</string>
     <!-- Explains the Wi-Fi-only switch -->
     <string name="settings_wifi_only_summary">Notifications and the badge still update on mobile data.</string>
+    <!-- Explains why the app asks to show notifications, above the button that asks -->
+    <string name="notifications_permission_rationale">Get told about mentions, replies and follows while Aloha Social is closed.</string>
+    <!-- Button that asks to show notifications, or opens the system settings once asked -->
+    <string name="notifications_permission_turn_on">Turn on notifications</string>
+    <!-- Switch: no notifications are raised during a daily window -->
+    <string name="settings_quiet_hours">Quiet hours</string>
+    <!-- Summary of the quiet hours; %1$s is when they start, %2$s when they end -->
+    <string name="settings_quiet_hours_summary">Nothing is raised from %1$s to %2$s. What arrives then waits until they end.</string>
+    <!-- Row choosing when quiet hours start; %s is the time -->
+    <string name="settings_quiet_from">Start at %s</string>
+    <!-- Row choosing when quiet hours end; %s is the time -->
+    <string name="settings_quiet_until">End at %s</string>
+    <!-- Title of the dialog choosing a time -->
+    <string name="settings_quiet_pick">Choose a time</string>
+    <!-- Confirms the chosen time -->
+    <string name="settings_quiet_ok">OK</string>
+    <!-- Closes the time dialog without a change -->
+    <string name="settings_quiet_cancel">Cancel</string>
+    <!-- Row opening the system settings, where each kind of notification of each account can be turned off -->
+    <string name="settings_notification_kinds">Kinds of notifications</string>
+    <!-- Explains that row -->
+    <string name="settings_notification_kinds_summary">Mentions, follows, favourites and more, for each account, in your phone\'s settings.</string>
 </resources>

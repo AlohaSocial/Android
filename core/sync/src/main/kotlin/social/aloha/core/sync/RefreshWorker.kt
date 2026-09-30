@@ -5,10 +5,8 @@ package social.aloha.core.sync
 
 import android.content.Context
 import androidx.hilt.work.HiltWorker
-import androidx.work.Constraints
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy
-import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
@@ -78,7 +76,7 @@ public class BackgroundRefresh @Inject constructor(
             return
         }
         val request = PeriodicWorkRequestBuilder<RefreshWorker>(repeat.toJavaDuration())
-            .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
+            .setConstraints(NEEDS_NETWORK)
             .build()
         work.enqueueUniquePeriodicWork(NAME, ExistingPeriodicWorkPolicy.UPDATE, request)
     }

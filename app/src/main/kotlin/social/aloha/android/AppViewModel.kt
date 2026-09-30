@@ -31,8 +31,12 @@ import social.aloha.core.data.compose.Outbox
 import social.aloha.core.data.sync.UnreadCounts
 import social.aloha.core.data.timeline.CacheSweeper
 import social.aloha.core.model.SignedInAccount
+import social.aloha.core.navigation.AccountKey
 import social.aloha.core.navigation.ComposerKey
 import social.aloha.core.navigation.DraftsKey
+import social.aloha.core.navigation.NotificationsKey
+import social.aloha.core.navigation.ThreadKey
+import social.aloha.core.sync.LocalNotifications
 import social.aloha.core.sync.PostQueue
 
 /** What the root of the app shows. */
@@ -75,6 +79,7 @@ class AppViewModel @Inject constructor(
     private val outbox: Outbox,
     private val queue: PostQueue,
     private val unread: UnreadCounts,
+    private val localNotifications: LocalNotifications,
     @ApplicationContext private val context: Context,
 ) : ViewModel() {
     private val signingInAgain = MutableStateFlow(false)
@@ -161,6 +166,19 @@ class AppViewModel @Inject constructor(
     }
 
     /**
+     * Opens what a notification is about, as the account it came to: its post, else the profile of
+     * whoever did it. An account no longer signed in here opens nothing.
+     */
+    fun openNotification(accountId: String, statusId: String?, profileId: String?) {
+        viewModelScope.launch {
+            if (accounts.byId(accountId) == null) return@launch
+            accounts.activate(accountId)
+            val key = statusId?.let { ThreadKey(accountId, it) } ?: profileId?.let { AccountKey(accountId, id = it) }
+            destination.value = accountId to (key ?: NotificationsKey)
+        }
+    }
+
+    /**
      * Opens the composer on what another app shared, as the active account; one shared before any
      * account is signed in waits for the sign-in.
      */
@@ -210,7 +228,10 @@ class AppViewModel @Inject constructor(
      */
     fun signOut() {
         viewModelScope.launch {
-            accounts.activeAccount.value?.let { removal.signOut(it) }
+            accounts.activeAccount.value?.let {
+                removal.signOut(it)
+                localNotifications.forget(it.id)
+            }
             if (accounts.all().isEmpty()) caches.clear()
         }
     }

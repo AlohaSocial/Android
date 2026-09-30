@@ -11,6 +11,7 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import social.aloha.core.model.QuietHours
 import social.aloha.core.model.SwipeAction
 
 /**
@@ -45,6 +46,32 @@ public class AppPreferences(private val store: DataStore<Preferences>) {
         store.edit { it[WIFI_ONLY_SYNC] = wifiOnly }
     }
 
+    /** The daily window in which no notification is raised; none until chosen. */
+    public val quietHours: Flow<QuietHours?> = store.data.map { stored ->
+        val from = stored[QUIET_FROM]
+        val until = stored[QUIET_UNTIL]
+        if (from != null && until != null) QuietHours(from, until) else null
+    }
+
+    public suspend fun setQuietHours(hours: QuietHours?) {
+        store.edit {
+            if (hours == null) {
+                it.remove(QUIET_FROM)
+                it.remove(QUIET_UNTIL)
+            } else {
+                it[QUIET_FROM] = hours.fromHour
+                it[QUIET_UNTIL] = hours.untilHour
+            }
+        }
+    }
+
+    /** Whether the person was asked to allow notifications; a second ask goes to the system settings. */
+    public val askedForNotifications: Flow<Boolean> = store.data.map { it[ASKED_NOTIFICATIONS] ?: false }
+
+    public suspend fun setAskedForNotifications() {
+        store.edit { it[ASKED_NOTIFICATIONS] = true }
+    }
+
     public suspend fun setTagShorts(tag: Boolean) {
         store.edit { it[TAG_SHORTS] = tag }
     }
@@ -76,6 +103,9 @@ public class AppPreferences(private val store: DataStore<Preferences>) {
         val WARN_DESCRIPTION = booleanPreferencesKey("warn_missing_description")
         val TAG_SHORTS = booleanPreferencesKey("tag_shorts")
         val WIFI_ONLY_SYNC = booleanPreferencesKey("wifi_only_sync")
+        val QUIET_FROM = intPreferencesKey("quiet_from_hour")
+        val QUIET_UNTIL = intPreferencesKey("quiet_until_hour")
+        val ASKED_NOTIFICATIONS = booleanPreferencesKey("asked_for_notifications")
 
         /** A value a later build wrote, or none at all, reads as the default. */
         fun swipe(stored: String?, default: SwipeAction): SwipeAction =

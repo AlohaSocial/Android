@@ -35,6 +35,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -50,6 +51,7 @@ import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.designsystem.badgeCount
 import social.aloha.core.model.NotificationKind
+import social.aloha.core.sync.NotificationText
 import social.aloha.core.ui.ListProgress
 import social.aloha.core.ui.NearEndEffect
 import social.aloha.core.ui.PostAge
@@ -96,6 +98,7 @@ internal fun NotificationsScreen(
     ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize()) {
             Chips(state.kinds, actions)
+            PermissionBanner(state.askedForPermission, actions::onAskedForPermission)
             state.trouble?.let { TroubleStrip(stringResource(it.message)) }
             PullToRefreshBox(
                 isRefreshing = state.refreshing,
@@ -221,30 +224,8 @@ internal fun NotificationRow(row: NotificationRowUi, now: Instant, actions: Noti
 }
 
 @Composable
-private fun summary(row: NotificationRowUi): String {
-    val name = row.name ?: stringResource(R.string.notifications_someone)
-    val who = if (row.others > 0) {
-        pluralStringResource(R.plurals.notifications_and_others, row.others, name, row.others)
-    } else {
-        name
-    }
-    return when (row.kind) {
-        NotificationKind.Mention -> stringResource(R.string.notifications_mention, who)
-        NotificationKind.Reblog -> stringResource(R.string.notifications_reblog, who)
-        NotificationKind.Favourite -> stringResource(R.string.notifications_favourite, who)
-        NotificationKind.Follow -> stringResource(R.string.notifications_follow, who)
-        NotificationKind.FollowRequest -> stringResource(R.string.notifications_follow_request, who)
-        NotificationKind.Poll -> stringResource(R.string.notifications_poll)
-        NotificationKind.Status -> stringResource(R.string.notifications_status, who)
-        NotificationKind.Update -> stringResource(R.string.notifications_update, who)
-        NotificationKind.ModerationWarning -> stringResource(R.string.notifications_moderation)
-        NotificationKind.SeveredRelationships -> stringResource(R.string.notifications_severed)
-        NotificationKind.AdminSignUp -> stringResource(R.string.notifications_admin_sign_up, who)
-        NotificationKind.AdminReport -> stringResource(R.string.notifications_admin_report, who)
-        NotificationKind.AnnualReport -> stringResource(R.string.notifications_annual_report)
-        NotificationKind.Unknown -> who
-    }
-}
+private fun summary(row: NotificationRowUi): String =
+    NotificationText.summary(LocalResources.current, row.kind, row.name, row.others)
 
 @Composable
 private fun Empty(filtered: Boolean) {

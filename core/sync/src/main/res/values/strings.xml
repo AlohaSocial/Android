@@ -24,4 +24,80 @@
     <string name="outbox_channel">Posts sent later</string>
     <!-- Description of that channel in the system's notification settings -->
     <string name="outbox_channel_description">Posts that were written offline and are going out, or need you</string>
+    <!-- Stands in for an account the notification does not name -->
+    <string name="notifications_someone">Someone</string>
+    <!-- The people in a grouped notification: %1$s is the newest one's name, %2$d how many others -->
+    <plurals name="notifications_and_others">
+        <item quantity="one">%1$s and %2$d other</item>
+        <item quantity="other">%1$s and %2$d others</item>
+    </plurals>
+    <!-- %s is who did it, one name or "Alice and 3 others" -->
+    <string name="notifications_mention">%s mentioned you</string>
+    <!-- %s is who did it, one name or "Alice and 3 others" -->
+    <string name="notifications_reblog">%s boosted your post</string>
+    <!-- %s is who did it, one name or "Alice and 3 others" -->
+    <string name="notifications_favourite">%s favourited your post</string>
+    <!-- %s is who did it, one name or "Alice and 3 others" -->
+    <string name="notifications_follow">%s followed you</string>
+    <!-- %s is who asked -->
+    <string name="notifications_follow_request">%s asked to follow you</string>
+    <!-- A poll the person voted in or wrote has ended -->
+    <string name="notifications_poll">A poll has ended</string>
+    <!-- %s is someone whose posts the person asked to be told about -->
+    <string name="notifications_status">%s posted</string>
+    <!-- %s is who edited a post the person interacted with -->
+    <string name="notifications_update">%s edited a post</string>
+    <!-- The server's moderators took an action on the person's account -->
+    <string name="notifications_moderation">Your server\'s moderators took action on your account</string>
+    <!-- Some follow relationships were cut because a server was blocked -->
+    <string name="notifications_severed">Some of your follows were removed because a server was blocked</string>
+    <!-- For server administrators: %s signed up -->
+    <string name="notifications_admin_sign_up">%s signed up</string>
+    <!-- For server administrators: %s filed a report -->
+    <string name="notifications_admin_report">%s filed a report</string>
+    <!-- The person's year in review is ready -->
+    <string name="notifications_annual_report">Your year in review is ready</string>
+    <!-- Name of the group of notification channels for one account; %s is its handle -->
+    <string name="notification_group">Notifications for %s</string>
+    <!-- Name of the notification channel for mentions and replies, in the system's notification settings -->
+    <string name="notification_channel_mentions">Mentions and replies</string>
+    <!-- Name of the notification channel for new followers and follow requests -->
+    <string name="notification_channel_follows">Follows</string>
+    <!-- Name of the notification channel for favourites of the person's posts -->
+    <string name="notification_channel_favourites">Favourites</string>
+    <!-- Name of the notification channel for boosts of the person's posts -->
+    <string name="notification_channel_boosts">Boosts</string>
+    <!-- Name of the notification channel for ended polls -->
+    <string name="notification_channel_polls">Polls</string>
+    <!-- Name of the notification channel for new posts from people the person asked to be told about -->
+    <string name="notification_channel_posts">New posts</string>
+    <!-- Name of the notification channel for edits of posts the person interacted with -->
+    <string name="notification_channel_edits">Edits</string>
+    <!-- Name of the notification channel for moderation and server administration -->
+    <string name="notification_channel_moderation">Moderation</string>
+    <!-- Notification action that replies to the post right from the notification -->
+    <string name="notification_reply">Reply</string>
+    <!-- Hint in the reply field of a notification -->
+    <string name="notification_reply_hint">Your reply</string>
+    <!-- Notification action that favourites the post -->
+    <string name="notification_favourite">Favourite</string>
+    <!-- Notification action that boosts the post -->
+    <string name="notification_boost">Boost</string>
+    <!-- Name of the notification channel for the brief notice while a push is looked at, in the system's notification settings -->
+    <string name="sync_channel">Checking for new activity</string>
+    <!-- Description of that channel -->
+    <string name="sync_channel_description">Shown for a moment on older Android versions while a push is looked at</string>
+    <!-- The brief notice while a push is looked at -->
+    <string name="sync_checking">Checking for new activity</string>
+    <!-- All a locked screen shows of a private mention -->
+    <string name="notification_private">New private mention</string>
+    <!-- All a locked screen shows of a notice from the server's moderators or administration -->
+    <string name="notification_moderation">New notice from your server</string>
+    <!-- Name the person's own messages carry in a conversation notification -->
+    <string name="notification_you">You</string>
+    <!-- Summary of several notifications of one account; %d is how many -->
+    <plurals name="notification_summary">
+        <item quantity="one">%d new notification</item>
+        <item quantity="other">%d new notifications</item>
+    </plurals>
 </resources>
