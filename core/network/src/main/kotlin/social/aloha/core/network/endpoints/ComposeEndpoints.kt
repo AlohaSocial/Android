@@ -4,6 +4,7 @@
 package social.aloha.core.network.endpoints
 
 import java.io.File
+import java.time.Instant
 import java.util.Locale
 import social.aloha.core.model.Announcement
 import social.aloha.core.model.ContinueWatchingItem
@@ -41,6 +42,20 @@ public object ComposeEndpoints {
         StatusDto.serializer(),
     ) { it.toDomain() }
 
+    /**
+     * Posts [draft] at its `scheduledAt`; the server answers with the scheduled post, not a status.
+     * The idempotency key makes a retry after a timeout as safe as it is for [post].
+     */
+    public fun schedule(draft: StatusPost): ApiRequest<ScheduledStatus> = request(
+        Endpoint(
+            "api/v1/statuses",
+            HttpMethod.POST,
+            body = Body.Form(draft.formItems()),
+            idempotencyKey = draft.idempotencyKey,
+        ),
+        ScheduledStatusDto.serializer(),
+    ) { it.toDomain() }
+
     /** Edits a known status; it cannot duplicate, so no idempotency key is sent. */
     public fun edit(id: String, draft: StatusPost): ApiRequest<Status> = request(
         Endpoint("api/v1/statuses/$id", HttpMethod.PUT, body = Body.Form(draft.formItems())),
@@ -55,6 +70,16 @@ public object ComposeEndpoints {
 
     public fun deleteScheduled(id: String): ApiRequest<Unit> =
         unitRequest(Endpoint("api/v1/scheduled_statuses/$id", HttpMethod.DELETE))
+
+    /** Moves scheduled post [id] to [at]. */
+    public fun reschedule(id: String, at: Instant): ApiRequest<ScheduledStatus> = request(
+        Endpoint(
+            "api/v1/scheduled_statuses/$id",
+            HttpMethod.PUT,
+            body = Body.Form(listOf(QueryItem("scheduled_at", at.toString()))),
+        ),
+        ScheduledStatusDto.serializer(),
+    ) { it.toDomain() }
 }
 
 public object MediaEndpoints {

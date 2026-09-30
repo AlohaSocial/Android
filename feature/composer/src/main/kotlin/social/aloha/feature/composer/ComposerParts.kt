@@ -15,7 +15,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.FilledTonalIconToggleButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -225,6 +224,7 @@ internal fun Toolbar(
                 Icon(AlohaIcons.ContentWarning, stringResource(R.string.composer_cw))
             }
             VisibilityMenu(state, actions::onVisibility)
+            ScheduleButton(state, actions)
             IconButton(onClick = { languages = true }) {
                 val name = languageName(state.language) ?: stringResource(R.string.composer_language_none)
                 Icon(AlohaIcons.Language, stringResource(R.string.composer_language, name))
@@ -251,11 +251,14 @@ internal fun Toolbar(
     }
 }
 
-/** Adding pictures, videos or files, while the post has room for them, and marking them sensitive. */
+/**
+ * Adding pictures, videos or files, while the post has room for them, and marking them sensitive; or
+ * a poll instead, on an opening post without media.
+ */
 @Composable
 private fun MediaButtons(state: ComposerUiState, actions: ComposerActions) {
     val attached = state.attachments.maxOfOrNull { it.size } ?: 0
-    val room = state.attachments.any { it.size < state.maxAttachments }
+    val room = state.poll == null && state.attachments.any { it.size < state.maxAttachments }
     IconButton(onClick = actions::onPickMedia, enabled = room && !state.posting) {
         Icon(AlohaIcons.AddMedia, stringResource(R.string.composer_add_media))
     }
@@ -269,8 +272,9 @@ private fun MediaButtons(state: ComposerUiState, actions: ComposerActions) {
             Icon(AlohaIcons.TextCard, stringResource(R.string.composer_card))
         }
     }
+    PollToggle(state, actions)
     if (attached > 0) {
-        IconToggleButton(checked = state.mediaSensitive, onCheckedChange = actions::onSensitive) {
+        OutlinedIconToggleButton(checked = state.mediaSensitive, onCheckedChange = actions::onSensitive) {
             Icon(AlohaIcons.Sensitive, stringResource(R.string.composer_media_sensitive))
         }
     }

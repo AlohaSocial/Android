@@ -33,6 +33,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.core.net.toUri
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import java.time.Instant
 import social.aloha.core.model.CustomEmoji
 import social.aloha.core.model.Visibility
 import social.aloha.core.navigation.ComposerKey
@@ -45,13 +46,21 @@ private class Dialogs(
     val discarding: MutableState<Boolean>,
     /** A short just recorded, waiting for the writer's answer about `#shorts`. */
     val short: MutableState<String?>,
-    val gifs: MutableState<Boolean>,
-    val nextcloudFile: MutableState<Boolean>,
+    /** The picker open over the composer, if any. */
+    val picker: MutableState<Picker?>,
 )
 
-/** The composer for [key]; [onDone] leaves it, once posted or discarded. */
+/** The pickers that open over the composer, one at a time. */
+private enum class Picker { Gifs, NextcloudFile, Schedule }
+
+/** The composer for [key]; [onDone] leaves it, once posted or discarded; [onScheduledPosts] opens that list. */
 @Composable
-public fun ComposerRoute(key: ComposerKey, onDone: () -> Unit, modifier: Modifier = Modifier) {
+public fun ComposerRoute(
+    key: ComposerKey,
+    onDone: () -> Unit,
+    onScheduledPosts: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val viewModel = hiltViewModel<ComposerViewModel, ComposerViewModel.Factory>(key = key.toString()) { it.create(key) }
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbars = remember { SnackbarHostState() }
@@ -61,10 +70,10 @@ public fun ComposerRoute(key: ComposerKey, onDone: () -> Unit, modifier: Modifie
         rememberSaveable { mutableStateOf(false) },
         rememberSaveable { mutableStateOf(false) },
         rememberSaveable { mutableStateOf(null) },
-        rememberSaveable { mutableStateOf(false) },
-        rememberSaveable { mutableStateOf(false) },
+        rememberSaveable { mutableStateOf(null) },
     )
-    val actions = rememberActions(viewModel, state, dialogs) { done() }
+    val scheduled by rememberUpdatedState(onScheduledPosts)
+    val actions = rememberActions(viewModel, state, dialogs, { scheduled() }) { done() }
     val hue = MaterialTheme.colorScheme.primary.toArgb()
     LaunchedEffect(hue) { viewModel.cards.onHue(hue) }
 
@@ -84,6 +93,7 @@ private fun rememberActions(
     viewModel: ComposerViewModel,
     state: ComposerUiState,
     dialogs: Dialogs,
+    scheduledPosts: () -> Unit,
     done: () -> Unit,
 ): ComposerActions {
     val current by rememberUpdatedState(state)
@@ -130,6 +140,20 @@ private fun rememberActions(
 
             override fun onAuthor(id: String) = viewModel.onAuthor(id)
 
+            override fun onPickSchedule() {
+                dialogs.picker.value = Picker.Schedule
+            }
+
+            override fun onSchedule(at: Instant?) {
+                viewModel.scheduledAt.value = at
+            }
+
+            override fun onScheduledPosts() = scheduledPosts()
+
+            override fun onPoll(poll: PollUi?) {
+                viewModel.poll.value = poll
+            }
+
             override fun onPickMedia() =
                 pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageAndVideo))
 
@@ -138,11 +162,11 @@ private fun rememberActions(
             override fun onCapture(capture: Capture) = camera(capture)
 
             override fun onGifs() {
-                dialogs.gifs.value = true
+                dialogs.picker.value = Picker.Gifs
             }
 
             override fun onNextcloudFile() {
-                dialogs.nextcloudFile.value = true
+                dialogs.picker.value = Picker.NextcloudFile
             }
 
             override fun onPaste() {
@@ -255,6 +279,17 @@ private fun ComposerDialogs(state: ComposerUiState, viewModel: ComposerViewModel
         }
     }
     LibraryDialogs(viewModel, dialogs)
+    if (dialogs.picker.value == Picker.Schedule) {
+        ScheduleDialog(
+            state.scheduledAt,
+            now = Instant::now,
+            onPick = {
+                dialogs.picker.value = null
+                viewModel.scheduledAt.value = it
+            },
+            onDismiss = { dialogs.picker.value = null },
+        )
+    }
     if (discarding) {
         DiscardDialog(
             onDiscard = {
@@ -268,30 +303,29 @@ private fun ComposerDialogs(state: ComposerUiState, viewModel: ComposerViewModel
 
 @Composable
 private fun LibraryDialogs(viewModel: ComposerViewModel, dialogs: Dialogs) {
-    var gifs by dialogs.gifs
-    var nextcloudFile by dialogs.nextcloudFile
-    if (gifs) {
+    var picker by dialogs.picker
+    if (picker == Picker.Gifs) {
         val library by viewModel.library.gifs.collectAsStateWithLifecycle()
         GifSheet(
             library,
             onQuery = viewModel.library::onQuery,
             onMore = viewModel.library::onMore,
             onPick = { gif ->
-                gifs = false
+                picker = null
                 viewModel.library.onGif(gif)
             },
-            onDismiss = { gifs = false },
+            onDismiss = { picker = null },
         )
     }
-    if (nextcloudFile) {
+    if (picker == Picker.NextcloudFile) {
         val recent by produceState(emptyList<String>()) { value = viewModel.library.recentPaths() }
         NextcloudFileDialog(
             recent,
             onAttach = { path ->
-                nextcloudFile = false
+                picker = null
                 viewModel.library.onNextcloudFile(path)
             },
-            onDismiss = { nextcloudFile = false },
+            onDismiss = { picker = null },
         )
     }
 }

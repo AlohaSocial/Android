@@ -21,6 +21,7 @@ import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
+import java.time.Instant
 import java.util.Locale
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -35,6 +36,7 @@ import social.aloha.core.data.ClientFactory
 import social.aloha.core.data.RemoteLookup
 import social.aloha.core.data.Trouble
 import social.aloha.core.data.compose.ComposeRepository
+import social.aloha.core.data.compose.ScheduledPosts
 import social.aloha.core.datastore.AppPreferences
 import social.aloha.core.html.StatusHtmlParser
 import social.aloha.core.model.CharacterCount
@@ -58,6 +60,7 @@ internal class ComposerViewModel @AssistedInject constructor(
     @ApplicationContext context: Context,
     private val accounts: AccountRepository,
     private val compose: ComposeRepository,
+    scheduled: ScheduledPosts,
     private val lookup: RemoteLookup,
     uploads: MediaUploads,
     clients: ClientFactory,
@@ -96,13 +99,21 @@ internal class ComposerViewModel @AssistedInject constructor(
 
     private val control = MutableStateFlow(ComposerUiState())
     private val completions = Completions(compose, viewModelScope)
-    private val poster = ThreadPoster(compose, gameWords(context))
+    private val poster = ThreadPoster(compose, scheduled, gameWords(context))
+
+    /** The opening post's poll, which takes the place of its media. */
+    val poll = MutableStateFlow<PollUi?>(null)
+
+    /** When the post goes out, if not at once. */
+    val scheduledAt = MutableStateFlow<Instant?>(null)
     private var reader: SignedInAccount? = null
     private var parent: Status? = null
     private var emojiList: List<CustomEmoji> = emptyList()
 
     /** A short post drawn as a picture, when the writer chooses. */
     val cards = TextCards(attachments, File(context.filesDir, UPLOADS), viewModelScope)
+
+    private val extras = combine(cards.state, poll, scheduledAt, ::Triple)
 
     private data class Written(val segments: List<String>, val spoiler: String)
 
@@ -128,8 +139,8 @@ internal class ComposerViewModel @AssistedInject constructor(
         snapshotFlow { Written(segments.map { it.text }, spoiler) },
         completions.suggestions,
         media,
-        cards.state,
-    ) { state, text, found, media, card ->
+        extras,
+    ) { state, text, found, media, (card, poll, at) ->
         val capabilities = reader?.capabilities
         val limits = capabilities?.limits ?: ServerLimits.MastodonDefaults
         val rule = capabilities?.lengthRule ?: LengthRule.Mastodon
@@ -142,11 +153,16 @@ internal class ComposerViewModel @AssistedInject constructor(
             // the card is an attachment only to the server; the strip shows what the writer attached
             attachments = media.attachments.map { list -> list.filterNot { it.id == cards.attachmentId } },
             card = card,
-            cardFits = TextCards.fits(
+            cardFits = poll == null && TextCards.fits(
                 text.segments.first(),
                 text.segments.size,
                 media.attachments.first().count { it.id != cards.attachmentId },
             ),
+            poll = poll,
+            maxPollOptions = limits.maxPollOptions,
+            maxPollOptionCharacters = limits.maxPollOptionCharacters,
+            pollDurations = PollUi.durations(limits.minPollExpiration, limits.maxPollExpiration),
+            scheduledAt = at,
             mediaSensitive = media.sensitive,
             maxAttachments = limits.maxMediaAttachments,
             attachFailure = media.failure,
@@ -238,8 +254,13 @@ internal class ComposerViewModel @AssistedInject constructor(
         if (tagShort && uris.isNotEmpty()) segments.getOrNull(focused)?.let { segments[focused] = tagged(it) }
     }
 
+    // a poll takes the opening post's place for media
     private val room: Int
-        get() = uiState.value.maxAttachments - uiState.value.attachments.getOrElse(focused) { emptyList() }.size
+        get() = if (focused == 0 && poll.value != null) {
+            0
+        } else {
+            uiState.value.maxAttachments - uiState.value.attachments.getOrElse(focused) { emptyList() }.size
+        }
 
     /** Writes as another signed-in account; a reply is looked up on that account's server first. */
     fun onAuthor(id: String) {
@@ -274,7 +295,7 @@ internal class ComposerViewModel @AssistedInject constructor(
                 control.update { it.copy(posting = false, failure = PostFailure.Unreached(Trouble.Server)) }
                 return@launch
             }
-            val thread = segments.indices.map { control.value.segmentAt(it, segments[it].text, spoiler, attachments) }
+            val thread = segments.indices.map { state.segmentAt(it, segments[it].text, spoiler, attachments) }
             val failure = poster.send(account, thread, parent?.id) { posted ->
                 control.update { it.copy(posted = posted) }
             }
@@ -385,6 +406,8 @@ private fun ComposerUiState.segmentAt(index: Int, text: String, spoiler: String,
     quotePolicy = if (index == 0) quotePolicy else QuotePolicy.Anyone,
     mediaIds = media.byPost.value.getOrElse(index) { emptyList() }.mapNotNull(Attachment::mediaId),
     mediaSensitive = media.sensitive.value,
+    poll = poll.takeIf { index == 0 },
+    scheduledAt = scheduledAt.takeIf { index == 0 },
 )
 
 /** [value] ending in `#shorts`, once, with the cursor after it. */

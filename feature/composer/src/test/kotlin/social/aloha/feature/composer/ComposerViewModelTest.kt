@@ -44,6 +44,7 @@ import social.aloha.core.data.ClientFactory
 import social.aloha.core.data.NewAccount
 import social.aloha.core.data.RemoteLookup
 import social.aloha.core.data.compose.ComposeRepository
+import social.aloha.core.data.compose.ScheduledPosts
 import social.aloha.core.data.timeline.StatusRepository
 import social.aloha.core.data.timeline.TimelineRepository
 import social.aloha.core.database.AccountsDatabase
@@ -124,18 +125,25 @@ private class Posts(private val script: MutableList<Int>) : Dispatcher() {
         val key = request.headers["Idempotency-Key"]
         val form = form(request)
         sent += key to form
-        key?.let { made[it] }?.let { return json(status(it).toString()) }
-        return when (script.removeFirstOrNull() ?: 200) {
-            200 -> {
-                val id = "s${++next}"
-                key?.let { made[it] = id }
-                json(status(id).toString())
-            }
-
-            422 -> MockResponse.Builder().code(422).body("""{"error":"a post may not be longer"}""").build()
-
-            else -> MockResponse.Builder().code(500).body("{}").build()
+        val at = form["scheduled_at"]
+        val known = key?.let { made[it] }
+        return when {
+            at != null -> json("""{"id":"later","scheduled_at":"$at","params":{"text":"${form["status"]}"}}""")
+            known != null -> json(status(known).toString())
+            else -> scripted(key)
         }
+    }
+
+    private fun scripted(key: String?): MockResponse = when (script.removeFirstOrNull() ?: 200) {
+        200 -> {
+            val id = "s${++next}"
+            key?.let { made[it] = id }
+            json(status(id).toString())
+        }
+
+        422 -> MockResponse.Builder().code(422).body("""{"error":"a post may not be longer"}""").build()
+
+        else -> MockResponse.Builder().code(500).body("{}").build()
     }
 
     private fun json(body: String) =
@@ -207,6 +215,7 @@ class ComposerViewModelTest {
             context,
             accounts,
             compose,
+            ScheduledPosts(clients),
             RemoteLookup(clients, statuses),
             MediaUploads(context),
             clients,
@@ -335,5 +344,44 @@ class ComposerViewModelTest {
         assertEquals(listOf("Photos/beach.jpg"), viewModel.library.recentPaths())
         viewModel.library.onNextcloudFile("missing.jpg")
         assertEquals(AttachFailure.NotFound, viewModel.await { it.attachFailure != null }.attachFailure)
+    }
+
+    @Test
+    fun `a poll goes out with the opening post and takes the place of its media`() = runBlocking {
+        val viewModel = open()
+        viewModel.await { it.ready }
+        viewModel.type(0, "Which beach?")
+        viewModel.poll.value = PollUi(options = listOf(" North ", "South", ""), seconds = 3_600, multiple = true)
+        viewModel.await { it.poll != null && it.canPost }
+        viewModel.library.onNextcloudFile("Photos/beach.jpg")
+        viewModel.onPost()
+        viewModel.await { it.done }
+        val form = posts.sent.single().second
+        assertEquals("South", form["poll[options][]"])
+        assertEquals("3600", form["poll[expires_in]"])
+        assertEquals("true", form["poll[multiple]"])
+        assertEquals(null, form["media_ids[]"])
+    }
+
+    @Test
+    fun `a poll with fewer than two different choices cannot be posted`() = runBlocking {
+        val viewModel = open()
+        viewModel.await { it.ready }
+        viewModel.type(0, "Which beach?")
+        viewModel.poll.value = PollUi(options = listOf("North", " North"))
+        assertEquals(false, viewModel.await { it.poll != null }.canPost)
+    }
+
+    @Test
+    fun `a scheduled post is scheduled, not posted`() = runBlocking {
+        val viewModel = open()
+        viewModel.await { it.ready }
+        viewModel.type(0, "Later")
+        val at = java.time.Instant.parse("2030-01-01T09:00:00Z")
+        viewModel.scheduledAt.value = at
+        viewModel.await { it.scheduledAt != null && it.canPost }
+        viewModel.onPost()
+        viewModel.await { it.done }
+        assertEquals(at.toString(), posts.sent.single().second["scheduled_at"])
     }
 }

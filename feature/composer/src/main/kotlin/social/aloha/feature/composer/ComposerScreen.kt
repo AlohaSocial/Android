@@ -4,6 +4,7 @@
 package social.aloha.feature.composer
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,6 +16,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -74,7 +77,10 @@ internal fun ComposerScreen(
                         Icon(AlohaIcons.Close, stringResource(R.string.composer_close))
                     }
                 },
-                actions = { PostButton(state, actions) },
+                actions = {
+                    ComposerMenu(actions)
+                    PostButton(state, actions)
+                },
             )
         },
         snackbarHost = { SnackbarHost(snackbars) },
@@ -88,18 +94,7 @@ internal fun ComposerScreen(
                 Modifier.weight(1f).readingWidth().fillMaxWidth().verticalScroll(rememberScrollState())
                     .padding(horizontal = AlohaSpacing.m),
                 verticalArrangement = Arrangement.spacedBy(AlohaSpacing.s),
-            ) {
-                state.reply?.let { ReplyLine(it) }
-                if (state.spoilerShown) SpoilerField(spoiler) { actions.onSpoiler(true, it) }
-                segments.forEachIndexed { index, value ->
-                    SegmentField(index, segments.size, value, state, actions)
-                }
-                GamesHint(state.games)
-                TextButton(onClick = actions::onAddSegment, enabled = !state.posting) {
-                    Icon(AlohaIcons.AddToThread, contentDescription = null)
-                    Text(stringResource(R.string.composer_add_segment), Modifier.padding(start = AlohaSpacing.xs))
-                }
-            }
+            ) { Writing(state, segments, spoiler, actions) }
             if (state.suggestions.isNotEmpty()) {
                 Suggestions(state.suggestions, actions::onSuggestion, Modifier.readingWidth())
             }
@@ -109,11 +104,47 @@ internal fun ComposerScreen(
     }
 }
 
+/** The post as written: what it answers, its warning, each segment of the thread, its poll and time. */
+@Composable
+private fun Writing(state: ComposerUiState, segments: List<TextFieldValue>, spoiler: String, actions: ComposerActions) {
+    state.reply?.let { ReplyLine(it) }
+    if (state.spoilerShown) SpoilerField(spoiler) { actions.onSpoiler(true, it) }
+    segments.forEachIndexed { index, value ->
+        SegmentField(index, segments.size, value, state, actions)
+        if (index == 0) state.poll?.let { PollEditor(state, it, actions::onPoll) }
+    }
+    GamesHint(state.games)
+    state.scheduledAt?.let { ScheduleLine(it, actions::onPickSchedule) { actions.onSchedule(null) } }
+    TextButton(onClick = actions::onAddSegment, enabled = !state.posting && state.scheduledAt == null) {
+        Icon(AlohaIcons.AddToThread, contentDescription = null)
+        Text(stringResource(R.string.composer_add_segment), Modifier.padding(start = AlohaSpacing.xs))
+    }
+}
+
+/** What is kept apart from the post being written: the posts waiting for their time. */
+@Composable
+private fun ComposerMenu(actions: ComposerActions) {
+    var open by remember { mutableStateOf(false) }
+    Box {
+        IconButton(onClick = { open = true }) { Icon(AlohaIcons.More, stringResource(R.string.composer_more)) }
+        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.composer_scheduled_posts)) },
+                onClick = {
+                    open = false
+                    actions.onScheduledPosts()
+                },
+            )
+        }
+    }
+}
+
 @Composable
 private fun PostButton(state: ComposerUiState, actions: ComposerActions) {
     val posting = stringResource(R.string.composer_posting)
     val label = when {
         state.posted > 0 -> R.string.composer_post_again
+        state.scheduledAt != null -> R.string.composer_post_schedule
         state.reply != null -> R.string.composer_post_reply
         else -> R.string.composer_post
     }

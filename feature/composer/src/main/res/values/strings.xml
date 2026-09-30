@@ -248,6 +248,94 @@
     <string name="composer_attach_not_found">The server couldn\'t attach that.</string>
     <!-- Snackbar when paste was chosen but the clipboard holds no picture or video -->
     <string name="composer_attach_nothing_to_paste">There\'s no picture or video to paste.</string>
+    <!-- Toolbar toggle that adds a poll to the post, or removes it -->
+    <string name="composer_poll_add_toggle">Poll</string>
+    <!-- Heading of the poll editor under the post -->
+    <string name="composer_poll">Poll</string>
+    <!-- Button that removes the poll -->
+    <string name="composer_poll_remove">Remove the poll</string>
+    <!-- Label of one choice of the poll; the placeholder is its number, 1, 2, 3 -->
+    <string name="composer_poll_option">Choice %1$d</string>
+    <!-- Shown under a poll choice that is too long; the placeholder is the server's limit in characters -->
+    <plurals name="composer_poll_option_long">
+        <item quantity="one">At most %1$d character</item>
+        <item quantity="other">At most %1$d characters</item>
+    </plurals>
+    <!-- Button that removes one choice of the poll; the placeholder is its number -->
+    <string name="composer_poll_option_remove">Remove choice %1$d</string>
+    <!-- Button that adds another choice to the poll -->
+    <string name="composer_poll_add">Add a choice</string>
+    <!-- Button showing how long the poll runs, opening the lengths to choose from; the placeholder is a length like "1 day" -->
+    <string name="composer_poll_duration">Runs for %1$s</string>
+    <!-- Checkbox: voters may pick more than one choice -->
+    <string name="composer_poll_multiple">Several answers allowed</string>
+    <!-- Checkbox: the counts stay hidden until the poll ends -->
+    <string name="composer_poll_hide_totals">Hide the results until it ends</string>
+    <!-- A poll's length in minutes -->
+    <plurals name="composer_poll_minutes">
+        <item quantity="one">%1$d minute</item>
+        <item quantity="other">%1$d minutes</item>
+    </plurals>
+    <!-- A poll's length in hours -->
+    <plurals name="composer_poll_hours">
+        <item quantity="one">%1$d hour</item>
+        <item quantity="other">%1$d hours</item>
+    </plurals>
+    <!-- A poll's length in days -->
+    <plurals name="composer_poll_days">
+        <item quantity="one">%1$d day</item>
+        <item quantity="other">%1$d days</item>
+    </plurals>
+    <!-- Toolbar button that opens the day and time picker for scheduling the post -->
+    <string name="composer_schedule">Schedule</string>
+    <!-- Chip under the post showing when it goes out; the placeholder is a date and time -->
+    <string name="composer_scheduled_for">Goes out %1$s</string>
+    <!-- Button next to the scheduled time that posts at once instead -->
+    <string name="composer_schedule_clear">Post now instead</string>
+    <!-- Button in the date picker that goes on to picking the time -->
+    <string name="composer_schedule_next">Next</string>
+    <!-- Title of the time picker when scheduling -->
+    <string name="composer_schedule_time">What time?</string>
+    <!-- Shown in the time picker when the time chosen is less than five minutes away -->
+    <string name="composer_schedule_too_soon">Pick a time at least five minutes from now.</string>
+    <!-- Button that confirms the scheduled time -->
+    <string name="composer_schedule_confirm">Schedule</string>
+    <!-- Button in the time picker that goes back to picking the day -->
+    <string name="composer_schedule_back">Back</string>
+    <!-- Button that closes a picker without choosing -->
+    <string name="composer_cancel">Cancel</string>
+    <!-- Post button label when the post is scheduled -->
+    <string name="composer_post_schedule">Schedule</string>
+    <!-- Overflow menu button in the composer's top bar -->
+    <string name="composer_more">More</string>
+    <!-- Menu item that opens the list of scheduled posts -->
+    <string name="composer_scheduled_posts">Scheduled posts</string>
+    <!-- Back button on the lists the composer opens: drafts and scheduled posts -->
+    <string name="composer_back">Back</string>
+    <!-- Shown when the scheduled posts could not be loaded -->
+    <string name="scheduled_failed">Your scheduled posts couldn\'t be loaded.</string>
+    <!-- Button that tries loading the scheduled posts again -->
+    <string name="scheduled_retry">Try again</string>
+    <!-- Shown when nothing is scheduled -->
+    <string name="scheduled_none">Nothing is scheduled.</string>
+    <!-- How many attachments a draft or a scheduled post carries -->
+    <plurals name="composer_media_count">
+        <item quantity="one">%1$d attachment</item>
+        <item quantity="other">%1$d attachments</item>
+    </plurals>
+    <!-- Spoken labels of a scheduled post's buttons; the placeholder is the start of its text -->
+    <string name="scheduled_move_one">Change the time of \u201c%1$s\u201d</string>
+    <string name="scheduled_delete_one">Delete \u201c%1$s\u201d</string>
+    <!-- Button that picks another time for a scheduled post -->
+    <string name="scheduled_move">Change time</string>
+    <!-- Button that deletes a scheduled post, and the confirm button of the dialog asking -->
+    <string name="scheduled_delete">Delete</string>
+    <!-- Title of the dialog asking before a scheduled post is deleted -->
+    <string name="scheduled_delete_title">Delete this scheduled post?</string>
+    <!-- Body of the dialog asking before a scheduled post is deleted -->
+    <string name="scheduled_delete_body">It will never go out.</string>
+    <!-- Snackbar when the server did not take a change to a scheduled post -->
+    <string name="scheduled_change_failed">That didn\'t work. Try again in a moment.</string>
     <!-- Toolbar button that opens the camera menu -->
     <string name="composer_camera">Camera</string>
     <!-- Camera menu: take a photo -->

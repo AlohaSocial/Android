@@ -4,6 +4,7 @@
 package social.aloha.feature.composer
 
 import android.app.Application
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.test.junit4.accessibility.enableAccessibilityChecks
@@ -17,6 +18,9 @@ import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.captureRoboImage
 import com.github.takahirom.roborazzi.captureScreenRoboImage
 import java.io.File
+import java.time.Instant
+import java.util.TimeZone
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -26,8 +30,12 @@ import org.robolectric.annotation.GraphicsMode
 import social.aloha.core.designsystem.AlohaTheme
 import social.aloha.core.designsystem.ThemeMode
 import social.aloha.core.designsystem.ThemeSettings
+import social.aloha.core.model.AttachmentKind
 import social.aloha.core.model.CustomEmoji
 import social.aloha.core.model.GifEntry
+import social.aloha.core.model.MediaAttachment
+import social.aloha.core.model.ScheduledStatus
+import social.aloha.core.model.ScheduledStatusParams
 import social.aloha.core.model.Visibility
 import social.aloha.core.sync.UploadState
 
@@ -38,6 +46,12 @@ import social.aloha.core.sync.UploadState
 class ComposerScreenshotTest {
     @get:Rule
     val compose = createComposeRule()
+
+    @Before
+    fun zone() {
+        // scheduled times show in the machine's zone, which would otherwise differ between machines
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
+    }
 
     private object NoActions : ComposerActions {
         override fun onClose() = Unit
@@ -61,6 +75,14 @@ class ComposerScreenshotTest {
         override fun onNextcloudFile() = Unit
 
         override fun onPaste() = Unit
+
+        override fun onPoll(poll: PollUi?) = Unit
+
+        override fun onPickSchedule() = Unit
+
+        override fun onSchedule(at: Instant?) = Unit
+
+        override fun onScheduledPosts() = Unit
         override fun onEditMedia(id: String) = Unit
         override fun onRemoveMedia(id: String) = Unit
         override fun onRetryMedia(id: String) = Unit
@@ -182,6 +204,45 @@ class ComposerScreenshotTest {
     fun gifs() = captureScreen("composer-gifs") {
         val gifs = (1..9).map { GifEntry("g$it", "Waves $it") }
         GifSheet(GifsUi("waves", gifs, attribution = "GIFs from the Nextcloud library"), {}, {}, {}, {})
+    }
+
+    // a scheduled post with a poll whose second choice runs over the limit
+    @Test
+    fun pollScheduled() = capture("composer-poll-scheduled") {
+        NewPost(
+            fresh.copy(
+                poll = PollUi(options = listOf("North shore", "South shore, where the long waves roll in at dawn")),
+                maxPollOptionCharacters = 25,
+                pollDurations = PollUi.durations(300, 604_800),
+                scheduledAt = Instant.parse("2030-06-01T07:30:00Z"),
+            ),
+        )
+    }
+
+    @Test
+    fun scheduledPosts() = capture("scheduled-posts") {
+        val params = ScheduledStatusParams(text = "Sunrise paddle out, who is in? Meet at the north end of the beach.")
+        ScheduledPostsScreen(
+            ScheduledUiState(
+                posts = listOf(
+                    ScheduledStatus("1", params, Instant.parse("2030-06-01T07:30:00Z")),
+                    ScheduledStatus(
+                        "2",
+                        ScheduledStatusParams(text = "Board swap this weekend", spoilerText = "Gear talk"),
+                        Instant.parse("2030-06-02T18:00:00Z"),
+                        mediaAttachments = listOf(
+                            MediaAttachment("m", AttachmentKind.Image, "https://example.test/a.jpg"),
+                        ),
+                    ),
+                ),
+                loading = false,
+            ),
+            onBack = {},
+            onMove = {},
+            onDelete = {},
+            onRetry = {},
+            snackbars = SnackbarHostState(),
+        )
     }
 
     // a sheet is a window of its own, so the whole screen is captured

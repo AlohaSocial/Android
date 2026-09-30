@@ -60,6 +60,7 @@ import social.aloha.core.navigation.PeopleKind
 import social.aloha.core.navigation.PhotosKey
 import social.aloha.core.navigation.ProfileKey
 import social.aloha.core.navigation.RouteResolver
+import social.aloha.core.navigation.ScheduledPostsKey
 import social.aloha.core.navigation.SettingsKey
 import social.aloha.core.navigation.SettingsSectionKey
 import social.aloha.core.navigation.ShortsKey
@@ -72,6 +73,7 @@ import social.aloha.core.navigation.VideoKey
 import social.aloha.core.ui.StatusNavigation
 import social.aloha.core.ui.openInBrowser
 import social.aloha.feature.composer.ComposerRoute
+import social.aloha.feature.composer.ScheduledPostsRoute
 import social.aloha.feature.profile.PeopleRoute
 import social.aloha.feature.profile.ProfileNavigation
 import social.aloha.feature.profile.ProfileRoute
@@ -252,7 +254,15 @@ fun AlohaApp(
                     SettingsSectionRoute(it.section, onBack = { backStack.removeLastOrNull() })
                 }
                 entry<ProfileKey> { ProfileRoute(AccountKey(readerId, id = serverAccountId), statusNavigation) }
-                entry<ComposerKey> { ComposerRoute(it, onDone = { backStack.removeLastOrNull() }) }
+                // a screen that closes itself takes its own entry away, so a second tap never closes what is under it
+                entry<ComposerKey> {
+                    ComposerRoute(
+                        it,
+                        onDone = { backStack.removeLastOrNull() },
+                        onScheduledPosts = { backStack.push(ScheduledPostsKey(it.readerId)) },
+                    )
+                }
+                entry<ScheduledPostsKey> { ScheduledPostsRoute(it, onBack = { backStack.removeLastOrNull() }) }
                 entry<ThreadKey>(metadata = ListDetailSceneStrategy.detailPane()) { ThreadRoute(it, statusNavigation) }
                 entry<StatusListKey>(metadata = ListDetailSceneStrategy.detailPane()) {
                     StatusListRoute(it, statusNavigation)

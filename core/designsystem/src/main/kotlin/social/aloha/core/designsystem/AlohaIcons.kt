@@ -55,11 +55,13 @@ import androidx.compose.material.icons.outlined.PersonAdd
 import androidx.compose.material.icons.outlined.PhotoCamera
 import androidx.compose.material.icons.outlined.PhotoLibrary
 import androidx.compose.material.icons.outlined.Place
+import androidx.compose.material.icons.outlined.Poll
 import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.RemoveCircleOutline
 import androidx.compose.material.icons.outlined.Repeat
+import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.outlined.SmartToy
@@ -156,4 +158,6 @@ public object AlohaIcons {
     public val Trim: ImageVector = Icons.Outlined.ContentCut
     public val Camera: ImageVector = Icons.Outlined.PhotoCamera
     public val AttachMore: ImageVector = Icons.Outlined.AddCircleOutline
+    public val Poll: ImageVector = Icons.Outlined.Poll
+    public val Schedule: ImageVector = Icons.Outlined.Schedule
 }

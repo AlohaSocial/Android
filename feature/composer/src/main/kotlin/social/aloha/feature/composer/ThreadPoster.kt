@@ -3,9 +3,12 @@
 
 package social.aloha.feature.composer
 
+import java.time.Instant
 import java.util.UUID
 import social.aloha.core.data.Answer
 import social.aloha.core.data.compose.ComposeRepository
+import social.aloha.core.data.compose.ScheduledPosts
+import social.aloha.core.data.map
 import social.aloha.core.data.trouble
 import social.aloha.core.model.SignedInAccount
 import social.aloha.core.model.Visibility
@@ -22,6 +25,9 @@ internal data class Segment(
     val mediaIds: List<String> = emptyList(),
     /** The media warn on their own, text or no text. */
     val mediaSensitive: Boolean = false,
+    val poll: PollUi? = null,
+    /** When the server posts it; the post is then scheduled, not posted. */
+    val scheduledAt: Instant? = null,
 )
 
 /**
@@ -34,6 +40,7 @@ internal data class Segment(
  */
 internal class ThreadPoster(
     private val compose: ComposeRepository,
+    private val scheduled: ScheduledPosts,
     private val words: ComposerGames.Words,
     private val random: () -> Double = Math::random,
     private val newKey: () -> String = { UUID.randomUUID().toString() },
@@ -58,14 +65,21 @@ internal class ThreadPoster(
     ): PostFailure? {
         var answering = postedIds.lastOrNull() ?: inReplyToId
         for (index in posted..segments.lastIndex) {
-            when (val answer = compose.post(account, post(index, segments[index], answering))) {
+            val post = post(index, segments[index], answering)
+            // a scheduled post is one alone: nothing can answer a post that is not there yet
+            val made = if (post.scheduledAt != null) {
+                scheduled.schedule(account, post).map { it.id }
+            } else {
+                compose.post(account, post).map { it.id }
+            }
+            when (made) {
                 is Answer.Got -> {
-                    postedIds += answer.value.id
-                    answering = answer.value.id
+                    postedIds += made.value
+                    answering = made.value
                     onPosted(posted)
                 }
 
-                is Answer.Missed -> return failureOf(answer.error)
+                is Answer.Missed -> return failureOf(made.error)
             }
         }
         return null
@@ -90,6 +104,11 @@ internal class ThreadPoster(
             inReplyToId = inReplyToId,
             idempotencyKey = current.key,
             quotePolicy = segment.quotePolicy.wire,
+            pollOptions = segment.poll?.choices.orEmpty(),
+            pollExpiresInSeconds = segment.poll?.seconds,
+            pollMultiple = segment.poll?.multiple == true,
+            pollHideTotals = segment.poll?.hideTotals == true,
+            scheduledAt = segment.scheduledAt,
         )
     }
 

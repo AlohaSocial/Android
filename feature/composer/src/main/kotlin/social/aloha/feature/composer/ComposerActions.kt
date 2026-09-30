@@ -4,11 +4,14 @@
 package social.aloha.feature.composer
 
 import androidx.compose.ui.text.input.TextFieldValue
+import java.time.Instant
 import social.aloha.core.model.CustomEmoji
 import social.aloha.core.model.Visibility
 
 /** What the composer's controls do; the screen itself decides nothing. */
-internal interface ComposerActions : MediaActions {
+internal interface ComposerActions :
+    MediaActions,
+    ScheduleActions {
     fun onClose()
 
     fun onPost()
@@ -34,6 +37,18 @@ internal interface ComposerActions : MediaActions {
     fun onAuthor(id: String)
 }
 
+/** What the scheduling controls do. */
+internal interface ScheduleActions {
+    /** Opens the day and time picker for when the post goes out. */
+    fun onPickSchedule()
+
+    /** Posts at [at], or at once when null. */
+    fun onSchedule(at: Instant?)
+
+    /** Opens the list of posts waiting on the server for their time. */
+    fun onScheduledPosts()
+}
+
 /** What the attachment controls do. */
 internal interface MediaActions {
     /** Opens the picture and video picker for the post being written. */
@@ -53,6 +68,9 @@ internal interface MediaActions {
 
     /** Attaches the pictures and videos on the clipboard. */
     fun onPaste()
+
+    /** Sets the opening post's poll, which takes the place of its media; null removes it. */
+    fun onPoll(poll: PollUi?)
 
     fun onEditMedia(id: String)
 
