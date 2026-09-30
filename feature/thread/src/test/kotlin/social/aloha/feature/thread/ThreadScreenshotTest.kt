@@ -100,6 +100,10 @@ class ThreadScreenshotTest {
                 StatusListKind.BoostedBy to 5,
                 StatusListKind.Reactions to 2,
             ),
+            people = mapOf(
+                StatusListKind.FavouritedBy to List(4) { null },
+                StatusListKind.BoostedBy to listOf(null, null),
+            ),
             edited = true,
             canReact = true,
         )
