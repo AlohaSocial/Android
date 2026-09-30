@@ -52,6 +52,8 @@ class MainActivity : ComponentActivity() {
             PostQueue.ACTION_OPEN_DRAFT -> intent.getStringExtra(PostQueue.EXTRA_ACCOUNT)?.let { account ->
                 app.openDraft(account, intent.getStringExtra(PostQueue.EXTRA_DRAFT))
             }
+
+            Intent.ACTION_SEND, Intent.ACTION_SEND_MULTIPLE -> SharedContent.from(intent, packageName)?.let(app::share)
         }
     }
 }

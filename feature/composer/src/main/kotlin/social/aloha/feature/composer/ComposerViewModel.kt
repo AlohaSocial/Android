@@ -13,6 +13,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.assisted.Assisted
@@ -411,6 +412,9 @@ internal class ComposerViewModel @AssistedInject constructor(
                 segments[0] = prefilled(status, account)
                 prefill = segments[0].text
             }
+            // what another app shared starts the post: its text, and the media there is room for
+            key.sharedText?.let { text -> segments[0] = TextFieldValue(text, TextRange(text.length)) }
+            onPicked(key.sharedMedia.map { it.toUri() })
         }
         control.update { it.copy(ready = true) }
     }

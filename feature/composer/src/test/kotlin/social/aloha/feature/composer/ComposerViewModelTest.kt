@@ -37,6 +37,7 @@ import mockwebserver3.RecordedRequest
 import okhttp3.OkHttpClient
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -519,5 +520,64 @@ class ComposerViewModelTest {
         assertEquals("As I wrote it", viewModel.segments.single().text)
         assertEquals("m1", state.attachments.first().single().mediaId)
         assertEquals("Old words", state.attachments.first().single().description)
+        assertEquals(emptyList<String>(), posts.deleted)
+        viewModel.await { it.canPost }
+        viewModel.onPost()
+        viewModel.await { it.done }
+        assertEquals("m1", posts.sent.single().second["media_ids[]"])
+        withTimeout(10.seconds) { while (posts.deleted.isEmpty()) delay(10) }
+        assertEquals(listOf("gone"), posts.deleted)
+    }
+
+    @Test
+    fun `a post with nothing in it cannot go, nor a thread with an empty segment`() = runBlocking {
+        val viewModel = open { ComposerKey(it) }
+        assertFalse(viewModel.await { it.ready }.canPost)
+        viewModel.type(0, "One")
+        viewModel.await { it.canPost }
+        viewModel.onSegments()
+        Snapshot.sendApplyNotifications()
+        viewModel.await { !it.canPost }
+        viewModel.type(1, "Two")
+        assertEquals(2, viewModel.await { it.canPost }.remaining.size)
+    }
+
+    @Test
+    fun `what another app shared starts a new post`() = runBlocking {
+        val shared = "Surf report https://surf.example/today"
+        val viewModel = open { ComposerKey(it, sharedText = shared) }
+        viewModel.await { it.ready }
+        assertEquals(shared, viewModel.segments.single().text)
+    }
+
+    @Test
+    fun `a thread cut off half way is kept with what went out, and carries on without posting twice`() = runBlocking {
+        script += listOf(200, 500)
+        val viewModel = open { ComposerKey(it, draftId = "thread") }
+        viewModel.await { it.ready }
+        viewModel.type(0, "One")
+        viewModel.onSegments()
+        viewModel.type(1, "Two")
+        viewModel.await { it.canPost }
+        viewModel.onPost()
+        viewModel.await { it.posted == 1 && !it.posting }
+        val reader = accounts.all().single().id
+        val kept = withTimeout(10.seconds) {
+            outbox.observe(reader).first { list -> list.any { it.post.postedIds.isNotEmpty() } }
+        }.single().post
+        assertEquals(listOf("s1"), kept.postedIds)
+        val again = open { ComposerKey(it, draftId = "thread") }
+        again.await { it.ready && it.posted == 1 }
+        // the restored text reaches the state on the next frame
+        Snapshot.sendApplyNotifications()
+        again.await { it.canPost }
+        again.onPost()
+        again.await { it.done }
+        // the second segment went twice under its one key; the first never went again
+        val keys = posts.sent.map { it.first }
+        assertEquals(3, keys.size)
+        assertEquals(keys[1], keys[2])
+        assertEquals("One", posts.sent[0].second["status"])
+        assertEquals("Two", posts.sent[2].second["status"])
     }
 }

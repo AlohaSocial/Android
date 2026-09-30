@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -149,6 +150,22 @@ class AppViewModel @Inject constructor(
             accounts.activate(accountId)
             destination.value =
                 accountId to (draftId?.let { ComposerKey(accountId, draftId = it) } ?: DraftsKey(accountId))
+        }
+    }
+
+    /**
+     * Opens the composer on what another app shared, as the active account; one shared before any
+     * account is signed in waits for the sign-in.
+     */
+    fun share(content: SharedContent) {
+        viewModelScope.launch {
+            val account = accounts.activeAccount.filterNotNull().first()
+            destination.value = account.id to ComposerKey(
+                account.id,
+                draftId = UUID.randomUUID().toString(),
+                sharedText = content.text,
+                sharedMedia = content.media.map { it.toString() },
+            )
         }
     }
 
