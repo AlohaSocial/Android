@@ -1,0 +1,14 @@
+{
+  "device": "OnePlus CPH2653, Snapdragon 8 Elite, Android 16 (faster than the Pixel 6a class the budgets name)",
+  "date": "2026-09-30",
+  "build": "genericBenchmarkRelease with the checked-in baseline and startup profiles",
+  "StartupBenchmark.coldStartup": {
+    "timeToInitialDisplayMs": 297.4,
+    "timeToFullDisplayMs": 534.9
+  },
+  "TimelineScrollBenchmark.scrollHome": {
+    "frameOverrunMsP90": -4.9,
+    "frameOverrunMsP99": -1.38,
+    "framesOverBudgetPercent": 0.29
+  }
+}
