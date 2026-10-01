@@ -168,7 +168,7 @@ class ApiClientTest {
 
     @Test
     fun `a server-supplied id that would climb the path is refused before it is sent`() = runTest {
-        listOf("..", "%2e%2E", ".", "x/../../accounts").forEach { id ->
+        listOf("..", "%2e%2E", ".", "x/../../accounts", "..\\accounts\\5").forEach { id ->
             val request = unitRequest(Endpoint("api/v1/statuses/$id/favourite", HttpMethod.POST))
             assertInstanceOf(ApiError.UnsafePath::class.java, client().execute(request).errorOrNull(), id)
         }
