@@ -10,6 +10,8 @@ This is the Apple app's specification, carried over as the product contract for 
 | Colour | The server's theming colour seeds a Material 3 scheme (tonal spot); Android dynamic colour is an opt-in; boost, favourite and bookmark stay fixed (`SemanticContrastTest`). |
 | Themes | Mode × contrast × Black instead of seven named themes; no Dim. |
 | Accessibility | TalkBack semantics, 48 dp targets, 200 % font with non-linear scaling. |
+| Account sheet | Where the iPad sidebar lists them, the sheet behind the account avatar leads to Direct messages, Bookmarks, Favourites, Lists, Hashtags, Filters, Announcements and Settings, and on Nextcloud Social to Archived posts and Interests too. Search is on Home's toolbar; while announcements are unread, Home says how many above its timeline. |
+| App icon | One adaptive icon, the mark from AlohaSocial/Logos on its sand, with a one-colour layer for themed icons; no icon variants. The splash screen shows the same mark on sand, or on the deep sea at night. |
 
 ---
 
@@ -356,7 +358,9 @@ Grouped, searchable (on platforms with settings search).
   Mastodon and Nextcloud Social take; a removed one is sent with `_destroy`
   rather than left out, because the server leaves what it is not told about
   alone. Saving refreshes the local store too, so a new filter takes effect over
-  cached content immediately.
+  cached content immediately. An expiry kept as it is, run out or not, is not
+  sent at all, for the same reason; and a filter that blurs keeps blurring when
+  it is edited, though only such a filter is offered blurring.
 - **Sound & touch** — a tick on a like, a breath of air on a post, a two-note
   chime for a direct message, and a tap in the hand. Device-local, never sent to
   the server. Sound is off until it is turned on; touch follows Reduce Motion.
