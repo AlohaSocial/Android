@@ -101,6 +101,7 @@ import social.aloha.feature.audio.MiniPlayer
 import social.aloha.feature.composer.ComposerRoute
 import social.aloha.feature.composer.DraftsRoute
 import social.aloha.feature.composer.ScheduledPostsRoute
+import social.aloha.feature.explore.ExploreRoute
 import social.aloha.feature.mediaviewer.MediaViewerRoute
 import social.aloha.feature.notifications.NotificationsRoute
 import social.aloha.feature.notifications.PolicyRoute
@@ -413,7 +414,11 @@ fun AlohaApp(
                                 onBack = { backStack.remove(it) },
                             )
                         }
-                        entry<SearchKey> { SearchRoute(it, statusNavigation, onBack = { backStack.remove(it) }) }
+                        entry<SearchKey> { key ->
+                            SearchRoute(key, statusNavigation, onBack = { backStack.remove(key) }) {
+                                ExploreRoute(key.readerId, statusNavigation)
+                            }
+                        }
                         entry<SettingsKey>(
                             metadata = ListDetailSceneStrategy.listPane(detailPlaceholder = {
                                 SettingsPlaceholder()

@@ -4,13 +4,19 @@
 package social.aloha.feature.search
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -62,6 +68,7 @@ public fun SearchRoute(
     navigation: StatusNavigation,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
+    explore: @Composable () -> Unit = {},
 ) {
     val viewModel = hiltViewModel<SearchViewModel, SearchViewModel.Factory>(key = key.toString()) { it.create(key) }
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -100,6 +107,7 @@ public fun SearchRoute(
         SearchActions(viewModel::onQuery, viewModel::onSubmit, viewModel::onClearRecent, onBack),
         rowActions,
         modifier,
+        explore = explore,
     )
 }
 
@@ -119,6 +127,7 @@ internal fun SearchScreen(
     rowActions: StatusActions,
     modifier: Modifier = Modifier,
     now: Instant = remember { Instant.now() },
+    explore: @Composable () -> Unit = {},
 ) {
     val title = stringResource(R.string.search_title)
     SearchBar(
@@ -150,34 +159,48 @@ internal fun SearchScreen(
     ) {
         val trouble = state.trouble
         when {
-            state.query.isBlank() -> Recent(state.recent, actions)
+            // nothing typed: the recent searches, and what is going on
+            state.query.isBlank() -> Column {
+                Recent(state.recent, actions)
+                explore()
+            }
+
             state.searched && state.empty -> Message(stringResource(R.string.search_nothing, state.query.trim()))
+
             state.searched -> Results(state, rowActions, now)
+
             trouble != null -> Trouble(trouble)
+
             else -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
         }
     }
 }
 
+/** The recent searches as a row of chips, each searched again on a tap; nothing when there are none. */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun Recent(recent: List<String>, actions: SearchActions) {
-    if (recent.isEmpty()) return Message(stringResource(R.string.search_start))
-    LazyColumn(Modifier.fillMaxSize()) {
-        item(key = "recent") {
-            ListItem(
-                headlineContent = {
-                    Text(stringResource(R.string.search_recent), Modifier.semantics { heading() })
-                },
-                trailingContent = {
-                    TextButton(onClick = actions.onClearRecent) { Text(stringResource(R.string.search_recent_clear)) }
-                },
-            )
-        }
-        items(recent, key = { "q:$it" }) { query ->
-            ListItem(
-                leadingContent = { Icon(AlohaIcons.Recent, contentDescription = null) },
-                headlineContent = { Text(query) },
-                modifier = Modifier.clickable { actions.onSubmit(query) },
+    if (recent.isEmpty()) return
+    Row(
+        Modifier.fillMaxWidth().padding(start = AlohaSpacing.m),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            stringResource(R.string.search_recent),
+            style = MaterialTheme.typography.titleSmall,
+            modifier = Modifier.weight(1f).semantics { heading() },
+        )
+        TextButton(onClick = actions.onClearRecent) { Text(stringResource(R.string.search_recent_clear)) }
+    }
+    FlowRow(
+        Modifier.padding(horizontal = AlohaSpacing.m),
+        horizontalArrangement = Arrangement.spacedBy(AlohaSpacing.xs),
+    ) {
+        recent.forEach { query ->
+            AssistChip(
+                onClick = { actions.onSubmit(query) },
+                label = { Text(query, maxLines = 1) },
+                leadingIcon = { Icon(AlohaIcons.Recent, contentDescription = null) },
             )
         }
     }

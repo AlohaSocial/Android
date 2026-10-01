@@ -12,8 +12,6 @@
     <string name="search_back">Back</string>
     <!-- Empties the search field -->
     <string name="search_clear">Clear search</string>
-    <!-- Shown before anything was ever searched for -->
-    <string name="search_start">Search for people, hashtags and posts, or paste the address of a post or profile from any server.</string>
     <!-- Heading over the recent searches -->
     <string name="search_recent">Recent</string>
     <!-- Forgets the recent searches -->
