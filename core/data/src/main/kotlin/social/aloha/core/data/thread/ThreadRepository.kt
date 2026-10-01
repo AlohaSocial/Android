@@ -3,9 +3,11 @@
 
 package social.aloha.core.data.thread
 
+import android.util.LruCache
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import social.aloha.core.data.Answer
 import social.aloha.core.data.ClientFactory
 import social.aloha.core.data.answer
@@ -29,7 +31,8 @@ public data class Conversation(val focused: Status, val ancestors: List<Status>,
 /**
  * A post and the conversation around it. Every post the server sends is stored with the rest, so an
  * action on one shows in the thread and in each timeline alike; what only this screen needs (the
- * card, the reactions, the edit history, who favourited or boosted) is fetched and not kept.
+ * card, the reactions, the edit history) is fetched and not kept. The first few who favourited or
+ * boosted a post are kept in memory, so the post opened again shows them at once.
  */
 @Singleton
 public class ThreadRepository @Inject constructor(
@@ -81,9 +84,31 @@ public class ThreadRepository @Inject constructor(
         limit: Int = Paging.DEFAULT_LIMIT,
     ): Answer<List<Account>> = clients.answer(account, StatusEndpoints.rebloggedBy(statusId, limit))
 
+    /**
+     * The first [limit] who favourited a post, or with [boosts] who boosted it: those last seen, at
+     * once, then the server's answer. Nothing when neither is known.
+     */
+    public fun people(account: SignedInAccount, statusId: String, boosts: Boolean, limit: Int): Flow<List<Account>> =
+        flow {
+            val key = "${account.id} $statusId $boosts"
+            known[key]?.let { emit(it) }
+            val answer = if (boosts) boostedBy(account, statusId, limit) else favouritedBy(account, statusId, limit)
+            (answer as? Answer.Got)?.value?.let { people ->
+                known.put(key, people)
+                emit(people)
+            }
+        }
+
+    // ponytail: in memory only, the last posts opened; a table in cache.db if they should outlive the process
+    private val known = LruCache<String, List<Account>>(KNOWN)
+
     public suspend fun quotes(account: SignedInAccount, statusId: String): Answer<List<Status>> =
         when (val answer = clients.answer(account, StatusExtraEndpoints.quotes(statusId))) {
             is Answer.Got -> answer.also { statuses.saveAll(account.id, it.value) }
             is Answer.Missed -> answer
         }
+
+    private companion object {
+        const val KNOWN = 200
+    }
 }

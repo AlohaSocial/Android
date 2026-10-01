@@ -165,7 +165,7 @@ private fun Footer(state: ThreadUiState, actions: ThreadScreenActions) {
         state.lists.forEach { (kind, count) ->
             // who favourited or boosted shows as the people themselves, still one button with its count
             OutlinedButton(onClick = { actions.onList(kind) }) {
-                state.people[kind]?.takeIf { it.isNotEmpty() }?.let {
+                peopleSlots(state.people[kind], count.takeIf { kind in PEOPLE_KINDS })?.let {
                     StackedAvatars(it, LIST_AVATAR)
                     Spacer(Modifier.width(AlohaSpacing.s))
                 }
@@ -181,6 +181,21 @@ private fun Footer(state: ThreadUiState, actions: ThreadScreenActions) {
 }
 
 private val LIST_AVATAR = 24.dp
+
+/**
+ * The avatars a favourites or boosts button draws, at most a few: while who they are is still on its
+ * way, a circle for each the count names, so the button keeps its width; once known, those the server
+ * named, which on a post opened again is so from the start. None for a count or a list of none.
+ */
+internal fun peopleSlots(known: List<String?>?, count: Int?): List<String?>? {
+    val slots = known?.take(PEOPLE_SHOWN) ?: List(minOf(count ?: 0, PEOPLE_SHOWN)) { null }
+    return slots.takeIf { it.isNotEmpty() }
+}
+
+private const val PEOPLE_SHOWN = 4
+
+/** The lists whose people show as avatars on their button. */
+private val PEOPLE_KINDS = setOf(StatusListKind.FavouritedBy, StatusListKind.BoostedBy)
 
 @Composable
 private fun listLabel(kind: StatusListKind, count: Int?): String = when (kind) {

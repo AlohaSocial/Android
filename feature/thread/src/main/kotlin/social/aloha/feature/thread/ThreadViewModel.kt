@@ -213,20 +213,21 @@ internal class ThreadViewModel @AssistedInject constructor(
                 threads.card(account, shown.id)?.let { card -> control.update { it.copy(card = card) } }
             }
         }
-        // the first few who favourited and boosted it, drawn beside the counts
+        // the first few who favourited and boosted it, drawn beside the counts: those seen last, then the server's
         listOfNotNull(
             StatusListKind.FavouritedBy.takeIf { shown.favouritesCount > 0 },
             StatusListKind.BoostedBy.takeIf { shown.reblogsCount > 0 },
         ).forEach { kind ->
             viewModelScope.launch {
-                val answer = if (kind == StatusListKind.FavouritedBy) {
-                    threads.favouritedBy(account, shown.id, limit = PEOPLE)
-                } else {
-                    threads.boostedBy(account, shown.id, limit = PEOPLE)
-                }
-                (answer as? Answer.Got)?.value?.map { it.avatar }?.let { avatars ->
-                    control.update { it.copy(people = it.people + (kind to avatars)) }
-                }
+                threads.people(account, shown.id, boosts = kind == StatusListKind.BoostedBy, limit = PEOPLE)
+                    .collect { people ->
+                        control.update {
+                            it.copy(
+                                people =
+                                    it.people + (kind to people.map { p -> p.avatar }),
+                            )
+                        }
+                    }
             }
         }
         val capabilities = account.capabilities
