@@ -23,6 +23,7 @@ import social.aloha.core.data.AccountRepository
 import social.aloha.core.data.nextcloud.ConnectResult
 import social.aloha.core.data.nextcloud.ConnectStart
 import social.aloha.core.data.nextcloud.NextcloudConnection
+import social.aloha.core.data.sync.PushSubscriptions
 import social.aloha.core.sync.PushRegistrar
 
 /** Where connecting stands; a phase after a failed attempt says why. */
@@ -34,11 +35,19 @@ internal enum class NextcloudPhase(@param:StringRes val message: Int?) {
     Failed(R.string.settings_nextcloud_failed),
 }
 
-/** [available] is false on a server that is no Nextcloud. */
+/** How a connected account's notifications arrive. */
+internal enum class NextcloudPush(@param:StringRes val message: Int) {
+    Pushed(R.string.settings_nextcloud_push_on),
+    NoDistributor(R.string.settings_nextcloud_push_no_distributor),
+    Polled(R.string.settings_nextcloud_push_polled),
+}
+
+/** [available] is false on a server that is no Nextcloud; [push] says how notifications arrive once connected. */
 internal data class NextcloudUiState(
     val available: Boolean = false,
     val connected: Boolean = false,
     val phase: NextcloudPhase = NextcloudPhase.Idle,
+    val push: NextcloudPush = NextcloudPush.Polled,
 )
 
 @HiltViewModel
@@ -46,6 +55,7 @@ internal class NextcloudViewModel @Inject constructor(
     private val accounts: AccountRepository,
     private val connection: NextcloudConnection,
     private val push: PushRegistrar,
+    subscriptions: PushSubscriptions,
 ) : ViewModel() {
     private val phase = MutableStateFlow(NextcloudPhase.Idle)
 
@@ -58,11 +68,19 @@ internal class NextcloudViewModel @Inject constructor(
     val loginPages: Flow<String> = pages.receiveAsFlow()
 
     val uiState: StateFlow<NextcloudUiState> =
-        combine(accounts.activeAccount, phase, refused) { account, phase, refused ->
+        combine(accounts.activeAccount, phase, refused, subscriptions.active) { account, phase, refused, pushed ->
             NextcloudUiState(
                 available = account != null && account.capabilities.isNextcloudSocial && account.id !in refused,
                 connected = account?.nextcloudConnected == true,
                 phase = phase,
+                push = when {
+                    account?.id in pushed -> NextcloudPush.Pushed
+
+                    push.current() == null -> NextcloudPush.NoDistributor
+
+                    // the Nextcloud has no Web Push to offer, or its activation has not arrived yet
+                    else -> NextcloudPush.Polled
+                },
             )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_MILLIS), NextcloudUiState())
 

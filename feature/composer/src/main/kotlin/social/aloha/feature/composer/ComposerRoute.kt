@@ -4,7 +4,6 @@
 package social.aloha.feature.composer
 
 import android.Manifest
-import android.content.ClipboardManager
 import android.content.Context
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -14,6 +13,7 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.draganddrop.dragAndDropTarget
 import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
@@ -31,6 +31,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draganddrop.toAndroidDragEvent
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -92,7 +93,15 @@ public fun ComposerRoute(
     QueuedEffect(state.queued)
     LaunchedEffect(state.done) { if (state.done) done() }
     FailureSnackbar(state, snackbars, viewModel::onFailureShown)
-    ComposerScreen(state, viewModel.segments, viewModel.spoiler, actions, modifier, snackbars)
+    val drop = rememberMediaDrop(viewModel::onPicked)
+    ComposerScreen(
+        state,
+        viewModel.segments,
+        viewModel.spoiler,
+        actions,
+        modifier.dragAndDropTarget({ carriesMedia(it.toAndroidDragEvent().clipDescription) }, drop),
+        snackbars,
+    )
     ComposerDialogs(state, viewModel, dialogs) { done() }
 }
 
@@ -373,18 +382,6 @@ private fun LibraryDialogs(viewModel: ComposerViewModel, dialogs: Dialogs) {
             onDismiss = { picker = null },
         )
     }
-}
-
-/** The pictures and videos on the clipboard, by the content URIs another app put there. */
-private fun clipboardMedia(context: Context): List<Uri> {
-    val clip = context.getSystemService(ClipboardManager::class.java)?.primaryClip ?: return emptyList()
-    val media = (0 until clip.description.mimeTypeCount).any {
-        val type = clip.description.getMimeType(it)
-        type.startsWith("image/") || type.startsWith("video/")
-    }
-    if (!media) return emptyList()
-    return (0 until clip.itemCount).mapNotNull { clip.getItemAt(it).uri }
-        .filter { isForeignContent(it, context.packageName) }
 }
 
 /** Asked once, after the first short: whether shorts get `#shorts`, which then stays the choice. */

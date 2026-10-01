@@ -63,6 +63,12 @@ public interface StatusNavigation {
 
     /** Album [albumId], called [title]; the reader changes it when it is their [own]. */
     public fun openAlbum(albumId: String, title: String, own: Boolean) {}
+
+    /**
+     * Opens post `statusId`'s thread, else profile `accountId`, in a new window; null where a window of
+     * its own makes no sense, which is anywhere but a wide screen or beside another app.
+     */
+    public val newWindow: ((statusId: String?, accountId: String?) -> Unit)? get() = null
 }
 
 /**
@@ -129,6 +135,7 @@ public abstract class RoutedStatusActions(
             addAll(SHARED)
             if (albums()) add(StatusMenuItem.AddToAlbum)
             if (archive()) add(StatusMenuItem.Archive)
+            if (navigation().newWindow != null) add(StatusMenuItem.OpenInNewWindow)
         }
 
     /** Archives the reader's own post; only offered where [archive] says the server can. */
@@ -179,6 +186,8 @@ public abstract class RoutedStatusActions(
             StatusMenuItem.AddToAlbum -> navigation().addToAlbum(row.statusId)
 
             StatusMenuItem.Archive -> onArchive(row)
+
+            StatusMenuItem.OpenInNewWindow -> navigation().newWindow?.invoke(row.statusId, null)
 
             else -> Unit
         }

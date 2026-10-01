@@ -100,6 +100,7 @@ public enum class StatusMenuItem {
     Pin,
     AddToAlbum,
     Archive,
+    OpenInNewWindow,
 }
 
 /**

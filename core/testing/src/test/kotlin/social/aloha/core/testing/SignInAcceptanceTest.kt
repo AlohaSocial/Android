@@ -102,6 +102,7 @@ class SignInAcceptanceTest(private val configuration: MockServerConfiguration) {
         NextcloudConnection(clients, accounts, database.accountDao(), vault),
         WidgetUpdates(ApplicationProvider.getApplicationContext(), WidgetFeedStore(InMemoryDataStore(emptyMap()))),
         RaisedNotifications(database.raisedDao()),
+        clients,
     )
 
     @After
@@ -174,6 +175,27 @@ class SignInAcceptanceTest(private val configuration: MockServerConfiguration) {
             assertNull(statuses.get(account.id, StatusSamples.post().id))
             assertEquals(AccountSettings(), settings.settings(account.id).first())
         }
+
+    @Test
+    fun `deleting on the server sends the typed handle with the app password, as an OCS request`() = runBlocking {
+        val server = finder.found(mock.origin.toString())
+        val authorize = (coordinator.beginAuthorization(server) as Authorization.Started).url.toHttpUrl()
+        val state = authorize.queryParameter("state") ?: error("state")
+        val account = (
+            coordinator.complete("alohasocial://oauth-callback/?code=mock-code&state=$state") as SignInResult.SignedIn
+            ).account
+        vault.put(VaultKey.AppPassword(account.id), APP_PASSWORD)
+
+        removal.deleteOnServer(account, "@alice")
+
+        val delete = mock.requests.last { it.url.encodedPath.endsWith("/api/v1/account/delete") }
+        assertEquals("POST", delete.method)
+        assertEquals("confirm=%40alice", delete.body?.utf8())
+        assertEquals(APP_PASSWORD, delete.headers["Authorization"])
+        assertEquals("true", delete.headers["OCS-APIRequest"])
+        // deleting does not sign out by itself
+        assertEquals(MockCredentials.ACCESS_TOKEN, accounts.token(account.id)?.value)
+    }
 
     companion object {
         private const val APP_PASSWORD = "Basic YWxpY2U6YXBwLXBhc3N3b3Jk"

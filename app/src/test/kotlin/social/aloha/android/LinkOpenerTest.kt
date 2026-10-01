@@ -163,4 +163,14 @@ class LinkOpenerTest {
         val host = server.url("/").host
         assertEquals(ThreadKey(reader.id, "42"), opener.destination(reader, "https://$host/@bob/42", fromPost = true))
     }
+
+    @Test
+    fun `an address handed over with Open in Aloha is asked after whatever its shape`() = runBlocking {
+        val reader = reader()
+        val address = "https://forum.example/t/aloha/12"
+        assertEquals(ThreadKey(reader.id, "555"), opener.destination(reader, address, handedOver = true))
+        assertEquals(listOf(address), searching.searches)
+        assertNull(opener.destination(reader, "javascript:alert(1)", handedOver = true))
+        assertEquals(1, searching.searches.size)
+    }
 }

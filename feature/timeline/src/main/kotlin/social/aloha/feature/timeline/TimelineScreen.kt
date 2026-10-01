@@ -3,9 +3,11 @@
 
 package social.aloha.feature.timeline
 
+import android.content.res.Configuration
 import androidx.activity.compose.ReportDrawnWhen
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -59,10 +61,18 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -73,7 +83,9 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.paneTitle
 import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
@@ -154,7 +166,7 @@ internal fun TimelineScreen(
             ) {
                 // the app is fully drawn once the reader sees posts, or learns there are none
                 ReportDrawnWhen { state.items.isNotEmpty() || state.loadedOnce }
-                Content(state, actions, rowActions, listState, gridState, onVideo)
+                Content(state, actions, rowActions, listState, gridState, onVideo, onCompose)
                 NewPostsPill(
                     state.pending,
                     state.pendingAvatars,
@@ -177,30 +189,48 @@ private fun Content(
     listState: LazyListState,
     gridState: LazyGridState,
     onVideo: (String) -> Unit,
+    onCompose: (() -> Unit)?,
 ) = when {
     state.items.isNotEmpty() && state.grid == true -> PhotoGrid(state, actions, rowActions, gridState)
     state.items.isNotEmpty() && state.watched != null -> VideoGrid(state, actions, onVideo, gridState)
-    state.items.isNotEmpty() -> Rows(state, actions, rowActions, listState)
+    state.items.isNotEmpty() -> Rows(state, actions, rowActions, listState, onCompose)
     state.loadedOnce -> EmptyState(state.source, TimelineSource.Local in state.sources, state.sparse, actions)
     else -> Skeleton()
 }
 
+/**
+ * The posts, read with the keyboard too: J and K select the next and the previous post, which the
+ * other keys act on (see [TimelineCommand]). With a hardware keyboard the list takes focus at once,
+ * and a key pressed while a post's own button has focus reaches it all the same.
+ */
 @Composable
 private fun Rows(
     state: TimelineUiState,
     actions: TimelineScreenActions,
     rowActions: StatusActions,
     listState: LazyListState,
+    onCompose: (() -> Unit)?,
 ) {
+    var selected by rememberSaveable { mutableStateOf<String?>(null) }
+    val focus = remember { FocusRequester() }
+    val onKey = timelineKeyHandler(state, rowActions, listState, focus, onCompose, selected) { selected = it }
+    val keyboard = LocalConfiguration.current.keyboard == Configuration.KEYBOARD_QWERTY
+    LaunchedEffect(keyboard) { if (keyboard) focus.requestFocus() }
     LazyColumn(
         state = listState,
-        modifier = Modifier.readingColumn().testTag(TIMELINE_LIST),
+        modifier = Modifier
+            .readingColumn()
+            .testTag(TIMELINE_LIST)
+            .focusRequester(focus)
+            .focusable()
+            .onKeyEvent(onKey),
         contentPadding = PaddingValues(bottom = AlohaSpacing.xl),
     ) {
         items(state.items, key = { it.key }, contentType = { it::class }) { item ->
             when (item) {
                 is TimelineItem.Post -> SwipeRow(
                     item.row,
+                    item.key == selected,
                     state.swipeTowardsEnd,
                     state.swipeTowardsStart,
                     onSwipe = { row, action ->
@@ -213,7 +243,15 @@ private fun Rows(
                         }
                     },
                 ) {
-                    StatusCard(item.row, state.now, SensitiveMediaPolicy.Blur, rowActions)
+                    // on the card itself, the one node a screen reader reads of the row
+                    val chosen = item.key == selected
+                    StatusCard(
+                        item.row,
+                        state.now,
+                        SensitiveMediaPolicy.Blur,
+                        rowActions,
+                        Modifier.semantics { this.selected = chosen },
+                    )
                 }
 
                 is TimelineItem.Gap -> GapRow(item, actions)
@@ -235,6 +273,7 @@ private fun Rows(
 @Composable
 private fun SwipeRow(
     row: StatusRowUi,
+    selected: Boolean,
     towardsEnd: SwipeAction,
     towardsStart: SwipeAction,
     onSwipe: (StatusRowUi, SwipeAction) -> Unit,
@@ -266,7 +305,19 @@ private fun SwipeRow(
             scope.launch { swipe.reset() }
         },
     ) {
-        Surface(color = MaterialTheme.colorScheme.background) { content() }
+        // the post the keyboard selected stands out from the rest, by a bar along its start as well as
+        // by its colour
+        val bar = MaterialTheme.colorScheme.primary
+        Surface(
+            color = MaterialTheme.colorScheme.run { if (selected) surfaceContainerHigh else background },
+            modifier = Modifier.drawWithContent {
+                drawContent()
+                if (selected) {
+                    val x = if (layoutDirection == LayoutDirection.Ltr) 0f else size.width - SELECTED_BAR.toPx()
+                    drawRect(bar, Offset(x, 0f), Size(SELECTED_BAR.toPx(), size.height))
+                }
+            },
+        ) { content() }
     }
 }
 
@@ -335,6 +386,7 @@ private fun NewPostsPill(count: Int, avatars: List<String?>, onReveal: () -> Uni
 }
 
 private val PILL_AVATAR = 24.dp
+private val SELECTED_BAR = 3.dp
 
 @Composable
 private fun SourceRow(source: TimelineSource, sources: List<TimelineSource>, onSource: (TimelineSource) -> Unit) {

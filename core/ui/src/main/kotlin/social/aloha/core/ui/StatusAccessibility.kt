@@ -22,6 +22,7 @@ internal fun menuItems(
         add(Triple(StatusMenuItem.CopyLink, AlohaIcons.CopyLink, R.string.status_menu_copy_link))
         add(Triple(StatusMenuItem.OpenInBrowser, AlohaIcons.OpenInBrowser, R.string.status_menu_open_in_browser))
     }
+    add(Triple(StatusMenuItem.OpenInNewWindow, AlohaIcons.NewWindow, R.string.status_menu_new_window))
     add(Triple(StatusMenuItem.Translate, AlohaIcons.Translate, R.string.status_menu_translate))
     val mute = if (row.state.muted) R.string.status_menu_unmute_conversation else R.string.status_menu_mute_conversation
     add(Triple(StatusMenuItem.MuteConversation, AlohaIcons.MuteConversation, mute))

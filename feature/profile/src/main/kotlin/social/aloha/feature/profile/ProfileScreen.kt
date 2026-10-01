@@ -262,6 +262,15 @@ private fun Menu(state: ProfileUiState, actions: ProfileScreenActions, ask: (Ask
                     },
                 )
             }
+            if (actions.windows) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.profile_new_window)) },
+                    onClick = {
+                        open = false
+                        actions.onNewWindow()
+                    },
+                )
+            }
         }
     }
 }

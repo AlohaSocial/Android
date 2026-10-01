@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ SPDX-FileCopyrightText: 2026 Aloha Social contributors
+  ~ SPDX-License-Identifier: MIT
+-->
+<!-- Only the Direct Share target: the shortcuts themselves are published at run time, since the
+     system starts a static one with FLAG_ACTIVITY_CLEAR_TASK, which closes whatever was open -->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Direct Share: an account's shortcut in the share sheet posts what is shared as that account -->
+    <share-target android:targetClass="social.aloha.android.MainActivity">
+        <data android:mimeType="text/plain" />
+        <data android:mimeType="image/*" />
+        <data android:mimeType="video/*" />
+        <category android:name="social.aloha.category.SHARE_TARGET" />
+    </share-target>
+</shortcuts>

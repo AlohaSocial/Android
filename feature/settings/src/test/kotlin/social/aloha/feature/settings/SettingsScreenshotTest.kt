@@ -65,6 +65,32 @@ class SettingsScreenshotTest {
     }
 
     @Test
+    fun deleteRefused() = capture("settings-delete-refused") {
+        DeleteAccountRows(
+            DeleteAccountUiState(
+                mode = DeletionMode.InApp,
+                handle = "@alice@cloud.example",
+                refusal = DeletionRefusal.Server(
+                    "type alice@cloud.example to confirm that this is the account to delete",
+                ),
+            ),
+            {},
+            {},
+            {},
+        )
+    }
+
+    @Test
+    fun deleteOnTheWeb() = capture("settings-delete-web") {
+        DeleteAccountRows(
+            DeleteAccountUiState(mode = DeletionMode.OnTheWeb, webPage = "https://mastodon.social/settings/delete"),
+            {},
+            {},
+            {},
+        )
+    }
+
+    @Test
     @Config(qualifiers = RobolectricDeviceQualifiers.MediumTablet)
     fun aboutWide() = capture("settings-about-wide") { SectionScreen(AboutSection, onBack = {}) }
 }

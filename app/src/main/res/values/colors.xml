@@ -6,6 +6,8 @@
 <resources>
     <!-- the logo's sand, behind the launcher icon and the splash screen -->
     <color name="aloha_sand">#FFFBF4EA</color>
+    <!-- the logo's coral, the glyph of the launcher shortcuts' icons -->
+    <color name="aloha_coral">#FFE8604C</color>
     <!-- behind the splash screen's mark: the sand by day -->
     <color name="splash_background">@color/aloha_sand</color>
 </resources>

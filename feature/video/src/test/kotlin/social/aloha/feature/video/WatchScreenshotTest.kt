@@ -110,8 +110,8 @@ class WatchScreenshotTest {
 
     private val none = WatchScreenActions({}, {}, {}, {}, {}, {})
 
-    @Test
-    fun watch() = capture("watch") {
+    @Composable
+    private fun Watch(tabletop: Boolean) {
         val (video, comment) = rows()
         WatchScreen(
             WatchUiState(
@@ -126,11 +126,19 @@ class WatchScreenshotTest {
             none,
             rowActions,
             SnackbarHostState(),
+            tabletop = tabletop,
         ) {
             // the player draws video frames, which a screenshot has none of
             Box(Modifier.fillMaxWidth().aspectRatio(16f / 9f).background(Color.Black))
         }
     }
+
+    @Test
+    fun watch() = capture("watch") { Watch(tabletop = false) }
+
+    // a foldable half open like a laptop: the video above the fold, the rest scrolling below it
+    @Test
+    fun watchTabletop() = capture("watch-tabletop") { Watch(tabletop = true) }
 
     @Test
     fun continueWatching() = capture("continue-watching", ThemeSettings(mode = ThemeMode.Dark)) {

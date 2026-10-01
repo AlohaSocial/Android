@@ -23,7 +23,7 @@ public sealed interface LinkTarget {
 
 /**
  * Turns an address into what it points at, from its shape alone: the paths Mastodon, Nextcloud Social,
- * Pleroma and Misskey give posts, profiles and hashtags, the fediverse's `web+ap://` scheme and the
+ * Pleroma, Misskey and Pixelfed give posts, profiles and hashtags, the fediverse's `web+ap://` scheme and the
  * app's own `alohasocial://open?url=`. Anything else, and anything that is not http(s), is [LinkTarget.Web],
  * so an ordinary link never leaves the browser's hands and is never sent to a server to look up.
  */
@@ -34,6 +34,12 @@ public object RouteResolver {
     // Mastodon's ids are numbers: a blog's `/@author/some-title` is an article, not a post
     private val number = Regex("[0-9]+")
     private val id = Regex("[A-Za-z0-9]+")
+
+    // Pleroma's and Akkoma's objects are UUIDs
+    private val objectId = Regex("[A-Za-z0-9-]+")
+
+    // Nextcloud Social serves its pages under the app's path unless the admin added the root rewrite
+    private val nextcloudSocial = listOf(listOf("index.php", "apps", "social"), listOf("apps", "social"))
 
     public fun parse(address: String): LinkTarget {
         val uri = try {
@@ -86,11 +92,13 @@ public object RouteResolver {
     private fun web(uri: URI): LinkTarget {
         val host = uri.host?.lowercase() ?: return LinkTarget.Web
         val url = uri.toString()
-        val path = uri.path.orEmpty().split('/').filter { it.isNotEmpty() }
-        return post(url, host, path) ?: named(url, host, path) ?: LinkTarget.Web
+        val segments = uri.path.orEmpty().split('/').filter { it.isNotEmpty() }
+        val path = nextcloudSocial.firstOrNull { segments.take(it.size) == it }?.let { segments.drop(it.size) }
+            ?: segments
+        return post(url, host, path) ?: byObject(url, host, path) ?: named(url, host, path) ?: LinkTarget.Web
     }
 
-    /** `/@user/123`, `/@user@remote/123`, `/users/user/statuses/123`, `/notice/ID` and `/notes/ID`. */
+    /** `/@user/123`, `/@user@remote/123` and `/users/user/statuses/123`. */
     private fun post(url: String, host: String, path: List<String>): LinkTarget.Post? = when {
         path.size == PAIR && handle.matches(path[0]) && number.matches(path[1]) ->
             // seen through another server, the id is that server's rather than the post's own
@@ -99,10 +107,20 @@ public object RouteResolver {
         path.size == CANONICAL && path[0] == "users" && path[2] == "statuses" && number.matches(path[CANONICAL - 1]) ->
             LinkTarget.Post(url, host, path[CANONICAL - 1])
 
-        path.size == PAIR && path[0] in setOf(
-            "notice",
-            "notes",
-        ) && id.matches(path[1]) -> LinkTarget.Post(url, host, null)
+        else -> null
+    }
+
+    /** `/notice/ID`, `/notes/ID`, `/objects/UUID`, and Pixelfed's `/p/user/123`. */
+    private fun byObject(url: String, host: String, path: List<String>): LinkTarget.Post? = when {
+        // three segments, so a newsletter's `/p/some-title` stays an article
+        path.size == PIXELFED && path[0] == "p" && user.matches(path[1]) && number.matches(path[2]) ->
+            LinkTarget.Post(url, host, path[2])
+
+        path.size != PAIR -> null
+
+        path[0] in setOf("notice", "notes") && id.matches(path[1]) -> LinkTarget.Post(url, host, null)
+
+        path[0] == "objects" && objectId.matches(path[1]) -> LinkTarget.Post(url, host, null)
 
         else -> null
     }
@@ -125,5 +143,6 @@ public object RouteResolver {
 
     /** A path of two segments, and Mastodon's canonical four: `users`, user, `statuses`, id. */
     private const val PAIR = 2
+    private const val PIXELFED = 3
     private const val CANONICAL = 4
 }

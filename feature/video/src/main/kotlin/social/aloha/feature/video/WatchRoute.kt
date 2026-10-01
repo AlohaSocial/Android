@@ -4,6 +4,7 @@
 package social.aloha.feature.video
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -24,9 +25,11 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.movableContentOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
@@ -135,7 +138,8 @@ internal class WatchScreenActions(
 /**
  * The watch page: the video, its title, who posted it with the way to follow them, how often it was
  * watched and liked (dislikes are shown, never given: the server takes none), its description and
- * chapters, then its comments, each an ordinary reply.
+ * chapters, then its comments, each an ordinary reply. On a foldable half open like a laptop the video
+ * keeps the upper half to itself and the rest scrolls below the fold.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -146,10 +150,15 @@ internal fun WatchScreen(
     rowActions: RoutedStatusActions,
     snackbars: SnackbarHostState,
     modifier: Modifier = Modifier,
+    tabletop: Boolean = currentWindowAdaptiveInfoV2().windowPosture.isTabletop,
     player: @Composable () -> Unit,
 ) {
-    val video = state.video
-    val title = video?.let { videoTitle(it) } ?: stringResource(R.string.watch_title)
+    val post = state.video
+    val title = post?.let { videoTitle(it) } ?: stringResource(R.string.watch_title)
+    val split = tabletop && state.sources.isNotEmpty()
+    // moved rather than rebuilt when the fold changes the layout, as far as Compose can move it into the list
+    val current by rememberUpdatedState(player)
+    val video = remember { movableContentOf { current() } }
     Scaffold(
         modifier = modifier.semantics { paneTitle = title },
         topBar = {
@@ -162,36 +171,60 @@ internal fun WatchScreen(
         },
         snackbarHost = { SnackbarHost(snackbars) },
     ) { padding ->
-        LazyColumn(Modifier.padding(padding).fillMaxSize()) {
-            item(key = "player") { if (state.sources.isNotEmpty()) player() }
-            when {
-                video != null -> {
-                    item(key = "about") { About(video, title, state.following, actions) }
-                    if (state.chapters.isNotEmpty()) {
-                        item(key = "chapters") {
-                            Chapters(state.chapters, actions.onChapter)
-                        }
-                    }
-                    item(key = "comments") { CommentsHeading(video, actions.onComment) }
-                    items(state.comments, key = { it.rowId }) { comment ->
-                        StatusCard(comment, now, SensitiveMediaPolicy.Blur, rowActions)
-                        HorizontalDivider()
-                    }
-                }
-
-                state.failed -> item(key = "failed") {
-                    Column(
-                        Modifier.fillMaxWidth().padding(AlohaSpacing.l),
-                        verticalArrangement = Arrangement.spacedBy(AlohaSpacing.s),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                    ) {
-                        Text(stringResource(R.string.watch_failed), style = MaterialTheme.typography.bodyLarge)
-                        Button(onClick = actions.onRetry) { Text(stringResource(R.string.watch_retry)) }
-                    }
-                }
-
-                else -> item(key = "loading") { ListProgress() }
+        if (split) {
+            // ponytail: an even split puts the fold near enough the middle; the hinge's own bounds
+            // (windowPosture.hingeList) if a device's fold sits elsewhere
+            Column(Modifier.padding(padding).fillMaxSize()) {
+                Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) { video() }
+                Details(state, post, title, now, actions, rowActions, Modifier.weight(1f), player = null)
             }
+        } else {
+            Details(state, post, title, now, actions, rowActions, Modifier.padding(padding).fillMaxSize(), video)
+        }
+    }
+}
+
+/** Everything under the video, with the video atop it unless it sits apart ([player] null). */
+@Composable
+private fun Details(
+    state: WatchUiState,
+    video: StatusRowUi?,
+    title: String,
+    now: Instant,
+    actions: WatchScreenActions,
+    rowActions: RoutedStatusActions,
+    modifier: Modifier,
+    player: (@Composable () -> Unit)?,
+) {
+    LazyColumn(modifier) {
+        if (player != null) item(key = "player") { if (state.sources.isNotEmpty()) player() }
+        when {
+            video != null -> {
+                item(key = "about") { About(video, title, state.following, actions) }
+                if (state.chapters.isNotEmpty()) {
+                    item(key = "chapters") {
+                        Chapters(state.chapters, actions.onChapter)
+                    }
+                }
+                item(key = "comments") { CommentsHeading(video, actions.onComment) }
+                items(state.comments, key = { it.rowId }) { comment ->
+                    StatusCard(comment, now, SensitiveMediaPolicy.Blur, rowActions)
+                    HorizontalDivider()
+                }
+            }
+
+            state.failed -> item(key = "failed") {
+                Column(
+                    Modifier.fillMaxWidth().padding(AlohaSpacing.l),
+                    verticalArrangement = Arrangement.spacedBy(AlohaSpacing.s),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Text(stringResource(R.string.watch_failed), style = MaterialTheme.typography.bodyLarge)
+                    Button(onClick = actions.onRetry) { Text(stringResource(R.string.watch_retry)) }
+                }
+            }
+
+            else -> item(key = "loading") { ListProgress() }
         }
     }
 }

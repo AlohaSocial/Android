@@ -46,6 +46,8 @@
     <string name="profile_unmute">Unmute</string>
     <!-- Menu item that blocks the account -->
     <string name="profile_block">Block</string>
+    <!-- Menu item on a wide screen or beside another app: opens the profile in a window of its own -->
+    <string name="profile_new_window">Open in new window</string>
     <!-- Menu item that opens the profile on its own server, in the browser -->
     <string name="profile_open_in_browser">Open in browser</string>
     <!-- Title of the dialog confirming a block; %s is the handle -->

@@ -78,7 +78,37 @@
                 <data android:mimeType="image/*" />
                 <data android:mimeType="video/*" />
             </intent-filter>
+            <!-- Direct Share: each account a target in the share sheet -->
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/shortcuts" />
         </activity>
+
+        <!-- A thread or a profile in a window of its own; started in a new task each time, and gone
+             from Recents once closed -->
+        <activity
+            android:name=".WindowActivity"
+            android:autoRemoveFromRecents="true"
+            android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation"
+            android:exported="false"
+            android:resizeableActivity="true"
+            android:supportsPictureInPicture="true"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- "Open in Aloha" in the share sheet: a browser hands a fediverse page to the app. An https
+             link filter cannot do it: the app has no hosts of its own to declare, and a filter without
+             one would make it a browser. -->
+        <activity-alias
+            android:name=".OpenInAloha"
+            android:exported="true"
+            android:label="@string/open_in_aloha"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+        </activity-alias>
 
         <!-- The OAuth callback: exported so the browser can deliver it, draws nothing, finishes at once. -->
         <activity

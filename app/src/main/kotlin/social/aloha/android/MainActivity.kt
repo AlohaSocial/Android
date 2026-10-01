@@ -7,6 +7,10 @@ import android.content.Intent
 import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
+import android.view.KeyEvent
+import android.view.KeyboardShortcutGroup
+import android.view.KeyboardShortcutInfo
+import android.view.Menu
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -23,15 +27,13 @@ import dagger.hilt.android.AndroidEntryPoint
 import java.util.UUID
 import javax.inject.Inject
 import social.aloha.core.designsystem.AlohaTheme
-import social.aloha.core.navigation.AppIntents
-import social.aloha.core.sync.PostQueue
 import social.aloha.core.sync.SyncEngine
 import social.aloha.feature.video.PictureInPicturePlayer
 import social.aloha.feature.video.VideoPlayback
 import social.aloha.feature.video.pictureInPictureParams
 
 @AndroidEntryPoint
-class MainActivity : ComponentActivity() {
+open class MainActivity : ComponentActivity() {
     private val app: AppViewModel by viewModels()
 
     @Inject lateinit var sync: SyncEngine
@@ -59,13 +61,16 @@ class MainActivity : ComponentActivity() {
 
     override fun onStart() {
         super.onStart()
+        started++
         sync.setForeground(true)
     }
 
     override fun onStop() {
         super.onStop()
-        // turned or resized, the app stays in front and its polls keep going
-        if (!isChangingConfigurations) sync.setForeground(false)
+        started--
+        // turned or resized, the app stays in front and its polls keep going, as they do while another
+        // of its windows is still in sight
+        if (started == 0 && !isChangingConfigurations) sync.setForeground(false)
     }
 
     override fun onPictureInPictureModeChanged(isInPictureInPictureMode: Boolean, newConfig: Configuration) {
@@ -86,6 +91,22 @@ class MainActivity : ComponentActivity() {
         sync.noteInteraction()
     }
 
+    /** What the system's keyboard shortcuts helper lists, for Meta+/ and the timeline's "?". */
+    override fun onProvideKeyboardShortcuts(data: MutableList<KeyboardShortcutGroup>, menu: Menu?, deviceId: Int) {
+        super.onProvideKeyboardShortcuts(data, menu, deviceId)
+        val keys = listOf(
+            R.string.keys_next to KeyEvent.KEYCODE_J,
+            R.string.keys_previous to KeyEvent.KEYCODE_K,
+            R.string.keys_open to KeyEvent.KEYCODE_O,
+            R.string.keys_favourite to KeyEvent.KEYCODE_F,
+            R.string.keys_favourite to KeyEvent.KEYCODE_L,
+            R.string.keys_boost to KeyEvent.KEYCODE_B,
+            R.string.keys_reply to KeyEvent.KEYCODE_R,
+            R.string.keys_compose to KeyEvent.KEYCODE_N,
+        ).map { (label, key) -> KeyboardShortcutInfo(getString(label), key, 0) }
+        data += KeyboardShortcutGroup(getString(R.string.keys_timeline), keys)
+    }
+
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         deliver(intent)
@@ -96,26 +117,19 @@ class MainActivity : ComponentActivity() {
      * the app, never trusted as given.
      */
     private fun deliver(intent: Intent) {
-        when (intent.action) {
-            Intent.ACTION_VIEW -> intent.dataString?.let(app::openExternal)
-
-            PostQueue.ACTION_OPEN_DRAFT -> intent.getStringExtra(PostQueue.EXTRA_ACCOUNT)?.let { account ->
-                app.openDraft(account, intent.getStringExtra(PostQueue.EXTRA_DRAFT))
-            }
-
-            Intent.ACTION_SEND, Intent.ACTION_SEND_MULTIPLE -> SharedContent.from(intent, packageName)?.let(app::share)
-
-            AppIntents.ACTION_OPEN -> intent.getStringExtra(AppIntents.EXTRA_ACCOUNT)?.let { account ->
-                app.openNotification(
-                    account,
-                    intent.getStringExtra(AppIntents.EXTRA_STATUS),
-                    intent.getStringExtra(AppIntents.EXTRA_PROFILE),
-                )
-            }
-
-            AppIntents.ACTION_COMPOSE -> intent.getStringExtra(AppIntents.EXTRA_ACCOUNT)?.let {
-                app.openDraft(it, draftId = UUID.randomUUID().toString())
-            }
+        when (val request = OutsideRequest.of(intent, packageName)) {
+            is OutsideRequest.Link -> app.openExternal(request.address, request.handedOver)
+            is OutsideRequest.Share -> app.share(request.content, request.accountId)
+            is OutsideRequest.Draft -> app.openDraft(request.accountId, request.draftId)
+            is OutsideRequest.Open -> app.openNotification(request.accountId, request.statusId, request.profileId)
+            is OutsideRequest.Compose -> app.openDraft(request.accountId, draftId = UUID.randomUUID().toString())
+            is OutsideRequest.Search -> app.openSearch(request.accountId)
+            null -> Unit
         }
+    }
+
+    private companion object {
+        /** The app's windows in sight; only the main thread counts them. */
+        var started = 0
     }
 }

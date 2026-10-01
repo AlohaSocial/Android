@@ -38,4 +38,38 @@
     <string name="settings_nextcloud_timed_out">The approval did not arrive in time. Try again.</string>
     <!-- Shown when the Nextcloud answered in a way the app could not use -->
     <string name="settings_nextcloud_failed">Your Nextcloud did not connect. Try again, or check that it is set up for this address.</string>
+    <!-- Once connected: notifications arrive by push, through the Nextcloud -->
+    <string name="settings_nextcloud_push_on">Notifications arrive by push through your Nextcloud.</string>
+    <!-- Once connected, without a push app (a UnifiedPush distributor such as ntfy) chosen -->
+    <string name="settings_nextcloud_push_no_distributor">Notifications are checked every few minutes. Choose a push app under Notifications to get them at once.</string>
+    <!-- Once connected, when the Nextcloud does not push (or has not confirmed yet) -->
+    <string name="settings_nextcloud_push_polled">Notifications are checked every few minutes: your Nextcloud does not push them yet.</string>
+    <!-- Settings section that deletes the account in use, for good -->
+    <string name="settings_delete">Delete account</string>
+    <!-- What deleting does, on Nextcloud Social; %s is the handle, like @alice@example.social -->
+    <string name="settings_delete_about">Deleting %s removes its posts and follows on every server that knew it. It cannot be undone. Your Nextcloud account stays.</string>
+    <!-- Button that opens the confirmation to delete the account -->
+    <string name="settings_delete_start">Delete this account…</string>
+    <!-- On Nextcloud Social without the Nextcloud connected -->
+    <string name="settings_delete_needs_nextcloud">To delete this account from here, connect your Nextcloud above first.</string>
+    <!-- On any server other than Nextcloud Social -->
+    <string name="settings_delete_on_web">Your server deletes accounts on its website, after you sign in there.</string>
+    <!-- Button that opens the server's page for deleting the account -->
+    <string name="settings_delete_open_web">Delete on the website</string>
+    <!-- Title of the confirmation dialog -->
+    <string name="settings_delete_title">Delete this account for good?</string>
+    <!-- Body of the confirmation dialog; %s is the handle to type -->
+    <string name="settings_delete_body">Type %s to confirm. Its posts and follows go, here and on every server that knew it.</string>
+    <!-- Label of the field the handle is typed into -->
+    <string name="settings_delete_field">Handle</string>
+    <!-- Button that deletes the account, enabled once the handle matches -->
+    <string name="settings_delete_confirm">Delete</string>
+    <!-- Button that closes the dialog without deleting -->
+    <string name="settings_delete_cancel">Cancel</string>
+    <!-- Said while the server deletes the account -->
+    <string name="settings_delete_deleting">Deleting…</string>
+    <!-- The server limits how often deletion can be tried -->
+    <string name="settings_delete_too_often">Too many tries. Try again in an hour.</string>
+    <!-- Deletion failed for any other reason -->
+    <string name="settings_delete_failed">The account was not deleted. Nothing changed; try again later.</string>
 </resources>
