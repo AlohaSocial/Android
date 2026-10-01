@@ -29,6 +29,7 @@ import social.aloha.core.designsystem.ContrastPreference
 import social.aloha.core.designsystem.ThemeMode
 import social.aloha.core.designsystem.ThemeSettings
 import social.aloha.core.html.RichTextCache
+import social.aloha.core.model.Card
 import social.aloha.core.model.SensitiveMediaPolicy
 import social.aloha.core.model.Status
 import social.aloha.core.testing.StatusSamples
@@ -104,6 +105,19 @@ class StatusCardScreenshotTest {
 
     @Test
     fun everyday() = capture("status-everyday") { Rows(everyday) }
+
+    @Test
+    fun videoCard() = capture("status-video-card") {
+        val card = Card(
+            url = "https://www.youtube.com/watch?v=abc",
+            title = "Diving the outer reef",
+            description = "Twenty minutes along the wall at dawn",
+            type = "video",
+            providerName = "YouTube",
+            image = "https://cloud.example/cache/preview_cards/abc.jpg",
+        )
+        Rows(listOf(StatusSamples.post("<p>Worth the early start</p>").copy(card = card)))
+    }
 
     @Test
     fun everydayDark() = capture("status-everyday-dark", ThemeSettings(mode = ThemeMode.Dark)) { Rows(everyday) }

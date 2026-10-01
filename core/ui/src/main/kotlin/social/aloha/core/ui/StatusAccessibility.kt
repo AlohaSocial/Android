@@ -5,6 +5,7 @@ package social.aloha.core.ui
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CustomAccessibilityAction
@@ -165,8 +166,10 @@ private fun attachedActions(row: StatusRowUi, actions: StatusActions): List<Cust
     },
     row.card?.url?.let { url ->
         val title = row.card.title.ifBlank { url }
-        CustomAccessibilityAction(stringResource(R.string.status_action_open_card, title)) {
-            true.also { actions.onLink(RichLinkTarget.Web(url)) }
+        val label = if (row.card.playable) R.string.status_action_play_card else R.string.status_action_open_card
+        val context = LocalContext.current
+        CustomAccessibilityAction(stringResource(label, title)) {
+            true.also { openCard(context, row.card, actions) }
         }
     },
 )

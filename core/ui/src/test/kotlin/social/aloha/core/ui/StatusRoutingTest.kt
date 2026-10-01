@@ -3,14 +3,19 @@
 
 package social.aloha.core.ui
 
+import android.app.Application
 import android.content.Context
+import android.content.Intent
 import androidx.compose.ui.graphics.Color
 import androidx.test.core.app.ApplicationProvider
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows.shadowOf
 import social.aloha.core.html.RichTextCache
+import social.aloha.core.model.Card
 import social.aloha.core.testing.StatusSamples
 
 @RunWith(RobolectricTestRunner::class)
@@ -28,7 +33,10 @@ class StatusRoutingTest {
 
         override fun openProfile(accountId: String?, acct: String?) = Unit
         override fun openTag(name: String) = Unit
-        override fun openWeb(url: String) = Unit
+        override fun openWeb(url: String) {
+            opened += "web $url"
+        }
+
         override fun openComposer(replyToId: String?) = Unit
         override fun editPost(statusId: String, redraft: Boolean) = Unit
         override fun report(accountId: String, handle: String, statusId: String?) = Unit
@@ -55,5 +63,17 @@ class StatusRoutingTest {
         actions.onMedia(row, 2)
         actions.onOpen(row.statusId)
         assertEquals(listOf("media ${row.statusId} 2", "thread ${row.statusId}"), opened)
+    }
+
+    @Test
+    fun `a video's card goes to an app that plays it, never a browser, and any other card opens as a link`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val video = Card(url = "https://www.youtube.com/watch?v=abc", title = "Reef", type = "video")
+        openCard(context, video, actions)
+        val started = shadowOf(context as Application).nextStartedActivity
+        assertEquals("https://www.youtube.com/watch?v=abc", started.dataString)
+        assertTrue(started.flags and Intent.FLAG_ACTIVITY_REQUIRE_NON_BROWSER != 0)
+        openCard(context, video.copy(type = "link"), actions)
+        assertEquals(listOf("web https://www.youtube.com/watch?v=abc"), opened)
     }
 }

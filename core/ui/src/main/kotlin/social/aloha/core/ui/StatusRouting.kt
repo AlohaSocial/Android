@@ -8,6 +8,7 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
@@ -16,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import androidx.core.content.getSystemService
 import androidx.core.net.toUri
+import social.aloha.core.model.Card
 
 /** Where a post sends the person: its thread, a profile by id or handle, a hashtag, or a reply to it. */
 public interface StatusNavigation {
@@ -157,6 +159,32 @@ public fun openInBrowser(context: Context, url: String) {
     } catch (_: ActivityNotFoundException) {
         // no browser on the device: nothing can show the page
     }
+}
+
+/** A link card opens as its link would; a video's goes to an app that plays it, else a Custom Tab. */
+public fun openCard(context: Context, card: Card, actions: StatusActions) {
+    val url = card.url ?: return
+    if (card.playable) openInApp(context, url) else actions.onLink(RichLinkTarget.Web(url))
+}
+
+/**
+ * Hands [url] to an app of its own, such as YouTube's, where one is installed; a browser does not
+ * count. Before Android 11 there is no asking for that, so it opens in a Custom Tab, as it does
+ * where no app claims it.
+ */
+private fun openInApp(context: Context, url: String) {
+    if (!isWeb(url)) return
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        val app = Intent(Intent.ACTION_VIEW, url.toUri())
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REQUIRE_NON_BROWSER)
+        try {
+            context.startActivity(app)
+            return
+        } catch (_: ActivityNotFoundException) {
+            // nothing but browsers: the Custom Tab, below
+        }
+    }
+    openInBrowser(context, url)
 }
 
 private fun isWeb(url: String): Boolean = url.toUri().scheme?.lowercase() in setOf("http", "https")

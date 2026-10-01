@@ -21,6 +21,13 @@ class EntitiesTest {
     }
 
     @Test
+    fun `only a video card with an address plays`() {
+        assertTrue(Card(url = "https://youtu.be/abc", type = "video").playable)
+        assertFalse(Card(url = "https://youtu.be/abc", type = "link").playable)
+        assertFalse(Card(type = "video").playable)
+    }
+
+    @Test
     fun `visibility fails closed`() {
         val v = Visibility.fromWire("local_only")
         assertTrue(v.isUnknown)

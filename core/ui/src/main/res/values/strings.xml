@@ -82,6 +82,8 @@
     <string name="source_federated">Everywhere</string>
     <!-- Screen-reader action that opens a post's link preview; %s is the link's title or address -->
     <string name="status_action_open_card">Open link: %s</string>
+    <!-- Screen reader action on a post's video link card, which plays it in its own app: %s is its title -->
+    <string name="status_action_play_card">Play video: %s</string>
     <!-- Read aloud for a quoted post; %s is the name of its author -->
     <string name="status_quote">Quoted post by %s</string>
     <!-- Read aloud for a place tagged on a post; %s is the place -->
