@@ -13,6 +13,8 @@ import social.aloha.core.data.map
 import social.aloha.core.model.Account
 import social.aloha.core.model.SignedInAccount
 import social.aloha.core.model.Story
+import social.aloha.core.model.StoryReaction
+import social.aloha.core.network.ApiError
 import social.aloha.core.network.endpoints.StoryEndpoints
 
 /**
@@ -39,6 +41,36 @@ public class Stories @Inject constructor(private val clients: ClientFactory, pri
                 .partition { it.account?.id == reader.serverAccountId }
             reels(own + mine, own = true) + reels(theirs, own = false)
         }
+
+    /** Marks [id] seen; the server counts a view once, so a repeat is a no-op. */
+    public suspend fun markSeen(reader: SignedInAccount, id: String): Answer<Unit> =
+        clients.answer(reader, StoryEndpoints.markSeen(id))
+
+    /** Who watched one of the reader's own stories. */
+    public suspend fun viewers(reader: SignedInAccount, id: String): Answer<List<Account>> =
+        clients.answer(reader, StoryEndpoints.viewers(id))
+
+    /** The reactions and replies to one of the reader's own stories, told to them only. */
+    public suspend fun reactions(reader: SignedInAccount, id: String): Answer<List<StoryReaction>> =
+        clients.answer(reader, StoryEndpoints.reactions(id))
+
+    /** An emoji for the poster of [id], and nobody else. */
+    public suspend fun react(reader: SignedInAccount, id: String, reaction: String): Answer<Unit> =
+        clients.answer(reader, StoryEndpoints.react(id, reaction))
+
+    /** A reply to [id], kept beside the story for its poster alone rather than federated as a post. */
+    public suspend fun reply(reader: SignedInAccount, id: String, text: String): Answer<Unit> =
+        clients.answer(reader, StoryEndpoints.comment(id, text))
+
+    /**
+     * Ends one of the reader's own stories early. A server that serves Pixelfed's story routes and not
+     * Mastodon's answers the `DELETE` with a 404, which is not a refusal: Pixelfed's own route is next.
+     */
+    public suspend fun delete(reader: SignedInAccount, id: String): Answer<Unit> {
+        val answer = clients.answer(reader, StoryEndpoints.delete(id))
+        if ((answer as? Answer.Missed)?.error != ApiError.NotFound) return answer
+        return clients.answer(reader, StoryEndpoints.selfExpire(id))
+    }
 
     /** The stories with a known poster, one reel per poster, in the order their first story came. */
     private fun reels(stories: List<Story>, own: Boolean): List<StoryReel> = stories

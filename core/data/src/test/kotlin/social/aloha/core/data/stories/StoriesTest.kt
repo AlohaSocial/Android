@@ -57,4 +57,18 @@ class StoriesTest {
             // one unseen story makes the whole reel new
             assertEquals(listOf(false, true, true), reels.map { it.unseen })
         }
+
+    @Test
+    fun `ending a story early falls back to Pixelfed's route where the server has no DELETE`() = runBlocking {
+        server.enqueue(MockResponse.Builder().code(404).build())
+        server.enqueue(
+            MockResponse.Builder().code(200).body("{}").addHeader("content-type", "application/json").build(),
+        )
+        assertEquals(Answer.Got(Unit), stories.delete(fixture.signIn(server.url("/")), "5"))
+        assertEquals("DELETE /api/v1/stories/5", server.takeRequest().let { "${it.method} ${it.url.encodedPath}" })
+        assertEquals(
+            "POST /api/v1.1/stories/self-expire/5",
+            server.takeRequest().let { "${it.method} ${it.url.encodedPath}" },
+        )
+    }
 }

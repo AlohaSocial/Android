@@ -523,11 +523,8 @@ private fun ModeTimeline(feed: TimelineFeed, navigation: StatusNavigation, accou
         navigationIcon = accountButton,
         header = {
             when (feed.mode) {
-                // until the story player, a poster on the rail opens their profile
-                FeedMode.Photos -> StoriesRail(onOpen = { navigation.openProfile(it, null) })
-
+                FeedMode.Photos -> StoriesRail(onProfile = { navigation.openProfile(it, null) })
                 FeedMode.Video -> ContinueWatching(onOpen = navigation::openVideo)
-
                 else -> Unit
             }
         },

@@ -8,6 +8,8 @@ plugins {
 
 dependencies {
     implementation(project(":core:data"))
+    // a story's clip, drawn without controls
+    implementation(libs.androidx.media3.ui)
     testImplementation(project(":core:testing"))
     testImplementation(project(":core:database"))
     testImplementation(libs.kotlinx.coroutines.test)

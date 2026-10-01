@@ -8,6 +8,7 @@ import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.automirrored.outlined.Reply
 import androidx.compose.material.icons.automirrored.outlined.Rule
+import androidx.compose.material.icons.automirrored.outlined.Send
 import androidx.compose.material.icons.automirrored.outlined.Subject
 import androidx.compose.material.icons.automirrored.outlined.VolumeOff
 import androidx.compose.material.icons.automirrored.outlined.VolumeUp
@@ -182,6 +183,7 @@ public object AlohaIcons {
     public val Check: ImageVector = Icons.Filled.Check
     public val Back: ImageVector = Icons.AutoMirrored.Outlined.ArrowBack
     public val Close: ImageVector = Icons.Outlined.Close
+    public val Send: ImageVector = Icons.AutoMirrored.Outlined.Send
     public val Settings: ImageVector = Icons.Outlined.Settings
     public val About: ImageVector = Icons.Outlined.Info
     public val Nextcloud: ImageVector = Icons.Outlined.Cloud
