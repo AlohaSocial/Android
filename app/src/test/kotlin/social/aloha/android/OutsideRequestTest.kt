@@ -3,6 +3,7 @@
 
 package social.aloha.android
 
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import androidx.core.content.pm.ShortcutManagerCompat
@@ -56,6 +57,19 @@ class OutsideRequestTest {
         assertNull((OutsideRequest.of(send("Aloha"), own) as OutsideRequest.Share).accountId)
         val other = send("Aloha").putExtra(ShortcutManagerCompat.EXTRA_SHORTCUT_ID, "conversation:a1:x")
         assertNull((OutsideRequest.of(other, own) as OutsideRequest.Share).accountId)
+    }
+
+    @Test
+    fun `Open in Aloha hands over the first web address, without the sentence around it`() {
+        val alias = ComponentName(own, OutsideRequest.OPEN_IN_ALOHA)
+        val shared = send("Look (https://mastodon.social/@alice/117355).").setComponent(alias)
+        assertEquals(
+            OutsideRequest.Link("https://mastodon.social/@alice/117355", handedOver = true),
+            OutsideRequest.of(shared, own),
+        )
+        assertNull(OutsideRequest.of(send("no address here").setComponent(alias), own))
+        // the same text through the app's own share target is a new post, not a link
+        assertEquals(OutsideRequest.Share::class, OutsideRequest.of(send("https://x.example/a"), own)!!::class)
     }
 
     @Test

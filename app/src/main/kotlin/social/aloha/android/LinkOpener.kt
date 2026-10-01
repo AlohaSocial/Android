@@ -25,14 +25,24 @@ class LinkOpener @Inject constructor(private val lookup: RemoteLookup) {
      * @param fromPost the link sits in a post's text. A post's own mentions and hashtags are already
      * known as such, so a profile- or hashtag-shaped web link there is some site's page, not the
      * fediverse's, and the browser takes it; only a post-shaped one opens here.
+     * @param handedOver the reader chose "Open in Aloha" for it, so an address of any shape is asked
+     * after as a post: they asked for exactly that.
      */
-    suspend fun destination(reader: SignedInAccount, address: String, fromPost: Boolean = false): NavKey? =
-        when (val target = RouteResolver.parse(address)) {
-            is LinkTarget.Post -> post(reader, target)?.let { ThreadKey(reader.id, it) }
-            is LinkTarget.Profile -> AccountKey(reader.id, acct = target.acct).takeUnless { fromPost }
-            is LinkTarget.Tag -> TagKey(reader.id, target.name).takeUnless { fromPost }
-            LinkTarget.Web -> null
-        }
+    suspend fun destination(
+        reader: SignedInAccount,
+        address: String,
+        fromPost: Boolean = false,
+        handedOver: Boolean = false,
+    ): NavKey? = when (val target = RouteResolver.parse(address)) {
+        is LinkTarget.Post -> post(reader, target)?.let { ThreadKey(reader.id, it) }
+
+        is LinkTarget.Profile -> AccountKey(reader.id, acct = target.acct).takeUnless { fromPost }
+
+        is LinkTarget.Tag -> TagKey(reader.id, target.name).takeUnless { fromPost }
+
+        LinkTarget.Web -> RouteResolver.browsable(address)?.takeIf { handedOver }?.let { lookup.post(reader, it) }
+            ?.let { ThreadKey(reader.id, it) }
+    }
 
     private suspend fun post(reader: SignedInAccount, target: LinkTarget.Post): String? {
         val home = reader.apiBase.toHttpUrlOrNull()?.host?.lowercase()

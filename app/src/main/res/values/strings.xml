@@ -80,4 +80,6 @@
     <string name="shortcut_search">Search</string>
     <!-- Launcher and share-sheet shortcut of one signed-in account; %s is its handle, like @alice@example.social -->
     <string name="shortcut_post_as">Post as %s</string>
+    <!-- In another app's share sheet: opens the shared post in this app instead of writing a new one -->
+    <string name="open_in_aloha">Open in Aloha</string>
 </resources>

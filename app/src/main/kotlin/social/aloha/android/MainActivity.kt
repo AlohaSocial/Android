@@ -95,7 +95,7 @@ class MainActivity : ComponentActivity() {
      */
     private fun deliver(intent: Intent) {
         when (val request = OutsideRequest.of(intent, packageName)) {
-            is OutsideRequest.Link -> app.openExternal(request.address)
+            is OutsideRequest.Link -> app.openExternal(request.address, request.handedOver)
             is OutsideRequest.Share -> app.share(request.content, request.accountId)
             is OutsideRequest.Draft -> app.openDraft(request.accountId, request.draftId)
             is OutsideRequest.Open -> app.openNotification(request.accountId, request.statusId, request.profileId)

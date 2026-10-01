@@ -168,8 +168,21 @@ class AppViewModel @Inject constructor(
             }
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), emptyList())
 
-    fun openExternal(address: String) {
-        external.value = address
+    /**
+     * Opens [address], which another app asked to open. [handedOver]: the reader chose "Open in Aloha"
+     * for it in the share sheet, so a post the server finds opens whatever its address looks like,
+     * else what any link opens.
+     */
+    fun openExternal(address: String, handedOver: Boolean = false) {
+        if (!handedOver) {
+            external.value = address
+            return
+        }
+        viewModelScope.launch {
+            val reader = accounts.activeAccount.filterNotNull().first()
+            val key = runCatching { links.destination(reader, address, handedOver = true) }.getOrNull()
+            if (key != null) destination.value = reader.id to key else external.value = address
+        }
     }
 
     fun externalHandled() {

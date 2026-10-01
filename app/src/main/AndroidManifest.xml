@@ -84,6 +84,21 @@
                 android:resource="@xml/shortcuts" />
         </activity>
 
+        <!-- "Open in Aloha" in the share sheet: a browser hands a fediverse page to the app. An https
+             link filter cannot do it: the app has no hosts of its own to declare, and a filter without
+             one would make it a browser. -->
+        <activity-alias
+            android:name=".OpenInAloha"
+            android:exported="true"
+            android:label="@string/open_in_aloha"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+        </activity-alias>
+
         <!-- The OAuth callback: exported so the browser can deliver it, draws nothing, finishes at once. -->
         <activity
             android:name=".OAuthRedirectActivity"
