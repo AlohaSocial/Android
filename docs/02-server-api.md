@@ -18,6 +18,9 @@ This is the Apple app's specification, carried over as the product contract for 
 | Errors | `ApiError` adds three cases to §6: `UntrustedCertificate` (the chain, for the person to decide), `ForeignCursor` (a `Link` cursor on another origin than the API base, never followed) and `UnsafePath` (a path segment from server data that would resolve as `.` or `..`, never sent). 404 and 410 are both `NotFound`. |
 | Rate limiting | A read answered 429 with a `Retry-After` of five seconds or less (or none) is retried once, after the per-host limiter has waited it out; a write never is. |
 | TLS | System CAs, plus certificates a person trusted for one host, kept in app-private storage and never system-wide. A client certificate is picked from the system KeyChain per host and presented to that host only. |
+| Video routes | `/media/playlist/{nid}` takes the **document** row id, which is the attachment's `id`, not the status's. A federated video's `video.captions` are addresses at its origin, not proxied. |
+| Link cards | `card.image` is the linked page's `og:image` at its own address (`LinkPreviewService`), not a copy on the server. |
+| Stories | Every route the client calls exists with the fields above; the v1.2 routes take `sid`, `self-expire` a numeric id. A story's `media` is the same attachment as a post's, served by the reader's server. A reply (`comment`) is kept beside the story for its poster, not delivered as a direct message. |
 
 ### Finding the API base
 

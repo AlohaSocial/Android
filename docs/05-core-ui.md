@@ -6,7 +6,7 @@ This is the Apple app's specification, carried over as the product contract for 
 
 | Topic | Android |
 |---|---|
-| Navigation | `NavigationSuiteScaffold` with at most five items (Material 3); Profile is reached through the account avatar. |
+| Navigation | `NavigationSuiteScaffold` with at most five items (Material 3); Profile is reached through the account avatar. On a phone, News or Audio, once on, takes the place of the one of Photos, Video or Shorts chosen in Settings; a rail or drawer adds them. Audio's mini player sits between the screens and the navigation. |
 | Colour | The server's theming colour seeds a Material 3 scheme (tonal spot); Android dynamic colour is an opt-in; boost, favourite and bookmark stay fixed (`SemanticContrastTest`). |
 | Themes | Mode × contrast × Black instead of seven named themes; no Dim. |
 | Accessibility | TalkBack semantics, 48 dp targets, 200 % font with non-linear scaling. |

@@ -6,9 +6,19 @@ This is the Apple app's specification, carried over as the product contract for 
 
 | Topic | Android |
 |---|---|
-| Player | Media3 ExoPlayer with `PlayerPool` (at most three players in Shorts) and the same three-rung source ladder. |
-| Captions | Server `video.captions` (WebVTT) through Media3 with the system caption style. |
-| Shorts | Without ffmpeg on the server `meta` is empty, so the deferred reclassification and a client-side first-frame poster are required. |
+| Sourcing | Every mode but Home is filtered on the device, also where the server narrows (`only_media` lets video through, `only_video` every clip that is not a short); the ×3/×5/×8 budget always applies and a page stops once full. A clip the server did not describe counts as video until a player has seen it. |
+| Modes on a phone | The bar holds Home, Photos, Video, Shorts and Notifications. News or Audio, once on, takes the place of the one of Photos, Video or Shorts chosen in Settings; a rail or drawer adds them instead. |
+| Player | Media3 ExoPlayer and the same three-rung source ladder (`LadderPlayback`), falling to the next rung at the position reached. The PeerTube playlist is asked for by the attachment's id, which is the document row the route takes. |
+| Captions | Server `video.captions` (WebVTT) through Media3 with the system caption style, **only those on the reader's own server**: Nextcloud Social hands out a federated video's captions at its origin and proxies none, so those are left out. |
+| Picture-in-picture | From the watch page: entered by the system from Android 12, by the app as the reader leaves before. The window lies over the app, which stays as it was beneath. |
+| Background play | One app-wide player per kind, video and audio, each with a Media3 `MediaSessionService` (lock screen, notification, headphones). Both sessions are exported and play-only: other apps may play, pause, seek and skip, never set what plays. An account switch or sign-out stops both. |
+| Shorts | One player and Media3's `DefaultPreloadManager` (next 3, previous 1; 1 ahead under battery saver or Data Saver) instead of a pool of three; the page being swiped in shows its poster. Each page decides play or pause: in front, revealed if sensitive, not paused by the reader. Without ffmpeg on the server `meta` is empty, so the deferred reclassification is required; the client-side first-frame poster and the *Autoplay video* toggle are not built yet. |
+| Photos | Grid of adaptive 112 dp squares (three on a phone) or feed, remembered per device. Explore uses Pixelfed's trending posts and Mastodon's `/trends/tags` (Pixelfed's hashtag route answers `[]`). |
+| Stories | The rail heads Photos where the server has stories, led by "New story"; with no stories it shows that tile alone, never an empty-state text. The player is a full-screen dialog over the app; next, previous and pause are also screen-reader actions. A reply is kept beside the story for its poster, not sent as a direct message. Posting is the composer's "Share as a story" toggle. Not on profiles yet. |
+| News | No layout of its own: the timeline row already shows the poster's comment above a full-width link card. A tap on the card opens it in the app where the server finds the post or profile, else in a Custom Tab; no reader mode. |
+| Audio | A list with a play button per post; playing one queues the list from it on. The mini player sits above the navigation on every screen. |
+| Media viewer | An overlay over the whole shell, kept through process death; no shared-element transition. Save goes through `DownloadManager` to Pictures, named by the attachment's id, never by the server's file name. |
+| Video link cards | A card the server typed `video`, such as YouTube's, shows a play button; a tap hands the link to an app that plays it (`FLAG_ACTIVITY_REQUIRE_NON_BROWSER`), else a Custom Tab. No WebView, so no in-app playback, and no duration, which Mastodon's card does not carry. |
 
 ---
 
