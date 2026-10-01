@@ -25,6 +25,8 @@ import org.robolectric.annotation.GraphicsMode
 import social.aloha.core.designsystem.AlohaTheme
 import social.aloha.core.designsystem.ThemeMode
 import social.aloha.core.designsystem.ThemeSettings
+import social.aloha.core.model.FeedMode
+import social.aloha.core.model.ModeChoices
 import social.aloha.core.model.SwipeAction
 import social.aloha.core.ui.readingColumn
 
@@ -71,4 +73,27 @@ class TimelineSettingsScreenshotTest {
     @Test
     @Config(qualifiers = RobolectricDeviceQualifiers.MediumTablet)
     fun wide() = capture("timeline-settings-wide")
+
+    @Test
+    fun modes() {
+        compose.enableAccessibilityChecks()
+        compose.setContent {
+            AlohaTheme(ThemeSettings(mode = ThemeMode.Light)) {
+                Surface(color = MaterialTheme.colorScheme.background) {
+                    Box(Modifier.readingColumn().verticalScroll(rememberScrollState())) {
+                        ModesSettingsContent(
+                            ModesSettingsState(
+                                ModeChoices().turned(FeedMode.Audio, on = true, slot = 1),
+                                listOf(FeedMode.News, FeedMode.Audio),
+                            ),
+                            onTurned = { _, _ -> },
+                            onSlot = { _, _ -> },
+                        )
+                    }
+                }
+            }
+        }
+        compose.onRoot().tryPerformAccessibilityChecks()
+        compose.onRoot().captureRoboImage("src/test/screenshots/modes-settings.png")
+    }
 }

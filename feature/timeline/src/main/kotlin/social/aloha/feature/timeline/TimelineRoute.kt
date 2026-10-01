@@ -116,7 +116,7 @@ public fun TimelineRoute(
     }
 }
 
-private fun modeTitle(mode: FeedMode): Int = when (mode) {
+internal fun modeTitle(mode: FeedMode): Int = when (mode) {
     FeedMode.Home -> R.string.timeline_title
     FeedMode.Photos -> R.string.timeline_title_photos
     FeedMode.Video -> R.string.timeline_title_video

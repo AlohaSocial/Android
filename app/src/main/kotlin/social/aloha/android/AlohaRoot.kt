@@ -44,6 +44,7 @@ fun AlohaRoot(viewModel: AppViewModel = hiltViewModel()) {
                 val pending by viewModel.pendingLink.collectAsStateWithLifecycle()
                 val destination by viewModel.pendingDestination.collectAsStateWithLifecycle()
                 val unread by viewModel.unreadNotifications.collectAsStateWithLifecycle()
+                val modes by viewModel.modes.collectAsStateWithLifecycle()
                 AlohaApp(
                     readerId = current.accountId,
                     serverAccountId = current.serverAccountId,
@@ -55,6 +56,7 @@ fun AlohaRoot(viewModel: AppViewModel = hiltViewModel()) {
                     unreadNotifications = unread,
                     resolveLink = viewModel::destination,
                     accountButton = { onProfile, onSettings -> AccountSwitcher(viewModel, onProfile, onSettings) },
+                    modes = modes,
                 )
             }
         }

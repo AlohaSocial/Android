@@ -47,6 +47,7 @@ import social.aloha.core.database.AccountsDatabase
 import social.aloha.core.database.CacheDatabase
 import social.aloha.core.datastore.AccountSettingsStore
 import social.aloha.core.datastore.AppPreferences
+import social.aloha.core.datastore.ModePreferences
 import social.aloha.core.datastore.TokenVault
 import social.aloha.core.html.RichTextCache
 import social.aloha.core.media.ImagePrefetcher
@@ -84,6 +85,7 @@ class TimelineViewModelTest {
     private val statuses = StatusRepository(cache.statusDao(), clock)
     private val settings = AccountSettingsStore(InMemoryDataStore(emptyMap()))
     private val preferences = AppPreferences(InMemoryDataStore(emptyPreferences()))
+    private val modes = ModePreferences(InMemoryDataStore(emptyPreferences()))
     private val signals = TimelineSignals()
     private val timeline = NumberedTimeline().apply { newest = 100 }
     private val server = MockWebServer().apply { dispatcher = timeline }
@@ -119,6 +121,7 @@ class TimelineViewModelTest {
         TimelinePositions(cache.positionDao(), clients),
         settings,
         preferences,
+        modes,
         clock,
         ApplicationProvider.getApplicationContext<Context>().let { ImagePrefetcher(it, ImageLoader(it)) },
         signals,
@@ -268,7 +271,7 @@ class TimelineViewModelTest {
         assertEquals(true, state.grid)
         photos.onGrid(false)
         withTimeout(10.seconds) { photos.uiState.first { it.grid == false } }
-        assertEquals(false, preferences.photosGrid.first())
+        assertEquals(false, modes.photosGrid.first())
         assertEquals(null, await { it.loadedOnce }.grid)
     }
 

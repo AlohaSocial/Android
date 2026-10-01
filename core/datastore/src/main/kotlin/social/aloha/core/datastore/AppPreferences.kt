@@ -47,23 +47,6 @@ public class AppPreferences(private val store: DataStore<Preferences>) {
         store.edit { it[WIFI_ONLY_SYNC] = wifiOnly }
     }
 
-    /**
-     * Whether videos play without sound, as they start until the person turns it on; the choice holds
-     * across sessions and modes. Autoplay means picture: sound is the person's choice.
-     */
-    public val videosMuted: Flow<Boolean> = store.data.map { it[VIDEOS_MUTED] ?: true }
-
-    public suspend fun setVideosMuted(muted: Boolean) {
-        store.edit { it[VIDEOS_MUTED] = muted }
-    }
-
-    /** Whether Photos shows as a grid, as it does until the person picks the feed. */
-    public val photosGrid: Flow<Boolean> = store.data.map { it[PHOTOS_GRID] ?: true }
-
-    public suspend fun setPhotosGrid(grid: Boolean) {
-        store.edit { it[PHOTOS_GRID] = grid }
-    }
-
     /** The daily window in which no notification is raised; none until chosen. */
     public val quietHours: Flow<QuietHours?> = store.data.map { stored ->
         val from = stored[QUIET_FROM]
@@ -141,8 +124,6 @@ public class AppPreferences(private val store: DataStore<Preferences>) {
         val WARN_DESCRIPTION = booleanPreferencesKey("warn_missing_description")
         val TAG_SHORTS = booleanPreferencesKey("tag_shorts")
         val WIFI_ONLY_SYNC = booleanPreferencesKey("wifi_only_sync")
-        val PHOTOS_GRID = booleanPreferencesKey("photos_grid")
-        val VIDEOS_MUTED = booleanPreferencesKey("videos_muted")
         val QUIET_FROM = intPreferencesKey("quiet_from_hour")
         val QUIET_UNTIL = intPreferencesKey("quiet_until_hour")
         val ASKED_NOTIFICATIONS = booleanPreferencesKey("asked_for_notifications")

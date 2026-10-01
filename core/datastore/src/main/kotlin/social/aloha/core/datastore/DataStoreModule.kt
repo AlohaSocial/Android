@@ -5,10 +5,12 @@ package social.aloha.core.datastore
 
 import android.content.Context
 import androidx.datastore.core.CorruptionException
+import androidx.datastore.core.DataStore
 import androidx.datastore.core.DataStoreFactory
 import androidx.datastore.core.Serializer
 import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
+import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStoreFile
 import dagger.Module
 import dagger.Provides
@@ -18,6 +20,7 @@ import dagger.hilt.components.SingletonComponent
 import java.io.File
 import java.io.InputStream
 import java.io.OutputStream
+import javax.inject.Qualifier
 import javax.inject.Singleton
 import kotlinx.coroutines.Dispatchers
 
@@ -48,10 +51,20 @@ internal object DataStoreModule {
         ioDispatcher = Dispatchers.IO,
     )
 
+    // one store for the file, which both kinds of the device's preferences read
     @Provides
     @Singleton
-    fun appPreferences(@ApplicationContext context: Context): AppPreferences =
-        AppPreferences(PreferenceDataStoreFactory.create { context.preferencesDataStoreFile("app") })
+    @AppStore
+    fun appStore(@ApplicationContext context: Context): DataStore<Preferences> =
+        PreferenceDataStoreFactory.create { context.preferencesDataStoreFile("app") }
+
+    @Provides
+    @Singleton
+    fun appPreferences(@AppStore store: DataStore<Preferences>): AppPreferences = AppPreferences(store)
+
+    @Provides
+    @Singleton
+    fun modePreferences(@AppStore store: DataStore<Preferences>): ModePreferences = ModePreferences(store)
 
     // an unreadable file starts over from the defaults rather than failing every screen that reads it
     @Provides
@@ -73,3 +86,8 @@ internal object DataStoreModule {
         ) { File(context.noBackupFilesDir, "widget_feed.json") },
     )
 }
+
+/** The device's preferences file, which [AppPreferences] and [ModePreferences] share. */
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+internal annotation class AppStore

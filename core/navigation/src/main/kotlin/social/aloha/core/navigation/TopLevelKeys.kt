@@ -26,6 +26,12 @@ public data object VideoKey : TopLevelKey
 public data object ShortsKey : TopLevelKey
 
 @Serializable
+public data object NewsKey : TopLevelKey
+
+@Serializable
+public data object AudioKey : TopLevelKey
+
+@Serializable
 public data object NotificationsKey : TopLevelKey
 
 @Serializable

@@ -18,7 +18,9 @@ import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Collections
+import androidx.compose.material.icons.filled.Headphones
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Newspaper
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.PlayArrow
@@ -49,6 +51,7 @@ import androidx.compose.material.icons.outlined.FilterAlt
 import androidx.compose.material.icons.outlined.Flag
 import androidx.compose.material.icons.outlined.FormatQuote
 import androidx.compose.material.icons.outlined.GridView
+import androidx.compose.material.icons.outlined.Headphones
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Inventory2
@@ -57,6 +60,7 @@ import androidx.compose.material.icons.outlined.Link
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Mail
 import androidx.compose.material.icons.outlined.MoreVert
+import androidx.compose.material.icons.outlined.Newspaper
 import androidx.compose.material.icons.outlined.NightsStay
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.NotificationsOff
@@ -106,6 +110,10 @@ public object AlohaIcons {
     // stacked portrait cards, as on Apple; Slideshow looks the same filled and outlined
     public val Shorts: ImageVector = Icons.Outlined.AmpStories
     public val ShortsSelected: ImageVector = Icons.Filled.AmpStories
+    public val News: ImageVector = Icons.Outlined.Newspaper
+    public val NewsSelected: ImageVector = Icons.Filled.Newspaper
+    public val Audio: ImageVector = Icons.Outlined.Headphones
+    public val AudioSelected: ImageVector = Icons.Filled.Headphones
     public val Notifications: ImageVector = Icons.Outlined.Notifications
     public val NotificationsSelected: ImageVector = Icons.Filled.Notifications
     public val Profile: ImageVector = Icons.Outlined.AccountCircle

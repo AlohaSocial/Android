@@ -44,6 +44,7 @@ import social.aloha.core.data.video.WatchPositions
 import social.aloha.core.datastore.AccountSettings
 import social.aloha.core.datastore.AccountSettingsStore
 import social.aloha.core.datastore.AppPreferences
+import social.aloha.core.datastore.ModePreferences
 import social.aloha.core.media.ImagePrefetcher
 import social.aloha.core.model.FeedMode
 import social.aloha.core.model.SignedInAccount
@@ -73,7 +74,8 @@ internal class TimelineViewModel @AssistedInject constructor(
     private val interactions: StatusInteractions,
     private val positions: TimelinePositions,
     private val settings: AccountSettingsStore,
-    private val preferences: AppPreferences,
+    preferences: AppPreferences,
+    private val modes: ModePreferences,
     private val clock: Clock,
     private val prefetcher: ImagePrefetcher,
     private val signals: TimelineSignals,
@@ -176,7 +178,7 @@ internal class TimelineViewModel @AssistedInject constructor(
     }
 
     /** Grid or feed, for Photos only: every other timeline is a list. */
-    private val grid: Flow<Boolean?> = if (feed.mode == FeedMode.Photos) preferences.photosGrid else flowOf(null)
+    private val grid: Flow<Boolean?> = if (feed.mode == FeedMode.Photos) modes.photosGrid else flowOf(null)
 
     val uiState: StateFlow<TimelineUiState> = combine(
         items,
@@ -298,7 +300,7 @@ internal class TimelineViewModel @AssistedInject constructor(
     override fun onShowReplies(show: Boolean) = updateSettings { it.copy(showReplies = show) }
 
     override fun onGrid(grid: Boolean) {
-        viewModelScope.launch { preferences.setPhotosGrid(grid) }
+        viewModelScope.launch { modes.setPhotosGrid(grid) }
     }
 
     private fun updateSettings(change: (AccountSettings) -> AccountSettings) {

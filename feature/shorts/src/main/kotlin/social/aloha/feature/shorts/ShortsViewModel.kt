@@ -31,7 +31,7 @@ import social.aloha.core.data.timeline.TimelineRepository
 import social.aloha.core.data.timeline.TimelineRow
 import social.aloha.core.data.timeline.Toggle
 import social.aloha.core.datastore.AccountSettingsStore
-import social.aloha.core.datastore.AppPreferences
+import social.aloha.core.datastore.ModePreferences
 import social.aloha.core.html.RichTextCache
 import social.aloha.core.model.AttachmentKind
 import social.aloha.core.model.FeedMode
@@ -71,7 +71,7 @@ internal class ShortsViewModel @Inject constructor(
     accounts: AccountRepository,
     timelines: TimelineRepository,
     private val settings: AccountSettingsStore,
-    private val preferences: AppPreferences,
+    private val preferences: ModePreferences,
     private val interactions: StatusInteractions,
     private val cache: RichTextCache,
     clock: Clock,

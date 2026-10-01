@@ -36,6 +36,7 @@ dependencies {
     implementation(project(":core:navigation"))
     implementation(project(":core:platform"))
     implementation(project(":core:data"))
+    implementation(project(":core:datastore"))
     implementation(project(":core:network"))
     implementation(project(":core:media"))
     implementation(project(":feature:composer"))

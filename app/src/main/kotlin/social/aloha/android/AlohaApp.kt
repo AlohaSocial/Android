@@ -60,15 +60,18 @@ import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.designsystem.AlohaTheme
 import social.aloha.core.designsystem.badgeCount
 import social.aloha.core.model.FeedMode
+import social.aloha.core.model.ModeChoices
 import social.aloha.core.navigation.AccountKey
 import social.aloha.core.navigation.AddToAlbumKey
 import social.aloha.core.navigation.AlbumKey
 import social.aloha.core.navigation.AlbumsKey
+import social.aloha.core.navigation.AudioKey
 import social.aloha.core.navigation.ComposerKey
 import social.aloha.core.navigation.DraftsKey
 import social.aloha.core.navigation.EditProfileKey
 import social.aloha.core.navigation.HomeKey
 import social.aloha.core.navigation.MediaViewerKey
+import social.aloha.core.navigation.NewsKey
 import social.aloha.core.navigation.NotificationPolicyKey
 import social.aloha.core.navigation.NotificationRequestsKey
 import social.aloha.core.navigation.NotificationsKey
@@ -129,22 +132,59 @@ private data class TopLevelDestination(
     val selectedIcon: ImageVector,
 )
 
+/** The modes the navigation shows: on a rail or drawer, and in a phone's bar of three. */
+data class ModeNavigation(val wide: List<FeedMode> = ModeChoices.PHONE, val phone: List<FeedMode> = ModeChoices.PHONE)
+
 /**
- * The navigation suite's items: five, the most a Material 3 navigation bar
- * holds. Profile belongs to the account avatar in the top app bar, not to the
- * bar.
+ * The navigation suite's items: Home, the modes, Notifications. A phone's bar holds five, the most a
+ * Material 3 navigation bar takes, so it shows the modes chosen for its three slots; a rail or drawer
+ * shows all. Profile belongs to the account avatar in the top app bar, not to the bar.
  */
-private val destinations = listOf(
-    TopLevelDestination(HomeKey, R.string.destination_home, AlohaIcons.Home, AlohaIcons.HomeSelected),
-    TopLevelDestination(PhotosKey, R.string.destination_photos, AlohaIcons.Photos, AlohaIcons.PhotosSelected),
-    TopLevelDestination(VideoKey, R.string.destination_video, AlohaIcons.Video, AlohaIcons.VideoSelected),
-    TopLevelDestination(ShortsKey, R.string.destination_shorts, AlohaIcons.Shorts, AlohaIcons.ShortsSelected),
-    TopLevelDestination(
-        NotificationsKey,
-        R.string.destination_notifications,
-        AlohaIcons.Notifications,
-        AlohaIcons.NotificationsSelected,
-    ),
+private fun destinationsFor(type: NavigationSuiteType, modes: ModeNavigation): List<TopLevelDestination> {
+    val bar = type == NavigationSuiteType.NavigationBar || type == NavigationSuiteType.ShortNavigationBarCompact
+    return listOf(HOME) + (if (bar) modes.phone else modes.wide).map(::destinationOf) + NOTIFICATIONS
+}
+
+private fun destinationOf(mode: FeedMode): TopLevelDestination = when (mode) {
+    FeedMode.Home -> HOME
+
+    FeedMode.Photos -> TopLevelDestination(
+        PhotosKey,
+        R.string.destination_photos,
+        AlohaIcons.Photos,
+        AlohaIcons.PhotosSelected,
+    )
+
+    FeedMode.Video -> TopLevelDestination(
+        VideoKey,
+        R.string.destination_video,
+        AlohaIcons.Video,
+        AlohaIcons.VideoSelected,
+    )
+
+    FeedMode.Shorts -> TopLevelDestination(
+        ShortsKey,
+        R.string.destination_shorts,
+        AlohaIcons.Shorts,
+        AlohaIcons.ShortsSelected,
+    )
+
+    FeedMode.News -> TopLevelDestination(NewsKey, R.string.destination_news, AlohaIcons.News, AlohaIcons.NewsSelected)
+
+    FeedMode.Audio -> TopLevelDestination(
+        AudioKey,
+        R.string.destination_audio,
+        AlohaIcons.Audio,
+        AlohaIcons.AudioSelected,
+    )
+}
+
+private val HOME = TopLevelDestination(HomeKey, R.string.destination_home, AlohaIcons.Home, AlohaIcons.HomeSelected)
+private val NOTIFICATIONS = TopLevelDestination(
+    NotificationsKey,
+    R.string.destination_notifications,
+    AlohaIcons.Notifications,
+    AlohaIcons.NotificationsSelected,
 )
 
 /**
@@ -166,6 +206,7 @@ fun AlohaApp(
     unreadNotifications: Int = 0,
     resolveLink: suspend (address: String, fromPost: Boolean) -> NavKey? = { _, _ -> null },
     accountButton: @Composable (onProfile: () -> Unit, onSettings: () -> Unit) -> Unit = { _, _ -> },
+    modes: ModeNavigation = ModeNavigation(),
     timeline: @Composable (TimelineFeed, StatusNavigation, accountButton: @Composable () -> Unit) -> Unit =
         { feed, navigation, button -> ModeTimeline(feed, navigation, button) },
 ) {
@@ -286,7 +327,7 @@ fun AlohaApp(
         NavigationSuiteScaffold(
             layoutType = suiteType,
             navigationSuiteItems = {
-                destinations.forEach { destination ->
+                destinationsFor(suiteType, modes).forEach { destination ->
                     val selected = destination.key == current
                     item(
                         selected = selected,
@@ -332,6 +373,8 @@ fun AlohaApp(
                     entry<PhotosKey>(metadata = listPane) { modeEntry(TimelineFeed.Mode(FeedMode.Photos)) }
                     entry<VideoKey>(metadata = listPane) { modeEntry(TimelineFeed.Mode(FeedMode.Video)) }
                     entry<ShortsKey>(metadata = listPane) { modeEntry(TimelineFeed.Mode(FeedMode.Shorts)) }
+                    entry<NewsKey>(metadata = listPane) { modeEntry(TimelineFeed.Mode(FeedMode.News)) }
+                    entry<AudioKey>(metadata = listPane) { modeEntry(TimelineFeed.Mode(FeedMode.Audio)) }
                     entry<NotificationsKey>(
                         metadata = ListDetailSceneStrategy.listPane(detailPlaceholder = { NothingOpen() }),
                     ) {
