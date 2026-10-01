@@ -16,6 +16,8 @@
     <string name="accounts_filters">Filters</string>
     <!-- In the account sheet: opens what the reader's server announces to everyone on it -->
     <string name="accounts_announcements">Announcements</string>
+    <!-- In the account sheet: opens the hashtags the reader's Nextcloud Social server learnt they care about -->
+    <string name="accounts_interests">Interests</string>
     <!-- In the account sheet: opens the reader's lists -->
     <string name="accounts_lists">Lists</string>
     <!-- In the account sheet: opens the hashtags the reader follows and their tag groups -->

@@ -76,6 +76,7 @@ import social.aloha.core.navigation.FilterEditKey
 import social.aloha.core.navigation.FiltersKey
 import social.aloha.core.navigation.HashtagsKey
 import social.aloha.core.navigation.HomeKey
+import social.aloha.core.navigation.InterestsKey
 import social.aloha.core.navigation.ListKey
 import social.aloha.core.navigation.ListMembersKey
 import social.aloha.core.navigation.ListsKey
@@ -139,6 +140,7 @@ import social.aloha.feature.safety.AnnouncementsBanner
 import social.aloha.feature.safety.AnnouncementsRoute
 import social.aloha.feature.safety.FilterEditRoute
 import social.aloha.feature.safety.FiltersRoute
+import social.aloha.feature.safety.InterestsRoute
 import social.aloha.feature.saved.SavedPostsRoute
 import social.aloha.feature.search.SearchRoute
 import social.aloha.feature.settings.SettingsPlaceholder
@@ -475,6 +477,7 @@ fun AlohaApp(
                                 onBack = { backStack.remove(key) },
                             )
                         }
+                        entry<InterestsKey> { key -> InterestsRoute(key, onBack = { backStack.remove(key) }) }
                         entry<AnnouncementsKey> { key ->
                             AnnouncementsRoute(
                                 key,
@@ -693,10 +696,10 @@ private fun AlohaAppPreview() {
     }
 }
 
-/** Where Home's toolbar leads beyond its timeline: search. */
+/** Where Home leads beyond its timeline: search, from its toolbar, and the server's announcements. */
 data class HomeLinks(val onSearch: () -> Unit = {}, val onAnnouncements: () -> Unit = {})
 
-/** Where the account button's sheet leads: the reader's profile, settings, lists and hashtags. */
+/** Where the account button's sheet leads, one [AccountPlace] at a time. */
 data class AccountLinks(val open: (AccountPlace) -> Unit = {})
 
 /** Where the account sheet leads. */
@@ -708,6 +711,7 @@ enum class AccountPlace {
     Archived,
     Lists,
     Hashtags,
+    Interests,
     Filters,
     Announcements,
     Settings,
@@ -721,6 +725,7 @@ private fun AccountPlace.key(readerId: String, serverAccountId: String): NavKey 
     AccountPlace.Archived -> SavedPostsKey(readerId, SavedKind.Archived)
     AccountPlace.Lists -> ListsKey(readerId)
     AccountPlace.Hashtags -> HashtagsKey(readerId)
+    AccountPlace.Interests -> InterestsKey(readerId)
     AccountPlace.Filters -> FiltersKey(readerId)
     AccountPlace.Announcements -> AnnouncementsKey(readerId)
     AccountPlace.Settings -> SettingsKey

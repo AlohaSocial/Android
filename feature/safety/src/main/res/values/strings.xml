@@ -116,4 +116,42 @@
         <item quantity="one">%d new announcement from your server</item>
         <item quantity="other">%d new announcements from your server</item>
     </plurals>
+    <!-- Title of the hashtags the reader's server learnt they care about -->
+    <string name="interests_title">Interests</string>
+    <!-- Shown where the server keeps no interests -->
+    <string name="interests_unavailable">This server doesn’t learn interests.</string>
+    <!-- Shown when the interests could not be loaded -->
+    <string name="interests_failed">Interests couldn’t be loaded.</string>
+    <!-- Shown when a change to the interests was refused -->
+    <string name="interests_change_failed">That didn’t work. Your interests are as they were.</string>
+    <!-- Switch: the server learns what the reader cares about from what they read -->
+    <string name="interests_learning">Learn from what I read</string>
+    <!-- Explains the learning switch -->
+    <string name="interests_learning_summary">Your server notes which hashtags you read, to rank what it suggests. Nothing leaves your server.</string>
+    <!-- Switch: learning stops for now, keeping what was learnt -->
+    <string name="interests_paused">Pause learning</string>
+    <!-- Explains the pause switch -->
+    <string name="interests_paused_summary">Keeps what was learnt, and learns nothing new until you resume.</string>
+    <!-- Heading of the reader's interests -->
+    <string name="interests_yours">Your interests</string>
+    <!-- Shown while the server has too little to go on -->
+    <string name="interests_thin">Still learning: there is little to go on yet.</string>
+    <!-- Heading of hashtags the server is still weighing -->
+    <string name="interests_candidates">Maybe interesting</string>
+    <!-- Adds a hashtag to the reader's interests -->
+    <string name="interests_add">Add</string>
+    <!-- Label of the field where a hashtag to add is typed -->
+    <string name="interests_hashtag">Hashtag to add</string>
+    <!-- Pins an interest so learning never drops it; %1$s is the hashtag -->
+    <string name="interests_pin">Keep #%1$s</string>
+    <!-- Under an interest pinned so learning never drops it -->
+    <string name="interests_kept">Kept</string>
+    <!-- Removes an interest; %1$s is the hashtag -->
+    <string name="interests_remove">Remove #%1$s</string>
+    <!-- Forgets all interests -->
+    <string name="interests_reset">Forget all interests</string>
+    <!-- Title of the dialog asking before all interests are forgotten -->
+    <string name="interests_reset_title">Forget all interests?</string>
+    <!-- Body of the dialog asking before all interests are forgotten -->
+    <string name="interests_reset_body">Everything your server learnt and every hashtag you chose or kept goes. It starts learning again from what you read next.</string>
 </resources>

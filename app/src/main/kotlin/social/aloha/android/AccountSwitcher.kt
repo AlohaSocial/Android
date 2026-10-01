@@ -106,7 +106,7 @@ internal fun AccountSheet(
             }
             items(accounts, key = { it.id }) { account -> AccountLine(account) { onSwitch(account.id) } }
             item { HorizontalDivider(Modifier.padding(vertical = AlohaSpacing.xs)) }
-            items(AccountPlace.entries.filter { it != AccountPlace.Archived || active.archives }) { place ->
+            items(AccountPlace.entries.filter { it !in NEXTCLOUD_ONLY || active.nextcloudSocial }) { place ->
                 val (icon, text) = place.look
                 Action(icon, stringResource(text)) { links.open(place) }
             }
@@ -187,9 +187,13 @@ private val AccountPlace.look: Pair<ImageVector, Int>
         AccountPlace.Lists -> AlohaIcons.Lists to R.string.accounts_lists
         AccountPlace.Hashtags -> AlohaIcons.Hashtag to R.string.accounts_hashtags
         AccountPlace.Filters -> AlohaIcons.Filtered to R.string.accounts_filters
+        AccountPlace.Interests -> AlohaIcons.Explore to R.string.accounts_interests
         AccountPlace.Announcements -> AlohaIcons.News to R.string.accounts_announcements
         AccountPlace.Settings -> AlohaIcons.Settings to R.string.accounts_settings
     }
+
+/** The places only Nextcloud Social keeps. */
+private val NEXTCLOUD_ONLY = setOf(AccountPlace.Archived, AccountPlace.Interests)
 
 private val BUTTON_AVATAR = 32.dp
 private val LINE_AVATAR = 40.dp

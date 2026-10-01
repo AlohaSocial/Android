@@ -18,7 +18,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ListItem
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -222,24 +221,8 @@ private fun LazyListScope.keywords(state: FilterEditUiState, actions: FilterEdit
             },
         )
     }
-    item(key = "add-keyword") { AddKeyword { actions.onAddKeyword(it, wholeWord = true) } }
-}
-
-@Composable
-private fun AddKeyword(onAdd: (String) -> Unit) {
-    var word by rememberSaveable { mutableStateOf("") }
-    Row(Modifier.fillMaxWidth().padding(horizontal = AlohaSpacing.m), verticalAlignment = Alignment.CenterVertically) {
-        OutlinedTextField(
-            value = word,
-            onValueChange = { word = it },
-            label = { Text(stringResource(R.string.filters_keyword)) },
-            singleLine = true,
-            modifier = Modifier.weight(1f),
-        )
-        TextButton(onClick = {
-            onAdd(word)
-            word = ""
-        }, enabled = word.isNotBlank()) { Text(stringResource(R.string.filters_add)) }
+    item(key = "add-keyword") {
+        AddField(R.string.filters_keyword, R.string.filters_add) { actions.onAddKeyword(it, wholeWord = true) }
     }
 }
 
@@ -250,18 +233,6 @@ private fun CheckRow(label: String, checked: Boolean, onChecked: (Boolean) -> Un
         headlineContent = { Text(label) },
         leadingContent = { Checkbox(checked = checked, onCheckedChange = null) },
     )
-}
-
-private fun LazyListScope.heading(text: Int) {
-    item(key = "h:$text") {
-        Text(
-            stringResource(text),
-            style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.fillMaxWidth().padding(horizontal = AlohaSpacing.m, vertical = AlohaSpacing.s)
-                .semantics { heading() },
-        )
-    }
 }
 
 /** How long a filter can apply: as it is where it has an expiry, for good, or for a while from now. */
