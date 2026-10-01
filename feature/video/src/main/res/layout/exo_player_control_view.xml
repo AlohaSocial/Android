@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ SPDX-FileCopyrightText: 2026 Aloha Social contributors
+  ~ SPDX-License-Identifier: MIT
+-->
+<!--
+  The player's controls, in place of Media3's own layout of this name: everything in one bar along the
+  bottom over a gradient, so the picture stays clear above it, instead of play and seeking in the
+  middle over a dimmed video, where a player as short as 16:9 runs them into the time bar. The ids are
+  Media3's, which its controller finds and drives; the speed, subtitle and audio track choices stay
+  behind the settings button. Each button is named by its Media3 style, and play and pause by the
+  controller as it switches, which lint does not follow.
+  A player too small for the bar (Media3's minimal mode) shows only the full-screen button: the videos
+  here are never that small but in a picture-in-picture window, which has the system's own controls.
+--><merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:ignore="ContentDescription"
+    tools:override="true">
+
+    <!-- 0dp, as in Media3's layout: the controller sizes it to the whole player in code -->
+    <View
+        android:id="@id/exo_controls_background"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="@drawable/video_controls_scrim" />
+
+    <FrameLayout
+        android:id="@id/exo_bottom_bar"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/video_bar_height"
+        android:layout_gravity="bottom"
+        android:layout_marginTop="@dimen/video_bar_margin_top"
+        android:layoutDirection="ltr">
+
+        <!--
+          Media3's exo_time is what it measures to decide what moves into the overflow, so it is the
+          whole left group, seeking and play included, not the time alone
+        -->
+        <LinearLayout
+            android:id="@id/exo_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical|start"
+            android:gravity="center_vertical"
+            android:layoutDirection="ltr">
+
+            <Button
+                android:id="@id/exo_rew_with_amount"
+                style="@style/ExoStyledControls.Button.Center.RewWithAmount"
+                android:layout_width="@dimen/video_seek_button"
+                android:layout_height="@dimen/video_seek_button"
+                android:singleLine="false" />
+
+            <ImageButton
+                android:id="@id/exo_play_pause"
+                style="@style/ExoStyledControls.Button.Bottom" />
+
+            <Button
+                android:id="@id/exo_ffwd_with_amount"
+                style="@style/ExoStyledControls.Button.Center.FfwdWithAmount"
+                android:layout_width="@dimen/video_seek_button"
+                android:layout_height="@dimen/video_seek_button"
+                android:singleLine="false" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:importantForAccessibility="noHideDescendants"
+                android:layoutDirection="ltr">
+
+                <TextView
+                    android:id="@id/exo_position"
+                    style="@style/ExoStyledControls.TimeText.Position" />
+
+                <TextView style="@style/ExoStyledControls.TimeText.Separator" />
+
+                <TextView
+                    android:id="@id/exo_duration"
+                    style="@style/ExoStyledControls.TimeText.Duration" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@id/exo_basic_controls"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical|end"
+            android:layoutDirection="ltr">
+
+            <ImageButton
+                android:id="@id/exo_vr"
+                style="@style/ExoStyledControls.Button.Bottom.VR" />
+
+            <ImageButton
+                android:id="@id/exo_shuffle"
+                style="@style/ExoStyledControls.Button.Bottom.Shuffle" />
+
+            <ImageButton
+                android:id="@id/exo_repeat_toggle"
+                style="@style/ExoStyledControls.Button.Bottom.RepeatToggle" />
+
+            <ImageButton
+                android:id="@id/exo_subtitle"
+                style="@style/ExoStyledControls.Button.Bottom.CC" />
+
+            <ImageButton
+                android:id="@id/exo_settings"
+                style="@style/ExoStyledControls.Button.Bottom.Settings" />
+
+            <ImageButton
+                android:id="@id/exo_fullscreen"
+                style="@style/ExoStyledControls.Button.Bottom.FullScreen" />
+
+            <ImageButton
+                android:id="@id/exo_overflow_show"
+                style="@style/ExoStyledControls.Button.Bottom.OverflowShow" />
+
+        </LinearLayout>
+
+        <HorizontalScrollView
+            android:id="@id/exo_extra_controls_scroll_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical|end"
+            android:visibility="invisible">
+
+            <LinearLayout
+                android:id="@id/exo_extra_controls"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layoutDirection="ltr">
+
+                <ImageButton
+                    android:id="@id/exo_overflow_hide"
+                    style="@style/ExoStyledControls.Button.Bottom.OverflowHide" />
+
+            </LinearLayout>
+
+        </HorizontalScrollView>
+
+    </FrameLayout>
+
+    <View
+        android:id="@id/exo_progress_placeholder"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/video_progress_height"
+        android:layout_gravity="bottom"
+        android:layout_marginBottom="@dimen/video_progress_margin_bottom" />
+
+    <LinearLayout
+        android:id="@id/exo_minimal_controls"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_marginBottom="@dimen/video_minimal_margin_bottom"
+        android:gravity="center_vertical"
+        android:layoutDirection="ltr"
+        android:orientation="horizontal">
+
+        <ImageButton
+            android:id="@id/exo_minimal_fullscreen"
+            style="@style/ExoStyledControls.Button.Bottom.FullScreen" />
+
+    </LinearLayout>
+
+    <!--
+      Kept, empty, for the controller's animations, which move it: play and the seek buttons are in the bar
+    -->
+    <LinearLayout
+        android:id="@id/exo_center_controls"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:background="@android:color/transparent"
+        android:layoutDirection="ltr"
+        android:orientation="horizontal" />
+
+    <LinearLayout
+        android:id="@+id/exo_top_controls"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|end"
+        android:background="@android:color/transparent">
+
+        <View
+            android:id="@+id/exo_media_route_button_placeholder"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone" />
+
+    </LinearLayout>
+
+</merge>
