@@ -6,6 +6,7 @@ package social.aloha.feature.composer
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -280,24 +281,26 @@ private fun MediaButtons(state: ComposerUiState, actions: ComposerActions) {
 @Composable
 private fun MoreSourcesMenu(state: ComposerUiState, enabled: Boolean, actions: MediaActions) {
     var open by remember { mutableStateOf(false) }
-    IconButton(onClick = { open = true }, enabled = enabled) {
-        Icon(AlohaIcons.AttachMore, stringResource(R.string.composer_more_sources))
-    }
-    DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
-        val choices = listOfNotNull(
-            stringResource(R.string.composer_paste) to actions::onPaste,
-            (stringResource(R.string.composer_gifs) to actions::onGifs).takeIf { state.gifLibrary },
-            (stringResource(R.string.composer_nextcloud_file) to actions::onNextcloudFile)
-                .takeIf { state.nextcloudFiles },
-        )
-        choices.forEach { (label, action) ->
-            DropdownMenuItem(
-                text = { Text(label) },
-                onClick = {
-                    open = false
-                    action()
-                },
+    Box {
+        IconButton(onClick = { open = true }, enabled = enabled) {
+            Icon(AlohaIcons.AttachMore, stringResource(R.string.composer_more_sources))
+        }
+        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+            val choices = listOfNotNull(
+                stringResource(R.string.composer_paste) to actions::onPaste,
+                (stringResource(R.string.composer_gifs) to actions::onGifs).takeIf { state.gifLibrary },
+                (stringResource(R.string.composer_nextcloud_file) to actions::onNextcloudFile)
+                    .takeIf { state.nextcloudFiles },
             )
+            choices.forEach { (label, action) ->
+                DropdownMenuItem(
+                    text = { Text(label) },
+                    onClick = {
+                        open = false
+                        action()
+                    },
+                )
+            }
         }
     }
 }
@@ -306,24 +309,26 @@ private fun MoreSourcesMenu(state: ComposerUiState, enabled: Boolean, actions: M
 @Composable
 private fun CameraMenu(enabled: Boolean, onCapture: (Capture) -> Unit) {
     var open by remember { mutableStateOf(false) }
-    IconButton(onClick = { open = true }, enabled = enabled) {
-        Icon(AlohaIcons.Camera, stringResource(R.string.composer_camera))
-    }
-    DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
-        val choices = listOf(
-            Capture.Photo to stringResource(R.string.composer_camera_photo),
-            Capture.Video to stringResource(R.string.composer_camera_video),
-        ) + Capture.SHORT_SECONDS.map {
-            Capture.Short(it) to pluralStringResource(R.plurals.composer_camera_short, it, it)
+    Box {
+        IconButton(onClick = { open = true }, enabled = enabled) {
+            Icon(AlohaIcons.Camera, stringResource(R.string.composer_camera))
         }
-        choices.forEach { (capture, label) ->
-            DropdownMenuItem(
-                text = { Text(label) },
-                onClick = {
-                    open = false
-                    onCapture(capture)
-                },
-            )
+        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+            val choices = listOf(
+                Capture.Photo to stringResource(R.string.composer_camera_photo),
+                Capture.Video to stringResource(R.string.composer_camera_video),
+            ) + Capture.SHORT_SECONDS.map {
+                Capture.Short(it) to pluralStringResource(R.plurals.composer_camera_short, it, it)
+            }
+            choices.forEach { (capture, label) ->
+                DropdownMenuItem(
+                    text = { Text(label) },
+                    onClick = {
+                        open = false
+                        onCapture(capture)
+                    },
+                )
+            }
         }
     }
 }
@@ -333,29 +338,31 @@ private fun VisibilityMenu(state: ComposerUiState, onVisibility: (Visibility) ->
     var open by remember { mutableStateOf(false) }
     val current = stringResource(state.visibility.label)
     // who a post reaches is settled once it is out; an edit cannot change it
-    IconButton(onClick = { open = true }, enabled = !state.editing) {
-        Icon(state.visibility.icon, stringResource(R.string.composer_visibility, current))
-    }
-    DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
-        state.visibilities.forEach { visibility ->
-            DropdownMenuItem(
-                text = { Text(stringResource(visibility.label)) },
-                leadingIcon = { Icon(visibility.icon, contentDescription = null) },
-                trailingIcon = { if (visibility == state.visibility) Chosen() },
-                modifier = Modifier.chosen(visibility == state.visibility),
-                onClick = {
-                    open = false
-                    onVisibility(visibility)
-                },
-            )
+    Box {
+        IconButton(onClick = { open = true }, enabled = !state.editing) {
+            Icon(state.visibility.icon, stringResource(R.string.composer_visibility, current))
         }
-        if (state.visibilityClamped) {
-            Text(
-                stringResource(R.string.composer_visibility_clamped),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = AlohaSpacing.m, vertical = AlohaSpacing.xs),
-            )
+        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+            state.visibilities.forEach { visibility ->
+                DropdownMenuItem(
+                    text = { Text(stringResource(visibility.label)) },
+                    leadingIcon = { Icon(visibility.icon, contentDescription = null) },
+                    trailingIcon = { if (visibility == state.visibility) Chosen() },
+                    modifier = Modifier.chosen(visibility == state.visibility),
+                    onClick = {
+                        open = false
+                        onVisibility(visibility)
+                    },
+                )
+            }
+            if (state.visibilityClamped) {
+                Text(
+                    stringResource(R.string.composer_visibility_clamped),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = AlohaSpacing.m, vertical = AlohaSpacing.xs),
+                )
+            }
         }
     }
 }
@@ -363,20 +370,22 @@ private fun VisibilityMenu(state: ComposerUiState, onVisibility: (Visibility) ->
 @Composable
 private fun QuoteMenu(state: ComposerUiState, onQuotePolicy: (QuotePolicy) -> Unit) {
     var open by remember { mutableStateOf(false) }
-    IconButton(onClick = { open = true }) {
-        Icon(AlohaIcons.Quote, stringResource(R.string.composer_quote, stringResource(state.quotePolicy.label)))
-    }
-    DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
-        state.quotePolicies.forEach { policy ->
-            DropdownMenuItem(
-                text = { Text(stringResource(policy.label)) },
-                trailingIcon = { if (policy == state.quotePolicy) Chosen() },
-                modifier = Modifier.chosen(policy == state.quotePolicy),
-                onClick = {
-                    open = false
-                    onQuotePolicy(policy)
-                },
-            )
+    Box {
+        IconButton(onClick = { open = true }) {
+            Icon(AlohaIcons.Quote, stringResource(R.string.composer_quote, stringResource(state.quotePolicy.label)))
+        }
+        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+            state.quotePolicies.forEach { policy ->
+                DropdownMenuItem(
+                    text = { Text(stringResource(policy.label)) },
+                    trailingIcon = { if (policy == state.quotePolicy) Chosen() },
+                    modifier = Modifier.chosen(policy == state.quotePolicy),
+                    onClick = {
+                        open = false
+                        onQuotePolicy(policy)
+                    },
+                )
+            }
         }
     }
 }

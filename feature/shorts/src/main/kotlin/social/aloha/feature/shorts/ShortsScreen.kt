@@ -368,39 +368,41 @@ private fun RailButton(
 @Composable
 private fun Menu(short: ShortUi, paused: Boolean, onPause: () -> Unit, actions: ShortsActions) {
     var open by remember { mutableStateOf(false) }
-    IconButton(onClick = {
-        open = true
-    }) { Icon(AlohaIcons.More, stringResource(R.string.shorts_more), tint = Color.White) }
-    DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
-        DropdownMenuItem(
-            text = { Text(stringResource(if (paused) R.string.shorts_play else R.string.shorts_pause)) },
-            onClick = {
-                open = false
-                onPause()
-            },
-        )
-        DropdownMenuItem(
-            text = { Text(stringResource(R.string.shorts_profile, short.row.author.plainName)) },
-            onClick = {
-                open = false
-                actions.onProfile(short)
-            },
-        )
-        DropdownMenuItem(
-            text = { Text(stringResource(R.string.shorts_open)) },
-            onClick = {
-                open = false
-                actions.onComments(short)
-            },
-        )
-        if (!short.row.isOwn) {
+    Box {
+        IconButton(onClick = {
+            open = true
+        }) { Icon(AlohaIcons.More, stringResource(R.string.shorts_more), tint = Color.White) }
+        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
             DropdownMenuItem(
-                text = { Text(stringResource(R.string.shorts_report)) },
+                text = { Text(stringResource(if (paused) R.string.shorts_play else R.string.shorts_pause)) },
                 onClick = {
                     open = false
-                    actions.onReport(short)
+                    onPause()
                 },
             )
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.shorts_profile, short.row.author.plainName)) },
+                onClick = {
+                    open = false
+                    actions.onProfile(short)
+                },
+            )
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.shorts_open)) },
+                onClick = {
+                    open = false
+                    actions.onComments(short)
+                },
+            )
+            if (!short.row.isOwn) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.shorts_report)) },
+                    onClick = {
+                        open = false
+                        actions.onReport(short)
+                    },
+                )
+            }
         }
     }
 }

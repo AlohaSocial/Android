@@ -299,24 +299,26 @@ private fun AlbumRow(album: MediaCollection, own: Boolean, actions: AlbumsScreen
 private fun AlbumMenu(album: MediaCollection, actions: AlbumsScreenActions) {
     var open by remember { mutableStateOf(false) }
     // which album the button is for, said aloud: every row has one
-    IconButton(onClick = { open = true }) {
-        Icon(AlohaIcons.More, stringResource(R.string.albums_options, album.title))
-    }
-    DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
-        DropdownMenuItem(
-            text = { Text(stringResource(R.string.albums_rename)) },
-            onClick = {
-                open = false
-                actions.onRename(album)
-            },
-        )
-        DropdownMenuItem(
-            text = { Text(stringResource(R.string.albums_delete)) },
-            onClick = {
-                open = false
-                actions.onDelete(album)
-            },
-        )
+    Box {
+        IconButton(onClick = { open = true }) {
+            Icon(AlohaIcons.More, stringResource(R.string.albums_options, album.title))
+        }
+        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.albums_rename)) },
+                onClick = {
+                    open = false
+                    actions.onRename(album)
+                },
+            )
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.albums_delete)) },
+                onClick = {
+                    open = false
+                    actions.onDelete(album)
+                },
+            )
+        }
     }
 }
 
