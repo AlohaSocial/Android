@@ -70,8 +70,10 @@ internal fun NextcloudRows(
         when {
             !state.available -> Unit
 
-            state.connected ->
+            state.connected -> {
+                Text(stringResource(state.push.message), Modifier.semantics { liveRegion = LiveRegionMode.Polite })
                 OutlinedButton(onClick = onDisconnect) { Text(stringResource(R.string.settings_nextcloud_disconnect)) }
+            }
 
             state.phase == NextcloudPhase.Waiting ->
                 TextButton(onClick = onCancel) { Text(stringResource(R.string.settings_nextcloud_cancel)) }

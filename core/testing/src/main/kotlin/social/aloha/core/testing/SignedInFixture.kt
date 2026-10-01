@@ -14,6 +14,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
+import social.aloha.core.data.AccountRemoval
 import social.aloha.core.data.AccountRepository
 import social.aloha.core.data.ClientFactory
 import social.aloha.core.data.NewAccount
@@ -27,6 +28,7 @@ import social.aloha.core.data.notifications.RaisedNotifications
 import social.aloha.core.data.photos.Albums
 import social.aloha.core.data.sync.UnreadCounts
 import social.aloha.core.data.sync.WidgetUpdates
+import social.aloha.core.data.timeline.CacheSweeper
 import social.aloha.core.data.timeline.FilterRepository
 import social.aloha.core.data.timeline.StatusInteractions
 import social.aloha.core.data.timeline.StatusRepository
@@ -38,11 +40,13 @@ import social.aloha.core.database.OutboxDatabase
 import social.aloha.core.datastore.AccountSettingsStore
 import social.aloha.core.datastore.AppPreferences
 import social.aloha.core.datastore.TokenVault
+import social.aloha.core.datastore.VaultKey
 import social.aloha.core.datastore.WidgetFeedStore
 import social.aloha.core.model.AccessToken
 import social.aloha.core.model.ServerCapabilities
 import social.aloha.core.model.SignedInAccount
 import social.aloha.core.network.RateLimiter
+import social.aloha.core.network.oauth.OAuthClient
 
 /**
  * An account repository on an in-memory database and the clients it hands out, for a test that needs
@@ -119,6 +123,27 @@ public class SignedInFixture(private val context: Context) : Closeable {
                 scope,
             )
         PostSender(compose, ScheduledPosts(clients), StatusInteractions(statuses, clients))
+    }
+
+    /** Signing out and deleting, over the same accounts, caches and Nextcloud connection. */
+    public val removal: AccountRemoval by lazy {
+        AccountRemoval(
+            accounts,
+            OAuthClient(OkHttpClient(), RateLimiter(nowMillis = clock::millis), Dispatchers.IO),
+            CacheSweeper(cache.value.statusDao(), cache.value.cacheAccountDao(), clock),
+            AccountSettingsStore(InMemoryDataStore(emptyMap())),
+            outbox,
+            nextcloud,
+            widgets,
+            raised,
+            clients,
+        )
+    }
+
+    /** Connects [accountId] to its Nextcloud with the app password [basic], as Login Flow v2 would. */
+    public suspend fun connectNextcloud(accountId: String, basic: String) {
+        vault.put(VaultKey.AppPassword(accountId), basic)
+        database.accountDao().setNextcloudConnected(accountId, connected = true)
     }
 
     /** Signs `@alice` in on the server at [apiBase], with the token the mock server accepts. */

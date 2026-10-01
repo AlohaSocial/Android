@@ -26,5 +26,9 @@ internal abstract class SettingsModule {
         @Provides
         @IntoSet
         fun nextcloud(): SettingsSection = NextcloudSection
+
+        @Provides
+        @IntoSet
+        fun deleteAccount(): SettingsSection = DeleteAccountSection
     }
 }

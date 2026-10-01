@@ -13,6 +13,8 @@ import social.aloha.core.data.sync.WidgetUpdates
 import social.aloha.core.data.timeline.CacheSweeper
 import social.aloha.core.datastore.AccountSettingsStore
 import social.aloha.core.model.SignedInAccount
+import social.aloha.core.network.ApiError
+import social.aloha.core.network.endpoints.SocialAccountEndpoints
 import social.aloha.core.network.oauth.OAuthClient
 import social.aloha.core.network.oauth.OAuthEndpoints
 
@@ -33,7 +35,18 @@ public class AccountRemoval @Inject constructor(
     private val nextcloud: NextcloudConnection,
     private val widgets: WidgetUpdates,
     private val raised: RaisedNotifications,
+    private val clients: ClientFactory,
 ) {
+    /**
+     * Deletes [account] on its Nextcloud Social server, for good: its posts, its follows, and a `Delete`
+     * to every server that knew it; the Nextcloud account stays. The server takes the handle [typed] as
+     * the confirmation, never a password, and the request goes with the Nextcloud app password, so only
+     * a connected account can. Null once deleted; else the server's refusal (a 422 names the handle to
+     * type), and nothing changed. Signing out of the device follows separately.
+     */
+    public suspend fun deleteOnServer(account: SignedInAccount, typed: String): ApiError? =
+        (clients.answer(account, SocialAccountEndpoints.delete(typed)) as? Answer.Missed)?.error
+
     public suspend fun signOut(account: SignedInAccount) {
         // the device forgets first, so a slow or unreachable server can never leave the account behind
         val token = accounts.token(account.id)

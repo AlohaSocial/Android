@@ -27,7 +27,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import social.aloha.core.data.AccountMaintenance
-import social.aloha.core.data.AccountRemoval
 import social.aloha.core.data.AccountRepository
 import social.aloha.core.data.compose.Outbox
 import social.aloha.core.data.sync.UnreadCounts
@@ -41,9 +40,8 @@ import social.aloha.core.navigation.DraftsKey
 import social.aloha.core.navigation.NotificationsKey
 import social.aloha.core.navigation.SearchKey
 import social.aloha.core.navigation.ThreadKey
-import social.aloha.core.sync.LocalNotifications
+import social.aloha.core.sync.AccountSignOut
 import social.aloha.core.sync.PostQueue
-import social.aloha.core.sync.PushRegistrar
 
 /** What the root of the app shows. */
 sealed interface AppSession {
@@ -79,7 +77,7 @@ data class SwitcherAccount(
 @HiltViewModel
 class AppViewModel @Inject constructor(
     private val accounts: AccountRepository,
-    private val removal: AccountRemoval,
+    private val signOuts: AccountSignOut,
     private val caches: DeviceCaches,
     private val links: LinkOpener,
     maintenance: AccountMaintenance,
@@ -87,8 +85,6 @@ class AppViewModel @Inject constructor(
     private val outbox: Outbox,
     private val queue: PostQueue,
     private val unread: UnreadCounts,
-    private val localNotifications: LocalNotifications,
-    private val push: PushRegistrar,
     private val shortcuts: AccountShortcuts,
     preferences: ModePreferences,
     savedState: SavedStateHandle,
@@ -139,6 +135,10 @@ class AppViewModel @Inject constructor(
         }
         viewModelScope.launch {
             accounts.activeAccount.filterNotNull().map { it.id }.distinctUntilChanged().collect { adding.value = false }
+        }
+        // once the last account is gone, signed out or deleted, the images and responses kept for it go too
+        viewModelScope.launch {
+            accounts.accounts.map { it.isEmpty() }.distinctUntilChanged().filter { it }.collect { caches.clear() }
         }
         // the launcher's and the share sheet's shortcuts follow who is signed in
         viewModelScope.launch {
@@ -266,25 +266,12 @@ class AppViewModel @Inject constructor(
         adding.value = false
     }
 
-    /**
-     * Signs the account in use out of this device; another becomes active, or sign-in shows. Once none
-     * is left, the images and responses kept for them go too.
-     */
+    /** Signs the account in use out of this device; another becomes active, or sign-in shows. */
     fun signOut() {
-        viewModelScope.launch {
-            accounts.activeAccount.value?.let {
-                // the server is told to stop pushing while the token still works, but an unreachable one
-                // never keeps the account here for long
-                withTimeoutOrNull(PUSH_FORGET_MILLIS) { push.forget(it) }
-                removal.signOut(it)
-                localNotifications.forget(it.id)
-            }
-            if (accounts.all().isEmpty()) caches.clear()
-        }
+        accounts.activeAccount.value?.let(signOuts::signOut)
     }
 
     private companion object {
-        const val PUSH_FORGET_MILLIS = 5_000L
         const val STOP_TIMEOUT_MILLIS = 5_000L
     }
 }
