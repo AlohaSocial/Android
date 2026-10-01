@@ -74,6 +74,9 @@ class ExploreViewModelTest {
         val reader = fixture.signIn(server.url("/"))
         val explore =
             ExploreViewModel(reader.id, fixture.accounts, Explore(fixture.clients, fixture.statuses), RichTextCache())
+        // the account is looked up off the test's thread; picking the tab meanwhile loads People twice, and
+        // the second answer could bring the dismissed suggestion back before the server refused
+        withTimeout(10.seconds) { explore.uiState.first { it.viewer.isNotEmpty() } }
         explore.onTab(ExploreTab.People)
         val people = withTimeout(10.seconds) { explore.uiState.first { it.people is Load.Loaded } }
         assertEquals(listOf("7"), (people.people as Load.Loaded).value.suggestions.map { it.id })
