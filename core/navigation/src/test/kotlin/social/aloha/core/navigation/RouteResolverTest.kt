@@ -26,6 +26,28 @@ class RouteResolverTest {
             LinkTarget.Post("https://pleroma.example/notice/AbC1", "pleroma.example", null),
             RouteResolver.parse("https://pleroma.example/notice/AbC1"),
         )
+        assertEquals(
+            LinkTarget.Post("https://akkoma.example/objects/5f1c-9e2a", "akkoma.example", null),
+            RouteResolver.parse("https://akkoma.example/objects/5f1c-9e2a"),
+        )
+        assertEquals(
+            LinkTarget.Post("https://pixelfed.example/p/dana/7041", "pixelfed.example", "7041"),
+            RouteResolver.parse("https://pixelfed.example/p/dana/7041"),
+        )
+    }
+
+    @Test
+    fun `Nextcloud Social's addresses under the app's path read like any other`() {
+        val post = "http://nextcloud.local/index.php/apps/social/@alice/17906370853806247191"
+        assertEquals(LinkTarget.Post(post, "nextcloud.local", "17906370853806247191"), RouteResolver.parse(post))
+        assertEquals(
+            LinkTarget.Profile("https://cloud.example/apps/social/@bob", "bob@cloud.example"),
+            RouteResolver.parse("https://cloud.example/apps/social/@bob"),
+        )
+        assertEquals(
+            LinkTarget.Tag("surf"),
+            RouteResolver.parse("https://cloud.example/index.php/apps/social/tags/surf"),
+        )
     }
 
     @Test
@@ -70,6 +92,8 @@ class RouteResolverTest {
             "https://youtu.be/BgezCG4W_Ns",
             "https://example.com/",
             "https://blog.example/@author/aloha-at-last",
+            "https://news.example/p/aloha-at-last",
+            "https://cloud.example/index.php/apps/files/@alice/1",
             "https://cloud.example/users/..%2F..",
             "javascript:alert(1)",
             "file:///data/data/social.aloha.android/databases/accounts.db",
