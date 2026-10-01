@@ -66,6 +66,7 @@ import social.aloha.core.navigation.AccountKey
 import social.aloha.core.navigation.AddToAlbumKey
 import social.aloha.core.navigation.AlbumKey
 import social.aloha.core.navigation.AlbumsKey
+import social.aloha.core.navigation.AnnouncementsKey
 import social.aloha.core.navigation.AudioKey
 import social.aloha.core.navigation.ComposerKey
 import social.aloha.core.navigation.ConversationsKey
@@ -108,6 +109,7 @@ import social.aloha.core.navigation.VideoKey
 import social.aloha.core.navigation.WatchKey
 import social.aloha.core.ui.StatusNavigation
 import social.aloha.core.ui.openInBrowser
+import social.aloha.core.ui.openLink
 import social.aloha.feature.audio.AudioRoute
 import social.aloha.feature.audio.MiniPlayer
 import social.aloha.feature.composer.ComposerRoute
@@ -133,6 +135,8 @@ import social.aloha.feature.profile.PeopleRoute
 import social.aloha.feature.profile.ProfileNavigation
 import social.aloha.feature.profile.ProfileRoute
 import social.aloha.feature.profile.ReportRoute
+import social.aloha.feature.safety.AnnouncementsBanner
+import social.aloha.feature.safety.AnnouncementsRoute
 import social.aloha.feature.safety.FilterEditRoute
 import social.aloha.feature.safety.FiltersRoute
 import social.aloha.feature.saved.SavedPostsRoute
@@ -400,7 +404,10 @@ fun AlohaApp(
                         val accountLinks = AccountLinks { backStack.push(it.key(readerId, serverAccountId)) }
                         // home and each mode: the same account button, each timeline of its own
                         val modeEntry = @Composable { feed: TimelineFeed ->
-                            val links = HomeLinks(onSearch = { backStack.push(SearchKey(readerId)) })
+                            val links = HomeLinks(
+                                onSearch = { backStack.push(SearchKey(readerId)) },
+                                onAnnouncements = { backStack.push(AnnouncementsKey(readerId)) },
+                            )
                             timeline(feed, statusNavigation, links) { accountButton(accountLinks) }
                         }
                         val listPane = ListDetailSceneStrategy.listPane(detailPlaceholder = { NothingOpen() })
@@ -465,6 +472,13 @@ fun AlohaApp(
                                 key,
                                 onTag = statusNavigation::openTag,
                                 onGroup = { backStack.push(TagGroupKey(key.readerId, it.name)) },
+                                onBack = { backStack.remove(key) },
+                            )
+                        }
+                        entry<AnnouncementsKey> { key ->
+                            AnnouncementsRoute(
+                                key,
+                                onLink = { statusNavigation.openLink(it) },
                                 onBack = { backStack.remove(key) },
                             )
                         }
@@ -647,7 +661,8 @@ private fun ModeTimeline(
 
                 FeedMode.Video -> ContinueWatching(onOpen = navigation::openVideo)
 
-                else -> Unit
+                // what the server announces is said on Home, the timeline every reader opens
+                else -> if (feed == TimelineFeed.Home) AnnouncementsBanner(onOpen = links.onAnnouncements)
             }
         },
     )
@@ -679,13 +694,24 @@ private fun AlohaAppPreview() {
 }
 
 /** Where Home's toolbar leads beyond its timeline: search. */
-data class HomeLinks(val onSearch: () -> Unit = {})
+data class HomeLinks(val onSearch: () -> Unit = {}, val onAnnouncements: () -> Unit = {})
 
 /** Where the account button's sheet leads: the reader's profile, settings, lists and hashtags. */
 data class AccountLinks(val open: (AccountPlace) -> Unit = {})
 
 /** Where the account sheet leads. */
-enum class AccountPlace { Profile, Messages, Bookmarks, Favourites, Archived, Lists, Hashtags, Filters, Settings }
+enum class AccountPlace {
+    Profile,
+    Messages,
+    Bookmarks,
+    Favourites,
+    Archived,
+    Lists,
+    Hashtags,
+    Filters,
+    Announcements,
+    Settings,
+}
 
 private fun AccountPlace.key(readerId: String, serverAccountId: String): NavKey = when (this) {
     AccountPlace.Profile -> AccountKey(readerId, id = serverAccountId)
@@ -696,6 +722,7 @@ private fun AccountPlace.key(readerId: String, serverAccountId: String): NavKey 
     AccountPlace.Lists -> ListsKey(readerId)
     AccountPlace.Hashtags -> HashtagsKey(readerId)
     AccountPlace.Filters -> FiltersKey(readerId)
+    AccountPlace.Announcements -> AnnouncementsKey(readerId)
     AccountPlace.Settings -> SettingsKey
 }
 

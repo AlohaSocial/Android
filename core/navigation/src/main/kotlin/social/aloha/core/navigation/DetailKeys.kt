@@ -153,6 +153,10 @@ public data class ConversationsKey(val readerId: String) : NavKey
 @Serializable
 public data class NewMessageKey(val readerId: String) : NavKey
 
+/** What [readerId]'s server announces. */
+@Serializable
+public data class AnnouncementsKey(val readerId: String) : NavKey
+
 /** [readerId]'s filters. */
 @Serializable
 public data class FiltersKey(val readerId: String) : NavKey

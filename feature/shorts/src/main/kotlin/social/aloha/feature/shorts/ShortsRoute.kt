@@ -42,9 +42,9 @@ import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.model.TimelineSource
 import social.aloha.core.ui.ProvideLinkRouting
 import social.aloha.core.ui.R as UiR
-import social.aloha.core.ui.RichLinkTarget
 import social.aloha.core.ui.RichTextColors
 import social.aloha.core.ui.StatusNavigation
+import social.aloha.core.ui.openLink
 import social.aloha.core.ui.sourceName
 
 /**
@@ -117,13 +117,9 @@ public fun ShortsRoute(
     val title = stringResource(R.string.shorts_title)
     Box(modifier.fillMaxSize().semantics { paneTitle = title }) {
         when {
-            state.shorts.isNotEmpty() -> ProvideLinkRouting(onLink = { target ->
-                when (target) {
-                    is RichLinkTarget.Mention -> nav.openProfile(target.accountId, target.acct)
-                    is RichLinkTarget.Hashtag -> nav.openTag(target.name)
-                    is RichLinkTarget.Web -> nav.openWeb(target.url)
-                }
-            }) { ShortsPager(state, pagerState, playback.player, actions) }
+            state.shorts.isNotEmpty() -> ProvideLinkRouting(onLink = { nav.openLink(it) }) {
+                ShortsPager(state, pagerState, playback.player, actions)
+            }
 
             state.loadedOnce -> Text(
                 stringResource(R.string.shorts_empty),

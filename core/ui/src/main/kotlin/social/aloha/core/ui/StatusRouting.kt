@@ -61,6 +61,13 @@ public interface StatusNavigation {
     public fun openAlbum(albumId: String, title: String, own: Boolean) {}
 }
 
+/** Where a link in rich text leads: a profile, a hashtag, or a web address. */
+public fun StatusNavigation.openLink(target: RichLinkTarget): Unit = when (target) {
+    is RichLinkTarget.Mention -> openProfile(target.accountId, target.acct)
+    is RichLinkTarget.Hashtag -> openTag(target.name)
+    is RichLinkTarget.Web -> openWeb(target.url)
+}
+
 /** A delete the person asked for, of [row]; with [redraft] the post is written again after. */
 public data class DeleteRequest(val row: StatusRowUi, val redraft: Boolean)
 
@@ -100,11 +107,7 @@ public abstract class RoutedStatusActions(
 
     override fun onProfile(accountId: String): Unit = navigation().openProfile(accountId, null)
 
-    override fun onLink(target: RichLinkTarget): Unit = when (target) {
-        is RichLinkTarget.Mention -> navigation().openProfile(target.accountId, target.acct)
-        is RichLinkTarget.Hashtag -> navigation().openTag(target.name)
-        is RichLinkTarget.Web -> navigation().openWeb(target.url)
-    }
+    override fun onLink(target: RichLinkTarget): Unit = navigation().openLink(target)
 
     // a picture opens in the viewer, at that picture; the rest of the row opens the post
     override fun onMedia(row: StatusRowUi, index: Int): Unit = navigation().openMedia(row.statusId, index)

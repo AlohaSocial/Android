@@ -101,4 +101,19 @@
     <string name="filters_for_day">For a day</string>
     <!-- A filter applies for a week from now -->
     <string name="filters_for_week">For a week</string>
+    <!-- Title of what the reader's server announces to everyone on it -->
+    <string name="announcements_title">Announcements</string>
+    <!-- Shown when the server has no announcements -->
+    <string name="announcements_none">No announcements. What your server’s team announces to everyone shows here.</string>
+    <!-- Shown when the announcements could not be loaded -->
+    <string name="announcements_failed">Announcements couldn’t be loaded.</string>
+    <!-- Marks an announcement the reader had not read before opening the screen -->
+    <string name="announcements_new">New</string>
+    <!-- Shown when a reaction to an announcement was refused and taken back -->
+    <string name="announcements_reaction_failed">The reaction couldn’t be saved.</string>
+    <!-- On Home: how many announcements the reader has not read; opens them -->
+    <plurals name="announcements_unread">
+        <item quantity="one">%d new announcement from your server</item>
+        <item quantity="other">%d new announcements from your server</item>
+    </plurals>
 </resources>

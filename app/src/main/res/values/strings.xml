@@ -14,6 +14,8 @@
     <string name="accounts_archived">Archived posts</string>
     <!-- In the account sheet: opens the reader's filters, which hide or warn about posts by keyword -->
     <string name="accounts_filters">Filters</string>
+    <!-- In the account sheet: opens what the reader's server announces to everyone on it -->
+    <string name="accounts_announcements">Announcements</string>
     <!-- In the account sheet: opens the reader's lists -->
     <string name="accounts_lists">Lists</string>
     <!-- In the account sheet: opens the hashtags the reader follows and their tag groups -->
