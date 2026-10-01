@@ -54,6 +54,7 @@ import androidx.compose.material.icons.outlined.Flag
 import androidx.compose.material.icons.outlined.FormatQuote
 import androidx.compose.material.icons.outlined.GridView
 import androidx.compose.material.icons.outlined.Headphones
+import androidx.compose.material.icons.outlined.HistoryToggleOff
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Inventory2
@@ -184,6 +185,7 @@ public object AlohaIcons {
     public val Back: ImageVector = Icons.AutoMirrored.Outlined.ArrowBack
     public val Close: ImageVector = Icons.Outlined.Close
     public val Send: ImageVector = Icons.AutoMirrored.Outlined.Send
+    public val Story: ImageVector = Icons.Outlined.HistoryToggleOff
     public val Settings: ImageVector = Icons.Outlined.Settings
     public val About: ImageVector = Icons.Outlined.Info
     public val Nextcloud: ImageVector = Icons.Outlined.Cloud

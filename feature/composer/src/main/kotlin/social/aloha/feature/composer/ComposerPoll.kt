@@ -3,16 +3,19 @@
 
 package social.aloha.feature.composer
 
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -172,3 +175,45 @@ private fun List<Long>.defaultLength(): Long =
 private const val MINUTE = 60L
 private const val HOUR = 3_600L
 private const val DAY = 86_400L
+
+/** The other shapes the post may go out in, where it fits them: a card, or a story. */
+@Composable
+internal fun ShareAs(state: ComposerUiState, actions: ComposerActions) {
+    if (state.cardFits) {
+        OutlinedIconToggleButton(checked = state.card.on, onCheckedChange = actions::onCard) {
+            Icon(AlohaIcons.TextCard, stringResource(R.string.composer_card))
+        }
+    }
+    if (state.storyFits) {
+        OutlinedIconToggleButton(checked = state.asStory, onCheckedChange = actions::onStory) {
+            Icon(AlohaIcons.Story, stringResource(R.string.composer_story))
+        }
+    }
+}
+
+/** How long a story's picture or card shows for, from the lengths a story takes. */
+@Composable
+internal fun StoryLength(seconds: Int, onSeconds: (Int) -> Unit) {
+    // at a large font the lengths scroll rather than wrap
+    Row(
+        Modifier.horizontalScroll(rememberScrollState()).padding(top = AlohaSpacing.xs),
+        horizontalArrangement = Arrangement.spacedBy(AlohaSpacing.xs),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(stringResource(R.string.composer_story_length), style = MaterialTheme.typography.labelLarge)
+        StoryShare.LENGTHS.forEach { length ->
+            FilterChip(
+                selected = length == seconds,
+                onClick = { onSeconds(length) },
+                label = { Text(pluralStringResource(R.plurals.composer_story_seconds, length, length), maxLines = 1) },
+            )
+        }
+    }
+}
+
+/** What only the opening post shows: the card it goes out as, and how long it shows as a story. */
+@Composable
+internal fun OpeningExtras(state: ComposerUiState, actions: ComposerActions) {
+    if (state.card.on && state.cardFits) CardPreview(state.card, actions)
+    if (state.storyLengthPicked) StoryLength(state.storySeconds, actions::onStorySeconds)
+}

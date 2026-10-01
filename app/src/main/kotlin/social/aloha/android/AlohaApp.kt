@@ -269,6 +269,10 @@ fun AlohaApp(
                 backStack.push(ComposerKey(readerId, replyToId, draftId = UUID.randomUUID().toString()))
             }
 
+            override fun openStoryComposer() {
+                backStack.push(ComposerKey(readerId, draftId = UUID.randomUUID().toString(), story = true))
+            }
+
             override fun report(accountId: String, handle: String, statusId: String?) {
                 backStack.push(ReportKey(readerId, accountId, handle, statusId))
             }
@@ -523,8 +527,13 @@ private fun ModeTimeline(feed: TimelineFeed, navigation: StatusNavigation, accou
         navigationIcon = accountButton,
         header = {
             when (feed.mode) {
-                FeedMode.Photos -> StoriesRail(onProfile = { navigation.openProfile(it, null) })
+                FeedMode.Photos -> StoriesRail(
+                    onProfile = { navigation.openProfile(it, null) },
+                    onNewStory = navigation::openStoryComposer,
+                )
+
                 FeedMode.Video -> ContinueWatching(onOpen = navigation::openVideo)
+
                 else -> Unit
             }
         },

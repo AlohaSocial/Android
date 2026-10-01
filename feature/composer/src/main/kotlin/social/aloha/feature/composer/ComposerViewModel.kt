@@ -47,6 +47,7 @@ import social.aloha.core.data.compose.MediaRepository
 import social.aloha.core.data.compose.Outbox
 import social.aloha.core.data.compose.PostSender
 import social.aloha.core.data.di.ApplicationScope
+import social.aloha.core.data.stories.Stories
 import social.aloha.core.data.timeline.StatusInteractions
 import social.aloha.core.datastore.AppPreferences
 import social.aloha.core.html.StatusHtmlParser
@@ -82,6 +83,7 @@ internal class ComposerViewModel @AssistedInject constructor(
     uploads: MediaUploads,
     mediaRepository: MediaRepository,
     private val preferences: AppPreferences,
+    stories: Stories,
 ) : ViewModel() {
     @AssistedFactory
     interface Factory {
@@ -142,7 +144,10 @@ internal class ComposerViewModel @AssistedInject constructor(
     /** A short post drawn as a picture, when the writer chooses. */
     val cards = TextCards(attachments, File(context.filesDir, Outbox.UPLOADS), viewModelScope)
 
-    private val extras = combine(cards.state, poll, scheduledAt, ::Triple)
+    /** The post shared as a story instead, where it can be one. */
+    val story = StoryShare(stories, attachments, cards, chosen = key.story)
+
+    private val extras = combine(cards.state, poll, scheduledAt, story.chosen, story.seconds, ::Extras)
 
     /** The post as a draft, when the writer wrote anything. */
     private val written: DraftPost?
@@ -185,12 +190,16 @@ internal class ComposerViewModel @AssistedInject constructor(
         completions.suggestions,
         media,
         extras,
-    ) { state, text, found, media, (card, poll, at) ->
+    ) { state, text, found, media, extras ->
+        val (card, poll, at) = extras
         val capabilities = reader?.capabilities
         val limits = capabilities?.limits ?: ServerLimits.MastodonDefaults
         val rule = capabilities?.lengthRule ?: LengthRule.Mastodon
         // the content warning goes out with every segment, so it counts in each
         val cw = if (state.spoilerShown) text.spoiler else ""
+        // the card is an attachment only to the server; the strip shows what the writer attached
+        val attached = media.attachments.map { list -> list.filterNot { it.id == cards.attachmentId } }
+        val cardFits = poll == null && TextCards.fits(text.segments.first(), text.segments.size, attached.first().size)
         state.copy(
             remaining = text.segments.map { CharacterCount.remaining(it, cw, limits, rule) },
             empty = text.segments.withIndex().any { (index, segment) ->
@@ -199,14 +208,18 @@ internal class ComposerViewModel @AssistedInject constructor(
             },
             games = text.segments.flatMap(ComposerGames::kinds).distinct(),
             suggestions = found,
-            // the card is an attachment only to the server; the strip shows what the writer attached
-            attachments = media.attachments.map { list -> list.filterNot { it.id == cards.attachmentId } },
+            attachments = attached,
             card = card,
-            cardFits = poll == null && TextCards.fits(
-                text.segments.first(),
-                text.segments.size,
-                media.attachments.first().count { it.id != cards.attachmentId },
-            ),
+            cardFits = cardFits,
+            storyFits = capabilities?.stories == true &&
+                StoryShare.fits(
+                    text.segments,
+                    attached.flatten(),
+                    alone = state.fresh && poll == null && at == null,
+                    card = card.on && cardFits,
+                ),
+            asStory = extras.asStory,
+            storySeconds = extras.seconds,
             poll = poll,
             maxPollOptions = limits.maxPollOptions,
             maxPollOptionCharacters = limits.maxPollOptionCharacters,
@@ -341,11 +354,15 @@ internal class ComposerViewModel @AssistedInject constructor(
     }
 
     fun onPost() {
-        val account = reader ?: return
-        if (!uiState.value.canPost) return
+        val account = reader?.takeIf { uiState.value.canPost } ?: return
         control.update { it.copy(posting = true, failure = null) }
         viewModelScope.launch {
             val state = uiState.value
+            if (state.sharesStory) {
+                val failure = story.share(account, state, segments.first().text, onShared = drafts::posted)
+                control.update { it.copy(posting = false, failure = failure, done = failure == null) }
+                return@launch
+            }
             if (!cards.ready(state.cardFits, segments.first().text)) {
                 control.update { it.copy(posting = false, failure = PostFailure.CardFailed) }
                 return@launch
@@ -457,6 +474,9 @@ private const val EXCERPT = 140
 
 /** What stops a post that the outbox then sends. */
 private val OFFLINE = PostFailure.Unreached(Trouble.Offline)
+
+/** What the post carries besides its text and media. */
+private data class Extras(val card: CardUi, val poll: PollUi?, val at: Instant?, val asStory: Boolean, val seconds: Int)
 
 /** The writer's own defaults from their server: the visibility where it is allowed, and the language. */
 private fun ComposerUiState.withDefaults(preferences: Preferences?) = copy(

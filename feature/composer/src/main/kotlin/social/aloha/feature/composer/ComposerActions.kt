@@ -35,6 +35,12 @@ internal interface ComposerActions :
     fun onRemoveSegment(index: Int)
 
     fun onAuthor(id: String)
+
+    /** Shares the post as a story instead, or back as a post. */
+    fun onStory(on: Boolean)
+
+    /** How long the story's picture or card shows for. */
+    fun onStorySeconds(seconds: Int)
 }
 
 /** What the controls for later do: scheduling, and the posts kept for later. */

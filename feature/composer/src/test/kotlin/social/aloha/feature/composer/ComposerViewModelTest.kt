@@ -51,6 +51,7 @@ import social.aloha.core.data.compose.MediaRepository
 import social.aloha.core.data.compose.Outbox
 import social.aloha.core.data.compose.PostSender
 import social.aloha.core.data.compose.ScheduledPosts
+import social.aloha.core.data.stories.Stories
 import social.aloha.core.data.timeline.StatusInteractions
 import social.aloha.core.data.timeline.StatusRepository
 import social.aloha.core.data.timeline.TimelineRepository
@@ -81,6 +82,7 @@ import social.aloha.core.testing.NumberedTimeline
  */
 private class Posts(private val script: MutableList<Int>) : Dispatcher() {
     val sent = CopyOnWriteArrayList<Pair<String?, Map<String, String>>>()
+    val stories = CopyOnWriteArrayList<Map<String, String>>()
     val deleted = CopyOnWriteArrayList<String>()
     private val made = HashMap<String, String>()
     private var next = 0
@@ -149,8 +151,17 @@ private class Posts(private val script: MutableList<Int>) : Dispatcher() {
 
             path.endsWith("/media/from-file") -> media(request, "path")
 
-            else -> MockResponse.Builder().code(404).body("{}").build()
+            else -> story(request)
         }
+    }
+
+    /** A story shared, remembered; anything else is not here. */
+    private fun story(request: RecordedRequest): MockResponse {
+        if (request.method != "POST" || !request.url.encodedPath.endsWith("/api/v1/stories")) {
+            return MockResponse.Builder().code(404).body("{}").build()
+        }
+        stories += form(request)
+        return json("{}")
     }
 
     // two pages of forty and a last of five, the way the library pages
@@ -258,6 +269,7 @@ class ComposerViewModelTest {
         val capabilities = ServerCapabilities.minimal(apiBase.toString()).copy(
             softwareName = "nextcloud-social",
             limits = ServerLimits.MastodonDefaults.copy(maxStatusCharacters = 5000),
+            stories = true,
         )
         val account = accounts.signedIn(
             NewAccount(apiBase.host, "6", "alice", "Alice", null, null, capabilities, profilePending = false),
@@ -280,6 +292,7 @@ class ComposerViewModelTest {
             MediaUploads(context),
             MediaRepository(clients),
             AppPreferences(InMemoryDataStore(emptyPreferences())),
+            Stories(clients, clock),
         ).also(opened::add)
     }
 
@@ -391,6 +404,36 @@ class ComposerViewModelTest {
         viewModel.onPost()
         viewModel.await { it.done }
         assertEquals("m-g0", posts.sent.single().second["media_ids[]"])
+    }
+
+    @Test
+    fun `one picture shared as a story goes to the stories route with its caption, and no post goes out`() =
+        runBlocking {
+            val viewModel = open { ComposerKey(it, story = true) }
+            viewModel.await { it.ready }
+            viewModel.library.onNextcloudFile("Photos/beach.jpg")
+            viewModel.type(0, "Sunset")
+            viewModel.await { it.canPost && it.storyFits && it.asStory }
+            // a picture shows for as long as the writer picks
+            viewModel.story.onSeconds(10)
+            viewModel.await { it.storySeconds == 10 && it.storyLengthPicked }
+            viewModel.onPost()
+            viewModel.await { it.done }
+            assertEquals(
+                mapOf("media_id" to "m-Photos/beach.jpg", "duration" to "10", "caption" to "Sunset"),
+                posts.stories.single(),
+            )
+            assertTrue(posts.sent.isEmpty())
+        }
+
+    @Test
+    fun `a second picture makes it a post again, not a story`() = runBlocking {
+        val viewModel = open { ComposerKey(it, story = true) }
+        viewModel.await { it.ready }
+        viewModel.library.onNextcloudFile("Photos/beach.jpg")
+        viewModel.await { it.storyFits }
+        viewModel.library.onNextcloudFile("Photos/reef.jpg")
+        assertFalse(viewModel.await { it.attachments.first().size == 2 }.storyFits)
     }
 
     @Test

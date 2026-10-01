@@ -10,6 +10,8 @@
     <string name="stories_reel_new">Stories from %s, new</string>
     <!-- A poster on the stories rail whose stories were all seen, read aloud: %s is who -->
     <string name="stories_reel">Stories from %s</string>
+    <!-- First on the stories rail: writes a new story -->
+    <string name="stories_new">New story</string>
     <!-- A story in the player, read aloud: %s is who posted it -->
     <string name="stories_story">Story by %s</string>
     <!-- A story with words in the player, read aloud: %1$s is who posted it, %2$s what they wrote -->

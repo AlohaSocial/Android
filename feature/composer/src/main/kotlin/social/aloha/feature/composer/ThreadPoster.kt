@@ -105,9 +105,10 @@ internal class ThreadPoster(
     fun forgetFrom(index: Int) {
         minted.keys.removeAll { it >= maxOf(index, posted) }
     }
+}
 
-    private fun failureOf(error: ApiError): PostFailure = when (error) {
-        is ApiError.Unprocessable -> PostFailure.Refused(error.message)
-        else -> PostFailure.Unreached(error.trouble)
-    }
+/** What a server's refusal means to the writer: a reason to fix, or a server to try again. */
+internal fun failureOf(error: ApiError): PostFailure = when (error) {
+    is ApiError.Unprocessable -> PostFailure.Refused(error.message)
+    else -> PostFailure.Unreached(error.trouble)
 }

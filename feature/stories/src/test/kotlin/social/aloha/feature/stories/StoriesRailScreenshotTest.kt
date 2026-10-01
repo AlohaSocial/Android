@@ -45,7 +45,9 @@ class StoriesRailScreenshotTest {
     fun rail() {
         compose.enableAccessibilityChecks()
         compose.setContent {
-            AlohaTheme(ThemeSettings(mode = ThemeMode.Light)) { Surface { StoriesRail(reels, onOpen = {}) } }
+            AlohaTheme(ThemeSettings(mode = ThemeMode.Light)) {
+                Surface { StoriesRail(reels, onOpen = {}, onNewStory = {}) }
+            }
         }
         compose.onRoot().tryPerformAccessibilityChecks()
         compose.onRoot().captureRoboImage("src/test/screenshots/stories-rail.png")

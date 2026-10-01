@@ -42,6 +42,10 @@ public class Stories @Inject constructor(private val clients: ClientFactory, pri
             reels(own + mine, own = true) + reels(theirs, own = false)
         }
 
+    /** Posts the uploaded [mediaId] as a story with [caption], on screen for [seconds]. */
+    public suspend fun post(reader: SignedInAccount, mediaId: String, caption: String?, seconds: Int): Answer<Unit> =
+        clients.answer(reader, StoryEndpoints.post(mediaId, caption, seconds))
+
     /** Marks [id] seen; the server counts a view once, so a repeat is a no-op. */
     public suspend fun markSeen(reader: SignedInAccount, id: String): Answer<Unit> =
         clients.answer(reader, StoryEndpoints.markSeen(id))

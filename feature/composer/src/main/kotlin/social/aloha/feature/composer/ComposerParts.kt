@@ -132,7 +132,7 @@ internal fun SegmentField(
     Column {
         SegmentText(value, label, index == 0, readOnly = posted || state.posting) { actions.onText(index, it) }
         state.attachments.getOrNull(index)?.takeIf { it.isNotEmpty() }?.let { MediaStrip(it, actions) }
-        if (index == 0 && state.card.on && state.cardFits) CardPreview(state.card, actions)
+        if (index == 0) OpeningExtras(state, actions)
         if (count > 1) SegmentFooter(index, posted, state, actions)
     }
 }
@@ -267,11 +267,7 @@ private fun MediaButtons(state: ComposerUiState, actions: ComposerActions) {
     }
     CameraMenu(enabled = room && !state.posting, onCapture = actions::onCapture)
     MoreSourcesMenu(state, enabled = room && !state.posting, actions)
-    if (state.cardFits) {
-        OutlinedIconToggleButton(checked = state.card.on, onCheckedChange = actions::onCard) {
-            Icon(AlohaIcons.TextCard, stringResource(R.string.composer_card))
-        }
-    }
+    ShareAs(state, actions)
     PollToggle(state, actions)
     if (attached > 0) {
         OutlinedIconToggleButton(checked = state.mediaSensitive, onCheckedChange = actions::onSensitive) {

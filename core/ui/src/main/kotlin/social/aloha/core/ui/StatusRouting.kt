@@ -31,6 +31,9 @@ public interface StatusNavigation {
     /** The composer: a new post, or a reply to [replyToId] when given. */
     public fun openComposer(replyToId: String?)
 
+    /** The composer, for a story; only a server with stories offers it. */
+    public fun openStoryComposer() {}
+
     /** The composer on the reader's own post [statusId]: edited, or deleted and written again when [redraft]. */
     public fun editPost(statusId: String, redraft: Boolean)
 

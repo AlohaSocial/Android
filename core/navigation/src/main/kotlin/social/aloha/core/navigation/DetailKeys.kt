@@ -47,7 +47,7 @@ public data class SettingsSectionKey(val section: String) : NavKey
  * A new post written as [readerId]; an answer to [replyToId] on that account's server when given,
  * draft [draftId] carried on with, the reader's own post [editId] edited, or their post [redraftId]
  * deleted and written again. What another app shared starts a new post: [sharedText], and the
- * content addresses of [sharedMedia].
+ * content addresses of [sharedMedia]. With [story] the post starts out as a story.
  */
 @Serializable
 public data class ComposerKey(
@@ -58,6 +58,7 @@ public data class ComposerKey(
     val redraftId: String? = null,
     val sharedText: String? = null,
     val sharedMedia: List<String> = emptyList(),
+    val story: Boolean = false,
 ) : NavKey
 
 /**

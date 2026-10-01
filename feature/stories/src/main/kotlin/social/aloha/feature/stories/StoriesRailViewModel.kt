@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -36,6 +37,10 @@ internal class StoriesRailViewModel @Inject constructor(accounts: AccountReposit
         .distinctUntilChanged { a, b -> a?.id == b?.id && a?.capabilities?.stories == b?.capabilities?.stories }
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
     private val reloads = MutableStateFlow(0)
+
+    /** Whether the reader's server takes stories, so the rail offers to post one. */
+    val canPost: StateFlow<Boolean> = reader.map { it?.capabilities?.stories == true }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_MILLIS), false)
 
     val reels: StateFlow<List<StoryReel>> = combine(reader, reloads) { reader, _ -> reader }
         .mapLatest { reader ->

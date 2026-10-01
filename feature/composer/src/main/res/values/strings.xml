@@ -204,6 +204,15 @@
     <string name="composer_filter_faded">Faded</string>
     <!-- Picture filter: brown old-photograph tones -->
     <string name="composer_filter_sepia">Sepia</string>
+    <!-- Toolbar toggle that shares the one picture or video as a story, gone after a day, instead of a post -->
+    <string name="composer_story">Share as a story</string>
+    <!-- Before the choice of how long a story's picture or card shows for -->
+    <string name="composer_story_length">Shows for</string>
+    <!-- One of the lengths a story's picture or card shows for: %d is the number of seconds -->
+    <plurals name="composer_story_seconds">
+        <item quantity="one">%d second</item>
+        <item quantity="other">%d seconds</item>
+    </plurals>
     <!-- Toolbar toggle that posts a short text drawn big on colour, as a picture -->
     <string name="composer_card">Post as a card</string>
     <!-- One of the card's background colours; the placeholder is its number, 1 to 6 -->

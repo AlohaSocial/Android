@@ -96,6 +96,8 @@ class ComposerScreenshotTest {
         override fun onRetryMedia(id: String) = Unit
         override fun onSensitive(sensitive: Boolean) = Unit
         override fun onCard(on: Boolean) = Unit
+        override fun onStory(on: Boolean) = Unit
+        override fun onStorySeconds(seconds: Int) = Unit
         override fun onCardBackground(index: Int) = Unit
     }
 
@@ -167,6 +169,12 @@ class ComposerScreenshotTest {
 
     @Test
     fun posting() = capture("composer-posting") { NewPost(fresh.copy(posting = true)) }
+
+    @Test
+    fun story() = capture("composer-story") {
+        val picture = Attachment("beach", File("beach.jpg"), "beach.jpg", "image/jpeg", UploadState.Done("1", null))
+        NewPost(fresh.copy(attachments = listOf(listOf(picture)), storyFits = true, asStory = true, storySeconds = 10))
+    }
 
     @Test
     fun card() = capture("composer-card") {
