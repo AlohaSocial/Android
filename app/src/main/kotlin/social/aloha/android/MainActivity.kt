@@ -33,7 +33,7 @@ import social.aloha.feature.video.VideoPlayback
 import social.aloha.feature.video.pictureInPictureParams
 
 @AndroidEntryPoint
-class MainActivity : ComponentActivity() {
+open class MainActivity : ComponentActivity() {
     private val app: AppViewModel by viewModels()
 
     @Inject lateinit var sync: SyncEngine
@@ -61,13 +61,16 @@ class MainActivity : ComponentActivity() {
 
     override fun onStart() {
         super.onStart()
+        started++
         sync.setForeground(true)
     }
 
     override fun onStop() {
         super.onStop()
-        // turned or resized, the app stays in front and its polls keep going
-        if (!isChangingConfigurations) sync.setForeground(false)
+        started--
+        // turned or resized, the app stays in front and its polls keep going, as they do while another
+        // of its windows is still in sight
+        if (started == 0 && !isChangingConfigurations) sync.setForeground(false)
     }
 
     override fun onPictureInPictureModeChanged(isInPictureInPictureMode: Boolean, newConfig: Configuration) {
@@ -123,5 +126,10 @@ class MainActivity : ComponentActivity() {
             is OutsideRequest.Search -> app.openSearch(request.accountId)
             null -> Unit
         }
+    }
+
+    private companion object {
+        /** The app's windows in sight; only the main thread counts them. */
+        var started = 0
     }
 }

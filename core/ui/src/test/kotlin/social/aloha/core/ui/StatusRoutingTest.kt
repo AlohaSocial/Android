@@ -9,6 +9,7 @@ import android.content.Intent
 import androidx.compose.ui.graphics.Color
 import androidx.test.core.app.ApplicationProvider
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -21,6 +22,7 @@ import social.aloha.core.testing.StatusSamples
 @RunWith(RobolectricTestRunner::class)
 class StatusRoutingTest {
     private val opened = mutableListOf<String>()
+    private var windows: ((String?, String?) -> Unit)? = null
 
     private val navigation = object : StatusNavigation {
         override fun openThread(statusId: String) {
@@ -40,6 +42,7 @@ class StatusRoutingTest {
         override fun openComposer(replyToId: String?) = Unit
         override fun editPost(statusId: String, redraft: Boolean) = Unit
         override fun report(accountId: String, handle: String, statusId: String?) = Unit
+        override val newWindow get() = windows
     }
 
     private val actions = object : RoutedStatusActions(
@@ -63,6 +66,17 @@ class StatusRoutingTest {
         actions.onMedia(row, 2)
         actions.onOpen(row.statusId)
         assertEquals(listOf("media ${row.statusId} 2", "thread ${row.statusId}"), opened)
+    }
+
+    @Test
+    fun `a new window is offered only where one makes sense, and opens the post`() {
+        assertFalse(StatusMenuItem.OpenInNewWindow in actions.menu)
+        windows = { statusId, accountId -> opened += "window $statusId $accountId" }
+        assertTrue(StatusMenuItem.OpenInNewWindow in actions.menu)
+        val row = StatusRowMapper(RichTextCache(), RichTextColors(Color.Blue, Color.Gray, Color.LightGray))
+            .map(StatusSamples.post(), viewerAccountId = "2")
+        actions.onMenu(row, StatusMenuItem.OpenInNewWindow)
+        assertEquals(listOf("window ${row.statusId} null"), opened)
     }
 
     @Test

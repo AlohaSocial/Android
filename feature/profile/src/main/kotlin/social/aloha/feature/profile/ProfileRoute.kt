@@ -85,6 +85,12 @@ public fun ProfileRoute(key: AccountKey, navigation: ProfileNavigation, modifier
 
             override fun onOpenInBrowser(url: String) = openInBrowser(context, url)
 
+            override val windows: Boolean get() = nav.newWindow != null
+
+            override fun onNewWindow() {
+                state.header?.author?.id?.let { nav.newWindow?.invoke(null, it) }
+            }
+
             override fun onAlbum(album: MediaCollection) =
                 nav.openAlbum(album.id, album.title, own = state.header?.isSelf == true)
 

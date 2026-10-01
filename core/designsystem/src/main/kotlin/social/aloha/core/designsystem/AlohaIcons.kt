@@ -7,6 +7,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.List
 import androidx.compose.material.icons.automirrored.outlined.Logout
+import androidx.compose.material.icons.automirrored.outlined.OpenInNew
 import androidx.compose.material.icons.automirrored.outlined.Reply
 import androidx.compose.material.icons.automirrored.outlined.Rule
 import androidx.compose.material.icons.automirrored.outlined.Send
@@ -155,6 +156,7 @@ public object AlohaIcons {
     public val Share: ImageVector = Icons.Outlined.Share
     public val CopyLink: ImageVector = Icons.Outlined.Link
     public val OpenInBrowser: ImageVector = Icons.Outlined.OpenInBrowser
+    public val NewWindow: ImageVector = Icons.AutoMirrored.Outlined.OpenInNew
     public val Translate: ImageVector = Icons.Outlined.Translate
     public val MuteConversation: ImageVector = Icons.Outlined.NotificationsOff
     public val Report: ImageVector = Icons.Outlined.Flag

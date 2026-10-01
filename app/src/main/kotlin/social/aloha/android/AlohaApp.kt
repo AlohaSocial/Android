@@ -3,6 +3,7 @@
 
 package social.aloha.android
 
+import androidx.activity.compose.LocalActivity
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -34,6 +35,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -264,6 +266,7 @@ fun AlohaApp(
             }
         }
     }
+    val canOpenWindows by rememberUpdatedState(canOpenWindows())
     // the media viewer lies over the whole shell, so dragging a picture away shows what was under it
     var viewing by rememberSaveable(stateSaver = ViewingSaver) { mutableStateOf<MediaViewerKey?>(null) }
     val statusNavigation = remember(backStack, readerId) {
@@ -334,6 +337,11 @@ fun AlohaApp(
             override fun openAlbum(albumId: String, title: String, own: Boolean) {
                 backStack.push(AlbumKey(readerId, albumId, title, own))
             }
+
+            override val newWindow: ((String?, String?) -> Unit)?
+                get() = { statusId: String?, accountId: String? ->
+                    WindowActivity.open(context, readerId, statusId, accountId)
+                }.takeIf { canOpenWindows }
 
             override fun editPost(statusId: String, redraft: Boolean) {
                 backStack.push(
@@ -764,4 +772,12 @@ private fun PushWhenAsked(destination: NavKey?, onTaken: () -> Unit, push: (NavK
 @Composable
 private fun DestinationBadge(key: TopLevelKey, unreadNotifications: Int) {
     if (key == NotificationsKey && unreadNotifications > 0) Badge { Text(badgeCount(unreadNotifications)) }
+}
+
+/** Whether a thread or a profile can open in a window of its own: where there is room, or beside another app. */
+@Composable
+private fun canOpenWindows(): Boolean {
+    val wide = currentWindowAdaptiveInfoV2().windowSizeClass
+        .isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND)
+    return wide || LocalActivity.current?.isInMultiWindowMode == true
 }

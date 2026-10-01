@@ -4,6 +4,7 @@
 package social.aloha.android
 
 import android.content.Context
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation3.runtime.NavKey
@@ -90,6 +91,7 @@ class AppViewModel @Inject constructor(
     private val push: PushRegistrar,
     private val shortcuts: AccountShortcuts,
     preferences: ModePreferences,
+    savedState: SavedStateHandle,
     @ApplicationContext private val context: Context,
 ) : ViewModel() {
     /** The modes the navigation shows, for the server of the account in use. */
@@ -114,11 +116,14 @@ class AppViewModel @Inject constructor(
 
     init {
         // once per launch, off the main thread: moved API bases are found, stale capabilities detected
-        // again, the cache trimmed within its budget, and copies that no post attaches any more deleted
-        viewModelScope.launch {
-            maintenance.checkAll()
-            sweeper.sweep()
-            outbox.sweep(File(context.filesDir, Outbox.UPLOADS))
+        // again, the cache trimmed within its budget, and copies that no post attaches any more deleted;
+        // an extra window opened beside the app leaves that to the main one
+        if (savedState.get<Boolean>(WindowActivity.EXTRA_WINDOW) != true) {
+            viewModelScope.launch {
+                maintenance.checkAll()
+                sweeper.sweep()
+                outbox.sweep(File(context.filesDir, Outbox.UPLOADS))
+            }
         }
         // a sign-in that succeeded ends the request for one, and an added account becomes the active one
         // and what it queued while the sign-in lapsed goes out, as does anything left waiting since last time

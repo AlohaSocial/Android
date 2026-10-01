@@ -116,7 +116,12 @@ internal interface ProfileActions {
 
 /** What the profile screen asks for: [ProfileActions], and the places it leads. */
 internal interface ProfileScreenActions : ProfileActions {
+    /** Whether the profile can open in a window of its own, which its menu then offers. */
+    val windows: Boolean get() = false
+
     fun onBack()
+
+    fun onNewWindow() {}
 
     fun onPeople(followers: Boolean)
 

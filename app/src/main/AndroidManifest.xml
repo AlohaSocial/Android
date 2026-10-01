@@ -84,6 +84,17 @@
                 android:resource="@xml/shortcuts" />
         </activity>
 
+        <!-- A thread or a profile in a window of its own; started in a new task each time, and gone
+             from Recents once closed -->
+        <activity
+            android:name=".WindowActivity"
+            android:autoRemoveFromRecents="true"
+            android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation"
+            android:exported="false"
+            android:resizeableActivity="true"
+            android:supportsPictureInPicture="true"
+            android:windowSoftInputMode="adjustResize" />
+
         <!-- "Open in Aloha" in the share sheet: a browser hands a fediverse page to the app. An https
              link filter cannot do it: the app has no hosts of its own to declare, and a filter without
              one would make it a browser. -->

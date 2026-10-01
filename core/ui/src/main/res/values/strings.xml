@@ -129,6 +129,8 @@
     <string name="status_menu_mute_conversation">Mute conversation</string>
     <!-- Menu item: notifications from a muted conversation again -->
     <string name="status_menu_unmute_conversation">Unmute conversation</string>
+    <!-- Menu item on a wide screen or beside another app: opens the post's thread in a window of its own -->
+    <string name="status_menu_new_window">Open in new window</string>
     <!-- Menu item: report a post to its server's moderators -->
     <string name="status_menu_report">Report post</string>
     <!-- A video's length, read aloud on its card: %s is the length as a clock, such as 4:05 -->
