@@ -5,6 +5,7 @@ package social.aloha.core.designsystem
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.List
 import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.automirrored.outlined.Reply
 import androidx.compose.material.icons.automirrored.outlined.Rule
@@ -53,6 +54,7 @@ import androidx.compose.material.icons.outlined.FilterAlt
 import androidx.compose.material.icons.outlined.Flag
 import androidx.compose.material.icons.outlined.FormatQuote
 import androidx.compose.material.icons.outlined.GridView
+import androidx.compose.material.icons.outlined.Groups
 import androidx.compose.material.icons.outlined.Headphones
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.HistoryToggleOff
@@ -69,6 +71,7 @@ import androidx.compose.material.icons.outlined.NightsStay
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.NotificationsOff
 import androidx.compose.material.icons.outlined.OpenInBrowser
+import androidx.compose.material.icons.outlined.People
 import androidx.compose.material.icons.outlined.PersonAdd
 import androidx.compose.material.icons.outlined.PhotoAlbum
 import androidx.compose.material.icons.outlined.PhotoCamera
@@ -190,6 +193,9 @@ public object AlohaIcons {
     public val Search: ImageVector = Icons.Outlined.Search
     public val Recent: ImageVector = Icons.Outlined.History
     public val Hashtag: ImageVector = Icons.Outlined.Tag
+    public val Lists: ImageVector = Icons.AutoMirrored.Outlined.List
+    public val Group: ImageVector = Icons.Outlined.Groups
+    public val Members: ImageVector = Icons.Outlined.People
     public val Send: ImageVector = Icons.AutoMirrored.Outlined.Send
     public val Story: ImageVector = Icons.Outlined.HistoryToggleOff
     public val Settings: ImageVector = Icons.Outlined.Settings

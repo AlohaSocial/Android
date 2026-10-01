@@ -4,6 +4,12 @@
   ~ SPDX-License-Identifier: MIT
 -->
 <resources>
+    <!-- Toolbar button on Home that opens the reader's lists -->
+    <string name="home_lists">Lists</string>
+    <!-- Leaves a list's timeline -->
+    <string name="list_back">Back</string>
+    <!-- Opens who is in a list, from its timeline -->
+    <string name="list_members">People in this list</string>
     <!-- The name under the launcher icon and in system settings. A brand name, not translated. -->
     <string name="app_name" translatable="false">Aloha Social</string>
     <!-- Navigation item: the home timeline of the signed-in account. -->

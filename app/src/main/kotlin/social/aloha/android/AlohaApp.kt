@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.material3.Badge
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -70,6 +71,9 @@ import social.aloha.core.navigation.ComposerKey
 import social.aloha.core.navigation.DraftsKey
 import social.aloha.core.navigation.EditProfileKey
 import social.aloha.core.navigation.HomeKey
+import social.aloha.core.navigation.ListKey
+import social.aloha.core.navigation.ListMembersKey
+import social.aloha.core.navigation.ListsKey
 import social.aloha.core.navigation.MediaViewerKey
 import social.aloha.core.navigation.NewsKey
 import social.aloha.core.navigation.NotificationPolicyKey
@@ -102,6 +106,8 @@ import social.aloha.feature.composer.ComposerRoute
 import social.aloha.feature.composer.DraftsRoute
 import social.aloha.feature.composer.ScheduledPostsRoute
 import social.aloha.feature.explore.ExploreRoute
+import social.aloha.feature.lists.ListMembersRoute
+import social.aloha.feature.lists.ListsRoute
 import social.aloha.feature.mediaviewer.MediaViewerRoute
 import social.aloha.feature.notifications.NotificationsRoute
 import social.aloha.feature.notifications.PolicyRoute
@@ -215,9 +221,9 @@ fun AlohaApp(
     timeline: @Composable (
         TimelineFeed,
         StatusNavigation,
-        onSearch: () -> Unit,
+        HomeLinks,
         accountButton: @Composable () -> Unit,
-    ) -> Unit = { feed, navigation, search, button -> ModeTimeline(feed, navigation, search, button) },
+    ) -> Unit = { feed, navigation, links, button -> ModeTimeline(feed, navigation, links, button) },
     nowPlaying: @Composable (onOpen: (statusId: String) -> Unit) -> Unit = { MiniPlayer(onOpen = it) },
 ) {
     val backStack = rememberNavBackStack(HomeKey)
@@ -377,7 +383,11 @@ fun AlohaApp(
                     entryProvider = entryProvider {
                         // home and each mode: the same account button, each timeline of its own
                         val modeEntry = @Composable { feed: TimelineFeed ->
-                            timeline(feed, statusNavigation, { backStack.push(SearchKey(readerId)) }) {
+                            val links = HomeLinks(
+                                onSearch = { backStack.push(SearchKey(readerId)) },
+                                onLists = { backStack.push(ListsKey(readerId)) },
+                            )
+                            timeline(feed, statusNavigation, links) {
                                 accountButton({
                                     backStack.push(AccountKey(readerId, id = serverAccountId))
                                 }, { backStack.push(SettingsKey) })
@@ -412,6 +422,36 @@ fun AlohaApp(
                                 it,
                                 onOpenProfile = { id -> statusNavigation.openProfile(id, null) },
                                 onBack = { backStack.remove(it) },
+                            )
+                        }
+                        entry<ListsKey> { key ->
+                            ListsRoute(
+                                key,
+                                onOpen = { backStack.push(ListKey(key.readerId, it.id, it.title)) },
+                                onBack = { backStack.remove(key) },
+                            )
+                        }
+                        entry<ListKey> { key ->
+                            TimelineRoute(
+                                statusNavigation,
+                                feed = TimelineFeed.List(key.listId, key.title),
+                                navigationIcon = {
+                                    IconButton(onClick = { backStack.remove(key) }) {
+                                        Icon(AlohaIcons.Back, stringResource(R.string.list_back))
+                                    }
+                                },
+                                toolbar = {
+                                    IconButton(onClick = {
+                                        backStack.push(ListMembersKey(key.readerId, key.listId, key.title))
+                                    }) { Icon(AlohaIcons.Members, stringResource(R.string.list_members)) }
+                                },
+                            )
+                        }
+                        entry<ListMembersKey> { key ->
+                            ListMembersRoute(
+                                key,
+                                onProfile = { statusNavigation.openProfile(it, null) },
+                                onBack = { backStack.remove(key) },
                             )
                         }
                         entry<SearchKey> { key ->
@@ -531,7 +571,7 @@ private fun NothingOpen() {
 private fun ModeTimeline(
     feed: TimelineFeed,
     navigation: StatusNavigation,
-    onSearch: () -> Unit,
+    links: HomeLinks,
     accountButton: @Composable () -> Unit,
 ) {
     // Shorts is a pager of its own rather than a timeline of rows
@@ -542,8 +582,13 @@ private fun ModeTimeline(
         navigation,
         feed = feed,
         navigationIcon = accountButton,
-        // search is reached from Home
-        onSearch = onSearch.takeIf { feed == TimelineFeed.Home },
+        // search and the lists are reached from Home
+        onSearch = links.onSearch.takeIf { feed == TimelineFeed.Home },
+        toolbar = {
+            if (feed == TimelineFeed.Home) {
+                IconButton(onClick = links.onLists) { Icon(AlohaIcons.Lists, stringResource(R.string.home_lists)) }
+            }
+        },
         header = {
             when (feed.mode) {
                 FeedMode.Photos -> StoriesRail(
@@ -583,6 +628,9 @@ private fun AlohaAppPreview() {
         AlohaApp("preview", "1", timeline = { _, _, _, _ -> Placeholder(stringResource(R.string.destination_home)) })
     }
 }
+
+/** Where Home's toolbar leads beyond its timeline: search, and the reader's lists. */
+data class HomeLinks(val onSearch: () -> Unit = {}, val onLists: () -> Unit = {})
 
 /** Opens [key] unless it is already on screen: a second copy would make back seem to do nothing. */
 internal fun MutableList<NavKey>.push(key: NavKey) {

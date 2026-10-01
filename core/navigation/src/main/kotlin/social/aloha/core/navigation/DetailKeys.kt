@@ -80,6 +80,18 @@ public data class ReportKey(
 @Serializable
 public data class SearchKey(val readerId: String) : NavKey
 
+/** [readerId]'s lists. */
+@Serializable
+public data class ListsKey(val readerId: String) : NavKey
+
+/** The timeline of [readerId]'s list [listId], called [title]. */
+@Serializable
+public data class ListKey(val readerId: String, val listId: String, val title: String) : NavKey
+
+/** Who is in [readerId]'s list [listId], called [title]: added and removed here, unless a group's. */
+@Serializable
+public data class ListMembersKey(val readerId: String, val listId: String, val title: String) : NavKey
+
 /** [readerId]'s own profile, being edited. */
 @Serializable
 public data class EditProfileKey(val readerId: String) : NavKey

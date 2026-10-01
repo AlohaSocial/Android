@@ -114,7 +114,7 @@ internal class TimelineViewModel @AssistedInject constructor(
     private val accountSettings: Flow<AccountSettings> = when (feed) {
         TimelineFeed.Home -> storedSettings
         is TimelineFeed.Mode -> storedSettings.map { it.copy(showBoosts = true, showReplies = true) }
-        is TimelineFeed.Tag -> flowOf(AccountSettings())
+        is TimelineFeed.Tag, is TimelineFeed.List -> flowOf(AccountSettings())
     }
 
     private val key: Flow<TimelineKey> = combine(account.filterNotNull(), accountSettings) { account, settings ->
@@ -195,7 +195,11 @@ internal class TimelineViewModel @AssistedInject constructor(
         ->
         TimelineUiState(
             source = sourceOf(account, settings),
-            sources = if (feed is TimelineFeed.Tag) emptyList() else homeSources(account.capabilities),
+            sources = if (feed is TimelineFeed.Tag || feed is TimelineFeed.List) {
+                emptyList()
+            } else {
+                homeSources(account.capabilities)
+            },
             items = shown.items,
             loadedOnce = paging.loadedOnce,
             refreshing = paging.refreshing,
@@ -292,7 +296,7 @@ internal class TimelineViewModel @AssistedInject constructor(
     override fun onSource(source: TimelineSource) = when (feed) {
         TimelineFeed.Home -> updateSettings { it.copy(homeSource = source) }
         is TimelineFeed.Mode -> updateSettings { it.copy(modeSources = it.modeSources + (feed.mode.key to source)) }
-        is TimelineFeed.Tag -> Unit
+        is TimelineFeed.Tag, is TimelineFeed.List -> Unit
     }
 
     override fun onShowBoosts(show: Boolean) = updateSettings { it.copy(showBoosts = show) }
@@ -375,15 +379,19 @@ internal class TimelineViewModel @AssistedInject constructor(
         if (key == TimelineKey.home()) positions.markHomeRead(account, position.statusId)
     }
 
-    /** The chosen source where the server serves it; a choice it no longer serves falls back to Following. */
-    private fun sourceOf(account: SignedInAccount, settings: AccountSettings): TimelineSource {
-        val chosen = when (feed) {
-            TimelineFeed.Home -> settings.homeSource
-            is TimelineFeed.Mode -> settings.modeSources[feed.mode.key]
-            is TimelineFeed.Tag -> return TimelineSource.Hashtag(feed.name)
-        }
-        return chosen?.takeIf { it in homeSources(account.capabilities) } ?: TimelineSource.Home
+    /**
+     * A hashtag's or a list's own timeline; else the chosen source where the server serves it, a choice
+     * it no longer serves falling back to Following.
+     */
+    private fun sourceOf(account: SignedInAccount, settings: AccountSettings): TimelineSource = when (feed) {
+        is TimelineFeed.Tag -> TimelineSource.Hashtag(feed.name)
+        is TimelineFeed.List -> TimelineSource.List(feed.id)
+        TimelineFeed.Home -> settings.homeSource.served(account)
+        is TimelineFeed.Mode -> settings.modeSources[feed.mode.key].served(account)
     }
+
+    private fun TimelineSource?.served(account: SignedInAccount): TimelineSource =
+        this?.takeIf { it in homeSources(account.capabilities) } ?: TimelineSource.Home
 
     private companion object {
         const val PILL_AVATARS = 3

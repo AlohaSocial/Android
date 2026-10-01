@@ -15,6 +15,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
@@ -230,14 +231,25 @@ private fun ListsDialog(lists: List<ListChoice>?, onListed: (String, Boolean) ->
 
                 else -> Column(Modifier.verticalScroll(rememberScrollState()), Arrangement.spacedBy(AlohaSpacing.xxs)) {
                     lists.forEach { choice ->
+                        // a list that follows a Nextcloud group holds the group's members, not the reader's choice
+                        val group = choice.list.followsGroup
                         Row(
-                            Modifier.fillMaxWidth().toggleable(choice.member, role = Role.Checkbox) {
+                            Modifier.fillMaxWidth().toggleable(choice.member, enabled = !group, role = Role.Checkbox) {
                                 onListed(choice.list.id, it)
                             },
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            Checkbox(checked = choice.member, onCheckedChange = null)
-                            Text(choice.list.title, Modifier.padding(start = AlohaSpacing.s))
+                            Checkbox(checked = choice.member, onCheckedChange = null, enabled = !group)
+                            Column(Modifier.padding(start = AlohaSpacing.s)) {
+                                Text(choice.list.title)
+                                if (group) {
+                                    Text(
+                                        stringResource(R.string.profile_lists_group),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                }
+                            }
                         }
                     }
                 }

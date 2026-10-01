@@ -40,6 +40,7 @@ public fun TimelineRoute(
     navigationIcon: @Composable () -> Unit = {},
     header: @Composable () -> Unit = {},
     onSearch: (() -> Unit)? = null,
+    toolbar: @Composable () -> Unit = {},
 ) {
     val viewModel =
         hiltViewModel<TimelineViewModel, TimelineViewModel.Factory>(key = feed.toString()) { it.create(feed) }
@@ -97,6 +98,7 @@ public fun TimelineRoute(
             TimelineFeed.Home -> stringResource(R.string.timeline_title)
             is TimelineFeed.Mode -> stringResource(modeTitle(feed.mode))
             is TimelineFeed.Tag -> "#${feed.name}"
+            is TimelineFeed.List -> feed.title
         },
         navigationIcon = navigationIcon,
         showOptions = feed == TimelineFeed.Home,
@@ -104,6 +106,7 @@ public fun TimelineRoute(
         onAlbums = if (feed.mode == FeedMode.Photos && state.albums) ({ nav.openAlbums() }) else null,
         onExplore = if (feed.mode == FeedMode.Photos) ({ nav.openPhotoExplore() }) else null,
         onSearch = onSearch,
+        toolbar = toolbar,
         header = header,
         onVideo = nav::openVideo,
     )

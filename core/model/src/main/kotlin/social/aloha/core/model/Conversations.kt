@@ -38,7 +38,11 @@ public data class AccountList(
     val title: String,
     val repliesPolicy: String? = null,
     val exclusive: Boolean = false,
-)
+    /** The Nextcloud group the list follows (Nextcloud Social's own): its members are the group's, not its owner's. */
+    val group: String? = null,
+) {
+    val followsGroup: Boolean get() = !group.isNullOrEmpty()
+}
 
 @Serializable
 public data class SearchResults(

@@ -23,6 +23,9 @@ public sealed interface TimelineFeed {
     public data class Mode(override val mode: FeedMode) : TimelineFeed
 
     public data class Tag(val name: String) : TimelineFeed
+
+    /** One of the reader's lists, by its [id], called [title]. */
+    public data class List(val id: String, val title: String) : TimelineFeed
 }
 
 /**
