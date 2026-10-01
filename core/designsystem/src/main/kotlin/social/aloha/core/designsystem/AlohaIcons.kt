@@ -9,6 +9,8 @@ import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.automirrored.outlined.Reply
 import androidx.compose.material.icons.automirrored.outlined.Rule
 import androidx.compose.material.icons.automirrored.outlined.Subject
+import androidx.compose.material.icons.automirrored.outlined.VolumeOff
+import androidx.compose.material.icons.automirrored.outlined.VolumeUp
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.AmpStories
 import androidx.compose.material.icons.filled.ArrowUpward
@@ -139,6 +141,10 @@ public object AlohaIcons {
     public val Delete: ImageVector = Icons.Outlined.Delete
     public val Redraft: ImageVector = Icons.Outlined.EditNote
     public val Add: ImageVector = Icons.Outlined.Add
+
+    /** A video's sound off, and on. */
+    public val Muted: ImageVector = Icons.AutoMirrored.Outlined.VolumeOff
+    public val Unmuted: ImageVector = Icons.AutoMirrored.Outlined.VolumeUp
 
     /** An album, Pixelfed's collection of posts with pictures. */
     public val Album: ImageVector = Icons.Outlined.PhotoAlbum

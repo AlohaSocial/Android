@@ -49,6 +49,7 @@ dependencies {
     implementation(project(":feature:photos"))
     implementation(project(":feature:stories"))
     implementation(project(":feature:video"))
+    implementation(project(":feature:shorts"))
     implementation(project(":feature:notifications"))
     implementation(project(":widget"))
     implementation(libs.androidx.hilt.lifecycle.viewmodel.compose)

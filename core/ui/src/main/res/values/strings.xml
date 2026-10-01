@@ -74,6 +74,12 @@
     <string name="status_action_unchoose">Remove choice %s</string>
     <!-- Screen-reader action that opens the post a post quotes -->
     <string name="status_action_open_quote">Open quoted post</string>
+    <!-- A mode's posts from the people the reader follows, on its tabs or chips -->
+    <string name="source_home">Following</string>
+    <!-- A mode's posts from everyone on the reader's own server -->
+    <string name="source_local">This server</string>
+    <!-- A mode's posts from every server the reader's server knows of -->
+    <string name="source_federated">Everywhere</string>
     <!-- Screen-reader action that opens a post's link preview; %s is the link's title or address -->
     <string name="status_action_open_card">Open link: %s</string>
     <!-- Read aloud for a quoted post; %s is the name of its author -->

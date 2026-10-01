@@ -3,4 +3,15 @@
 
 plugins {
     alias(libs.plugins.aloha.android.feature)
+    alias(libs.plugins.aloha.screenshot)
+}
+
+dependencies {
+    implementation(project(":core:data"))
+    implementation(project(":core:datastore"))
+    // the player's view, drawn without its controls
+    implementation(libs.androidx.media3.ui)
+    testImplementation(project(":core:testing"))
+    testImplementation(project(":core:database"))
+    testImplementation(libs.kotlinx.coroutines.test)
 }

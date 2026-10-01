@@ -104,6 +104,7 @@ import social.aloha.feature.profile.ReportRoute
 import social.aloha.feature.settings.SettingsPlaceholder
 import social.aloha.feature.settings.SettingsRoute
 import social.aloha.feature.settings.SettingsSectionRoute
+import social.aloha.feature.shorts.ShortsRoute
 import social.aloha.feature.stories.StoriesRail
 import social.aloha.feature.thread.StatusListRoute
 import social.aloha.feature.thread.ThreadNavigation
@@ -423,6 +424,8 @@ private fun NothingOpen() {
 /** Home's timeline, or a mode's: Photos carries the stories rail above its own, Video what to carry on with. */
 @Composable
 private fun ModeTimeline(feed: TimelineFeed, navigation: StatusNavigation, accountButton: @Composable () -> Unit) {
+    // Shorts is a pager of its own rather than a timeline of rows
+    if (feed.mode == FeedMode.Shorts) return ShortsRoute(navigation, accountButton)
     TimelineRoute(
         navigation,
         feed = feed,
