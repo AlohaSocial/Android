@@ -31,6 +31,7 @@ import social.aloha.core.data.timeline.FilterRepository
 import social.aloha.core.data.timeline.StatusInteractions
 import social.aloha.core.data.timeline.StatusRepository
 import social.aloha.core.data.timeline.TimelineRepository
+import social.aloha.core.data.video.WatchPositions
 import social.aloha.core.database.AccountsDatabase
 import social.aloha.core.database.CacheDatabase
 import social.aloha.core.database.OutboxDatabase
@@ -95,6 +96,10 @@ public class SignedInFixture(private val context: Context) : Closeable {
 
     /** The stored posts, in the in-memory cache. */
     public val statuses: StatusRepository by lazy { StatusRepository(cache.value.statusDao(), clock) }
+
+    /** Watch positions, on the in-memory cache, reported as of [at]. */
+    public fun watchPositions(at: Clock = clock): WatchPositions =
+        WatchPositions(clients, cache.value.watchPositionDao(), statuses, at)
 
     /** The reader's albums, their posts stored in [statuses]. */
     public val albums: Albums by lazy { Albums(clients, statuses) }
