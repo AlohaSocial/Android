@@ -60,7 +60,7 @@ class AppShellScreenshotTest {
             SwitcherAccount("b", "Alice at work", "@alice@mastodon.example", null, active = false, needsReauth = true),
         )
         compose.setContent {
-            AlohaTheme(ThemeSettings(mode = ThemeMode.Light)) { AccountSheet(accounts, {}, {}, {}, {}, {}, {}) }
+            AlohaTheme(ThemeSettings(mode = ThemeMode.Light)) { AccountSheet(accounts, {}, AccountLinks(), {}, {}, {}) }
         }
         compose.waitForIdle()
         captureScreenRoboImage("src/test/screenshots/shell-accounts.png")

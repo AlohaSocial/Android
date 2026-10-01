@@ -44,5 +44,5 @@ listOf(
 listOf(
     "signin", "timeline", "thread", "profile", "notifications", "composer", "search", "explore",
     "lists", "settings", "photos", "video", "shorts", "stories", "mediaviewer", "audio", "news",
-    "safety", "moderation", "share",
+    "safety", "moderation", "share", "hashtags",
 ).forEach { include(":feature:$it") }

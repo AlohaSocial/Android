@@ -70,6 +70,7 @@ import social.aloha.core.navigation.AudioKey
 import social.aloha.core.navigation.ComposerKey
 import social.aloha.core.navigation.DraftsKey
 import social.aloha.core.navigation.EditProfileKey
+import social.aloha.core.navigation.HashtagsKey
 import social.aloha.core.navigation.HomeKey
 import social.aloha.core.navigation.ListKey
 import social.aloha.core.navigation.ListMembersKey
@@ -93,6 +94,7 @@ import social.aloha.core.navigation.SettingsSectionKey
 import social.aloha.core.navigation.ShortsKey
 import social.aloha.core.navigation.StatusListKey
 import social.aloha.core.navigation.StatusListKind
+import social.aloha.core.navigation.TagGroupKey
 import social.aloha.core.navigation.TagKey
 import social.aloha.core.navigation.ThreadKey
 import social.aloha.core.navigation.TopLevelKey
@@ -106,6 +108,8 @@ import social.aloha.feature.composer.ComposerRoute
 import social.aloha.feature.composer.DraftsRoute
 import social.aloha.feature.composer.ScheduledPostsRoute
 import social.aloha.feature.explore.ExploreRoute
+import social.aloha.feature.hashtags.HashtagsRoute
+import social.aloha.feature.hashtags.TagGroupRoute
 import social.aloha.feature.lists.ListMembersRoute
 import social.aloha.feature.lists.ListsRoute
 import social.aloha.feature.mediaviewer.MediaViewerRoute
@@ -216,7 +220,7 @@ fun AlohaApp(
     onPendingDestinationTaken: () -> Unit = {},
     unreadNotifications: Int = 0,
     resolveLink: suspend (address: String, fromPost: Boolean) -> NavKey? = { _, _ -> null },
-    accountButton: @Composable (onProfile: () -> Unit, onSettings: () -> Unit) -> Unit = { _, _ -> },
+    accountButton: @Composable (AccountLinks) -> Unit = {},
     modes: ModeNavigation = ModeNavigation(),
     timeline: @Composable (
         TimelineFeed,
@@ -381,17 +385,17 @@ fun AlohaApp(
                         rememberViewModelStoreNavEntryDecorator(),
                     ),
                     entryProvider = entryProvider {
+                        // where the account button's sheet leads, the same from every top-level screen
+                        val accountLinks = AccountLinks(
+                            onProfile = { backStack.push(AccountKey(readerId, id = serverAccountId)) },
+                            onSettings = { backStack.push(SettingsKey) },
+                            onLists = { backStack.push(ListsKey(readerId)) },
+                            onHashtags = { backStack.push(HashtagsKey(readerId)) },
+                        )
                         // home and each mode: the same account button, each timeline of its own
                         val modeEntry = @Composable { feed: TimelineFeed ->
-                            val links = HomeLinks(
-                                onSearch = { backStack.push(SearchKey(readerId)) },
-                                onLists = { backStack.push(ListsKey(readerId)) },
-                            )
-                            timeline(feed, statusNavigation, links) {
-                                accountButton({
-                                    backStack.push(AccountKey(readerId, id = serverAccountId))
-                                }, { backStack.push(SettingsKey) })
-                            }
+                            val links = HomeLinks(onSearch = { backStack.push(SearchKey(readerId)) })
+                            timeline(feed, statusNavigation, links) { accountButton(accountLinks) }
                         }
                         val listPane = ListDetailSceneStrategy.listPane(detailPlaceholder = { NothingOpen() })
                         entry<HomeKey>(metadata = listPane) { modeEntry(TimelineFeed.Home) }
@@ -407,11 +411,7 @@ fun AlohaApp(
                                 statusNavigation,
                                 onPolicy = { backStack.push(NotificationPolicyKey(readerId)) },
                                 onRequests = { backStack.push(NotificationRequestsKey(readerId)) },
-                                navigationIcon = {
-                                    accountButton({
-                                        backStack.push(AccountKey(readerId, id = serverAccountId))
-                                    }, { backStack.push(SettingsKey) })
-                                },
+                                navigationIcon = { accountButton(accountLinks) },
                             )
                         }
                         entry<NotificationPolicyKey>(metadata = ListDetailSceneStrategy.detailPane()) {
@@ -453,6 +453,17 @@ fun AlohaApp(
                                 onProfile = { statusNavigation.openProfile(it, null) },
                                 onBack = { backStack.remove(key) },
                             )
+                        }
+                        entry<HashtagsKey> { key ->
+                            HashtagsRoute(
+                                key,
+                                onTag = statusNavigation::openTag,
+                                onGroup = { backStack.push(TagGroupKey(key.readerId, it.name)) },
+                                onBack = { backStack.remove(key) },
+                            )
+                        }
+                        entry<TagGroupKey> { key ->
+                            TagGroupRoute(key, statusNavigation, onBack = { backStack.remove(key) })
                         }
                         entry<SearchKey> { key ->
                             SearchRoute(key, statusNavigation, onBack = { backStack.remove(key) }) {
@@ -582,13 +593,8 @@ private fun ModeTimeline(
         navigation,
         feed = feed,
         navigationIcon = accountButton,
-        // search and the lists are reached from Home
+        // search is reached from Home
         onSearch = links.onSearch.takeIf { feed == TimelineFeed.Home },
-        toolbar = {
-            if (feed == TimelineFeed.Home) {
-                IconButton(onClick = links.onLists) { Icon(AlohaIcons.Lists, stringResource(R.string.home_lists)) }
-            }
-        },
         header = {
             when (feed.mode) {
                 FeedMode.Photos -> StoriesRail(
@@ -629,8 +635,16 @@ private fun AlohaAppPreview() {
     }
 }
 
-/** Where Home's toolbar leads beyond its timeline: search, and the reader's lists. */
-data class HomeLinks(val onSearch: () -> Unit = {}, val onLists: () -> Unit = {})
+/** Where Home's toolbar leads beyond its timeline: search. */
+data class HomeLinks(val onSearch: () -> Unit = {})
+
+/** Where the account button's sheet leads: the reader's profile, settings, lists and hashtags. */
+data class AccountLinks(
+    val onProfile: () -> Unit = {},
+    val onSettings: () -> Unit = {},
+    val onLists: () -> Unit = {},
+    val onHashtags: () -> Unit = {},
+)
 
 /** Opens [key] unless it is already on screen: a second copy would make back seem to do nothing. */
 internal fun MutableList<NavKey>.push(key: NavKey) {

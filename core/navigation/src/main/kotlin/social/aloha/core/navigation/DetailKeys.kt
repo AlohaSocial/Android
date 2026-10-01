@@ -92,6 +92,14 @@ public data class ListKey(val readerId: String, val listId: String, val title: S
 @Serializable
 public data class ListMembersKey(val readerId: String, val listId: String, val title: String) : NavKey
 
+/** The hashtags [readerId] follows, and their tag groups. */
+@Serializable
+public data class HashtagsKey(val readerId: String) : NavKey
+
+/** [readerId]'s tag group [name]: several hashtags read as one timeline. */
+@Serializable
+public data class TagGroupKey(val readerId: String, val name: String) : NavKey
+
 /** [readerId]'s own profile, being edited. */
 @Serializable
 public data class EditProfileKey(val readerId: String) : NavKey

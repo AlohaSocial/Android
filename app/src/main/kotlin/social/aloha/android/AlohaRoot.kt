@@ -55,7 +55,7 @@ fun AlohaRoot(viewModel: AppViewModel = hiltViewModel()) {
                     onPendingDestinationTaken = viewModel::destinationHandled,
                     unreadNotifications = unread,
                     resolveLink = viewModel::destination,
-                    accountButton = { onProfile, onSettings -> AccountSwitcher(viewModel, onProfile, onSettings) },
+                    accountButton = { links -> AccountSwitcher(viewModel, links) },
                     modes = modes,
                 )
             }

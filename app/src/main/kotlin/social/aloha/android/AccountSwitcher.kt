@@ -48,7 +48,7 @@ import social.aloha.core.ui.Avatar
  * to switch to, the reader's own profile, another account to add, and signing out of this one.
  */
 @Composable
-internal fun AccountSwitcher(viewModel: AppViewModel, onProfile: () -> Unit, onSettings: () -> Unit) {
+internal fun AccountSwitcher(viewModel: AppViewModel, links: AccountLinks) {
     val accounts by viewModel.switcher.collectAsStateWithLifecycle()
     var open by remember { mutableStateOf(false) }
     val active = accounts.firstOrNull { it.active } ?: return
@@ -63,14 +63,25 @@ internal fun AccountSwitcher(viewModel: AppViewModel, onProfile: () -> Unit, onS
                 open = false
                 viewModel.switchTo(it)
             },
-            onProfile = {
-                open = false
-                onProfile()
-            },
-            onSettings = {
-                open = false
-                onSettings()
-            },
+            // each place closes the sheet as it opens
+            links = AccountLinks(
+                onProfile = {
+                    open = false
+                    links.onProfile()
+                },
+                onSettings = {
+                    open = false
+                    links.onSettings()
+                },
+                onLists = {
+                    open = false
+                    links.onLists()
+                },
+                onHashtags = {
+                    open = false
+                    links.onHashtags()
+                },
+            ),
             onAdd = {
                 open = false
                 viewModel.addAccount()
@@ -89,8 +100,7 @@ internal fun AccountSwitcher(viewModel: AppViewModel, onProfile: () -> Unit, onS
 internal fun AccountSheet(
     accounts: List<SwitcherAccount>,
     onSwitch: (String) -> Unit,
-    onProfile: () -> Unit,
-    onSettings: () -> Unit,
+    links: AccountLinks,
     onAdd: () -> Unit,
     onSignOut: () -> Unit,
     onDismiss: () -> Unit,
@@ -110,8 +120,10 @@ internal fun AccountSheet(
             }
             items(accounts, key = { it.id }) { account -> AccountLine(account) { onSwitch(account.id) } }
             item { HorizontalDivider(Modifier.padding(vertical = AlohaSpacing.xs)) }
-            item { Action(AlohaIcons.Profile, stringResource(R.string.accounts_profile), onProfile) }
-            item { Action(AlohaIcons.Settings, stringResource(R.string.accounts_settings), onSettings) }
+            item { Action(AlohaIcons.Profile, stringResource(R.string.accounts_profile), links.onProfile) }
+            item { Action(AlohaIcons.Lists, stringResource(R.string.accounts_lists), links.onLists) }
+            item { Action(AlohaIcons.Hashtag, stringResource(R.string.accounts_hashtags), links.onHashtags) }
+            item { Action(AlohaIcons.Settings, stringResource(R.string.accounts_settings), links.onSettings) }
             item { Action(AlohaIcons.AddAccount, stringResource(R.string.accounts_add), onAdd) }
             item {
                 Action(AlohaIcons.SignOut, stringResource(R.string.accounts_sign_out, active.handle)) {

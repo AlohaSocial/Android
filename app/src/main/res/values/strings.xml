@@ -4,8 +4,10 @@
   ~ SPDX-License-Identifier: MIT
 -->
 <resources>
-    <!-- Toolbar button on Home that opens the reader's lists -->
-    <string name="home_lists">Lists</string>
+    <!-- In the account sheet: opens the reader's lists -->
+    <string name="accounts_lists">Lists</string>
+    <!-- In the account sheet: opens the hashtags the reader follows and their tag groups -->
+    <string name="accounts_hashtags">Hashtags</string>
     <!-- Leaves a list's timeline -->
     <string name="list_back">Back</string>
     <!-- Opens who is in a list, from its timeline -->

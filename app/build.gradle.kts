@@ -55,6 +55,7 @@ dependencies {
     implementation(project(":feature:search"))
     implementation(project(":feature:explore"))
     implementation(project(":feature:lists"))
+    implementation(project(":feature:hashtags"))
     implementation(project(":feature:mediaviewer"))
     implementation(project(":feature:notifications"))
     implementation(project(":widget"))
