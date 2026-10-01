@@ -73,8 +73,10 @@ public fun ShortsRoute(
             snackbars.showSnackbar(failed)
         }
     }
-    val pagerState = rememberPagerState { state.shorts.size }
     val shorts by rememberUpdatedState(state.shorts)
+    // counted from the list as composed, which the pager's pages are drawn from: counted from the newest
+    // state, a page arriving between frames is counted before the pager has its shorts
+    val pagerState = rememberPagerState { shorts.size }
     val muted by rememberUpdatedState(state.muted)
     LaunchedEffect(state.shorts) { playback.setItems(state.shorts.map { it.source }) }
     LaunchedEffect(pagerState) {
