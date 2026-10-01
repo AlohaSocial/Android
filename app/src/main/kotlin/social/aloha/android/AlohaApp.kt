@@ -71,6 +71,8 @@ import social.aloha.core.navigation.ComposerKey
 import social.aloha.core.navigation.ConversationsKey
 import social.aloha.core.navigation.DraftsKey
 import social.aloha.core.navigation.EditProfileKey
+import social.aloha.core.navigation.FilterEditKey
+import social.aloha.core.navigation.FiltersKey
 import social.aloha.core.navigation.HashtagsKey
 import social.aloha.core.navigation.HomeKey
 import social.aloha.core.navigation.ListKey
@@ -131,6 +133,8 @@ import social.aloha.feature.profile.PeopleRoute
 import social.aloha.feature.profile.ProfileNavigation
 import social.aloha.feature.profile.ProfileRoute
 import social.aloha.feature.profile.ReportRoute
+import social.aloha.feature.safety.FilterEditRoute
+import social.aloha.feature.safety.FiltersRoute
 import social.aloha.feature.saved.SavedPostsRoute
 import social.aloha.feature.search.SearchRoute
 import social.aloha.feature.settings.SettingsPlaceholder
@@ -464,6 +468,14 @@ fun AlohaApp(
                                 onBack = { backStack.remove(key) },
                             )
                         }
+                        entry<FiltersKey> { key ->
+                            FiltersRoute(
+                                key,
+                                onEdit = { backStack.push(FilterEditKey(key.readerId, it)) },
+                                onBack = { backStack.remove(key) },
+                            )
+                        }
+                        entry<FilterEditKey> { key -> FilterEditRoute(key, onDone = { backStack.remove(key) }) }
                         entry<SavedPostsKey> { key ->
                             SavedPostsRoute(key, statusNavigation, onBack = { backStack.remove(key) })
                         }
@@ -673,7 +685,7 @@ data class HomeLinks(val onSearch: () -> Unit = {})
 data class AccountLinks(val open: (AccountPlace) -> Unit = {})
 
 /** Where the account sheet leads. */
-enum class AccountPlace { Profile, Messages, Bookmarks, Favourites, Archived, Lists, Hashtags, Settings }
+enum class AccountPlace { Profile, Messages, Bookmarks, Favourites, Archived, Lists, Hashtags, Filters, Settings }
 
 private fun AccountPlace.key(readerId: String, serverAccountId: String): NavKey = when (this) {
     AccountPlace.Profile -> AccountKey(readerId, id = serverAccountId)
@@ -683,6 +695,7 @@ private fun AccountPlace.key(readerId: String, serverAccountId: String): NavKey 
     AccountPlace.Archived -> SavedPostsKey(readerId, SavedKind.Archived)
     AccountPlace.Lists -> ListsKey(readerId)
     AccountPlace.Hashtags -> HashtagsKey(readerId)
+    AccountPlace.Filters -> FiltersKey(readerId)
     AccountPlace.Settings -> SettingsKey
 }
 

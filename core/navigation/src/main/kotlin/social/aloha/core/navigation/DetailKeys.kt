@@ -153,6 +153,14 @@ public data class ConversationsKey(val readerId: String) : NavKey
 @Serializable
 public data class NewMessageKey(val readerId: String) : NavKey
 
+/** [readerId]'s filters. */
+@Serializable
+public data class FiltersKey(val readerId: String) : NavKey
+
+/** [readerId]'s filter [filterId] being changed, or a new one without. */
+@Serializable
+public data class FilterEditKey(val readerId: String, val filterId: String? = null) : NavKey
+
 /** The watch page of post [statusId]'s video, as [readerId] sees it. */
 @Serializable
 public data class WatchKey(val readerId: String, val statusId: String) : NavKey

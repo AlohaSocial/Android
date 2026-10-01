@@ -58,6 +58,7 @@ dependencies {
     implementation(project(":feature:hashtags"))
     implementation(project(":feature:saved"))
     implementation(project(":feature:conversations"))
+    implementation(project(":feature:safety"))
     implementation(project(":feature:mediaviewer"))
     implementation(project(":feature:notifications"))
     implementation(project(":widget"))

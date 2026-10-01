@@ -186,6 +186,7 @@ private val AccountPlace.look: Pair<ImageVector, Int>
         AccountPlace.Archived -> AlohaIcons.Archived to R.string.accounts_archived
         AccountPlace.Lists -> AlohaIcons.Lists to R.string.accounts_lists
         AccountPlace.Hashtags -> AlohaIcons.Hashtag to R.string.accounts_hashtags
+        AccountPlace.Filters -> AlohaIcons.Filtered to R.string.accounts_filters
         AccountPlace.Settings -> AlohaIcons.Settings to R.string.accounts_settings
     }
 
