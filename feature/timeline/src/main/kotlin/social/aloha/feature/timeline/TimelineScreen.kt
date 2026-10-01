@@ -110,6 +110,7 @@ internal fun TimelineScreen(
     onAlbums: (() -> Unit)? = null,
     onExplore: (() -> Unit)? = null,
     header: @Composable () -> Unit = {},
+    onVideo: (String) -> Unit = {},
 ) {
     Scaffold(
         modifier = modifier.semantics { paneTitle = title },
@@ -147,7 +148,7 @@ internal fun TimelineScreen(
             ) {
                 // the app is fully drawn once the reader sees posts, or learns there are none
                 ReportDrawnWhen { state.items.isNotEmpty() || state.loadedOnce }
-                Content(state, actions, rowActions, listState, gridState)
+                Content(state, actions, rowActions, listState, gridState, onVideo)
                 NewPostsPill(
                     state.pending,
                     state.pendingAvatars,
@@ -157,8 +158,8 @@ internal fun TimelineScreen(
             }
         }
     }
-    // the grid keeps its own position and paging; the list's effects follow the list alone
-    if (state.grid != true) ListEffects(state, actions, listState)
+    // a grid keeps its own position and paging; the list's effects follow the list alone
+    if (state.grid != true && state.watched == null) ListEffects(state, actions, listState)
 }
 
 /** The posts as a list or a grid, what an empty timeline says, or their shapes while the first page loads. */
@@ -169,8 +170,10 @@ private fun Content(
     rowActions: StatusActions,
     listState: LazyListState,
     gridState: LazyGridState,
+    onVideo: (String) -> Unit,
 ) = when {
     state.items.isNotEmpty() && state.grid == true -> PhotoGrid(state, actions, rowActions, gridState)
+    state.items.isNotEmpty() && state.watched != null -> VideoGrid(state, actions, onVideo, gridState)
     state.items.isNotEmpty() -> Rows(state, actions, rowActions, listState)
     state.loadedOnce -> EmptyState(state.source, TimelineSource.Local in state.sources, state.sparse, actions)
     else -> Skeleton()

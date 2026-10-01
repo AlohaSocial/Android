@@ -40,6 +40,7 @@ import social.aloha.core.data.timeline.TimelinePositions
 import social.aloha.core.data.timeline.TimelineRepository
 import social.aloha.core.data.timeline.TimelineRow
 import social.aloha.core.data.timeline.Toggle
+import social.aloha.core.data.video.WatchPositions
 import social.aloha.core.datastore.AccountSettings
 import social.aloha.core.datastore.AccountSettingsStore
 import social.aloha.core.datastore.AppPreferences
@@ -76,6 +77,7 @@ internal class TimelineViewModel @AssistedInject constructor(
     private val clock: Clock,
     private val prefetcher: ImagePrefetcher,
     private val signals: TimelineSignals,
+    private val watching: WatchPositions,
 ) : ViewModel(),
     TimelineScreenActions {
     @AssistedFactory
@@ -166,19 +168,26 @@ internal class TimelineViewModel @AssistedInject constructor(
         }
         .flowOn(Dispatchers.Default)
 
+    /** How far the reader got in each video, for Video's cards; other timelines show none. */
+    private val watched: Flow<Map<String, Double>?> = if (feed.mode == FeedMode.Video) {
+        account.filterNotNull().map { it.id }.distinctUntilChanged().flatMapLatest(watching::observe)
+    } else {
+        flowOf(null)
+    }
+
     /** Grid or feed, for Photos only: every other timeline is a list. */
     private val grid: Flow<Boolean?> = if (feed.mode == FeedMode.Photos) preferences.photosGrid else flowOf(null)
 
     val uiState: StateFlow<TimelineUiState> = combine(
         items,
         combine(pager.states, control, ::Pair),
-        combine(accountSettings, swipes, grid, ::Triple),
+        combine(accountSettings, swipes, combine(grid, watched, ::Pair), ::Triple),
         account.filterNotNull(),
         minuteTicks(clock),
     ) {
             shown,
             (paging, control),
-            (settings, swipes, grid),
+            (settings, swipes, layout),
             account,
             now,
         ->
@@ -194,7 +203,8 @@ internal class TimelineViewModel @AssistedInject constructor(
             loadingOlder = paging.loadingOlder,
             reachedEnd = paging.reachedEnd,
             sparse = TimelineFilters.forMode(feed.mode, account.capabilities).isEmpty && feed.mode != FeedMode.Home,
-            grid = grid,
+            grid = layout.first,
+            watched = layout.second,
             albums = account.capabilities.collections,
             showBoosts = settings.showBoosts,
             showReplies = settings.showReplies,

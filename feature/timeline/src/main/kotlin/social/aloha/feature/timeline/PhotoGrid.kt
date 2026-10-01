@@ -172,7 +172,7 @@ private fun LayoutToggle(grid: Boolean, onGrid: (Boolean) -> Unit) {
 
 /** The grid's side of what the list does: its position kept, the next page near the end, the scroll asked for. */
 @Composable
-private fun GridEffects(state: TimelineUiState, actions: TimelineScreenActions, gridState: LazyGridState) {
+internal fun GridEffects(state: TimelineUiState, actions: TimelineScreenActions, gridState: LazyGridState) {
     val items by rememberUpdatedState(state.items)
     LaunchedEffect(gridState) {
         snapshotFlow { gridState.firstVisibleItemIndex to gridState.firstVisibleItemScrollOffset }

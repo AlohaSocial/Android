@@ -40,6 +40,9 @@ public interface StatusNavigation {
     /** The reader's albums, to put their post [statusId] into; only a server with albums offers it. */
     public fun addToAlbum(statusId: String) {}
 
+    /** The watch page of a post's video; without one, the post. */
+    public fun openVideo(statusId: String): Unit = openThread(statusId)
+
     /** The reader's own albums. */
     public fun openAlbums() {}
 

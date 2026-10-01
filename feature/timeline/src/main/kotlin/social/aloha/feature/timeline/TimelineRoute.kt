@@ -103,6 +103,7 @@ public fun TimelineRoute(
         onAlbums = if (feed.mode == FeedMode.Photos && state.albums) ({ nav.openAlbums() }) else null,
         onExplore = if (feed.mode == FeedMode.Photos) ({ nav.openPhotoExplore() }) else null,
         header = header,
+        onVideo = nav::openVideo,
     )
 
     deleting?.let { request ->

@@ -83,6 +83,7 @@ import social.aloha.core.navigation.TagKey
 import social.aloha.core.navigation.ThreadKey
 import social.aloha.core.navigation.TopLevelKey
 import social.aloha.core.navigation.VideoKey
+import social.aloha.core.navigation.WatchKey
 import social.aloha.core.ui.StatusNavigation
 import social.aloha.core.ui.openInBrowser
 import social.aloha.feature.composer.ComposerRoute
@@ -110,6 +111,8 @@ import social.aloha.feature.thread.ThreadRoute
 import social.aloha.feature.timeline.TagRoute
 import social.aloha.feature.timeline.TimelineFeed
 import social.aloha.feature.timeline.TimelineRoute
+import social.aloha.feature.video.ContinueWatching
+import social.aloha.feature.video.WatchRoute
 
 private data class TopLevelDestination(
     val key: TopLevelKey,
@@ -222,6 +225,10 @@ fun AlohaApp(
 
             override fun openAlbums() {
                 backStack.push(AlbumsKey(readerId))
+            }
+
+            override fun openVideo(statusId: String) {
+                backStack.push(WatchKey(readerId, statusId))
             }
 
             override fun openPhotoExplore() {
@@ -377,6 +384,9 @@ fun AlohaApp(
                     AlbumRoute(it, onOpen = statusNavigation::openThread, onBack = { backStack.remove(it) })
                 }
                 entry<AddToAlbumKey> { AddToAlbumRoute(it, onBack = { backStack.remove(it) }) }
+                entry<WatchKey>(metadata = ListDetailSceneStrategy.detailPane()) {
+                    WatchRoute(it, statusNavigation, onBack = { backStack.remove(it) })
+                }
                 entry<PhotoExploreKey>(metadata = ListDetailSceneStrategy.detailPane()) {
                     PhotoExploreRoute(it, statusNavigation, onBack = { backStack.remove(it) })
                 }
@@ -410,15 +420,23 @@ private fun NothingOpen() {
     }
 }
 
-/** Home's timeline, or a mode's: Photos carries the stories rail above its own. */
+/** Home's timeline, or a mode's: Photos carries the stories rail above its own, Video what to carry on with. */
 @Composable
 private fun ModeTimeline(feed: TimelineFeed, navigation: StatusNavigation, accountButton: @Composable () -> Unit) {
     TimelineRoute(
         navigation,
         feed = feed,
         navigationIcon = accountButton,
-        // until the story player, a poster on the rail opens their profile
-        header = { if (feed.mode == FeedMode.Photos) StoriesRail(onOpen = { navigation.openProfile(it, null) }) },
+        header = {
+            when (feed.mode) {
+                // until the story player, a poster on the rail opens their profile
+                FeedMode.Photos -> StoriesRail(onOpen = { navigation.openProfile(it, null) })
+
+                FeedMode.Video -> ContinueWatching(onOpen = navigation::openVideo)
+
+                else -> Unit
+            }
+        },
     )
 }
 

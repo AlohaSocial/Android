@@ -42,6 +42,7 @@ import social.aloha.core.data.timeline.StatusRepository
 import social.aloha.core.data.timeline.TimelinePositions
 import social.aloha.core.data.timeline.TimelineRepository
 import social.aloha.core.data.timeline.Toggle
+import social.aloha.core.data.video.WatchPositions
 import social.aloha.core.database.AccountsDatabase
 import social.aloha.core.database.CacheDatabase
 import social.aloha.core.datastore.AccountSettingsStore
@@ -121,6 +122,7 @@ class TimelineViewModelTest {
         clock,
         ApplicationProvider.getApplicationContext<Context>().let { ImagePrefetcher(it, ImageLoader(it)) },
         signals,
+        WatchPositions(clients, cache.watchPositionDao(), statuses, clock),
     ).apply { onColors(RichTextColors(Color.Blue, Color.Gray, Color.LightGray)) }
 
     @After

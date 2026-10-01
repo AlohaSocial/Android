@@ -110,3 +110,7 @@ public data class AddToAlbumKey(val readerId: String, val statusId: String) : Na
 /** Photos' Explore: what is trending with pictures, hashtags and people, as [readerId] sees them. */
 @Serializable
 public data class PhotoExploreKey(val readerId: String) : NavKey
+
+/** The watch page of post [statusId]'s video, as [readerId] sees it. */
+@Serializable
+public data class WatchKey(val readerId: String, val statusId: String) : NavKey
