@@ -72,4 +72,12 @@
     <string name="accounts_cancel">Cancel</string>
     <!-- Shown in the right-hand pane on a wide screen before a post or profile is opened -->
     <string name="detail_nothing_open">Choose a post or a profile to read it here.</string>
+    <!-- Launcher shortcut (long-press the icon) that starts a new post. Keep it to about ten characters. -->
+    <string name="shortcut_compose">New post</string>
+    <!-- The same shortcut where the launcher has room for a longer label -->
+    <string name="shortcut_compose_long">Write a new post</string>
+    <!-- Launcher shortcut that opens search. Keep it to about ten characters. -->
+    <string name="shortcut_search">Search</string>
+    <!-- Launcher and share-sheet shortcut of one signed-in account; %s is its handle, like @alice@example.social -->
+    <string name="shortcut_post_as">Post as %s</string>
 </resources>

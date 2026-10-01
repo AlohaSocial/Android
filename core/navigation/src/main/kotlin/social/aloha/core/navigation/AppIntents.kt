@@ -8,8 +8,9 @@ import android.content.Intent
 import android.net.Uri
 
 /**
- * How what lives outside the app's screens opens them: a notification, a widget. The intent names the
- * account; what it opens is looked up in the app, never trusted as given.
+ * How what lives outside the app's screens opens them: a notification, a widget, a launcher shortcut.
+ * The intent names the account, or none for the account in use (the static launcher shortcuts); what it
+ * opens is looked up in the app, never trusted as given.
  */
 public object AppIntents {
     /** Opens the post [EXTRA_STATUS], else the profile [EXTRA_PROFILE], else the notifications. */
@@ -17,6 +18,9 @@ public object AppIntents {
 
     /** Opens the composer on a new post. */
     public const val ACTION_COMPOSE: String = "social.aloha.action.COMPOSE"
+
+    /** Opens search. */
+    public const val ACTION_SEARCH: String = "social.aloha.action.SEARCH"
 
     public const val EXTRA_ACCOUNT: String = "account"
     public const val EXTRA_STATUS: String = "status"
@@ -31,6 +35,12 @@ public object AppIntents {
             .putExtra(EXTRA_ACCOUNT, accountId)
             .putExtra(EXTRA_STATUS, statusId)
             .putExtra(EXTRA_PROFILE, profileId)
+
+    /**
+     * [action] as the account in use, for the launcher's shortcuts: the app opens the notifications for
+     * [ACTION_OPEN], a new post for [ACTION_COMPOSE] and search for [ACTION_SEARCH].
+     */
+    public fun asActiveAccount(context: Context, action: String): Intent = launch(context, action, "active/$action")
 
     /** Opens the composer on a new post by [accountId]. */
     public fun compose(context: Context, accountId: String): Intent =

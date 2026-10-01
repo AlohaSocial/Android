@@ -23,8 +23,6 @@ import dagger.hilt.android.AndroidEntryPoint
 import java.util.UUID
 import javax.inject.Inject
 import social.aloha.core.designsystem.AlohaTheme
-import social.aloha.core.navigation.AppIntents
-import social.aloha.core.sync.PostQueue
 import social.aloha.core.sync.SyncEngine
 import social.aloha.feature.video.PictureInPicturePlayer
 import social.aloha.feature.video.VideoPlayback
@@ -96,26 +94,14 @@ class MainActivity : ComponentActivity() {
      * the app, never trusted as given.
      */
     private fun deliver(intent: Intent) {
-        when (intent.action) {
-            Intent.ACTION_VIEW -> intent.dataString?.let(app::openExternal)
-
-            PostQueue.ACTION_OPEN_DRAFT -> intent.getStringExtra(PostQueue.EXTRA_ACCOUNT)?.let { account ->
-                app.openDraft(account, intent.getStringExtra(PostQueue.EXTRA_DRAFT))
-            }
-
-            Intent.ACTION_SEND, Intent.ACTION_SEND_MULTIPLE -> SharedContent.from(intent, packageName)?.let(app::share)
-
-            AppIntents.ACTION_OPEN -> intent.getStringExtra(AppIntents.EXTRA_ACCOUNT)?.let { account ->
-                app.openNotification(
-                    account,
-                    intent.getStringExtra(AppIntents.EXTRA_STATUS),
-                    intent.getStringExtra(AppIntents.EXTRA_PROFILE),
-                )
-            }
-
-            AppIntents.ACTION_COMPOSE -> intent.getStringExtra(AppIntents.EXTRA_ACCOUNT)?.let {
-                app.openDraft(it, draftId = UUID.randomUUID().toString())
-            }
+        when (val request = OutsideRequest.of(intent, packageName)) {
+            is OutsideRequest.Link -> app.openExternal(request.address)
+            is OutsideRequest.Share -> app.share(request.content, request.accountId)
+            is OutsideRequest.Draft -> app.openDraft(request.accountId, request.draftId)
+            is OutsideRequest.Open -> app.openNotification(request.accountId, request.statusId, request.profileId)
+            is OutsideRequest.Compose -> app.openDraft(request.accountId, draftId = UUID.randomUUID().toString())
+            is OutsideRequest.Search -> app.openSearch(request.accountId)
+            null -> Unit
         }
     }
 }

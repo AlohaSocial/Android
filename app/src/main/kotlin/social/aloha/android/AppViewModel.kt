@@ -38,6 +38,7 @@ import social.aloha.core.navigation.AccountKey
 import social.aloha.core.navigation.ComposerKey
 import social.aloha.core.navigation.DraftsKey
 import social.aloha.core.navigation.NotificationsKey
+import social.aloha.core.navigation.SearchKey
 import social.aloha.core.navigation.ThreadKey
 import social.aloha.core.sync.LocalNotifications
 import social.aloha.core.sync.PostQueue
@@ -87,6 +88,7 @@ class AppViewModel @Inject constructor(
     private val unread: UnreadCounts,
     private val localNotifications: LocalNotifications,
     private val push: PushRegistrar,
+    private val shortcuts: AccountShortcuts,
     preferences: ModePreferences,
     @ApplicationContext private val context: Context,
 ) : ViewModel() {
@@ -133,6 +135,13 @@ class AppViewModel @Inject constructor(
         viewModelScope.launch {
             accounts.activeAccount.filterNotNull().map { it.id }.distinctUntilChanged().collect { adding.value = false }
         }
+        // the launcher's and the share sheet's shortcuts follow who is signed in
+        viewModelScope.launch {
+            accounts.accounts
+                .map { all -> all.sortedBy { it.addedAt } }
+                .distinctUntilChanged { a, b -> a.map(::shortcutOf) == b.map(::shortcutOf) }
+                .collect { shortcuts.publish(it) }
+        }
     }
 
     val session: StateFlow<AppSession> =
@@ -169,48 +178,46 @@ class AppViewModel @Inject constructor(
 
     /**
      * Opens draft [draftId] of [accountId] in the composer, or that account's drafts without one; a new
-     * id is a new post. A notification or a widget asks, so an account no longer signed in here opens
-     * nothing.
+     * id is a new post. A notification, a widget or a shortcut asks, so an account no longer signed in
+     * here opens nothing; none named is the account in use.
      */
-    fun openDraft(accountId: String, draftId: String?) = openAs(accountId) {
-        draftId?.let { ComposerKey(accountId, draftId = it) } ?: DraftsKey(accountId)
+    fun openDraft(accountId: String?, draftId: String?) = openAs(accountId) { id ->
+        draftId?.let { ComposerKey(id, draftId = it) } ?: DraftsKey(id)
     }
 
     /**
      * Opens what a notification is about, as the account it came to: its post, else the profile of
-     * whoever did it. An account no longer signed in here opens nothing.
+     * whoever did it, else the notifications. An account no longer signed in here opens nothing; none
+     * named is the account in use.
      */
-    fun openNotification(accountId: String, statusId: String?, profileId: String?) = openAs(accountId) {
-        statusId?.let { ThreadKey(accountId, it) } ?: profileId?.let { AccountKey(accountId, id = it) }
-            ?: NotificationsKey
+    fun openNotification(accountId: String?, statusId: String?, profileId: String?) = openAs(accountId) { id ->
+        statusId?.let { ThreadKey(id, it) } ?: profileId?.let { AccountKey(id, id = it) } ?: NotificationsKey
     }
 
-    /**
-     * Switches to [accountId] and opens what [key] names there; what lives outside the app asks for it,
-     * so an account no longer signed in here opens nothing.
-     */
-    private fun openAs(accountId: String, key: () -> NavKey) {
+    /** Opens search, as [accountId] or the account in use. */
+    fun openSearch(accountId: String?) = openAs(accountId, key = ::SearchKey)
+
+    /** Switches to the account [accountFor] picks and opens what [key] names there. */
+    private fun openAs(accountId: String?, shared: Boolean = false, key: (accountId: String) -> NavKey) {
         viewModelScope.launch {
-            if (accounts.byId(accountId) == null) return@launch
-            accounts.activate(accountId)
-            destination.value = accountId to key()
+            val id = accounts.accountFor(accountId, shared) ?: return@launch
+            accounts.activate(id)
+            destination.value = id to key(id)
         }
     }
 
     /**
-     * Opens the composer on what another app shared, as the active account; one shared before any
-     * account is signed in waits for the sign-in.
+     * Opens the composer on what another app shared, as [accountId] when a Direct Share shortcut named
+     * one that is still signed in, else as the active account; one shared before any account is signed in
+     * waits for the sign-in.
      */
-    fun share(content: SharedContent) {
-        viewModelScope.launch {
-            val account = accounts.activeAccount.filterNotNull().first()
-            destination.value = account.id to ComposerKey(
-                account.id,
-                draftId = UUID.randomUUID().toString(),
-                sharedText = content.text,
-                sharedMedia = content.media.map { it.toString() },
-            )
-        }
+    fun share(content: SharedContent, accountId: String? = null) = openAs(accountId, shared = true) { id ->
+        ComposerKey(
+            id,
+            draftId = UUID.randomUUID().toString(),
+            sharedText = content.text,
+            sharedMedia = content.media.map { it.toString() },
+        )
     }
 
     fun destinationHandled() {
@@ -258,21 +265,47 @@ class AppViewModel @Inject constructor(
         }
     }
 
-    private fun sessionOf(
-        all: List<SignedInAccount>,
-        active: SignedInAccount?,
-        again: Boolean,
-        adding: Boolean,
-    ): AppSession = when {
-        active == null && all.isEmpty() -> AppSession.SigningIn()
-        active == null -> AppSession.Loading
-        again && active.needsReauth -> AppSession.SigningIn()
-        adding -> AppSession.SigningIn(adding = true)
-        else -> AppSession.SignedIn(active.id, active.serverAccountId, active.qualifiedHandle, active.needsReauth)
-    }
-
     private companion object {
         const val PUSH_FORGET_MILLIS = 5_000L
         const val STOP_TIMEOUT_MILLIS = 5_000L
+    }
+}
+
+/** What an account's shortcut shows, so it is published again only when that changes. */
+private fun shortcutOf(account: SignedInAccount) = Triple(account.id, account.qualifiedHandle, account.avatarUrl)
+
+private fun sessionOf(
+    all: List<SignedInAccount>,
+    active: SignedInAccount?,
+    again: Boolean,
+    adding: Boolean,
+): AppSession = when {
+    active == null && all.isEmpty() -> AppSession.SigningIn()
+    active == null -> AppSession.Loading
+    again && active.needsReauth -> AppSession.SigningIn()
+    adding -> AppSession.SigningIn(adding = true)
+    else -> AppSession.SignedIn(active.id, active.serverAccountId, active.qualifiedHandle, active.needsReauth)
+}
+
+// how long a shortcut waits for the account in use to load from disk on a cold start
+private const val LOAD_MILLIS = 3_000L
+
+/**
+ * The account a request from outside the app acts as, which only asks: [accountId] while it is signed in
+ * here, and nothing opens for one signed out since. Something [shared] is the exception: it goes to the
+ * account in use instead, waiting for a sign-in if need be. With no account named, the account in use,
+ * once it has loaded within [loadMillis]; with none signed in, null, so nothing opens later out of the blue.
+ */
+internal suspend fun AccountRepository.accountFor(
+    accountId: String?,
+    shared: Boolean,
+    loadMillis: Long = LOAD_MILLIS,
+): String? {
+    val named = accountId?.let { byId(it) }
+    return when {
+        named != null -> named.id
+        shared -> activeAccount.filterNotNull().first().id
+        accountId != null -> null
+        else -> withTimeoutOrNull(loadMillis) { activeAccount.filterNotNull().first() }?.id
     }
 }
