@@ -41,15 +41,29 @@ public interface StatusTranslations {
     public fun translate(row: StatusRowUi)
 
     public fun showOriginal(statusId: String)
+
+    /** Opens the system's settings where the language a [TranslationUi.NeedsLanguage] names is downloaded. */
+    public fun getLanguage(): Unit = Unit
 }
 
-/** A translation asked for: on its way, arrived, or refused. */
+/** A translation asked for: on its way, arrived, waiting for a language to download, or refused. */
 @Immutable
 public sealed interface TranslationUi {
     public data object Working : TranslationUi
 
-    /** [content] is HTML, as the post's own; [provider] names the service the server used, when it says. */
-    public data class Done(val content: String, val spoiler: String?, val provider: String?) : TranslationUi
+    /**
+     * [content] is HTML, as the post's own; [provider] names the service the server used, when it says.
+     * [onDevice] when the device translated it, and nothing was sent anywhere.
+     */
+    public data class Done(
+        val content: String,
+        val spoiler: String?,
+        val provider: String?,
+        val onDevice: Boolean = false,
+    ) : TranslationUi
+
+    /** Only the device can translate it, once [language] (its name, to show) is downloaded to it. */
+    public data class NeedsLanguage(val language: String) : TranslationUi
 
     /** [message] is the server's own words, shown as they are, when it gave any. */
     public data class Failed(val message: String?) : TranslationUi
@@ -89,7 +103,7 @@ internal fun translated(row: StatusRowUi, state: TranslationUi?): StatusRowUi {
 /** Under a translated post: who translated it and the way back; or that it is coming, or why it is not. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-internal fun TranslationLine(state: TranslationUi, onShowOriginal: () -> Unit) {
+internal fun TranslationLine(state: TranslationUi, onShowOriginal: () -> Unit, onGetLanguage: () -> Unit) {
     // the button moves under the words where both do not fit, so a large font never breaks a word
     FlowRow(
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -111,9 +125,18 @@ internal fun TranslationLine(state: TranslationUi, onShowOriginal: () -> Unit) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
-        if (state !is TranslationUi.Working) {
-            val action = if (state is TranslationUi.Done) R.string.status_show_original else R.string.status_dismiss
-            TextButton(onClick = onShowOriginal) { Text(stringResource(action)) }
+        when (state) {
+            TranslationUi.Working -> Unit
+
+            is TranslationUi.NeedsLanguage ->
+                TextButton(onClick = onGetLanguage) { Text(stringResource(R.string.status_translation_get_language)) }
+
+            is TranslationUi.Done ->
+                TextButton(onClick = onShowOriginal) { Text(stringResource(R.string.status_show_original)) }
+
+            is TranslationUi.Failed -> TextButton(onClick = onShowOriginal) {
+                Text(stringResource(R.string.status_dismiss))
+            }
         }
     }
 }
@@ -123,8 +146,13 @@ internal fun TranslationLine(state: TranslationUi, onShowOriginal: () -> Unit) {
 internal fun translationText(state: TranslationUi): String = when (state) {
     TranslationUi.Working -> stringResource(R.string.status_translating)
 
-    is TranslationUi.Done -> state.provider?.let { stringResource(R.string.status_translated_by, it) }
-        ?: stringResource(R.string.status_translated)
+    is TranslationUi.Done -> when {
+        state.onDevice -> stringResource(R.string.status_translated_on_device)
+        state.provider != null -> stringResource(R.string.status_translated_by, state.provider)
+        else -> stringResource(R.string.status_translated)
+    }
+
+    is TranslationUi.NeedsLanguage -> stringResource(R.string.status_translation_needs_language, state.language)
 
     is TranslationUi.Failed -> state.message?.let { stringResource(R.string.status_translation_refused, it) }
         ?: stringResource(R.string.status_translation_failed)

@@ -57,13 +57,37 @@ class TranslationsViewModelTest {
         server.close()
     }
 
-    private fun viewModel(translates: Boolean): TranslationsViewModel = runBlocking {
-        val capabilities = ServerCapabilities.minimal(server.url("/").toString()).copy(translation = translates)
-        fixture.signIn(server.url("/"), capabilities)
-        fixture.accounts.activeAccount.filterNotNull().first()
-        TranslationsViewModel(fixture.accounts, TranslationRepository(fixture.clients)).apply {
-            readerLanguages = { listOf("en-GB") }
+    /** A device that translates German into English once the German pack is [ready]. */
+    private class Device(var ready: Boolean = true) : DeviceTranslator {
+        val asked = mutableListOf<String>()
+        var opened = 0
+
+        override suspend fun pairs() = mapOf(("de" to "en") to ready)
+
+        override suspend fun translate(text: String, from: String, into: String): String {
+            asked += text
+            return "Translated <$text>\nsecond line"
         }
+
+        override fun openLanguages() {
+            opened++
+        }
+    }
+
+    private fun viewModel(translates: Boolean, device: DeviceTranslator = NoDevice): TranslationsViewModel =
+        runBlocking {
+            val capabilities = ServerCapabilities.minimal(server.url("/").toString()).copy(translation = translates)
+            fixture.signIn(server.url("/"), capabilities)
+            fixture.accounts.activeAccount.filterNotNull().first()
+            TranslationsViewModel(fixture.accounts, TranslationRepository(fixture.clients), device).apply {
+                readerLanguages = { listOf("en-GB") }
+            }
+        }
+
+    private object NoDevice : DeviceTranslator {
+        override suspend fun pairs() = emptyMap<Pair<String, String>, Boolean>()
+        override suspend fun translate(text: String, from: String, into: String): String? = null
+        override fun openLanguages() = Unit
     }
 
     @Test
@@ -96,6 +120,56 @@ class TranslationsViewModelTest {
     @Test
     fun `nothing is offered by a server that does not translate`() {
         assertFalse(viewModel(translates = false).offers(row))
+    }
+
+    @Test
+    fun `where the server has no translation service the device translates, sending nothing`() {
+        server.enqueue(json(503, """{"error":"no translation provider is configured"}"""))
+        val device = Device()
+        val translations = viewModel(translates = true, device)
+        translations.translate(row)
+        awaitSettled(translations)
+        assertEquals(
+            TranslationUi.Done(
+                "<p>Translated &lt;${row.plainText}&gt;<br>second line</p>",
+                null,
+                null,
+                onDevice = true,
+            ),
+            translations.stateOf(row.statusId),
+        )
+        assertEquals(listOf(row.plainText), device.asked)
+    }
+
+    @Test
+    fun `a server that does not translate leaves it to the device, which asks for the language first`() {
+        val device = Device(ready = false)
+        val translations = viewModel(translates = false, device)
+        awaitPairs(translations)
+        assertTrue(translations.offers(row))
+        translations.translate(row)
+        awaitSettled(translations)
+        assertEquals(TranslationUi.NeedsLanguage("German"), translations.stateOf(row.statusId))
+        translations.getLanguage()
+        assertEquals(1, device.opened)
+        device.ready = true
+        translations.showOriginal(row.statusId)
+        translations.translate(row)
+        awaitSettled(translations)
+        assertTrue((translations.stateOf(row.statusId) as TranslationUi.Done).onDevice)
+        assertEquals(0, server.requestCount)
+    }
+
+    @Test
+    fun `nothing is offered where neither the server nor the device has the languages`() {
+        val translations = viewModel(translates = false, Device())
+        awaitPairs(translations)
+        assertFalse(translations.offers(row.copy(language = "ja")))
+    }
+
+    private fun awaitPairs(translations: TranslationsViewModel) {
+        val until = System.currentTimeMillis() + TIMEOUT
+        while (!translations.offers(row) && System.currentTimeMillis() < until) Thread.sleep(POLL)
     }
 
     private fun awaitSettled(translations: TranslationsViewModel) {

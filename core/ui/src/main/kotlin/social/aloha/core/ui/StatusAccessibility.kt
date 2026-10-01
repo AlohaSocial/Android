@@ -25,6 +25,7 @@ internal fun menuItems(
     add(Triple(StatusMenuItem.OpenInNewWindow, AlohaIcons.NewWindow, R.string.status_menu_new_window))
     add(Triple(StatusMenuItem.Translate, AlohaIcons.Translate, R.string.status_menu_translate))
     add(Triple(StatusMenuItem.ShowOriginal, AlohaIcons.Translate, R.string.status_show_original))
+    add(Triple(StatusMenuItem.TranslationLanguage, AlohaIcons.Translate, R.string.status_translation_get_language))
     val mute = if (row.state.muted) R.string.status_menu_unmute_conversation else R.string.status_menu_mute_conversation
     add(Triple(StatusMenuItem.MuteConversation, AlohaIcons.MuteConversation, mute))
     if (row.isOwn) {
@@ -98,6 +99,7 @@ internal data class CardControls(
     val onPollChoice: (List<Int>) -> Unit = {},
     val translation: TranslationUi? = null,
     val onShowOriginal: () -> Unit = {},
+    val onGetLanguage: () -> Unit = {},
 )
 
 /**

@@ -27,15 +27,24 @@ public class TranslationRepository @Inject constructor(private val clients: Clie
 /**
  * Whether a post written in [language] is worth offering to a reader of [readerLanguages] (most preferred
  * first): it is in none of them, and the server translates, from that language into the first when it
- * lists the pairs it can do. A post that names no language is not offered: nothing says it is foreign.
+ * lists the pairs it can do.
  */
 public fun ServerCapabilities.offersTranslation(language: String?, readerLanguages: List<String>): Boolean {
-    val from = language?.let(::primary).orEmpty()
-    val readers = readerLanguages.map(::primary)
-    val into = readers.firstOrNull()
-    return translation && from.isNotEmpty() && into != null && from !in readers &&
-        (translationLanguages.isEmpty() || translationLanguages[from].orEmpty().any { primary(it) == into })
+    val from = foreignLanguage(language, readerLanguages) ?: return false
+    val into = primaryLanguage(readerLanguages.first())
+    return translation &&
+        (translationLanguages.isEmpty() || translationLanguages[from].orEmpty().any { primaryLanguage(it) == into })
+}
+
+/**
+ * The language a post is written in, as its primary subtag, when the reader reads none of
+ * [readerLanguages] in it; null when they do, or when the post names no language, so nothing says it is
+ * foreign.
+ */
+public fun foreignLanguage(language: String?, readerLanguages: List<String>): String? {
+    val from = language?.let(::primaryLanguage)?.takeIf { it.isNotEmpty() } ?: return null
+    return from.takeIf { readerLanguages.isNotEmpty() && readerLanguages.none { primaryLanguage(it) == from } }
 }
 
 /** `pt-BR` and `pt` are one language to a reader. */
-private fun primary(tag: String): String = tag.substringBefore('-').substringBefore('_').lowercase()
+public fun primaryLanguage(tag: String): String = tag.substringBefore('-').substringBefore('_').lowercase()

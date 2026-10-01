@@ -93,6 +93,7 @@ public enum class StatusMenuItem {
     OpenInBrowser,
     Translate,
     ShowOriginal,
+    TranslationLanguage,
     MuteConversation,
     Report,
     Edit,
@@ -130,8 +131,8 @@ public fun StatusCard(
     val translation = translations.stateOf(post.statusId)
     val row = translated(post, translation)
     val offered = translation == null && translations.offers(post)
-    val actions = remember(screenActions, translations, offered, translation != null) {
-        TranslatingActions(screenActions, translations, offered, shown = translation != null)
+    val actions = remember(screenActions, translations, offered, translation) {
+        TranslatingActions(screenActions, translations, offered, translation)
     }
     var filterRevealed by rememberSaveable(row.rowId) { mutableStateOf(false) }
     val warning = row.filterWarning
@@ -151,6 +152,7 @@ public fun StatusCard(
         { pollChoice = it },
         translation,
         { translations.showOriginal(row.statusId) },
+        translations::getLanguage,
     )
     val customActions = customActions(row, actions, controls)
     ProvideLinkRouting(onLink = actions::onLink) {
@@ -205,7 +207,7 @@ private fun RowScope.StatusMain(
         if (row.spoiler == null || controls.spoilerRevealed) {
             StatusBody(row, policy, actions, flags.canReact, flags.animateEmoji, flags.focused, controls)
         }
-        controls.translation?.let { TranslationLine(it, controls.onShowOriginal) }
+        controls.translation?.let { TranslationLine(it, controls.onShowOriginal, controls.onGetLanguage) }
         if (flags.focused) {
             Text(
                 fullDate(row.createdAt),
@@ -486,11 +488,12 @@ private class TranslatingActions(
     private val screen: StatusActions,
     private val translations: StatusTranslations,
     offered: Boolean,
-    shown: Boolean,
+    translation: TranslationUi?,
 ) : StatusActions by screen {
     private val added = buildSet {
         if (offered) add(StatusMenuItem.Translate)
-        if (shown) add(StatusMenuItem.ShowOriginal)
+        if (translation is TranslationUi.NeedsLanguage) add(StatusMenuItem.TranslationLanguage)
+        if (translation != null) add(StatusMenuItem.ShowOriginal)
     }
 
     override val menu: Set<StatusMenuItem> get() = screen.menu - TRANSLATION_ITEMS + added
@@ -498,11 +501,13 @@ private class TranslatingActions(
     override fun onMenu(row: StatusRowUi, item: StatusMenuItem) = when (item) {
         StatusMenuItem.Translate -> translations.translate(row)
         StatusMenuItem.ShowOriginal -> translations.showOriginal(row.statusId)
+        StatusMenuItem.TranslationLanguage -> translations.getLanguage()
         else -> screen.onMenu(row, item)
     }
 }
 
-private val TRANSLATION_ITEMS = setOf(StatusMenuItem.Translate, StatusMenuItem.ShowOriginal)
+private val TRANSLATION_ITEMS =
+    setOf(StatusMenuItem.Translate, StatusMenuItem.ShowOriginal, StatusMenuItem.TranslationLanguage)
 
 internal val AVATAR = 44.dp
 internal val SMALL_ICON = 16.dp
