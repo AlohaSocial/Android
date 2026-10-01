@@ -3,100 +3,55 @@
 
 package social.aloha.feature.video
 
+import android.app.Activity
+import android.app.PictureInPictureParams
+import android.graphics.Rect
+import android.os.Build
+import android.util.Rational
+import androidx.activity.compose.LocalActivity
 import androidx.annotation.OptIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.media3.common.C
 import androidx.media3.common.Player
-import androidx.media3.common.VideoSize
 import androidx.media3.common.util.UnstableApi
-import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
-import kotlin.time.Duration.Companion.seconds
-import kotlinx.coroutines.delay
-import social.aloha.core.media.LadderPlayback
-import social.aloha.core.media.mediaPlayer
-import social.aloha.core.model.MediaDimensions
-import social.aloha.core.model.VideoCaption
-import social.aloha.core.model.VideoSource
-import social.aloha.core.model.WatchPositionRules
-
-/** A player for one screen, released when the screen goes. */
-@Composable
-internal fun rememberVideoPlayer(): ExoPlayer {
-    val context = LocalContext.current
-    val player = remember { mediaPlayer(context) }
-    DisposableEffect(player) { onDispose { player.release() } }
-    return player
-}
+import kotlin.math.roundToInt
 
 /**
  * The video, with the player's own controls: play and pause, seeking, the playback speed from 0.5× to
- * 2×, and the subtitle and audio tracks the video has. It starts at [startAtSeconds] and plays from the
- * best of [sources], falling to the next where one fails. [onProgress] hears where the reader got to,
- * every ten seconds while playing and at once on a pause and when the screen goes; [onSeen] what the
- * player found the clip to be. Leaving the app pauses it.
+ * 2×, and the subtitle and audio tracks the video has. While it is shown and [pictureInPicture] holds,
+ * leaving the app shrinks it into a window of its own, from where it is on screen.
  */
 @OptIn(UnstableApi::class)
 @Composable
 internal fun VideoPlayer(
-    player: ExoPlayer,
-    sources: List<VideoSource>,
-    captions: List<VideoCaption>,
-    startAtSeconds: Double?,
-    onProgress: (position: Double, duration: Double, forced: Boolean) -> Unit,
-    onSeen: (MediaDimensions) -> Unit,
+    player: Player,
+    pictureInPicture: Boolean,
+    covered: Boolean,
+    onShown: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val progress by rememberUpdatedState(onProgress)
-    val seen by rememberUpdatedState(onSeen)
-    DisposableEffect(player, sources) {
-        val ladder = LadderPlayback(player, sources, captions)
-        ladder.start(((startAtSeconds ?: 0.0) * MILLIS).toLong())
-        player.playWhenReady = true
-        val listener = object : Player.Listener {
-            override fun onIsPlayingChanged(isPlaying: Boolean) {
-                if (!isPlaying) player.report(forced = true, progress)
-            }
-
-            override fun onVideoSizeChanged(videoSize: VideoSize) {
-                if (videoSize.width == 0 || player.duration == C.TIME_UNSET) return
-                seen(MediaDimensions(videoSize.width, videoSize.height, duration = player.duration / MILLIS))
-            }
-        }
-        player.addListener(listener)
-        onDispose {
-            player.report(forced = true, progress)
-            player.removeListener(listener)
-            ladder.release()
-        }
+    DisposableEffect(player) {
+        onShown(true)
+        onDispose { onShown(false) }
     }
-    LaunchedEffect(player) {
-        while (true) {
-            delay(WatchPositionRules.REPORT_INTERVAL_SECONDS.seconds)
-            if (player.isPlaying) player.report(forced = false, progress)
-        }
-    }
-    val lifecycle = LocalLifecycleOwner.current.lifecycle
-    DisposableEffect(lifecycle, player) {
-        val observer = LifecycleEventObserver { _, event -> if (event == Lifecycle.Event.ON_STOP) player.pause() }
-        lifecycle.addObserver(observer)
-        onDispose { lifecycle.removeObserver(observer) }
-    }
+    val activity = LocalActivity.current
+    var bounds by remember { mutableStateOf<Rect?>(null) }
+    LaunchedEffect(activity, pictureInPicture, bounds) { activity?.offerPictureInPicture(pictureInPicture, bounds) }
     AndroidView(
         factory = { context ->
             PlayerView(context).apply {
@@ -104,17 +59,56 @@ internal fun VideoPlayer(
                 setShowSubtitleButton(true)
                 setShowNextButton(false)
                 setShowPreviousButton(false)
-                setKeepScreenOn(true)
+                keepScreenOn = true
             }
         },
-        modifier = modifier.fillMaxWidth().aspectRatio(WIDE).background(Color.Black),
+        // while the picture-in-picture window's view has the player this one lets go, then takes it back
+        update = { view -> view.player = player.takeUnless { covered } },
+        modifier = modifier.fillMaxWidth().aspectRatio(WIDE).background(Color.Black)
+            .onGloballyPositioned { layout ->
+                val box = layout.boundsInWindow()
+                bounds =
+                    Rect(box.left.roundToInt(), box.top.roundToInt(), box.right.roundToInt(), box.bottom.roundToInt())
+            },
     )
 }
 
-private fun Player.report(forced: Boolean, onProgress: (Double, Double, Boolean) -> Unit) {
-    val length = duration.takeIf { it != C.TIME_UNSET } ?: return
-    onProgress(currentPosition / MILLIS, length / MILLIS, forced)
+/**
+ * The video alone, filling the picture-in-picture window over the app, which stays as it was beneath:
+ * the window has its own controls.
+ */
+@OptIn(UnstableApi::class)
+@Composable
+public fun PictureInPicturePlayer(playback: VideoPlayback, modifier: Modifier = Modifier) {
+    AndroidView(
+        factory = { context ->
+            PlayerView(context).apply {
+                player = playback.player
+                useController = false
+            }
+        },
+        onRelease = { it.player = null },
+        modifier = modifier.fillMaxSize().background(Color.Black),
+    )
 }
 
-private const val MILLIS = 1_000.0
+/**
+ * The window a video shrinks into when the reader leaves the app, as the system draws it: the video's
+ * shape, from where it is on screen. From Android 12 the system enters it on its own when [wanted];
+ * before that the activity asks as the reader leaves (see [pictureInPictureParams]).
+ */
+private fun Activity.offerPictureInPicture(wanted: Boolean, bounds: Rect?) {
+    setPictureInPictureParams(pictureInPictureParams(bounds, autoEnter = wanted))
+}
+
+/** The picture-in-picture window's shape and where it grows from; [autoEnter] lets Android 12 and later enter it. */
+public fun pictureInPictureParams(bounds: Rect? = null, autoEnter: Boolean = false): PictureInPictureParams {
+    val builder = PictureInPictureParams.Builder().setAspectRatio(Rational(WIDTH, HEIGHT))
+    bounds?.let(builder::setSourceRectHint)
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) builder.setAutoEnterEnabled(autoEnter)
+    return builder.build()
+}
+
+private const val WIDTH = 16
+private const val HEIGHT = 9
 private const val WIDE = 16f / 9f

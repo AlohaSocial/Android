@@ -103,7 +103,8 @@ public fun WatchRoute(key: WatchKey, navigation: StatusNavigation, onBack: () ->
             override fun onMedia(row: StatusRowUi, index: Int) = nav.openThread(row.statusId)
         }
     }
-    val player = rememberVideoPlayer()
+    val pictureInPicture by viewModel.pictureInPicture.collectAsStateWithLifecycle()
+    val covered by viewModel.inPictureInPicture.collectAsStateWithLifecycle()
     val now by remember { minuteTicks(Clock.systemUTC()) }.collectAsStateWithLifecycle(Instant.now())
     WatchScreen(
         state,
@@ -113,21 +114,14 @@ public fun WatchRoute(key: WatchKey, navigation: StatusNavigation, onBack: () ->
             onFollow = viewModel::onFollow,
             onProfile = { state.video?.let { nav.openProfile(it.author.id, null) } },
             onComment = { nav.openComposer(key.statusId) },
-            onChapter = { player.seekTo((it.start * MILLIS).toLong()) },
+            onChapter = { viewModel.onSeek(it.start) },
             onRetry = viewModel::onRetry,
         ),
         rowActions,
         snackbars,
         modifier,
     ) {
-        VideoPlayer(
-            player,
-            state.sources,
-            state.captions,
-            state.resumeAt,
-            onProgress = viewModel::onProgress,
-            onSeen = viewModel::onSeen,
-        )
+        VideoPlayer(viewModel.player, pictureInPicture, covered, onShown = viewModel::onShown)
     }
 }
 
@@ -273,5 +267,3 @@ private fun CommentsHeading(video: StatusRowUi, onComment: () -> Unit) {
         TextButton(onClick = onComment) { Text(stringResource(R.string.watch_comment)) }
     }
 }
-
-private const val MILLIS = 1_000.0

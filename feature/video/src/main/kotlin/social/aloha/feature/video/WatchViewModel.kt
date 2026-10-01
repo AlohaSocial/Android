@@ -6,6 +6,7 @@ package social.aloha.feature.video
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.media3.common.Player
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -19,6 +20,7 @@ import social.aloha.core.data.AccountRepository
 import social.aloha.core.data.Answer
 import social.aloha.core.data.profile.ProfileRepository
 import social.aloha.core.data.profile.RelationshipChange
+import social.aloha.core.data.thread.Conversation
 import social.aloha.core.data.thread.ThreadRepository
 import social.aloha.core.data.timeline.StatusInteractions
 import social.aloha.core.data.timeline.StatusRepository
@@ -27,9 +29,6 @@ import social.aloha.core.data.video.WatchPositions
 import social.aloha.core.html.RichTextCache
 import social.aloha.core.html.StatusHtmlParser
 import social.aloha.core.model.AttachmentKind
-import social.aloha.core.model.ContentClassifier
-import social.aloha.core.model.ContentKind
-import social.aloha.core.model.MediaDimensions
 import social.aloha.core.model.SignedInAccount
 import social.aloha.core.model.Status
 import social.aloha.core.model.VideoCaption
@@ -62,8 +61,8 @@ internal data class WatchUiState(
 /**
  * A video's watch page: the video from the best source its server has, from where the reader left off;
  * its chapters, from the server or the description; following who posted it; and the replies as its
- * comments. How far the reader got goes to [WatchPositions] as they watch, and what the player sees of
- * an undescribed clip settles whether it is a short.
+ * comments. The video plays in [VideoPlayback], which outlives the page: picture-in-picture and the
+ * background go on with it, and it stops when the page is left for good.
  */
 @HiltViewModel(assistedFactory = WatchViewModel.Factory::class)
 internal class WatchViewModel @AssistedInject constructor(
@@ -75,6 +74,7 @@ internal class WatchViewModel @AssistedInject constructor(
     private val profiles: ProfileRepository,
     private val watching: WatchPositions,
     private val cache: RichTextCache,
+    private val playback: VideoPlayback,
 ) : ViewModel() {
     @AssistedFactory
     interface Factory {
@@ -100,47 +100,54 @@ internal class WatchViewModel @AssistedInject constructor(
             val reader = reader() ?: return@launch state.update { it.copy(loading = false, failed = true) }
             when (val answer = threads.load(reader, key.statusId)) {
                 is Answer.Missed -> state.update { it.copy(loading = false, failed = true) }
-
-                is Answer.Got -> {
-                    val video = answer.value.focused.displayed
-                    posts = listOf(video) + answer.value.descendants
-                    val attachment = video.mediaAttachments.firstOrNull { it.type == AttachmentKind.Video }
-                        ?: video.mediaAttachments.firstOrNull()
-                    val apiBase = reader.capabilities.apiBase
-                    val chapters = video.video?.chapters.orEmpty()
-                        .ifEmpty { VideoChapters.parse(StatusHtmlParser.plainText(video.content)) }
-                    state.update {
-                        it.copy(
-                            sources = attachment?.let { media -> VideoSources.ladder(video, media, apiBase) }.orEmpty(),
-                            captions = VideoSources.captions(video, apiBase),
-                            resumeAt = watching.resumeAt(reader.id, video.id),
-                            chapters = chapters,
-                            loading = false,
-                        )
-                    }
-                    redraw()
-                    following(reader, video)
-                }
+                is Answer.Got -> opened(reader, answer.value)
             }
         }
     }
 
-    /** Where the reader got to; [forced] by a pause or by leaving, otherwise as the video plays. */
-    fun onProgress(positionSeconds: Double, durationSeconds: Double, forced: Boolean) {
-        val video = posts.firstOrNull() ?: return
-        viewModelScope.launch {
-            reader()?.let { watching.report(it, video.id, positionSeconds, durationSeconds, forced) }
+    /**
+     * The video loaded: it starts playing before the page says so, so a page that shows it loaded shows
+     * it handed to the player.
+     */
+    private suspend fun opened(reader: SignedInAccount, conversation: Conversation) {
+        val video = conversation.focused.displayed
+        posts = listOf(video) + conversation.descendants
+        val attachment = video.mediaAttachments.firstOrNull { it.type == AttachmentKind.Video }
+            ?: video.mediaAttachments.firstOrNull()
+        val apiBase = reader.capabilities.apiBase
+        val sources = attachment?.let { VideoSources.ladder(video, it, apiBase) }.orEmpty()
+        val captions = VideoSources.captions(video, apiBase)
+        val resumeAt = watching.resumeAt(reader.id, video.id)
+        playback.play(reader, video, resumeAt)
+        state.update {
+            it.copy(
+                sources = sources,
+                captions = captions,
+                resumeAt = resumeAt,
+                chapters = video.video?.chapters.orEmpty()
+                    .ifEmpty { VideoChapters.parse(StatusHtmlParser.plainText(video.content)) },
+                loading = false,
+            )
         }
+        redraw()
+        following(reader, video)
     }
 
-    /** What the player saw of the clip, which settles one the server did not describe. */
-    fun onSeen(dimensions: MediaDimensions) {
-        val video = posts.firstOrNull() ?: return
-        if (ContentClassifier.classify(video) != ContentKind.Undetermined) return
-        val attachment = video.mediaAttachments.firstOrNull { it.type == AttachmentKind.Video } ?: return
-        viewModelScope.launch {
-            reader()?.let { statuses.reclassify(it.id, video.id, attachment.id, dimensions) }
-        }
+    /** The player the video plays in, which the page shows. */
+    val player: Player get() = playback.player
+
+    /** Where picture-in-picture is wanted, which the page offers the system. */
+    val pictureInPicture: StateFlow<Boolean> get() = playback.wantsPictureInPicture
+
+    /** Whether the picture-in-picture window has the player, which the page then lets go of. */
+    val inPictureInPicture: StateFlow<Boolean> get() = playback.inPictureInPicture
+
+    fun onShown(shown: Boolean) = playback.onShown(shown)
+
+    fun onSeek(seconds: Double) = playback.player.seekTo((seconds * MILLIS).toLong())
+
+    override fun onCleared() {
+        posts.firstOrNull()?.let { playback.stop(it.id) }
     }
 
     fun onToggle(statusId: String, toggle: Toggle) {
@@ -183,4 +190,8 @@ internal class WatchViewModel @AssistedInject constructor(
     }
 
     private suspend fun reader() = accounts.byId(key.readerId)
+
+    private companion object {
+        const val MILLIS = 1_000.0
+    }
 }

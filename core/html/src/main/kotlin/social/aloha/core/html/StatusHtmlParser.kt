@@ -27,6 +27,10 @@ public object StatusHtmlParser {
     /** Plain text only, for what never needs styling: a search index, a notification body. */
     public fun plainText(html: String): String = parse(html).plainText
 
+    /** The first line with words in it, trimmed, to name a post by: on a lock screen, in a list. */
+    public fun firstLine(html: String): String? =
+        plainText(html).lineSequence().map(String::trim).firstOrNull(String::isNotEmpty)
+
     /**
      * Text that is not markup but may carry custom emoji: a content warning, a display name. A `<` in it
      * is a character to show, so it is escaped before the emoji are resolved.

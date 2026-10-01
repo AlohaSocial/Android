@@ -15,6 +15,8 @@ dependencies {
     // video: the player, HLS for the server's transcoding ladder and the proxied PeerTube playlists
     api(libs.androidx.media3.exoplayer)
     implementation(libs.androidx.media3.exoplayer.hls)
+    // what other apps may ask of the app's media sessions
+    api(libs.androidx.media3.session)
     testImplementation(libs.androidx.media3.test.utils)
     testImplementation(libs.okhttp.mockwebserver)
     testImplementation(libs.junit4)

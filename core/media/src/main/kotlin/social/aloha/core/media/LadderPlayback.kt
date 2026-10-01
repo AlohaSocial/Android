@@ -8,6 +8,7 @@ import androidx.annotation.OptIn
 import androidx.core.net.toUri
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
+import androidx.media3.common.MediaMetadata
 import androidx.media3.common.MimeTypes
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
@@ -20,12 +21,13 @@ import social.aloha.core.model.VideoSource
  * Plays a video from the best of its [sources], and moves to the next one when a source fails: at the
  * start, as a ladder whose master playlist 404s, or part way through, at the position reached, so the
  * reader sees the picture carry on rather than an error. Only the last source failing is an error the
- * screen hears of. [captions] go along with every source.
+ * screen hears of. [captions] go along with every source, and [metadata] names it on the lock screen.
  */
 public class LadderPlayback(
     private val player: Player,
     private val sources: List<VideoSource>,
     private val captions: List<VideoCaption> = emptyList(),
+    private val metadata: MediaMetadata = MediaMetadata.EMPTY,
 ) : Player.Listener {
     private var rung = 0
 
@@ -58,6 +60,7 @@ public class LadderPlayback(
 
     private fun item(source: VideoSource): MediaItem = MediaItem.Builder()
         .setUri(source.url)
+        .setMediaMetadata(metadata)
         .apply { if (source.hls) setMimeType(MimeTypes.APPLICATION_M3U8) }
         .setSubtitleConfigurations(
             captions.map { caption ->

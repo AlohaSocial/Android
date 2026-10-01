@@ -4,13 +4,16 @@
 package social.aloha.feature.video
 
 import android.content.Context
+import android.os.Looper
 import androidx.compose.ui.graphics.Color
 import androidx.test.core.app.ApplicationProvider
 import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.resetMain
@@ -27,12 +30,11 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows.shadowOf
 import social.aloha.core.data.profile.ProfileRepository
 import social.aloha.core.data.thread.ThreadRepository
 import social.aloha.core.data.timeline.StatusInteractions
 import social.aloha.core.html.RichTextCache
-import social.aloha.core.model.ContentKind
-import social.aloha.core.model.MediaDimensions
 import social.aloha.core.model.ServerCapabilities
 import social.aloha.core.model.SignedInAccount
 import social.aloha.core.navigation.WatchKey
@@ -83,6 +85,14 @@ class WatchViewModelTest {
     }
     private lateinit var reader: SignedInAccount
     private lateinit var watch: WatchViewModel
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private val playback = VideoPlayback(
+        ApplicationProvider.getApplicationContext(),
+        fixture.watchPositions(),
+        fixture.statuses,
+        fixture.accounts,
+        scope,
+    )
 
     @Before
     fun open() = runBlocking {
@@ -100,12 +110,16 @@ class WatchViewModelTest {
             ProfileRepository(fixture.clients, fixture.statuses),
             fixture.watchPositions(),
             RichTextCache(),
+            playback,
         )
         watch.onColors(RichTextColors(Color.Blue, Color.Gray, Color.LightGray))
     }
 
     @After
     fun close() {
+        playback.stop()
+        playback.player.release()
+        scope.cancel()
         Dispatchers.resetMain()
         fixture.close()
         server.close()
@@ -135,21 +149,22 @@ class WatchViewModelTest {
         }
 
     @Test
-    fun `where the reader got to is told, and what the player saw settles the clip`() = runBlocking {
-        loaded()
-        watch.onProgress(positionSeconds = 42.0, durationSeconds = 600.0, forced = true)
-        watch.onSeen(MediaDimensions(width = 1920, height = 1080, duration = 600.0))
-        withTimeout(10.seconds) {
-            while (answers.asked.none { it == "POST /api/v1/statuses/v1/watched" }) delay(20)
-        }
-        val kind = withTimeout(10.seconds) {
-            var settled = fixture.statuses.kinds(reader.id, listOfNotNull(fixture.statuses.get(reader.id, "v1")))["v1"]
-            while (settled == ContentKind.Undetermined) {
-                delay(20)
-                settled = fixture.statuses.kinds(reader.id, listOfNotNull(fixture.statuses.get(reader.id, "v1")))["v1"]
-            }
-            settled
-        }
-        assertEquals(ContentKind.Video, kind)
+    fun `the video plays on across the page coming back, and stops only with its own page`() = runBlocking {
+        val state = loaded()
+        // the page hands the video over on the player's own thread, which is this test's main looper
+        shadowOf(Looper.getMainLooper()).idle()
+        val playing = playback.player.currentMediaItem?.localConfiguration?.uri.toString()
+        assertEquals(state.sources.first().url, playing)
+        assertEquals("Harbour tour", playback.player.currentMediaItem?.mediaMetadata?.title.toString())
+        // the same video asked for again, as a page coming back from picture-in-picture does, goes on
+        watch.onRetry()
+        withTimeout(10.seconds) { watch.uiState.first { !it.loading } }
+        shadowOf(Looper.getMainLooper()).idle()
+        assertEquals(playing, playback.player.currentMediaItem?.localConfiguration?.uri.toString())
+        playback.stop("another")
+        assertEquals(1, playback.player.mediaItemCount)
+        playback.stop("v1")
+        shadowOf(Looper.getMainLooper()).idle()
+        assertEquals(0, playback.player.mediaItemCount)
     }
 }
