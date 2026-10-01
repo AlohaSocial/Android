@@ -76,6 +76,7 @@ internal class ThreadViewModel @AssistedInject constructor(
         val reactions: List<Reaction>? = null,
         val history: List<EditVersion>? = null,
         val actionFailed: Boolean = false,
+        val archived: Boolean = false,
         val people: Map<StatusListKind, List<String?>> = emptyMap(),
     )
 
@@ -156,11 +157,20 @@ internal class ThreadViewModel @AssistedInject constructor(
         }
     }
 
-    fun onActionFailureShown() {
-        control.update { it.copy(actionFailed = false) }
+    fun onArchive(statusId: String) = act(statusId) { account, status ->
+        interactions.archive(account, status).also {
+            if (it == null) control.update { state -> state.copy(archived = true) }
+        }
     }
 
-    fun onHistory() {
+    /** The archive, or else the failure, the screen said; only that one, so the other still shows. */
+    fun onNoticeShown(archived: Boolean) {
+        control.update { if (archived) it.copy(archived = false) else it.copy(actionFailed = false) }
+    }
+
+    /** The focused post's edits, fetched for the sheet when [open]; the sheet gone otherwise. */
+    fun onHistory(open: Boolean) {
+        if (!open) return control.update { it.copy(history = null) }
         viewModelScope.launch {
             val account = account.value ?: return@launch
             val colors = colors.value ?: return@launch
@@ -175,10 +185,6 @@ internal class ThreadViewModel @AssistedInject constructor(
                 is Answer.Missed -> control.update { it.copy(actionFailed = true) }
             }
         }
-    }
-
-    fun onHistoryDismissed() {
-        control.update { it.copy(history = null) }
     }
 
     private fun act(statusId: String, block: suspend (SignedInAccount, Status) -> ApiError?) {
@@ -263,6 +269,8 @@ internal class ThreadViewModel @AssistedInject constructor(
             edited = focused?.displayed?.isEdited == true,
             canReact = account.capabilities.let { it.emojiReactions || it.isNextcloudSocial },
             albums = account.capabilities.collections,
+            archive = account.capabilities.isNextcloudSocial,
+            archived = control.archived,
             history = control.history,
             actionFailed = control.actionFailed,
             people = control.people,

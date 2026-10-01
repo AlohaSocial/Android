@@ -72,6 +72,7 @@ public data class DeleteRequest(val row: StatusRowUi, val redraft: Boolean)
  * @param onDeleteAsked the person asked to delete a post, or to write it again, which the screen
  *   confirms first.
  * @param albums whether the reader's server keeps albums, which the reader's own posts can go into.
+ * @param archive whether the reader's server archives posts: takes them off the profile, deleting nothing.
  */
 public abstract class RoutedStatusActions(
     private val context: Context,
@@ -79,9 +80,17 @@ public abstract class RoutedStatusActions(
     private val onCopied: () -> Unit,
     private val onDeleteAsked: (DeleteRequest) -> Unit,
     private val albums: () -> Boolean = { false },
+    private val archive: () -> Boolean = { false },
 ) : StatusActions {
     override val menu: Set<StatusMenuItem>
-        get() = if (albums()) SHARED + StatusMenuItem.AddToAlbum else SHARED
+        get() = buildSet {
+            addAll(SHARED)
+            if (albums()) add(StatusMenuItem.AddToAlbum)
+            if (archive()) add(StatusMenuItem.Archive)
+        }
+
+    /** Archives the reader's own post; only offered where [archive] says the server can. */
+    public open fun onArchive(row: StatusRowUi) {}
 
     public abstract fun onMute(row: StatusRowUi)
 
@@ -130,6 +139,8 @@ public abstract class RoutedStatusActions(
             StatusMenuItem.Report -> navigation().report(row.author.id, row.author.handle, row.statusId)
 
             StatusMenuItem.AddToAlbum -> navigation().addToAlbum(row.statusId)
+
+            StatusMenuItem.Archive -> onArchive(row)
 
             else -> Unit
         }

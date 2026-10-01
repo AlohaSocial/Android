@@ -70,6 +70,8 @@ data class SwitcherAccount(
     val avatarUrl: String?,
     val active: Boolean,
     val needsReauth: Boolean,
+    /** Whether its server archives posts, which the sheet then offers. */
+    val archives: Boolean = false,
 )
 
 @HiltViewModel
@@ -152,6 +154,7 @@ class AppViewModel @Inject constructor(
                     avatarUrl = account.avatarUrl,
                     active = account.id == active?.id,
                     needsReauth = account.needsReauth,
+                    archives = account.capabilities.isNextcloudSocial,
                 )
             }
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), emptyList())

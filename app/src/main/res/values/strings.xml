@@ -4,6 +4,14 @@
   ~ SPDX-License-Identifier: MIT
 -->
 <resources>
+    <!-- In the account sheet: opens the reader's direct conversations -->
+    <string name="accounts_messages">Direct messages</string>
+    <!-- In the account sheet: opens the posts the reader bookmarked -->
+    <string name="accounts_bookmarks">Bookmarks</string>
+    <!-- In the account sheet: opens the posts the reader favourited -->
+    <string name="accounts_favourites">Favourites</string>
+    <!-- In the account sheet: opens the reader's own posts taken off their profile without deleting them -->
+    <string name="accounts_archived">Archived posts</string>
     <!-- In the account sheet: opens the reader's lists -->
     <string name="accounts_lists">Lists</string>
     <!-- In the account sheet: opens the hashtags the reader follows and their tag groups -->

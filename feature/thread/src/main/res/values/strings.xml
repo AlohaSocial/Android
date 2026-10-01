@@ -62,4 +62,6 @@
         <item quantity="one">%1$s, %2$d reaction</item>
         <item quantity="other">%1$s, %2$d reactions</item>
     </plurals>
+    <!-- Confirms the reader's own post was archived -->
+    <string name="thread_archived">Archived. It’s off your profile, not deleted, and can be put back from Archived posts.</string>
 </resources>

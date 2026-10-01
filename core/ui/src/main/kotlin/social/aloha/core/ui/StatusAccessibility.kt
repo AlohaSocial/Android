@@ -37,6 +37,7 @@ internal fun menuItems(
         if (row.media.isNotEmpty()) {
             add(Triple(StatusMenuItem.AddToAlbum, AlohaIcons.Album, R.string.status_menu_add_to_album))
         }
+        add(Triple(StatusMenuItem.Archive, AlohaIcons.Archived, R.string.status_menu_archive))
         add(Triple(StatusMenuItem.Edit, AlohaIcons.Edited, R.string.status_menu_edit))
         add(Triple(StatusMenuItem.Redraft, AlohaIcons.Redraft, R.string.status_menu_redraft))
         add(Triple(StatusMenuItem.Delete, AlohaIcons.Delete, R.string.status_menu_delete))

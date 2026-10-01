@@ -98,6 +98,7 @@ public enum class StatusMenuItem {
     Redraft,
     Pin,
     AddToAlbum,
+    Archive,
 }
 
 /**

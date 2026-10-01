@@ -64,24 +64,10 @@ internal fun AccountSwitcher(viewModel: AppViewModel, links: AccountLinks) {
                 viewModel.switchTo(it)
             },
             // each place closes the sheet as it opens
-            links = AccountLinks(
-                onProfile = {
-                    open = false
-                    links.onProfile()
-                },
-                onSettings = {
-                    open = false
-                    links.onSettings()
-                },
-                onLists = {
-                    open = false
-                    links.onLists()
-                },
-                onHashtags = {
-                    open = false
-                    links.onHashtags()
-                },
-            ),
+            links = AccountLinks {
+                open = false
+                links.open(it)
+            },
             onAdd = {
                 open = false
                 viewModel.addAccount()
@@ -120,10 +106,10 @@ internal fun AccountSheet(
             }
             items(accounts, key = { it.id }) { account -> AccountLine(account) { onSwitch(account.id) } }
             item { HorizontalDivider(Modifier.padding(vertical = AlohaSpacing.xs)) }
-            item { Action(AlohaIcons.Profile, stringResource(R.string.accounts_profile), links.onProfile) }
-            item { Action(AlohaIcons.Lists, stringResource(R.string.accounts_lists), links.onLists) }
-            item { Action(AlohaIcons.Hashtag, stringResource(R.string.accounts_hashtags), links.onHashtags) }
-            item { Action(AlohaIcons.Settings, stringResource(R.string.accounts_settings), links.onSettings) }
+            items(AccountPlace.entries.filter { it != AccountPlace.Archived || active.archives }) { place ->
+                val (icon, text) = place.look
+                Action(icon, stringResource(text)) { links.open(place) }
+            }
             item { Action(AlohaIcons.AddAccount, stringResource(R.string.accounts_add), onAdd) }
             item {
                 Action(AlohaIcons.SignOut, stringResource(R.string.accounts_sign_out, active.handle)) {
@@ -189,6 +175,19 @@ private fun Action(icon: ImageVector, label: String, onClick: () -> Unit) {
 // rows sit on the sheet's own surface rather than painting one of theirs
 private val SheetRow: ListItemColors
     @Composable get() = ListItemDefaults.colors(containerColor = Color.Transparent)
+
+/** A place's icon and name in the sheet. */
+private val AccountPlace.look: Pair<ImageVector, Int>
+    get() = when (this) {
+        AccountPlace.Profile -> AlohaIcons.Profile to R.string.accounts_profile
+        AccountPlace.Messages -> AlohaIcons.VisibilityDirect to R.string.accounts_messages
+        AccountPlace.Bookmarks -> AlohaIcons.Bookmark to R.string.accounts_bookmarks
+        AccountPlace.Favourites -> AlohaIcons.Favourite to R.string.accounts_favourites
+        AccountPlace.Archived -> AlohaIcons.Archived to R.string.accounts_archived
+        AccountPlace.Lists -> AlohaIcons.Lists to R.string.accounts_lists
+        AccountPlace.Hashtags -> AlohaIcons.Hashtag to R.string.accounts_hashtags
+        AccountPlace.Settings -> AlohaIcons.Settings to R.string.accounts_settings
+    }
 
 private val BUTTON_AVATAR = 32.dp
 private val LINE_AVATAR = 40.dp

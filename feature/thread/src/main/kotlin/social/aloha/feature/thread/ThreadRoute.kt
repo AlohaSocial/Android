@@ -42,9 +42,16 @@ public fun ThreadRoute(key: ThreadKey, navigation: ThreadNavigation, modifier: M
     val nav by rememberUpdatedState(navigation)
 
     LaunchedEffect(colors) { viewModel.onColors(colors) }
+    val archived = stringResource(R.string.thread_archived)
+    LaunchedEffect(state.archived) {
+        if (state.archived) {
+            viewModel.onNoticeShown(archived = true)
+            snackbars.showSnackbar(archived)
+        }
+    }
     LaunchedEffect(state.actionFailed) {
         if (state.actionFailed) {
-            viewModel.onActionFailureShown()
+            viewModel.onNoticeShown(archived = false)
             snackbars.showSnackbar(failed)
         }
     }
@@ -56,6 +63,7 @@ public fun ThreadRoute(key: ThreadKey, navigation: ThreadNavigation, modifier: M
             onCopied = { scope.launch { snackbars.showSnackbar(copied) } },
             onDeleteAsked = { deleting = it },
             albums = { state.albums },
+            archive = { state.archive },
         ) {
             // the focused post is already open; a tap on it does nothing
             override fun onOpen(statusId: String) {
@@ -71,6 +79,8 @@ public fun ThreadRoute(key: ThreadKey, navigation: ThreadNavigation, modifier: M
             override fun onMute(row: StatusRowUi) = viewModel.onToggle(row.statusId, Toggle.MuteConversation)
 
             override fun onPin(row: StatusRowUi) = viewModel.onToggle(row.statusId, Toggle.Pin)
+
+            override fun onArchive(row: StatusRowUi) = viewModel.onArchive(row.statusId)
 
             override fun onVote(row: StatusRowUi, choices: List<Int>) = viewModel.onVote(row.statusId, choices)
 
@@ -89,9 +99,9 @@ public fun ThreadRoute(key: ThreadKey, navigation: ThreadNavigation, modifier: M
 
             override fun onList(kind: StatusListKind) = nav.openList(key.statusId, kind)
 
-            override fun onHistory() = viewModel.onHistory()
+            override fun onHistory() = viewModel.onHistory(open = true)
 
-            override fun onHistoryDismissed() = viewModel.onHistoryDismissed()
+            override fun onHistoryDismissed() = viewModel.onHistory(open = false)
         }
     }
 

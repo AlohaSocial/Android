@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ SPDX-FileCopyrightText: 2026 Aloha Social contributors
+  ~ SPDX-License-Identifier: MIT
+-->
+<resources>
+    <!-- Title of the reader's direct conversations -->
+    <string name="conversations_title">Direct messages</string>
+    <!-- Leaves a direct messages screen -->
+    <string name="conversations_back">Back</string>
+    <!-- Marks every conversation read -->
+    <string name="conversations_read_all">Mark all read</string>
+    <!-- Starts a new direct conversation; also the title of the screen choosing whom it is for -->
+    <string name="conversations_new">New message</string>
+    <!-- Shown when the reader has no direct conversations -->
+    <string name="conversations_none">No direct messages yet. A message sent to someone directly is seen only by those it mentions.</string>
+    <!-- Shown when the conversations could not be loaded -->
+    <string name="conversations_failed">Direct messages couldn’t be loaded.</string>
+    <!-- Loads the next page of conversations -->
+    <string name="conversations_more">Show more</string>
+    <!-- Shown when a change to the conversations was refused and undone -->
+    <string name="conversations_change_failed">That didn’t work. Nothing was changed.</string>
+    <!-- Spoken for a conversation with something unread -->
+    <string name="conversations_unread">Unread</string>
+    <!-- Names a conversation with no one else in it -->
+    <string name="conversations_only_you">Only you</string>
+    <!-- How long ago something was, when it was just now -->
+    <string name="conversations_age_now">now</string>
+    <!-- Takes a conversation off the list; %1$s is whom it is with -->
+    <string name="conversations_delete">Remove conversation with %1$s</string>
+    <!-- Title of the dialog asking before a conversation is taken off the list -->
+    <string name="conversations_delete_title">Remove this conversation?</string>
+    <!-- Body of the dialog asking before a conversation is taken off the list -->
+    <string name="conversations_delete_body">It goes from this list only. No message is deleted, for you or anyone in it, and a new message brings it back.</string>
+    <!-- Confirms taking a conversation off the list -->
+    <string name="conversations_delete_confirm">Remove</string>
+    <!-- Label of the field where whom a new message is for is typed -->
+    <string name="conversations_to">To</string>
+    <!-- Above the people the reader and they follow each other with -->
+    <string name="conversations_mutuals">People you follow who follow you back</string>
+    <!-- Shown when the reader has no mutual follows -->
+    <string name="conversations_no_mutuals">Type a name to find whom to write to.</string>
+</resources>

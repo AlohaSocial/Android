@@ -96,8 +96,8 @@ internal class ComposerViewModel @AssistedInject constructor(
         private set
     private var focused by mutableIntStateOf(0)
 
-    /** What a reply started with (its mentions), which leaving the composer would not lose. */
-    private var prefill = ""
+    /** What a reply or a direct message started with (whom it is for), which leaving would not lose. */
+    private var prefill = key.sharedText.takeIf { key.direct }.orEmpty()
 
     /** Whether leaving would lose something the writer wrote. */
     val hasWriting: Boolean
@@ -413,7 +413,7 @@ internal class ComposerViewModel @AssistedInject constructor(
         (draft?.replyToId ?: key.replyToId)?.let { id -> parent = (compose.status(account, id) as? Answer.Got)?.value }
         use(account)
         val preferences = compose.preferences(account)
-        control.update { it.withDefaults(preferences) }
+        control.update { it.withDefaults(preferences, key.direct) }
         if (draft != null) {
             segments.clear()
             segments.addAll(draft.segments.map { TextFieldValue(it.text, TextRange(it.text.length)) })
@@ -478,9 +478,13 @@ private val OFFLINE = PostFailure.Unreached(Trouble.Offline)
 /** What the post carries besides its text and media. */
 private data class Extras(val card: CardUi, val poll: PollUi?, val at: Instant?, val asStory: Boolean, val seconds: Int)
 
-/** The writer's own defaults from their server: the visibility where it is allowed, and the language. */
-private fun ComposerUiState.withDefaults(preferences: Preferences?) = copy(
-    visibility = preferences?.defaultVisibility?.takeIf { it in visibilities } ?: visibilities.first(),
+/**
+ * The writer's own defaults from their server: the visibility where it is allowed, and the language. A
+ * [direct] message is direct whatever the default.
+ */
+private fun ComposerUiState.withDefaults(preferences: Preferences?, direct: Boolean) = copy(
+    visibility = Visibility.Direct.takeIf { direct && it in visibilities }
+        ?: preferences?.defaultVisibility?.takeIf { it in visibilities } ?: visibilities.first(),
     language = preferences?.defaultLanguage ?: Locale.getDefault().language.ifEmpty { null },
 )
 

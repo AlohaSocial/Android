@@ -47,7 +47,8 @@ public data class SettingsSectionKey(val section: String) : NavKey
  * A new post written as [readerId]; an answer to [replyToId] on that account's server when given,
  * draft [draftId] carried on with, the reader's own post [editId] edited, or their post [redraftId]
  * deleted and written again. What another app shared starts a new post: [sharedText], and the
- * content addresses of [sharedMedia]. With [story] the post starts out as a story.
+ * content addresses of [sharedMedia]. With [story] the post starts out as a story; with [direct], as a
+ * direct message, [sharedText] then being whom it is for.
  */
 @Serializable
 public data class ComposerKey(
@@ -59,6 +60,7 @@ public data class ComposerKey(
     val sharedText: String? = null,
     val sharedMedia: List<String> = emptyList(),
     val story: Boolean = false,
+    val direct: Boolean = false,
 ) : NavKey
 
 /**
@@ -135,6 +137,21 @@ public data class AddToAlbumKey(val readerId: String, val statusId: String) : Na
 /** Photos' Explore: what is trending with pictures, hashtags and people, as [readerId] sees them. */
 @Serializable
 public data class PhotoExploreKey(val readerId: String) : NavKey
+
+/** The posts a reader kept: bookmarked, favourited, or archived off their profile. */
+public enum class SavedKind { Bookmarks, Favourites, Archived }
+
+/** [readerId]'s [kind] posts. */
+@Serializable
+public data class SavedPostsKey(val readerId: String, val kind: SavedKind) : NavKey
+
+/** [readerId]'s direct conversations. */
+@Serializable
+public data class ConversationsKey(val readerId: String) : NavKey
+
+/** Whom [readerId] starts a direct conversation with. */
+@Serializable
+public data class NewMessageKey(val readerId: String) : NavKey
 
 /** The watch page of post [statusId]'s video, as [readerId] sees it. */
 @Serializable
