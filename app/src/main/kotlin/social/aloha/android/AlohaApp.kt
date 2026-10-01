@@ -95,6 +95,8 @@ import social.aloha.core.navigation.VideoKey
 import social.aloha.core.navigation.WatchKey
 import social.aloha.core.ui.StatusNavigation
 import social.aloha.core.ui.openInBrowser
+import social.aloha.feature.audio.AudioRoute
+import social.aloha.feature.audio.MiniPlayer
 import social.aloha.feature.composer.ComposerRoute
 import social.aloha.feature.composer.DraftsRoute
 import social.aloha.feature.composer.ScheduledPostsRoute
@@ -209,6 +211,7 @@ fun AlohaApp(
     modes: ModeNavigation = ModeNavigation(),
     timeline: @Composable (TimelineFeed, StatusNavigation, accountButton: @Composable () -> Unit) -> Unit =
         { feed, navigation, button -> ModeTimeline(feed, navigation, button) },
+    nowPlaying: @Composable (onOpen: (statusId: String) -> Unit) -> Unit = { MiniPlayer(onOpen = it) },
 ) {
     val backStack = rememberNavBackStack(HomeKey)
     // a detail opened from a destination keeps that destination selected
@@ -349,126 +352,133 @@ fun AlohaApp(
                 }
             },
         ) {
-            NavDisplay(
-                // the navigation already pads its side for the system bars; the screens must not pad it again
-                modifier = Modifier.consumeWindowInsets(suiteInsets(suiteType)),
-                backStack = backStack,
-                onBack = { backStack.removeLastOrNull() },
-                sceneStrategies = listOf(panes),
-                entryDecorators = listOf(
-                    rememberSaveableStateHolderNavEntryDecorator(),
-                    rememberViewModelStoreNavEntryDecorator(),
-                ),
-                entryProvider = entryProvider {
-                    // home and each mode: the same account button, each timeline of its own
-                    val modeEntry = @Composable { feed: TimelineFeed ->
-                        timeline(feed, statusNavigation) {
-                            accountButton({
-                                backStack.push(AccountKey(readerId, id = serverAccountId))
-                            }, { backStack.push(SettingsKey) })
-                        }
-                    }
-                    val listPane = ListDetailSceneStrategy.listPane(detailPlaceholder = { NothingOpen() })
-                    entry<HomeKey>(metadata = listPane) { modeEntry(TimelineFeed.Home) }
-                    entry<PhotosKey>(metadata = listPane) { modeEntry(TimelineFeed.Mode(FeedMode.Photos)) }
-                    entry<VideoKey>(metadata = listPane) { modeEntry(TimelineFeed.Mode(FeedMode.Video)) }
-                    entry<ShortsKey>(metadata = listPane) { modeEntry(TimelineFeed.Mode(FeedMode.Shorts)) }
-                    entry<NewsKey>(metadata = listPane) { modeEntry(TimelineFeed.Mode(FeedMode.News)) }
-                    entry<AudioKey>(metadata = listPane) { modeEntry(TimelineFeed.Mode(FeedMode.Audio)) }
-                    entry<NotificationsKey>(
-                        metadata = ListDetailSceneStrategy.listPane(detailPlaceholder = { NothingOpen() }),
-                    ) {
-                        NotificationsRoute(
-                            statusNavigation,
-                            onPolicy = { backStack.push(NotificationPolicyKey(readerId)) },
-                            onRequests = { backStack.push(NotificationRequestsKey(readerId)) },
-                            navigationIcon = {
+            // the navigation already pads its side for the system bars; the screens must not pad it again
+            Column(Modifier.consumeWindowInsets(suiteInsets(suiteType))) {
+                NavDisplay(
+                    modifier = Modifier.weight(1f),
+                    backStack = backStack,
+                    onBack = { backStack.removeLastOrNull() },
+                    sceneStrategies = listOf(panes),
+                    entryDecorators = listOf(
+                        rememberSaveableStateHolderNavEntryDecorator(),
+                        rememberViewModelStoreNavEntryDecorator(),
+                    ),
+                    entryProvider = entryProvider {
+                        // home and each mode: the same account button, each timeline of its own
+                        val modeEntry = @Composable { feed: TimelineFeed ->
+                            timeline(feed, statusNavigation) {
                                 accountButton({
                                     backStack.push(AccountKey(readerId, id = serverAccountId))
                                 }, { backStack.push(SettingsKey) })
-                            },
-                        )
-                    }
-                    entry<NotificationPolicyKey>(metadata = ListDetailSceneStrategy.detailPane()) {
-                        PolicyRoute(it, onBack = { backStack.remove(it) })
-                    }
-                    entry<NotificationRequestsKey>(metadata = ListDetailSceneStrategy.detailPane()) {
-                        RequestsRoute(it, onOpenProfile = { id -> statusNavigation.openProfile(id, null) }, onBack = {
-                            backStack.remove(it)
-                        })
-                    }
-                    entry<SettingsKey>(
-                        metadata = ListDetailSceneStrategy.listPane(detailPlaceholder = {
-                            SettingsPlaceholder()
-                        }),
-                    ) {
-                        SettingsRoute(onBack = {
-                            backStack.removeLastOrNull()
-                        }, onSection = { backStack.push(SettingsSectionKey(it)) })
-                    }
-                    entry<SettingsSectionKey>(metadata = ListDetailSceneStrategy.detailPane()) {
-                        SettingsSectionRoute(it.section, onBack = { backStack.removeLastOrNull() })
-                    }
-                    entry<ProfileKey> { ProfileRoute(AccountKey(readerId, id = serverAccountId), statusNavigation) }
-                    // a screen that closes itself takes its own entry away, so a second tap never closes
-                    // what is under it
-                    entry<ComposerKey> {
-                        ComposerRoute(
-                            it,
-                            onDone = { backStack.remove(it) },
-                            onScheduledPosts = { backStack.push(ScheduledPostsKey(it.readerId)) },
-                            onDrafts = { backStack.push(DraftsKey(it.readerId)) },
-                        )
-                    }
-                    entry<DraftsKey> { drafts ->
-                        DraftsRoute(
-                            drafts,
-                            onBack = { backStack.remove(drafts) },
-                            onOpen = { id ->
-                                // the draft opens in place of the list, and of the composer the list was opened from
-                                backStack.remove(drafts)
-                                if (backStack.lastOrNull() is ComposerKey) backStack.removeLastOrNull()
-                                backStack.push(ComposerKey(drafts.readerId, draftId = id))
-                            },
-                        )
-                    }
-                    entry<ReportKey> { ReportRoute(it, onDone = { backStack.remove(it) }) }
-                    entry<EditProfileKey> { EditProfileRoute(it, onDone = { backStack.remove(it) }) }
-                    entry<ScheduledPostsKey> { ScheduledPostsRoute(it, onBack = { backStack.remove(it) }) }
-                    entry<AlbumsKey>(metadata = ListDetailSceneStrategy.detailPane()) {
-                        AlbumsRoute(
-                            it,
-                            onOpen = { album, own -> statusNavigation.openAlbum(album.id, album.title, own) },
-                            onBack = { backStack.remove(it) },
-                        )
-                    }
-                    entry<AlbumKey>(metadata = ListDetailSceneStrategy.detailPane()) {
-                        AlbumRoute(it, onOpen = statusNavigation::openThread, onBack = { backStack.remove(it) })
-                    }
-                    entry<AddToAlbumKey> { AddToAlbumRoute(it, onBack = { backStack.remove(it) }) }
-                    entry<WatchKey>(metadata = ListDetailSceneStrategy.detailPane()) {
-                        WatchRoute(it, statusNavigation, onBack = { backStack.remove(it) })
-                    }
-                    entry<PhotoExploreKey>(metadata = ListDetailSceneStrategy.detailPane()) {
-                        PhotoExploreRoute(it, statusNavigation, onBack = { backStack.remove(it) })
-                    }
-                    entry<ThreadKey>(metadata = ListDetailSceneStrategy.detailPane()) {
-                        ThreadRoute(it, statusNavigation)
-                    }
-                    entry<StatusListKey>(metadata = ListDetailSceneStrategy.detailPane()) {
-                        StatusListRoute(it, statusNavigation)
-                    }
-                    entry<AccountKey>(metadata = ListDetailSceneStrategy.detailPane()) {
-                        ProfileRoute(it, statusNavigation)
-                    }
-                    entry<PeopleKey>(metadata = ListDetailSceneStrategy.detailPane()) {
-                        PeopleRoute(it, statusNavigation)
-                    }
-                    entry<TagKey>(metadata = ListDetailSceneStrategy.detailPane()) {
-                        TagRoute(it.name, statusNavigation, onBack = statusNavigation::back)
-                    }
-                },
-            )
+                            }
+                        }
+                        val listPane = ListDetailSceneStrategy.listPane(detailPlaceholder = { NothingOpen() })
+                        entry<HomeKey>(metadata = listPane) { modeEntry(TimelineFeed.Home) }
+                        entry<PhotosKey>(metadata = listPane) { modeEntry(TimelineFeed.Mode(FeedMode.Photos)) }
+                        entry<VideoKey>(metadata = listPane) { modeEntry(TimelineFeed.Mode(FeedMode.Video)) }
+                        entry<ShortsKey>(metadata = listPane) { modeEntry(TimelineFeed.Mode(FeedMode.Shorts)) }
+                        entry<NewsKey>(metadata = listPane) { modeEntry(TimelineFeed.Mode(FeedMode.News)) }
+                        entry<AudioKey>(metadata = listPane) { modeEntry(TimelineFeed.Mode(FeedMode.Audio)) }
+                        entry<NotificationsKey>(
+                            metadata = ListDetailSceneStrategy.listPane(detailPlaceholder = { NothingOpen() }),
+                        ) {
+                            NotificationsRoute(
+                                statusNavigation,
+                                onPolicy = { backStack.push(NotificationPolicyKey(readerId)) },
+                                onRequests = { backStack.push(NotificationRequestsKey(readerId)) },
+                                navigationIcon = {
+                                    accountButton({
+                                        backStack.push(AccountKey(readerId, id = serverAccountId))
+                                    }, { backStack.push(SettingsKey) })
+                                },
+                            )
+                        }
+                        entry<NotificationPolicyKey>(metadata = ListDetailSceneStrategy.detailPane()) {
+                            PolicyRoute(it, onBack = { backStack.remove(it) })
+                        }
+                        entry<NotificationRequestsKey>(metadata = ListDetailSceneStrategy.detailPane()) {
+                            RequestsRoute(
+                                it,
+                                onOpenProfile = { id -> statusNavigation.openProfile(id, null) },
+                                onBack = { backStack.remove(it) },
+                            )
+                        }
+                        entry<SettingsKey>(
+                            metadata = ListDetailSceneStrategy.listPane(detailPlaceholder = {
+                                SettingsPlaceholder()
+                            }),
+                        ) {
+                            SettingsRoute(onBack = {
+                                backStack.removeLastOrNull()
+                            }, onSection = { backStack.push(SettingsSectionKey(it)) })
+                        }
+                        entry<SettingsSectionKey>(metadata = ListDetailSceneStrategy.detailPane()) {
+                            SettingsSectionRoute(it.section, onBack = { backStack.removeLastOrNull() })
+                        }
+                        entry<ProfileKey> { ProfileRoute(AccountKey(readerId, id = serverAccountId), statusNavigation) }
+                        // a screen that closes itself takes its own entry away, so a second tap never closes
+                        // what is under it
+                        entry<ComposerKey> {
+                            ComposerRoute(
+                                it,
+                                onDone = { backStack.remove(it) },
+                                onScheduledPosts = { backStack.push(ScheduledPostsKey(it.readerId)) },
+                                onDrafts = { backStack.push(DraftsKey(it.readerId)) },
+                            )
+                        }
+                        entry<DraftsKey> { drafts ->
+                            DraftsRoute(
+                                drafts,
+                                onBack = { backStack.remove(drafts) },
+                                onOpen = { id ->
+                                    // the draft opens in place of the list, and of the composer the list was
+                                    // opened from
+                                    backStack.remove(drafts)
+                                    if (backStack.lastOrNull() is ComposerKey) backStack.removeLastOrNull()
+                                    backStack.push(ComposerKey(drafts.readerId, draftId = id))
+                                },
+                            )
+                        }
+                        entry<ReportKey> { ReportRoute(it, onDone = { backStack.remove(it) }) }
+                        entry<EditProfileKey> { EditProfileRoute(it, onDone = { backStack.remove(it) }) }
+                        entry<ScheduledPostsKey> { ScheduledPostsRoute(it, onBack = { backStack.remove(it) }) }
+                        entry<AlbumsKey>(metadata = ListDetailSceneStrategy.detailPane()) {
+                            AlbumsRoute(
+                                it,
+                                onOpen = { album, own -> statusNavigation.openAlbum(album.id, album.title, own) },
+                                onBack = { backStack.remove(it) },
+                            )
+                        }
+                        entry<AlbumKey>(metadata = ListDetailSceneStrategy.detailPane()) {
+                            AlbumRoute(it, onOpen = statusNavigation::openThread, onBack = { backStack.remove(it) })
+                        }
+                        entry<AddToAlbumKey> { AddToAlbumRoute(it, onBack = { backStack.remove(it) }) }
+                        entry<WatchKey>(metadata = ListDetailSceneStrategy.detailPane()) {
+                            WatchRoute(it, statusNavigation, onBack = { backStack.remove(it) })
+                        }
+                        entry<PhotoExploreKey>(metadata = ListDetailSceneStrategy.detailPane()) {
+                            PhotoExploreRoute(it, statusNavigation, onBack = { backStack.remove(it) })
+                        }
+                        entry<ThreadKey>(metadata = ListDetailSceneStrategy.detailPane()) {
+                            ThreadRoute(it, statusNavigation)
+                        }
+                        entry<StatusListKey>(metadata = ListDetailSceneStrategy.detailPane()) {
+                            StatusListRoute(it, statusNavigation)
+                        }
+                        entry<AccountKey>(metadata = ListDetailSceneStrategy.detailPane()) {
+                            ProfileRoute(it, statusNavigation)
+                        }
+                        entry<PeopleKey>(metadata = ListDetailSceneStrategy.detailPane()) {
+                            PeopleRoute(it, statusNavigation)
+                        }
+                        entry<TagKey>(metadata = ListDetailSceneStrategy.detailPane()) {
+                            TagRoute(it.name, statusNavigation, onBack = statusNavigation::back)
+                        }
+                    },
+                )
+                // the sound playing, docked above the navigation wherever the reader goes
+                nowPlaying(statusNavigation::openThread)
+            }
         }
         OpenViewer(viewing, statusNavigation) { viewing = null }
     }
@@ -505,6 +515,8 @@ private fun NothingOpen() {
 private fun ModeTimeline(feed: TimelineFeed, navigation: StatusNavigation, accountButton: @Composable () -> Unit) {
     // Shorts is a pager of its own rather than a timeline of rows
     if (feed.mode == FeedMode.Shorts) return ShortsRoute(navigation, accountButton)
+    // and Audio a list to play from
+    if (feed.mode == FeedMode.Audio) return AudioRoute(navigation, accountButton)
     TimelineRoute(
         navigation,
         feed = feed,

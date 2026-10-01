@@ -69,7 +69,7 @@ class AppShellScreenshotTest {
     private fun capture(name: String, mode: ThemeMode = ThemeMode.Light, select: String? = null) {
         compose.setContent {
             AlohaTheme(ThemeSettings(mode = mode)) {
-                AlohaApp("a", "1", timeline = { feed, _, _ -> Placeholder(feed.label()) })
+                AlohaApp("a", "1", timeline = { feed, _, _ -> Placeholder(feed.label()) }, nowPlaying = {})
             }
         }
         select?.let { compose.onNodeWithText(it).performClick() }

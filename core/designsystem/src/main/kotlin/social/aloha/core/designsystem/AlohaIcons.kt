@@ -22,6 +22,7 @@ import androidx.compose.material.icons.filled.Headphones
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Newspaper
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.RepeatOn
@@ -140,6 +141,7 @@ public object AlohaIcons {
     public val Archived: ImageVector = Icons.Outlined.Inventory2
     public val Dislike: ImageVector = Icons.Outlined.ThumbDown
     public val Play: ImageVector = Icons.Filled.PlayArrow
+    public val Pause: ImageVector = Icons.Filled.Pause
     public val Bot: ImageVector = Icons.Outlined.SmartToy
     public val Filtered: ImageVector = Icons.Outlined.FilterAlt
     public val Share: ImageVector = Icons.Outlined.Share

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ SPDX-FileCopyrightText: 2026 Aloha Social contributors
+  ~ SPDX-License-Identifier: MIT
+-->
+<resources>
+    <!-- Title of the Audio mode, the posts with sound -->
+    <string name="audio_title">Audio</string>
+    <!-- Shown when there are no posts with sound to show -->
+    <string name="audio_empty">No audio here yet.</string>
+    <!-- Plays a post's sound from the start: %1$s is its title -->
+    <string name="audio_play">Play %1$s</string>
+    <!-- Goes on playing a paused sound: %1$s is its title -->
+    <string name="audio_resume">Resume %1$s</string>
+    <!-- Pauses the sound playing: %1$s is its title -->
+    <string name="audio_pause">Pause %1$s</string>
+    <!-- Stops the sound and closes the player docked above the navigation -->
+    <string name="audio_stop">Stop playing</string>
+</resources>
