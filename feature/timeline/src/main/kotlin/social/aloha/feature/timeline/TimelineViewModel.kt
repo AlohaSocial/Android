@@ -144,7 +144,7 @@ internal class TimelineViewModel @AssistedInject constructor(
         .flatMapLatest { (account, key) ->
             combine(
                 pager.observe(account, key),
-                rows.filters(account.id),
+                combine(rows.filters(account.id), rows.follows(account.id), ::Pair),
                 colors.filterNotNull(),
                 accountSettings,
                 combine(pager.states, control) { paging, control ->
@@ -152,12 +152,15 @@ internal class TimelineViewModel @AssistedInject constructor(
                 }.distinctUntilChanged(),
             ) {
                     stored,
-                    filters,
+                    (filters, follows),
                     colors,
                     settings,
                     shaping,
                 ->
-                val shape = TimelineRowBuilder.Shape(colors, settings, filters, shaping.held, shaping.loadingGaps)
+                val shape =
+                    TimelineRowBuilder.Shape(colors, settings, filters, shaping.held, shaping.loadingGaps, follows)
+                val unknown = rows.unknownAuthors(account, key.source, stored, shape)
+                if (unknown.isNotEmpty()) viewModelScope.launch { rows.askAbout(account, unknown) }
                 val held = stored.filter { it.id in shaping.held }
                 // the newest few who posted what waits, once each, for the pill to show
                 val avatars = held.filterIsInstance<TimelineRow.Post>()

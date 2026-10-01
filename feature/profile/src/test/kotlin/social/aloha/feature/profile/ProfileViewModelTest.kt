@@ -38,6 +38,7 @@ import org.robolectric.RobolectricTestRunner
 import social.aloha.core.data.AccountRepository
 import social.aloha.core.data.ClientFactory
 import social.aloha.core.data.NewAccount
+import social.aloha.core.data.profile.FollowedAuthors
 import social.aloha.core.data.profile.ProfileRepository
 import social.aloha.core.data.profile.RelationshipChange
 import social.aloha.core.data.timeline.FilterRepository
@@ -172,7 +173,7 @@ class ProfileViewModelTest {
         return ProfileViewModel(
             AccountKey(reader.id, id, acct),
             accounts,
-            ProfileRepository(clients, statuses),
+            ProfileRepository(clients, statuses, FollowedAuthors(clients)),
             TimelineRepository(cache.timelineDao(), statuses, clients, accounts, clock, Dispatchers.IO),
             FilterRepository(cache.filterDao(), clients),
             StatusInteractions(statuses, clients),

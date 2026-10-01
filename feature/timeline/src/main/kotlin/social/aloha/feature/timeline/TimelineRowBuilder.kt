@@ -6,6 +6,7 @@ package social.aloha.feature.timeline
 import java.time.Clock
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
+import social.aloha.core.data.profile.FollowedAuthors
 import social.aloha.core.data.timeline.FilterEvaluator
 import social.aloha.core.data.timeline.FilterRepository
 import social.aloha.core.data.timeline.TimelineRow
@@ -26,6 +27,7 @@ import social.aloha.core.ui.StatusRowCache
 internal class TimelineRowBuilder @Inject constructor(
     private val cache: RichTextCache,
     private val filters: FilterRepository,
+    private val followed: FollowedAuthors,
     private val clock: Clock,
 ) {
     /** What decides which stored rows show and how they are drawn. */
@@ -35,6 +37,8 @@ internal class TimelineRowBuilder @Inject constructor(
         val filters: List<Filter>,
         val held: Set<String>,
         val loadingGaps: Set<String>,
+        /** Whether the reader follows each author asked about, where the reader hides those they don't. */
+        val follows: Map<String, Boolean> = emptyMap(),
     )
 
     private val rows = StatusRowCache(cache)
@@ -45,6 +49,27 @@ internal class TimelineRowBuilder @Inject constructor(
         filters.refresh(account)
     }
 
+    fun follows(readerId: String): Flow<Map<String, Boolean>> = followed.observe(readerId)
+
+    /**
+     * The authors of [stored] posts not yet known to be followed or not, while [source] hides those
+     * [account] doesn't follow: these are asked about, and hidden until the answer says otherwise. The
+     * reader is never asked about.
+     */
+    fun unknownAuthors(
+        account: SignedInAccount,
+        source: TimelineSource,
+        stored: List<TimelineRow>,
+        shape: Shape,
+    ): Set<String> = if (!hidesStrangers(source, shape.settings)) {
+        emptySet()
+    } else {
+        stored.filterIsInstance<TimelineRow.Post>().map { it.status.displayed.account.id }
+            .filterTo(mutableSetOf()) { it !in shape.follows && it != account.serverAccountId }
+    }
+
+    suspend fun askAbout(account: SignedInAccount, authors: Set<String>) = followed.ask(account, authors)
+
     @Synchronized
     fun build(
         account: SignedInAccount,
@@ -54,10 +79,14 @@ internal class TimelineRowBuilder @Inject constructor(
     ): List<TimelineItem> {
         rows.use(shape.colors)
         val evaluator = FilterEvaluator(shape.filters, contextOf(source), clock.instant())
+        val strangers = hidesStrangers(source, shape.settings)
         return stored.mapNotNull { row ->
             when (row) {
                 is TimelineRow.Gap -> TimelineItem.Gap(row.id, loading = row.id in shape.loadingGaps)
-                is TimelineRow.Post -> post(account.serverAccountId, row.status, evaluator, shape)
+
+                is TimelineRow.Post -> row.status.takeUnless {
+                    strangers && stranger(account.serverAccountId, it, shape.follows)
+                }?.let { post(account.serverAccountId, it, evaluator, shape) }
             }
         }
     }
@@ -85,6 +114,15 @@ internal class TimelineRowBuilder @Inject constructor(
         return (!settings.showBoosts && status.isBoost) ||
             // a reply to oneself continues a thread; only replies to others are hidden
             (!settings.showReplies && shown.inReplyToAccountId != null && shown.inReplyToAccountId != shown.account.id)
+    }
+
+    private fun hidesStrangers(source: TimelineSource, settings: AccountSettings) =
+        settings.hideStrangers && (source == TimelineSource.Local || source == TimelineSource.Federated)
+
+    // one not yet known to be followed is a stranger until the server says otherwise
+    private fun stranger(viewer: String, status: Status, follows: Map<String, Boolean>): Boolean {
+        val author = status.displayed.account.id
+        return author != viewer && follows[author] != true
     }
 
     private fun contextOf(source: TimelineSource) = when (source) {

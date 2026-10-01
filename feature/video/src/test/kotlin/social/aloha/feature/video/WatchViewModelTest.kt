@@ -31,6 +31,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
+import social.aloha.core.data.profile.FollowedAuthors
 import social.aloha.core.data.profile.ProfileRepository
 import social.aloha.core.data.thread.ThreadRepository
 import social.aloha.core.data.timeline.StatusInteractions
@@ -107,7 +108,7 @@ class WatchViewModelTest {
             ThreadRepository(fixture.statuses, fixture.clients),
             fixture.statuses,
             StatusInteractions(fixture.statuses, fixture.clients),
-            ProfileRepository(fixture.clients, fixture.statuses),
+            ProfileRepository(fixture.clients, fixture.statuses, FollowedAuthors(fixture.clients)),
             fixture.watchPositions(),
             RichTextCache(),
             playback,

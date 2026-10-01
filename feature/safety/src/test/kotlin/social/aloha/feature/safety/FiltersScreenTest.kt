@@ -94,7 +94,13 @@ class FiltersScreenTest {
         compose.enableAccessibilityChecks()
         compose.setContent {
             AlohaTheme {
-                FiltersScreen(FiltersUiState(filters, loading = false), { asked += "edit:$it" }, {}, now = now)
+                FiltersScreen(
+                    FiltersUiState(filters, loading = false),
+                    onEdit = { asked += "edit:$it" },
+                    onHideStrangers = { asked += "strangers:$it" },
+                    onBack = {},
+                    now = now,
+                )
             }
         }
         compose.onRoot().tryPerformAccessibilityChecks()
@@ -102,7 +108,8 @@ class FiltersScreenTest {
         compose.onNodeWithText("Expired").assertExists()
         compose.onRoot().captureRoboImage("src/test/screenshots/filters.png")
         compose.onNodeWithText("Spoilers").performClick()
-        assertEquals(listOf("edit:1"), asked)
+        compose.onNodeWithText("Only people I follow in public timelines").performClick()
+        assertEquals(listOf("edit:1", "strangers:true"), asked)
     }
 
     @Test

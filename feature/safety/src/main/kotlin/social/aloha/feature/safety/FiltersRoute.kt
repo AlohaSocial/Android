@@ -6,12 +6,14 @@ package social.aloha.feature.safety
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
@@ -40,6 +42,7 @@ import social.aloha.core.model.Filter
 import social.aloha.core.model.FilterAction
 import social.aloha.core.model.FilterContext
 import social.aloha.core.navigation.FiltersKey
+import social.aloha.core.ui.SwitchRow
 import social.aloha.core.ui.fullDate
 
 /**
@@ -57,7 +60,7 @@ public fun FiltersRoute(
         it.create(key.readerId)
     }
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    FiltersScreen(state, onEdit, onBack, modifier)
+    FiltersScreen(state, onEdit, viewModel::onHideStrangers, onBack, modifier)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -65,6 +68,7 @@ public fun FiltersRoute(
 internal fun FiltersScreen(
     state: FiltersUiState,
     onEdit: (filterId: String?) -> Unit,
+    onHideStrangers: (Boolean) -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
     now: Instant = remember { Instant.now() },
@@ -92,19 +96,32 @@ internal fun FiltersScreen(
         },
         snackbarHost = { SnackbarHost(snackbars) },
     ) { padding ->
-        Box(Modifier.padding(padding).fillMaxSize()) {
-            when {
-                state.filters.isEmpty() && state.loading -> CircularProgressIndicator(Modifier.align(Alignment.Center))
-
-                state.filters.isEmpty() -> Text(
-                    stringResource(R.string.filters_none),
-                    style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.align(Alignment.Center).padding(AlohaSpacing.l),
+        LazyColumn(Modifier.padding(padding).fillMaxSize()) {
+            item(key = "strangers") {
+                SwitchRow(
+                    stringResource(R.string.filters_hide_strangers),
+                    state.hideStrangers,
+                    onHideStrangers,
+                    summary = stringResource(R.string.filters_hide_strangers_summary),
                 )
-
-                else -> LazyColumn(Modifier.fillMaxSize()) {
-                    items(state.filters, key = { it.id }) { filter -> FilterRow(filter, now) { onEdit(filter.id) } }
+                HorizontalDivider()
+            }
+            when {
+                state.filters.isEmpty() && state.loading -> item(key = "loading") {
+                    Box(Modifier.fillMaxWidth().padding(AlohaSpacing.l), Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
                 }
+
+                state.filters.isEmpty() -> item(key = "none") {
+                    Text(
+                        stringResource(R.string.filters_none),
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.padding(AlohaSpacing.l),
+                    )
+                }
+
+                else -> items(state.filters, key = { it.id }) { filter -> FilterRow(filter, now) { onEdit(filter.id) } }
             }
         }
     }

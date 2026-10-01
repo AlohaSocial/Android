@@ -18,6 +18,7 @@ import kotlinx.coroutines.launch
 import social.aloha.core.data.AccountRepository
 import social.aloha.core.data.Answer
 import social.aloha.core.data.timeline.FilterRepository
+import social.aloha.core.datastore.AccountSettingsStore
 import social.aloha.core.model.Filter
 import social.aloha.core.model.SignedInAccount
 
@@ -28,6 +29,8 @@ internal data class FiltersUiState(
     /** The server could not be asked; the filters shown are the ones last kept. */
     val failed: Boolean = false,
     val deleteFailed: Boolean = false,
+    /** The local and federated timelines show only accounts the reader follows. */
+    val hideStrangers: Boolean = false,
 )
 
 /**
@@ -39,6 +42,7 @@ internal class FiltersViewModel @AssistedInject constructor(
     @Assisted private val readerId: String,
     private val accounts: AccountRepository,
     private val filters: FilterRepository,
+    private val settings: AccountSettingsStore,
 ) : ViewModel() {
     @AssistedFactory
     interface Factory {
@@ -55,6 +59,11 @@ internal class FiltersViewModel @AssistedInject constructor(
             val account = accounts.byId(readerId) ?: return@launch
             reader = account
             launch {
+                settings.settings(account.id).collect { kept ->
+                    state.update { it.copy(hideStrangers = kept.hideStrangers) }
+                }
+            }
+            launch {
                 filters.observe(account.id).collect { kept ->
                     state.update { it.copy(filters = kept.sortedBy { filter -> filter.title.lowercase() }) }
                 }
@@ -69,6 +78,10 @@ internal class FiltersViewModel @AssistedInject constructor(
         viewModelScope.launch {
             if (filters.delete(account, id) is Answer.Missed) state.update { it.copy(deleteFailed = true) }
         }
+    }
+
+    fun onHideStrangers(hide: Boolean) {
+        viewModelScope.launch { settings.update(readerId) { it.copy(hideStrangers = hide) } }
     }
 
     fun onDeleteFailureShown() {

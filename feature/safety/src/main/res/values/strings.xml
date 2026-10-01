@@ -16,6 +16,10 @@
     <string name="filters_none">No filters. A filter hides posts with the words you choose, or puts a warning over them, wherever you choose.</string>
     <!-- Shown when the filters could not be refreshed from the server -->
     <string name="filters_stale">Filters couldn’t be refreshed. These are the ones last loaded.</string>
+    <!-- Switch: the local and federated timelines show only accounts the reader follows -->
+    <string name="filters_hide_strangers">Only people I follow in public timelines</string>
+    <!-- Explains the switch hiding everyone the reader doesn't follow in public timelines -->
+    <string name="filters_hide_strangers_summary">Hides everything from accounts you don’t follow in the local and federated timelines, on this device.</string>
     <!-- Names a filter without a name -->
     <string name="filters_untitled">Unnamed filter</string>
     <!-- What a filter does: hides posts -->
