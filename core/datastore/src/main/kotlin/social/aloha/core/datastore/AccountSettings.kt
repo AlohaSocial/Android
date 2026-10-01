@@ -30,6 +30,7 @@ import social.aloha.core.model.TimelineSource
  *   followed.
  * @property recentTags the hashtags this account used last, newest first, offered first when writing.
  * @property recentFilePaths the Nextcloud files this account attached last, by path, newest first.
+ * @property recentSearches what this account searched for last, newest first, until cleared.
  * @property pollFrequency how often this account's server is asked what is new while the app is open.
  */
 @Serializable
@@ -40,6 +41,7 @@ public data class AccountSettings(
     val modeSources: Map<String, TimelineSource> = emptyMap(),
     val recentTags: List<String> = emptyList(),
     val recentFilePaths: List<String> = emptyList(),
+    val recentSearches: List<String> = emptyList(),
     val pollFrequency: PollFrequency = PollFrequency.Normal,
 )
 

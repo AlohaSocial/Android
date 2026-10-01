@@ -109,6 +109,7 @@ internal fun TimelineScreen(
     onCompose: (() -> Unit)? = null,
     onAlbums: (() -> Unit)? = null,
     onExplore: (() -> Unit)? = null,
+    onSearch: (() -> Unit)? = null,
     header: @Composable () -> Unit = {},
     onVideo: (String) -> Unit = {},
 ) {
@@ -119,6 +120,9 @@ internal fun TimelineScreen(
                 title = { Text(title) },
                 navigationIcon = navigationIcon,
                 actions = {
+                    onSearch?.let {
+                        IconButton(onClick = it) { Icon(AlohaIcons.Search, stringResource(R.string.timeline_search)) }
+                    }
                     PhotosButtons(state.grid, actions::onGrid, onAlbums, onExplore)
                     if (showOptions) Options(state, actions)
                 },

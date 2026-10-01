@@ -76,6 +76,10 @@ public data class ReportKey(
     val remote: Boolean get() = handle.removePrefix("@").contains('@')
 }
 
+/** Search, as [readerId]: accounts, hashtags and posts, from anywhere by their address. */
+@Serializable
+public data class SearchKey(val readerId: String) : NavKey
+
 /** [readerId]'s own profile, being edited. */
 @Serializable
 public data class EditProfileKey(val readerId: String) : NavKey

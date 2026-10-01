@@ -54,6 +54,7 @@ import androidx.compose.material.icons.outlined.Flag
 import androidx.compose.material.icons.outlined.FormatQuote
 import androidx.compose.material.icons.outlined.GridView
 import androidx.compose.material.icons.outlined.Headphones
+import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.HistoryToggleOff
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Info
@@ -80,10 +81,12 @@ import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.RemoveCircleOutline
 import androidx.compose.material.icons.outlined.Repeat
 import androidx.compose.material.icons.outlined.Schedule
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.outlined.SmartToy
 import androidx.compose.material.icons.outlined.StarBorder
+import androidx.compose.material.icons.outlined.Tag
 import androidx.compose.material.icons.outlined.TextFields
 import androidx.compose.material.icons.outlined.ThumbDown
 import androidx.compose.material.icons.outlined.Translate
@@ -184,6 +187,9 @@ public object AlohaIcons {
     public val Check: ImageVector = Icons.Filled.Check
     public val Back: ImageVector = Icons.AutoMirrored.Outlined.ArrowBack
     public val Close: ImageVector = Icons.Outlined.Close
+    public val Search: ImageVector = Icons.Outlined.Search
+    public val Recent: ImageVector = Icons.Outlined.History
+    public val Hashtag: ImageVector = Icons.Outlined.Tag
     public val Send: ImageVector = Icons.AutoMirrored.Outlined.Send
     public val Story: ImageVector = Icons.Outlined.HistoryToggleOff
     public val Settings: ImageVector = Icons.Outlined.Settings

@@ -52,6 +52,7 @@ dependencies {
     implementation(project(":feature:video"))
     implementation(project(":feature:shorts"))
     implementation(project(":feature:audio"))
+    implementation(project(":feature:search"))
     implementation(project(":feature:mediaviewer"))
     implementation(project(":feature:notifications"))
     implementation(project(":widget"))

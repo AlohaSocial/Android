@@ -83,6 +83,7 @@ import social.aloha.core.navigation.ProfileKey
 import social.aloha.core.navigation.ReportKey
 import social.aloha.core.navigation.RouteResolver
 import social.aloha.core.navigation.ScheduledPostsKey
+import social.aloha.core.navigation.SearchKey
 import social.aloha.core.navigation.SettingsKey
 import social.aloha.core.navigation.SettingsSectionKey
 import social.aloha.core.navigation.ShortsKey
@@ -113,6 +114,7 @@ import social.aloha.feature.profile.PeopleRoute
 import social.aloha.feature.profile.ProfileNavigation
 import social.aloha.feature.profile.ProfileRoute
 import social.aloha.feature.profile.ReportRoute
+import social.aloha.feature.search.SearchRoute
 import social.aloha.feature.settings.SettingsPlaceholder
 import social.aloha.feature.settings.SettingsRoute
 import social.aloha.feature.settings.SettingsSectionRoute
@@ -209,8 +211,12 @@ fun AlohaApp(
     resolveLink: suspend (address: String, fromPost: Boolean) -> NavKey? = { _, _ -> null },
     accountButton: @Composable (onProfile: () -> Unit, onSettings: () -> Unit) -> Unit = { _, _ -> },
     modes: ModeNavigation = ModeNavigation(),
-    timeline: @Composable (TimelineFeed, StatusNavigation, accountButton: @Composable () -> Unit) -> Unit =
-        { feed, navigation, button -> ModeTimeline(feed, navigation, button) },
+    timeline: @Composable (
+        TimelineFeed,
+        StatusNavigation,
+        onSearch: () -> Unit,
+        accountButton: @Composable () -> Unit,
+    ) -> Unit = { feed, navigation, search, button -> ModeTimeline(feed, navigation, search, button) },
     nowPlaying: @Composable (onOpen: (statusId: String) -> Unit) -> Unit = { MiniPlayer(onOpen = it) },
 ) {
     val backStack = rememberNavBackStack(HomeKey)
@@ -370,7 +376,7 @@ fun AlohaApp(
                     entryProvider = entryProvider {
                         // home and each mode: the same account button, each timeline of its own
                         val modeEntry = @Composable { feed: TimelineFeed ->
-                            timeline(feed, statusNavigation) {
+                            timeline(feed, statusNavigation, { backStack.push(SearchKey(readerId)) }) {
                                 accountButton({
                                     backStack.push(AccountKey(readerId, id = serverAccountId))
                                 }, { backStack.push(SettingsKey) })
@@ -407,6 +413,7 @@ fun AlohaApp(
                                 onBack = { backStack.remove(it) },
                             )
                         }
+                        entry<SearchKey> { SearchRoute(it, statusNavigation, onBack = { backStack.remove(it) }) }
                         entry<SettingsKey>(
                             metadata = ListDetailSceneStrategy.listPane(detailPlaceholder = {
                                 SettingsPlaceholder()
@@ -516,7 +523,12 @@ private fun NothingOpen() {
 
 /** Home's timeline, or a mode's: Photos carries the stories rail above its own, Video what to carry on with. */
 @Composable
-private fun ModeTimeline(feed: TimelineFeed, navigation: StatusNavigation, accountButton: @Composable () -> Unit) {
+private fun ModeTimeline(
+    feed: TimelineFeed,
+    navigation: StatusNavigation,
+    onSearch: () -> Unit,
+    accountButton: @Composable () -> Unit,
+) {
     // Shorts is a pager of its own rather than a timeline of rows
     if (feed.mode == FeedMode.Shorts) return ShortsRoute(navigation, accountButton)
     // and Audio a list to play from
@@ -525,6 +537,8 @@ private fun ModeTimeline(feed: TimelineFeed, navigation: StatusNavigation, accou
         navigation,
         feed = feed,
         navigationIcon = accountButton,
+        // search is reached from Home
+        onSearch = onSearch.takeIf { feed == TimelineFeed.Home },
         header = {
             when (feed.mode) {
                 FeedMode.Photos -> StoriesRail(
@@ -561,7 +575,7 @@ internal fun Placeholder(title: String) {
 @Composable
 private fun AlohaAppPreview() {
     AlohaTheme {
-        AlohaApp("preview", "1", timeline = { _, _, _ -> Placeholder(stringResource(R.string.destination_home)) })
+        AlohaApp("preview", "1", timeline = { _, _, _, _ -> Placeholder(stringResource(R.string.destination_home)) })
     }
 }
 

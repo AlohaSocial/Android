@@ -39,6 +39,7 @@ public fun TimelineRoute(
     feed: TimelineFeed = TimelineFeed.Home,
     navigationIcon: @Composable () -> Unit = {},
     header: @Composable () -> Unit = {},
+    onSearch: (() -> Unit)? = null,
 ) {
     val viewModel =
         hiltViewModel<TimelineViewModel, TimelineViewModel.Factory>(key = feed.toString()) { it.create(feed) }
@@ -102,6 +103,7 @@ public fun TimelineRoute(
         onCompose = if (feed == TimelineFeed.Home) ({ nav.openComposer(null) }) else null,
         onAlbums = if (feed.mode == FeedMode.Photos && state.albums) ({ nav.openAlbums() }) else null,
         onExplore = if (feed.mode == FeedMode.Photos) ({ nav.openPhotoExplore() }) else null,
+        onSearch = onSearch,
         header = header,
         onVideo = nav::openVideo,
     )

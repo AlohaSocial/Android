@@ -4,6 +4,8 @@
   ~ SPDX-License-Identifier: MIT
 -->
 <resources>
+    <!-- Toolbar button on Home that opens search -->
+    <string name="timeline_search">Search</string>
     <!-- Floating button on the home timeline that opens the composer for a new post -->
     <string name="timeline_compose">New post</string>
     <!-- Title of the home timeline screen -->

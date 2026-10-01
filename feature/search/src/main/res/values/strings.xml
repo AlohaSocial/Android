@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ SPDX-FileCopyrightText: 2026 Aloha Social contributors
+  ~ SPDX-License-Identifier: MIT
+-->
+<resources>
+    <!-- Name of the search screen, read aloud when it opens -->
+    <string name="search_title">Search</string>
+    <!-- Hint in the empty search field -->
+    <string name="search_hint">Search, or paste an address</string>
+    <!-- Leaves the search screen -->
+    <string name="search_back">Back</string>
+    <!-- Empties the search field -->
+    <string name="search_clear">Clear search</string>
+    <!-- Shown before anything was ever searched for -->
+    <string name="search_start">Search for people, hashtags and posts, or paste the address of a post or profile from any server.</string>
+    <!-- Heading over the recent searches -->
+    <string name="search_recent">Recent</string>
+    <!-- Forgets the recent searches -->
+    <string name="search_recent_clear">Clear</string>
+    <!-- Heading over the accounts found -->
+    <string name="search_accounts">Accounts</string>
+    <!-- Heading over the hashtags found -->
+    <string name="search_hashtags">Hashtags</string>
+    <!-- Heading over the posts found -->
+    <string name="search_posts">Posts</string>
+    <!-- Nothing was found: %s is what was searched for -->
+    <string name="search_nothing">Nothing found for “%s”.</string>
+    <!-- The search could not reach the server -->
+    <string name="search_offline">You are offline. Search needs a connection.</string>
+    <!-- The server could not search -->
+    <string name="search_error">The search did not work. Try again in a moment.</string>
+</resources>
