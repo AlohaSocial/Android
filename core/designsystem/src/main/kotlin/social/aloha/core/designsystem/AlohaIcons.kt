@@ -84,6 +84,8 @@ import androidx.compose.material.icons.outlined.VideoLibrary
 import androidx.compose.material.icons.outlined.ViewAgenda
 import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material.icons.outlined.WarningAmber
+import androidx.compose.material.icons.outlined.ZoomIn
+import androidx.compose.material.icons.outlined.ZoomOut
 import androidx.compose.ui.graphics.vector.ImageVector
 
 /**
@@ -141,6 +143,10 @@ public object AlohaIcons {
     public val Delete: ImageVector = Icons.Outlined.Delete
     public val Redraft: ImageVector = Icons.Outlined.EditNote
     public val Add: ImageVector = Icons.Outlined.Add
+
+    /** Closer to a picture, and back. */
+    public val ZoomIn: ImageVector = Icons.Outlined.ZoomIn
+    public val ZoomOut: ImageVector = Icons.Outlined.ZoomOut
 
     /** A video's sound off, and on. */
     public val Muted: ImageVector = Icons.AutoMirrored.Outlined.VolumeOff

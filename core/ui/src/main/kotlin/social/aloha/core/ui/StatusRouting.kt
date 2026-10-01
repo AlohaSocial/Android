@@ -40,6 +40,9 @@ public interface StatusNavigation {
     /** The reader's albums, to put their post [statusId] into; only a server with albums offers it. */
     public fun addToAlbum(statusId: String) {}
 
+    /** The media viewer on a post's [index]th attachment; without one, the post. */
+    public fun openMedia(statusId: String, index: Int): Unit = openThread(statusId)
+
     /** The watch page of a post's video; without one, the post. */
     public fun openVideo(statusId: String): Unit = openThread(statusId)
 
@@ -89,8 +92,8 @@ public abstract class RoutedStatusActions(
         is RichLinkTarget.Web -> navigation().openWeb(target.url)
     }
 
-    // until there is a media viewer the post itself opens; within its own thread that is where the reader is
-    override fun onMedia(row: StatusRowUi, index: Int): Unit = navigation().openThread(row.statusId)
+    // a picture opens in the viewer, at that picture; the rest of the row opens the post
+    override fun onMedia(row: StatusRowUi, index: Int): Unit = navigation().openMedia(row.statusId, index)
 
     override fun onReply(row: StatusRowUi): Unit = navigation().openComposer(row.statusId)
 

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ SPDX-FileCopyrightText: 2026 Aloha Social contributors
+  ~ SPDX-License-Identifier: MIT
+-->
+<resources>
+    <!-- Read aloud as the media viewer opens, which shows a post's pictures and videos full screen -->
+    <string name="viewer_title">Media</string>
+    <!-- Closes the media viewer -->
+    <string name="viewer_close">Close</string>
+    <!-- Which of a post's pictures is shown: %1$d is its place, %2$d how many there are -->
+    <string name="viewer_position">%1$d of %2$d</string>
+    <!-- Shares the picture's address -->
+    <string name="viewer_share">Share</string>
+    <!-- Opens the viewer's menu -->
+    <string name="viewer_more">More</string>
+    <!-- Saves the picture to the device -->
+    <string name="viewer_save">Save</string>
+    <!-- Shown when saving has started: the system's downloads take it from there -->
+    <string name="viewer_saving">Saving to Pictures</string>
+    <!-- Copies the picture's address -->
+    <string name="viewer_copy">Copy link</string>
+    <!-- Shown when the picture's address was copied -->
+    <string name="viewer_copied">Link copied</string>
+    <!-- Opens the picture in the browser -->
+    <string name="viewer_open_in_browser">Open in browser</string>
+    <!-- Reports the post the picture is in -->
+    <string name="viewer_report">Report</string>
+    <!-- Zooms into the picture -->
+    <string name="viewer_zoom_in">Zoom in</string>
+    <!-- Zooms out of the picture -->
+    <string name="viewer_zoom_out">Zoom out</string>
+    <!-- The badge on a picture its author described; keep it short, it is a badge -->
+    <string name="viewer_alt">ALT</string>
+    <!-- Title of the picture's description -->
+    <string name="viewer_alt_title">Description</string>
+    <!-- Closes the picture's description -->
+    <string name="viewer_alt_close">Close</string>
+</resources>

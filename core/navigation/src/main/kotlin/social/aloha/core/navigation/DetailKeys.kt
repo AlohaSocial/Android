@@ -114,3 +114,7 @@ public data class PhotoExploreKey(val readerId: String) : NavKey
 /** The watch page of post [statusId]'s video, as [readerId] sees it. */
 @Serializable
 public data class WatchKey(val readerId: String, val statusId: String) : NavKey
+
+/** The media viewer on post [statusId]'s attachments from the [index]th, as [readerId] sees them. */
+@Serializable
+public data class MediaViewerKey(val readerId: String, val statusId: String, val index: Int)

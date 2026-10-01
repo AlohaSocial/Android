@@ -98,9 +98,6 @@ public fun WatchRoute(key: WatchKey, navigation: StatusNavigation, onBack: () ->
             override fun onPin(row: StatusRowUi) = viewModel.onToggle(row.statusId, Toggle.Pin)
 
             override fun onVote(row: StatusRowUi, choices: List<Int>) = nav.openThread(row.statusId)
-
-            // within its own page the video already plays; its pictures, where it has any, open its post
-            override fun onMedia(row: StatusRowUi, index: Int) = nav.openThread(row.statusId)
         }
     }
     val pictureInPicture by viewModel.pictureInPicture.collectAsStateWithLifecycle()
