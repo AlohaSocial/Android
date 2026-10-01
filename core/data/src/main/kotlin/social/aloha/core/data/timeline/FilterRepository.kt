@@ -8,7 +8,9 @@ import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.SerializationException
+import social.aloha.core.data.Answer
 import social.aloha.core.data.ClientFactory
+import social.aloha.core.data.answer
 import social.aloha.core.database.CacheAccountDao
 import social.aloha.core.database.FilterDao
 import social.aloha.core.database.FilterEntity
@@ -17,11 +19,13 @@ import social.aloha.core.model.Filter
 import social.aloha.core.model.SignedInAccount
 import social.aloha.core.network.ApiError
 import social.aloha.core.network.ApiResult
+import social.aloha.core.network.endpoints.FilterDraft
 import social.aloha.core.network.endpoints.FilterEndpoints
 
 /**
  * An account's v2 filters, fetched from the server and kept in the cache so they apply to cached rows
- * at once. Managing them is a later screen; this reads and refreshes.
+ * at once: one saved or deleted here is written to the cache as the server answers, so what it hides
+ * goes, or comes back, without a refetch.
  */
 @Singleton
 public class FilterRepository @Inject constructor(private val dao: FilterDao, private val clients: ClientFactory) {
@@ -43,20 +47,36 @@ public class FilterRepository @Inject constructor(private val dao: FilterDao, pr
             is ApiResult.Failure -> result.error
 
             is ApiResult.Success -> null.also {
-                dao.replace(
-                    account.id,
-                    result.value.map {
-                        FilterEntity(
-                            account.id,
-                            it.id,
-                            StatusRepository.json.encodeToString(Filter.serializer(), it),
-                            it.expiresAt?.toEpochMilli(),
-                        )
-                    },
-                )
+                dao.replace(account.id, result.value.map { it.entity(account.id) })
             }
         }
     }
+
+    /** Filter [id] as the server has it now, kept on the device as it answers. */
+    public suspend fun get(account: SignedInAccount, id: String): Answer<Filter> =
+        clients.answer(account, FilterEndpoints.get(id)).also { answer ->
+            if (answer is Answer.Got) dao.upsert(listOf(answer.value.entity(account.id)))
+        }
+
+    /** Creates a filter from [draft], or changes filter [id]; the server's answer is the one kept. */
+    public suspend fun save(account: SignedInAccount, id: String?, draft: FilterDraft): Answer<Filter> {
+        val request = if (id == null) FilterEndpoints.create(draft) else FilterEndpoints.update(id, draft)
+        return clients.answer(account, request).also { answer ->
+            if (answer is Answer.Got) dao.upsert(listOf(answer.value.entity(account.id)))
+        }
+    }
+
+    public suspend fun delete(account: SignedInAccount, id: String): Answer<Unit> =
+        clients.answer(account, FilterEndpoints.delete(id)).also { answer ->
+            if (answer is Answer.Got) dao.delete(account.id, id)
+        }
+
+    private fun Filter.entity(accountId: String) = FilterEntity(
+        accountId,
+        id,
+        StatusRepository.json.encodeToString(Filter.serializer(), this),
+        expiresAt?.toEpochMilli(),
+    )
 }
 
 /**

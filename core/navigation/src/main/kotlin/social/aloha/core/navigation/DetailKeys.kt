@@ -47,7 +47,8 @@ public data class SettingsSectionKey(val section: String) : NavKey
  * A new post written as [readerId]; an answer to [replyToId] on that account's server when given,
  * draft [draftId] carried on with, the reader's own post [editId] edited, or their post [redraftId]
  * deleted and written again. What another app shared starts a new post: [sharedText], and the
- * content addresses of [sharedMedia]. With [story] the post starts out as a story.
+ * content addresses of [sharedMedia]. With [story] the post starts out as a story; with [direct], as a
+ * direct message, [sharedText] then being whom it is for.
  */
 @Serializable
 public data class ComposerKey(
@@ -59,6 +60,7 @@ public data class ComposerKey(
     val sharedText: String? = null,
     val sharedMedia: List<String> = emptyList(),
     val story: Boolean = false,
+    val direct: Boolean = false,
 ) : NavKey
 
 /**
@@ -75,6 +77,30 @@ public data class ReportKey(
     /** An account on another server, whose moderators can be sent a copy. */
     val remote: Boolean get() = handle.removePrefix("@").contains('@')
 }
+
+/** Search, as [readerId]: accounts, hashtags and posts, from anywhere by their address. */
+@Serializable
+public data class SearchKey(val readerId: String) : NavKey
+
+/** [readerId]'s lists. */
+@Serializable
+public data class ListsKey(val readerId: String) : NavKey
+
+/** The timeline of [readerId]'s list [listId], called [title]. */
+@Serializable
+public data class ListKey(val readerId: String, val listId: String, val title: String) : NavKey
+
+/** Who is in [readerId]'s list [listId], called [title]: added and removed here, unless a group's. */
+@Serializable
+public data class ListMembersKey(val readerId: String, val listId: String, val title: String) : NavKey
+
+/** The hashtags [readerId] follows, and their tag groups. */
+@Serializable
+public data class HashtagsKey(val readerId: String) : NavKey
+
+/** [readerId]'s tag group [name]: several hashtags read as one timeline. */
+@Serializable
+public data class TagGroupKey(val readerId: String, val name: String) : NavKey
 
 /** [readerId]'s own profile, being edited. */
 @Serializable
@@ -111,6 +137,37 @@ public data class AddToAlbumKey(val readerId: String, val statusId: String) : Na
 /** Photos' Explore: what is trending with pictures, hashtags and people, as [readerId] sees them. */
 @Serializable
 public data class PhotoExploreKey(val readerId: String) : NavKey
+
+/** The posts a reader kept: bookmarked, favourited, or archived off their profile. */
+public enum class SavedKind { Bookmarks, Favourites, Archived }
+
+/** [readerId]'s [kind] posts. */
+@Serializable
+public data class SavedPostsKey(val readerId: String, val kind: SavedKind) : NavKey
+
+/** [readerId]'s direct conversations. */
+@Serializable
+public data class ConversationsKey(val readerId: String) : NavKey
+
+/** Whom [readerId] starts a direct conversation with. */
+@Serializable
+public data class NewMessageKey(val readerId: String) : NavKey
+
+/** The hashtags [readerId]'s Nextcloud Social server has learnt they care about. */
+@Serializable
+public data class InterestsKey(val readerId: String) : NavKey
+
+/** What [readerId]'s server announces. */
+@Serializable
+public data class AnnouncementsKey(val readerId: String) : NavKey
+
+/** [readerId]'s filters. */
+@Serializable
+public data class FiltersKey(val readerId: String) : NavKey
+
+/** [readerId]'s filter [filterId] being changed, or a new one without. */
+@Serializable
+public data class FilterEditKey(val readerId: String, val filterId: String? = null) : NavKey
 
 /** The watch page of post [statusId]'s video, as [readerId] sees it. */
 @Serializable

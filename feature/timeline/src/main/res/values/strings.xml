@@ -4,6 +4,16 @@
   ~ SPDX-License-Identifier: MIT
 -->
 <resources>
+    <!-- Follows a hashtag, so its posts come home -->
+    <string name="tag_follow">Follow hashtag</string>
+    <!-- Stops following a hashtag -->
+    <string name="tag_unfollow">Unfollow hashtag</string>
+    <!-- Before the hashtags used together with this one -->
+    <string name="tag_related">Used with</string>
+    <!-- What was asked for normalises to nothing, or the server refused it -->
+    <string name="tag_not_a_tag">That isn’t a hashtag.</string>
+    <!-- Toolbar button on Home that opens search -->
+    <string name="timeline_search">Search</string>
     <!-- Floating button on the home timeline that opens the composer for a new post -->
     <string name="timeline_compose">New post</string>
     <!-- Title of the home timeline screen -->
@@ -102,5 +112,9 @@
     <string name="timeline_settings_swipe_start">Swipe towards the start</string>
     <!-- Supporting text under the show-boosts and show-replies settings -->
     <string name="timeline_settings_account">For the account in use</string>
+    <!-- Under a hashtag's header when whether it is followed could not be loaded: tries again -->
+    <string name="tag_retry">Couldn’t load this hashtag. Try again</string>
+    <!-- Under a hashtag's follow button when following or unfollowing failed -->
+    <string name="tag_follow_failed">That didn’t work. Nothing was changed.</string>
 </resources>
 

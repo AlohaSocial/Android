@@ -4,6 +4,8 @@
   ~ SPDX-License-Identifier: MIT
 -->
 <resources>
+    <!-- Under a list in the lists dialog that follows a Nextcloud group, which cannot be ticked -->
+    <string name="profile_lists_group">Follows a Nextcloud group</string>
     <!-- Button that goes back from a screen -->
     <string name="profile_back">Back</string>
     <!-- Button with the profile's other actions -->

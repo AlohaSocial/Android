@@ -89,8 +89,9 @@ internal class RequestExecutor(
         /**
          * A path segment URL resolution would treat as `.` or `..`, in plain or percent-encoded form.
          * Ids and names in paths come from servers; one such segment would move a request carrying the
-         * account's token to another route, so it is refused before anything is sent.
+         * account's token to another route, so it is refused before anything is sent. OkHttp splits a
+         * path on backslashes as well as slashes, as browsers do, so both separate segments here.
          */
-        fun Endpoint.hasDotSegment(): Boolean = path.split('/').any { it.lowercase() in DOT_SEGMENTS }
+        fun Endpoint.hasDotSegment(): Boolean = path.split('/', '\\').any { it.lowercase() in DOT_SEGMENTS }
     }
 }

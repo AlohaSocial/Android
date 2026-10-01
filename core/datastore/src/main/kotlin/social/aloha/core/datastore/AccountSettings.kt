@@ -30,6 +30,9 @@ import social.aloha.core.model.TimelineSource
  *   followed.
  * @property recentTags the hashtags this account used last, newest first, offered first when writing.
  * @property recentFilePaths the Nextcloud files this account attached last, by path, newest first.
+ * @property recentSearches what this account searched for last, newest first, until cleared.
+ * @property tagGroups this account's tag groups, by name: hashtags read together as one timeline.
+ * @property hideStrangers the local and federated timelines show only the accounts this account follows.
  * @property pollFrequency how often this account's server is asked what is new while the app is open.
  */
 @Serializable
@@ -40,6 +43,9 @@ public data class AccountSettings(
     val modeSources: Map<String, TimelineSource> = emptyMap(),
     val recentTags: List<String> = emptyList(),
     val recentFilePaths: List<String> = emptyList(),
+    val recentSearches: List<String> = emptyList(),
+    val tagGroups: Map<String, List<String>> = emptyMap(),
+    val hideStrangers: Boolean = false,
     val pollFrequency: PollFrequency = PollFrequency.Normal,
 )
 

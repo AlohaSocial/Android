@@ -30,15 +30,17 @@ public data class Tag(
 
     public companion object {
         private const val MAX_LENGTH = 127
+        private const val PATH_CHARACTERS = "/\\%?#"
 
         /**
          * The server's own normalisation: no leading `#`, trimmed, lowercased, cut to the 127 characters
          * its column holds. `#NextCloud` and `nextcloud` are one tag to follow, look up and unfollow.
-         * Null when nothing remains.
+         * Null when nothing remains, or for a name no hashtag can have: one holding a path separator or a
+         * `%` would change the route it is put into.
          */
         public fun normalise(raw: String): String? {
             val value = raw.trim().trimStart('#').trim().lowercase()
-            return value.takeIf { it.isNotEmpty() }?.take(MAX_LENGTH)
+            return value.takeIf { it.isNotEmpty() && it.none { c -> c in PATH_CHARACTERS } }?.take(MAX_LENGTH)
         }
     }
 }

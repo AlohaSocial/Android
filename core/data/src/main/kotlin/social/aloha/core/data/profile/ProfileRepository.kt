@@ -67,6 +67,7 @@ public data class AccountPage(val accounts: List<Account>, val next: HttpUrl?)
 public class ProfileRepository @Inject constructor(
     private val clients: ClientFactory,
     private val statuses: StatusRepository,
+    private val followed: FollowedAuthors,
 ) {
     /**
      * The account by its id on the reader's server, or by its handle. A handle the server has not met
@@ -104,6 +105,7 @@ public class ProfileRepository @Inject constructor(
         ).also { answer ->
             val hides = change == RelationshipChange.Block || change is RelationshipChange.Mute
             if (hides && answer is Answer.Got) statuses.removeAuthor(reader.id, id)
+            if (answer is Answer.Got) followed.learn(reader.id, answer.value)
         }
 
     /**

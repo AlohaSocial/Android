@@ -16,6 +16,7 @@ import social.aloha.core.network.ApiResult
 import social.aloha.core.network.endpoints.ComposeEndpoints
 import social.aloha.core.network.endpoints.StatusAction
 import social.aloha.core.network.endpoints.StatusEndpoints
+import social.aloha.core.network.endpoints.StatusExtraEndpoints
 import social.aloha.core.network.endpoints.StatusPost
 
 /** A toggle a person can flip on a post. */
@@ -73,6 +74,10 @@ public class StatusInteractions @Inject constructor(
     /** Deletes the reader's own [status]; it goes from every timeline once the server confirms. */
     public suspend fun delete(account: SignedInAccount, status: Status): ApiError? =
         (deleted(account, status.id) as? Answer.Missed)?.error
+
+    /** Takes the reader's own [status] off their profile (Nextcloud Social's archive); nothing is deleted. */
+    public suspend fun archive(account: SignedInAccount, status: Status): ApiError? =
+        (clients.answer(account, StatusExtraEndpoints.archive(status.id)) as? Answer.Missed)?.error
 
     /**
      * Deletes the reader's own post [id] and answers with it as the server had it, its source text

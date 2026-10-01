@@ -5,6 +5,7 @@ package social.aloha.core.ui
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -98,6 +99,7 @@ public enum class StatusMenuItem {
     Redraft,
     Pin,
     AddToAlbum,
+    Archive,
 }
 
 /**
@@ -444,17 +446,19 @@ private fun ActionButton(icon: ImageVector, count: Int?, tint: Color, onClick: (
 @Composable
 private fun StatusMenu(row: StatusRowUi, actions: StatusActions) {
     var open by remember { mutableStateOf(false) }
-    IconButton(onClick = { open = true }) { Icon(AlohaIcons.More, stringResource(R.string.status_action_more)) }
-    DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
-        menuItems(row, actions.menu).forEach { (item, icon, text) ->
-            DropdownMenuItem(
-                text = { Text(stringResource(text)) },
-                leadingIcon = { Icon(icon, contentDescription = null) },
-                onClick = {
-                    open = false
-                    actions.onMenu(row, item)
-                },
-            )
+    Box {
+        IconButton(onClick = { open = true }) { Icon(AlohaIcons.More, stringResource(R.string.status_action_more)) }
+        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+            menuItems(row, actions.menu).forEach { (item, icon, text) ->
+                DropdownMenuItem(
+                    text = { Text(stringResource(text)) },
+                    leadingIcon = { Icon(icon, contentDescription = null) },
+                    onClick = {
+                        open = false
+                        actions.onMenu(row, item)
+                    },
+                )
+            }
         }
     }
 }

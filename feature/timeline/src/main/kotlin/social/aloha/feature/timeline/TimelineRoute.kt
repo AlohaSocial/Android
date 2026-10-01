@@ -39,6 +39,8 @@ public fun TimelineRoute(
     feed: TimelineFeed = TimelineFeed.Home,
     navigationIcon: @Composable () -> Unit = {},
     header: @Composable () -> Unit = {},
+    onSearch: (() -> Unit)? = null,
+    toolbar: @Composable () -> Unit = {},
 ) {
     val viewModel =
         hiltViewModel<TimelineViewModel, TimelineViewModel.Factory>(key = feed.toString()) { it.create(feed) }
@@ -96,12 +98,15 @@ public fun TimelineRoute(
             TimelineFeed.Home -> stringResource(R.string.timeline_title)
             is TimelineFeed.Mode -> stringResource(modeTitle(feed.mode))
             is TimelineFeed.Tag -> "#${feed.name}"
+            is TimelineFeed.List -> feed.title
         },
         navigationIcon = navigationIcon,
         showOptions = feed == TimelineFeed.Home,
         onCompose = if (feed == TimelineFeed.Home) ({ nav.openComposer(null) }) else null,
         onAlbums = if (feed.mode == FeedMode.Photos && state.albums) ({ nav.openAlbums() }) else null,
         onExplore = if (feed.mode == FeedMode.Photos) ({ nav.openPhotoExplore() }) else null,
+        onSearch = onSearch,
+        toolbar = toolbar,
         header = header,
         onVideo = nav::openVideo,
     )
@@ -125,7 +130,7 @@ internal fun modeTitle(mode: FeedMode): Int = when (mode) {
     FeedMode.Audio -> R.string.timeline_title_audio
 }
 
-/** One hashtag's public posts, read like home, with a way back. */
+/** One hashtag's public posts, read like home, with a way back, and above them a way to follow it. */
 @Composable
 public fun TagRoute(name: String, navigation: StatusNavigation, onBack: () -> Unit, modifier: Modifier = Modifier) {
     TimelineRoute(
@@ -135,5 +140,6 @@ public fun TagRoute(name: String, navigation: StatusNavigation, onBack: () -> Un
         navigationIcon = {
             IconButton(onClick = onBack) { Icon(AlohaIcons.Back, stringResource(R.string.timeline_back)) }
         },
+        header = { TagHeader(name, onTag = navigation::openTag) },
     )
 }

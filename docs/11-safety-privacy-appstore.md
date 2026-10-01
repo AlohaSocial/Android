@@ -9,6 +9,7 @@ This is the Apple app's specification, carried over as the product contract for 
 | Store | Google Play's UGC policy and Data safety form (filled per flavor) instead of App Review; F-Droid for `generic`. |
 | Locking | An opt-in biometric or device-credential app lock; authentication-bound encryption of direct messages is an optional later addition. |
 | Backups | `dataExtractionRules` and `fullBackupContent` keep the token vault, the cache, and the posts not yet out (`outbox.db`, drafts and direct messages among them, with the copies in `files/uploads` they attach) off backups and device transfers. |
+| Public timelines | The "accounts I don't follow" switch is per account, on the device, and narrows the local and federated timelines only. Whether the reader follows an author is asked of the server for the authors on screen, a batch at a time; until it answers, their posts are held back. |
 | Media sessions | The video and audio playback services are exported, as a media session must be; their sessions refuse `COMMAND_SET_MEDIA_ITEM` and `COMMAND_CHANGE_MEDIA_ITEMS`, so no other app can make the player fetch an address. |
 | Remote loading | §3's "media from the instance's own host" holds for attachments, video, audio and stories. It does **not** hold for link card pictures: Nextcloud Social keeps the linked page's `og:image` at its origin, so a card loads its picture from the linked site when shown. A server-side proxy is the fix. |
 

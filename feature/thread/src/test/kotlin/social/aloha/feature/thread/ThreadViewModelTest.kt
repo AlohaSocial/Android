@@ -228,10 +228,10 @@ class ThreadViewModelTest {
     fun `the edit history reads newest last, as the server sends it`() = runBlocking {
         val viewModel = open("f")
         viewModel.await { !it.loading && it.posts().size == 4 }
-        viewModel.onHistory()
+        viewModel.onHistory(open = true)
         val history = viewModel.await { it.history != null }.history!!
         assertEquals(listOf("Edited"), history.drop(1).map { it.body.text.trim() })
-        viewModel.onHistoryDismissed()
+        viewModel.onHistory(open = false)
         assertEquals(null, viewModel.await { it.history == null }.history)
     }
 

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ SPDX-FileCopyrightText: 2026 Aloha Social contributors
+  ~ SPDX-License-Identifier: MIT
+-->
+<resources>
+    <!-- behind the splash screen's mark at night: the logo's deep sea, rather than a flash of sand -->
+    <color name="splash_background">#FF0F4C5C</color>
+</resources>

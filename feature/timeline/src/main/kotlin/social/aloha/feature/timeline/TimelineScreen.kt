@@ -109,6 +109,8 @@ internal fun TimelineScreen(
     onCompose: (() -> Unit)? = null,
     onAlbums: (() -> Unit)? = null,
     onExplore: (() -> Unit)? = null,
+    onSearch: (() -> Unit)? = null,
+    toolbar: @Composable () -> Unit = {},
     header: @Composable () -> Unit = {},
     onVideo: (String) -> Unit = {},
 ) {
@@ -119,6 +121,10 @@ internal fun TimelineScreen(
                 title = { Text(title) },
                 navigationIcon = navigationIcon,
                 actions = {
+                    onSearch?.let {
+                        IconButton(onClick = it) { Icon(AlohaIcons.Search, stringResource(R.string.timeline_search)) }
+                    }
+                    toolbar()
                     PhotosButtons(state.grid, actions::onGrid, onAlbums, onExplore)
                     if (showOptions) Options(state, actions)
                 },
@@ -366,18 +372,20 @@ private fun SourceRow(source: TimelineSource, sources: List<TimelineSource>, onS
 @Composable
 private fun Options(state: TimelineUiState, actions: TimelineScreenActions) {
     var open by remember { mutableStateOf(false) }
-    IconButton(onClick = { open = true }) { Icon(AlohaIcons.More, stringResource(R.string.timeline_options)) }
-    DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
-        DropdownMenuItem(
-            text = { Text(stringResource(R.string.timeline_show_boosts)) },
-            leadingIcon = { Checkbox(state.showBoosts, onCheckedChange = null) },
-            onClick = { actions.onShowBoosts(!state.showBoosts) },
-        )
-        DropdownMenuItem(
-            text = { Text(stringResource(R.string.timeline_show_replies)) },
-            leadingIcon = { Checkbox(state.showReplies, onCheckedChange = null) },
-            onClick = { actions.onShowReplies(!state.showReplies) },
-        )
+    Box {
+        IconButton(onClick = { open = true }) { Icon(AlohaIcons.More, stringResource(R.string.timeline_options)) }
+        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.timeline_show_boosts)) },
+                leadingIcon = { Checkbox(state.showBoosts, onCheckedChange = null) },
+                onClick = { actions.onShowBoosts(!state.showBoosts) },
+            )
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.timeline_show_replies)) },
+                leadingIcon = { Checkbox(state.showReplies, onCheckedChange = null) },
+                onClick = { actions.onShowReplies(!state.showReplies) },
+            )
+        }
     }
 }
 

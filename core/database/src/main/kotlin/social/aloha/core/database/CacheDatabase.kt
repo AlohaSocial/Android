@@ -250,6 +250,9 @@ public interface FilterDao {
 
     @Upsert
     public suspend fun upsert(filters: List<FilterEntity>)
+
+    @Query("DELETE FROM filter WHERE accountId = :accountId AND id = :id")
+    public suspend fun delete(accountId: String, id: String)
 }
 
 @Dao

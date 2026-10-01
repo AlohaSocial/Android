@@ -53,6 +53,10 @@ internal data class ThreadUiState(
     val canReact: Boolean = false,
     /** Whether the reader's server keeps albums, which the reader's own posts can go into. */
     val albums: Boolean = false,
+    /** Whether the reader's server archives posts, which the reader's own posts can then be. */
+    val archive: Boolean = false,
+    /** A post was just archived, which the screen confirms. */
+    val archived: Boolean = false,
 )
 
 /** What a pushed list of the focused post shows. */

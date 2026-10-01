@@ -48,7 +48,7 @@ import social.aloha.core.ui.Avatar
  * to switch to, the reader's own profile, another account to add, and signing out of this one.
  */
 @Composable
-internal fun AccountSwitcher(viewModel: AppViewModel, onProfile: () -> Unit, onSettings: () -> Unit) {
+internal fun AccountSwitcher(viewModel: AppViewModel, links: AccountLinks) {
     val accounts by viewModel.switcher.collectAsStateWithLifecycle()
     var open by remember { mutableStateOf(false) }
     val active = accounts.firstOrNull { it.active } ?: return
@@ -63,13 +63,10 @@ internal fun AccountSwitcher(viewModel: AppViewModel, onProfile: () -> Unit, onS
                 open = false
                 viewModel.switchTo(it)
             },
-            onProfile = {
+            // each place closes the sheet as it opens
+            links = AccountLinks {
                 open = false
-                onProfile()
-            },
-            onSettings = {
-                open = false
-                onSettings()
+                links.open(it)
             },
             onAdd = {
                 open = false
@@ -89,8 +86,7 @@ internal fun AccountSwitcher(viewModel: AppViewModel, onProfile: () -> Unit, onS
 internal fun AccountSheet(
     accounts: List<SwitcherAccount>,
     onSwitch: (String) -> Unit,
-    onProfile: () -> Unit,
-    onSettings: () -> Unit,
+    links: AccountLinks,
     onAdd: () -> Unit,
     onSignOut: () -> Unit,
     onDismiss: () -> Unit,
@@ -110,8 +106,10 @@ internal fun AccountSheet(
             }
             items(accounts, key = { it.id }) { account -> AccountLine(account) { onSwitch(account.id) } }
             item { HorizontalDivider(Modifier.padding(vertical = AlohaSpacing.xs)) }
-            item { Action(AlohaIcons.Profile, stringResource(R.string.accounts_profile), onProfile) }
-            item { Action(AlohaIcons.Settings, stringResource(R.string.accounts_settings), onSettings) }
+            items(AccountPlace.entries.filter { it !in NEXTCLOUD_ONLY || active.nextcloudSocial }) { place ->
+                val (icon, text) = place.look
+                Action(icon, stringResource(text)) { links.open(place) }
+            }
             item { Action(AlohaIcons.AddAccount, stringResource(R.string.accounts_add), onAdd) }
             item {
                 Action(AlohaIcons.SignOut, stringResource(R.string.accounts_sign_out, active.handle)) {
@@ -177,6 +175,25 @@ private fun Action(icon: ImageVector, label: String, onClick: () -> Unit) {
 // rows sit on the sheet's own surface rather than painting one of theirs
 private val SheetRow: ListItemColors
     @Composable get() = ListItemDefaults.colors(containerColor = Color.Transparent)
+
+/** A place's icon and name in the sheet. */
+private val AccountPlace.look: Pair<ImageVector, Int>
+    get() = when (this) {
+        AccountPlace.Profile -> AlohaIcons.Profile to R.string.accounts_profile
+        AccountPlace.Messages -> AlohaIcons.VisibilityDirect to R.string.accounts_messages
+        AccountPlace.Bookmarks -> AlohaIcons.Bookmark to R.string.accounts_bookmarks
+        AccountPlace.Favourites -> AlohaIcons.Favourite to R.string.accounts_favourites
+        AccountPlace.Archived -> AlohaIcons.Archived to R.string.accounts_archived
+        AccountPlace.Lists -> AlohaIcons.Lists to R.string.accounts_lists
+        AccountPlace.Hashtags -> AlohaIcons.Hashtag to R.string.accounts_hashtags
+        AccountPlace.Filters -> AlohaIcons.Filtered to R.string.accounts_filters
+        AccountPlace.Interests -> AlohaIcons.Explore to R.string.accounts_interests
+        AccountPlace.Announcements -> AlohaIcons.News to R.string.accounts_announcements
+        AccountPlace.Settings -> AlohaIcons.Settings to R.string.accounts_settings
+    }
+
+/** The places only Nextcloud Social keeps. */
+private val NEXTCLOUD_ONLY = setOf(AccountPlace.Archived, AccountPlace.Interests)
 
 private val BUTTON_AVATAR = 32.dp
 private val LINE_AVATAR = 40.dp

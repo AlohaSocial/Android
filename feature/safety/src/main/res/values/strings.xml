@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ SPDX-FileCopyrightText: 2026 Aloha Social contributors
+  ~ SPDX-License-Identifier: MIT
+-->
+<resources>
+    <!-- Leaves a safety screen -->
+    <string name="safety_back">Back</string>
+    <!-- Title of the reader's filters -->
+    <string name="filters_title">Filters</string>
+    <!-- Makes a new filter; also the title of the editor for one -->
+    <string name="filters_new">New filter</string>
+    <!-- Title of the editor for an existing filter -->
+    <string name="filters_edit">Edit filter</string>
+    <!-- Shown when the reader has no filters -->
+    <string name="filters_none">No filters. A filter hides posts with the words you choose, or puts a warning over them, wherever you choose.</string>
+    <!-- Shown when the filters could not be refreshed from the server -->
+    <string name="filters_stale">Filters couldn’t be refreshed. These are the ones last loaded.</string>
+    <!-- Switch: the local and federated timelines show only accounts the reader follows -->
+    <string name="filters_hide_strangers">Only people I follow in public timelines</string>
+    <!-- Explains the switch hiding everyone the reader doesn't follow in public timelines -->
+    <string name="filters_hide_strangers_summary">Hides everything from accounts you don’t follow in the local and federated timelines, on this device.</string>
+    <!-- Names a filter without a name -->
+    <string name="filters_untitled">Unnamed filter</string>
+    <!-- What a filter does: hides posts -->
+    <string name="filters_hides">Hides</string>
+    <!-- What a filter does: shows a warning over posts -->
+    <string name="filters_warns">Warns</string>
+    <!-- How many keywords a filter has -->
+    <plurals name="filters_keywords">
+        <item quantity="one">%d keyword</item>
+        <item quantity="other">%d keywords</item>
+    </plurals>
+    <!-- A filter that has run out and no longer applies -->
+    <string name="filters_expired">Expired</string>
+    <!-- Until when a filter applies; %1$s is the date and time -->
+    <string name="filters_until">Until %1$s</string>
+    <!-- Where a filter applies: the home timeline and lists -->
+    <string name="filters_context_home">Home and lists</string>
+    <!-- Where a filter applies: notifications -->
+    <string name="filters_context_notifications">Notifications</string>
+    <!-- Where a filter applies: the public timelines -->
+    <string name="filters_context_public">Public timelines</string>
+    <!-- Where a filter applies: conversations under a post -->
+    <string name="filters_context_thread">Conversations</string>
+    <!-- Where a filter applies: profiles -->
+    <string name="filters_context_account">Profiles</string>
+    <!-- Where a filter applies, for a place this app doesn't know -->
+    <string name="filters_context_other">Elsewhere</string>
+    <!-- Leaves the filter editor without saving -->
+    <string name="filters_discard">Close without saving</string>
+    <!-- Saves a filter -->
+    <string name="filters_save">Save</string>
+    <!-- Deletes a filter -->
+    <string name="filters_delete">Delete filter</string>
+    <!-- Title of the dialog asking before a filter is deleted -->
+    <string name="filters_delete_title">Delete this filter?</string>
+    <!-- Body of the dialog asking before a filter is deleted -->
+    <string name="filters_delete_body">What it hides or warns about will show again, here and wherever else you use this account.</string>
+    <!-- Shown when saving or deleting a filter failed -->
+    <string name="filters_save_failed">That didn’t work. The filter is as it was.</string>
+    <!-- Shown when deleting a filter failed -->
+    <string name="filters_delete_failed">The filter couldn’t be deleted. It still applies.</string>
+    <!-- Shown when the filter to edit could not be loaded -->
+    <string name="filters_load_failed">This filter couldn’t be loaded.</string>
+    <!-- A filter's action: pictures and videos are blurred, the text still shown -->
+    <string name="filters_action_blur">Blur pictures and videos</string>
+    <!-- How long a filter applies: it ran out on this date, and stays run out; %1$s is the date and time -->
+    <string name="filters_expired_on">Keep it run out (since %1$s)</string>
+    <!-- Label of the field naming a filter -->
+    <string name="filters_name">Name</string>
+    <!-- Heading of a filter's keywords -->
+    <string name="filters_keywords">Keywords</string>
+    <!-- Label of the field where a keyword to add is typed -->
+    <string name="filters_keyword">Keyword or phrase</string>
+    <!-- Adds the keyword typed -->
+    <string name="filters_add">Add</string>
+    <!-- Matches a keyword only as a whole word, not inside other words -->
+    <string name="filters_whole_word">Whole word</string>
+    <!-- Removes a keyword from a filter; %1$s is the keyword -->
+    <string name="filters_remove_keyword">Remove %1$s</string>
+    <!-- Heading of where a filter applies -->
+    <string name="filters_where">Where</string>
+    <!-- Heading of what a filter does -->
+    <string name="filters_what">What it does</string>
+    <!-- A filter's action: a warning over the post, which can still be opened -->
+    <string name="filters_action_warn">Warn, with the filter’s name over the post</string>
+    <!-- A filter's action: the post is not shown at all -->
+    <string name="filters_action_hide">Hide the post completely</string>
+    <!-- Heading of how long a filter applies -->
+    <string name="filters_how_long">How long</string>
+    <!-- A filter applies until it is deleted -->
+    <string name="filters_forever">Until I delete it</string>
+    <!-- A filter applies for 30 minutes from now -->
+    <string name="filters_for_30_minutes">For 30 minutes</string>
+    <!-- A filter applies for an hour from now -->
+    <string name="filters_for_hour">For an hour</string>
+    <!-- A filter applies for 12 hours from now -->
+    <string name="filters_for_12_hours">For 12 hours</string>
+    <!-- A filter applies for a day from now -->
+    <string name="filters_for_day">For a day</string>
+    <!-- A filter applies for a week from now -->
+    <string name="filters_for_week">For a week</string>
+    <!-- Title of what the reader's server announces to everyone on it -->
+    <string name="announcements_title">Announcements</string>
+    <!-- Shown when the server has no announcements -->
+    <string name="announcements_none">No announcements. What your server’s team announces to everyone shows here.</string>
+    <!-- Shown when the announcements could not be loaded -->
+    <string name="announcements_failed">Announcements couldn’t be loaded.</string>
+    <!-- Marks an announcement the reader had not read before opening the screen -->
+    <string name="announcements_new">New</string>
+    <!-- Shown when a reaction to an announcement was refused and taken back -->
+    <string name="announcements_reaction_failed">The reaction couldn’t be saved.</string>
+    <!-- On Home: how many announcements the reader has not read; opens them -->
+    <plurals name="announcements_unread">
+        <item quantity="one">%d new announcement from your server</item>
+        <item quantity="other">%d new announcements from your server</item>
+    </plurals>
+    <!-- Title of the hashtags the reader's server learnt they care about -->
+    <string name="interests_title">Interests</string>
+    <!-- Shown where the server keeps no interests -->
+    <string name="interests_unavailable">This server doesn’t learn interests.</string>
+    <!-- Shown when the interests could not be loaded -->
+    <string name="interests_failed">Interests couldn’t be loaded.</string>
+    <!-- Shown when a change to the interests was refused -->
+    <string name="interests_change_failed">That didn’t work. Your interests are as they were.</string>
+    <!-- Switch: the server learns what the reader cares about from what they read -->
+    <string name="interests_learning">Learn from what I read</string>
+    <!-- Explains the learning switch -->
+    <string name="interests_learning_summary">Your server notes which hashtags you read, to rank what it suggests. Nothing leaves your server.</string>
+    <!-- Switch: learning stops for now, keeping what was learnt -->
+    <string name="interests_paused">Pause learning</string>
+    <!-- Explains the pause switch -->
+    <string name="interests_paused_summary">Keeps what was learnt, and learns nothing new until you resume.</string>
+    <!-- Heading of the reader's interests -->
+    <string name="interests_yours">Your interests</string>
+    <!-- Shown while the server has too little to go on -->
+    <string name="interests_thin">Still learning: there is little to go on yet.</string>
+    <!-- Heading of hashtags the server is still weighing -->
+    <string name="interests_candidates">Maybe interesting</string>
+    <!-- Adds a hashtag to the reader's interests -->
+    <string name="interests_add">Add</string>
+    <!-- Label of the field where a hashtag to add is typed -->
+    <string name="interests_hashtag">Hashtag to add</string>
+    <!-- Pins an interest so learning never drops it; %1$s is the hashtag -->
+    <string name="interests_pin">Keep #%1$s</string>
+    <!-- Under an interest pinned so learning never drops it -->
+    <string name="interests_kept">Kept</string>
+    <!-- Removes an interest; %1$s is the hashtag -->
+    <string name="interests_remove">Remove #%1$s</string>
+    <!-- Forgets all interests -->
+    <string name="interests_reset">Forget all interests</string>
+    <!-- Title of the dialog asking before all interests are forgotten -->
+    <string name="interests_reset_title">Forget all interests?</string>
+    <!-- Body of the dialog asking before all interests are forgotten -->
+    <string name="interests_reset_body">Everything your server learnt and every hashtag you chose or kept goes. It starts learning again from what you read next.</string>
+</resources>

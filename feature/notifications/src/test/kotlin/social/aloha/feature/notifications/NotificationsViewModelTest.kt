@@ -10,6 +10,7 @@ import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.resetMain
@@ -147,8 +148,15 @@ class NotificationsViewModelTest {
         viewModel.onShown(isShown = true)
         await { it.loadedOnce }
         viewModel.onKind(NotificationKind.Follow)
-        await { it.kinds == setOf(NotificationKind.Follow) && !it.refreshing }
-        val asked = notifications.asked.last { it.startsWith("GET /api/v2/notifications?") }
-        assertTrue(asked, "types%5B%5D=follow" in asked && "types%5B%5D=follow_request" in asked)
+        // the chip is set before its page is asked for, so wait for the request rather than the state
+        val asked = withTimeout(10.seconds) {
+            while (notifications.asked.none { "types%5B%5D=follow" in it }) delay(POLL_MS)
+            notifications.asked.last { "types%5B%5D=follow" in it }
+        }
+        assertTrue(asked, asked.startsWith("GET /api/v2/notifications?") && "types%5B%5D=follow_request" in asked)
+    }
+
+    private companion object {
+        const val POLL_MS = 10L
     }
 }

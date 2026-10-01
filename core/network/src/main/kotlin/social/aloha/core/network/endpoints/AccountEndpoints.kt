@@ -61,9 +61,18 @@ public object AccountEndpoints {
         RelationshipDto.serializer(),
     ) { it.toDomain() }
 
-    /** What a composer calls to complete a `@handle`; Nextcloud Social serves it for exactly that. */
-    public fun search(query: String, limit: Int = SEARCH_LIMIT, resolve: Boolean = false): ApiRequest<List<Account>> {
-        val items = listOf(QueryItem("q", query), Paging.limitItem(limit)) + flagQuery("resolve", resolve)
+    /**
+     * What a composer calls to complete a `@handle`; Nextcloud Social serves it for exactly that. With
+     * [following], only the accounts the reader follows, as a list's members must be.
+     */
+    public fun search(
+        query: String,
+        limit: Int = SEARCH_LIMIT,
+        resolve: Boolean = false,
+        following: Boolean = false,
+    ): ApiRequest<List<Account>> {
+        val items = listOf(QueryItem("q", query), Paging.limitItem(limit)) + flagQuery("resolve", resolve) +
+            flagQuery("following", following)
         return accounts(Endpoint("api/v1/accounts/search", query = items))
     }
 

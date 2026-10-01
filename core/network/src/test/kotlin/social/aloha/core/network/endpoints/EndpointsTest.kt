@@ -65,6 +65,9 @@ class EndpointsTest {
     fun `clearing a filter expiry sends an empty value, not nothing`() {
         assertEquals("", FilterEndpoints.update("3", draft(expires = null)).endpoint.formValue("expires_in"))
         assertEquals("1800", FilterEndpoints.create(draft(expires = 1800)).endpoint.formValue("expires_in"))
+        // kept as it is, which may be run out already: not sent, so the server keeps it
+        val kept = draft().copy(keepExpiry = true)
+        assertEquals(null, FilterEndpoints.update("3", kept).endpoint.formValue("expires_in"))
     }
 
     @Test

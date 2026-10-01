@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ SPDX-FileCopyrightText: 2026 Aloha Social contributors
+  ~ SPDX-License-Identifier: MIT
+-->
+<resources>
+    <!-- Explore tab: the posts trending on the reader's server -->
+    <string name="explore_posts">Posts</string>
+    <!-- Explore tab: the hashtags trending on the reader's server -->
+    <string name="explore_hashtags">Hashtags</string>
+    <!-- Explore tab: the links trending on the reader's server -->
+    <string name="explore_news">News</string>
+    <!-- Explore tab: who to follow -->
+    <string name="explore_people">People</string>
+    <!-- Explore tab: the accounts on the reader's server that chose to be listed -->
+    <string name="explore_directory">Directory</string>
+    <!-- No posts are trending -->
+    <string name="explore_posts_none">Nothing is trending right now.</string>
+    <!-- No hashtags are trending -->
+    <string name="explore_hashtags_none">No hashtags are trending right now.</string>
+    <!-- No links are trending -->
+    <string name="explore_news_none">No links are trending right now.</string>
+    <!-- Nobody to suggest -->
+    <string name="explore_people_none">Nobody to suggest right now.</string>
+    <!-- How much a trending hashtag was used: %d is the number of times -->
+    <plurals name="explore_uses">
+        <item quantity="one">Used once</item>
+        <item quantity="other">Used %d times</item>
+    </plurals>
+    <!-- Trending over the last hour -->
+    <string name="explore_period_hour">Last hour</string>
+    <!-- Trending over the last 12 hours -->
+    <string name="explore_period_half_day">12 hours</string>
+    <!-- Trending over the last day -->
+    <string name="explore_period_day">Today</string>
+    <!-- Trending over the last 3 days -->
+    <string name="explore_period_three_days">3 days</string>
+    <!-- Trending over the last 10 days -->
+    <string name="explore_period_ten_days">10 days</string>
+    <!-- Heading over the accounts the server suggests to follow -->
+    <string name="explore_suggested">Suggested for you</string>
+    <!-- Stops suggesting an account: %s is its name -->
+    <string name="explore_dismiss">Don’t suggest %s</string>
+    <!-- Heading over the starter packs, sets of accounts followed all at once -->
+    <string name="explore_packs">Starter packs</string>
+    <!-- How many accounts a starter pack holds: %d is the number -->
+    <plurals name="explore_pack_size">
+        <item quantity="one">%d account</item>
+        <item quantity="other">%d accounts</item>
+    </plurals>
+    <!-- Follows every account in a starter pack -->
+    <string name="explore_follow_all">Follow all</string>
+    <!-- Asks before following a starter pack: %s is its name -->
+    <string name="explore_follow_all_title">Follow everyone in %s?</string>
+    <!-- Says what following a starter pack does: %d is how many accounts it holds -->
+    <plurals name="explore_follow_all_body">
+        <item quantity="one">You will follow its %d account.</item>
+        <item quantity="other">You will follow all %d of its accounts.</item>
+    </plurals>
+    <!-- A starter pack the reader followed -->
+    <string name="explore_pack_followed">Followed</string>
+    <!-- Heading over the accounts popular on the reader's server -->
+    <string name="explore_popular">Popular here</string>
+    <!-- The directory, most recently active first -->
+    <string name="explore_order_active">Recently active</string>
+    <!-- The directory, most recently joined first -->
+    <string name="explore_order_new">New here</string>
+    <!-- Loads the next page of the directory -->
+    <string name="explore_more">Show more</string>
+    <!-- Under the directory: who is in it -->
+    <string name="explore_directory_note">Only accounts on this server that chose to be listed appear here.</string>
+    <!-- Explore could not reach the server -->
+    <string name="explore_offline">You are offline.</string>
+    <!-- The server could not answer -->
+    <string name="explore_error">This could not be loaded.</string>
+    <!-- Tries loading again -->
+    <string name="explore_retry">Try again</string>
+</resources>

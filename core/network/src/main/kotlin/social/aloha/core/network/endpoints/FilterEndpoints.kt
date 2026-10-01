@@ -28,13 +28,18 @@ public data class KeywordDraft(
     val destroy: Boolean = false,
 )
 
-/** What a filter editor sends when creating or changing a filter. */
+/**
+ * What a filter editor sends when creating or changing a filter. With [keepExpiry] the expiry is not sent
+ * at all, so the server keeps the one the filter has, run out or not; else [expiresInSeconds] sets it,
+ * null clearing it.
+ */
 public data class FilterDraft(
     val title: String,
     val context: List<FilterContext>,
     val action: FilterAction,
     val expiresInSeconds: Long?,
     val keywords: List<KeywordDraft>,
+    val keepExpiry: Boolean = false,
 )
 
 public object FilterEndpoints {
@@ -66,12 +71,17 @@ public object FilterEndpoints {
     /**
      * Rails' nested-attributes shape, which Mastodon's v2 API takes: a flat `keywords[]` is silently
      * ignored. An absent expiry is sent as `""` rather than omitted, because the server leaves an
-     * unnamed field alone and an update would keep an expiry the editor just cleared.
+     * unnamed field alone and an update would keep an expiry the editor just cleared; for the same reason
+     * an expiry kept as it is is not sent.
      */
     internal fun formItems(draft: FilterDraft): List<QueryItem> = listOf(QueryItem("title", draft.title)) +
         draft.context.filter { it != FilterContext.Unknown }.map { QueryItem("context[]", it.wire) } +
         QueryItem("filter_action", draft.action.wire) +
-        QueryItem("expires_in", draft.expiresInSeconds?.toString().orEmpty()) +
+        listOfNotNull(
+            QueryItem("expires_in", draft.expiresInSeconds?.toString().orEmpty()).takeUnless {
+                draft.keepExpiry
+            },
+        ) +
         draft.keywords.flatMapIndexed(::keywordItems)
 
     private fun keywordItems(index: Int, draft: KeywordDraft): List<QueryItem> {

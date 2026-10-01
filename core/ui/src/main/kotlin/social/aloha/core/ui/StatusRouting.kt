@@ -14,6 +14,10 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.core.content.getSystemService
 import androidx.core.net.toUri
@@ -61,6 +65,44 @@ public interface StatusNavigation {
     public fun openAlbum(albumId: String, title: String, own: Boolean) {}
 }
 
+/**
+ * The actions of a post read in a list and acted on in its thread: whatever would change it, a boost,
+ * a favourite, a vote, a delete, opens the thread instead, where it is done and shown as done.
+ */
+@Composable
+public fun rememberThreadRoutedActions(navigation: StatusNavigation): StatusActions {
+    val context = LocalContext.current
+    val nav by rememberUpdatedState(navigation)
+    return remember(context) { ThreadRoutedActions(context) { nav } }
+}
+
+private class ThreadRoutedActions(context: Context, private val navigation: () -> StatusNavigation) :
+    RoutedStatusActions(
+        context,
+        navigation,
+        onCopied = {},
+        onDeleteAsked = { navigation().openThread(it.row.statusId) },
+    ) {
+    override fun onBoost(row: StatusRowUi) = navigation().openThread(row.statusId)
+
+    override fun onFavourite(row: StatusRowUi) = navigation().openThread(row.statusId)
+
+    override fun onBookmark(row: StatusRowUi) = navigation().openThread(row.statusId)
+
+    override fun onMute(row: StatusRowUi) = navigation().openThread(row.statusId)
+
+    override fun onPin(row: StatusRowUi) = navigation().openThread(row.statusId)
+
+    override fun onVote(row: StatusRowUi, choices: List<Int>) = navigation().openThread(row.statusId)
+}
+
+/** Where a link in rich text leads: a profile, a hashtag, or a web address. */
+public fun StatusNavigation.openLink(target: RichLinkTarget): Unit = when (target) {
+    is RichLinkTarget.Mention -> openProfile(target.accountId, target.acct)
+    is RichLinkTarget.Hashtag -> openTag(target.name)
+    is RichLinkTarget.Web -> openWeb(target.url)
+}
+
 /** A delete the person asked for, of [row]; with [redraft] the post is written again after. */
 public data class DeleteRequest(val row: StatusRowUi, val redraft: Boolean)
 
@@ -72,6 +114,7 @@ public data class DeleteRequest(val row: StatusRowUi, val redraft: Boolean)
  * @param onDeleteAsked the person asked to delete a post, or to write it again, which the screen
  *   confirms first.
  * @param albums whether the reader's server keeps albums, which the reader's own posts can go into.
+ * @param archive whether the reader's server archives posts: takes them off the profile, deleting nothing.
  */
 public abstract class RoutedStatusActions(
     private val context: Context,
@@ -79,9 +122,17 @@ public abstract class RoutedStatusActions(
     private val onCopied: () -> Unit,
     private val onDeleteAsked: (DeleteRequest) -> Unit,
     private val albums: () -> Boolean = { false },
+    private val archive: () -> Boolean = { false },
 ) : StatusActions {
     override val menu: Set<StatusMenuItem>
-        get() = if (albums()) SHARED + StatusMenuItem.AddToAlbum else SHARED
+        get() = buildSet {
+            addAll(SHARED)
+            if (albums()) add(StatusMenuItem.AddToAlbum)
+            if (archive()) add(StatusMenuItem.Archive)
+        }
+
+    /** Archives the reader's own post; only offered where [archive] says the server can. */
+    public open fun onArchive(row: StatusRowUi) {}
 
     public abstract fun onMute(row: StatusRowUi)
 
@@ -91,11 +142,7 @@ public abstract class RoutedStatusActions(
 
     override fun onProfile(accountId: String): Unit = navigation().openProfile(accountId, null)
 
-    override fun onLink(target: RichLinkTarget): Unit = when (target) {
-        is RichLinkTarget.Mention -> navigation().openProfile(target.accountId, target.acct)
-        is RichLinkTarget.Hashtag -> navigation().openTag(target.name)
-        is RichLinkTarget.Web -> navigation().openWeb(target.url)
-    }
+    override fun onLink(target: RichLinkTarget): Unit = navigation().openLink(target)
 
     // a picture opens in the viewer, at that picture; the rest of the row opens the post
     override fun onMedia(row: StatusRowUi, index: Int): Unit = navigation().openMedia(row.statusId, index)
@@ -130,6 +177,8 @@ public abstract class RoutedStatusActions(
             StatusMenuItem.Report -> navigation().report(row.author.id, row.author.handle, row.statusId)
 
             StatusMenuItem.AddToAlbum -> navigation().addToAlbum(row.statusId)
+
+            StatusMenuItem.Archive -> onArchive(row)
 
             else -> Unit
         }

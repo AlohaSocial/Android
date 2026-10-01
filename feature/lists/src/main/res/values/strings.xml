@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ SPDX-FileCopyrightText: 2026 Aloha Social contributors
+  ~ SPDX-License-Identifier: MIT
+-->
+<resources>
+    <!-- Title of the reader's lists -->
+    <string name="lists_title">Lists</string>
+    <!-- Makes a new list -->
+    <string name="lists_new">New list</string>
+    <!-- The reader has no lists -->
+    <string name="lists_none">No lists yet.</string>
+    <!-- Under a list that follows a Nextcloud group, whose members are the group's -->
+    <string name="lists_group">Follows a Nextcloud group</string>
+    <!-- Opens the menu of a list: %s is its name -->
+    <string name="lists_options">Options for %s</string>
+    <!-- Changes a list's name and settings -->
+    <string name="lists_edit">Edit list</string>
+    <!-- Deletes a list -->
+    <string name="lists_delete">Delete list</string>
+    <!-- Asks before deleting a list: %s is its name -->
+    <string name="lists_delete_title">Delete %s?</string>
+    <!-- Says what deleting a list does -->
+    <string name="lists_delete_body">The list goes; the people in it are still followed.</string>
+    <!-- Label of a list's name -->
+    <string name="lists_name">Name</string>
+    <!-- Saves a list -->
+    <string name="lists_save">Save</string>
+    <!-- Heading over whose replies a list shows -->
+    <string name="lists_replies">Show replies to</string>
+    <!-- A list shows replies to anyone the reader follows -->
+    <string name="lists_replies_followed">Anyone you follow</string>
+    <!-- A list shows replies to the people in it -->
+    <string name="lists_replies_list">People in the list</string>
+    <!-- A list shows no replies -->
+    <string name="lists_replies_none">Nobody</string>
+    <!-- A switch: the people in a list leave the home timeline -->
+    <string name="lists_exclusive">Hide these people from Home</string>
+    <!-- Leaves a lists screen -->
+    <string name="lists_back">Back</string>
+    <!-- A lists screen could not load -->
+    <string name="lists_failed">This could not be loaded.</string>
+    <!-- Tries loading again -->
+    <string name="lists_retry">Try again</string>
+    <!-- A change to a list did not go through, and the server said nothing of why -->
+    <string name="lists_change_failed">That did not work. Try again in a moment.</string>
+    <!-- Title of who is in a list: %s is the list's name -->
+    <string name="lists_members_title">People in %s</string>
+    <!-- Heading over who is in a list -->
+    <string name="lists_members">In this list</string>
+    <!-- Nobody is in a list -->
+    <string name="lists_members_none">Nobody is in this list yet.</string>
+    <!-- Above a group list's members, which cannot be changed here -->
+    <string name="lists_group_members">This list follows a Nextcloud group: its members are the group’s, and change where the group is managed.</string>
+    <!-- Label of the field that finds people the reader follows, to add to a list -->
+    <string name="lists_add_people">Add people you follow</string>
+    <!-- Adds someone to a list: %s is their name -->
+    <string name="lists_add">Add %s</string>
+    <!-- Removes someone from a list: %s is their name -->
+    <string name="lists_remove">Remove %s</string>
+</resources>

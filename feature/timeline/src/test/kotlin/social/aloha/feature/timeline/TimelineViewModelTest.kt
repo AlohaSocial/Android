@@ -35,6 +35,7 @@ import org.robolectric.RobolectricTestRunner
 import social.aloha.core.data.AccountRepository
 import social.aloha.core.data.ClientFactory
 import social.aloha.core.data.NewAccount
+import social.aloha.core.data.profile.FollowedAuthors
 import social.aloha.core.data.sync.TimelineSignals
 import social.aloha.core.data.timeline.FilterRepository
 import social.aloha.core.data.timeline.StatusInteractions
@@ -116,7 +117,12 @@ class TimelineViewModelTest {
         feed,
         accounts,
         TimelineRepository(cache.timelineDao(), statuses, clients, accounts, clock, Dispatchers.IO),
-        TimelineRowBuilder(RichTextCache(), FilterRepository(cache.filterDao(), clients), clock),
+        TimelineRowBuilder(
+            RichTextCache(),
+            FilterRepository(cache.filterDao(), clients),
+            FollowedAuthors(clients),
+            clock,
+        ),
         StatusInteractions(statuses, clients),
         TimelinePositions(cache.positionDao(), clients),
         settings,

@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.material3.Badge
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -65,12 +66,22 @@ import social.aloha.core.navigation.AccountKey
 import social.aloha.core.navigation.AddToAlbumKey
 import social.aloha.core.navigation.AlbumKey
 import social.aloha.core.navigation.AlbumsKey
+import social.aloha.core.navigation.AnnouncementsKey
 import social.aloha.core.navigation.AudioKey
 import social.aloha.core.navigation.ComposerKey
+import social.aloha.core.navigation.ConversationsKey
 import social.aloha.core.navigation.DraftsKey
 import social.aloha.core.navigation.EditProfileKey
+import social.aloha.core.navigation.FilterEditKey
+import social.aloha.core.navigation.FiltersKey
+import social.aloha.core.navigation.HashtagsKey
 import social.aloha.core.navigation.HomeKey
+import social.aloha.core.navigation.InterestsKey
+import social.aloha.core.navigation.ListKey
+import social.aloha.core.navigation.ListMembersKey
+import social.aloha.core.navigation.ListsKey
 import social.aloha.core.navigation.MediaViewerKey
+import social.aloha.core.navigation.NewMessageKey
 import social.aloha.core.navigation.NewsKey
 import social.aloha.core.navigation.NotificationPolicyKey
 import social.aloha.core.navigation.NotificationRequestsKey
@@ -82,12 +93,16 @@ import social.aloha.core.navigation.PhotosKey
 import social.aloha.core.navigation.ProfileKey
 import social.aloha.core.navigation.ReportKey
 import social.aloha.core.navigation.RouteResolver
+import social.aloha.core.navigation.SavedKind
+import social.aloha.core.navigation.SavedPostsKey
 import social.aloha.core.navigation.ScheduledPostsKey
+import social.aloha.core.navigation.SearchKey
 import social.aloha.core.navigation.SettingsKey
 import social.aloha.core.navigation.SettingsSectionKey
 import social.aloha.core.navigation.ShortsKey
 import social.aloha.core.navigation.StatusListKey
 import social.aloha.core.navigation.StatusListKind
+import social.aloha.core.navigation.TagGroupKey
 import social.aloha.core.navigation.TagKey
 import social.aloha.core.navigation.ThreadKey
 import social.aloha.core.navigation.TopLevelKey
@@ -95,11 +110,19 @@ import social.aloha.core.navigation.VideoKey
 import social.aloha.core.navigation.WatchKey
 import social.aloha.core.ui.StatusNavigation
 import social.aloha.core.ui.openInBrowser
+import social.aloha.core.ui.openLink
 import social.aloha.feature.audio.AudioRoute
 import social.aloha.feature.audio.MiniPlayer
 import social.aloha.feature.composer.ComposerRoute
 import social.aloha.feature.composer.DraftsRoute
 import social.aloha.feature.composer.ScheduledPostsRoute
+import social.aloha.feature.conversations.ConversationsRoute
+import social.aloha.feature.conversations.NewMessageRoute
+import social.aloha.feature.explore.ExploreRoute
+import social.aloha.feature.hashtags.HashtagsRoute
+import social.aloha.feature.hashtags.TagGroupRoute
+import social.aloha.feature.lists.ListMembersRoute
+import social.aloha.feature.lists.ListsRoute
 import social.aloha.feature.mediaviewer.MediaViewerRoute
 import social.aloha.feature.notifications.NotificationsRoute
 import social.aloha.feature.notifications.PolicyRoute
@@ -113,6 +136,13 @@ import social.aloha.feature.profile.PeopleRoute
 import social.aloha.feature.profile.ProfileNavigation
 import social.aloha.feature.profile.ProfileRoute
 import social.aloha.feature.profile.ReportRoute
+import social.aloha.feature.safety.AnnouncementsBanner
+import social.aloha.feature.safety.AnnouncementsRoute
+import social.aloha.feature.safety.FilterEditRoute
+import social.aloha.feature.safety.FiltersRoute
+import social.aloha.feature.safety.InterestsRoute
+import social.aloha.feature.saved.SavedPostsRoute
+import social.aloha.feature.search.SearchRoute
 import social.aloha.feature.settings.SettingsPlaceholder
 import social.aloha.feature.settings.SettingsRoute
 import social.aloha.feature.settings.SettingsSectionRoute
@@ -207,10 +237,14 @@ fun AlohaApp(
     onPendingDestinationTaken: () -> Unit = {},
     unreadNotifications: Int = 0,
     resolveLink: suspend (address: String, fromPost: Boolean) -> NavKey? = { _, _ -> null },
-    accountButton: @Composable (onProfile: () -> Unit, onSettings: () -> Unit) -> Unit = { _, _ -> },
+    accountButton: @Composable (AccountLinks) -> Unit = {},
     modes: ModeNavigation = ModeNavigation(),
-    timeline: @Composable (TimelineFeed, StatusNavigation, accountButton: @Composable () -> Unit) -> Unit =
-        { feed, navigation, button -> ModeTimeline(feed, navigation, button) },
+    timeline: @Composable (
+        TimelineFeed,
+        StatusNavigation,
+        HomeLinks,
+        accountButton: @Composable () -> Unit,
+    ) -> Unit = { feed, navigation, links, button -> ModeTimeline(feed, navigation, links, button) },
     nowPlaying: @Composable (onOpen: (statusId: String) -> Unit) -> Unit = { MiniPlayer(onOpen = it) },
 ) {
     val backStack = rememberNavBackStack(HomeKey)
@@ -368,13 +402,15 @@ fun AlohaApp(
                         rememberViewModelStoreNavEntryDecorator(),
                     ),
                     entryProvider = entryProvider {
+                        // where the account button's sheet leads, the same from every top-level screen
+                        val accountLinks = AccountLinks { backStack.push(it.key(readerId, serverAccountId)) }
                         // home and each mode: the same account button, each timeline of its own
                         val modeEntry = @Composable { feed: TimelineFeed ->
-                            timeline(feed, statusNavigation) {
-                                accountButton({
-                                    backStack.push(AccountKey(readerId, id = serverAccountId))
-                                }, { backStack.push(SettingsKey) })
-                            }
+                            val links = HomeLinks(
+                                onSearch = { backStack.push(SearchKey(readerId)) },
+                                onAnnouncements = { backStack.push(AnnouncementsKey(readerId)) },
+                            )
+                            timeline(feed, statusNavigation, links) { accountButton(accountLinks) }
                         }
                         val listPane = ListDetailSceneStrategy.listPane(detailPlaceholder = { NothingOpen() })
                         entry<HomeKey>(metadata = listPane) { modeEntry(TimelineFeed.Home) }
@@ -390,11 +426,7 @@ fun AlohaApp(
                                 statusNavigation,
                                 onPolicy = { backStack.push(NotificationPolicyKey(readerId)) },
                                 onRequests = { backStack.push(NotificationRequestsKey(readerId)) },
-                                navigationIcon = {
-                                    accountButton({
-                                        backStack.push(AccountKey(readerId, id = serverAccountId))
-                                    }, { backStack.push(SettingsKey) })
-                                },
+                                navigationIcon = { accountButton(accountLinks) },
                             )
                         }
                         entry<NotificationPolicyKey>(metadata = ListDetailSceneStrategy.detailPane()) {
@@ -406,6 +438,97 @@ fun AlohaApp(
                                 onOpenProfile = { id -> statusNavigation.openProfile(id, null) },
                                 onBack = { backStack.remove(it) },
                             )
+                        }
+                        entry<ListsKey> { key ->
+                            ListsRoute(
+                                key,
+                                onOpen = { backStack.push(ListKey(key.readerId, it.id, it.title)) },
+                                onBack = { backStack.remove(key) },
+                            )
+                        }
+                        entry<ListKey> { key ->
+                            TimelineRoute(
+                                statusNavigation,
+                                feed = TimelineFeed.List(key.listId, key.title),
+                                navigationIcon = {
+                                    IconButton(onClick = { backStack.remove(key) }) {
+                                        Icon(AlohaIcons.Back, stringResource(R.string.list_back))
+                                    }
+                                },
+                                toolbar = {
+                                    IconButton(onClick = {
+                                        backStack.push(ListMembersKey(key.readerId, key.listId, key.title))
+                                    }) { Icon(AlohaIcons.Members, stringResource(R.string.list_members)) }
+                                },
+                            )
+                        }
+                        entry<ListMembersKey> { key ->
+                            ListMembersRoute(
+                                key,
+                                onProfile = { statusNavigation.openProfile(it, null) },
+                                onBack = { backStack.remove(key) },
+                            )
+                        }
+                        entry<HashtagsKey> { key ->
+                            HashtagsRoute(
+                                key,
+                                onTag = statusNavigation::openTag,
+                                onGroup = { backStack.push(TagGroupKey(key.readerId, it.name)) },
+                                onBack = { backStack.remove(key) },
+                            )
+                        }
+                        entry<InterestsKey> { key -> InterestsRoute(key, onBack = { backStack.remove(key) }) }
+                        entry<AnnouncementsKey> { key ->
+                            AnnouncementsRoute(
+                                key,
+                                onLink = { statusNavigation.openLink(it) },
+                                onBack = { backStack.remove(key) },
+                            )
+                        }
+                        entry<FiltersKey> { key ->
+                            FiltersRoute(
+                                key,
+                                onEdit = { backStack.push(FilterEditKey(key.readerId, it)) },
+                                onBack = { backStack.remove(key) },
+                            )
+                        }
+                        entry<FilterEditKey> { key -> FilterEditRoute(key, onDone = { backStack.remove(key) }) }
+                        entry<SavedPostsKey> { key ->
+                            SavedPostsRoute(key, statusNavigation, onBack = { backStack.remove(key) })
+                        }
+                        entry<ConversationsKey> { key ->
+                            ConversationsRoute(
+                                key,
+                                onThread = statusNavigation::openThread,
+                                onNew = { backStack.push(NewMessageKey(key.readerId)) },
+                                onBack = { backStack.remove(key) },
+                            )
+                        }
+                        entry<NewMessageKey> { key ->
+                            NewMessageRoute(
+                                key,
+                                onPick = { acct ->
+                                    // the composer takes this screen's place: back from it is the conversations
+                                    backStack.remove(key)
+                                    backStack.push(
+                                        ComposerKey(
+                                            key.readerId,
+                                            draftId = UUID.randomUUID().toString(),
+                                            sharedText = "@$acct ",
+                                            direct = true,
+                                        ),
+                                    )
+                                },
+                                onBack = { backStack.remove(key) },
+                            )
+                        }
+                        entry<TagGroupKey> { key ->
+                            TagGroupRoute(key, statusNavigation, onBack = { backStack.remove(key) })
+                        }
+                        entry<SearchKey> { key ->
+                            SearchRoute(key, statusNavigation, onBack = { backStack.remove(key) }) {
+                                ExploreRoute(key.readerId, statusNavigation)
+                            }
                         }
                         entry<SettingsKey>(
                             metadata = ListDetailSceneStrategy.listPane(detailPlaceholder = {
@@ -516,7 +639,12 @@ private fun NothingOpen() {
 
 /** Home's timeline, or a mode's: Photos carries the stories rail above its own, Video what to carry on with. */
 @Composable
-private fun ModeTimeline(feed: TimelineFeed, navigation: StatusNavigation, accountButton: @Composable () -> Unit) {
+private fun ModeTimeline(
+    feed: TimelineFeed,
+    navigation: StatusNavigation,
+    links: HomeLinks,
+    accountButton: @Composable () -> Unit,
+) {
     // Shorts is a pager of its own rather than a timeline of rows
     if (feed.mode == FeedMode.Shorts) return ShortsRoute(navigation, accountButton)
     // and Audio a list to play from
@@ -525,6 +653,8 @@ private fun ModeTimeline(feed: TimelineFeed, navigation: StatusNavigation, accou
         navigation,
         feed = feed,
         navigationIcon = accountButton,
+        // search is reached from Home
+        onSearch = links.onSearch.takeIf { feed == TimelineFeed.Home },
         header = {
             when (feed.mode) {
                 FeedMode.Photos -> StoriesRail(
@@ -534,7 +664,8 @@ private fun ModeTimeline(feed: TimelineFeed, navigation: StatusNavigation, accou
 
                 FeedMode.Video -> ContinueWatching(onOpen = navigation::openVideo)
 
-                else -> Unit
+                // what the server announces is said on Home, the timeline every reader opens
+                else -> if (feed == TimelineFeed.Home) AnnouncementsBanner(onOpen = links.onAnnouncements)
             }
         },
     )
@@ -561,8 +692,43 @@ internal fun Placeholder(title: String) {
 @Composable
 private fun AlohaAppPreview() {
     AlohaTheme {
-        AlohaApp("preview", "1", timeline = { _, _, _ -> Placeholder(stringResource(R.string.destination_home)) })
+        AlohaApp("preview", "1", timeline = { _, _, _, _ -> Placeholder(stringResource(R.string.destination_home)) })
     }
+}
+
+/** Where Home leads beyond its timeline: search, from its toolbar, and the server's announcements. */
+data class HomeLinks(val onSearch: () -> Unit = {}, val onAnnouncements: () -> Unit = {})
+
+/** Where the account button's sheet leads, one [AccountPlace] at a time. */
+data class AccountLinks(val open: (AccountPlace) -> Unit = {})
+
+/** Where the account sheet leads. */
+enum class AccountPlace {
+    Profile,
+    Messages,
+    Bookmarks,
+    Favourites,
+    Archived,
+    Lists,
+    Hashtags,
+    Interests,
+    Filters,
+    Announcements,
+    Settings,
+}
+
+private fun AccountPlace.key(readerId: String, serverAccountId: String): NavKey = when (this) {
+    AccountPlace.Profile -> AccountKey(readerId, id = serverAccountId)
+    AccountPlace.Messages -> ConversationsKey(readerId)
+    AccountPlace.Bookmarks -> SavedPostsKey(readerId, SavedKind.Bookmarks)
+    AccountPlace.Favourites -> SavedPostsKey(readerId, SavedKind.Favourites)
+    AccountPlace.Archived -> SavedPostsKey(readerId, SavedKind.Archived)
+    AccountPlace.Lists -> ListsKey(readerId)
+    AccountPlace.Hashtags -> HashtagsKey(readerId)
+    AccountPlace.Interests -> InterestsKey(readerId)
+    AccountPlace.Filters -> FiltersKey(readerId)
+    AccountPlace.Announcements -> AnnouncementsKey(readerId)
+    AccountPlace.Settings -> SettingsKey
 }
 
 /** Opens [key] unless it is already on screen: a second copy would make back seem to do nothing. */

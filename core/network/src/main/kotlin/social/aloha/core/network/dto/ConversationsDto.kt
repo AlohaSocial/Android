@@ -62,6 +62,7 @@ internal data class AccountListDto(
     val title: String = "",
     @SerialName("replies_policy") val repliesPolicy: String? = null,
     @Serializable(with = LenientBoolSerializer::class) val exclusive: Boolean = false,
+    @SerialName("nextcloud_group") val group: String? = null,
 )
 
 @Serializable
@@ -113,7 +114,7 @@ internal fun MarkerSetDto.toDomain(): MarkerSet = MarkerSet(home?.toDomain(), no
 
 internal fun UnreadCountDto.toDomain(): UnreadCount = UnreadCount(count)
 
-internal fun AccountListDto.toDomain(): AccountList = AccountList(id, title, repliesPolicy, exclusive)
+internal fun AccountListDto.toDomain(): AccountList = AccountList(id, title, repliesPolicy, exclusive, group)
 
 internal fun SearchResultsDto.toDomain(): SearchResults = SearchResults(
     accounts.map { it.toDomain() },

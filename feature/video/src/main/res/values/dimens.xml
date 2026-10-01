@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ SPDX-FileCopyrightText: 2026 Aloha Social contributors
+  ~ SPDX-License-Identifier: MIT
+-->
+<resources>
+    <!-- The seek back and forward buttons in the player's bar, a touch target's size -->
+    <dimen name="video_seek_button">48dp</dimen>
+    <!-- Media3's own sizes for its controls, kept here, as Media3's are private -->
+    <dimen name="video_bar_height">60dp</dimen>
+    <dimen name="video_bar_margin_top">10dp</dimen>
+    <dimen name="video_progress_height">48dp</dimen>
+    <dimen name="video_progress_margin_bottom">52dp</dimen>
+    <dimen name="video_minimal_margin_bottom">4dp</dimen>
+</resources>

@@ -60,7 +60,7 @@ class AppShellScreenshotTest {
             SwitcherAccount("b", "Alice at work", "@alice@mastodon.example", null, active = false, needsReauth = true),
         )
         compose.setContent {
-            AlohaTheme(ThemeSettings(mode = ThemeMode.Light)) { AccountSheet(accounts, {}, {}, {}, {}, {}, {}) }
+            AlohaTheme(ThemeSettings(mode = ThemeMode.Light)) { AccountSheet(accounts, {}, AccountLinks(), {}, {}, {}) }
         }
         compose.waitForIdle()
         captureScreenRoboImage("src/test/screenshots/shell-accounts.png")
@@ -69,7 +69,7 @@ class AppShellScreenshotTest {
     private fun capture(name: String, mode: ThemeMode = ThemeMode.Light, select: String? = null) {
         compose.setContent {
             AlohaTheme(ThemeSettings(mode = mode)) {
-                AlohaApp("a", "1", timeline = { feed, _, _ -> Placeholder(feed.label()) }, nowPlaying = {})
+                AlohaApp("a", "1", timeline = { feed, _, _, _ -> Placeholder(feed.label()) }, nowPlaying = {})
             }
         }
         select?.let { compose.onNodeWithText(it).performClick() }

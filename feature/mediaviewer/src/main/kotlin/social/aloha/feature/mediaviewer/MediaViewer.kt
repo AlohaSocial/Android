@@ -27,6 +27,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -282,23 +283,27 @@ private fun BoxScope.TopBar(current: MediaAttachment?, index: Int, count: Int, a
 @Composable
 private fun More(attachment: MediaAttachment, actions: MediaViewerActions) {
     var open by remember { mutableStateOf(false) }
-    IconButton(onClick = {
-        open = true
-    }) { Icon(AlohaIcons.More, stringResource(R.string.viewer_more), tint = Color.White) }
-    DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
-        listOf(
-            R.string.viewer_save to { actions.onSave(attachment) },
-            R.string.viewer_copy to { actions.onCopy(attachment) },
-            R.string.viewer_open_in_browser to { actions.onOpenInBrowser(attachment) },
-            R.string.viewer_report to { actions.onReport() },
-        ).forEach { (label, action) ->
-            DropdownMenuItem(
-                text = { Text(stringResource(label)) },
-                onClick = {
-                    open = false
-                    action()
-                },
-            )
+    Box {
+        IconButton(onClick = {
+            open = true
+        }) { Icon(AlohaIcons.More, stringResource(R.string.viewer_more), tint = Color.White) }
+        // dark whatever the app's theme, as everything over the picture is
+        DropdownMenu(expanded = open, onDismissRequest = { open = false }, containerColor = MENU) {
+            listOf(
+                R.string.viewer_save to { actions.onSave(attachment) },
+                R.string.viewer_copy to { actions.onCopy(attachment) },
+                R.string.viewer_open_in_browser to { actions.onOpenInBrowser(attachment) },
+                R.string.viewer_report to { actions.onReport() },
+            ).forEach { (label, action) ->
+                DropdownMenuItem(
+                    text = { Text(stringResource(label)) },
+                    onClick = {
+                        open = false
+                        action()
+                    },
+                    colors = MenuDefaults.itemColors(textColor = Color.White),
+                )
+            }
         }
     }
 }
@@ -341,6 +346,9 @@ private fun BoxScope.AltBadge(description: String) {
         )
     }
 }
+
+/** The viewer's menu: a neutral near-black, never tinted by the app's colours. */
+private val MENU = Color(0xFF212121)
 
 /** White on the dark backdrop, dimmed where the button cannot be used now. */
 private fun onDark(enabled: Boolean): Color = if (enabled) Color.White else Color.White.copy(alpha = DISABLED)

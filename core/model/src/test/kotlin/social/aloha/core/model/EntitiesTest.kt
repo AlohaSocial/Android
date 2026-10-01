@@ -94,6 +94,8 @@ class EntitiesTest {
         assertEquals("swift", Tag.normalise("##Swift"))
         assertNull(Tag.normalise("#"))
         assertEquals(127, Tag.normalise("a".repeat(200))?.length)
+        // a name that would change the route it is put into is no hashtag
+        listOf("..\\accounts", "a/b", "a%5cb", "a?b").forEach { assertNull(Tag.normalise(it), it) }
     }
 
     @Test

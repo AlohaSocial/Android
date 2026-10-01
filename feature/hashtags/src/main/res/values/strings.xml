@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ SPDX-FileCopyrightText: 2026 Aloha Social contributors
+  ~ SPDX-License-Identifier: MIT
+-->
+<resources>
+    <!-- Title of the hashtags the reader follows and their tag groups -->
+    <string name="hashtags_title">Hashtags</string>
+    <!-- Leaves a hashtags screen -->
+    <string name="hashtags_back">Back</string>
+    <!-- Label of the field where a hashtag to follow is typed -->
+    <string name="hashtags_follow_label">Hashtag to follow</string>
+    <!-- Follows the hashtag typed -->
+    <string name="hashtags_follow">Follow</string>
+    <!-- Heading over the hashtags the reader follows -->
+    <string name="hashtags_followed">Followed hashtags</string>
+    <!-- The reader follows no hashtags -->
+    <string name="hashtags_none">You follow no hashtags yet.</string>
+    <!-- Something could not be loaded -->
+    <string name="hashtags_failed">This could not be loaded.</string>
+    <!-- Stops following a hashtag -->
+    <string name="hashtags_unfollow">Unfollow</string>
+    <!-- What was typed normalises to nothing, or the server refused it -->
+    <string name="hashtags_not_a_tag">That isn’t a hashtag.</string>
+    <!-- Heading over the reader's tag groups -->
+    <string name="hashtags_groups">Tag groups</string>
+    <!-- Says what a tag group is -->
+    <string name="hashtags_groups_note">Several hashtags read as one timeline, kept on this device.</string>
+    <!-- Makes a new tag group -->
+    <string name="hashtags_group_new">New tag group</string>
+    <!-- Changes a tag group: %s is its name -->
+    <string name="hashtags_group_edit">Edit %s</string>
+    <!-- Label of a tag group's name -->
+    <string name="hashtags_group_name">Name</string>
+    <!-- Label of a tag group's hashtags -->
+    <string name="hashtags_group_tags">Hashtags, apart by spaces</string>
+    <!-- Deletes a tag group -->
+    <string name="hashtags_group_delete">Delete group</string>
+    <!-- Saves a tag group -->
+    <string name="hashtags_save">Save</string>
+    <!-- A tag group has no posts -->
+    <string name="hashtags_group_empty">No posts with these hashtags yet.</string>
+    <!-- Loads more of a tag group's posts -->
+    <string name="hashtags_more">Show more</string>
+    <!-- Tries loading the followed hashtags again -->
+    <string name="hashtags_retry">Try again</string>
+    <!-- Spoken for a followed hashtag's unfollow button; %1$s is the hashtag -->
+    <string name="hashtags_unfollow_tag">Unfollow #%1$s</string>
+    <!-- Shown when following or unfollowing a hashtag failed -->
+    <string name="hashtags_follow_failed">That didn’t work. Nothing was changed.</string>
+    <!-- Shown when a tag group was not saved: its name is blank or another group has it -->
+    <string name="hashtags_group_taken">Not saved: give the group a name no other group has.</string>
+</resources>

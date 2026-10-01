@@ -237,29 +237,31 @@ private val ProfileTab.label: Int
 private fun Menu(state: ProfileUiState, actions: ProfileScreenActions, ask: (Asking) -> Unit) {
     val header = state.header ?: return
     var open by remember { mutableStateOf(false) }
-    IconButton(onClick = { open = true }) { Icon(AlohaIcons.More, stringResource(R.string.profile_more)) }
-    DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
-        val relation = state.relation
-        if (!header.isSelf && relation != null) {
-            RelationItems(relation, header.domain, actions, ask) { open = false }
-        }
-        if (!header.isSelf) {
-            DropdownMenuItem(
-                text = { Text(stringResource(R.string.profile_report)) },
-                onClick = {
-                    open = false
-                    actions.onReport()
-                },
-            )
-        }
-        header.url?.let { url ->
-            DropdownMenuItem(
-                text = { Text(stringResource(R.string.profile_open_in_browser)) },
-                onClick = {
-                    open = false
-                    actions.onOpenInBrowser(url)
-                },
-            )
+    Box {
+        IconButton(onClick = { open = true }) { Icon(AlohaIcons.More, stringResource(R.string.profile_more)) }
+        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+            val relation = state.relation
+            if (!header.isSelf && relation != null) {
+                RelationItems(relation, header.domain, actions, ask) { open = false }
+            }
+            if (!header.isSelf) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.profile_report)) },
+                    onClick = {
+                        open = false
+                        actions.onReport()
+                    },
+                )
+            }
+            header.url?.let { url ->
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.profile_open_in_browser)) },
+                    onClick = {
+                        open = false
+                        actions.onOpenInBrowser(url)
+                    },
+                )
+            }
         }
     }
 }
