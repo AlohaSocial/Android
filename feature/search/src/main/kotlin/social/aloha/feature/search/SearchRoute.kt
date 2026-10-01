@@ -35,7 +35,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.paneTitle
@@ -51,12 +50,11 @@ import social.aloha.core.navigation.SearchKey
 import social.aloha.core.ui.AccountRow
 import social.aloha.core.ui.RichLinkTarget
 import social.aloha.core.ui.RichTextColors
-import social.aloha.core.ui.RoutedStatusActions
 import social.aloha.core.ui.StatusActions
 import social.aloha.core.ui.StatusCard
 import social.aloha.core.ui.StatusNavigation
-import social.aloha.core.ui.StatusRowUi
 import social.aloha.core.ui.TroubleStrip
+import social.aloha.core.ui.rememberThreadRoutedActions
 
 /**
  * Search: accounts, hashtags and posts on the reader's server, from anywhere by their address. A post
@@ -73,7 +71,6 @@ public fun SearchRoute(
     val viewModel = hiltViewModel<SearchViewModel, SearchViewModel.Factory>(key = key.toString()) { it.create(key) }
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val colors = RichTextColors.fromTheme()
-    val context = LocalContext.current
     val nav by rememberUpdatedState(navigation)
     LaunchedEffect(colors) { viewModel.onColors(colors) }
     LaunchedEffect(state.found) {
@@ -85,23 +82,7 @@ public fun SearchRoute(
         viewModel.onFoundShown()
     }
     // a post found is read here and acted on in its thread
-    val rowActions = remember(context) {
-        object : RoutedStatusActions(context, navigation = { nav }, onCopied = {}, onDeleteAsked = {
-            nav.openThread(it.row.statusId)
-        }) {
-            override fun onBoost(row: StatusRowUi) = nav.openThread(row.statusId)
-
-            override fun onFavourite(row: StatusRowUi) = nav.openThread(row.statusId)
-
-            override fun onBookmark(row: StatusRowUi) = nav.openThread(row.statusId)
-
-            override fun onMute(row: StatusRowUi) = nav.openThread(row.statusId)
-
-            override fun onPin(row: StatusRowUi) = nav.openThread(row.statusId)
-
-            override fun onVote(row: StatusRowUi, choices: List<Int>) = nav.openThread(row.statusId)
-        }
-    }
+    val rowActions = rememberThreadRoutedActions(navigation)
     SearchScreen(
         state,
         SearchActions(viewModel::onQuery, viewModel::onSubmit, viewModel::onClearRecent, onBack),

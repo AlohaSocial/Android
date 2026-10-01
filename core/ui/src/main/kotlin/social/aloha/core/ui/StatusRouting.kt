@@ -14,6 +14,10 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.core.content.getSystemService
 import androidx.core.net.toUri
@@ -59,6 +63,37 @@ public interface StatusNavigation {
 
     /** Album [albumId], called [title]; the reader changes it when it is their [own]. */
     public fun openAlbum(albumId: String, title: String, own: Boolean) {}
+}
+
+/**
+ * The actions of a post read in a list and acted on in its thread: whatever would change it, a boost,
+ * a favourite, a vote, a delete, opens the thread instead, where it is done and shown as done.
+ */
+@Composable
+public fun rememberThreadRoutedActions(navigation: StatusNavigation): StatusActions {
+    val context = LocalContext.current
+    val nav by rememberUpdatedState(navigation)
+    return remember(context) { ThreadRoutedActions(context) { nav } }
+}
+
+private class ThreadRoutedActions(context: Context, private val navigation: () -> StatusNavigation) :
+    RoutedStatusActions(
+        context,
+        navigation,
+        onCopied = {},
+        onDeleteAsked = { navigation().openThread(it.row.statusId) },
+    ) {
+    override fun onBoost(row: StatusRowUi) = navigation().openThread(row.statusId)
+
+    override fun onFavourite(row: StatusRowUi) = navigation().openThread(row.statusId)
+
+    override fun onBookmark(row: StatusRowUi) = navigation().openThread(row.statusId)
+
+    override fun onMute(row: StatusRowUi) = navigation().openThread(row.statusId)
+
+    override fun onPin(row: StatusRowUi) = navigation().openThread(row.statusId)
+
+    override fun onVote(row: StatusRowUi, choices: List<Int>) = navigation().openThread(row.statusId)
 }
 
 /** Where a link in rich text leads: a profile, a hashtag, or a web address. */

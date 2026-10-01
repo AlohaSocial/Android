@@ -25,10 +25,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.paneTitle
@@ -42,12 +40,11 @@ import social.aloha.core.model.SensitiveMediaPolicy
 import social.aloha.core.navigation.SavedKind
 import social.aloha.core.navigation.SavedPostsKey
 import social.aloha.core.ui.RichTextColors
-import social.aloha.core.ui.RoutedStatusActions
 import social.aloha.core.ui.StatusActions
 import social.aloha.core.ui.StatusCard
 import social.aloha.core.ui.StatusNavigation
 import social.aloha.core.ui.StatusRowMapper
-import social.aloha.core.ui.StatusRowUi
+import social.aloha.core.ui.rememberThreadRoutedActions
 
 /**
  * The reader's bookmarked, favourited or archived posts; a post opens its thread, where it is acted
@@ -65,25 +62,7 @@ public fun SavedPostsRoute(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val colors = RichTextColors.fromTheme()
     val mapper = remember(colors) { viewModel.mapper(colors) }
-    val context = LocalContext.current
-    val nav by rememberUpdatedState(navigation)
-    val rowActions = remember(context) {
-        object : RoutedStatusActions(context, navigation = { nav }, onCopied = {}, onDeleteAsked = {
-            nav.openThread(it.row.statusId)
-        }) {
-            override fun onBoost(row: StatusRowUi) = nav.openThread(row.statusId)
-
-            override fun onFavourite(row: StatusRowUi) = nav.openThread(row.statusId)
-
-            override fun onBookmark(row: StatusRowUi) = nav.openThread(row.statusId)
-
-            override fun onMute(row: StatusRowUi) = nav.openThread(row.statusId)
-
-            override fun onPin(row: StatusRowUi) = nav.openThread(row.statusId)
-
-            override fun onVote(row: StatusRowUi, choices: List<Int>) = nav.openThread(row.statusId)
-        }
-    }
+    val rowActions = rememberThreadRoutedActions(navigation)
     val actions = SavedActions(
         onMore = viewModel::onMore,
         onUnarchive = viewModel::onUnarchive.takeIf { key.kind == SavedKind.Archived },

@@ -23,10 +23,8 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.paneTitle
 import androidx.compose.ui.semantics.semantics
@@ -38,12 +36,11 @@ import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.model.SensitiveMediaPolicy
 import social.aloha.core.navigation.TagGroupKey
 import social.aloha.core.ui.RichTextColors
-import social.aloha.core.ui.RoutedStatusActions
 import social.aloha.core.ui.StatusActions
 import social.aloha.core.ui.StatusCard
 import social.aloha.core.ui.StatusNavigation
 import social.aloha.core.ui.StatusRowMapper
-import social.aloha.core.ui.StatusRowUi
+import social.aloha.core.ui.rememberThreadRoutedActions
 
 /** A tag group as one timeline: its hashtags' posts merged, newest first; a post opens its thread. */
 @Composable
@@ -57,26 +54,8 @@ public fun TagGroupRoute(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val colors = RichTextColors.fromTheme()
     val mapper = remember(colors) { viewModel.mapper(colors) }
-    val context = LocalContext.current
-    val nav by rememberUpdatedState(navigation)
     // a post is read here and acted on in its thread
-    val rowActions = remember(context) {
-        object : RoutedStatusActions(context, navigation = { nav }, onCopied = {}, onDeleteAsked = {
-            nav.openThread(it.row.statusId)
-        }) {
-            override fun onBoost(row: StatusRowUi) = nav.openThread(row.statusId)
-
-            override fun onFavourite(row: StatusRowUi) = nav.openThread(row.statusId)
-
-            override fun onBookmark(row: StatusRowUi) = nav.openThread(row.statusId)
-
-            override fun onMute(row: StatusRowUi) = nav.openThread(row.statusId)
-
-            override fun onPin(row: StatusRowUi) = nav.openThread(row.statusId)
-
-            override fun onVote(row: StatusRowUi, choices: List<Int>) = nav.openThread(row.statusId)
-        }
-    }
+    val rowActions = rememberThreadRoutedActions(navigation)
     TagGroupScreen(key.name, state, mapper, rowActions, viewModel::onMore, onBack, modifier)
 }
 
