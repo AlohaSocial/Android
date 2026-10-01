@@ -14,6 +14,10 @@
     <string name="destination_video">Video</string>
     <!-- Navigation item: the shorts mode, short vertical videos. Keep it short, it sits under an icon. -->
     <string name="destination_shorts">Shorts</string>
+    <!-- Navigation item: the news mode, posts that share an article, once turned on. Keep it short. -->
+    <string name="destination_news">News</string>
+    <!-- Navigation item: the audio mode, posts with sound, once turned on. Keep it short. -->
+    <string name="destination_audio">Audio</string>
     <!-- Navigation item: mentions, favourites, boosts and follows. -->
     <string name="destination_notifications">Notifications</string>
     <!-- Banner when the server no longer accepts this account's sign-in; %s is the account's handle -->

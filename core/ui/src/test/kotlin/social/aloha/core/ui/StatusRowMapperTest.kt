@@ -125,5 +125,10 @@ class StatusChoicesTest {
         val theirs = menuItems(mapper.map(StatusSamples.post(), viewerAccountId = "2")).map { it.first }
         assertTrue(StatusMenuItem.Delete in own && StatusMenuItem.Report !in own)
         assertTrue(StatusMenuItem.Report in theirs && StatusMenuItem.Delete !in theirs)
+        // an album takes only the author's own posts, and only ones with pictures
+        assertTrue(StatusMenuItem.AddToAlbum !in own)
+        val gallery = menuItems(mapper.map(StatusSamples.gallery, viewerAccountId = "1")).map { it.first }
+        val theirGallery = menuItems(mapper.map(StatusSamples.gallery, viewerAccountId = "2")).map { it.first }
+        assertTrue(StatusMenuItem.AddToAlbum in gallery && StatusMenuItem.AddToAlbum !in theirGallery)
     }
 }

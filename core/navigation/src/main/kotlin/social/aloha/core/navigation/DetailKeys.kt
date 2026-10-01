@@ -47,7 +47,7 @@ public data class SettingsSectionKey(val section: String) : NavKey
  * A new post written as [readerId]; an answer to [replyToId] on that account's server when given,
  * draft [draftId] carried on with, the reader's own post [editId] edited, or their post [redraftId]
  * deleted and written again. What another app shared starts a new post: [sharedText], and the
- * content addresses of [sharedMedia].
+ * content addresses of [sharedMedia]. With [story] the post starts out as a story.
  */
 @Serializable
 public data class ComposerKey(
@@ -58,6 +58,7 @@ public data class ComposerKey(
     val redraftId: String? = null,
     val sharedText: String? = null,
     val sharedMedia: List<String> = emptyList(),
+    val story: Boolean = false,
 ) : NavKey
 
 /**
@@ -94,3 +95,27 @@ public data class NotificationPolicyKey(val readerId: String) : NavKey
 /** The senders whose notifications [readerId]'s server holds back, to let through or drop. */
 @Serializable
 public data class NotificationRequestsKey(val readerId: String) : NavKey
+
+/** The albums of account [ownerId] as [readerId] sees them, or the reader's own without one. */
+@Serializable
+public data class AlbumsKey(val readerId: String, val ownerId: String? = null) : NavKey
+
+/** One album's posts, as [readerId] sees them; [own] albums can be changed. */
+@Serializable
+public data class AlbumKey(val readerId: String, val albumId: String, val title: String, val own: Boolean) : NavKey
+
+/** Picks which of [readerId]'s albums the reader's post [statusId] goes into. */
+@Serializable
+public data class AddToAlbumKey(val readerId: String, val statusId: String) : NavKey
+
+/** Photos' Explore: what is trending with pictures, hashtags and people, as [readerId] sees them. */
+@Serializable
+public data class PhotoExploreKey(val readerId: String) : NavKey
+
+/** The watch page of post [statusId]'s video, as [readerId] sees it. */
+@Serializable
+public data class WatchKey(val readerId: String, val statusId: String) : NavKey
+
+/** The media viewer on post [statusId]'s attachments from the [index]th, as [readerId] sees them. */
+@Serializable
+public data class MediaViewerKey(val readerId: String, val statusId: String, val index: Int)

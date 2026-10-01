@@ -111,6 +111,21 @@ public object DiscoveryEndpoints {
             StatusDto.serializer(),
         ) { it.toDomain() }
 
+    /** Pixelfed's trending posts, the ones with pictures first; Mastodon's trends are the same service's. */
+    public fun trendingPosts(limit: Int = DEFAULT_DISCOVER): ApiRequest<List<Status>> = listRequest(
+        Endpoint("api/v1.1/discover/posts/trending", query = listOf(Paging.limitItem(limit, MAXIMUM_DISCOVER))),
+        StatusDto.serializer(),
+    ) { it.toDomain() }
+
+    /** What trends across the servers this one knows, not only on it. */
+    public fun networkTrendingPosts(limit: Int = DEFAULT_DISCOVER): ApiRequest<List<Status>> = listRequest(
+        Endpoint(
+            "api/v1.1/discover/posts/network/trending",
+            query = listOf(Paging.limitItem(limit, MAXIMUM_DISCOVER)),
+        ),
+        StatusDto.serializer(),
+    ) { it.toDomain() }
+
     /** Curated subjects, sent bare or as `{categories: [...]}`. */
     public fun categories(): ApiRequest<List<DiscoverCategory>> = request(
         Endpoint("api/v1.1/discover/categories"),

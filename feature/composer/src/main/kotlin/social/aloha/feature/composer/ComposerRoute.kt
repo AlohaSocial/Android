@@ -207,6 +207,10 @@ private fun rememberActions(
                 viewModel.attachments.sensitive.value = sensitive
             }
 
+            override fun onStory(on: Boolean) = viewModel.story.onStory(on)
+
+            override fun onStorySeconds(seconds: Int) = viewModel.story.onSeconds(seconds)
+
             override fun onCard(on: Boolean) {
                 viewModel.cards.onCard(on)
                 if (on) viewModel.cards.onText(viewModel.segments.first().text)

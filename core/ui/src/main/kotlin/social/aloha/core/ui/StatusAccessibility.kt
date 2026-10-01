@@ -5,6 +5,7 @@ package social.aloha.core.ui
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CustomAccessibilityAction
@@ -32,6 +33,10 @@ internal fun menuItems(
                 if (row.state.pinned) R.string.status_menu_unpin else R.string.status_menu_pin,
             ),
         )
+        // only the author's own posts with pictures go into their albums
+        if (row.media.isNotEmpty()) {
+            add(Triple(StatusMenuItem.AddToAlbum, AlohaIcons.Album, R.string.status_menu_add_to_album))
+        }
         add(Triple(StatusMenuItem.Edit, AlohaIcons.Edited, R.string.status_menu_edit))
         add(Triple(StatusMenuItem.Redraft, AlohaIcons.Redraft, R.string.status_menu_redraft))
         add(Triple(StatusMenuItem.Delete, AlohaIcons.Delete, R.string.status_menu_delete))
@@ -161,8 +166,10 @@ private fun attachedActions(row: StatusRowUi, actions: StatusActions): List<Cust
     },
     row.card?.url?.let { url ->
         val title = row.card.title.ifBlank { url }
-        CustomAccessibilityAction(stringResource(R.string.status_action_open_card, title)) {
-            true.also { actions.onLink(RichLinkTarget.Web(url)) }
+        val label = if (row.card.playable) R.string.status_action_play_card else R.string.status_action_open_card
+        val context = LocalContext.current
+        CustomAccessibilityAction(stringResource(label, title)) {
+            true.also { openCard(context, row.card, actions) }
         }
     },
 )

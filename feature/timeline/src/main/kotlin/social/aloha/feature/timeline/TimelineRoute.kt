@@ -23,6 +23,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
 import social.aloha.core.data.timeline.Toggle
 import social.aloha.core.designsystem.AlohaIcons
+import social.aloha.core.model.FeedMode
 import social.aloha.core.ui.DeleteRequest
 import social.aloha.core.ui.DeleteStatusDialog
 import social.aloha.core.ui.R as UiR
@@ -37,6 +38,7 @@ public fun TimelineRoute(
     modifier: Modifier = Modifier,
     feed: TimelineFeed = TimelineFeed.Home,
     navigationIcon: @Composable () -> Unit = {},
+    header: @Composable () -> Unit = {},
 ) {
     val viewModel =
         hiltViewModel<TimelineViewModel, TimelineViewModel.Factory>(key = feed.toString()) { it.create(feed) }
@@ -68,6 +70,7 @@ public fun TimelineRoute(
             navigation = { nav },
             onCopied = { scope.launch { snackbars.showSnackbar(copied) } },
             onDeleteAsked = { deleting = it },
+            albums = { state.albums },
         ) {
             override fun onBoost(row: StatusRowUi) = viewModel.onToggle(row.statusId, Toggle.Boost)
 
@@ -91,11 +94,16 @@ public fun TimelineRoute(
         snackbars,
         title = when (feed) {
             TimelineFeed.Home -> stringResource(R.string.timeline_title)
+            is TimelineFeed.Mode -> stringResource(modeTitle(feed.mode))
             is TimelineFeed.Tag -> "#${feed.name}"
         },
         navigationIcon = navigationIcon,
         showOptions = feed == TimelineFeed.Home,
         onCompose = if (feed == TimelineFeed.Home) ({ nav.openComposer(null) }) else null,
+        onAlbums = if (feed.mode == FeedMode.Photos && state.albums) ({ nav.openAlbums() }) else null,
+        onExplore = if (feed.mode == FeedMode.Photos) ({ nav.openPhotoExplore() }) else null,
+        header = header,
+        onVideo = nav::openVideo,
     )
 
     deleting?.let { request ->
@@ -106,6 +114,15 @@ public fun TimelineRoute(
             onDismiss = { deleting = null },
         )
     }
+}
+
+internal fun modeTitle(mode: FeedMode): Int = when (mode) {
+    FeedMode.Home -> R.string.timeline_title
+    FeedMode.Photos -> R.string.timeline_title_photos
+    FeedMode.Video -> R.string.timeline_title_video
+    FeedMode.Shorts -> R.string.timeline_title_shorts
+    FeedMode.News -> R.string.timeline_title_news
+    FeedMode.Audio -> R.string.timeline_title_audio
 }
 
 /** One hashtag's public posts, read like home, with a way back. */

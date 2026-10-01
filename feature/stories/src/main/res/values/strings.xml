@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ SPDX-FileCopyrightText: 2026 Aloha Social contributors
+  ~ SPDX-License-Identifier: MIT
+-->
+<resources>
+    <!-- Name under the reader's own stories on the stories rail -->
+    <string name="stories_yours">Your story</string>
+    <!-- A poster on the stories rail with stories not yet seen, read aloud: %s is who -->
+    <string name="stories_reel_new">Stories from %s, new</string>
+    <!-- A poster on the stories rail whose stories were all seen, read aloud: %s is who -->
+    <string name="stories_reel">Stories from %s</string>
+    <!-- First on the stories rail: writes a new story -->
+    <string name="stories_new">New story</string>
+    <!-- A story in the player, read aloud: %s is who posted it -->
+    <string name="stories_story">Story by %s</string>
+    <!-- A story with words in the player, read aloud: %1$s is who posted it, %2$s what they wrote -->
+    <string name="stories_story_caption">Story by %1$s. %2$s</string>
+    <!-- Where the reader is among a poster's stories, read aloud: %1$d is which, %2$d how many -->
+    <string name="stories_position">Story %1$d of %2$d</string>
+    <!-- Goes on to the next story; a tap on the right does the same -->
+    <string name="stories_next">Next story</string>
+    <!-- Goes back to the story before; a tap on the left does the same -->
+    <string name="stories_previous">Previous story</string>
+    <!-- Screen reader action that holds the story still, as pressing on it does -->
+    <string name="stories_pause">Pause story</string>
+    <!-- Screen reader action that lets a held story go on -->
+    <string name="stories_resume">Resume story</string>
+    <!-- Closes the story player -->
+    <string name="stories_close">Close stories</string>
+    <!-- How many watched one of the reader's own stories; opens who they were -->
+    <plurals name="stories_views">
+        <item quantity="one">Seen by %d</item>
+        <item quantity="other">Seen by %d</item>
+    </plurals>
+    <!-- Ends one of the reader's own stories before its day is up -->
+    <string name="stories_delete">Delete story</string>
+    <!-- Asks before ending one of the reader's own stories -->
+    <string name="stories_delete_title">Delete this story?</string>
+    <!-- Says what deleting a story does -->
+    <string name="stories_delete_body">It goes for everyone now, rather than after its day.</string>
+    <!-- The server would not end the story -->
+    <string name="stories_delete_failed">The story could not be deleted. Try again in a moment.</string>
+    <!-- In the field for replying to a story: %s is who posted it -->
+    <string name="stories_reply">Reply to %s</string>
+    <!-- Sends the reply typed -->
+    <string name="stories_send">Send</string>
+    <!-- A reaction or reply went through: %s is who it went to -->
+    <string name="stories_sent">Sent to %s</string>
+    <!-- A reaction or reply did not go through: %s is who it was for -->
+    <string name="stories_send_failed">Could not send to %s. Try again in a moment.</string>
+    <!-- Nobody has watched one of the reader's own stories yet -->
+    <string name="stories_audience_none">Nobody has seen this yet.</string>
+    <!-- The server would not say who watched -->
+    <string name="stories_audience_failed">Who has seen this could not be loaded.</string>
+</resources>

@@ -3,6 +3,7 @@
 
 package social.aloha.core.database
 
+import androidx.room.AutoMigration
 import androidx.room.Dao
 import androidx.room.Database
 import androidx.room.Entity
@@ -71,6 +72,19 @@ public data class TimelinePositionEntity(
     val offset: Int,
 )
 
+/**
+ * How far the reader got in a video, mirrored from what was reported to the server so a progress bar is
+ * right offline. A video watched to its end has no row: the server forgets it, and so does this.
+ */
+@Entity(tableName = "watch_position", primaryKeys = ["accountId", "statusId"])
+public data class WatchPositionEntity(
+    val accountId: String,
+    val statusId: String,
+    val positionSeconds: Double,
+    val durationSeconds: Double,
+    val updatedAt: Long,
+)
+
 /** A v2 filter of one account, as JSON, with its expiry lifted out for the sweep. */
 @Entity(tableName = "filter", primaryKeys = ["accountId", "id"])
 public data class FilterEntity(val accountId: String, val id: String, val payloadJson: String, val expiresAt: Long?)
@@ -133,6 +147,9 @@ public interface TimelineDao {
     }
 }
 
+/** A stored status's classification, as `ContentKind`'s name. */
+public data class StoredKind(val serverId: String, val contentKind: String)
+
 @Dao
 public interface StatusDao {
     @Query("SELECT * FROM status WHERE accountId = :accountId AND serverId = :serverId")
@@ -144,6 +161,10 @@ public interface StatusDao {
     /** At most 900 ids at a time, under SQLite's limit on bound variables. */
     @Query("SELECT * FROM status WHERE accountId = :accountId AND serverId IN (:serverIds)")
     public fun observeMany(accountId: String, serverIds: List<String>): Flow<List<CachedStatusEntity>>
+
+    /** What each of [serverIds] was classified as, where stored; at most 900 ids at a time. */
+    @Query("SELECT serverId, contentKind FROM status WHERE accountId = :accountId AND serverId IN (:serverIds)")
+    public suspend fun kinds(accountId: String, serverIds: List<String>): List<StoredKind>
 
     @Upsert
     public suspend fun upsert(status: CachedStatusEntity)
@@ -240,6 +261,22 @@ public interface PositionDao {
     public suspend fun set(position: TimelinePositionEntity)
 }
 
+@Dao
+public interface WatchPositionDao {
+    /** Every video [accountId] is part way through, as they change. */
+    @Query("SELECT * FROM watch_position WHERE accountId = :accountId")
+    public fun observe(accountId: String): Flow<List<WatchPositionEntity>>
+
+    @Query("SELECT * FROM watch_position WHERE accountId = :accountId AND statusId = :statusId")
+    public suspend fun get(accountId: String, statusId: String): WatchPositionEntity?
+
+    @Upsert
+    public suspend fun set(position: WatchPositionEntity)
+
+    @Query("DELETE FROM watch_position WHERE accountId = :accountId AND statusId = :statusId")
+    public suspend fun forget(accountId: String, statusId: String)
+}
+
 /** Removing an account takes everything it cached with it, at once. */
 @Dao
 public interface CacheAccountDao {
@@ -249,7 +286,11 @@ public interface CacheAccountDao {
         deleteStatuses(accountId)
         deleteFilters(accountId)
         deletePositions(accountId)
+        deleteWatchPositions(accountId)
     }
+
+    @Query("DELETE FROM watch_position WHERE accountId = :accountId")
+    public suspend fun deleteWatchPositions(accountId: String)
 
     @Query("DELETE FROM timeline_position WHERE accountId = :accountId")
     public suspend fun deletePositions(accountId: String)
@@ -274,9 +315,11 @@ public interface CacheAccountDao {
         TimelineEntryEntity::class,
         FilterEntity::class,
         TimelinePositionEntity::class,
+        WatchPositionEntity::class,
     ],
-    version = 1,
+    version = 2,
     exportSchema = true,
+    autoMigrations = [AutoMigration(from = 1, to = 2)],
 )
 public abstract class CacheDatabase : RoomDatabase() {
     public abstract fun timelineDao(): TimelineDao
@@ -288,6 +331,8 @@ public abstract class CacheDatabase : RoomDatabase() {
     public abstract fun cacheAccountDao(): CacheAccountDao
 
     public abstract fun positionDao(): PositionDao
+
+    public abstract fun watchPositionDao(): WatchPositionDao
 
     public companion object {
         public const val FILE_NAME: String = "cache.db"

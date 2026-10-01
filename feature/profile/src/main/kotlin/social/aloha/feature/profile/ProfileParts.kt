@@ -298,9 +298,7 @@ internal fun Highlights(highlights: ProfileHighlights) {
 @Composable
 internal fun CollectionRow(collection: MediaCollection, actions: ProfileScreenActions) {
     ListItem(
-        modifier = Modifier.clickable(enabled = collection.url != null) {
-            collection.url?.let(actions::onOpenInBrowser)
-        },
+        modifier = Modifier.clickable { actions.onAlbum(collection) },
         leadingContent = { Thumbnail(collection.thumbnail) },
         headlineContent = { Text(collection.title, maxLines = 2, overflow = TextOverflow.Ellipsis) },
         supportingContent = {

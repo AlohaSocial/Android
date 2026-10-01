@@ -40,6 +40,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -87,7 +88,10 @@ internal fun StatusBody(
         row.poll?.let {
             PollView(it, controls.pollChoice, controls.onPollChoice) { choices -> actions.onVote(row, choices) }
         }
-        row.card?.let { LinkCard(it) { it.url?.let { url -> actions.onLink(RichLinkTarget.Web(url)) } } }
+        row.card?.let { card ->
+            val context = LocalContext.current
+            LinkCard(card) { openCard(context, card, actions) }
+        }
         row.quote?.let { QuoteCard(it) { actions.onOpen(it.statusId) } }
         StatusExtras(row, canReact, actions)
     }
@@ -246,13 +250,19 @@ internal fun LinkCard(card: Card, onOpen: () -> Unit) {
     ) {
         Column {
             card.image?.let { image ->
-                AsyncImage(
-                    model = image,
-                    contentDescription = null,
-                    placeholder = rememberBlurHashPainter(card.blurhash),
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxWidth().aspectRatio(CARD_ASPECT),
-                )
+                Box(contentAlignment = Alignment.Center) {
+                    AsyncImage(
+                        model = image,
+                        contentDescription = null,
+                        placeholder = rememberBlurHashPainter(card.blurhash),
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxWidth().aspectRatio(
+                            if (card.playable) VIDEO_ASPECT else CARD_ASPECT,
+                        ),
+                    )
+                    // the server's own copy of the thumbnail; nothing is asked of the video's site before a tap
+                    if (card.playable) PlayBadge(Modifier)
+                }
             }
             Column(Modifier.padding(AlohaSpacing.s), verticalArrangement = Arrangement.spacedBy(AlohaSpacing.xxs)) {
                 if (card.displayProvider.isNotEmpty()) {
@@ -436,6 +446,7 @@ private const val MIN_ASPECT = 0.8f
 private const val MAX_ASPECT = 1.91f
 private const val PAIR_ASPECT = 0.9f
 private const val CARD_ASPECT = 1.91f
+private const val VIDEO_ASPECT = 16f / 9f
 private const val COVER_ALPHA = 0.55f
 private const val QUOTE_LINES = 4
 private val GUTTER = 2.dp

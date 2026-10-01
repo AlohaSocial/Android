@@ -9,6 +9,7 @@ import kotlinx.serialization.Serializable
 import social.aloha.core.model.Card
 import social.aloha.core.model.Poll
 import social.aloha.core.model.PollOption
+import social.aloha.core.model.VideoCaption
 import social.aloha.core.model.VideoChapter
 import social.aloha.core.model.VideoDetails
 import social.aloha.core.network.decoding.ChapterStartSerializer
@@ -72,6 +73,15 @@ internal data class VideoDetailsDto(
     @Serializable(with = LenientTextSerializer::class) val support: String? = null,
     @Serializable(with = OptionalBoolSerializer::class) val download: Boolean? = null,
     @Serializable(with = LossyListSerializer::class) val chapters: List<VideoChapterDto> = emptyList(),
+    @Serializable(with = LenientTextSerializer::class) val title: String? = null,
+    @Serializable(with = LenientIntSerializer::class) val duration: Int = 0,
+    @Serializable(with = LossyListSerializer::class) val captions: List<VideoCaptionDto> = emptyList(),
+)
+
+@Serializable
+internal data class VideoCaptionDto(
+    @Serializable(with = LenientTextSerializer::class) val language: String? = null,
+    @Serializable(with = LenientTextSerializer::class) val url: String? = null,
 )
 
 @Serializable
@@ -121,4 +131,10 @@ internal fun VideoDetailsDto.toDomain(): VideoDetails = VideoDetails(
     support = support,
     download = download,
     chapters = chapters.mapNotNull { chapter -> chapter.start?.let { VideoChapter(it, chapter.title.orEmpty()) } },
+    title = title?.takeIf { it.isNotBlank() },
+    duration = duration.takeIf { it > 0 }?.toDouble(),
+    captions = captions.mapNotNull { caption ->
+        val url = caption.url?.takeIf { it.isNotBlank() } ?: return@mapNotNull null
+        VideoCaption(caption.language.orEmpty(), url)
+    },
 )

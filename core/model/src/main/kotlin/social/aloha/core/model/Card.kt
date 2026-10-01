@@ -22,6 +22,12 @@ public data class Card(
     val height: Int? = null,
     val html: String? = null,
 ) {
+    /**
+     * A video somewhere else, such as YouTube's: the server read it as `video` from the page's oEmbed. It
+     * plays where it lives, in its own app or a Custom Tab; its embed is a web page and never runs here.
+     */
+    val playable: Boolean get() = type == "video" && url != null
+
     /** What to print under the headline: the provider, else the link's host. */
     val displayProvider: String
         get() = providerName?.takeIf { it.isNotEmpty() }

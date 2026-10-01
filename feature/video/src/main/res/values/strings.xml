@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ SPDX-FileCopyrightText: 2026 Aloha Social contributors
+  ~ SPDX-License-Identifier: MIT
+-->
+<resources>
+    <!-- Heading of the videos the reader started and did not finish, atop Video -->
+    <string name="continue_watching">Continue watching</string>
+    <!-- Takes a video off the ones to carry on with, read aloud: %s is the video's title -->
+    <string name="continue_watching_remove">Remove %s from Continue watching</string>
+    <!-- Title of the screen that plays one video with its comments -->
+    <string name="watch_title">Video</string>
+    <!-- Back button of the video screen -->
+    <string name="watch_back">Back</string>
+    <!-- Follows who posted the video, which is how one subscribes to their channel -->
+    <string name="watch_follow">Follow</string>
+    <!-- Stops following who posted the video -->
+    <string name="watch_unfollow">Following</string>
+    <!-- How many liked a video -->
+    <plurals name="watch_likes">
+        <item quantity="one">%d like</item>
+        <item quantity="other">%d likes</item>
+    </plurals>
+    <!-- How many disliked a video, which is shown but cannot be given -->
+    <plurals name="watch_dislikes">
+        <item quantity="one">%d dislike</item>
+        <item quantity="other">%d dislikes</item>
+    </plurals>
+    <!-- Heading of a video's chapters -->
+    <string name="watch_chapters">Chapters</string>
+    <!-- A chapter, read aloud: %1$s is its title, %2$s where it starts, such as 4:05 -->
+    <string name="watch_chapter">Jump to %1$s, at %2$s</string>
+    <!-- Heading of a video's comments -->
+    <plurals name="watch_comments">
+        <item quantity="one">%d comment</item>
+        <item quantity="other">%d comments</item>
+    </plurals>
+    <!-- Writes a comment on the video, which is a reply to its post -->
+    <string name="watch_comment">Comment</string>
+    <!-- Shown when the video could not be loaded -->
+    <string name="watch_failed">The video could not be loaded.</string>
+    <!-- Tries loading the video again -->
+    <string name="watch_retry">Try again</string>
+</resources>

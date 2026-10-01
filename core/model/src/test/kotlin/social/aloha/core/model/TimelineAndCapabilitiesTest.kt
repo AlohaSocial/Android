@@ -24,14 +24,15 @@ class TimelineAndCapabilitiesTest {
     fun `video mode asks for only_video where the server has it`() {
         val filters = TimelineFilters.forMode(FeedMode.Video, capabilities(nextcloud = true))
         assertTrue(filters.onlyVideo)
-        assertEquals(1, OverFetch.multiplier(FeedMode.Video, filters))
+        assertFalse(filters.onlyMedia)
     }
 
     @Test
     fun `without server narrowing Shorts over-fetches hardest`() {
         val filters = TimelineFilters.forMode(FeedMode.Shorts, capabilities(nextcloud = false))
         assertTrue(filters.isEmpty)
-        assertEquals(8, OverFetch.multiplier(FeedMode.Shorts, filters))
+        assertEquals(8, OverFetch.multiplier(FeedMode.Shorts))
+        assertEquals(1, OverFetch.multiplier(FeedMode.Home))
     }
 
     @Test

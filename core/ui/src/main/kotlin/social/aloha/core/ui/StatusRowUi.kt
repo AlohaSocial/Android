@@ -16,6 +16,7 @@ import social.aloha.core.model.Poll
 import social.aloha.core.model.Reaction
 import social.aloha.core.model.Status
 import social.aloha.core.model.StatusPlace
+import social.aloha.core.model.VideoDetails
 import social.aloha.core.model.Visibility
 
 /**
@@ -51,6 +52,8 @@ public data class StatusRowUi(
     val filterWarning: List<String>?,
     val isOwn: Boolean,
     val language: String?,
+    /** What the server knows about the post's video beyond the file: its title, length, views. */
+    val video: VideoDetails? = null,
 ) {
     @Immutable
     public data class AuthorUi(
@@ -147,6 +150,7 @@ public class StatusRowMapper(private val cache: RichTextCache, private val color
             filterWarning = filterWarning,
             isOwn = viewerAccountId != null && shown.account.id == viewerAccountId,
             language = shown.language,
+            video = shown.video,
         )
     }
 

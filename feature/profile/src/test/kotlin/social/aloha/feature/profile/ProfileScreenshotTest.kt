@@ -24,6 +24,7 @@ import social.aloha.core.designsystem.ThemeSettings
 import social.aloha.core.html.RichTextCache
 import social.aloha.core.model.AccountField
 import social.aloha.core.model.InstanceRule
+import social.aloha.core.model.MediaCollection
 import social.aloha.core.model.ProfileHighlights
 import social.aloha.core.navigation.PeopleKind
 import social.aloha.core.testing.StatusSamples
@@ -70,6 +71,7 @@ class ProfileScreenshotTest {
         override fun onReport() = Unit
         override fun onPeople(followers: Boolean) = Unit
         override fun onOpenInBrowser(url: String) = Unit
+        override fun onAlbum(album: MediaCollection) = Unit
     }
 
     @Composable

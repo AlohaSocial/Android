@@ -107,6 +107,12 @@ internal data class ComposerUiState(
     val card: CardUi = CardUi(),
     /** Whether the post is short and plain enough to go out as a card. */
     val cardFits: Boolean = false,
+    /** Whether the post could go out as a story instead: one picture or video and a short caption. */
+    val storyFits: Boolean = false,
+    /** The writer chose to share it as a story, which goes once its day is up. */
+    val asStory: Boolean = false,
+    /** How long the story's picture or card shows for, in seconds. */
+    val storySeconds: Int = 5,
     /** Whether to warn before posting pictures without a description. */
     val warnMissingDescription: Boolean = true,
     /** Whether a short gets `#shorts`; null until the writer is asked, once. */
@@ -128,6 +134,15 @@ internal data class ComposerUiState(
     val canPost: Boolean
         get() = ready && author != null && !posting && !empty && remaining.all { it >= 0 } && (uploaded || canWait) &&
             poll?.ready(maxPollOptionCharacters) != false
+
+    /** A post of its own, not a reply to one or one written again: what a story can be. */
+    val fresh: Boolean get() = !editing && reply == null && replaces == null
+
+    /** The post goes out as a story. */
+    val sharesStory: Boolean get() = asStory && storyFits
+
+    /** A story the writer picks the length of: a picture or a card; a clip plays to its end. */
+    val storyLengthPicked: Boolean get() = sharesStory && attachments.flatten().none { it.isVideo }
 
     /** Every attachment is on the server, ready to be attached. */
     val uploaded: Boolean get() = attachments.flatten().all { it.mediaId != null }

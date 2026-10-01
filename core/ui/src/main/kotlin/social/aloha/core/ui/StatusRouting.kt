@@ -8,6 +8,7 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
@@ -16,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import androidx.core.content.getSystemService
 import androidx.core.net.toUri
+import social.aloha.core.model.Card
 
 /** Where a post sends the person: its thread, a profile by id or handle, a hashtag, or a reply to it. */
 public interface StatusNavigation {
@@ -31,11 +33,32 @@ public interface StatusNavigation {
     /** The composer: a new post, or a reply to [replyToId] when given. */
     public fun openComposer(replyToId: String?)
 
+    /** The composer, for a story; only a server with stories offers it. */
+    public fun openStoryComposer() {}
+
     /** The composer on the reader's own post [statusId]: edited, or deleted and written again when [redraft]. */
     public fun editPost(statusId: String, redraft: Boolean)
 
     /** A report about account [accountId], known as [handle], about its post [statusId] when given. */
     public fun report(accountId: String, handle: String, statusId: String?)
+
+    /** The reader's albums, to put their post [statusId] into; only a server with albums offers it. */
+    public fun addToAlbum(statusId: String) {}
+
+    /** The media viewer on a post's [index]th attachment; without one, the post. */
+    public fun openMedia(statusId: String, index: Int): Unit = openThread(statusId)
+
+    /** The watch page of a post's video; without one, the post. */
+    public fun openVideo(statusId: String): Unit = openThread(statusId)
+
+    /** The reader's own albums. */
+    public fun openAlbums() {}
+
+    /** What is trending with pictures, and who, from Photos. */
+    public fun openPhotoExplore() {}
+
+    /** Album [albumId], called [title]; the reader changes it when it is their [own]. */
+    public fun openAlbum(albumId: String, title: String, own: Boolean) {}
 }
 
 /** A delete the person asked for, of [row]; with [redraft] the post is written again after. */
@@ -48,24 +71,17 @@ public data class DeleteRequest(val row: StatusRowUi, val redraft: Boolean)
  * @param onCopied the link is on the clipboard, which the screen confirms.
  * @param onDeleteAsked the person asked to delete a post, or to write it again, which the screen
  *   confirms first.
+ * @param albums whether the reader's server keeps albums, which the reader's own posts can go into.
  */
 public abstract class RoutedStatusActions(
     private val context: Context,
     private val navigation: () -> StatusNavigation,
     private val onCopied: () -> Unit,
     private val onDeleteAsked: (DeleteRequest) -> Unit,
+    private val albums: () -> Boolean = { false },
 ) : StatusActions {
-    override val menu: Set<StatusMenuItem> = setOf(
-        StatusMenuItem.Share,
-        StatusMenuItem.CopyLink,
-        StatusMenuItem.OpenInBrowser,
-        StatusMenuItem.MuteConversation,
-        StatusMenuItem.Pin,
-        StatusMenuItem.Edit,
-        StatusMenuItem.Redraft,
-        StatusMenuItem.Delete,
-        StatusMenuItem.Report,
-    )
+    override val menu: Set<StatusMenuItem>
+        get() = if (albums()) SHARED + StatusMenuItem.AddToAlbum else SHARED
 
     public abstract fun onMute(row: StatusRowUi)
 
@@ -81,8 +97,8 @@ public abstract class RoutedStatusActions(
         is RichLinkTarget.Web -> navigation().openWeb(target.url)
     }
 
-    // until there is a media viewer the post itself opens; within its own thread that is where the reader is
-    override fun onMedia(row: StatusRowUi, index: Int): Unit = navigation().openThread(row.statusId)
+    // a picture opens in the viewer, at that picture; the rest of the row opens the post
+    override fun onMedia(row: StatusRowUi, index: Int): Unit = navigation().openMedia(row.statusId, index)
 
     override fun onReply(row: StatusRowUi): Unit = navigation().openComposer(row.statusId)
 
@@ -113,10 +129,24 @@ public abstract class RoutedStatusActions(
 
             StatusMenuItem.Report -> navigation().report(row.author.id, row.author.handle, row.statusId)
 
+            StatusMenuItem.AddToAlbum -> navigation().addToAlbum(row.statusId)
+
             else -> Unit
         }
     }
 }
+
+private val SHARED = setOf(
+    StatusMenuItem.Share,
+    StatusMenuItem.CopyLink,
+    StatusMenuItem.OpenInBrowser,
+    StatusMenuItem.MuteConversation,
+    StatusMenuItem.Pin,
+    StatusMenuItem.Edit,
+    StatusMenuItem.Redraft,
+    StatusMenuItem.Delete,
+    StatusMenuItem.Report,
+)
 
 /**
  * Opens [url] in a Custom Tab, the browser's view inside the app. Only web links open: a post can carry
@@ -129,6 +159,32 @@ public fun openInBrowser(context: Context, url: String) {
     } catch (_: ActivityNotFoundException) {
         // no browser on the device: nothing can show the page
     }
+}
+
+/** A link card opens as its link would; a video's goes to an app that plays it, else a Custom Tab. */
+public fun openCard(context: Context, card: Card, actions: StatusActions) {
+    val url = card.url ?: return
+    if (card.playable) openInApp(context, url) else actions.onLink(RichLinkTarget.Web(url))
+}
+
+/**
+ * Hands [url] to an app of its own, such as YouTube's, where one is installed; a browser does not
+ * count. Before Android 11 there is no asking for that, so it opens in a Custom Tab, as it does
+ * where no app claims it.
+ */
+private fun openInApp(context: Context, url: String) {
+    if (!isWeb(url)) return
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        val app = Intent(Intent.ACTION_VIEW, url.toUri())
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REQUIRE_NON_BROWSER)
+        try {
+            context.startActivity(app)
+            return
+        } catch (_: ActivityNotFoundException) {
+            // nothing but browsers: the Custom Tab, below
+        }
+    }
+    openInBrowser(context, url)
 }
 
 private fun isWeb(url: String): Boolean = url.toUri().scheme?.lowercase() in setOf("http", "https")

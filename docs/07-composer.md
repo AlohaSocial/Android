@@ -10,6 +10,7 @@ This is the Apple app's specification, carried over as the product contract for 
 | Processing | Media3 `Transformer` for HEIC/MOV conversion and trim; filters are `ColorMatrix` values. |
 | Uploads | A WorkManager worker in the foreground with a `ProgressStyle` notification on Android 16+ (`setProgress` below). |
 | Server facts | `Idempotency-Key` is honoured for an hour; `scheduled_at` needs five minutes' lead; the place picker stays hidden until the server stores places. |
+| Stories | A "Share as a story" toggle where the server has stories and the post is new and alone (no thread, poll, schedule, reply or edit), with at most 500 characters, holding one picture or video, or nothing but its words drawn as a card (the card's own renderer, square). The medium goes through the composer's own preparation and upload; the text is the caption, which is also how a screen reader reads a card. A picture or a card shows for 5, 10 or 15 s, picked under the post; a clip plays to its end (30 s is sent, which the server clamps). A story never waits in the outbox. Stickers are not built. |
 
 ---
 

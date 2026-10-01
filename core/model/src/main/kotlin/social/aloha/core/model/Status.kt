@@ -63,6 +63,8 @@ public data class Status(
     val archived: Boolean? = null,
     val place: StatusPlace? = null,
     val video: VideoDetails? = null,
+    /** Whether the post was made on the reader's server; null where the server did not say. */
+    val local: Boolean? = null,
 ) {
     /** The status whose content is drawn: for a boost that is the boosted post. */
     val displayed: Status get() = reblog ?: this

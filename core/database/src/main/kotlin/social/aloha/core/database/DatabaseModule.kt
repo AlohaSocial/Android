@@ -56,4 +56,7 @@ internal object DatabaseModule {
 
     @Provides
     fun positionDao(database: CacheDatabase): PositionDao = database.positionDao()
+
+    @Provides
+    fun watchPositionDao(database: CacheDatabase): WatchPositionDao = database.watchPositionDao()
 }

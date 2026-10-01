@@ -31,6 +31,8 @@ import social.aloha.core.data.AccountRepository
 import social.aloha.core.data.compose.Outbox
 import social.aloha.core.data.sync.UnreadCounts
 import social.aloha.core.data.timeline.CacheSweeper
+import social.aloha.core.datastore.ModePreferences
+import social.aloha.core.model.ServerCapabilities
 import social.aloha.core.model.SignedInAccount
 import social.aloha.core.navigation.AccountKey
 import social.aloha.core.navigation.ComposerKey
@@ -83,8 +85,15 @@ class AppViewModel @Inject constructor(
     private val unread: UnreadCounts,
     private val localNotifications: LocalNotifications,
     private val push: PushRegistrar,
+    preferences: ModePreferences,
     @ApplicationContext private val context: Context,
 ) : ViewModel() {
+    /** The modes the navigation shows, for the server of the account in use. */
+    val modes: StateFlow<ModeNavigation> = combine(preferences.modeChoices, accounts.activeAccount) { choices, reader ->
+        val capabilities = reader?.capabilities ?: ServerCapabilities.minimal("")
+        ModeNavigation(choices.wide(capabilities), choices.narrow(capabilities))
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, ModeNavigation())
+
     private val signingInAgain = MutableStateFlow(false)
     private val external = MutableStateFlow<String?>(null)
 

@@ -21,6 +21,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.grid.LazyGridState
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
@@ -100,10 +102,15 @@ internal fun TimelineScreen(
     modifier: Modifier = Modifier,
     snackbars: SnackbarHostState = remember { SnackbarHostState() },
     listState: LazyListState = rememberLazyListState(),
+    gridState: LazyGridState = rememberLazyGridState(),
     title: String = stringResource(R.string.timeline_title),
     navigationIcon: @Composable () -> Unit = {},
     showOptions: Boolean = true,
     onCompose: (() -> Unit)? = null,
+    onAlbums: (() -> Unit)? = null,
+    onExplore: (() -> Unit)? = null,
+    header: @Composable () -> Unit = {},
+    onVideo: (String) -> Unit = {},
 ) {
     Scaffold(
         modifier = modifier.semantics { paneTitle = title },
@@ -111,7 +118,10 @@ internal fun TimelineScreen(
             TopAppBar(
                 title = { Text(title) },
                 navigationIcon = navigationIcon,
-                actions = { if (showOptions) Options(state, actions) },
+                actions = {
+                    PhotosButtons(state.grid, actions::onGrid, onAlbums, onExplore)
+                    if (showOptions) Options(state, actions)
+                },
             )
         },
         snackbarHost = { SnackbarHost(snackbars) },
@@ -127,6 +137,8 @@ internal fun TimelineScreen(
         },
     ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize()) {
+            // what another feature puts atop this timeline, such as Photos' stories
+            header()
             if (state.sources.size > 1) SourceRow(state.source, state.sources, actions::onSource)
             state.trouble?.let { TroubleStrip(it) }
             PullToRefreshBox(
@@ -136,11 +148,7 @@ internal fun TimelineScreen(
             ) {
                 // the app is fully drawn once the reader sees posts, or learns there are none
                 ReportDrawnWhen { state.items.isNotEmpty() || state.loadedOnce }
-                when {
-                    state.items.isNotEmpty() -> Rows(state, actions, rowActions, listState)
-                    state.loadedOnce -> EmptyState(state.source, TimelineSource.Local in state.sources, actions)
-                    else -> Skeleton()
-                }
+                Content(state, actions, rowActions, listState, gridState, onVideo)
                 NewPostsPill(
                     state.pending,
                     state.pendingAvatars,
@@ -150,7 +158,25 @@ internal fun TimelineScreen(
             }
         }
     }
-    ListEffects(state, actions, listState)
+    // a grid keeps its own position and paging; the list's effects follow the list alone
+    if (state.grid != true && state.watched == null) ListEffects(state, actions, listState)
+}
+
+/** The posts as a list or a grid, what an empty timeline says, or their shapes while the first page loads. */
+@Composable
+private fun Content(
+    state: TimelineUiState,
+    actions: TimelineScreenActions,
+    rowActions: StatusActions,
+    listState: LazyListState,
+    gridState: LazyGridState,
+    onVideo: (String) -> Unit,
+) = when {
+    state.items.isNotEmpty() && state.grid == true -> PhotoGrid(state, actions, rowActions, gridState)
+    state.items.isNotEmpty() && state.watched != null -> VideoGrid(state, actions, onVideo, gridState)
+    state.items.isNotEmpty() -> Rows(state, actions, rowActions, listState)
+    state.loadedOnce -> EmptyState(state.source, TimelineSource.Local in state.sources, state.sparse, actions)
+    else -> Skeleton()
 }
 
 @Composable
@@ -262,7 +288,7 @@ internal fun swipeLabel(action: SwipeAction): Int = when (action) {
 }
 
 @Composable
-private fun GapRow(gap: TimelineItem.Gap, actions: TimelineScreenActions) {
+internal fun GapRow(gap: TimelineItem.Gap, actions: TimelineScreenActions) {
     if (gap.loading) {
         ListProgress(size = GAP_PROGRESS)
     } else {
@@ -366,7 +392,7 @@ private fun TroubleStrip(trouble: Trouble) {
 }
 
 @Composable
-private fun EmptyState(source: TimelineSource, canExplore: Boolean, actions: TimelineScreenActions) {
+private fun EmptyState(source: TimelineSource, canExplore: Boolean, sparse: Boolean, actions: TimelineScreenActions) {
     Column(
         Modifier.fillMaxSize().padding(AlohaSpacing.l),
         verticalArrangement = Arrangement.spacedBy(AlohaSpacing.s, Alignment.CenterVertically),
@@ -388,6 +414,14 @@ private fun EmptyState(source: TimelineSource, canExplore: Boolean, actions: Tim
             }
         } else {
             Text(stringResource(R.string.timeline_empty_public), style = MaterialTheme.typography.bodyMedium)
+        }
+        // said once, where it explains the emptiness: the server leaves the narrowing to the device
+        if (sparse) {
+            Text(
+                stringResource(R.string.timeline_empty_sparse),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 }

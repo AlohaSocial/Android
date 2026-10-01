@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ SPDX-FileCopyrightText: 2026 Aloha Social contributors
+  ~ SPDX-License-Identifier: MIT
+-->
+<resources>
+    <!-- Back button of the album screens -->
+    <string name="photos_back">Back</string>
+    <!-- Title of the screen listing albums, named sets of posts with pictures -->
+    <string name="albums_title">Albums</string>
+    <!-- Button and dialog title that make a new album -->
+    <string name="albums_new">New album</string>
+    <!-- Confirms the name of a new album and makes it -->
+    <string name="albums_create">Create</string>
+    <!-- Menu item and dialog title that rename an album -->
+    <string name="albums_rename">Rename</string>
+    <!-- Confirms an album's new name -->
+    <string name="albums_rename_confirm">Save</string>
+    <!-- Menu item and confirm button that delete an album -->
+    <string name="albums_delete">Delete</string>
+    <!-- Title of the question before an album is deleted: %s is its name -->
+    <string name="albums_delete_title">Delete “%s”?</string>
+    <!-- Text of the question before an album is deleted -->
+    <string name="albums_delete_body">The album goes; the posts in it stay.</string>
+    <!-- Closes the album name dialog without a change -->
+    <string name="albums_cancel">Cancel</string>
+    <!-- Label of the album name field -->
+    <string name="albums_name">Name</string>
+    <!-- Label of the album description field -->
+    <string name="albums_description">What it holds (optional)</string>
+    <!-- Name shown for an album that has none -->
+    <string name="albums_untitled">Untitled album</string>
+    <!-- How many posts an album holds -->
+    <plurals name="albums_posts">
+        <item quantity="one">%d post</item>
+        <item quantity="other">%d posts</item>
+    </plurals>
+    <!-- Button with an album's rename and delete, read aloud: %s is the album's name -->
+    <string name="albums_options">Options for %s</string>
+    <!-- Shown when the reader has no albums -->
+    <string name="albums_none_own">No albums yet. Make one, then add your posts with pictures to it.</string>
+    <!-- Shown when another account has no albums -->
+    <string name="albums_none">No albums.</string>
+    <!-- Shown when albums or their posts could not be loaded -->
+    <string name="albums_failed">The albums could not be loaded.</string>
+    <!-- Tries loading the albums again -->
+    <string name="albums_retry">Try again</string>
+    <!-- Shown when the server did not take a change to an album -->
+    <string name="albums_change_failed">The album could not be changed.</string>
+    <!-- Shown in an album without posts -->
+    <string name="album_empty">No posts in this album yet.</string>
+    <!-- A post in an album, read aloud: %s is who posted it -->
+    <string name="album_post">Post by %s</string>
+    <!-- Read aloud for a post in an album whose picture has no description -->
+    <string name="album_post_no_alt">no description</string>
+    <!-- Read aloud for a post whose picture is marked sensitive and hidden behind its blur -->
+    <string name="album_post_sensitive">marked sensitive</string>
+    <!-- What tapping a post in an album does, read aloud -->
+    <string name="album_open">open the post</string>
+    <!-- Takes a post out of an album -->
+    <string name="album_remove">Remove from album</string>
+    <!-- Title of Photos' Explore, what is trending with pictures and who is popular -->
+    <string name="explore_title">Explore</string>
+    <!-- Heading of the pictures trending on the reader's server -->
+    <string name="explore_trending">Trending</string>
+    <!-- Heading of the pictures trending across the servers the reader's server knows -->
+    <string name="explore_network">Across the network</string>
+    <!-- Heading of the trending hashtags -->
+    <string name="explore_tags">Hashtags</string>
+    <!-- Heading of the popular accounts -->
+    <string name="explore_people">People</string>
+    <!-- Shown when nothing is trending -->
+    <string name="explore_empty">Nothing is trending right now.</string>
+    <!-- Title of the screen that puts a post into an album -->
+    <string name="add_to_album_title">Add to album</string>
+    <!-- Read aloud for an album the post was just added to -->
+    <string name="add_to_album_added">added</string>
+</resources>

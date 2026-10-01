@@ -74,8 +74,16 @@
     <string name="status_action_unchoose">Remove choice %s</string>
     <!-- Screen-reader action that opens the post a post quotes -->
     <string name="status_action_open_quote">Open quoted post</string>
+    <!-- A mode's posts from the people the reader follows, on its tabs or chips -->
+    <string name="source_home">Following</string>
+    <!-- A mode's posts from everyone on the reader's own server -->
+    <string name="source_local">This server</string>
+    <!-- A mode's posts from every server the reader's server knows of -->
+    <string name="source_federated">Everywhere</string>
     <!-- Screen-reader action that opens a post's link preview; %s is the link's title or address -->
     <string name="status_action_open_card">Open link: %s</string>
+    <!-- Screen reader action on a post's video link card, which plays it in its own app: %s is its title -->
+    <string name="status_action_play_card">Play video: %s</string>
     <!-- Read aloud for a quoted post; %s is the name of its author -->
     <string name="status_quote">Quoted post by %s</string>
     <!-- Read aloud for a place tagged on a post; %s is the place -->
@@ -123,6 +131,21 @@
     <string name="status_menu_unmute_conversation">Unmute conversation</string>
     <!-- Menu item: report a post to its server's moderators -->
     <string name="status_menu_report">Report post</string>
+    <!-- A video's length, read aloud on its card: %s is the length as a clock, such as 4:05 -->
+    <string name="video_length">%s long</string>
+    <!-- How often a video was watched, on its card -->
+    <plurals name="video_views">
+        <item quantity="one">%d view</item>
+        <item quantity="other">%d views</item>
+    </plurals>
+    <!-- How far the reader got in a video, read aloud on its card: %d is the percentage -->
+    <string name="video_watched">%d%% watched</string>
+    <!-- Read aloud for a video card whose video is marked sensitive and hidden behind its blur -->
+    <string name="video_sensitive">marked sensitive</string>
+    <!-- Title of a video whose post says nothing at all -->
+    <string name="video_untitled">Video</string>
+    <!-- Menu item on one's own post with pictures: put it into one of the reader's albums -->
+    <string name="status_menu_add_to_album">Add to album</string>
     <!-- Menu item on one's own post: change it -->
     <string name="status_menu_edit">Edit</string>
     <!-- Menu item on one's own post: delete it -->

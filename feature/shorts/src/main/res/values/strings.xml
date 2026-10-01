@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ SPDX-FileCopyrightText: 2026 Aloha Social contributors
+  ~ SPDX-License-Identifier: MIT
+-->
+<resources>
+    <!-- Title of the Shorts mode, short vertical videos one per screen -->
+    <string name="shorts_title">Shorts</string>
+    <!-- Shown when there are no shorts to show -->
+    <string name="shorts_empty">No shorts here yet.</string>
+    <!-- A short, read aloud: %1$s is who posted it, %2$s what they wrote -->
+    <string name="shorts_page">Short by %1$s. %2$s</string>
+    <!-- Over a sensitive short, which plays only once tapped -->
+    <string name="shorts_sensitive">Sensitive. Tap to play.</string>
+    <!-- Screen reader action that shows and plays a sensitive short, as a tap does -->
+    <string name="shorts_show">Show and play</string>
+    <!-- Favourites the short -->
+    <string name="shorts_favourite">Favourite</string>
+    <!-- Takes the favourite back -->
+    <string name="shorts_unfavourite">Remove favourite</string>
+    <!-- Boosts the short -->
+    <string name="shorts_boost">Boost</string>
+    <!-- Takes the boost back -->
+    <string name="shorts_unboost">Undo boost</string>
+    <!-- Opens the short's replies -->
+    <plurals name="shorts_comments">
+        <item quantity="one">%d comment</item>
+        <item quantity="other">%d comments</item>
+    </plurals>
+    <!-- Shares the short's address -->
+    <string name="shorts_share">Share</string>
+    <!-- Opens the short's menu -->
+    <string name="shorts_more">More</string>
+    <!-- Pauses the short and shows where it is -->
+    <string name="shorts_pause">Pause</string>
+    <!-- Plays the paused short again -->
+    <string name="shorts_play">Play</string>
+    <!-- The paused short's position, read aloud on its slider -->
+    <string name="shorts_position">Position in the short</string>
+    <!-- Opens the profile of who posted the short: %s is their name -->
+    <string name="shorts_profile">View %s\'s profile</string>
+    <!-- Opens the short's post with its replies -->
+    <string name="shorts_open">Open post</string>
+    <!-- Reports the short -->
+    <string name="shorts_report">Report</string>
+    <!-- Turns the shorts' sound off -->
+    <string name="shorts_mute">Turn sound off</string>
+    <!-- Turns the shorts' sound on -->
+    <string name="shorts_unmute">Turn sound on</string>
+</resources>

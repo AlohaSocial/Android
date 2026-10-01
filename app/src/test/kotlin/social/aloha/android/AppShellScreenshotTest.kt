@@ -4,6 +4,7 @@
 package social.aloha.android
 
 import android.app.Application
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
@@ -22,6 +23,7 @@ import org.robolectric.annotation.GraphicsMode
 import social.aloha.core.designsystem.AlohaTheme
 import social.aloha.core.designsystem.ThemeMode
 import social.aloha.core.designsystem.ThemeSettings
+import social.aloha.feature.timeline.TimelineFeed
 
 /** The empty shell on a phone (navigation bar) and a tablet (navigation rail), and the accounts sheet. */
 @RunWith(RobolectricTestRunner::class)
@@ -67,10 +69,17 @@ class AppShellScreenshotTest {
     private fun capture(name: String, mode: ThemeMode = ThemeMode.Light, select: String? = null) {
         compose.setContent {
             AlohaTheme(ThemeSettings(mode = mode)) {
-                AlohaApp("a", "1", home = { _, _ -> Placeholder(stringResource(R.string.destination_home)) })
+                AlohaApp("a", "1", timeline = { feed, _, _ -> Placeholder(feed.label()) }, nowPlaying = {})
             }
         }
         select?.let { compose.onNodeWithText(it).performClick() }
         compose.onRoot().captureRoboImage("src/test/screenshots/$name.png")
     }
+}
+
+/** What the stand-in for a timeline says: which of them it stands for. */
+@Composable
+private fun TimelineFeed.label(): String = when (this) {
+    is TimelineFeed.Mode -> mode.name
+    else -> stringResource(R.string.destination_home)
 }

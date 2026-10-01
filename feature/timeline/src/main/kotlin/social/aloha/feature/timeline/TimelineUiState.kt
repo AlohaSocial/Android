@@ -6,6 +6,7 @@ package social.aloha.feature.timeline
 import androidx.compose.runtime.Immutable
 import java.time.Instant
 import social.aloha.core.data.Trouble
+import social.aloha.core.model.FeedMode
 import social.aloha.core.model.ServerCapabilities
 import social.aloha.core.model.SwipeAction
 import social.aloha.core.model.TimelineSource
@@ -13,7 +14,13 @@ import social.aloha.core.ui.StatusRowUi
 
 /** What a timeline screen reads: home, from the source chosen for it, or one hashtag's public posts. */
 public sealed interface TimelineFeed {
+    /** The mode the timeline is read in, which is part of its cache key. */
+    public val mode: FeedMode get() = FeedMode.Home
+
     public data object Home : TimelineFeed
+
+    /** A media mode's timeline, from the source chosen for that mode. */
+    public data class Mode(override val mode: FeedMode) : TimelineFeed
 
     public data class Tag(val name: String) : TimelineFeed
 }
@@ -59,6 +66,14 @@ internal data class TimelineUiState(
     val trouble: Trouble? = null,
     val loadingOlder: Boolean = false,
     val reachedEnd: Boolean = false,
+    /** A media mode the server cannot narrow: the device filters, so pages may be sparse. */
+    val sparse: Boolean = false,
+    /** Photos can be a grid or a feed; null for a timeline that is always a list. */
+    val grid: Boolean? = null,
+    /** Video's cards, with how far the reader got in each by post; null for a timeline of rows. */
+    val watched: Map<String, Double>? = null,
+    /** Whether the reader's server keeps albums. */
+    val albums: Boolean = false,
     val showBoosts: Boolean = true,
     val showReplies: Boolean = true,
     val now: Instant = Instant.EPOCH,
@@ -81,6 +96,7 @@ internal interface TimelineScreenActions {
     fun onSource(source: TimelineSource)
     fun onShowBoosts(show: Boolean)
     fun onShowReplies(show: Boolean)
+    fun onGrid(grid: Boolean)
     fun onScrolled(rowId: String, offset: Int)
     fun onNearEnd()
     fun onFillGap(gapId: String)

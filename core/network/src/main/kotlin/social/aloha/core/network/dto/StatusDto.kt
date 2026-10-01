@@ -69,6 +69,7 @@ internal data class StatusDto(
     @Serializable(with = OptionalBoolSerializer::class) val archived: Boolean? = null,
     @Serializable(with = StatusPlaceOrNull::class) val place: StatusPlaceDto? = null,
     @Serializable(with = VideoDetailsOrNull::class) val video: VideoDetailsDto? = null,
+    @Serializable(with = OptionalBoolSerializer::class) val local: Boolean? = null,
 )
 
 internal object StatusOrNull : KSerializer<StatusDto?> by OrNullSerializer(StatusDto.serializer())
@@ -115,4 +116,5 @@ internal fun StatusDto.toDomain(): Status = Status(
     archived = archived,
     place = place?.toDomain(),
     video = video?.toDomain(),
+    local = local,
 )

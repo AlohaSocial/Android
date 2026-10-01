@@ -16,6 +16,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.resetMain
@@ -41,14 +42,17 @@ import social.aloha.core.data.timeline.StatusRepository
 import social.aloha.core.data.timeline.TimelinePositions
 import social.aloha.core.data.timeline.TimelineRepository
 import social.aloha.core.data.timeline.Toggle
+import social.aloha.core.data.video.WatchPositions
 import social.aloha.core.database.AccountsDatabase
 import social.aloha.core.database.CacheDatabase
 import social.aloha.core.datastore.AccountSettingsStore
 import social.aloha.core.datastore.AppPreferences
+import social.aloha.core.datastore.ModePreferences
 import social.aloha.core.datastore.TokenVault
 import social.aloha.core.html.RichTextCache
 import social.aloha.core.media.ImagePrefetcher
 import social.aloha.core.model.AccessToken
+import social.aloha.core.model.FeedMode
 import social.aloha.core.model.ServerCapabilities
 import social.aloha.core.model.SwipeAction
 import social.aloha.core.model.TimelineKey
@@ -81,6 +85,7 @@ class TimelineViewModelTest {
     private val statuses = StatusRepository(cache.statusDao(), clock)
     private val settings = AccountSettingsStore(InMemoryDataStore(emptyMap()))
     private val preferences = AppPreferences(InMemoryDataStore(emptyPreferences()))
+    private val modes = ModePreferences(InMemoryDataStore(emptyPreferences()))
     private val signals = TimelineSignals()
     private val timeline = NumberedTimeline().apply { newest = 100 }
     private val server = MockWebServer().apply { dispatcher = timeline }
@@ -116,9 +121,11 @@ class TimelineViewModelTest {
         TimelinePositions(cache.positionDao(), clients),
         settings,
         preferences,
+        modes,
         clock,
         ApplicationProvider.getApplicationContext<Context>().let { ImagePrefetcher(it, ImageLoader(it)) },
         signals,
+        WatchPositions(clients, cache.watchPositionDao(), statuses, clock),
     ).apply { onColors(RichTextColors(Color.Blue, Color.Gray, Color.LightGray)) }
 
     @After
@@ -240,6 +247,32 @@ class TimelineViewModelTest {
                 TimelineKey.home(TimelineSource.Hashtag("surf")).storageKey,
             ).isNotEmpty(),
         )
+    }
+
+    @Test
+    fun `a mode reads its own kind of post from a source of its own, with nothing of home's hidden`() = runBlocking {
+        timeline.media = { if (it % 2 == 0) listOf(NumberedTimeline.image(it)) else emptyList() }
+        val account = accounts.activeAccount.filterNotNull().first()
+        settings.update(account.id) { it.copy(showBoosts = false, homeSource = TimelineSource.Federated) }
+        val photos = create(TimelineFeed.Mode(FeedMode.Photos))
+        val state = withTimeout(10.seconds) { photos.uiState.first { it.loadedOnce && it.items.isNotEmpty() } }
+        assertEquals((100 downTo 62 step 2).map(Int::toString), state.postIds())
+        // home's choice of source is home's: the mode starts on the people followed
+        assertEquals(TimelineSource.Home, state.source)
+        assertTrue(state.showBoosts)
+        // this server narrows nothing, so an empty photos timeline would say why
+        assertTrue(state.sparse)
+        photos.onSource(TimelineSource.Local)
+        withTimeout(10.seconds) { photos.uiState.first { it.source == TimelineSource.Local } }
+        val stored = settings.settings(account.id).first()
+        assertEquals(TimelineSource.Local, stored.modeSources[FeedMode.Photos.key])
+        assertEquals(TimelineSource.Federated, stored.homeSource)
+        // photos start as a grid, and a feed chosen instead is kept; home is always a list
+        assertEquals(true, state.grid)
+        photos.onGrid(false)
+        withTimeout(10.seconds) { photos.uiState.first { it.grid == false } }
+        assertEquals(false, modes.photosGrid.first())
+        assertEquals(null, await { it.loadedOnce }.grid)
     }
 
     @Test

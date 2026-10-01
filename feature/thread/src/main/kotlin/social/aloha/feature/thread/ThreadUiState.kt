@@ -51,6 +51,8 @@ internal data class ThreadUiState(
     val actionFailed: Boolean = false,
     /** Whether the reader's server takes emoji reactions, which the focused post then offers. */
     val canReact: Boolean = false,
+    /** Whether the reader's server keeps albums, which the reader's own posts can go into. */
+    val albums: Boolean = false,
 )
 
 /** What a pushed list of the focused post shows. */
