@@ -7,6 +7,10 @@ import android.content.Intent
 import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
+import android.view.KeyEvent
+import android.view.KeyboardShortcutGroup
+import android.view.KeyboardShortcutInfo
+import android.view.Menu
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -82,6 +86,22 @@ class MainActivity : ComponentActivity() {
     override fun onUserInteraction() {
         super.onUserInteraction()
         sync.noteInteraction()
+    }
+
+    /** What the system's keyboard shortcuts helper lists, for Meta+/ and the timeline's "?". */
+    override fun onProvideKeyboardShortcuts(data: MutableList<KeyboardShortcutGroup>, menu: Menu?, deviceId: Int) {
+        super.onProvideKeyboardShortcuts(data, menu, deviceId)
+        val keys = listOf(
+            R.string.keys_next to KeyEvent.KEYCODE_J,
+            R.string.keys_previous to KeyEvent.KEYCODE_K,
+            R.string.keys_open to KeyEvent.KEYCODE_O,
+            R.string.keys_favourite to KeyEvent.KEYCODE_F,
+            R.string.keys_favourite to KeyEvent.KEYCODE_L,
+            R.string.keys_boost to KeyEvent.KEYCODE_B,
+            R.string.keys_reply to KeyEvent.KEYCODE_R,
+            R.string.keys_compose to KeyEvent.KEYCODE_N,
+        ).map { (label, key) -> KeyboardShortcutInfo(getString(label), key, 0) }
+        data += KeyboardShortcutGroup(getString(R.string.keys_timeline), keys)
     }
 
     override fun onNewIntent(intent: Intent) {

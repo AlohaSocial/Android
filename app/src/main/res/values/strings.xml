@@ -82,4 +82,20 @@
     <string name="shortcut_post_as">Post as %s</string>
     <!-- In another app's share sheet: opens the shared post in this app instead of writing a new one -->
     <string name="open_in_aloha">Open in Aloha</string>
+    <!-- Heading of the app's keys in the system's keyboard shortcuts list -->
+    <string name="keys_timeline">Timeline</string>
+    <!-- Keyboard shortcut J: selects the next post in a timeline -->
+    <string name="keys_next">Next post</string>
+    <!-- Keyboard shortcut K: selects the previous post -->
+    <string name="keys_previous">Previous post</string>
+    <!-- Keyboard shortcut O (or Enter): opens the selected post's thread -->
+    <string name="keys_open">Open post</string>
+    <!-- Keyboard shortcuts F and L: favourite the selected post -->
+    <string name="keys_favourite">Favourite</string>
+    <!-- Keyboard shortcut B: boosts the selected post -->
+    <string name="keys_boost">Boost</string>
+    <!-- Keyboard shortcut R: replies to the selected post -->
+    <string name="keys_reply">Reply</string>
+    <!-- Keyboard shortcut N: starts a new post -->
+    <string name="keys_compose">New post</string>
 </resources>
