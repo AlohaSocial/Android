@@ -18,10 +18,12 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
+import social.aloha.core.data.photos.PhotoExplore
 import social.aloha.core.designsystem.AlohaTheme
 import social.aloha.core.designsystem.ThemeMode
 import social.aloha.core.designsystem.ThemeSettings
 import social.aloha.core.model.MediaCollection
+import social.aloha.core.model.Tag
 import social.aloha.core.testing.StatusSamples
 
 @RunWith(RobolectricTestRunner::class)
@@ -70,6 +72,27 @@ class AlbumsScreenshotTest {
     fun album() = capture("album") {
         val posts = listOf(StatusSamples.gallery, StatusSamples.sensitive, StatusSamples.gallery.copy(id = "g2"))
         AlbumScreen(AlbumUiState(posts, loading = false), "Beach", {}, {}, {}, {}, SnackbarHostState())
+    }
+
+    @Test
+    fun explore() = capture("photos-explore") {
+        val photos = listOf(StatusSamples.gallery, StatusSamples.sensitive, StatusSamples.gallery.copy(id = "g2"))
+        PhotoExploreScreen(
+            PhotoExploreUiState(
+                PhotoExplore(
+                    trending = photos,
+                    tags = listOf(Tag("beach"), Tag("sunset"), Tag("filmphotography")),
+                    people = listOf(StatusSamples.alice, StatusSamples.bob),
+                    network = photos.take(2).map { it.copy(id = "n" + it.id) },
+                ),
+                loading = false,
+            ),
+            {},
+            {},
+            {},
+            {},
+            {},
+        )
     }
 
     @Test

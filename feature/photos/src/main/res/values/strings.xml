@@ -53,10 +53,24 @@
     <string name="album_post">Post by %s</string>
     <!-- Read aloud for a post in an album whose picture has no description -->
     <string name="album_post_no_alt">no description</string>
+    <!-- Read aloud for a post whose picture is marked sensitive and hidden behind its blur -->
+    <string name="album_post_sensitive">marked sensitive</string>
     <!-- What tapping a post in an album does, read aloud -->
     <string name="album_open">open the post</string>
     <!-- Takes a post out of an album -->
     <string name="album_remove">Remove from album</string>
+    <!-- Title of Photos' Explore, what is trending with pictures and who is popular -->
+    <string name="explore_title">Explore</string>
+    <!-- Heading of the pictures trending on the reader's server -->
+    <string name="explore_trending">Trending</string>
+    <!-- Heading of the pictures trending across the servers the reader's server knows -->
+    <string name="explore_network">Across the network</string>
+    <!-- Heading of the trending hashtags -->
+    <string name="explore_tags">Hashtags</string>
+    <!-- Heading of the popular accounts -->
+    <string name="explore_people">People</string>
+    <!-- Shown when nothing is trending -->
+    <string name="explore_empty">Nothing is trending right now.</string>
     <!-- Title of the screen that puts a post into an album -->
     <string name="add_to_album_title">Add to album</string>
     <!-- Read aloud for an album the post was just added to -->

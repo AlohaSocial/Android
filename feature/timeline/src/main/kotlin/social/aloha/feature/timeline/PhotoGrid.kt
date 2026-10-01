@@ -138,15 +138,29 @@ private fun Cell(row: StatusRowUi, onOpen: () -> Unit) {
     }
 }
 
-/** The reader's albums, from Photos. */
+/**
+ * Photos' own toolbar buttons, each where it applies: Explore, the reader's albums, and the switch
+ * between grid and feed ([grid] is null for a timeline that is always a list).
+ */
 @Composable
-internal fun AlbumsButton(onAlbums: () -> Unit) {
-    IconButton(onClick = onAlbums) { Icon(AlohaIcons.Album, stringResource(R.string.photos_albums)) }
+internal fun PhotosButtons(
+    grid: Boolean?,
+    onGrid: (Boolean) -> Unit,
+    onAlbums: (() -> Unit)?,
+    onExplore: (() -> Unit)?,
+) {
+    onExplore?.let {
+        IconButton(onClick = it) { Icon(AlohaIcons.Explore, stringResource(R.string.photos_explore)) }
+    }
+    onAlbums?.let {
+        IconButton(onClick = it) { Icon(AlohaIcons.Album, stringResource(R.string.photos_albums)) }
+    }
+    grid?.let { LayoutToggle(it, onGrid) }
 }
 
 /** Switches Photos between its grid and its feed, naming what a tap switches to. */
 @Composable
-internal fun LayoutToggle(grid: Boolean, onGrid: (Boolean) -> Unit) {
+private fun LayoutToggle(grid: Boolean, onGrid: (Boolean) -> Unit) {
     IconButton(onClick = { onGrid(!grid) }) {
         if (grid) {
             Icon(AlohaIcons.Feed, stringResource(R.string.photos_show_feed))

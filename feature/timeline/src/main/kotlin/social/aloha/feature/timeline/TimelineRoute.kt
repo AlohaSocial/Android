@@ -100,6 +100,7 @@ public fun TimelineRoute(
         showOptions = feed == TimelineFeed.Home,
         onCompose = if (feed == TimelineFeed.Home) ({ nav.openComposer(null) }) else null,
         onAlbums = if (feed.mode == FeedMode.Photos && state.albums) ({ nav.openAlbums() }) else null,
+        onExplore = if (feed.mode == FeedMode.Photos) ({ nav.openPhotoExplore() }) else null,
     )
 
     deleting?.let { request ->

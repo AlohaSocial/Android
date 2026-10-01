@@ -68,6 +68,7 @@ import social.aloha.core.navigation.NotificationRequestsKey
 import social.aloha.core.navigation.NotificationsKey
 import social.aloha.core.navigation.PeopleKey
 import social.aloha.core.navigation.PeopleKind
+import social.aloha.core.navigation.PhotoExploreKey
 import social.aloha.core.navigation.PhotosKey
 import social.aloha.core.navigation.ProfileKey
 import social.aloha.core.navigation.ReportKey
@@ -93,6 +94,7 @@ import social.aloha.feature.notifications.RequestsRoute
 import social.aloha.feature.photos.AddToAlbumRoute
 import social.aloha.feature.photos.AlbumRoute
 import social.aloha.feature.photos.AlbumsRoute
+import social.aloha.feature.photos.PhotoExploreRoute
 import social.aloha.feature.profile.EditProfileRoute
 import social.aloha.feature.profile.PeopleRoute
 import social.aloha.feature.profile.ProfileNavigation
@@ -219,6 +221,10 @@ fun AlohaApp(
 
             override fun openAlbums() {
                 backStack.push(AlbumsKey(readerId))
+            }
+
+            override fun openPhotoExplore() {
+                backStack.push(PhotoExploreKey(readerId))
             }
 
             override fun openAlbum(albumId: String, title: String, own: Boolean) {
@@ -370,6 +376,9 @@ fun AlohaApp(
                     AlbumRoute(it, onOpen = statusNavigation::openThread, onBack = { backStack.remove(it) })
                 }
                 entry<AddToAlbumKey> { AddToAlbumRoute(it, onBack = { backStack.remove(it) }) }
+                entry<PhotoExploreKey>(metadata = ListDetailSceneStrategy.detailPane()) {
+                    PhotoExploreRoute(it, statusNavigation, onBack = { backStack.remove(it) })
+                }
                 entry<ThreadKey>(metadata = ListDetailSceneStrategy.detailPane()) { ThreadRoute(it, statusNavigation) }
                 entry<StatusListKey>(metadata = ListDetailSceneStrategy.detailPane()) {
                     StatusListRoute(it, statusNavigation)

@@ -51,6 +51,8 @@
     <string name="timeline_empty_explore">See what\'s happening on this server</string>
     <!-- Text of an empty public timeline -->
     <string name="timeline_empty_public">No posts here yet.</string>
+    <!-- Button in the photos toolbar that opens what is trending with pictures, hashtags and people -->
+    <string name="photos_explore">Explore</string>
     <!-- Button in the photos toolbar that opens the reader's albums -->
     <string name="photos_albums">Albums</string>
     <!-- Button in the photos toolbar that shows the photos as a grid of squares -->

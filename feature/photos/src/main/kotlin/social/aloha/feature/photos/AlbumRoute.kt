@@ -3,18 +3,12 @@
 
 package social.aloha.feature.photos
 
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -27,21 +21,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.CustomAccessibilityAction
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.clearAndSetSemantics
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.paneTitle
-import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -61,7 +47,6 @@ import social.aloha.core.data.photos.Albums
 import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.model.Status
 import social.aloha.core.navigation.AlbumKey
-import social.aloha.core.ui.MediaImage
 
 @Immutable
 internal data class AlbumUiState(
@@ -175,7 +160,7 @@ internal fun AlbumScreen(
         snackbarHost = { SnackbarHost(snackbars) },
     ) { padding ->
         LazyVerticalGrid(GridCells.Adaptive(CELL), Modifier.padding(padding).fillMaxSize()) {
-            items(state.posts, key = { it.id }) { post -> Square(post, onOpen, onRemove) }
+            items(state.posts, key = { it.id }) { post -> PhotoSquare(post, onOpen, onRemove) }
             item(span = { GridItemSpan(maxLineSpan) }, key = "footer") {
                 ListFooter(
                     loading = state.loading,
@@ -188,56 +173,3 @@ internal fun AlbumScreen(
         }
     }
 }
-
-/**
- * A post in the album. A tap opens it; a long press, or the screen reader's action, takes it out of an
- * album of the reader's own.
- */
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-private fun Square(post: Status, onOpen: (String) -> Unit, onRemove: ((String) -> Unit)?) {
-    val shown = post.displayed
-    val first = shown.mediaAttachments.firstOrNull()
-    var menu by remember { mutableStateOf(false) }
-    val label = listOfNotNull(
-        stringResource(R.string.album_post, shown.account.bestDisplayName),
-        first?.description?.takeIf { it.isNotBlank() } ?: stringResource(R.string.album_post_no_alt),
-    ).joinToString(", ")
-    val open = stringResource(R.string.album_open)
-    val remove = stringResource(R.string.album_remove)
-    Box(
-        Modifier.aspectRatio(1f).padding(GAP)
-            .combinedClickable(onClick = { onOpen(post.id) }, onLongClick = onRemove?.let { { menu = true } })
-            .clearAndSetSemantics {
-                contentDescription = label
-                role = Role.Button
-                onClick(open) {
-                    onOpen(post.id)
-                    true
-                }
-                if (onRemove != null) {
-                    customActions = listOf(
-                        CustomAccessibilityAction(remove) {
-                            onRemove(post.id)
-                            true
-                        },
-                    )
-                }
-            },
-    ) {
-        first?.let { MediaImage(it, contentDescription = null, modifier = Modifier.fillMaxSize(), fitToAspect = false) }
-        DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-            DropdownMenuItem(
-                text = { Text(remove) },
-                leadingIcon = { Icon(AlohaIcons.Remove, contentDescription = null) },
-                onClick = {
-                    menu = false
-                    onRemove?.invoke(post.id)
-                },
-            )
-        }
-    }
-}
-
-private val CELL = 112.dp
-private val GAP = 1.dp

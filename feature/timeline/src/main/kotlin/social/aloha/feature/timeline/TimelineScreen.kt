@@ -108,6 +108,7 @@ internal fun TimelineScreen(
     showOptions: Boolean = true,
     onCompose: (() -> Unit)? = null,
     onAlbums: (() -> Unit)? = null,
+    onExplore: (() -> Unit)? = null,
 ) {
     Scaffold(
         modifier = modifier.semantics { paneTitle = title },
@@ -116,8 +117,7 @@ internal fun TimelineScreen(
                 title = { Text(title) },
                 navigationIcon = navigationIcon,
                 actions = {
-                    onAlbums?.let { AlbumsButton(it) }
-                    state.grid?.let { LayoutToggle(it, actions::onGrid) }
+                    PhotosButtons(state.grid, actions::onGrid, onAlbums, onExplore)
                     if (showOptions) Options(state, actions)
                 },
             )

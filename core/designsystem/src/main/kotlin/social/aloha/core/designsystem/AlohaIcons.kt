@@ -42,6 +42,7 @@ import androidx.compose.material.icons.outlined.EditNote
 import androidx.compose.material.icons.outlined.EmojiEmotions
 import androidx.compose.material.icons.outlined.ExpandLess
 import androidx.compose.material.icons.outlined.ExpandMore
+import androidx.compose.material.icons.outlined.Explore
 import androidx.compose.material.icons.outlined.FilterAlt
 import androidx.compose.material.icons.outlined.Flag
 import androidx.compose.material.icons.outlined.FormatQuote
@@ -141,6 +142,9 @@ public object AlohaIcons {
 
     /** An album, Pixelfed's collection of posts with pictures. */
     public val Album: ImageVector = Icons.Outlined.PhotoAlbum
+
+    /** What is trending, and who is popular. */
+    public val Explore: ImageVector = Icons.Outlined.Explore
     public val Sensitive: ImageVector = Icons.Outlined.VisibilityOff
 
     /** A post holding more than one picture, on its square in a grid. */

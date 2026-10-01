@@ -106,3 +106,7 @@ public data class AlbumKey(val readerId: String, val albumId: String, val title:
 /** Picks which of [readerId]'s albums the reader's post [statusId] goes into. */
 @Serializable
 public data class AddToAlbumKey(val readerId: String, val statusId: String) : NavKey
+
+/** Photos' Explore: what is trending with pictures, hashtags and people, as [readerId] sees them. */
+@Serializable
+public data class PhotoExploreKey(val readerId: String) : NavKey

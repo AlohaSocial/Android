@@ -43,6 +43,9 @@ public interface StatusNavigation {
     /** The reader's own albums. */
     public fun openAlbums() {}
 
+    /** What is trending with pictures, and who, from Photos. */
+    public fun openPhotoExplore() {}
+
     /** Album [albumId], called [title]; the reader changes it when it is their [own]. */
     public fun openAlbum(albumId: String, title: String, own: Boolean) {}
 }
