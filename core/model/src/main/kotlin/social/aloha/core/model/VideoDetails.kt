@@ -12,6 +12,9 @@ import kotlinx.serialization.Serializable
  *
  * @property support the author's "support me" text, where they wrote one.
  * @property download whether the author allows downloading; null when the server did not say.
+ * @property title what the video is called, which a post has no place for but a watch page heads with.
+ * @property duration seconds, where the video said.
+ * @property captions the subtitles the video names, by language; addresses on the video's own server.
  */
 @Serializable
 public data class VideoDetails(
@@ -25,7 +28,14 @@ public data class VideoDetails(
     val support: String? = null,
     val download: Boolean? = null,
     val chapters: List<VideoChapter> = emptyList(),
+    val title: String? = null,
+    val duration: Double? = null,
+    val captions: List<VideoCaption> = emptyList(),
 )
+
+/** One subtitle file of a video: WebVTT at [url], in [language] (a BCP 47 tag, as PeerTube names them). */
+@Serializable
+public data class VideoCaption(val language: String, val url: String)
 
 /** One chapter of a video; [start] in seconds from the beginning. */
 @Serializable
