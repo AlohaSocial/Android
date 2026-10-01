@@ -12,6 +12,8 @@ dependencies {
     implementation(libs.androidx.media3.ui)
     // the media session: playing on in the background, with controls on the lock screen and headphones
     implementation(libs.androidx.media3.session)
+    // the window's posture: a foldable half open like a laptop
+    implementation(libs.compose.material3.adaptive)
     testImplementation(project(":core:testing"))
     testImplementation(project(":core:database"))
     testImplementation(libs.kotlinx.coroutines.test)
