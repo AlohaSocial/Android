@@ -109,6 +109,7 @@ internal fun TimelineScreen(
     onCompose: (() -> Unit)? = null,
     onAlbums: (() -> Unit)? = null,
     onExplore: (() -> Unit)? = null,
+    header: @Composable () -> Unit = {},
 ) {
     Scaffold(
         modifier = modifier.semantics { paneTitle = title },
@@ -135,6 +136,8 @@ internal fun TimelineScreen(
         },
     ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize()) {
+            // what another feature puts atop this timeline, such as Photos' stories
+            header()
             if (state.sources.size > 1) SourceRow(state.source, state.sources, actions::onSource)
             state.trouble?.let { TroubleStrip(it) }
             PullToRefreshBox(

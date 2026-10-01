@@ -103,6 +103,7 @@ import social.aloha.feature.profile.ReportRoute
 import social.aloha.feature.settings.SettingsPlaceholder
 import social.aloha.feature.settings.SettingsRoute
 import social.aloha.feature.settings.SettingsSectionRoute
+import social.aloha.feature.stories.StoriesRail
 import social.aloha.feature.thread.StatusListRoute
 import social.aloha.feature.thread.ThreadNavigation
 import social.aloha.feature.thread.ThreadRoute
@@ -155,7 +156,7 @@ fun AlohaApp(
     resolveLink: suspend (address: String, fromPost: Boolean) -> NavKey? = { _, _ -> null },
     accountButton: @Composable (onProfile: () -> Unit, onSettings: () -> Unit) -> Unit = { _, _ -> },
     timeline: @Composable (TimelineFeed, StatusNavigation, accountButton: @Composable () -> Unit) -> Unit =
-        { feed, navigation, button -> TimelineRoute(navigation, feed = feed, navigationIcon = button) },
+        { feed, navigation, button -> ModeTimeline(feed, navigation, button) },
 ) {
     val backStack = rememberNavBackStack(HomeKey)
     // a detail opened from a destination keeps that destination selected
@@ -407,6 +408,18 @@ private fun NothingOpen() {
             )
         }
     }
+}
+
+/** Home's timeline, or a mode's: Photos carries the stories rail above its own. */
+@Composable
+private fun ModeTimeline(feed: TimelineFeed, navigation: StatusNavigation, accountButton: @Composable () -> Unit) {
+    TimelineRoute(
+        navigation,
+        feed = feed,
+        navigationIcon = accountButton,
+        // until the story player, a poster on the rail opens their profile
+        header = { if (feed.mode == FeedMode.Photos) StoriesRail(onOpen = { navigation.openProfile(it, null) }) },
+    )
 }
 
 @Composable

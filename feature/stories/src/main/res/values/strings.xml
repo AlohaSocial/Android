@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ SPDX-FileCopyrightText: 2026 Aloha Social contributors
+  ~ SPDX-License-Identifier: MIT
+-->
+<resources>
+    <!-- Name under the reader's own stories on the stories rail -->
+    <string name="stories_yours">Your story</string>
+    <!-- A poster on the stories rail with stories not yet seen, read aloud: %s is who -->
+    <string name="stories_reel_new">Stories from %s, new</string>
+    <!-- A poster on the stories rail whose stories were all seen, read aloud: %s is who -->
+    <string name="stories_reel">Stories from %s</string>
+</resources>
