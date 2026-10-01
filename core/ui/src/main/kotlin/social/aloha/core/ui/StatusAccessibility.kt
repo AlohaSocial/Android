@@ -24,6 +24,7 @@ internal fun menuItems(
     }
     add(Triple(StatusMenuItem.OpenInNewWindow, AlohaIcons.NewWindow, R.string.status_menu_new_window))
     add(Triple(StatusMenuItem.Translate, AlohaIcons.Translate, R.string.status_menu_translate))
+    add(Triple(StatusMenuItem.ShowOriginal, AlohaIcons.Translate, R.string.status_show_original))
     val mute = if (row.state.muted) R.string.status_menu_unmute_conversation else R.string.status_menu_mute_conversation
     add(Triple(StatusMenuItem.MuteConversation, AlohaIcons.MuteConversation, mute))
     if (row.isOwn) {
@@ -88,13 +89,15 @@ private fun contextText(context: StatusRowUi.ContextLine): String = when (contex
 
 /**
  * What a card's own controls hold, which a screen reader reaches through [customActions] as well:
- * whether the content warning is open, and the poll options chosen before voting.
+ * whether the content warning is open, the poll options chosen before voting, and the translation shown.
  */
 internal data class CardControls(
     val spoilerRevealed: Boolean = false,
     val onSpoiler: () -> Unit = {},
     val pollChoice: List<Int> = emptyList(),
     val onPollChoice: (List<Int>) -> Unit = {},
+    val translation: TranslationUi? = null,
+    val onShowOriginal: () -> Unit = {},
 )
 
 /**

@@ -125,6 +125,20 @@
     <string name="status_menu_open_in_browser">Open in browser</string>
     <!-- Menu item: translate a post -->
     <string name="status_menu_translate">Translate</string>
+    <!-- Menu item and button under a translated post: show the post as it was written again -->
+    <string name="status_show_original">Show original</string>
+    <!-- Under a post while its translation is on its way -->
+    <string name="status_translating">Translating…</string>
+    <!-- Under a translated post, when the server did not name the service that translated it -->
+    <string name="status_translated">Translated by your server</string>
+    <!-- Under a translated post. %1$s: the translation service the server used, such as DeepL -->
+    <string name="status_translated_by">Translated by %1$s through your server</string>
+    <!-- Under a post that could not be translated, when the server gave no reason -->
+    <string name="status_translation_failed">Can’t translate this post right now</string>
+    <!-- Under a post that could not be translated. %1$s: the server's reason, in its own words -->
+    <string name="status_translation_refused">Can’t translate right now: %1$s</string>
+    <!-- Button under a post that could not be translated: hides the message -->
+    <string name="status_dismiss">Dismiss</string>
     <!-- Menu item: stop notifications from a conversation -->
     <string name="status_menu_mute_conversation">Mute conversation</string>
     <!-- Menu item: notifications from a muted conversation again -->

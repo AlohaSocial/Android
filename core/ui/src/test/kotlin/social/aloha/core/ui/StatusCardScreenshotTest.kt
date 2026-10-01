@@ -161,6 +161,24 @@ class StatusCardScreenshotTest {
         Rows(listOf(StatusSamples.gallery), policy = SensitiveMediaPolicy.ShowAll)
     }
 
+    /** The first post translated, the second refused by a server without a translation service. */
+    private object Translated : StatusTranslations {
+        override fun offers(row: StatusRowUi) = true
+        override fun stateOf(statusId: String) = when (statusId) {
+            "10" -> TranslationUi.Done("<p>Aloha aus dem Meer! #surf</p>", null, "DeepL")
+            else -> TranslationUi.Failed("no translation provider is configured")
+        }
+        override fun translate(row: StatusRowUi) = Unit
+        override fun showOriginal(statusId: String) = Unit
+    }
+
+    @Test
+    fun translated() = capture("status-translated") {
+        CompositionLocalProvider(LocalStatusTranslations provides Translated) {
+            Rows(listOf(StatusSamples.post(), StatusSamples.linked))
+        }
+    }
+
     @Test
     fun attachments() = capture("status-attachments") {
         Rows(listOf(StatusSamples.poll, StatusSamples.pollResults, StatusSamples.linked, StatusSamples.quoting))
