@@ -33,6 +33,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -59,6 +60,7 @@ import social.aloha.core.model.ServerLimits
 import social.aloha.core.model.SignedInAccount
 import social.aloha.core.model.Status
 import social.aloha.core.model.Visibility
+import social.aloha.core.model.Writing
 import social.aloha.core.navigation.ComposerKey
 import social.aloha.core.sync.MediaUploads
 import social.aloha.core.sync.PostQueue
@@ -174,6 +176,7 @@ internal class ComposerViewModel @AssistedInject constructor(
         val warn: Boolean,
         val edit: EditFailure?,
         val tagShorts: Boolean?,
+        val writing: Writing,
     )
 
     private val media = combine(
@@ -181,8 +184,10 @@ internal class ComposerViewModel @AssistedInject constructor(
         attachments.sensitive,
         attachments.failure,
         edits.failure,
-        combine(preferences.warnMissingDescription, preferences.tagShorts, ::Pair),
-    ) { attachments, sensitive, failure, edit, (warn, tag) -> Media(attachments, sensitive, failure, warn, edit, tag) }
+        combine(preferences.warnMissingDescription, preferences.tagShorts, preferences.writing, ::Triple),
+    ) { attachments, sensitive, failure, edit, (warn, tag, writing) ->
+        Media(attachments, sensitive, failure, warn, edit, tag, writing)
+    }
 
     val uiState: StateFlow<ComposerUiState> = combine(
         control,
@@ -201,7 +206,10 @@ internal class ComposerViewModel @AssistedInject constructor(
         val attached = media.attachments.map { list -> list.filterNot { it.id == cards.attachmentId } }
         val cardFits = poll == null && TextCards.fits(text.segments.first(), text.segments.size, attached.first().size)
         state.copy(
-            remaining = text.segments.map { CharacterCount.remaining(it, cw, limits, rule) },
+            remaining = text.segments.mapIndexed { index, segment ->
+                val number = numbering(media.writing.numberThreads, index, text.segments.size)
+                CharacterCount.remaining(segment + number, cw, limits, rule)
+            },
             empty = text.segments.withIndex().any { (index, segment) ->
                 segment.isBlank() && media.attachments.getOrElse(index) { emptyList() }.isEmpty() &&
                     !(index == 0 && poll != null)
@@ -231,6 +239,8 @@ internal class ComposerViewModel @AssistedInject constructor(
             editFailure = media.edit,
             tagShorts = media.tagShorts,
             warnMissingDescription = media.warn,
+            confirmBeforePosting = media.writing.confirmBeforePosting,
+            numberThreads = media.writing.numberThreads,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_MILLIS), ComposerUiState())
 
@@ -368,7 +378,11 @@ internal class ComposerViewModel @AssistedInject constructor(
                 return@launch
             }
             // the card is attached for the server alone, so the post takes every attachment there is
-            val post = state.draft(segments.map { it.text }, spoiler, parent?.id, attachments.byPost.value)
+            val texts = segments.mapIndexed { index, value ->
+                val number = numbering(state.numberThreads, index, segments.size)
+                if (number.isEmpty()) value.text else value.text.trimEnd() + number
+            }
+            val post = state.draft(texts, spoiler, parent?.id, attachments.byPost.value)
             // what was described since uploading goes first: a post must not go out without it
             val failure = if (attachments.sync(account)) {
                 poster.send(account, post, editing) { posted -> control.update { it.copy(posted = posted) } }
@@ -413,7 +427,8 @@ internal class ComposerViewModel @AssistedInject constructor(
         (draft?.replyToId ?: key.replyToId)?.let { id -> parent = (compose.status(account, id) as? Answer.Got)?.value }
         use(account)
         val preferences = compose.preferences(account)
-        control.update { it.withDefaults(preferences, key.direct) }
+        val writing = this.preferences.writing.first()
+        control.update { it.withDefaults(preferences, writing, key.direct) }
         if (draft != null) {
             segments.clear()
             segments.addAll(draft.segments.map { TextFieldValue(it.text, TextRange(it.text.length)) })
@@ -482,11 +497,17 @@ private data class Extras(val card: CardUi, val poll: PollUi?, val at: Instant?,
  * The writer's own defaults from their server: the visibility where it is allowed, and the language. A
  * [direct] message is direct whatever the default.
  */
-private fun ComposerUiState.withDefaults(preferences: Preferences?, direct: Boolean) = copy(
+private fun ComposerUiState.withDefaults(preferences: Preferences?, writing: Writing, direct: Boolean) = copy(
     visibility = Visibility.Direct.takeIf { direct && it in visibilities }
+        ?: writing.visibility?.takeIf { it in visibilities }
         ?: preferences?.defaultVisibility?.takeIf { it in visibilities } ?: visibilities.first(),
-    language = preferences?.defaultLanguage ?: Locale.getDefault().language.ifEmpty { null },
+    language = writing.language ?: preferences?.defaultLanguage ?: Locale.getDefault().language.ifEmpty { null },
+    // a warning already written, as in a draft, is open anyway
+    spoilerShown = spoilerShown || writing.alwaysShowWarning,
 )
+
+/** The number a part of a thread ends in, where the writer numbers threads. */
+private fun numbering(on: Boolean, index: Int, size: Int): String = if (on) Writing.numbering(index, size) else ""
 
 private fun SignedInAccount.toAuthor() = Author(id, qualifiedHandle, displayName.ifBlank { handle }, avatarUrl)
 

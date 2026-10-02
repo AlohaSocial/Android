@@ -4,8 +4,13 @@
 package social.aloha.feature.composer
 
 import android.app.Application
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.test.junit4.accessibility.enableAccessibilityChecks
 import androidx.compose.ui.test.junit4.v2.createComposeRule
@@ -43,6 +48,7 @@ import social.aloha.core.model.OutboxState
 import social.aloha.core.model.ScheduledStatus
 import social.aloha.core.model.ScheduledStatusParams
 import social.aloha.core.model.Visibility
+import social.aloha.core.model.Writing
 import social.aloha.core.sync.UploadState
 
 /** The composer in its states, each also run through the Accessibility Test Framework checks. */
@@ -123,6 +129,21 @@ class ComposerScreenshotTest {
         compose.setContent { AlohaTheme(settings) { content() } }
         compose.onRoot().tryPerformAccessibilityChecks()
         compose.onRoot().captureRoboImage("src/test/screenshots/$name.png")
+    }
+
+    @Test
+    fun writingSettings() = capture("composer-settings") {
+        Surface {
+            Column(Modifier.verticalScroll(rememberScrollState())) {
+                WritingContent(
+                    warn = true,
+                    onWarn = {},
+                    writing = Writing(confirmBeforePosting = true, numberThreads = true, language = "de"),
+                    languages = listOf("en", "de"),
+                    onChange = {},
+                )
+            }
+        }
     }
 
     @Composable

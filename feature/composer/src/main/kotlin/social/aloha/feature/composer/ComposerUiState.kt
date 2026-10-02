@@ -115,6 +115,10 @@ internal data class ComposerUiState(
     val storySeconds: Int = 5,
     /** Whether to warn before posting pictures without a description. */
     val warnMissingDescription: Boolean = true,
+    /** Posting asks first, where the writer chose so. */
+    val confirmBeforePosting: Boolean = false,
+    /** Each part of a thread ends in its number, counted in its length. */
+    val numberThreads: Boolean = false,
     /** Whether a short gets `#shorts`; null until the writer is asked, once. */
     val tagShorts: Boolean? = null,
     /** How many segments of the thread are already posted; a retry starts after them. */

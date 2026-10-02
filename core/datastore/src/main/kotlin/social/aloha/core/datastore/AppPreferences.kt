@@ -18,6 +18,8 @@ import social.aloha.core.model.AppearanceContrast
 import social.aloha.core.model.AppearanceMode
 import social.aloha.core.model.QuietHours
 import social.aloha.core.model.SwipeAction
+import social.aloha.core.model.Visibility
+import social.aloha.core.model.Writing
 
 /**
  * App-wide settings that are not secrets: which account is active, which terms were accepted, and how
@@ -121,6 +123,27 @@ public class AppPreferences(private val store: DataStore<Preferences>) {
         store.edit { it[ACCEPTED_TERMS] = version }
     }
 
+    /** How the reader writes; a visibility a later build wrote reads as the server's. */
+    public val writing: Flow<Writing> = store.data.map {
+        Writing(
+            confirmBeforePosting = it[CONFIRM_POST] ?: false,
+            alwaysShowWarning = it[ALWAYS_WARNING] ?: false,
+            numberThreads = it[NUMBER_THREADS] ?: false,
+            visibility = Visibility.entries.firstOrNull { v -> v.name == it[DEFAULT_VISIBILITY] },
+            language = it[DEFAULT_LANGUAGE]?.takeIf { language -> language.isNotBlank() },
+        )
+    }
+
+    public suspend fun setWriting(writing: Writing) {
+        store.edit {
+            it[CONFIRM_POST] = writing.confirmBeforePosting
+            it[ALWAYS_WARNING] = writing.alwaysShowWarning
+            it[NUMBER_THREADS] = writing.numberThreads
+            it[DEFAULT_VISIBILITY] = writing.visibility?.name.orEmpty()
+            it[DEFAULT_LANGUAGE] = writing.language.orEmpty()
+        }
+    }
+
     /** How the app looks; each part a later build does not know reads as its default. */
     public val appearance: Flow<Appearance> = store.data.map {
         Appearance(
@@ -153,6 +176,11 @@ public class AppPreferences(private val store: DataStore<Preferences>) {
         val QUIET_UNTIL = intPreferencesKey("quiet_until_hour")
         val ASKED_NOTIFICATIONS = booleanPreferencesKey("asked_for_notifications")
         val PUSH_ACCOUNTS = stringSetPreferencesKey("push_accounts")
+        val CONFIRM_POST = booleanPreferencesKey("confirm_before_posting")
+        val ALWAYS_WARNING = booleanPreferencesKey("always_show_warning")
+        val NUMBER_THREADS = booleanPreferencesKey("number_threads")
+        val DEFAULT_VISIBILITY = stringPreferencesKey("default_visibility")
+        val DEFAULT_LANGUAGE = stringPreferencesKey("default_language")
         val THEME_MODE = stringPreferencesKey("theme_mode")
         val THEME_CONTRAST = stringPreferencesKey("theme_contrast")
         val THEME_BLACK = booleanPreferencesKey("theme_black")

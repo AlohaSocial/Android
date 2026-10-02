@@ -430,4 +430,24 @@
     <string name="composer_shorts_yes">Tag them</string>
     <!-- Button that never tags shorts -->
     <string name="composer_shorts_no">Don\'t tag</string>
+    <!-- Title of the dialog that asks before posting, where the writer chose to be asked -->
+    <string name="composer_confirm_title">Post this?</string>
+    <!-- Body of the dialog that asks before posting -->
+    <string name="composer_confirm_body">It goes out to everyone it is addressed to as soon as you post it.</string>
+    <!-- Writing setting: ask before posting -->
+    <string name="composer_settings_confirm">Ask before posting</string>
+    <!-- Writing setting: the content warning field is open in every new post -->
+    <string name="composer_settings_warning">Always show the content warning field</string>
+    <!-- Writing setting: number the parts of a thread -->
+    <string name="composer_settings_number">Number the parts of a thread</string>
+    <!-- Summary of the setting above -->
+    <string name="composer_settings_number_summary">Each part ends in 1/3, 2/3, 3/3, counted in its length</string>
+    <!-- Writing setting: heading over the default visibility of new posts -->
+    <string name="composer_settings_visibility">New posts are seen by</string>
+    <!-- Default visibility choice: as the reader's server says -->
+    <string name="composer_settings_visibility_server">As my server says</string>
+    <!-- Writing setting: heading over the default language of new posts -->
+    <string name="composer_settings_language">New posts are written in</string>
+    <!-- Default language choice: as the reader's server says, else the device's language -->
+    <string name="composer_settings_language_server">As my server says</string>
 </resources>
