@@ -24,6 +24,9 @@ internal object DatabaseModule {
     fun accountDao(database: AccountsDatabase): AccountDao = database.accountDao()
 
     @Provides
+    fun accountOrderDao(database: AccountsDatabase): AccountOrderDao = database.accountOrderDao()
+
+    @Provides
     @Singleton
     fun outboxDatabase(@ApplicationContext context: Context): OutboxDatabase =
         Room.databaseBuilder(context, OutboxDatabase::class.java, OutboxDatabase.FILE_NAME).build()

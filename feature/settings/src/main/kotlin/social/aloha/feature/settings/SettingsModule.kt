@@ -21,6 +21,10 @@ internal abstract class SettingsModule {
     companion object {
         @Provides
         @IntoSet
+        fun accounts(): SettingsSection = AccountsSection
+
+        @Provides
+        @IntoSet
         fun appearance(): SettingsSection = AppearanceSection
 
         @Provides

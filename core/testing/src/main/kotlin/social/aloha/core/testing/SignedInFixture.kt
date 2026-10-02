@@ -14,6 +14,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
+import social.aloha.core.data.AccountOrder
 import social.aloha.core.data.AccountRemoval
 import social.aloha.core.data.AccountRepository
 import social.aloha.core.data.ClientFactory
@@ -66,6 +67,8 @@ public class SignedInFixture(private val context: Context) : Closeable {
         clock,
         scope,
     )
+
+    public val order: AccountOrder = AccountOrder(database.accountOrderDao())
 
     public val clients: ClientFactory =
         ClientFactory(OkHttpClient(), RateLimiter(nowMillis = clock::millis), Dispatchers.IO, accounts)

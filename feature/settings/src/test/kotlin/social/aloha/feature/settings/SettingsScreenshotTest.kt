@@ -51,6 +51,19 @@ class SettingsScreenshotTest {
     fun about() = capture("settings-about") { SectionScreen(AboutSection, onBack = {}) }
 
     @Test
+    fun accounts() = capture("settings-accounts") {
+        AccountsContent(
+            listOf(
+                AccountEntry("1", "Alice", "@alice@cloud.example", null, active = true, needsReauth = false),
+                AccountEntry("2", "Alice", "@alice@mastodon.example", null, active = false, needsReauth = true),
+            ),
+            onMove = { _, _ -> },
+            onSignInAgain = {},
+            onSignOut = {},
+        )
+    }
+
+    @Test
     fun appearance() = capture("settings-appearance") {
         AppearanceContent(
             AppearanceState(Appearance(accent = AccentSource.Custom, black = true), serverColour = true),

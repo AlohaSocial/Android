@@ -57,7 +57,7 @@ class AccountShortcuts @Inject constructor(
                 .setLongLived(true)
                 .setCategories(setOf(SHARE_CATEGORY))
                 .setIntent(AppIntents.compose(context, account.id))
-                // after the app's three, in the order the accounts were added
+                // after the app's three, in the order the reader arranged the accounts
                 .setRank(APP.size + index)
             // with one account the launcher's New post already posts as it; before Android 13 an excluded
             // shortcut is never published at all, which would take it out of the share sheet too

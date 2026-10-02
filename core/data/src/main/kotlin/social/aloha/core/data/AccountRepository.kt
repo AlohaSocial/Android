@@ -98,6 +98,7 @@ public class AccountRepository @Inject constructor(
     }
 
     /** The server refused the token: keep the account and its cache, ask for a new sign-in. */
+
     public suspend fun markNeedsReauth(id: String) {
         dao.setNeedsReauth(id, needsReauth = true)
     }

@@ -28,6 +28,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import social.aloha.core.data.AccountMaintenance
 import social.aloha.core.data.AccountRepository
+import social.aloha.core.data.ReauthRequest
 import social.aloha.core.data.compose.Outbox
 import social.aloha.core.data.sync.UnreadCounts
 import social.aloha.core.data.timeline.CacheSweeper
@@ -91,6 +92,7 @@ class AppViewModel @Inject constructor(
     private val queue: PostQueue,
     private val unread: UnreadCounts,
     private val shortcuts: AccountShortcuts,
+    private val reauth: ReauthRequest,
     preferences: ModePreferences,
     appPreferences: AppPreferences,
     savedState: SavedStateHandle,
@@ -107,7 +109,6 @@ class AppViewModel @Inject constructor(
         themeOf(look, reader?.capabilities?.theme)
     }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
-    private val signingInAgain = MutableStateFlow(false)
     private val external = MutableStateFlow<String?>(null)
 
     /** A link another app asked to open, waiting for the shell to open it. */
@@ -140,7 +141,7 @@ class AppViewModel @Inject constructor(
                     b.id
             }
                 .collect { account ->
-                    signingInAgain.value = false
+                    reauth.done()
                     queue.resume(account.id)
                 }
         }
@@ -151,17 +152,16 @@ class AppViewModel @Inject constructor(
         viewModelScope.launch {
             accounts.accounts.map { it.isEmpty() }.distinctUntilChanged().filter { it }.collect { caches.clear() }
         }
-        // the launcher's and the share sheet's shortcuts follow who is signed in
+        // the launcher's and the share sheet's shortcuts follow who is signed in, in the reader's order
         viewModelScope.launch {
             accounts.accounts
-                .map { all -> all.sortedBy { it.addedAt } }
                 .distinctUntilChanged { a, b -> a.map(::shortcutOf) == b.map(::shortcutOf) }
                 .collect { shortcuts.publish(it) }
         }
     }
 
     val session: StateFlow<AppSession> =
-        combine(accounts.accounts, accounts.activeAccount, signingInAgain, adding, ::sessionOf)
+        combine(accounts.accounts, accounts.activeAccount, reauth.requested, adding, ::sessionOf)
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), AppSession.Loading)
 
     /** The active account's unread notifications, as its server last said. */
@@ -171,7 +171,7 @@ class AppViewModel @Inject constructor(
 
     val switcher: StateFlow<List<SwitcherAccount>> =
         combine(accounts.accounts, accounts.activeAccount) { all, active ->
-            all.sortedBy { it.addedAt }.map { account ->
+            all.map { account ->
                 SwitcherAccount(
                     id = account.id,
                     displayName = account.displayName.ifBlank { account.handle },
@@ -261,7 +261,7 @@ class AppViewModel @Inject constructor(
         accounts.activeAccount.value?.let { links.destination(it, address, fromPost) }
 
     fun signInAgain() {
-        signingInAgain.value = true
+        reauth.ask()
     }
 
     /** Switching paints the other account from its cache at once; nothing waits for its server. */
