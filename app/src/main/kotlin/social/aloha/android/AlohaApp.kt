@@ -70,6 +70,7 @@ import social.aloha.core.navigation.AlbumKey
 import social.aloha.core.navigation.AlbumsKey
 import social.aloha.core.navigation.AnnouncementsKey
 import social.aloha.core.navigation.AudioKey
+import social.aloha.core.navigation.BlockedKey
 import social.aloha.core.navigation.ComposerKey
 import social.aloha.core.navigation.ConversationsKey
 import social.aloha.core.navigation.DraftsKey
@@ -142,9 +143,11 @@ import social.aloha.feature.profile.ProfileRoute
 import social.aloha.feature.profile.ReportRoute
 import social.aloha.feature.safety.AnnouncementsBanner
 import social.aloha.feature.safety.AnnouncementsRoute
+import social.aloha.feature.safety.BlockedRoute
 import social.aloha.feature.safety.FilterEditRoute
 import social.aloha.feature.safety.FiltersRoute
 import social.aloha.feature.safety.InterestsRoute
+import social.aloha.feature.safety.R as SafetyR
 import social.aloha.feature.saved.SavedPostsRoute
 import social.aloha.feature.search.SearchRoute
 import social.aloha.feature.settings.R as SettingsR
@@ -499,6 +502,7 @@ fun AlohaApp(
                                 onBack = { backStack.remove(key) },
                             )
                         }
+                        entry<BlockedKey> { key -> BlockedRoute(key, onBack = { backStack.remove(key) }) }
                         entry<YearKey> { key ->
                             YearRoute(onOpenPost = statusNavigation::openThread, onBack = { backStack.remove(key) })
                         }
@@ -564,6 +568,14 @@ fun AlohaApp(
                                         AlohaIcons.Filtered,
                                     ) {
                                         backStack.push(FiltersKey(readerId))
+                                    },
+                                    SettingsDestination(
+                                        "blocked",
+                                        BLOCKED_ORDER,
+                                        SafetyR.string.blocked_title,
+                                        AlohaIcons.Report,
+                                    ) {
+                                        backStack.push(BlockedKey(readerId))
                                     },
                                     SettingsDestination(
                                         "year",
@@ -819,3 +831,6 @@ private const val FILTERS_ORDER = 250
 
 // near the end of the list, before About this server
 private const val YEAR_ORDER = 970
+
+// after Sound and haptics, among what keeps the reader safe
+private const val BLOCKED_ORDER = 380

@@ -154,4 +154,36 @@
     <string name="interests_reset_title">Forget all interests?</string>
     <!-- Body of the dialog asking before all interests are forgotten -->
     <string name="interests_reset_body">Everything your server learnt and every hashtag you chose or kept goes. It starts learning again from what you read next.</string>
+    <!-- Title of the screen listing who the reader blocked and muted, and its entry in Settings -->
+    <string name="blocked_title">Muted and blocked</string>
+    <!-- Content description of the back button -->
+    <string name="blocked_back">Back</string>
+    <!-- Tab: blocked accounts -->
+    <string name="blocked_tab_blocked">Blocked</string>
+    <!-- Tab: muted accounts -->
+    <string name="blocked_tab_muted">Muted</string>
+    <!-- Tab: blocked servers -->
+    <string name="blocked_tab_servers">Servers</string>
+    <!-- Button: take a block back -->
+    <string name="blocked_unblock">Unblock</string>
+    <!-- Button: take a mute back -->
+    <string name="blocked_unmute">Unmute</string>
+    <!-- Shown when nobody is blocked -->
+    <string name="blocked_none">You haven’t blocked anyone.</string>
+    <!-- Shown when nobody is muted -->
+    <string name="blocked_none_muted">You haven’t muted anyone.</string>
+    <!-- Shown when no server is blocked -->
+    <string name="blocked_none_servers">You haven’t blocked a server.</string>
+    <!-- Shown when the lists could not be asked for -->
+    <string name="blocked_failed">Couldn’t reach your server.</string>
+    <!-- Shown when the server did not take a change, which then stands as it was -->
+    <string name="blocked_refused">Your server didn’t take the change.</string>
+    <!-- Field: a server to block, such as spam.example -->
+    <string name="blocked_server_field">Block a server</string>
+    <!-- Under the field above -->
+    <string name="blocked_server_help">Nothing from it reaches you here.</string>
+    <!-- Under the field above, when what was typed is no server address -->
+    <string name="blocked_server_invalid">Type a server’s address, such as spam.example.</string>
+    <!-- Button: block the server typed -->
+    <string name="blocked_server_block">Block</string>
 </resources>
