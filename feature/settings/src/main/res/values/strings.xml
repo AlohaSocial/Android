@@ -317,6 +317,28 @@
         <item quantity="one">used once</item>
         <item quantity="other">used %d times</item>
     </plurals>
+    <!-- Settings section: the app lock -->
+    <string name="privacy_title">Privacy and safety</string>
+    <!-- Switch: the app asks for a fingerprint, face or the screen lock -->
+    <string name="privacy_lock">App lock</string>
+    <!-- Summary of the App lock switch -->
+    <string name="privacy_lock_summary">Asks for your fingerprint, face or screen lock to open the app, and hides it in recent apps</string>
+    <!-- Shown instead of the switch where the device has no screen lock -->
+    <string name="privacy_lock_needs_screen_lock">The app lock needs a screen lock on this device. Set one in Android’s settings to use it.</string>
+    <!-- Heading over how long the app may be away before it locks -->
+    <string name="privacy_lock_after">Lock again after</string>
+    <!-- Lock again choice: every time the app leaves the screen -->
+    <string name="privacy_lock_immediately">Leaving the app</string>
+    <!-- Lock again choice. %d: minutes away -->
+    <plurals name="privacy_lock_minutes">
+        <item quantity="one">%d minute away</item>
+        <item quantity="other">%d minutes away</item>
+    </plurals>
+    <!-- Lock again choice. %d: hours away -->
+    <plurals name="privacy_lock_hours">
+        <item quantity="one">%d hour away</item>
+        <item quantity="other">%d hours away</item>
+    </plurals>
     <!-- One week of server activity: posts written. %d: how many -->
     <plurals name="server_week_posts">
         <item quantity="one">%d post</item>

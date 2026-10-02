@@ -37,6 +37,10 @@ internal abstract class SettingsModule {
 
         @Provides
         @IntoSet
+        fun privacy(): SettingsSection = PrivacySection
+
+        @Provides
+        @IntoSet
         fun media(): SettingsSection = MediaSection
 
         @Provides

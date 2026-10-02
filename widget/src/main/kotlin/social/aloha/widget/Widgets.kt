@@ -42,10 +42,15 @@ internal class MentionsWidget : GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val (account, _) = context.widgetAccount(id)
         val feed = account?.let { context.widgetEntryPoint().widgets().feed(it.id) } ?: flowOf(WidgetFeed())
+        val locked = context.widgetEntryPoint().lock().enabled
         provideContent {
             val shown by feed.collectAsState(WidgetFeed())
-            val rows = remember(shown) { shown.mentions.map { WidgetRow(it.statusId, it.name, it.text) } }
-            GlanceTheme { ListContent(account, R.string.widget_mentions_title, rows, R.string.widget_mentions_empty) }
+            val behindLock by locked.collectAsState(true)
+            val rows = remember(shown, behindLock) {
+                if (behindLock) emptyList() else shown.mentions.map { WidgetRow(it.statusId, it.name, it.text) }
+            }
+            val empty = if (behindLock) R.string.widget_locked else R.string.widget_mentions_empty
+            GlanceTheme { ListContent(account, R.string.widget_mentions_title, rows, empty) }
         }
     }
 }
@@ -64,9 +69,14 @@ internal class LatestPostsWidget : GlanceAppWidget() {
                     }
                 }
         } ?: flowOf(emptyList())
+        val locked = context.widgetEntryPoint().lock().enabled
         provideContent {
-            val rows by posts.collectAsState(emptyList())
-            GlanceTheme { ListContent(account, R.string.widget_latest_title, rows, R.string.widget_latest_empty) }
+            val shown by posts.collectAsState(emptyList())
+            // behind the app lock no post shows on the home screen; until the setting is read, none either
+            val behindLock by locked.collectAsState(true)
+            val rows = if (behindLock) emptyList() else shown
+            val empty = if (behindLock) R.string.widget_locked else R.string.widget_latest_empty
+            GlanceTheme { ListContent(account, R.string.widget_latest_title, rows, empty) }
         }
     }
 

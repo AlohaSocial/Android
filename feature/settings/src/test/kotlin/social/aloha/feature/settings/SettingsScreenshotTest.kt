@@ -148,6 +148,16 @@ class SettingsScreenshotTest {
     }
 
     @Test
+    fun appLock() = capture("settings-privacy-lock") {
+        PrivacyContent(LockState(enabled = true, timeoutSeconds = 300), secure = true, onEnabled = {}, onTimeout = {})
+    }
+
+    @Test
+    fun privacyWithoutScreenLock() = capture("settings-privacy-no-screen-lock") {
+        PrivacyContent(LockState(), secure = false, onEnabled = {}, onTimeout = {})
+    }
+
+    @Test
     fun appearance() = capture("settings-appearance") {
         AppearanceContent(
             AppearanceState(Appearance(accent = AccentSource.Custom, black = true), serverColour = true),

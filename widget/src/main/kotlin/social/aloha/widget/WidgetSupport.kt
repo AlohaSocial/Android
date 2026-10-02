@@ -14,6 +14,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.components.SingletonComponent
 import social.aloha.core.data.AccountRepository
+import social.aloha.core.data.AppLockSettings
 import social.aloha.core.data.sync.WidgetUpdates
 import social.aloha.core.data.timeline.TimelineRepository
 import social.aloha.core.model.SignedInAccount
@@ -28,6 +29,8 @@ internal interface WidgetEntryPoint {
     fun timelines(): TimelineRepository
 
     fun widgets(): WidgetUpdates
+
+    fun lock(): AppLockSettings
 }
 
 internal fun Context.widgetEntryPoint(): WidgetEntryPoint =

@@ -66,6 +66,17 @@ class AppShellScreenshotTest {
         captureScreenRoboImage("src/test/screenshots/shell-accounts.png")
     }
 
+    @Test
+    @Config(qualifiers = RobolectricDeviceQualifiers.Pixel7)
+    fun locked() {
+        var asked = 0
+        compose.setContent { AlohaTheme(ThemeSettings(mode = ThemeMode.Light)) { LockScreen(onUnlock = { asked++ }) } }
+        compose.onRoot().captureRoboImage("src/test/screenshots/locked.png")
+        // the prompt comes at once, and again from the button
+        compose.onNodeWithText("Unlock").performClick()
+        org.junit.Assert.assertEquals(2, asked)
+    }
+
     private fun capture(name: String, mode: ThemeMode = ThemeMode.Light, select: String? = null) {
         compose.setContent {
             AlohaTheme(ThemeSettings(mode = mode)) {

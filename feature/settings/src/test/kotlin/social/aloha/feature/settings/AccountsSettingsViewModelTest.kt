@@ -61,7 +61,7 @@ class AccountsSettingsViewModelTest {
     private val viewModel = AccountsSettingsViewModel(
         fixture.accounts,
         fixture.order,
-        AccountSignOut(push, fixture.removal, LocalNotifications(context, AvatarSource { null }), scope),
+        AccountSignOut(push, fixture.removal, LocalNotifications(context, avatars = AvatarSource { null }), scope),
         reauth,
     ).also { store.put("accounts", it) }
 
