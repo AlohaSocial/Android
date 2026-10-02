@@ -45,6 +45,7 @@ import social.aloha.core.datastore.AccountSettings
 import social.aloha.core.datastore.AccountSettingsStore
 import social.aloha.core.datastore.AppPreferences
 import social.aloha.core.datastore.ModePreferences
+import social.aloha.core.datastore.ReadingPreferences
 import social.aloha.core.media.ImagePrefetcher
 import social.aloha.core.model.FeedMode
 import social.aloha.core.model.SignedInAccount
@@ -75,6 +76,7 @@ internal class TimelineViewModel @AssistedInject constructor(
     private val positions: TimelinePositions,
     private val settings: AccountSettingsStore,
     preferences: AppPreferences,
+    private val reading: ReadingPreferences,
     private val modes: ModePreferences,
     private val clock: Clock,
     private val prefetcher: ImagePrefetcher,
@@ -229,6 +231,12 @@ internal class TimelineViewModel @AssistedInject constructor(
     init {
         viewModelScope.launch { scrolled.filterNotNull().debounce(SAVE_DEBOUNCE_MILLIS).collect(::savePosition) }
         viewModelScope.launch {
+            // without the pill, what a refresh brings joins the list at once; it keeps its place by key
+            combine(pager.states.map { it.held.isNotEmpty() }, reading.newPostsPill) { held, pill -> held && !pill }
+                .distinctUntilChanged()
+                .collect { if (it) pager.reveal() }
+        }
+        viewModelScope.launch {
             // a new source, or a switch of account, starts where that timeline was left
             combine(account.filterNotNull(), key) { account, key -> account to key }
                 .distinctUntilChanged { a, b -> a.first.id == b.first.id && a.second == b.second }
@@ -366,6 +374,8 @@ internal class TimelineViewModel @AssistedInject constructor(
     private fun scheduleRestore(account: SignedInAccount, key: TimelineKey) {
         restoreJob?.cancel()
         restoreJob = viewModelScope.launch {
+            // a reader who chose so starts at the newest post every time
+            if (!reading.restorePosition.first()) return@launch
             // the read marker is home's own: another mode's timeline of the same source starts where it was left
             val saved = positions.saved(account, key)
                 ?: positions.homeMarker(account)?.takeIf { key == TimelineKey.home() }?.let { TimelinePosition(it, 0) }

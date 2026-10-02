@@ -122,5 +122,15 @@
     <string name="tag_retry">Couldn’t load this hashtag. Try again</string>
     <!-- Under a hashtag's follow button when following or unfollowing failed -->
     <string name="tag_follow_failed">That didn’t work. Nothing was changed.</string>
+    <!-- Timeline setting: heading over which of Home's timelines the app opens on, for the account in use -->
+    <string name="timeline_settings_home_opens">Home opens on</string>
+    <!-- Timeline setting: a timeline opens where it was left -->
+    <string name="timeline_settings_restore">Open where I left off</string>
+    <!-- Summary of the setting above -->
+    <string name="timeline_settings_restore_summary">Off, a timeline opens at the newest post</string>
+    <!-- Timeline setting: new posts wait behind a button at the top -->
+    <string name="timeline_settings_pill">Hold new posts behind a button</string>
+    <!-- Summary of the setting above -->
+    <string name="timeline_settings_pill_summary">Off, new posts join the timeline as they arrive, without moving what you read</string>
 </resources>
 

@@ -66,6 +66,10 @@ internal object DataStoreModule {
     @Singleton
     fun modePreferences(@AppStore store: DataStore<Preferences>): ModePreferences = ModePreferences(store)
 
+    @Provides
+    @Singleton
+    fun readingPreferences(@AppStore store: DataStore<Preferences>): ReadingPreferences = ReadingPreferences(store)
+
     // an unreadable file starts over from the defaults rather than failing every screen that reads it
     @Provides
     @Singleton

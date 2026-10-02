@@ -33,8 +33,10 @@ import social.aloha.core.data.AccountRepository
 import social.aloha.core.datastore.AccountSettings
 import social.aloha.core.datastore.AccountSettingsStore
 import social.aloha.core.datastore.AppPreferences
+import social.aloha.core.datastore.ReadingPreferences
 import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.model.SwipeAction
+import social.aloha.core.model.TimelineSource
 import social.aloha.core.ui.ChoiceRows
 import social.aloha.core.ui.SettingsSection
 import social.aloha.core.ui.SwitchRow
@@ -46,7 +48,13 @@ internal data class TimelineSettingsState(
     val showReplies: Boolean = true,
     val swipeTowardsEnd: SwipeAction = SwipeAction.Favourite,
     val swipeTowardsStart: SwipeAction = SwipeAction.Boost,
+    val homeSource: TimelineSource = TimelineSource.Home,
+    val restorePosition: Boolean = true,
+    val newPostsPill: Boolean = true,
 )
+
+/** The device's own timeline switches, as stored. */
+private data class Reading(val restore: Boolean, val pill: Boolean)
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
@@ -54,18 +62,40 @@ internal class TimelineSettingsViewModel @Inject constructor(
     private val accounts: AccountRepository,
     private val settings: AccountSettingsStore,
     private val preferences: AppPreferences,
+    private val reading: ReadingPreferences,
 ) : ViewModel(),
     TimelineSettingsActions {
     val state: StateFlow<TimelineSettingsState> = combine(
         accounts.activeAccount.filterNotNull().flatMapLatest { settings.settings(it.id) },
         preferences.swipeTowardsEnd,
         preferences.swipeTowardsStart,
-    ) { account, end, start -> TimelineSettingsState(account.showBoosts, account.showReplies, end, start) }
+        combine(reading.restorePosition, reading.newPostsPill, ::Reading),
+    ) { account, end, start, reading ->
+        TimelineSettingsState(
+            account.showBoosts,
+            account.showReplies,
+            end,
+            start,
+            account.homeSource,
+            reading.restore,
+            reading.pill,
+        )
+    }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_MILLIS), TimelineSettingsState())
 
     override fun onShowBoosts(show: Boolean) = update { it.copy(showBoosts = show) }
 
     override fun onShowReplies(show: Boolean) = update { it.copy(showReplies = show) }
+
+    override fun onHomeSource(source: TimelineSource) = update { it.copy(homeSource = source) }
+
+    override fun onRestorePosition(restore: Boolean) {
+        viewModelScope.launch { reading.setRestorePosition(restore) }
+    }
+
+    override fun onNewPostsPill(pill: Boolean) {
+        viewModelScope.launch { reading.setNewPostsPill(pill) }
+    }
 
     override fun onSwipeTowardsEnd(action: SwipeAction) {
         viewModelScope.launch { preferences.setSwipeTowardsEnd(action) }
@@ -104,6 +134,12 @@ internal interface TimelineSettingsActions {
 
     fun onShowReplies(show: Boolean)
 
+    fun onHomeSource(source: TimelineSource) {}
+
+    fun onRestorePosition(restore: Boolean) {}
+
+    fun onNewPostsPill(pill: Boolean) {}
+
     fun onSwipeTowardsEnd(action: SwipeAction)
 
     fun onSwipeTowardsStart(action: SwipeAction)
@@ -116,6 +152,30 @@ internal fun TimelineSettingsContent(state: TimelineSettingsState, actions: Time
     Column {
         SwitchRow(stringResource(R.string.timeline_show_boosts), state.showBoosts, actions::onShowBoosts, account)
         SwitchRow(stringResource(R.string.timeline_show_replies), state.showReplies, actions::onShowReplies, account)
+        HorizontalDivider()
+        ChoiceRows(
+            stringResource(R.string.timeline_settings_home_opens),
+            listOf(
+                TimelineSource.Home to stringResource(R.string.timeline_source_home),
+                TimelineSource.Local to stringResource(R.string.timeline_source_local),
+                TimelineSource.Federated to stringResource(R.string.timeline_source_federated),
+            ),
+            state.homeSource,
+            actions::onHomeSource,
+        )
+        HorizontalDivider()
+        SwitchRow(
+            stringResource(R.string.timeline_settings_restore),
+            state.restorePosition,
+            actions::onRestorePosition,
+            stringResource(R.string.timeline_settings_restore_summary),
+        )
+        SwitchRow(
+            stringResource(R.string.timeline_settings_pill),
+            state.newPostsPill,
+            actions::onNewPostsPill,
+            stringResource(R.string.timeline_settings_pill_summary),
+        )
         HorizontalDivider()
         ChoiceRows(
             stringResource(R.string.timeline_settings_swipe_end),
