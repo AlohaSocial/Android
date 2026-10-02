@@ -222,6 +222,24 @@
     <string name="storage_measuring">Measuring…</string>
     <!-- Button: empty the cache -->
     <string name="storage_clear">Clear</string>
+    <!-- Settings section: how posts read -->
+    <string name="reading_title">Reading</string>
+    <!-- Reading switch: rows closer together -->
+    <string name="reading_compact">Compact</string>
+    <!-- Summary of the Compact switch -->
+    <string name="reading_compact_summary">Posts closer together, so more fit on the screen</string>
+    <!-- Reading switch: a post's text in a serif face -->
+    <string name="reading_serif">Serif text</string>
+    <!-- Reading switch: more room between a post's lines -->
+    <string name="reading_relaxed">More space between lines</string>
+    <!-- Reading switch: avatars as rounded squares instead of circles -->
+    <string name="reading_rounded">Rounded square avatars</string>
+    <!-- Reading switch: the numbers beside reply, boost and favourite -->
+    <string name="reading_counts">Show counts</string>
+    <!-- Summary of the Show counts switch -->
+    <string name="reading_counts_summary">How many replied, boosted and favourited, beside each button</string>
+    <!-- Reading switch: the number on Notifications in the navigation -->
+    <string name="reading_badge">Unread count on Notifications</string>
     <!-- One week of server activity: posts written. %d: how many -->
     <plurals name="server_week_posts">
         <item quantity="one">%d post</item>

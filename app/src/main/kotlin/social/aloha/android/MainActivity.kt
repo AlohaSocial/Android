@@ -17,6 +17,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.semantics
@@ -26,9 +27,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.UUID
 import javax.inject.Inject
+import social.aloha.core.datastore.ReadingPreferences
 import social.aloha.core.designsystem.AlohaTheme
 import social.aloha.core.designsystem.ThemeSettings
+import social.aloha.core.model.ReadingStyle
 import social.aloha.core.sync.SyncEngine
+import social.aloha.core.ui.LocalReadingStyle
 import social.aloha.feature.video.PictureInPicturePlayer
 import social.aloha.feature.video.VideoPlayback
 import social.aloha.feature.video.pictureInPictureParams
@@ -41,6 +45,8 @@ open class MainActivity : ComponentActivity() {
 
     @Inject lateinit var playback: VideoPlayback
 
+    @Inject lateinit var reading: ReadingPreferences
+
     override fun onCreate(savedInstanceState: Bundle?) {
         // held until the theme is read, so a dark choice never opens on a light frame
         installSplashScreen().setKeepOnScreenCondition { app.theme.value == null }
@@ -49,14 +55,17 @@ open class MainActivity : ComponentActivity() {
         if (savedInstanceState == null) deliver(intent)
         setContent {
             val theme by app.theme.collectAsStateWithLifecycle()
+            val style by reading.style.collectAsStateWithLifecycle(ReadingStyle())
             AlohaTheme(theme ?: ThemeSettings()) {
-                // test tags double as resource ids, so a release-build benchmark finds its lists
-                Box(Modifier.fillMaxSize().semantics { testTagsAsResourceId = true }) {
-                    AlohaRoot(app)
-                    // the video alone fills a picture-in-picture window; the app stays composed beneath it, so
-                    // what was open is still open when the window grows back
-                    val inPictureInPicture by playback.inPictureInPicture.collectAsStateWithLifecycle()
-                    if (inPictureInPicture) PictureInPicturePlayer(playback)
+                CompositionLocalProvider(LocalReadingStyle provides style) {
+                    // test tags double as resource ids, so a release-build benchmark finds its lists
+                    Box(Modifier.fillMaxSize().semantics { testTagsAsResourceId = true }) {
+                        AlohaRoot(app)
+                        // the video alone fills a picture-in-picture window; the app stays composed beneath it, so
+                        // what was open is still open when the window grows back
+                        val inPictureInPicture by playback.inPictureInPicture.collectAsStateWithLifecycle()
+                        if (inPictureInPicture) PictureInPicturePlayer(playback)
+                    }
                 }
             }
         }

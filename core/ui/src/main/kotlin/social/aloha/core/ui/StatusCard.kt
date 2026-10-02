@@ -155,6 +155,7 @@ public fun StatusCard(
         translations::getLanguage,
     )
     val customActions = customActions(row, actions, controls)
+    val compact = LocalReadingStyle.current.compact
     ProvideLinkRouting(onLink = actions::onLink) {
         Column(
             modifier = modifier
@@ -165,7 +166,7 @@ public fun StatusCard(
                     this.customActions = customActions
                     onClick { actions.onOpen(row.statusId).let { true } }
                 }
-                .padding(horizontal = AlohaSpacing.m, vertical = AlohaSpacing.s),
+                .padding(horizontal = AlohaSpacing.m, vertical = if (compact) AlohaSpacing.xs else AlohaSpacing.s),
             verticalArrangement = Arrangement.spacedBy(AlohaSpacing.xxs),
         ) {
             row.context?.let { ContextLineRow(it) }
@@ -221,12 +222,13 @@ private fun RowScope.StatusMain(
 
 @Composable
 public fun Avatar(url: String?, size: Dp, modifier: Modifier = Modifier) {
+    val shape = avatarShape()
     Surface(
         modifier = modifier.size(size),
-        shape = CircleShape,
+        shape = shape,
         color = MaterialTheme.colorScheme.surfaceContainerHighest,
     ) {
-        AsyncImage(model = url, contentDescription = null, modifier = Modifier.size(size).clip(CircleShape))
+        AsyncImage(model = url, contentDescription = null, modifier = Modifier.size(size).clip(shape))
     }
 }
 
@@ -455,7 +457,7 @@ private fun ActionButton(icon: ImageVector, count: Int?, tint: Color, onClick: (
     Row(verticalAlignment = Alignment.CenterVertically) {
         IconButton(onClick = onClick) { Icon(icon, contentDescription = null, tint = tint) }
         Text(
-            count?.takeIf { it > 0 }?.toString().orEmpty(),
+            count?.takeIf { it > 0 && LocalReadingStyle.current.showCounts }?.toString().orEmpty(),
             style = MaterialTheme.typography.labelMedium,
             color = tint,
             maxLines = 1,

@@ -26,6 +26,7 @@ import social.aloha.core.model.Appearance
 import social.aloha.core.model.InstanceDocument
 import social.aloha.core.model.InstanceRule
 import social.aloha.core.model.PublicDomainBlock
+import social.aloha.core.model.ReadingStyle
 import social.aloha.core.model.SensitiveMediaPolicy
 
 /** The settings list and a section at each width, each also run through the Accessibility Test Framework checks. */
@@ -97,6 +98,11 @@ class SettingsScreenshotTest {
 
     @Test
     fun storage() = capture("settings-storage") { StorageContent(StorageState(bytes = 126_000_000), onClear = {}) }
+
+    @Test
+    fun reading() = capture("settings-reading") {
+        ReadingContent(ReadingStyle(compact = true, showCounts = false), onChange = {})
+    }
 
     @Test
     fun appearance() = capture("settings-appearance") {

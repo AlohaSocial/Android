@@ -9,6 +9,7 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import social.aloha.core.model.ReadingStyle
 
 /** How the reader reads the device's timelines, kept beside the app's other preferences. */
 public class ReadingPreferences(private val store: DataStore<Preferences>) {
@@ -26,8 +27,37 @@ public class ReadingPreferences(private val store: DataStore<Preferences>) {
         store.edit { it[NEW_POSTS_PILL] = pill }
     }
 
+    /** How posts read: density, face, line spacing, avatar shape, counts, the unread badge. */
+    public val style: Flow<ReadingStyle> = store.data.map {
+        ReadingStyle(
+            compact = it[COMPACT] ?: false,
+            serif = it[SERIF] ?: false,
+            relaxed = it[RELAXED] ?: false,
+            roundedAvatars = it[ROUNDED_AVATARS] ?: false,
+            showCounts = it[SHOW_COUNTS] ?: true,
+            unreadBadge = it[UNREAD_BADGE] ?: true,
+        )
+    }
+
+    public suspend fun setStyle(style: ReadingStyle) {
+        store.edit {
+            it[COMPACT] = style.compact
+            it[SERIF] = style.serif
+            it[RELAXED] = style.relaxed
+            it[ROUNDED_AVATARS] = style.roundedAvatars
+            it[SHOW_COUNTS] = style.showCounts
+            it[UNREAD_BADGE] = style.unreadBadge
+        }
+    }
+
     private companion object {
         val RESTORE_POSITION = booleanPreferencesKey("restore_position")
         val NEW_POSTS_PILL = booleanPreferencesKey("new_posts_pill")
+        val COMPACT = booleanPreferencesKey("reading_compact")
+        val SERIF = booleanPreferencesKey("reading_serif")
+        val RELAXED = booleanPreferencesKey("reading_relaxed")
+        val ROUNDED_AVATARS = booleanPreferencesKey("reading_rounded_avatars")
+        val SHOW_COUNTS = booleanPreferencesKey("reading_show_counts")
+        val UNREAD_BADGE = booleanPreferencesKey("reading_unread_badge")
     }
 }

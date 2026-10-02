@@ -110,6 +110,7 @@ import social.aloha.core.navigation.ThreadKey
 import social.aloha.core.navigation.TopLevelKey
 import social.aloha.core.navigation.VideoKey
 import social.aloha.core.navigation.WatchKey
+import social.aloha.core.ui.LocalReadingStyle
 import social.aloha.core.ui.StatusNavigation
 import social.aloha.core.ui.openInBrowser
 import social.aloha.core.ui.openLink
@@ -774,7 +775,8 @@ private fun PushWhenAsked(destination: NavKey?, onTaken: () -> Unit, push: (NavK
 /** The unread notifications on their destination; nothing on the others, nor with none unread. */
 @Composable
 private fun DestinationBadge(key: TopLevelKey, unreadNotifications: Int) {
-    if (key == NotificationsKey && unreadNotifications > 0) Badge { Text(badgeCount(unreadNotifications)) }
+    val shown = LocalReadingStyle.current.unreadBadge
+    if (shown && key == NotificationsKey && unreadNotifications > 0) Badge { Text(badgeCount(unreadNotifications)) }
 }
 
 /** Whether a thread or a profile can open in a window of its own: where there is room, or beside another app. */

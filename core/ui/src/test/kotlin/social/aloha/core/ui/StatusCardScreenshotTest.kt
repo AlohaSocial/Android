@@ -30,6 +30,7 @@ import social.aloha.core.designsystem.ThemeMode
 import social.aloha.core.designsystem.ThemeSettings
 import social.aloha.core.html.RichTextCache
 import social.aloha.core.model.Card
+import social.aloha.core.model.ReadingStyle
 import social.aloha.core.model.SensitiveMediaPolicy
 import social.aloha.core.model.Status
 import social.aloha.core.testing.StatusSamples
@@ -187,6 +188,13 @@ class StatusCardScreenshotTest {
         CompositionLocalProvider(LocalStatusTranslations provides Translated) {
             Rows(listOf(StatusSamples.post(), StatusSamples.direct))
         }
+    }
+
+    @Test
+    fun readingStyle() = capture("status-reading-style") {
+        val style =
+            ReadingStyle(compact = true, serif = true, relaxed = true, roundedAvatars = true, showCounts = false)
+        CompositionLocalProvider(LocalReadingStyle provides style) { Rows(everyday) }
     }
 
     @Test
