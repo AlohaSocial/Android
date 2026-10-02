@@ -158,4 +158,18 @@
     <string name="accounts_sign_out_title">Sign out %1$s?</string>
     <!-- Body of the dialog confirming a sign-out -->
     <string name="accounts_sign_out_body">The account stays on its server. What it read here, its drafts and any posts not sent yet go from this device.</string>
+    <!-- Settings section: pictures, video and sound -->
+    <string name="media_title">Media</string>
+    <!-- Media: heading over how media marked sensitive shows -->
+    <string name="media_sensitive">Media marked sensitive</string>
+    <!-- Sensitive media choice: covered, one press away -->
+    <string name="media_sensitive_blur">Covered, shown when pressed</string>
+    <!-- Sensitive media choice: always shown -->
+    <string name="media_sensitive_show">Always shown</string>
+    <!-- Sensitive media choice: not shown in lists, only in the post -->
+    <string name="media_sensitive_hide">Hidden, shown in the post only</string>
+    <!-- Media, on a server that keeps the choice on its website. %1$s: the current choice, such as "Always shown" -->
+    <string name="media_sensitive_on_website">%1$s. Your server keeps this choice on its website, where it can be changed.</string>
+    <!-- Shown when the server did not take the sensitive media choice -->
+    <string name="media_sensitive_refused">Your server did not take the change. Try again later.</string>
 </resources>

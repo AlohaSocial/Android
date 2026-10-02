@@ -22,6 +22,7 @@ import social.aloha.core.designsystem.ThemeMode
 import social.aloha.core.designsystem.ThemeSettings
 import social.aloha.core.model.AccentSource
 import social.aloha.core.model.Appearance
+import social.aloha.core.model.SensitiveMediaPolicy
 
 /** The settings list and a section at each width, each also run through the Accessibility Test Framework checks. */
 @RunWith(RobolectricTestRunner::class)
@@ -61,6 +62,16 @@ class SettingsScreenshotTest {
             onSignInAgain = {},
             onSignOut = {},
         )
+    }
+
+    @Test
+    fun media() = capture("settings-media") {
+        MediaContent(MediaState(SensitiveMediaPolicy.ShowAll, changeable = true, refused = true), onChoose = {})
+    }
+
+    @Test
+    fun mediaOnTheWebsite() = capture("settings-media-website") {
+        MediaContent(MediaState(SensitiveMediaPolicy.Blur, changeable = false), onChoose = {})
     }
 
     @Test

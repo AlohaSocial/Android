@@ -72,6 +72,7 @@ import kotlin.math.absoluteValue
 import kotlinx.coroutines.delay
 import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaSpacing
+import social.aloha.core.ui.LocalSensitiveMediaPolicy
 import social.aloha.core.ui.rememberBlurHashPainter
 import social.aloha.core.ui.rememberReducedMotion
 
@@ -90,7 +91,9 @@ internal fun ShortPage(
     actions: ShortsActions,
     modifier: Modifier = Modifier,
 ) {
-    val page = remember(short.row.statusId) { PageState(short.row.sensitive) }
+    // only "show all" plays a sensitive short at once; a short has no way to be left out of the pager
+    val covered = short.row.sensitive && !LocalSensitiveMediaPolicy.current.allowsAutomaticReveal
+    val page = remember(short.row.statusId) { PageState(covered) }
     // the page alone says whether it plays: in front, asked for if sensitive, and not paused by the reader
     val shown by LocalLifecycleOwner.current.lifecycle.currentStateAsState()
     val front = shown.isAtLeast(Lifecycle.State.RESUMED)

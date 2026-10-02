@@ -80,6 +80,7 @@ import social.aloha.core.model.SensitiveMediaPolicy
 import social.aloha.core.model.Story
 import social.aloha.core.ui.Avatar
 import social.aloha.core.ui.ListProgress
+import social.aloha.core.ui.LocalSensitiveMediaPolicy
 import social.aloha.core.ui.NearEndEffect
 import social.aloha.core.ui.ProvideLinkRouting
 import social.aloha.core.ui.StatusActions
@@ -175,7 +176,12 @@ private fun LazyListScope.tabContent(state: ProfileUiState, actions: ProfileScre
             }
             items(state.items, key = { it.key }, contentType = { it::class }) { item ->
                 when (item) {
-                    is ProfileItem.Post -> StatusCard(item.row, state.now, SensitiveMediaPolicy.Blur, rowActions)
+                    is ProfileItem.Post -> StatusCard(
+                        item.row,
+                        state.now,
+                        LocalSensitiveMediaPolicy.current,
+                        rowActions,
+                    )
 
                     is ProfileItem.Gap -> if (item.loading) {
                         ListProgress(size = PROGRESS)

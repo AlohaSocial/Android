@@ -27,6 +27,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import social.aloha.core.designsystem.AlohaPreviews
 import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.designsystem.AlohaTheme
+import social.aloha.core.ui.LocalSensitiveMediaPolicy
 import social.aloha.core.ui.LocalStatusTranslations
 import social.aloha.feature.signin.SignInEntry
 
@@ -51,7 +52,12 @@ fun AlohaRoot(viewModel: AppViewModel = hiltViewModel()) {
                 val unread by viewModel.unreadNotifications.collectAsStateWithLifecycle()
                 val modes by viewModel.modes.collectAsStateWithLifecycle()
                 val translations: TranslationsViewModel = hiltViewModel(key = "translations-${current.accountId}")
-                CompositionLocalProvider(LocalStatusTranslations provides translations) {
+                val media: MediaPolicyViewModel = hiltViewModel()
+                val policy by media.policy.collectAsStateWithLifecycle()
+                CompositionLocalProvider(
+                    LocalStatusTranslations provides translations,
+                    LocalSensitiveMediaPolicy provides policy,
+                ) {
                     AlohaApp(
                         readerId = current.accountId,
                         serverAccountId = current.serverAccountId,

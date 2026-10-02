@@ -29,6 +29,10 @@ internal abstract class SettingsModule {
 
         @Provides
         @IntoSet
+        fun media(): SettingsSection = MediaSection
+
+        @Provides
+        @IntoSet
         fun about(): SettingsSection = AboutSection
 
         @Provides

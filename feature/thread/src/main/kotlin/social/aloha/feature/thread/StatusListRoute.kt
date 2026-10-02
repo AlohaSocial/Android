@@ -45,6 +45,7 @@ import social.aloha.core.model.SensitiveMediaPolicy
 import social.aloha.core.navigation.StatusListKey
 import social.aloha.core.navigation.StatusListKind
 import social.aloha.core.ui.AccountRow
+import social.aloha.core.ui.LocalSensitiveMediaPolicy
 import social.aloha.core.ui.RichTextColors
 import social.aloha.core.ui.StatusActions
 import social.aloha.core.ui.StatusCard
@@ -107,7 +108,7 @@ internal fun StatusListScreen(
 
                 is StatusListState.Posts -> Listed(state.rows.isEmpty()) {
                     items(state.rows, key = { it.rowId }) { row ->
-                        StatusCard(row, state.now, SensitiveMediaPolicy.Blur, rowActions, showActions = false)
+                        StatusCard(row, state.now, LocalSensitiveMediaPolicy.current, rowActions, showActions = false)
                         HorizontalDivider()
                     }
                 }

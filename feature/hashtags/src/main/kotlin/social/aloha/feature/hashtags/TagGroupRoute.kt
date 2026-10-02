@@ -35,6 +35,7 @@ import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.model.SensitiveMediaPolicy
 import social.aloha.core.navigation.TagGroupKey
+import social.aloha.core.ui.LocalSensitiveMediaPolicy
 import social.aloha.core.ui.RichTextColors
 import social.aloha.core.ui.StatusActions
 import social.aloha.core.ui.StatusCard
@@ -101,7 +102,7 @@ internal fun TagGroupScreen(
 
                 else -> LazyColumn(Modifier.fillMaxSize()) {
                     items(rows, key = { it.rowId }) { row ->
-                        StatusCard(row, now, SensitiveMediaPolicy.Blur, rowActions, showActions = false)
+                        StatusCard(row, now, LocalSensitiveMediaPolicy.current, rowActions, showActions = false)
                         HorizontalDivider()
                     }
                     if (!state.done) {
