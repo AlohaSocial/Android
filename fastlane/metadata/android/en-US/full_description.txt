@@ -1,0 +1,26 @@
+Aloha Social brings the fediverse to your phone and tablet: posts, photos, video, shorts, stories, news and audio, from Nextcloud Social first and from Mastodon and every server that speaks its API.
+
+<b>Made for Nextcloud Social</b>
+Sign in with your Nextcloud account, wear your Nextcloud’s colour, attach files from your Nextcloud, and get notifications through your Nextcloud. Everything Nextcloud Social adds is used where your server offers it; every other server works too.
+
+<b>Read the way you like</b>
+• Home, your server and everywhere, with new posts waiting behind a button so the list never moves under you
+• Photos, Video and Shorts modes, and News and Audio when you want them
+• Threads, profiles, hashtags, lists, bookmarks and your year in review
+• Translation by your server, or on the device where it can
+
+<b>Write</b>
+• Posts and threads, polls, content warnings, scheduled posts and drafts
+• Pictures and videos with descriptions, focal points and edits
+• Posts that wait in an outbox when you are offline
+
+<b>Stay safe</b>
+• Filters, muting, blocking and blocked servers, all managed in the app
+• Reports to your server’s moderators from any post or profile
+• Media marked sensitive shown as your server account says
+• An optional app lock with your fingerprint, face or screen lock
+
+<b>Private by design</b>
+The app collects nothing about you and sends nothing to its developers: no analytics, no crash reporting, no advertising. It talks to the servers you sign in to; your sign-in stays on the device, encrypted.
+
+Aloha Social is free software under the MIT licence.

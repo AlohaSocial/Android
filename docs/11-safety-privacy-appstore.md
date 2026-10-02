@@ -6,7 +6,7 @@ This is the Apple app's specification, carried over as the product contract for 
 
 | Topic | Android |
 |---|---|
-| Store | Google Play's UGC policy and Data safety form (filled per flavor) instead of App Review; F-Droid for `generic`. |
+| Store | Google Play's UGC policy and Data safety form (filled per flavor) instead of App Review; F-Droid for `generic`. The answers and the listing are in [12-store.md](12-store.md). |
 | Locking | An opt-in biometric or device-credential app lock; authentication-bound encryption of direct messages is an optional later addition. |
 | Backups | `dataExtractionRules` and `fullBackupContent` keep the token vault, the cache, and the posts not yet out (`outbox.db`, drafts and direct messages among them, with the copies in `files/uploads` they attach) off backups and device transfers. |
 | Public timelines | The "accounts I don't follow" switch is per account, on the device, and narrows the local and federated timelines only. Whether the reader follows an author is asked of the server for the authors on screen, a batch at a time; until it answers, their posts are held back. |
