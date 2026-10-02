@@ -92,6 +92,8 @@ public enum class StatusMenuItem {
     CopyLink,
     OpenInBrowser,
     Translate,
+    ShowOriginal,
+    TranslationLanguage,
     MuteConversation,
     Report,
     Edit,
@@ -114,16 +116,24 @@ public enum class StatusMenuItem {
  */
 @Composable
 public fun StatusCard(
-    row: StatusRowUi,
+    post: StatusRowUi,
     now: Instant,
     policy: SensitiveMediaPolicy,
-    actions: StatusActions,
+    screenActions: StatusActions,
     modifier: Modifier = Modifier,
     showActions: Boolean = true,
     canReact: Boolean = false,
     animateEmoji: Boolean = true,
     focused: Boolean = false,
 ) {
+    // a translation takes the post's place, everywhere the card reads it: its text, its label, its links
+    val translations = LocalStatusTranslations.current
+    val translation = translations.stateOf(post.statusId)
+    val row = translated(post, translation)
+    val offered = translation == null && translations.offers(post)
+    val actions = remember(screenActions, translations, offered, translation) {
+        TranslatingActions(screenActions, translations, offered, translation)
+    }
     var filterRevealed by rememberSaveable(row.rowId) { mutableStateOf(false) }
     val warning = row.filterWarning
     if (warning != null && !filterRevealed) {
@@ -133,9 +143,17 @@ public fun StatusCard(
     var spoilerRevealed by rememberSaveable(row.rowId) { mutableStateOf(false) }
     var pollChoice by rememberSaveable(row.rowId) { mutableStateOf(listOf<Int>()) }
     val bodyShown = row.spoiler == null || spoilerRevealed
-    val label = accessibilityLabel(row, now, bodyShown)
-    val controls =
-        CardControls(spoilerRevealed, { spoilerRevealed = !spoilerRevealed }, pollChoice, { pollChoice = it })
+    val label = listOfNotNull(accessibilityLabel(row, now, bodyShown), translation?.let { translationText(it) })
+        .joinToString(". ")
+    val controls = CardControls(
+        spoilerRevealed,
+        { spoilerRevealed = !spoilerRevealed },
+        pollChoice,
+        { pollChoice = it },
+        translation,
+        { translations.showOriginal(row.statusId) },
+        translations::getLanguage,
+    )
     val customActions = customActions(row, actions, controls)
     ProvideLinkRouting(onLink = actions::onLink) {
         Column(
@@ -189,6 +207,7 @@ private fun RowScope.StatusMain(
         if (row.spoiler == null || controls.spoilerRevealed) {
             StatusBody(row, policy, actions, flags.canReact, flags.animateEmoji, flags.focused, controls)
         }
+        controls.translation?.let { TranslationLine(it, controls.onShowOriginal, controls.onGetLanguage) }
         if (flags.focused) {
             Text(
                 fullDate(row.createdAt),
@@ -463,6 +482,32 @@ private fun StatusMenu(row: StatusRowUi, actions: StatusActions) {
         }
     }
 }
+
+/** The screen's actions, with translating and its undo carried out here, for every screen alike. */
+private class TranslatingActions(
+    private val screen: StatusActions,
+    private val translations: StatusTranslations,
+    offered: Boolean,
+    translation: TranslationUi?,
+) : StatusActions by screen {
+    private val added = buildSet {
+        if (offered) add(StatusMenuItem.Translate)
+        if (translation is TranslationUi.NeedsLanguage) add(StatusMenuItem.TranslationLanguage)
+        if (translation != null) add(StatusMenuItem.ShowOriginal)
+    }
+
+    override val menu: Set<StatusMenuItem> get() = screen.menu - TRANSLATION_ITEMS + added
+
+    override fun onMenu(row: StatusRowUi, item: StatusMenuItem) = when (item) {
+        StatusMenuItem.Translate -> translations.translate(row)
+        StatusMenuItem.ShowOriginal -> translations.showOriginal(row.statusId)
+        StatusMenuItem.TranslationLanguage -> translations.getLanguage()
+        else -> screen.onMenu(row, item)
+    }
+}
+
+private val TRANSLATION_ITEMS =
+    setOf(StatusMenuItem.Translate, StatusMenuItem.ShowOriginal, StatusMenuItem.TranslationLanguage)
 
 internal val AVATAR = 44.dp
 internal val SMALL_ICON = 16.dp

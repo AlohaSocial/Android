@@ -13,6 +13,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
@@ -26,6 +27,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import social.aloha.core.designsystem.AlohaPreviews
 import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.designsystem.AlohaTheme
+import social.aloha.core.ui.LocalStatusTranslations
 import social.aloha.feature.signin.SignInEntry
 
 /** Sign-in until an account exists, the shell afterwards. */
@@ -45,19 +47,22 @@ fun AlohaRoot(viewModel: AppViewModel = hiltViewModel()) {
                 val destination by viewModel.pendingDestination.collectAsStateWithLifecycle()
                 val unread by viewModel.unreadNotifications.collectAsStateWithLifecycle()
                 val modes by viewModel.modes.collectAsStateWithLifecycle()
-                AlohaApp(
-                    readerId = current.accountId,
-                    serverAccountId = current.serverAccountId,
-                    pendingLink = pending,
-                    onPendingLinkTaken = viewModel::externalHandled,
-                    // only the shell of the account it belongs to takes it, not the one switched away from
-                    pendingDestination = destination?.takeIf { it.first == current.accountId }?.second,
-                    onPendingDestinationTaken = viewModel::destinationHandled,
-                    unreadNotifications = unread,
-                    resolveLink = viewModel::destination,
-                    accountButton = { links -> AccountSwitcher(viewModel, links) },
-                    modes = modes,
-                )
+                val translations: TranslationsViewModel = hiltViewModel(key = "translations-${current.accountId}")
+                CompositionLocalProvider(LocalStatusTranslations provides translations) {
+                    AlohaApp(
+                        readerId = current.accountId,
+                        serverAccountId = current.serverAccountId,
+                        pendingLink = pending,
+                        onPendingLinkTaken = viewModel::externalHandled,
+                        // only the shell of the account it belongs to takes it, not the one switched away from
+                        pendingDestination = destination?.takeIf { it.first == current.accountId }?.second,
+                        onPendingDestinationTaken = viewModel::destinationHandled,
+                        unreadNotifications = unread,
+                        resolveLink = viewModel::destination,
+                        accountButton = { links -> AccountSwitcher(viewModel, links) },
+                        modes = modes,
+                    )
+                }
             }
         }
     }
