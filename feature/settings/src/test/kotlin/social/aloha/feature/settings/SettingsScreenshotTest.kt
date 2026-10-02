@@ -96,6 +96,9 @@ class SettingsScreenshotTest {
     }
 
     @Test
+    fun storage() = capture("settings-storage") { StorageContent(StorageState(bytes = 126_000_000), onClear = {}) }
+
+    @Test
     fun appearance() = capture("settings-appearance") {
         AppearanceContent(
             AppearanceState(Appearance(accent = AccentSource.Custom, black = true), serverColour = true),

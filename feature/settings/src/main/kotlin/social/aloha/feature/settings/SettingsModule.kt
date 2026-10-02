@@ -33,6 +33,10 @@ internal abstract class SettingsModule {
 
         @Provides
         @IntoSet
+        fun storage(): SettingsSection = StorageSection
+
+        @Provides
+        @IntoSet
         fun server(): SettingsSection = ServerSection
 
         @Provides

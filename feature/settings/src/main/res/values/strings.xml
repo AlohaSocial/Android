@@ -210,6 +210,18 @@
     <string name="server_updated">Last changed %1$s</string>
     <!-- One week of server activity. %1$s: the date the week starts -->
     <string name="server_week">Week of %1$s</string>
+    <!-- Settings section: what the app keeps on the device -->
+    <string name="storage_title">Storage</string>
+    <!-- Storage: the pictures and server answers kept to be quick -->
+    <string name="storage_cache">Pictures and answers kept to be quick</string>
+    <!-- Storage: the cache's size. %1$s: a size, such as 120 MB -->
+    <string name="storage_cache_size">%1$s, fetched again whenever needed</string>
+    <!-- Storage, after clearing. %1$s: what is left, such as 0 B -->
+    <string name="storage_cleared">Cleared, %1$s left</string>
+    <!-- Storage, while the size is measured -->
+    <string name="storage_measuring">Measuring…</string>
+    <!-- Button: empty the cache -->
+    <string name="storage_clear">Clear</string>
     <!-- One week of server activity: posts written. %d: how many -->
     <plurals name="server_week_posts">
         <item quantity="one">%d post</item>
