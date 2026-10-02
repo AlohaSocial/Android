@@ -256,6 +256,67 @@
     <string name="media_full_pictures">Full-size pictures on mobile data</string>
     <!-- Summary of the switch above -->
     <string name="media_full_pictures_summary">Off, a picture opens at the size a list shows it, on mobile data only</string>
+    <!-- Title of the year in review screen, and its entry in Settings -->
+    <string name="year_title">Your year</string>
+    <!-- Heading of one year in review. %1$d: the year, such as 2026 -->
+    <string name="year_heading">Your %1$d</string>
+    <!-- Shown where the server keeps no year in review -->
+    <string name="year_none">Your server has no year in review for you yet.</string>
+    <!-- Shown where the server could not be asked -->
+    <string name="year_trouble">Couldn’t reach your server.</string>
+    <!-- Button: ask the server again -->
+    <string name="year_retry">Try again</string>
+    <!-- How many posts, and the busiest month. %1$s: such as "19 posts", %2$s: a month, such as September -->
+    <string name="year_posts_busiest">%1$s, most of them in %2$s</string>
+    <!-- The months chart, for a screen reader. %1$s: the months with posts and how many, such as "September 19" -->
+    <string name="year_chart">Posts by month: %1$s</string>
+    <!-- Heading over the hashtags used most -->
+    <string name="year_hashtags">Your hashtags</string>
+    <!-- Heading over the year’s top posts -->
+    <string name="year_top_posts">Your top posts</string>
+    <!-- Above a top post: the most boosted -->
+    <string name="year_top_boosts">Boosted most</string>
+    <!-- Above a top post: the most replied to -->
+    <string name="year_top_replies">Most replies</string>
+    <!-- Above a top post: the most favourited -->
+    <string name="year_top_favourites">Favourited most</string>
+    <!-- A top post with no text, only media -->
+    <string name="year_post_no_text">A post without text</string>
+    <!-- Archetype: wrote almost nothing -->
+    <string name="year_lurker">The quiet one</string>
+    <!-- What the quiet one did -->
+    <string name="year_lurker_line">You read more than you wrote.</string>
+    <!-- Archetype: mostly boosted other people -->
+    <string name="year_booster">The booster</string>
+    <!-- What the booster did -->
+    <string name="year_booster_line">You passed on what others wrote.</string>
+    <!-- Archetype: mostly asked questions -->
+    <string name="year_pollster">The pollster</string>
+    <!-- What the pollster did -->
+    <string name="year_pollster_line">You asked, and people answered.</string>
+    <!-- Archetype: mostly answered other people -->
+    <string name="year_replier">The replier</string>
+    <!-- What the replier did -->
+    <string name="year_replier_line">You answered other people more than anyone else.</string>
+    <!-- Archetype: mostly wrote their own posts, and was read -->
+    <string name="year_oracle">The oracle</string>
+    <!-- What the oracle did -->
+    <string name="year_oracle_line">You wrote your own posts, and people read them.</string>
+    <!-- Posts written in the year. %d: how many -->
+    <plurals name="year_posts">
+        <item quantity="one">%d post</item>
+        <item quantity="other">%d posts</item>
+    </plurals>
+    <!-- New followers in the year. %d: how many -->
+    <plurals name="year_followers">
+        <item quantity="one">%d new follower</item>
+        <item quantity="other">%d new followers</item>
+    </plurals>
+    <!-- How often a hashtag was used. %d: how many times -->
+    <plurals name="year_tag_uses">
+        <item quantity="one">used once</item>
+        <item quantity="other">used %d times</item>
+    </plurals>
     <!-- One week of server activity: posts written. %d: how many -->
     <plurals name="server_week_posts">
         <item quantity="one">%d post</item>

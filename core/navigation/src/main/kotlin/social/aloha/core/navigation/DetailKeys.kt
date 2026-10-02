@@ -165,6 +165,10 @@ public data class AnnouncementsKey(val readerId: String) : NavKey
 @Serializable
 public data class FiltersKey(val readerId: String) : NavKey
 
+/** [readerId]'s years in review. */
+@Serializable
+public data class YearKey(val readerId: String) : NavKey
+
 /** [readerId]'s filter [filterId] being changed, or a new one without. */
 @Serializable
 public data class FilterEditKey(val readerId: String, val filterId: String? = null) : NavKey

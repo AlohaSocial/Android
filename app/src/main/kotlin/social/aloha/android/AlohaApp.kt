@@ -110,6 +110,7 @@ import social.aloha.core.navigation.ThreadKey
 import social.aloha.core.navigation.TopLevelKey
 import social.aloha.core.navigation.VideoKey
 import social.aloha.core.navigation.WatchKey
+import social.aloha.core.navigation.YearKey
 import social.aloha.core.ui.LocalReadingStyle
 import social.aloha.core.ui.StatusNavigation
 import social.aloha.core.ui.openInBrowser
@@ -151,6 +152,7 @@ import social.aloha.feature.settings.SettingsDestination
 import social.aloha.feature.settings.SettingsPlaceholder
 import social.aloha.feature.settings.SettingsRoute
 import social.aloha.feature.settings.SettingsSectionRoute
+import social.aloha.feature.settings.YearRoute
 import social.aloha.feature.shorts.ShortsRoute
 import social.aloha.feature.stories.StoriesRail
 import social.aloha.feature.thread.StatusListRoute
@@ -497,6 +499,9 @@ fun AlohaApp(
                                 onBack = { backStack.remove(key) },
                             )
                         }
+                        entry<YearKey> { key ->
+                            YearRoute(onOpenPost = statusNavigation::openThread, onBack = { backStack.remove(key) })
+                        }
                         entry<FiltersKey> { key ->
                             FiltersRoute(
                                 key,
@@ -559,6 +564,14 @@ fun AlohaApp(
                                         AlohaIcons.Filtered,
                                     ) {
                                         backStack.push(FiltersKey(readerId))
+                                    },
+                                    SettingsDestination(
+                                        "year",
+                                        YEAR_ORDER,
+                                        SettingsR.string.year_title,
+                                        AlohaIcons.Recent,
+                                    ) {
+                                        backStack.push(YearKey(readerId))
                                     },
                                 ),
                             )
@@ -803,3 +816,6 @@ private fun canOpenWindows(): Boolean {
 
 // after Writing in the settings list, before Notifications
 private const val FILTERS_ORDER = 250
+
+// near the end of the list, before About this server
+private const val YEAR_ORDER = 970

@@ -23,6 +23,11 @@ import social.aloha.core.designsystem.AlohaTheme
 import social.aloha.core.designsystem.ThemeMode
 import social.aloha.core.designsystem.ThemeSettings
 import social.aloha.core.model.AccentSource
+import social.aloha.core.model.AnnualArchetype
+import social.aloha.core.model.AnnualHashtag
+import social.aloha.core.model.AnnualMonth
+import social.aloha.core.model.AnnualReport
+import social.aloha.core.model.AnnualReportData
 import social.aloha.core.model.Appearance
 import social.aloha.core.model.InstanceDocument
 import social.aloha.core.model.InstanceRule
@@ -117,6 +122,30 @@ class SettingsScreenshotTest {
 
     @Test
     fun sound() = capture("settings-sound") { SoundContent(ReadingStyle(), onChange = {}, onNotificationSounds = {}) }
+
+    @Test
+    fun year() = capture("settings-year") {
+        val report = AnnualReport(
+            2026,
+            AnnualReportData(
+                archetype = AnnualArchetype.Oracle,
+                timeSeries = (1..12).map { AnnualMonth(it, statuses = if (it in 8..10) it * 2 else 0) },
+                topHashtags = listOf(AnnualHashtag("aloha", 3), AnnualHashtag("surf", 1)),
+            ),
+        )
+        YearScreen(
+            YearState(
+                loading = false,
+                reports = listOf(report, AnnualReport(2025)),
+                shown = 2026,
+                posts = mapOf(2026 to listOf(TopPost(TopKind.Favourites, "s1", "Surf\u2019s up at dawn"))),
+            ),
+            onOpenPost = {},
+            onYear = {},
+            onRetry = {},
+            onBack = {},
+        )
+    }
 
     @Test
     fun appearance() = capture("settings-appearance") {
