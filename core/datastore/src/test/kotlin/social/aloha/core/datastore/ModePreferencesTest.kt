@@ -38,4 +38,15 @@ class ModePreferencesTest {
         val stored = mutablePreferencesOf(stringSetPreferencesKey("optional_modes") to emptySet())
         assertTrue(ModePreferences(Memory(stored)).modesOffered.first())
     }
+
+    @Test
+    fun `shorts loop and play on mobile data until the reader says otherwise`() = runTest {
+        val preferences = ModePreferences(Memory(emptyPreferences()))
+        assertTrue(preferences.loopShorts.first())
+        assertTrue(preferences.autoplayOnMobileData.first())
+        preferences.setLoopShorts(false)
+        preferences.setAutoplayOnMobileData(false)
+        assertFalse(preferences.loopShorts.first())
+        assertFalse(preferences.autoplayOnMobileData.first())
+    }
 }

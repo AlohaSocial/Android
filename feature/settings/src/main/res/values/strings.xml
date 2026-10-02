@@ -172,4 +172,14 @@
     <string name="media_sensitive_on_website">%1$s. Your server keeps this choice on its website, where it can be changed.</string>
     <!-- Shown when the server did not take the sensitive media choice -->
     <string name="media_sensitive_refused">Your server did not take the change. Try again later.</string>
+    <!-- Media switch: shorts start without sound -->
+    <string name="media_start_muted">Start shorts muted</string>
+    <!-- Summary of the start muted switch -->
+    <string name="media_start_muted_summary">Sound comes on with the speaker button, and stays on until turned off</string>
+    <!-- Media switch: a short starts over when it ends -->
+    <string name="media_loop_shorts">Loop shorts</string>
+    <!-- Media switch: shorts play as they come into view on mobile data too -->
+    <string name="media_autoplay_mobile">Play shorts on mobile data</string>
+    <!-- Summary of the switch above -->
+    <string name="media_autoplay_mobile_summary">Off, a short waits for a tap on mobile data. On Wi-Fi shorts always play.</string>
 </resources>

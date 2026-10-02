@@ -113,6 +113,11 @@ internal class ShortsPlayback(private val context: Context) {
         player.play()
     }
 
+    /** A short starts over when it ends, or stops there. */
+    fun setLoop(loop: Boolean) {
+        player.repeatMode = if (loop) Player.REPEAT_MODE_ONE else Player.REPEAT_MODE_OFF
+    }
+
     fun setMuted(muted: Boolean) {
         player.volume = if (muted) 0f else 1f
     }

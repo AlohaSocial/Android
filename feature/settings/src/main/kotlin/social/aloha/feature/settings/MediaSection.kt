@@ -5,6 +5,7 @@ package social.aloha.feature.settings
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -33,11 +34,13 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import social.aloha.core.data.AccountRepository
 import social.aloha.core.data.reading.SensitiveMedia
+import social.aloha.core.datastore.ModePreferences
 import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.model.SensitiveMediaPolicy
 import social.aloha.core.ui.ChoiceRows
 import social.aloha.core.ui.SettingsSection
+import social.aloha.core.ui.SwitchRow
 
 /** What Media shows: the account's sensitive-media choice, whether its server takes a change, and a refusal. */
 @Immutable
@@ -45,13 +48,20 @@ internal data class MediaState(
     val policy: SensitiveMediaPolicy = SensitiveMediaPolicy.Blur,
     val changeable: Boolean = false,
     val refused: Boolean = false,
+    val startMuted: Boolean = true,
+    val loopShorts: Boolean = true,
+    val autoplayOnMobileData: Boolean = true,
 )
+
+/** The playback switches, each as it is stored. */
+internal data class Playback(val startMuted: Boolean, val loopShorts: Boolean, val autoplayOnMobileData: Boolean)
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 internal class MediaSettingsViewModel @Inject constructor(
     private val accounts: AccountRepository,
     private val sensitive: SensitiveMedia,
+    private val playback: ModePreferences,
 ) : ViewModel() {
     private val refused = MutableStateFlow(false)
 
@@ -61,7 +71,27 @@ internal class MediaSettingsViewModel @Inject constructor(
             // only Nextcloud Social takes the choice from an app; Mastodon keeps it on its website
             MediaState(policy, reader.capabilities.isNextcloudSocial, no)
         }
+    }.combine(
+        combine(playback.videosMuted, playback.loopShorts, playback.autoplayOnMobileData, ::Playback),
+    ) { state, play ->
+        state.copy(
+            startMuted = play.startMuted,
+            loopShorts = play.loopShorts,
+            autoplayOnMobileData = play.autoplayOnMobileData,
+        )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_MILLIS), MediaState())
+
+    fun startMuted(muted: Boolean) {
+        viewModelScope.launch { playback.setVideosMuted(muted) }
+    }
+
+    fun loopShorts(loop: Boolean) {
+        viewModelScope.launch { playback.setLoopShorts(loop) }
+    }
+
+    fun autoplayOnMobileData(autoplay: Boolean) {
+        viewModelScope.launch { playback.setAutoplayOnMobileData(autoplay) }
+    }
 
     fun choose(policy: SensitiveMediaPolicy) {
         val reader = accounts.activeAccount.value ?: return
@@ -83,13 +113,22 @@ internal object MediaSection : SettingsSection {
     override fun Content() {
         val viewModel: MediaSettingsViewModel = hiltViewModel()
         val state by viewModel.state.collectAsStateWithLifecycle()
-        MediaContent(state, viewModel::choose)
+        MediaContent(
+            state,
+            MediaActions(
+                viewModel::choose,
+                viewModel::startMuted,
+                viewModel::loopShorts,
+                viewModel::autoplayOnMobileData,
+            ),
+        )
     }
 }
 
 /** Sensitive media as the account's server keeps it; a server that keeps it on its website says so. */
 @Composable
-internal fun MediaContent(state: MediaState, onChoose: (SensitiveMediaPolicy) -> Unit) {
+internal fun MediaContent(state: MediaState, actions: MediaActions) {
+    val onChoose = actions.onChoose
     Column {
         val options = listOf(
             SensitiveMediaPolicy.Blur to stringResource(R.string.media_sensitive_blur),
@@ -124,5 +163,27 @@ internal fun MediaContent(state: MediaState, onChoose: (SensitiveMediaPolicy) ->
                     .semantics { liveRegion = LiveRegionMode.Polite },
             )
         }
+        HorizontalDivider()
+        SwitchRow(
+            stringResource(R.string.media_start_muted),
+            state.startMuted,
+            actions.onStartMuted,
+            stringResource(R.string.media_start_muted_summary),
+        )
+        SwitchRow(stringResource(R.string.media_loop_shorts), state.loopShorts, actions.onLoopShorts)
+        SwitchRow(
+            stringResource(R.string.media_autoplay_mobile),
+            state.autoplayOnMobileData,
+            actions.onAutoplayOnMobileData,
+            stringResource(R.string.media_autoplay_mobile_summary),
+        )
     }
 }
+
+/** What the Media rows change. */
+internal class MediaActions(
+    val onChoose: (SensitiveMediaPolicy) -> Unit = {},
+    val onStartMuted: (Boolean) -> Unit = {},
+    val onLoopShorts: (Boolean) -> Unit = {},
+    val onAutoplayOnMobileData: (Boolean) -> Unit = {},
+)

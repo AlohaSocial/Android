@@ -66,12 +66,15 @@ class SettingsScreenshotTest {
 
     @Test
     fun media() = capture("settings-media") {
-        MediaContent(MediaState(SensitiveMediaPolicy.ShowAll, changeable = true, refused = true), onChoose = {})
+        MediaContent(MediaState(SensitiveMediaPolicy.ShowAll, changeable = true, refused = true), MediaActions())
     }
 
     @Test
     fun mediaOnTheWebsite() = capture("settings-media-website") {
-        MediaContent(MediaState(SensitiveMediaPolicy.Blur, changeable = false), onChoose = {})
+        MediaContent(
+            MediaState(SensitiveMediaPolicy.Blur, changeable = false, autoplayOnMobileData = false),
+            MediaActions(),
+        )
     }
 
     @Test

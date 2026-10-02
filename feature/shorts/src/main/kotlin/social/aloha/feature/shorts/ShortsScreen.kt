@@ -51,6 +51,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CustomAccessibilityAction
@@ -60,6 +61,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.getSystemService
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.currentStateAsState
@@ -90,10 +92,11 @@ internal fun ShortPage(
     muted: Boolean,
     actions: ShortsActions,
     modifier: Modifier = Modifier,
+    waits: Boolean = false,
 ) {
     // only "show all" plays a sensitive short at once; a short has no way to be left out of the pager
     val covered = short.row.sensitive && !LocalSensitiveMediaPolicy.current.allowsAutomaticReveal
-    val page = remember(short.row.statusId) { PageState(covered) }
+    val page = remember(short.row.statusId) { PageState(covered, paused = waits) }
     // the page alone says whether it plays: in front, asked for if sensitive, and not paused by the reader
     val shown by LocalLifecycleOwner.current.lifecycle.currentStateAsState()
     val front = shown.isAtLeast(Lifecycle.State.RESUMED)
@@ -123,17 +126,20 @@ internal fun ShortPage(
 
 /** What one page remembers: whether its sensitive short was asked for, whether it is paused, its hearts. */
 @Stable
-private class PageState(sensitive: Boolean) {
+private class PageState(sensitive: Boolean, paused: Boolean) {
     var revealed by mutableStateOf(!sensitive)
-    var paused by mutableStateOf(false)
+    var paused by mutableStateOf(paused)
     var hearts by mutableIntStateOf(0)
 }
 
-/** The gestures: a tap reveals a sensitive short, a double tap favourites, a long press pauses, the edge opens who. */
+/**
+ * The gestures: a tap reveals a sensitive short or plays one waiting, a double tap favourites, a long press
+ * pauses, the edge opens who.
+ */
 private fun Modifier.gestures(short: ShortUi, page: PageState, actions: ShortsActions): Modifier = this
     .pointerInput(short.row.statusId) {
         detectTapGestures(
-            onTap = { page.revealed = true },
+            onTap = { if (page.revealed) page.paused = false else page.revealed = true },
             onDoubleTap = {
                 if (!short.row.state.favourited) actions.onFavourite(short)
                 page.hearts++
@@ -432,7 +438,8 @@ internal fun ShortsPager(
             player.takeIf { page == pagerState.settledPage },
             state.muted,
             actions,
-            Modifier.graphicsLayer {
+            waits = state.waitForTap,
+            modifier = Modifier.graphicsLayer {
                 if (reduced) {
                     val offset = pagerState.getOffsetDistanceInPages(page)
                     translationY = offset * size.height
