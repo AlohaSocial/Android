@@ -42,6 +42,8 @@ internal fun Lint.configureLint(project: Project) {
     abortOnError = true
     warningsAsErrors = true
     checkDependencies = false
+    // test sources are detekt's and ktlint's; lint over them cost a sixth of a full check and found nothing
+    ignoreTestSources = true
     // version drift is Renovate's job; these checks need the network and fail offline
     disable += setOf("GradleDependency", "NewerVersionAvailable", "AndroidGradlePluginVersion", "OldTargetApi")
     // a baseline exists only once a finding had to be accepted; lint must never write one itself
