@@ -12,6 +12,9 @@ package social.aloha.core.model
  * @param roundedAvatars rounded squares instead of circles, for every avatar.
  * @param showCounts the numbers beside reply, boost and favourite.
  * @param unreadBadge the count on Notifications in the navigation.
+ * @param haptics a light tick under the finger as a post is boosted, favourited or bookmarked.
+ * @param fullPicturesOnMobileData the viewer loads a picture at full size on mobile data too; off, its
+ *   preview there, as lists show it.
  */
 public data class ReadingStyle(
     val compact: Boolean = false,
@@ -20,4 +23,6 @@ public data class ReadingStyle(
     val roundedAvatars: Boolean = false,
     val showCounts: Boolean = true,
     val unreadBadge: Boolean = true,
+    val haptics: Boolean = true,
+    val fullPicturesOnMobileData: Boolean = true,
 )

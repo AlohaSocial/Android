@@ -105,6 +105,9 @@ class SettingsScreenshotTest {
     }
 
     @Test
+    fun sound() = capture("settings-sound") { SoundContent(ReadingStyle(), onChange = {}, onNotificationSounds = {}) }
+
+    @Test
     fun appearance() = capture("settings-appearance") {
         AppearanceContent(
             AppearanceState(Appearance(accent = AccentSource.Custom, black = true), serverColour = true),

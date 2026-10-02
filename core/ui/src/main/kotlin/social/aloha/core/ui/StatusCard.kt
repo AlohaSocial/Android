@@ -36,6 +36,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.UriHandler
 import androidx.compose.ui.res.pluralStringResource
@@ -415,6 +417,7 @@ private fun ActionRow(row: StatusRowUi, actions: StatusActions) {
 @Composable
 private fun Actions(row: StatusRowUi, actions: StatusActions) {
     val semantic = LocalAlohaSemanticColors.current
+    val tick = rememberTick()
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     ActionButton(AlohaIcons.Reply, row.counts.replies, muted) { actions.onReply(row) }
     ActionButton(
@@ -422,6 +425,7 @@ private fun Actions(row: StatusRowUi, actions: StatusActions) {
         row.counts.boosts,
         if (row.state.boosted) semantic.boost else muted,
     ) {
+        tick(!row.state.boosted)
         actions.onBoost(row)
     }
     ActionButton(
@@ -429,6 +433,7 @@ private fun Actions(row: StatusRowUi, actions: StatusActions) {
         row.counts.favourites,
         if (row.state.favourited) semantic.favourite else muted,
     ) {
+        tick(!row.state.favourited)
         actions.onFavourite(row)
     }
     ActionButton(
@@ -436,6 +441,7 @@ private fun Actions(row: StatusRowUi, actions: StatusActions) {
         null,
         if (row.state.bookmarked) semantic.bookmark else muted,
     ) {
+        tick(!row.state.bookmarked)
         actions.onBookmark(row)
     }
     // PeerTube's thumbs-down, read-only: the server carries the count but has no route to cast one
@@ -449,6 +455,16 @@ private fun Actions(row: StatusRowUi, actions: StatusActions) {
                 modifier = Modifier.padding(start = AlohaSpacing.xxs),
             )
         }
+    }
+}
+
+/** A tick under the finger as a post changes; Android leaves it out where touch feedback is off. */
+@Composable
+private fun rememberTick(): (Boolean) -> Unit {
+    val haptics = LocalHapticFeedback.current
+    val ticks = LocalReadingStyle.current.haptics
+    return { on ->
+        if (ticks) haptics.performHapticFeedback(if (on) HapticFeedbackType.ToggleOn else HapticFeedbackType.ToggleOff)
     }
 }
 

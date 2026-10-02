@@ -33,6 +33,10 @@ internal abstract class SettingsModule {
 
         @Provides
         @IntoSet
+        fun sound(): SettingsSection = SoundSection
+
+        @Provides
+        @IntoSet
         fun media(): SettingsSection = MediaSection
 
         @Provides

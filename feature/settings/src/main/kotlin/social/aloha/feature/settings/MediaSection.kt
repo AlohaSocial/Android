@@ -28,6 +28,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
@@ -35,6 +36,7 @@ import kotlinx.coroutines.launch
 import social.aloha.core.data.AccountRepository
 import social.aloha.core.data.reading.SensitiveMedia
 import social.aloha.core.datastore.ModePreferences
+import social.aloha.core.datastore.ReadingPreferences
 import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.model.SensitiveMediaPolicy
@@ -51,6 +53,7 @@ internal data class MediaState(
     val startMuted: Boolean = true,
     val loopShorts: Boolean = true,
     val autoplayOnMobileData: Boolean = true,
+    val fullPicturesOnMobileData: Boolean = true,
 )
 
 /** The playback switches, each as it is stored. */
@@ -62,6 +65,7 @@ internal class MediaSettingsViewModel @Inject constructor(
     private val accounts: AccountRepository,
     private val sensitive: SensitiveMedia,
     private val playback: ModePreferences,
+    private val reading: ReadingPreferences,
 ) : ViewModel() {
     private val refused = MutableStateFlow(false)
 
@@ -79,7 +83,12 @@ internal class MediaSettingsViewModel @Inject constructor(
             loopShorts = play.loopShorts,
             autoplayOnMobileData = play.autoplayOnMobileData,
         )
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_MILLIS), MediaState())
+    }.combine(reading.style) { state, style -> state.copy(fullPicturesOnMobileData = style.fullPicturesOnMobileData) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_MILLIS), MediaState())
+
+    fun fullPicturesOnMobileData(full: Boolean) {
+        viewModelScope.launch { reading.setStyle(reading.style.first().copy(fullPicturesOnMobileData = full)) }
+    }
 
     fun startMuted(muted: Boolean) {
         viewModelScope.launch { playback.setVideosMuted(muted) }
@@ -120,6 +129,7 @@ internal object MediaSection : SettingsSection {
                 viewModel::startMuted,
                 viewModel::loopShorts,
                 viewModel::autoplayOnMobileData,
+                viewModel::fullPicturesOnMobileData,
             ),
         )
     }
@@ -177,6 +187,12 @@ internal fun MediaContent(state: MediaState, actions: MediaActions) {
             actions.onAutoplayOnMobileData,
             stringResource(R.string.media_autoplay_mobile_summary),
         )
+        SwitchRow(
+            stringResource(R.string.media_full_pictures),
+            state.fullPicturesOnMobileData,
+            actions.onFullPicturesOnMobileData,
+            stringResource(R.string.media_full_pictures_summary),
+        )
     }
 }
 
@@ -186,4 +202,5 @@ internal class MediaActions(
     val onStartMuted: (Boolean) -> Unit = {},
     val onLoopShorts: (Boolean) -> Unit = {},
     val onAutoplayOnMobileData: (Boolean) -> Unit = {},
+    val onFullPicturesOnMobileData: (Boolean) -> Unit = {},
 )

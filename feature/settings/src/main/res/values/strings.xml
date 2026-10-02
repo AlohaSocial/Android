@@ -240,6 +240,20 @@
     <string name="reading_counts_summary">How many replied, boosted and favourited, beside each button</string>
     <!-- Reading switch: the number on Notifications in the navigation -->
     <string name="reading_badge">Unread count on Notifications</string>
+    <!-- Settings section: haptic feedback and notification sounds -->
+    <string name="sound_title">Sound and haptics</string>
+    <!-- Switch: a light vibration as a post is boosted, favourited or bookmarked -->
+    <string name="sound_haptics">Haptic feedback</string>
+    <!-- Summary of the Haptic feedback switch -->
+    <string name="sound_haptics_summary">A light tick as you boost, favourite or bookmark</string>
+    <!-- Opens Android's settings for this app's notifications -->
+    <string name="sound_notifications">Notification sounds</string>
+    <!-- Summary of the row above -->
+    <string name="sound_notifications_summary">Each kind of notification sounds as Android\'s settings say</string>
+    <!-- Media switch: the picture viewer loads full-size pictures on mobile data too -->
+    <string name="media_full_pictures">Full-size pictures on mobile data</string>
+    <!-- Summary of the switch above -->
+    <string name="media_full_pictures_summary">Off, a picture opens at the size a list shows it, on mobile data only</string>
     <!-- One week of server activity: posts written. %d: how many -->
     <plurals name="server_week_posts">
         <item quantity="one">%d post</item>

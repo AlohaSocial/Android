@@ -16,6 +16,9 @@ import social.aloha.core.model.ReadingStyle
 /** How posts read, everywhere they show; the defaults where nothing provides it. */
 public val LocalReadingStyle: ProvidableCompositionLocal<ReadingStyle> = staticCompositionLocalOf { ReadingStyle() }
 
+/** Whether the device is on mobile data, as the window was last composed; false where nothing provides it. */
+public val LocalOnMobileData: ProvidableCompositionLocal<Boolean> = staticCompositionLocalOf { false }
+
 /** [this] as a post's text reads in the reader's [style]: its face and the room between its lines. */
 internal fun TextStyle.asRead(style: ReadingStyle): TextStyle {
     val faced = if (style.serif) copy(fontFamily = FontFamily.Serif) else this

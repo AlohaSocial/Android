@@ -31,7 +31,9 @@ import social.aloha.core.datastore.ReadingPreferences
 import social.aloha.core.designsystem.AlohaTheme
 import social.aloha.core.designsystem.ThemeSettings
 import social.aloha.core.model.ReadingStyle
+import social.aloha.core.sync.DeviceConditions
 import social.aloha.core.sync.SyncEngine
+import social.aloha.core.ui.LocalOnMobileData
 import social.aloha.core.ui.LocalReadingStyle
 import social.aloha.feature.video.PictureInPicturePlayer
 import social.aloha.feature.video.VideoPlayback
@@ -47,6 +49,8 @@ open class MainActivity : ComponentActivity() {
 
     @Inject lateinit var reading: ReadingPreferences
 
+    @Inject lateinit var conditions: DeviceConditions
+
     override fun onCreate(savedInstanceState: Bundle?) {
         // held until the theme is read, so a dark choice never opens on a light frame
         installSplashScreen().setKeepOnScreenCondition { app.theme.value == null }
@@ -57,7 +61,11 @@ open class MainActivity : ComponentActivity() {
             val theme by app.theme.collectAsStateWithLifecycle()
             val style by reading.style.collectAsStateWithLifecycle(ReadingStyle())
             AlohaTheme(theme ?: ThemeSettings()) {
-                CompositionLocalProvider(LocalReadingStyle provides style) {
+                // ponytail: read as the window composes; a move onto mobile data counts from the next recomposition
+                CompositionLocalProvider(
+                    LocalReadingStyle provides style,
+                    LocalOnMobileData provides conditions.metered,
+                ) {
                     // test tags double as resource ids, so a release-build benchmark finds its lists
                     Box(Modifier.fillMaxSize().semantics { testTagsAsResourceId = true }) {
                         AlohaRoot(app)

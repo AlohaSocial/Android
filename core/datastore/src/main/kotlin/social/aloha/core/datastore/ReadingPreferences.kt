@@ -36,6 +36,8 @@ public class ReadingPreferences(private val store: DataStore<Preferences>) {
             roundedAvatars = it[ROUNDED_AVATARS] ?: false,
             showCounts = it[SHOW_COUNTS] ?: true,
             unreadBadge = it[UNREAD_BADGE] ?: true,
+            haptics = it[HAPTICS] ?: true,
+            fullPicturesOnMobileData = it[FULL_PICTURES] ?: true,
         )
     }
 
@@ -47,6 +49,8 @@ public class ReadingPreferences(private val store: DataStore<Preferences>) {
             it[ROUNDED_AVATARS] = style.roundedAvatars
             it[SHOW_COUNTS] = style.showCounts
             it[UNREAD_BADGE] = style.unreadBadge
+            it[HAPTICS] = style.haptics
+            it[FULL_PICTURES] = style.fullPicturesOnMobileData
         }
     }
 
@@ -59,5 +63,7 @@ public class ReadingPreferences(private val store: DataStore<Preferences>) {
         val ROUNDED_AVATARS = booleanPreferencesKey("reading_rounded_avatars")
         val SHOW_COUNTS = booleanPreferencesKey("reading_show_counts")
         val UNREAD_BADGE = booleanPreferencesKey("reading_unread_badge")
+        val HAPTICS = booleanPreferencesKey("haptics")
+        val FULL_PICTURES = booleanPreferencesKey("full_pictures_on_mobile_data")
     }
 }
