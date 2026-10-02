@@ -63,6 +63,12 @@
     <string name="timeline_empty_public">No posts here yet.</string>
     <!-- Title of the settings section that turns the News and Audio modes on -->
     <string name="modes_settings_title">Modes</string>
+    <!-- Title of the sheet offering the optional modes once, after the first account -->
+    <string name="modes_offer_title">Make it yours</string>
+    <!-- Body of the sheet offering the optional modes -->
+    <string name="modes_offer_body">Photos, Video and Shorts are always there. More can join them; you can change this later in Settings, under Modes.</string>
+    <!-- Button that closes the sheet offering the optional modes -->
+    <string name="modes_offer_done">Done</string>
     <!-- Heading of the choice of which mode an optional mode replaces in a phone's navigation bar, which holds three -->
     <string name="modes_settings_phone">On a phone, in place of</string>
     <!-- Summary of the News mode's switch -->

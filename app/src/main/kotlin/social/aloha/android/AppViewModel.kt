@@ -47,8 +47,11 @@ import social.aloha.core.sync.PostQueue
 sealed interface AppSession {
     data object Loading : AppSession
 
-    /** No account yet, a new sign-in for one the server refused, or one being added beside others ([adding]). */
-    data class SigningIn(val adding: Boolean = false) : AppSession
+    /**
+     * No account yet ([first]: the welcome comes first), a new sign-in for one the server refused, or one
+     * being added beside others ([adding]).
+     */
+    data class SigningIn(val adding: Boolean = false, val first: Boolean = false) : AppSession
 
     /**
      * [needsReauth]: the server refused the token; the cache stays and a banner offers a new sign-in.
@@ -279,13 +282,13 @@ class AppViewModel @Inject constructor(
 /** What an account's shortcut shows, so it is published again only when that changes. */
 private fun shortcutOf(account: SignedInAccount) = Triple(account.id, account.qualifiedHandle, account.avatarUrl)
 
-private fun sessionOf(
+internal fun sessionOf(
     all: List<SignedInAccount>,
     active: SignedInAccount?,
     again: Boolean,
     adding: Boolean,
 ): AppSession = when {
-    active == null && all.isEmpty() -> AppSession.SigningIn()
+    active == null && all.isEmpty() -> AppSession.SigningIn(first = true)
     active == null -> AppSession.Loading
     again && active.needsReauth -> AppSession.SigningIn()
     adding -> AppSession.SigningIn(adding = true)

@@ -153,6 +153,7 @@ import social.aloha.feature.stories.StoriesRail
 import social.aloha.feature.thread.StatusListRoute
 import social.aloha.feature.thread.ThreadNavigation
 import social.aloha.feature.thread.ThreadRoute
+import social.aloha.feature.timeline.ModesOffer
 import social.aloha.feature.timeline.TagRoute
 import social.aloha.feature.timeline.TimelineFeed
 import social.aloha.feature.timeline.TimelineRoute
@@ -677,6 +678,8 @@ private fun ModeTimeline(
             }
         },
     )
+    // the optional modes are offered once, on the timeline every reader opens first
+    if (feed == TimelineFeed.Home) ModesOffer()
 }
 
 @Composable

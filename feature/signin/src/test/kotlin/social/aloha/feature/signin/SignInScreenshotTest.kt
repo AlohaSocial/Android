@@ -115,8 +115,21 @@ class SignInScreenshotTest {
 
     @Test
     fun terms() {
-        compose.setContent { AlohaTheme { TermsScreen(onAccept = {}) } }
+        compose.setContent { AlohaTheme { TermsScreen(onAccept = {}, onDecline = {}) } }
         compose.onRoot().captureRoboImage("src/test/screenshots/signin-terms.png")
+    }
+
+    @Test
+    fun welcome() {
+        compose.setContent { AlohaTheme { WelcomeScreen(onAddAccount = {}, onFindServer = {}) } }
+        compose.onRoot().captureRoboImage("src/test/screenshots/signin-welcome.png")
+    }
+
+    @Test
+    @Config(fontScale = 2f)
+    fun welcomeLargeFont() {
+        compose.setContent { AlohaTheme { WelcomeScreen(onAddAccount = {}, onFindServer = {}) } }
+        compose.onRoot().captureRoboImage("src/test/screenshots/signin-welcome-font200.png")
     }
 
     private fun capture(

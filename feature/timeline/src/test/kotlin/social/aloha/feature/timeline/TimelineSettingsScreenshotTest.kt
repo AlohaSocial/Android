@@ -96,4 +96,23 @@ class TimelineSettingsScreenshotTest {
         compose.onRoot().tryPerformAccessibilityChecks()
         compose.onRoot().captureRoboImage("src/test/screenshots/modes-settings.png")
     }
+
+    @Test
+    fun modesOffer() {
+        compose.enableAccessibilityChecks()
+        compose.setContent {
+            AlohaTheme(ThemeSettings(mode = ThemeMode.Light)) {
+                Surface(color = MaterialTheme.colorScheme.surfaceContainerLow) {
+                    ModesOfferContent(
+                        ModesSettingsState(ModeChoices(), listOf(FeedMode.News, FeedMode.Audio)),
+                        onTurned = { _, _ -> },
+                        onSlot = { _, _ -> },
+                        onDone = {},
+                    )
+                }
+            }
+        }
+        compose.onRoot().tryPerformAccessibilityChecks()
+        compose.onRoot().captureRoboImage("src/test/screenshots/modes-offer.png")
+    }
 }

@@ -37,7 +37,10 @@ fun AlohaRoot(viewModel: AppViewModel = hiltViewModel()) {
     when (val current = session) {
         AppSession.Loading -> Unit
 
-        is AppSession.SigningIn -> SignInEntry(onCancel = if (current.adding) viewModel::cancelAdding else null)
+        is AppSession.SigningIn -> SignInEntry(
+            onCancel = if (current.adding) viewModel::cancelAdding else null,
+            welcome = current.first,
+        )
 
         // a switch starts the shell afresh for that account: its own back stack, painted from its cache
         is AppSession.SignedIn -> key(current.accountId) {

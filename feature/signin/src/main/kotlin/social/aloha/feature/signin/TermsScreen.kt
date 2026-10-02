@@ -14,6 +14,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -38,7 +39,7 @@ import social.aloha.core.designsystem.AlohaSpacing
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun TermsScreen(onAccept: () -> Unit, modifier: Modifier = Modifier) {
+internal fun TermsScreen(onAccept: () -> Unit, onDecline: () -> Unit, modifier: Modifier = Modifier) {
     val title = stringResource(R.string.terms_title)
     Scaffold(
         modifier = modifier.semantics { paneTitle = title },
@@ -59,8 +60,14 @@ internal fun TermsScreen(onAccept: () -> Unit, modifier: Modifier = Modifier) {
                 verticalArrangement = Arrangement.spacedBy(AlohaSpacing.l),
             ) {
                 Text(stringResource(R.string.terms_body), style = MaterialTheme.typography.bodyLarge)
+                Text(stringResource(R.string.terms_conduct), style = MaterialTheme.typography.bodyLarge)
+                Text(stringResource(R.string.terms_tools), style = MaterialTheme.typography.bodyLarge)
                 Button(onClick = onAccept, modifier = Modifier.fillMaxWidth()) {
                     Text(stringResource(R.string.terms_accept))
+                }
+                // declining leaves the app: nothing in it works without the terms
+                OutlinedButton(onClick = onDecline, modifier = Modifier.fillMaxWidth()) {
+                    Text(stringResource(R.string.terms_decline))
                 }
             }
         }

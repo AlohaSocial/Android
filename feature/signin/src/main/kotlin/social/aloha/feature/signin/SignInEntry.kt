@@ -11,14 +11,18 @@ import android.content.ContextWrapper
 import android.content.Intent
 import android.security.KeyChain
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.ReportDrawn
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
@@ -30,22 +34,42 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
 
 /**
- * Where a person without an account starts: the terms, once per version, then sign-in. Signing in
- * makes an account active, and the app leaves this screen by itself.
+ * Where a person without an account starts: the terms, once per version, a welcome before the first
+ * account, then sign-in. Signing in makes an account active, and the app leaves this screen by itself.
  *
  * @param onCancel given when an account is being added beside others: the screen offers a way back.
+ * @param welcome before the first account only; signing in again or adding one goes straight to the server.
  */
 @Composable
-public fun SignInEntry(modifier: Modifier = Modifier, onCancel: (() -> Unit)? = null) {
+public fun SignInEntry(
+    modifier: Modifier = Modifier,
+    onCancel: (() -> Unit)? = null,
+    welcome: Boolean = onCancel == null,
+) {
     onCancel?.let { BackHandler(onBack = it) }
     // signed out, the first screen is the whole app: it is fully drawn once it shows
     ReportDrawn()
     val terms: TermsViewModel = hiltViewModel()
     val accepted by terms.accepted.collectAsStateWithLifecycle()
+    val activity = LocalActivity.current
+    val context = LocalContext.current
+    // Back from the server's address returns to the welcome
+    var welcomed by rememberSaveable { mutableStateOf(!welcome) }
+    BackHandler(enabled = welcome && welcomed) { welcomed = false }
     when (accepted) {
         null -> Unit
-        false -> TermsScreen(onAccept = terms::accept, modifier = modifier)
-        true -> SignInRoute(modifier, onCancel)
+
+        false -> TermsScreen(onAccept = terms::accept, onDecline = { activity?.finish() }, modifier = modifier)
+
+        true -> if (welcomed) {
+            SignInRoute(modifier, onCancel)
+        } else {
+            WelcomeScreen(
+                onAddAccount = { welcomed = true },
+                onFindServer = { openInBrowser(context, FIND_SERVER) },
+                modifier = modifier,
+            )
+        }
     }
 }
 
@@ -107,6 +131,9 @@ private fun openInBrowser(context: Context, url: String) {
         context.startActivity(Intent(Intent.ACTION_VIEW, uri).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
     }
 }
+
+/** Servers that take new accounts, kept by the Mastodon project; a Nextcloud's is its administrator's to add. */
+private const val FIND_SERVER = "https://joinmastodon.org/servers"
 
 /** The web-server rules that ship with Nextcloud Social, with notes on proxies and the Authorization header. */
 private const val WEB_SERVER_RULES = "https://github.com/nextcloud/social/tree/master/contrib/webserver"

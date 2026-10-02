@@ -60,6 +60,14 @@ internal class ModesSettingsViewModel @Inject constructor(
         ModesSettingsState(choices, available)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_MILLIS), ModesSettingsState())
 
+    /** Whether the modes were offered once; null until read, so the offer never flashes. */
+    val offered: StateFlow<Boolean?> =
+        preferences.modesOffered.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_MILLIS), null)
+
+    fun onOffered() {
+        viewModelScope.launch { preferences.modesWereOffered() }
+    }
+
     fun onTurned(mode: FeedMode, on: Boolean) = change { it.turned(mode, on) }
 
     fun onSlot(mode: FeedMode, slot: Int) = change { it.turned(mode, on = true, slot = slot) }

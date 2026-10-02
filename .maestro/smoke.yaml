@@ -22,6 +22,7 @@ appId: social.aloha.android
           visible: "Before you start"
           timeout: 20000
 - tapOn: "Agree and continue"
+- tapOn: "Add your account"
 - assertVisible: "Add account"
 - stopApp
 - launchApp
@@ -34,6 +35,6 @@ appId: social.aloha.android
           commands:
             - tapOn: "Wait"
       - extendedWaitUntil:
-          visible: "Add account"
+          visible: "Add your account"
           timeout: 20000
 - assertNotVisible: "Before you start"

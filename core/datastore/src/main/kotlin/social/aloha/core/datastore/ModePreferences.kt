@@ -43,6 +43,16 @@ public class ModePreferences(private val store: DataStore<Preferences>) {
         }
     }
 
+    /**
+     * Whether the optional modes were offered once, after the first account; someone who already chose
+     * modes before the offer existed counts as offered.
+     */
+    public val modesOffered: Flow<Boolean> = store.data.map { it[MODES_OFFERED] ?: (it[OPTIONAL_MODES] != null) }
+
+    public suspend fun modesWereOffered() {
+        store.edit { it[MODES_OFFERED] = true }
+    }
+
     /** Whether Photos shows as a grid, as it does until the person picks the feed. */
     public val photosGrid: Flow<Boolean> = store.data.map { it[PHOTOS_GRID] ?: true }
 
@@ -52,6 +62,7 @@ public class ModePreferences(private val store: DataStore<Preferences>) {
 
     private companion object {
         val PHOTOS_GRID = booleanPreferencesKey("photos_grid")
+        val MODES_OFFERED = booleanPreferencesKey("modes_offered")
         val VIDEOS_MUTED = booleanPreferencesKey("videos_muted")
         val OPTIONAL_MODES = stringSetPreferencesKey("optional_modes")
         val PHONE_MODES = stringPreferencesKey("phone_modes")

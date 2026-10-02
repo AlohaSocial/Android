@@ -111,6 +111,28 @@
     <string name="terms_title">Before you start</string>
     <!-- Body of the terms screen -->
     <string name="terms_body">Aloha Social connects you to a server someone else runs. That server\'s own rules apply to what you post there, and its administrator can see what you share with it. The app itself collects nothing about you.</string>
+    <!-- Second paragraph of the terms screen: what may not be posted, which the person agrees to -->
+    <string name="terms_conduct">There is no tolerance for objectionable content or abusive behaviour. By continuing you agree not to post anything illegal, hateful, harassing or threatening, nor sexual content involving minors, and not to abuse other people.</string>
+    <!-- Third paragraph of the terms screen: the tools against what breaks the terms -->
+    <string name="terms_tools">Every post and every account can be reported to the server\'s moderators, who can remove posts and close accounts, and anyone can be muted or blocked. The terms are in Settings, About, whenever you need them.</string>
     <!-- Button that accepts the terms -->
     <string name="terms_accept">Agree and continue</string>
+    <!-- Button that declines the terms and leaves the app -->
+    <string name="terms_decline">Decline</string>
+    <!-- Welcome screen heading: the app's name, which is not translated -->
+    <string name="welcome_title" translatable="false">Aloha Social</string>
+    <!-- Welcome screen, under the app's name: what the app is for -->
+    <string name="welcome_subtitle">Text, photos, video and shorts from across the fediverse, in one app.</string>
+    <!-- Welcome screen: heading of the short explanation of the fediverse -->
+    <string name="welcome_fediverse_title">What is the fediverse?</string>
+    <!-- Welcome screen: what the fediverse is -->
+    <string name="welcome_fediverse_body">Many independent servers, run by people and organisations, that talk to each other. Your account lives on one of them, and you follow people on any of the others.</string>
+    <!-- Welcome screen: Nextcloud Social, named first -->
+    <string name="welcome_nextcloud">Nextcloud Social puts such a server into a Nextcloud. If yours has it, you sign in with your Nextcloud account; if it has not, its administrator can add it.</string>
+    <!-- Welcome screen: the button that starts adding the first account -->
+    <string name="welcome_add_account">Add your account</string>
+    <!-- Welcome screen: link to a list of servers that take new accounts -->
+    <string name="welcome_find_server">No account yet? Find a server</string>
+    <!-- Welcome screen footnote: the servers the app works with -->
+    <string name="welcome_footnote">Works with Nextcloud Social, Mastodon, and anything else that speaks the Mastodon API.</string>
 </resources>
