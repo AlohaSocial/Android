@@ -36,6 +36,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import social.aloha.core.datastore.AppPreferences
 import social.aloha.core.designsystem.AlohaSpacing
+import social.aloha.core.ui.AppTerms
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -59,9 +60,7 @@ internal fun TermsScreen(onAccept: () -> Unit, onDecline: () -> Unit, modifier: 
                     .padding(AlohaSpacing.l),
                 verticalArrangement = Arrangement.spacedBy(AlohaSpacing.l),
             ) {
-                Text(stringResource(R.string.terms_body), style = MaterialTheme.typography.bodyLarge)
-                Text(stringResource(R.string.terms_conduct), style = MaterialTheme.typography.bodyLarge)
-                Text(stringResource(R.string.terms_tools), style = MaterialTheme.typography.bodyLarge)
+                AppTerms()
                 Button(onClick = onAccept, modifier = Modifier.fillMaxWidth()) {
                     Text(stringResource(R.string.terms_accept))
                 }

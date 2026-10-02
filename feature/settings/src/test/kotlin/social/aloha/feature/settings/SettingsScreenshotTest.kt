@@ -49,6 +49,9 @@ class SettingsScreenshotTest {
     fun about() = capture("settings-about") { SectionScreen(AboutSection, onBack = {}) }
 
     @Test
+    fun privacy() = capture("settings-privacy") { TextPage("Privacy", onClose = {}) { PrivacyStatement() } }
+
+    @Test
     fun nextcloud() = capture("settings-nextcloud") {
         NextcloudRows(NextcloudUiState(available = true, phase = NextcloudPhase.TimedOut), {}, {}, {})
     }

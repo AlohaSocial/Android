@@ -72,4 +72,22 @@
     <string name="settings_delete_too_often">Too many tries. Try again in an hour.</string>
     <!-- Deletion failed for any other reason -->
     <string name="settings_delete_failed">The account was not deleted. Nothing changed; try again later.</string>
+    <!-- Settings, About: opens the app's terms of use -->
+    <string name="settings_terms">Terms of use</string>
+    <!-- Settings, About: opens what the app does with the reader's data -->
+    <string name="settings_privacy">Privacy</string>
+    <!-- Settings, About: opens the open-source libraries the app is built from and their licences -->
+    <string name="settings_licences">Open-source licences</string>
+    <!-- Settings, About: opens the project's issue tracker, to report a problem -->
+    <string name="settings_issues">Report a problem</string>
+    <!-- Content description of the button that closes a page opened from Settings, About -->
+    <string name="settings_page_back">Back</string>
+    <!-- Privacy statement, first paragraph -->
+    <string name="privacy_nothing">Aloha Social collects nothing about you and sends nothing to its developers: no analytics, no crash reports, no advertising.</string>
+    <!-- Privacy statement, second paragraph -->
+    <string name="privacy_servers">It talks to the servers you sign in to, and loads the pictures, videos and link previews their posts point at from where they are kept. Your sign-in stays on this device, encrypted.</string>
+    <!-- Privacy statement, third paragraph -->
+    <string name="privacy_notifications">Notifications come through the push app you choose, which learns that a notification is waiting but not what it says, or from asking your server now and then. Translate sends a post\'s text to your server, which hands it to its translation service; where this device translates, the text stays on it.</string>
+    <!-- Privacy statement, fourth paragraph -->
+    <string name="privacy_posts">What you post, and whom you follow, your server keeps; its own privacy policy and rules apply there.</string>
 </resources>

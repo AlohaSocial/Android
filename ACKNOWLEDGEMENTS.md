@@ -13,7 +13,8 @@ Every runtime and build dependency is declared in
 [`gradle/libs.versions.toml`](gradle/libs.versions.toml) and verified against
 [`gradle/verification-metadata.xml`](gradle/verification-metadata.xml). The colour
 schemes come from [MaterialKolor](https://github.com/jordond/materialkolor)
-(MIT), a Kotlin port of Google's Material Color Utilities. The
+(MIT), a Kotlin port of Google's Material Color Utilities. The open-source licences screen is generated at build time by
+[AboutLibraries](https://github.com/mikepenz/AboutLibraries) (Apache-2.0). The
 Material Icons used until the switch to Material Symbols are Apache-2.0
 (Google).
 

@@ -8,24 +8,33 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import social.aloha.core.designsystem.AlohaIcons
+import social.aloha.core.ui.AppTerms
 import social.aloha.core.ui.SettingsSection
 import social.aloha.core.ui.openInBrowser
 
-/** The app itself: its version and where its source lives. Licences and contact follow with the rest. */
+/** The app itself: its version, terms, privacy, licences, and where its source and issue tracker live. */
 internal object AboutSection : SettingsSection {
     private const val SOURCE = "https://github.com/AlohaSocial/Android"
+    private const val ISSUES = "$SOURCE/issues"
 
     override val key: String = "about"
     override val order: Int = 1_000
     override val title: Int = R.string.settings_about
     override val icon: ImageVector = AlohaIcons.About
+
+    /** The pages About opens over Settings. */
+    private enum class Page { Terms, Privacy, Licences }
 
     @Composable
     override fun Content() {
@@ -33,13 +42,38 @@ internal object AboutSection : SettingsSection {
         val version = remember(context) {
             context.packageManager.getPackageInfo(context.packageName, 0).versionName.orEmpty()
         }
+        var page by rememberSaveable { mutableStateOf<Page?>(null) }
         Column {
             ListItem(headlineContent = { Text(stringResource(R.string.settings_version, version)) })
-            ListItem(
-                modifier = Modifier.clickable(role = Role.Button) { openInBrowser(context, SOURCE) },
-                headlineContent = { Text(stringResource(R.string.settings_source)) },
-                supportingContent = { Text(SOURCE) },
-            )
+            PageRow(R.string.settings_terms) { page = Page.Terms }
+            PageRow(R.string.settings_privacy) { page = Page.Privacy }
+            PageRow(R.string.settings_licences) { page = Page.Licences }
+            LinkRow(R.string.settings_source, SOURCE) { openInBrowser(context, SOURCE) }
+            LinkRow(R.string.settings_issues, ISSUES) { openInBrowser(context, ISSUES) }
         }
+        val close = { page = null }
+        when (page) {
+            Page.Terms -> TextPage(stringResource(R.string.settings_terms), close) { AppTerms() }
+            Page.Privacy -> TextPage(stringResource(R.string.settings_privacy), close) { PrivacyStatement() }
+            Page.Licences -> LicencesPage(close)
+            null -> Unit
+        }
+    }
+
+    @Composable
+    private fun PageRow(title: Int, onClick: () -> Unit) {
+        ListItem(
+            modifier = Modifier.clickable(role = Role.Button, onClick = onClick),
+            headlineContent = { Text(stringResource(title)) },
+        )
+    }
+
+    @Composable
+    private fun LinkRow(title: Int, url: String, onClick: () -> Unit) {
+        ListItem(
+            modifier = Modifier.clickable(role = Role.Button, onClick = onClick),
+            headlineContent = { Text(stringResource(title)) },
+            supportingContent = { Text(url) },
+        )
     }
 }

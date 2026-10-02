@@ -109,12 +109,6 @@
     <string name="signin_certificate_cancel">Don\'t trust</string>
     <!-- Title of the screen that asks a person to accept the terms before adding an account -->
     <string name="terms_title">Before you start</string>
-    <!-- Body of the terms screen -->
-    <string name="terms_body">Aloha Social connects you to a server someone else runs. That server\'s own rules apply to what you post there, and its administrator can see what you share with it. The app itself collects nothing about you.</string>
-    <!-- Second paragraph of the terms screen: what may not be posted, which the person agrees to -->
-    <string name="terms_conduct">There is no tolerance for objectionable content or abusive behaviour. By continuing you agree not to post anything illegal, hateful, harassing or threatening, nor sexual content involving minors, and not to abuse other people.</string>
-    <!-- Third paragraph of the terms screen: the tools against what breaks the terms -->
-    <string name="terms_tools">Every post and every account can be reported to the server\'s moderators, who can remove posts and close accounts, and anyone can be muted or blocked. The terms are in Settings, About, whenever you need them.</string>
     <!-- Button that accepts the terms -->
     <string name="terms_accept">Agree and continue</string>
     <!-- Button that declines the terms and leaves the app -->
