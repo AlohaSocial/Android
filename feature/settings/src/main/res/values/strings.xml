@@ -182,4 +182,47 @@
     <string name="media_autoplay_mobile">Play shorts on mobile data</string>
     <!-- Summary of the switch above -->
     <string name="media_autoplay_mobile_summary">Off, a short waits for a tap on mobile data. On Wi-Fi shorts always play.</string>
+    <!-- Settings section: what the reader's server publishes about itself -->
+    <string name="server_title">About this server</string>
+    <!-- Under the About this server heading. %1$s: the server's address, such as cloud.example.com -->
+    <string name="server_host">%1$s</string>
+    <!-- While the server's pages are asked for -->
+    <string name="server_loading">Asking the server…</string>
+    <!-- About this server: the rules people agree to there -->
+    <string name="server_rules">Rules</string>
+    <!-- About this server: the administrator's own description -->
+    <string name="server_description">About</string>
+    <!-- About this server: its privacy policy -->
+    <string name="server_privacy">Privacy policy</string>
+    <!-- About this server: its terms of service -->
+    <string name="server_terms">Terms of service</string>
+    <!-- About this server: how busy it was, week by week -->
+    <string name="server_activity">Activity</string>
+    <!-- About this server: the other servers it knows -->
+    <string name="server_peers">Known servers</string>
+    <!-- About this server: the servers it refuses or limits -->
+    <string name="server_blocks">Moderated servers</string>
+    <!-- A moderated server: nothing from it reaches this one -->
+    <string name="server_block_blocked">Blocked</string>
+    <!-- A moderated server: its posts are hidden unless followed -->
+    <string name="server_block_limited">Limited</string>
+    <!-- Above a server page: when it last changed. %1$s: a date -->
+    <string name="server_updated">Last changed %1$s</string>
+    <!-- One week of server activity. %1$s: the date the week starts -->
+    <string name="server_week">Week of %1$s</string>
+    <!-- One week of server activity: posts written. %d: how many -->
+    <plurals name="server_week_posts">
+        <item quantity="one">%d post</item>
+        <item quantity="other">%d posts</item>
+    </plurals>
+    <!-- One week of server activity: people who signed in. %d: how many -->
+    <plurals name="server_week_logins">
+        <item quantity="one">%d sign-in</item>
+        <item quantity="other">%d sign-ins</item>
+    </plurals>
+    <!-- One week of server activity: new accounts. %d: how many -->
+    <plurals name="server_week_signups">
+        <item quantity="one">%d new account</item>
+        <item quantity="other">%d new accounts</item>
+    </plurals>
 </resources>

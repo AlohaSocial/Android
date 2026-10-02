@@ -17,11 +17,15 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
+import social.aloha.core.data.server.ServerAbout
 import social.aloha.core.designsystem.AlohaTheme
 import social.aloha.core.designsystem.ThemeMode
 import social.aloha.core.designsystem.ThemeSettings
 import social.aloha.core.model.AccentSource
 import social.aloha.core.model.Appearance
+import social.aloha.core.model.InstanceDocument
+import social.aloha.core.model.InstanceRule
+import social.aloha.core.model.PublicDomainBlock
 import social.aloha.core.model.SensitiveMediaPolicy
 
 /** The settings list and a section at each width, each also run through the Accessibility Test Framework checks. */
@@ -74,6 +78,20 @@ class SettingsScreenshotTest {
         MediaContent(
             MediaState(SensitiveMediaPolicy.Blur, changeable = false, autoplayOnMobileData = false),
             MediaActions(),
+        )
+    }
+
+    @Test
+    fun server() = capture("settings-server") {
+        ServerContent(
+            ServerState(
+                "cloud.example",
+                ServerAbout(
+                    rules = listOf(InstanceRule("1", "Be kind")),
+                    privacyPolicy = InstanceDocument("<p>We keep little.</p>"),
+                    domainBlocks = listOf(PublicDomainBlock("spam.example")),
+                ),
+            ),
         )
     }
 
