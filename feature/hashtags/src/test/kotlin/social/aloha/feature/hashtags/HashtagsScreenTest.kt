@@ -71,4 +71,13 @@ class HashtagsScreenTest {
         compose.onRoot().tryPerformAccessibilityChecks()
         compose.onRoot().captureRoboImage("src/test/screenshots/hashtags.png")
     }
+
+    @Test
+    @Config(fontScale = 2f)
+    fun hashtagsLargeFont() {
+        compose.enableAccessibilityChecks()
+        compose.setContent { AlohaTheme { HashtagsScreen(state, actions, {}, {}) } }
+        compose.onRoot().tryPerformAccessibilityChecks()
+        compose.onRoot().captureRoboImage("src/test/screenshots/hashtags-font200.png")
+    }
 }

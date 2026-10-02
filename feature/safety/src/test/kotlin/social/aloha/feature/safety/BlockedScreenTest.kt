@@ -48,6 +48,20 @@ class BlockedScreenTest {
     }
 
     @Test
+    @Config(fontScale = 2f)
+    fun `each blocked account has its way back, at twice the font size`() {
+        val taken = mutableListOf<String>()
+        compose.enableAccessibilityChecks()
+        compose.setContent {
+            AlohaTheme { BlockedScreen(state, BlockedActions(onUnblock = { taken += it }), {}, {}) }
+        }
+        compose.onRoot().tryPerformAccessibilityChecks()
+        compose.onRoot().captureRoboImage("src/test/screenshots/blocked-font200.png")
+        compose.onNodeWithText("Unblock").performClick()
+        assertEquals(listOf("7"), taken)
+    }
+
+    @Test
     fun `the servers tab takes a server to block`() {
         compose.setContent {
             AlohaTheme { BlockedScreen(state, BlockedActions(), {}, {}, initialTab = BlockedTab.Servers) }

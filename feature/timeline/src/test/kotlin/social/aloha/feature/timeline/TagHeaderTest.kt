@@ -5,10 +5,12 @@ package social.aloha.feature.timeline
 
 import android.app.Application
 import androidx.compose.material3.Surface
+import androidx.compose.ui.test.junit4.accessibility.enableAccessibilityChecks
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.tryPerformAccessibilityChecks
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.captureRoboImage
 import org.junit.Assert.assertEquals
@@ -32,6 +34,7 @@ class TagHeaderTest {
 
     @Test
     fun `a hashtag not followed is followed from its timeline, and the tags used with it open theirs`() {
+        compose.enableAccessibilityChecks()
         compose.setContent {
             AlohaTheme {
                 Surface {
@@ -48,11 +51,13 @@ class TagHeaderTest {
         compose.onNodeWithText("Follow hashtag").performClick()
         compose.onNodeWithText("#reef").performClick()
         assertEquals(listOf("follow", "tag:reef"), asked)
+        compose.onRoot().tryPerformAccessibilityChecks()
         compose.onRoot().captureRoboImage("src/test/screenshots/tag-header.png")
     }
 
     @Test
     fun `something that is no hashtag says so, rather than offering to follow it`() {
+        compose.enableAccessibilityChecks()
         compose.setContent { AlohaTheme { Surface { TagHeader(TagHeaderState(notATag = true), {}, {}) {} } } }
         compose.onNodeWithText("That isn’t a hashtag.").assertExists()
         compose.onNodeWithText("Follow hashtag").assertDoesNotExist()
@@ -60,6 +65,7 @@ class TagHeaderTest {
 
     @Test
     fun `a hashtag that could not be loaded offers to try again`() {
+        compose.enableAccessibilityChecks()
         compose.setContent {
             AlohaTheme { Surface { TagHeader(TagHeaderState(failed = true), {}, { asked += "retry" }) {} } }
         }

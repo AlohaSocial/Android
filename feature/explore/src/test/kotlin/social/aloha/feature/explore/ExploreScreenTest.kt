@@ -142,6 +142,19 @@ class ExploreScreenTest {
     }
 
     @Test
+    @Config(fontScale = 2f)
+    fun hashtagsLargeFont() {
+        compose.enableAccessibilityChecks()
+        val tags = listOf(Tag("surf", history = listOf(TagHistory("1", "12", "0"))), Tag("reef"))
+        show(ExploreUiState(tab = ExploreTab.Hashtags, hashtags = Load.Loaded(tags), periods = true))
+        compose.onRoot().tryPerformAccessibilityChecks()
+        compose.onNodeWithText("Used 12 times").assertExists()
+        compose.onRoot().captureRoboImage("src/test/screenshots/explore-hashtags-font200.png")
+        compose.onNodeWithText("#surf").performClick()
+        assertEquals(listOf("link:${RichLinkTarget.Hashtag("surf")}"), asked)
+    }
+
+    @Test
     fun people() {
         compose.enableAccessibilityChecks()
         show(ExploreUiState(tab = ExploreTab.People, people = Load.Loaded(people)))

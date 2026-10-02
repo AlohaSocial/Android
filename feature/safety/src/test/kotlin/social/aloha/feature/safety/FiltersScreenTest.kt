@@ -113,6 +113,30 @@ class FiltersScreenTest {
     }
 
     @Test
+    @Config(fontScale = 2f)
+    fun `each filter says what it does where, and an expired one says so, at twice the font size`() {
+        compose.enableAccessibilityChecks()
+        compose.setContent {
+            AlohaTheme {
+                FiltersScreen(
+                    FiltersUiState(filters, loading = false),
+                    onEdit = { asked += "edit:$it" },
+                    onHideStrangers = { asked += "strangers:$it" },
+                    onBack = {},
+                    now = now,
+                )
+            }
+        }
+        compose.onRoot().tryPerformAccessibilityChecks()
+        compose.onNodeWithText("Hides · Home and lists, Public timelines · 2 keywords").assertExists()
+        compose.onNodeWithText("Expired").assertExists()
+        compose.onRoot().captureRoboImage("src/test/screenshots/filters-font200.png")
+        compose.onNodeWithText("Spoilers").performClick()
+        compose.onNodeWithText("Only people I follow in public timelines").performClick()
+        assertEquals(listOf("edit:1", "strangers:true"), asked)
+    }
+
+    @Test
     fun `the editor adds keywords, and chooses where, what and how long`() {
         val state = filters[0].editing()
         compose.enableAccessibilityChecks()

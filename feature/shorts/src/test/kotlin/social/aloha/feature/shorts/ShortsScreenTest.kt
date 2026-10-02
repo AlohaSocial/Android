@@ -125,6 +125,15 @@ class ShortsScreenTest {
     }
 
     @Test
+    @Config(fontScale = 2f)
+    fun shortLargeFont() {
+        compose.enableAccessibilityChecks()
+        show()
+        compose.onRoot().tryPerformAccessibilityChecks()
+        compose.onRoot().captureRoboImage("src/test/screenshots/shorts-page-font200.png")
+    }
+
+    @Test
     fun sensitiveShort() {
         show(sensitive = true)
         compose.onRoot().captureRoboImage("src/test/screenshots/shorts-sensitive.png")

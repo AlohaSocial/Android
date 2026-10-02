@@ -107,6 +107,15 @@ class SearchScreenTest {
     }
 
     @Test
+    @Config(fontScale = 2f)
+    fun resultsLargeFont() {
+        compose.enableAccessibilityChecks()
+        compose.setContent { AlohaTheme { SearchScreen(found, actions, rows, now = StatusSamples.NOW) } }
+        compose.onRoot().tryPerformAccessibilityChecks()
+        compose.onRoot().captureRoboImage("src/test/screenshots/search-results-font200.png")
+    }
+
+    @Test
     fun recent() {
         compose.setContent {
             AlohaTheme { SearchScreen(SearchUiState(recent = listOf("surf", "#beach")), actions, rows) }

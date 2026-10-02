@@ -6,8 +6,10 @@ package social.aloha.feature.signin
 import android.app.Application
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.test.junit4.accessibility.enableAccessibilityChecks
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.tryPerformAccessibilityChecks
 import androidx.compose.ui.unit.LayoutDirection
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.captureRoboImage
@@ -115,20 +117,26 @@ class SignInScreenshotTest {
 
     @Test
     fun terms() {
+        compose.enableAccessibilityChecks()
         compose.setContent { AlohaTheme { TermsScreen(onAccept = {}, onDecline = {}) } }
+        compose.onRoot().tryPerformAccessibilityChecks()
         compose.onRoot().captureRoboImage("src/test/screenshots/signin-terms.png")
     }
 
     @Test
     fun welcome() {
+        compose.enableAccessibilityChecks()
         compose.setContent { AlohaTheme { WelcomeScreen(onAddAccount = {}, onFindServer = {}) } }
+        compose.onRoot().tryPerformAccessibilityChecks()
         compose.onRoot().captureRoboImage("src/test/screenshots/signin-welcome.png")
     }
 
     @Test
     @Config(fontScale = 2f)
     fun welcomeLargeFont() {
+        compose.enableAccessibilityChecks()
         compose.setContent { AlohaTheme { WelcomeScreen(onAddAccount = {}, onFindServer = {}) } }
+        compose.onRoot().tryPerformAccessibilityChecks()
         compose.onRoot().captureRoboImage("src/test/screenshots/signin-welcome-font200.png")
     }
 
@@ -138,12 +146,14 @@ class SignInScreenshotTest {
         mode: ThemeMode = ThemeMode.Light,
         direction: LayoutDirection = LayoutDirection.Ltr,
     ) {
+        compose.enableAccessibilityChecks()
         compose.setContent {
             // Robolectric does not apply the locale's direction to Compose by itself
             CompositionLocalProvider(LocalLayoutDirection provides direction) {
                 AlohaTheme(ThemeSettings(mode = mode)) { SignInScreen(state, NoActions) }
             }
         }
+        compose.onRoot().tryPerformAccessibilityChecks()
         compose.onRoot().captureRoboImage("src/test/screenshots/$name.png")
     }
 
