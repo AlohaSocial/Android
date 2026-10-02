@@ -346,6 +346,7 @@
     </plurals>
     <!-- Spoken labels of a scheduled post's buttons; the placeholder is the start of its text -->
     <string name="scheduled_move_one">Change the time of \u201c%1$s\u201d</string>
+    <!-- Spoken label of a scheduled post's delete button. %1$s: the start of its text -->
     <string name="scheduled_delete_one">Delete \u201c%1$s\u201d</string>
     <!-- Button that picks another time for a scheduled post -->
     <string name="scheduled_move">Change time</string>
@@ -399,15 +400,21 @@
         <item quantity="one">%1$d of %2$d character</item>
         <item quantity="other">%1$d of %2$d characters</item>
     </plurals>
-    <!-- Screen-reader actions setting a picture's focal point: its middle, and near each edge -->
+    <!-- Screen-reader action setting a picture's focal point: its middle -->
     <string name="composer_media_focus_centre">Focus on the middle</string>
+    <!-- Screen-reader action setting a picture's focal point near its top edge -->
     <string name="composer_media_focus_top">Focus near the top</string>
+    <!-- Screen-reader action setting a picture's focal point near its bottom edge -->
     <string name="composer_media_focus_bottom">Focus near the bottom</string>
+    <!-- Screen-reader action setting a picture's focal point near its left edge -->
     <string name="composer_media_focus_left">Focus near the left</string>
+    <!-- Screen-reader action setting a picture's focal point near its right edge -->
     <string name="composer_media_focus_right">Focus near the right</string>
-    <!-- What stage an attachment's upload is at, for a screen reader -->
+    <!-- An attachment's upload stage, for a screen reader: not started yet -->
     <string name="composer_media_stage_waiting">Waiting to upload</string>
+    <!-- An attachment's upload stage, for a screen reader: being sent -->
     <string name="composer_media_stage_uploading">Uploading</string>
+    <!-- An attachment's upload stage, for a screen reader: sent, and the server is converting it -->
     <string name="composer_media_stage_processing">The server is preparing it</string>
     <!-- A trimmed video's size estimate when it is still over the server's limit; the placeholder is a size -->
     <string name="composer_video_estimate_over">About %1$s, still over the server\'s limit</string>
