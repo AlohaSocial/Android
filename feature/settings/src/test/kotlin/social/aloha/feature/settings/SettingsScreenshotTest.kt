@@ -20,6 +20,8 @@ import org.robolectric.annotation.GraphicsMode
 import social.aloha.core.designsystem.AlohaTheme
 import social.aloha.core.designsystem.ThemeMode
 import social.aloha.core.designsystem.ThemeSettings
+import social.aloha.core.model.AccentSource
+import social.aloha.core.model.Appearance
 
 /** The settings list and a section at each width, each also run through the Accessibility Test Framework checks. */
 @RunWith(RobolectricTestRunner::class)
@@ -47,6 +49,20 @@ class SettingsScreenshotTest {
 
     @Test
     fun about() = capture("settings-about") { SectionScreen(AboutSection, onBack = {}) }
+
+    @Test
+    fun appearance() = capture("settings-appearance") {
+        AppearanceContent(
+            AppearanceState(Appearance(accent = AccentSource.Custom, black = true), serverColour = true),
+            onChange = {},
+        )
+    }
+
+    @Test
+    @Config(fontScale = 2f)
+    fun appearanceLargeFont() = capture("settings-appearance-font200") {
+        AppearanceContent(AppearanceState(Appearance(accent = AccentSource.Custom)), onChange = {})
+    }
 
     @Test
     fun privacy() = capture("settings-privacy") { TextPage("Privacy", onClose = {}) { PrivacyStatement() } }

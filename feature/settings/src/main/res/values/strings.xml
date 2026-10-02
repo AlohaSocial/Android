@@ -90,4 +90,54 @@
     <string name="privacy_notifications">Notifications come through the push app you choose, which learns that a notification is waiting but not what it says, or from asking your server now and then. Translate sends a post\'s text to your server, which hands it to its translation service; where this device translates, the text stays on it.</string>
     <!-- Privacy statement, fourth paragraph -->
     <string name="privacy_posts">What you post, and whom you follow, your server keeps; its own privacy policy and rules apply there.</string>
+    <!-- Settings section: how the app looks -->
+    <string name="appearance_title">Appearance</string>
+    <!-- Appearance: heading over light, dark or as the system -->
+    <string name="appearance_mode">Theme</string>
+    <!-- Appearance theme choice: as the device is set -->
+    <string name="appearance_mode_system">As the system</string>
+    <!-- Appearance theme choice -->
+    <string name="appearance_mode_light">Light</string>
+    <!-- Appearance theme choice -->
+    <string name="appearance_mode_dark">Dark</string>
+    <!-- Appearance switch: pure black backgrounds while dark -->
+    <string name="appearance_black">Black</string>
+    <!-- Summary of the Black switch -->
+    <string name="appearance_black_summary">Pure black backgrounds while dark, for OLED screens</string>
+    <!-- Appearance: heading over the contrast choices -->
+    <string name="appearance_contrast">Contrast</string>
+    <!-- Contrast choice: as the device is set (Android 14 and later) -->
+    <string name="appearance_contrast_system">As the system</string>
+    <!-- Contrast choice -->
+    <string name="appearance_contrast_standard">Standard</string>
+    <!-- Contrast choice -->
+    <string name="appearance_contrast_high">High</string>
+    <!-- Appearance: heading over where the app's colours come from -->
+    <string name="appearance_colours">Colours</string>
+    <!-- Colours choice: the colour the reader's Nextcloud is themed with -->
+    <string name="appearance_colours_server">Your Nextcloud\'s colour</string>
+    <!-- Colours choice, while the reader's server wears no colour: it then shows the app's own -->
+    <string name="appearance_colours_no_server">Your server\'s colour, where it has one</string>
+    <!-- Colours choice: from the phone's wallpaper (Android 12 and later) -->
+    <string name="appearance_colours_wallpaper">From the wallpaper</string>
+    <!-- Colours choice: the app's own coral -->
+    <string name="appearance_colours_app">Aloha\'s own</string>
+    <!-- Colours choice: an accent the reader picks -->
+    <string name="appearance_colours_custom">An accent of your choice</string>
+    <!-- Name of an accent colour swatch, read by a screen reader -->
+    <string name="appearance_accent_coral">Coral</string>
+    <!-- Name of an accent colour swatch -->
+    <string name="appearance_accent_blue">Blue</string>
+    <!-- Name of an accent colour swatch -->
+    <string name="appearance_accent_green">Green</string>
+    <!-- Name of an accent colour swatch -->
+    <string name="appearance_accent_teal">Teal</string>
+    <!-- Name of an accent colour swatch -->
+    <string name="appearance_accent_violet">Violet</string>
+    <!-- Name of an accent colour swatch -->
+    <string name="appearance_accent_pink">Pink</string>
+    <!-- Name of an accent colour swatch -->
+    <string name="appearance_accent_yellow">Yellow</string>
+    <!-- Name of an accent colour swatch -->
+    <string name="appearance_accent_brown">Brown</string>
 </resources>

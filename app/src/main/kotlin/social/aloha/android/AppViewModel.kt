@@ -31,7 +31,9 @@ import social.aloha.core.data.AccountRepository
 import social.aloha.core.data.compose.Outbox
 import social.aloha.core.data.sync.UnreadCounts
 import social.aloha.core.data.timeline.CacheSweeper
+import social.aloha.core.datastore.AppPreferences
 import social.aloha.core.datastore.ModePreferences
+import social.aloha.core.designsystem.ThemeSettings
 import social.aloha.core.model.ServerCapabilities
 import social.aloha.core.model.SignedInAccount
 import social.aloha.core.navigation.AccountKey
@@ -90,6 +92,7 @@ class AppViewModel @Inject constructor(
     private val unread: UnreadCounts,
     private val shortcuts: AccountShortcuts,
     preferences: ModePreferences,
+    appPreferences: AppPreferences,
     savedState: SavedStateHandle,
     @ApplicationContext private val context: Context,
 ) : ViewModel() {
@@ -98,6 +101,11 @@ class AppViewModel @Inject constructor(
         val capabilities = reader?.capabilities ?: ServerCapabilities.minimal("")
         ModeNavigation(choices.wide(capabilities), choices.narrow(capabilities))
     }.stateIn(viewModelScope, SharingStarted.Eagerly, ModeNavigation())
+
+    /** The theme every window wears: the reader's choice, coloured by their server where they chose it. */
+    val theme: StateFlow<ThemeSettings?> = combine(appPreferences.appearance, accounts.activeAccount) { look, reader ->
+        themeOf(look, reader?.capabilities?.theme)
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     private val signingInAgain = MutableStateFlow(false)
     private val external = MutableStateFlow<String?>(null)

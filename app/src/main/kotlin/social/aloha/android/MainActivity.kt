@@ -27,6 +27,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import java.util.UUID
 import javax.inject.Inject
 import social.aloha.core.designsystem.AlohaTheme
+import social.aloha.core.designsystem.ThemeSettings
 import social.aloha.core.sync.SyncEngine
 import social.aloha.feature.video.PictureInPicturePlayer
 import social.aloha.feature.video.VideoPlayback
@@ -41,12 +42,14 @@ open class MainActivity : ComponentActivity() {
     @Inject lateinit var playback: VideoPlayback
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        installSplashScreen()
+        // held until the theme is read, so a dark choice never opens on a light frame
+        installSplashScreen().setKeepOnScreenCondition { app.theme.value == null }
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         if (savedInstanceState == null) deliver(intent)
         setContent {
-            AlohaTheme {
+            val theme by app.theme.collectAsStateWithLifecycle()
+            AlohaTheme(theme ?: ThemeSettings()) {
                 // test tags double as resource ids, so a release-build benchmark finds its lists
                 Box(Modifier.fillMaxSize().semantics { testTagsAsResourceId = true }) {
                     AlohaRoot(app)
