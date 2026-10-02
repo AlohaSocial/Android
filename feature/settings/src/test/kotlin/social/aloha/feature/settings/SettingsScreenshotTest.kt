@@ -148,6 +148,12 @@ class SettingsScreenshotTest {
     }
 
     @Test
+    @Config(qualifiers = "+en-rXA")
+    fun mediaPseudolocale() = capture("settings-media-en-xa") {
+        MediaContent(MediaState(SensitiveMediaPolicy.Blur, changeable = true), MediaActions())
+    }
+
+    @Test
     fun appLock() = capture("settings-privacy-lock") {
         PrivacyContent(LockState(enabled = true, timeoutSeconds = 300), secure = true, onEnabled = {}, onTimeout = {})
     }

@@ -34,6 +34,8 @@ internal fun Project.configureAndroid(extension: CommonExtension) {
         compileOptions.sourceCompatibility = JavaVersion.VERSION_17
         compileOptions.targetCompatibility = JavaVersion.VERSION_17
         lint.configureLint(this@configureAndroid)
+        // en-XA (accented, longer) and ar-XB (mirrored) in debug, for screenshots and a look on a device
+        buildTypes.getByName("debug").isPseudoLocalesEnabled = true
     }
     configureKotlin()
 }

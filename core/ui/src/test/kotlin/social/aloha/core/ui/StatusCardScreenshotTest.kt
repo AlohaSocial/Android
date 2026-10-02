@@ -141,6 +141,10 @@ class StatusCardScreenshotTest {
     fun everydayLargeFont() = capture("status-everyday-font200") { Rows(everyday.take(2)) }
 
     @Test
+    @Config(qualifiers = "+en-rXA")
+    fun everydayPseudolocale() = capture("status-everyday-en-xa") { Rows(everyday) }
+
+    @Test
     @Config(qualifiers = "+ar-rXB-ldrtl")
     fun everydayRightToLeft() = capture("status-everyday-rtl", direction = LayoutDirection.Rtl) { Rows(everyday) }
 
