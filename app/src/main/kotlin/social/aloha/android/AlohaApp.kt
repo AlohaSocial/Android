@@ -146,6 +146,8 @@ import social.aloha.feature.safety.FiltersRoute
 import social.aloha.feature.safety.InterestsRoute
 import social.aloha.feature.saved.SavedPostsRoute
 import social.aloha.feature.search.SearchRoute
+import social.aloha.feature.settings.R as SettingsR
+import social.aloha.feature.settings.SettingsDestination
 import social.aloha.feature.settings.SettingsPlaceholder
 import social.aloha.feature.settings.SettingsRoute
 import social.aloha.feature.settings.SettingsSectionRoute
@@ -545,9 +547,21 @@ fun AlohaApp(
                                 SettingsPlaceholder()
                             }),
                         ) {
-                            SettingsRoute(onBack = {
-                                backStack.removeLastOrNull()
-                            }, onSection = { backStack.push(SettingsSectionKey(it)) })
+                            SettingsRoute(
+                                onBack = { backStack.removeLastOrNull() },
+                                onSection = { backStack.push(SettingsSectionKey(it)) },
+                                destinations = listOf(
+                                    // where the account sheet leads too, so Settings is complete on its own
+                                    SettingsDestination(
+                                        "filters",
+                                        FILTERS_ORDER,
+                                        SettingsR.string.settings_filters,
+                                        AlohaIcons.Filtered,
+                                    ) {
+                                        backStack.push(FiltersKey(readerId))
+                                    },
+                                ),
+                            )
                         }
                         entry<SettingsSectionKey>(metadata = ListDetailSceneStrategy.detailPane()) {
                             SettingsSectionRoute(it.section, onBack = { backStack.removeLastOrNull() })
@@ -786,3 +800,6 @@ private fun canOpenWindows(): Boolean {
         .isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND)
     return wide || LocalActivity.current?.isInMultiWindowMode == true
 }
+
+// after Writing in the settings list, before Notifications
+private const val FILTERS_ORDER = 250

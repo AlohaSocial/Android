@@ -140,6 +140,8 @@
     <string name="appearance_accent_yellow">Yellow</string>
     <!-- Name of an accent colour swatch -->
     <string name="appearance_accent_brown">Brown</string>
+    <!-- Settings list: opens the reader's filters, which hide or warn about posts by keyword -->
+    <string name="settings_filters">Filters</string>
     <!-- Settings section: the signed-in accounts -->
     <string name="accounts_title">Accounts</string>
     <!-- Under an account in Settings: it is the one in use. %1$s: its handle -->

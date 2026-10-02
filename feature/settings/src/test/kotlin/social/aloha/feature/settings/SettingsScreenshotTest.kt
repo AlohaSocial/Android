@@ -18,6 +18,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import social.aloha.core.data.server.ServerAbout
+import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaTheme
 import social.aloha.core.designsystem.ThemeMode
 import social.aloha.core.designsystem.ThemeSettings
@@ -45,7 +46,17 @@ class SettingsScreenshotTest {
     }
 
     @Test
-    fun sections() = capture("settings-sections") { SettingsScreen(listOf(AboutSection), onBack = {}, onSection = {}) }
+    fun sections() = capture("settings-sections") {
+        SettingsScreen(
+            listOf(AccountsSection, AppearanceSection, MediaSection, AboutSection),
+            onBack = {},
+            onSection = {},
+            destinations = listOf(
+                SettingsDestination("filters", 250, R.string.settings_filters, AlohaIcons.Filtered) {
+                },
+            ),
+        )
+    }
 
     @Test
     @Config(fontScale = 2f)
