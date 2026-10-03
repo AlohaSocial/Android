@@ -61,6 +61,7 @@ dependencies {
     implementation(project(":feature:saved"))
     implementation(project(":feature:conversations"))
     implementation(project(":feature:safety"))
+    implementation(project(":feature:moderation"))
     implementation(project(":feature:mediaviewer"))
     implementation(project(":feature:notifications"))
     implementation(project(":widget"))

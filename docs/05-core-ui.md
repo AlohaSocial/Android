@@ -370,8 +370,8 @@ Grouped, searchable (on platforms with settings search).
 - **Sound & touch** — a tick on a like, a breath of air on a post, a two-note
   chime for a direct message, and a tap in the hand. Device-local, never sent to
   the server. Sound is off until it is turned on; touch follows Reduce Motion.
-- **Moderation** — the moderator's screens, where the account is an
-  administrator of the Nextcloud. See
+- **Moderation** — the moderator's screens, where the account's role on its
+  server allows moderating. See
   [11-safety-privacy-appstore.md](11-safety-privacy-appstore.md) §7.
 - **Privacy & Safety** — blocked accounts, muted accounts, blocked domains,
   data & storage, clear cache.

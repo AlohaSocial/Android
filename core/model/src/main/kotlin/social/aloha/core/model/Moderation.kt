@@ -46,6 +46,60 @@ public data class AdminAccount(
 public enum class AdminStanding { Active, Silenced, Suspended, Sensitized }
 
 /**
+ * What the signed-in person may moderate: the `permissions` bitmask of the `role` Mastodon puts on
+ * `verify_credentials`. A server that reports no role (Nextcloud Social so far) grants nothing here, so
+ * the moderation console stays hidden there; the admin API itself still decides on every call.
+ */
+@Serializable
+public data class ModeratorRole(val permissions: Long = 0) {
+    private fun has(bit: Long) = (permissions and (ADMINISTRATOR or bit)) != 0L
+
+    val reports: Boolean get() = has(MANAGE_REPORTS)
+
+    val accounts: Boolean get() = has(MANAGE_USERS)
+
+    val trends: Boolean get() = has(MANAGE_TAXONOMIES)
+
+    val any: Boolean get() = reports || accounts || trends
+
+    public companion object {
+        /** Mastodon's `UserRole` flags: an administrator holds every permission. */
+        public const val ADMINISTRATOR: Long = 1L shl 0
+        public const val MANAGE_REPORTS: Long = 1L shl 4
+        public const val MANAGE_TAXONOMIES: Long = 1L shl 8
+        public const val MANAGE_USERS: Long = 1L shl 10
+    }
+}
+
+/**
+ * A hashtag as a moderator reviews it: Mastodon's `Admin::Tag`. Its [id] is the one the review routes
+ * take; Nextcloud Social names a tag by itself, so there the id falls back to the name.
+ */
+@Serializable
+public data class AdminTag(
+    val id: String,
+    val name: String,
+    val uses: Int = 0,
+    val accounts: Int = 0,
+    val requiresReview: Boolean = false,
+    val trendable: Boolean = true,
+)
+
+/**
+ * A link as a moderator reviews it among the trends: Mastodon's admin trend link, a preview card with the
+ * [id] its review routes take. Nextcloud Social names a link by its address, so there the id falls back
+ * to the [url].
+ */
+@Serializable
+public data class AdminLink(
+    val id: String,
+    val url: String,
+    val title: String = "",
+    val providerName: String = "",
+    val requiresReview: Boolean = false,
+)
+
+/**
  * What a moderator can do to an account: the `type` of `POST /api/v1/admin/accounts/{id}/action`.
  * Nextcloud Social acts on these three.
  */

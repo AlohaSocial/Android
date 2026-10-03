@@ -84,6 +84,7 @@ import social.aloha.core.navigation.ListKey
 import social.aloha.core.navigation.ListMembersKey
 import social.aloha.core.navigation.ListsKey
 import social.aloha.core.navigation.MediaViewerKey
+import social.aloha.core.navigation.ModerationKey
 import social.aloha.core.navigation.NewMessageKey
 import social.aloha.core.navigation.NewsKey
 import social.aloha.core.navigation.NotificationPolicyKey
@@ -129,6 +130,9 @@ import social.aloha.feature.hashtags.TagGroupRoute
 import social.aloha.feature.lists.ListMembersRoute
 import social.aloha.feature.lists.ListsRoute
 import social.aloha.feature.mediaviewer.MediaViewerRoute
+import social.aloha.feature.moderation.ModerationRoute
+import social.aloha.feature.moderation.R as ModerationR
+import social.aloha.feature.moderation.rememberModerator
 import social.aloha.feature.notifications.NotificationsRoute
 import social.aloha.feature.notifications.PolicyRoute
 import social.aloha.feature.notifications.RequestsRoute
@@ -503,6 +507,7 @@ fun AlohaApp(
                             )
                         }
                         entry<BlockedKey> { key -> BlockedRoute(key, onBack = { backStack.remove(key) }) }
+                        entry<ModerationKey> { key -> ModerationRoute(key, onBack = { backStack.remove(key) }) }
                         entry<YearKey> { key ->
                             YearRoute(onOpenPost = statusNavigation::openThread, onBack = { backStack.remove(key) })
                         }
@@ -556,6 +561,7 @@ fun AlohaApp(
                                 SettingsPlaceholder()
                             }),
                         ) {
+                            val moderator = rememberModerator(readerId)
                             SettingsRoute(
                                 onBack = { backStack.removeLastOrNull() },
                                 onSection = { backStack.push(SettingsSectionKey(it)) },
@@ -585,6 +591,15 @@ fun AlohaApp(
                                     ) {
                                         backStack.push(YearKey(readerId))
                                     },
+                                ) + listOfNotNull(
+                                    SettingsDestination(
+                                        "moderation",
+                                        MODERATION_ORDER,
+                                        ModerationR.string.moderation_title,
+                                        AlohaIcons.Report,
+                                    ) {
+                                        backStack.push(ModerationKey(readerId))
+                                    }.takeIf { moderator },
                                 ),
                             )
                         }
@@ -834,3 +849,6 @@ private const val YEAR_ORDER = 970
 
 // after Sound and haptics, among what keeps the reader safe
 private const val BLOCKED_ORDER = 380
+
+/** Right after the reader's own blocks: the server's moderation, for its moderators. */
+private const val MODERATION_ORDER = 390

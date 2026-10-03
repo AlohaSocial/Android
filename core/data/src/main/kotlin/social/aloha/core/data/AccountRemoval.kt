@@ -50,7 +50,7 @@ public class AccountRemoval @Inject constructor(
     public suspend fun signOut(account: SignedInAccount) {
         // the device forgets first, so a slow or unreachable server can never leave the account behind
         val token = accounts.token(account.id)
-        val registration = accounts.registration(account.host)
+        val registration = accounts.registration(account.host, account.id)
         val appPassword = accounts.credentials(account.id).nextcloudBasic
         accounts.remove(account.id)
         sweeper.forget(account.id)

@@ -192,27 +192,45 @@ any future addition of analytics requires changing this document first.
 
 ## 7. Moderation
 
-A moderator surface, over Mastodon's `/api/v1/admin/*`, which Nextcloud Social
-serves from `AdminApiController`. The server's own `/moderation/*` routes need a
-Nextcloud session **and** a CSRF token, which no API client has and none can
-obtain — so before this a moderator could act from a browser and from nowhere
-else.
+A moderator surface, Settings, Moderation, over Mastodon's `/api/v1/admin/*`,
+which Nextcloud Social serves from `AdminApiController` too. The server's own
+`/moderation/*` routes need a Nextcloud session **and** a CSRF token, which no
+API client has and none can obtain — so before this a moderator could act from
+a browser and from nowhere else.
 
-- **Reports.** The unresolved queue and the handled one; one report shows who
-  reported, who was reported, the posts, and the moderator's note. Take it,
-  hand it back, resolve, reopen.
-- **Accounts.** Filtered by origin and standing, searched by username.
-  Silence, suspend, lift either, and stop forcing warnings on their media.
-  A decision taken from a report resolves that report in the same call
-  (`report_id`), because two calls could disagree.
-- **Trends.** Hashtags, posts and links, with approve and reject. Rejecting
-  hides; approving grants nothing — everything nobody has objected to trends
-  already, which is the server's own arrangement, and the screen says so rather
-  than implying a queue that does not exist.
+- **Reports.** The open queue and the resolved one; a report shows who it is
+  about, the category, the posts it points at, the reporter's comment, who sent
+  it and who took it.
+  Take it, give it back, resolve, reopen; limit or suspend the account it is
+  about, which resolves the report in the same call (`report_id`), because two
+  calls could disagree.
+- **Accounts.** Found by username, on this server or others, active, limited
+  or suspended. Limit or suspend an active one, lift either. Limiting and
+  suspending ask first.
+- **Trends.** Hashtags, links and posts waiting for review, each allowed or
+  hidden.
 
-Every route is gated on the caller being a **Nextcloud administrator**, checked
-by the server on each one, whatever scope the token carries. A 403 hides the
-whole section rather than showing empty lists to everybody else.
+**Who sees it.** Settings lists Moderation only when the `role` on the
+account's `verify_credentials` grants it: Mastodon's `permissions` bitmask,
+where Administrator grants everything, Manage Reports the reports, Manage Users
+the accounts and Manage Taxonomies the trends; each tab follows its permission.
+Nextcloud Social reports it from 0.26.108 on
+([AlohaSocial/social#2459](https://github.com/AlohaSocial/social/pull/2459)): every
+flag for a Nextcloud administrator, what the admin API allows for a moderator
+the section is delegated to, the default role for everyone else; an older
+server reports none, and the console stays hidden there. The server still
+checks the moderator on every route.
+
+**The admin scopes.** Sign-in asks for `read write follow push` only, so nobody
+who cannot moderate sees moderation permissions on the consent page. When the
+console's first call answers 403 for lack of `admin:read` (Nextcloud Social
+answers 401 before 0.26.108, which signed the account out), it asks the
+moderator to allow moderation: a second authorisation of the same account with
+`admin:read admin:write` added. A server refuses an authorisation for more than
+the app was registered with, so the app first registers again with the admin
+scopes when the stored registration lacks them. Each account on that server
+keeps the client its token was issued to, so signing out still revokes the
+token with the client that issued it.
 
 ### Still deliberately excluded
 

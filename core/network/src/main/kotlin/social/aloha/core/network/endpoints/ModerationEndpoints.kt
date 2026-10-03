@@ -3,18 +3,20 @@
 
 package social.aloha.core.network.endpoints
 
+import social.aloha.core.model.AdminLink
 import social.aloha.core.model.AdminReport
-import social.aloha.core.model.Card
+import social.aloha.core.model.AdminTag
+import social.aloha.core.model.ModeratorRole
 import social.aloha.core.model.Status
-import social.aloha.core.model.Tag
 import social.aloha.core.network.ApiRequest
 import social.aloha.core.network.Endpoint
 import social.aloha.core.network.HttpMethod
 import social.aloha.core.network.QueryItem
+import social.aloha.core.network.dto.AdminLinkDto
 import social.aloha.core.network.dto.AdminReportDto
-import social.aloha.core.network.dto.CardDto
+import social.aloha.core.network.dto.AdminTagDto
+import social.aloha.core.network.dto.RoleHolderDto
 import social.aloha.core.network.dto.StatusDto
-import social.aloha.core.network.dto.TagDto
 import social.aloha.core.network.dto.toDomain
 import social.aloha.core.network.listRequest
 import social.aloha.core.network.request
@@ -55,14 +57,18 @@ public object ModerationEndpoints {
     public fun unassignReport(id: String): ApiRequest<AdminReport> = reportAction(id, "unassign")
 
     /** What may trend, from the moderator's side of the same readers the public routes use. */
-    public fun trendingTags(limit: Int = Paging.DEFAULT_LIMIT): ApiRequest<List<Tag>> =
-        listRequest(trends("tags", limit), TagDto.serializer()) { it.toDomain() }
+    public fun trendingTags(limit: Int = Paging.DEFAULT_LIMIT): ApiRequest<List<AdminTag>> =
+        listRequest(trends("tags", limit), AdminTagDto.serializer()) { it.toDomain() }
+
+    /** What the signed-in person may moderate, from the `role` on `verify_credentials`; nothing without one. */
+    public fun role(): ApiRequest<ModeratorRole> =
+        request(Endpoint("api/v1/accounts/verify_credentials"), RoleHolderDto.serializer()) { it.toDomain() }
 
     public fun trendingStatuses(limit: Int = Paging.DEFAULT_LIMIT): ApiRequest<List<Status>> =
         listRequest(trends("statuses", limit), StatusDto.serializer()) { it.toDomain() }
 
-    public fun trendingLinks(limit: Int = Paging.DEFAULT_LIMIT): ApiRequest<List<Card>> =
-        listRequest(trends("links", limit), CardDto.serializer()) { it.toDomain() }
+    public fun trendingLinks(limit: Int = Paging.DEFAULT_LIMIT): ApiRequest<List<AdminLink>> =
+        listRequest(trends("links", limit), AdminLinkDto.serializer()) { it.toDomain() }
 
     /**
      * Records that a moderator looked. Everything nobody objected to trends already, so approving grants

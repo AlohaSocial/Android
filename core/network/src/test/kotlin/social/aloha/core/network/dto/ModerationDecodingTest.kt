@@ -138,4 +138,59 @@ class ModerationDecodingTest {
         assertEquals("suspend", bare.severity)
         assertEquals("x.example", bare.id)
     }
+
+    @Test
+    fun `a Mastodon role grants what its permissions say, and no role grants nothing`() {
+        val reports = ModerationEndpoints.role().decodeValue("""{"id":"1","role":{"id":"2","permissions":"16"}}""")
+        assertTrue(reports.reports)
+        assertFalse(reports.accounts)
+        val admin = ModerationEndpoints.role().decodeValue("""{"id":"1","role":{"id":"3","permissions":1}}""")
+        assertTrue(admin.reports && admin.accounts && admin.trends)
+        val everyone = ModerationEndpoints.role().decodeValue("""{"id":"1","role":{"permissions":"65536"}}""")
+        assertFalse(everyone.any)
+        // Nextcloud Social before 0.26.108: `role` is null
+        assertFalse(ModerationEndpoints.role().decodeValue("""{"id":"1","role":null}""").any)
+    }
+
+    @Test
+    fun `the roles Nextcloud Social reports, as it reports them`() {
+        val admin = ModerationEndpoints.role().decodeValue(
+            """{"id":"1","role":{"id":"3","name":"Admin","color":"","permissions":"8388607","highlighted":true}}""",
+        )
+        assertTrue(admin.reports && admin.accounts && admin.trends)
+        val moderator = ModerationEndpoints.role().decodeValue(
+            """{"id":"1","role":{"id":"1","name":"Moderator","permissions":"591288","highlighted":true}}""",
+        )
+        assertTrue(moderator.reports && moderator.accounts && moderator.trends)
+        val everyone = ModerationEndpoints.role().decodeValue(
+            """{"id":"1","role":{"id":"-99","name":"","permissions":"65536","highlighted":false}}""",
+        )
+        assertFalse(everyone.any)
+    }
+
+    @Test
+    fun `an admin link carries its id, or on Nextcloud Social its address`() {
+        val links = ModerationEndpoints.trendingLinks().decodeValue(
+            """[{"id":"12","url":"https://news.example/a","title":"A","provider_name":"News",""" +
+                """"requires_review":true},""" +
+                """{"url":"https://blog.example/b","title":"B"}]""",
+        )
+        assertEquals("12", links[0].id)
+        assertTrue(links[0].requiresReview)
+        assertEquals("https://blog.example/b", links[1].id)
+    }
+
+    @Test
+    fun `an admin tag carries the id the review routes take, and today's uses`() {
+        val tags = ModerationEndpoints.trendingTags().decodeValue(
+            """[{"id":"37","name":"Aloha","requires_review":true,"trendable":false,""" +
+                """"history":[{"day":"1790000000","uses":"12","accounts":"5"}]},{"name":"nextcloud"}]""",
+        )
+        assertEquals("37", tags[0].id)
+        assertEquals(12, tags[0].uses)
+        assertEquals(5, tags[0].accounts)
+        assertTrue(tags[0].requiresReview)
+        assertFalse(tags[0].trendable)
+        assertEquals("nextcloud", tags[1].id)
+    }
 }
