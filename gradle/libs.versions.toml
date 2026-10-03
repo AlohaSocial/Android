@@ -111,6 +111,9 @@ junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
 junit-vintage-engine = { module = "org.junit.vintage:junit-vintage-engine" }
 junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
+# the Accessibility Test Framework's own, raised past their advisories; protobuf stays on 3.x, which ATF is built with
+atf-protobuf-javalite = { module = "com.google.protobuf:protobuf-javalite", version = "3.25.9" }
+atf-jsoup = { module = "org.jsoup:jsoup", version = "1.23.2" }
 roborazzi = { module = "io.github.takahirom.roborazzi:roborazzi", version.ref = "roborazzi" }
 roborazzi-compose = { module = "io.github.takahirom.roborazzi:roborazzi-compose", version.ref = "roborazzi" }
 roborazzi-junit-rule = { module = "io.github.takahirom.roborazzi:roborazzi-junit-rule", version.ref = "roborazzi" }

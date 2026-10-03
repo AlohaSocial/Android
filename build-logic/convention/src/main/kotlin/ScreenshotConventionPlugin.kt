@@ -33,6 +33,10 @@ class ScreenshotConventionPlugin : Plugin<Project> {
                 add("testImplementation", libs.library("compose-ui-test-junit4"))
                 // the Accessibility Test Framework checks every screenshot test can run
                 add("testImplementation", libs.library("compose-ui-test-junit4-accessibility"))
+                for (alias in listOf("atf-protobuf-javalite", "atf-jsoup")) {
+                    val pinned = libs.library(alias).get()
+                    constraints.add("testImplementation", "${pinned.module}:${pinned.version}")
+                }
                 add("debugImplementation", libs.library("compose-ui-test-manifest"))
             }
         }

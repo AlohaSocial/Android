@@ -15,11 +15,11 @@
          <ignored-key id="6751E1A6E2001B8D" reason="Key couldn't be downloaded from any key server" />
          <ignored-key id="C51E6CBC7FF46F0B" reason="Key couldn't be downloaded from any key server" />
          <ignored-key id="EB380DC13C39F675" reason="Key couldn't be downloaded from any key server" />
-         <ignored-key id="F42E87F9665015C9" reason="Key couldn't be downloaded from any key server" />
          <ignored-key id="3A387D43964143E3" reason="Key couldn't be downloaded from any key server" />
          <ignored-key id="C0E2EB10E7B60FAD" reason="Key couldn't be downloaded from any key server" />
       </ignored-keys>
       <trusted-keys>
+         <trusted-key id="0D35D3F60078655126908E8AF3D1600878E85A3D" group="io.netty" name="netty-bom"/>
          <trusted-key id="03C123038C20AAE9E286C857479D601F3A7B5C1A" group="com.github.ajalt.clikt" />
          <trusted-key id="04543577D6A9CC626239C50C7ECBD740FF06AEB5">
             <trusting group="org.glassfish.jaxb" />
@@ -198,7 +198,7 @@
          <trusted-key id="73976C9C39C1479B84E2641A5A68A2249128E2C6" group="com.google.crypto.tink" name="tink" version="1.23.0"/>
          <trusted-key id="7F0C6700F82B97092092AFF84DA93C0B57A98B11" group="org.unifiedpush.android" name="connector" version="3.3.5"/>
          <trusted-key id="F1A51E051F527E0C8E24D54D4B1E11D5A4B91E89" group="com.google.protobuf"/>
-         <trusted-key id="F3184BCD55F4D016E30D4C9BF42E87F9665015C9" group="org.jsoup" name="jsoup" version="1.15.1"/>
+         <trusted-key id="F3184BCD55F4D016E30D4C9BF42E87F9665015C9" group="org.jsoup" name="jsoup"/>
          <trusted-key id="10F3C7A02ECA55E502BADCF3991EFB94DB91127D" group="org.ow2" name="ow2" version="1.5.1"/>
          <trusted-key id="147B691A19097624902F4EA9689CBE64F4BC997F" group="org.mockito" name="mockito-core" version="3.12.4"/>
          <trusted-key id="A7892505CF1A58076453E52D7999BEFBA1039E8B" group="net.bytebuddy"/>
