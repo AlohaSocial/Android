@@ -8,6 +8,10 @@ import org.gradle.api.Project
 import org.gradle.api.artifacts.ProjectDependency
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.tasks.Input
+import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import social.aloha.buildlogic.ModuleRules
 
@@ -31,10 +35,22 @@ class ArchitectureConventionPlugin : Plugin<Project> {
                 }.distinct().sorted(),
             )
         }
+        val strings = target.tasks.register("alohaStringsCheck", StringsCheckTask::class.java) {
+            group = "verification"
+            description = "Fails on a string without a translator comment of its own, or named as another module's."
+            files.from(
+                target.fileTree(target.rootDir) {
+                    include("**/src/main/res/values/strings.xml")
+                    exclude("**/build/**")
+                },
+            )
+        }
         target.tasks.register("alohaArchitectureCheck", ArchitectureCheckTask::class.java) {
             group = "verification"
             description = "Fails on a module dependency the module graph does not allow."
             this.edges.set(edges)
+            // run with it, so CI's architecture step holds the strings to their comments too
+            dependsOn(strings)
         }
     }
 }
@@ -53,5 +69,43 @@ abstract class ArchitectureCheckTask : DefaultTask() {
             throw GradleException("Module graph violations (allowed edges: ModuleRules.kt):\n" + violations.joinToString("\n"))
         }
         logger.lifecycle("Module graph: ${edges.get().size} edges, all allowed")
+    }
+}
+
+/**
+ * `alohaStringsCheck`: every string and plural a translator will see has a comment of its own directly
+ * above it, which translation tools show beside it; a comment over a group reaches only the first.
+ */
+abstract class StringsCheckTask : DefaultTask() {
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val files: ConfigurableFileCollection
+
+    @TaskAction
+    fun check() {
+        val entry = Regex("""^\s*<(string|plurals) name="([^"]+)"([^>]*)>""")
+        val bare = files.files.sortedBy { it.path }.flatMap { file ->
+            val lines = file.readLines()
+            lines.withIndex().mapNotNull { (index, line) ->
+                val match = entry.find(line) ?: return@mapNotNull null
+                val translatable = !match.groupValues[3].contains("translatable=\"false\"")
+                val commented = lines.getOrNull(index - 1)?.trim()?.endsWith("-->") == true
+                "${file.path}: ${match.groupValues[2]}".takeIf { translatable && !commented }
+            }
+        }
+        if (bare.isNotEmpty()) {
+            throw GradleException("Strings without a translator comment above them:\n" + bare.joinToString("\n"))
+        }
+        // resources merge by name: the app's own, or whichever module wins, silently replaces the other's
+        val shared = files.files.flatMap { file ->
+            file.readLines().mapNotNull { entry.find(it) }.map { "${it.groupValues[1]} ${it.groupValues[2]}" to file }
+        }.groupBy({ it.first }, { it.second }).filterValues { it.size > 1 }
+        if (shared.isNotEmpty()) {
+            throw GradleException(
+                "Strings defined in more than one module, so one replaces the other:\n" +
+                    shared.map { (name, where) -> "$name: ${where.joinToString { it.path }}" }.joinToString("\n"),
+            )
+        }
+        logger.lifecycle("Strings: every one has its translator comment and a name no other module uses")
     }
 }

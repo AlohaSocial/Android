@@ -22,6 +22,8 @@ import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.core.graphics.drawable.IconCompat
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
+import kotlinx.coroutines.flow.first
+import social.aloha.core.data.AppLockSettings
 import social.aloha.core.data.notifications.preview
 import social.aloha.core.model.NotificationItem
 import social.aloha.core.model.NotificationKind
@@ -48,6 +50,7 @@ public fun notificationsAllowed(context: Context): Boolean = Build.VERSION.SDK_I
  */
 public class LocalNotifications @Inject constructor(
     @param:ApplicationContext private val context: Context,
+    private val lock: AppLockSettings? = null,
     private val avatars: AvatarSource,
 ) {
     private val manager = NotificationManagerCompat.from(context)
@@ -160,7 +163,9 @@ public class LocalNotifications @Inject constructor(
         if (item.status?.visibility == Visibility.Direct) builder.setCategory(NotificationCompat.CATEGORY_MESSAGE)
     }
 
-    private fun actions(builder: NotificationCompat.Builder, account: SignedInAccount, item: NotificationItem) {
+    private suspend fun actions(builder: NotificationCompat.Builder, account: SignedInAccount, item: NotificationItem) {
+        // behind the app lock a tap opens the app, which asks first; a button would act without it
+        if (lock?.enabled?.first() == true) return
         val reply = RemoteInput.Builder(NotificationActions.EXTRA_TEXT)
             .setLabel(context.getString(R.string.notification_reply_hint))
             .build()

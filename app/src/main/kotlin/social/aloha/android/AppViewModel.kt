@@ -28,10 +28,13 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import social.aloha.core.data.AccountMaintenance
 import social.aloha.core.data.AccountRepository
+import social.aloha.core.data.ReauthRequest
 import social.aloha.core.data.compose.Outbox
 import social.aloha.core.data.sync.UnreadCounts
 import social.aloha.core.data.timeline.CacheSweeper
+import social.aloha.core.datastore.AppPreferences
 import social.aloha.core.datastore.ModePreferences
+import social.aloha.core.designsystem.ThemeSettings
 import social.aloha.core.model.ServerCapabilities
 import social.aloha.core.model.SignedInAccount
 import social.aloha.core.navigation.AccountKey
@@ -47,8 +50,11 @@ import social.aloha.core.sync.PostQueue
 sealed interface AppSession {
     data object Loading : AppSession
 
-    /** No account yet, a new sign-in for one the server refused, or one being added beside others ([adding]). */
-    data class SigningIn(val adding: Boolean = false) : AppSession
+    /**
+     * No account yet ([first]: the welcome comes first), a new sign-in for one the server refused, or one
+     * being added beside others ([adding]).
+     */
+    data class SigningIn(val adding: Boolean = false, val first: Boolean = false) : AppSession
 
     /**
      * [needsReauth]: the server refused the token; the cache stays and a banner offers a new sign-in.
@@ -86,7 +92,9 @@ class AppViewModel @Inject constructor(
     private val queue: PostQueue,
     private val unread: UnreadCounts,
     private val shortcuts: AccountShortcuts,
+    private val reauth: ReauthRequest,
     preferences: ModePreferences,
+    appPreferences: AppPreferences,
     savedState: SavedStateHandle,
     @ApplicationContext private val context: Context,
 ) : ViewModel() {
@@ -96,7 +104,11 @@ class AppViewModel @Inject constructor(
         ModeNavigation(choices.wide(capabilities), choices.narrow(capabilities))
     }.stateIn(viewModelScope, SharingStarted.Eagerly, ModeNavigation())
 
-    private val signingInAgain = MutableStateFlow(false)
+    /** The theme every window wears: the reader's choice, coloured by their server where they chose it. */
+    val theme: StateFlow<ThemeSettings?> = combine(appPreferences.appearance, accounts.activeAccount) { look, reader ->
+        themeOf(look, reader?.capabilities?.theme)
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
     private val external = MutableStateFlow<String?>(null)
 
     /** A link another app asked to open, waiting for the shell to open it. */
@@ -129,7 +141,7 @@ class AppViewModel @Inject constructor(
                     b.id
             }
                 .collect { account ->
-                    signingInAgain.value = false
+                    reauth.done()
                     queue.resume(account.id)
                 }
         }
@@ -140,17 +152,16 @@ class AppViewModel @Inject constructor(
         viewModelScope.launch {
             accounts.accounts.map { it.isEmpty() }.distinctUntilChanged().filter { it }.collect { caches.clear() }
         }
-        // the launcher's and the share sheet's shortcuts follow who is signed in
+        // the launcher's and the share sheet's shortcuts follow who is signed in, in the reader's order
         viewModelScope.launch {
             accounts.accounts
-                .map { all -> all.sortedBy { it.addedAt } }
                 .distinctUntilChanged { a, b -> a.map(::shortcutOf) == b.map(::shortcutOf) }
                 .collect { shortcuts.publish(it) }
         }
     }
 
     val session: StateFlow<AppSession> =
-        combine(accounts.accounts, accounts.activeAccount, signingInAgain, adding, ::sessionOf)
+        combine(accounts.accounts, accounts.activeAccount, reauth.requested, adding, ::sessionOf)
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), AppSession.Loading)
 
     /** The active account's unread notifications, as its server last said. */
@@ -160,7 +171,7 @@ class AppViewModel @Inject constructor(
 
     val switcher: StateFlow<List<SwitcherAccount>> =
         combine(accounts.accounts, accounts.activeAccount) { all, active ->
-            all.sortedBy { it.addedAt }.map { account ->
+            all.map { account ->
                 SwitcherAccount(
                     id = account.id,
                     displayName = account.displayName.ifBlank { account.handle },
@@ -250,7 +261,7 @@ class AppViewModel @Inject constructor(
         accounts.activeAccount.value?.let { links.destination(it, address, fromPost) }
 
     fun signInAgain() {
-        signingInAgain.value = true
+        reauth.ask()
     }
 
     /** Switching paints the other account from its cache at once; nothing waits for its server. */
@@ -279,13 +290,13 @@ class AppViewModel @Inject constructor(
 /** What an account's shortcut shows, so it is published again only when that changes. */
 private fun shortcutOf(account: SignedInAccount) = Triple(account.id, account.qualifiedHandle, account.avatarUrl)
 
-private fun sessionOf(
+internal fun sessionOf(
     all: List<SignedInAccount>,
     active: SignedInAccount?,
     again: Boolean,
     adding: Boolean,
 ): AppSession = when {
-    active == null && all.isEmpty() -> AppSession.SigningIn()
+    active == null && all.isEmpty() -> AppSession.SigningIn(first = true)
     active == null -> AppSession.Loading
     again && active.needsReauth -> AppSession.SigningIn()
     adding -> AppSession.SigningIn(adding = true)

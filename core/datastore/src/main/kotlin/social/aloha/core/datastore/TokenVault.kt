@@ -23,6 +23,9 @@ public sealed class VaultKey(internal val name: String) {
 
     public class ClientSecret(host: String) : VaultKey("client-secret:${host.lowercase()}")
 
+    /** The client an account's token was issued to, kept once its server's registration was replaced. */
+    public class TokenClient(accountId: String) : VaultKey("token-client:$accountId")
+
     /** The sign-in in flight: state, PKCE verifier and API base, kept only while the browser tab is open. */
     public data object PendingAuthorization : VaultKey("pending-authorization")
 }

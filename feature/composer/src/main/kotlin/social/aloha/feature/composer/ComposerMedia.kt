@@ -181,7 +181,10 @@ private fun uploadLabel(attachment: Attachment): String? = when {
     attachment.preparing -> stringResource(R.string.composer_media_preparing)
 
     attachment.oversizedLimit != null ->
-        stringResource(R.string.composer_media_oversized, Attachments.size(attachment.oversizedLimit))
+        stringResource(
+            R.string.composer_media_oversized,
+            stringResource(R.string.composer_size_mb, Attachments.megabytes(attachment.oversizedLimit)),
+        )
 
     else -> uploadLabel(attachment.upload)
 }
@@ -415,7 +418,7 @@ private fun VideoTrim(attachment: Attachment, video: VideoInfo, edit: VideoEdit,
         Text(
             stringResource(
                 if (over) R.string.composer_video_estimate_over else R.string.composer_video_estimate,
-                Attachments.size(estimate),
+                stringResource(R.string.composer_size_mb, Attachments.megabytes(estimate)),
             ),
             style = MaterialTheme.typography.bodySmall,
             color = if (over) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,

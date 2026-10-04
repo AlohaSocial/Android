@@ -8,6 +8,8 @@ plugins {
     alias(libs.plugins.aloha.screenshot)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.baselineprofile)
+    // every dependency and its licence, gathered at build time for Settings, About
+    alias(libs.plugins.aboutlibraries)
 }
 
 android {
@@ -59,6 +61,7 @@ dependencies {
     implementation(project(":feature:saved"))
     implementation(project(":feature:conversations"))
     implementation(project(":feature:safety"))
+    implementation(project(":feature:moderation"))
     implementation(project(":feature:mediaviewer"))
     implementation(project(":feature:notifications"))
     implementation(project(":widget"))
@@ -74,6 +77,7 @@ dependencies {
     implementation(libs.androidx.profileinstaller)
     implementation(libs.kotlinx.serialization.json)
     testImplementation(project(":core:testing"))
+    testImplementation(libs.aboutlibraries.core)
     testImplementation(project(":core:database"))
     baselineProfile(project(":benchmark"))
 }

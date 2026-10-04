@@ -260,7 +260,8 @@ class ProfileViewModelTest {
     @Test
     fun `blocking their server blocks the domain of their handle`() = runBlocking {
         val viewModel = open(id = "7")
-        viewModel.await { it.relation != null }
+        // the domain comes from their handle, which arrives with the header, not always before the relation
+        viewModel.await { it.relation != null && it.header != null }
         viewModel.onBlockDomain(true)
         withTimeout(10.seconds) { while (bob.changes.isEmpty()) delay(10) }
         assertEquals("POST /api/v1/domain_blocks domain=remote.example", bob.changes.single())

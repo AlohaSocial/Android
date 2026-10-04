@@ -156,7 +156,7 @@ internal fun PhotoExploreScreen(
                 item(span = { GridItemSpan(maxLineSpan) }, key = "tags") { Tags(explore.tags.map { it.name }, onTag) }
             }
             if (explore.people.isNotEmpty()) {
-                heading(R.string.explore_people)
+                heading(R.string.photos_people)
                 items(explore.people, key = { "person:${it.id}" }, span = { GridItemSpan(maxLineSpan) }) {
                     Person(it, onPerson)
                 }

@@ -21,6 +21,13 @@ public object OAuthIdentity {
     /** Coarse grants covering every granular scope Nextcloud Social checks; `push` is needed where Web Push exists. */
     public const val SCOPES: String = "read write follow push"
 
+    /**
+     * What a moderator's second authorisation asks for, and what the app registers before it: a server
+     * refuses an authorisation for more than the app was registered with. Ordinary sign-in never asks for
+     * the admin scopes, so no one else sees them on the consent page.
+     */
+    public const val MODERATOR_SCOPES: String = "$SCOPES admin:read admin:write"
+
     /** The verified App Link: no other app can receive a code sent here. */
     public const val APP_LINK_REDIRECT: String = "https://aloha.social/oauth/callback"
 
@@ -99,12 +106,13 @@ public fun authorizationUrl(
     redirectUri: String,
     pkce: Pkce = Pkce.generate(),
     state: String = Pkce.randomToken(STATE_BYTES),
+    scope: String = OAuthIdentity.SCOPES,
 ): Pair<HttpUrl, PendingAuthorization> {
     val url = endpoints.authorization.newBuilder()
         .addQueryParameter("response_type", "code")
         .addQueryParameter("client_id", clientId)
         .addQueryParameter("redirect_uri", redirectUri)
-        .addQueryParameter("scope", OAuthIdentity.SCOPES)
+        .addQueryParameter("scope", scope)
         .addQueryParameter("state", state)
         .addQueryParameter("code_challenge", pkce.challenge)
         .addQueryParameter("code_challenge_method", pkce.method)

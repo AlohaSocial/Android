@@ -4,18 +4,24 @@
 package social.aloha.core.network.dto
 
 import java.time.Instant
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import social.aloha.core.model.AdminAccount
+import social.aloha.core.model.AdminLink
 import social.aloha.core.model.AdminReport
+import social.aloha.core.model.AdminTag
 import social.aloha.core.model.InstanceActivityWeek
+import social.aloha.core.model.ModeratorRole
 import social.aloha.core.model.PublicDomainBlock
 import social.aloha.core.network.decoding.FlexibleIdSerializer
 import social.aloha.core.network.decoding.LenientBoolSerializer
 import social.aloha.core.network.decoding.LenientInstantSerializer
 import social.aloha.core.network.decoding.LenientIntSerializer
 import social.aloha.core.network.decoding.LenientTextSerializer
+import social.aloha.core.network.decoding.LenientUrlSerializer
 import social.aloha.core.network.decoding.LossyListSerializer
+import social.aloha.core.network.decoding.OrNullSerializer
 
 @Serializable
 internal data class AdminAccountDto(
@@ -111,3 +117,55 @@ internal fun PublicDomainBlockDto.toDomain(): PublicDomainBlock = PublicDomainBl
     severity = severity ?: "suspend",
     comment = comment.orEmpty(),
 )
+
+/** Only the `role` of `verify_credentials`; everything else of the account is read elsewhere. */
+@Serializable
+internal data class RoleHolderDto(@Serializable(with = RoleOrNull::class) val role: RoleDto? = null)
+
+@Serializable
+internal data class RoleDto(@Serializable(with = LenientTextSerializer::class) val permissions: String? = null)
+
+internal object RoleOrNull : KSerializer<RoleDto?> by OrNullSerializer(RoleDto.serializer())
+
+internal fun RoleHolderDto.toDomain(): ModeratorRole = ModeratorRole(role?.permissions?.trim()?.toLongOrNull() ?: 0)
+
+@Serializable
+internal data class AdminTagDto(
+    @Serializable(with = FlexibleIdSerializer::class) val id: String? = null,
+    val name: String? = null,
+    @Serializable(with = LossyListSerializer::class) val history: List<TagHistoryDto> = emptyList(),
+    @SerialName("requires_review") @Serializable(with = LenientBoolSerializer::class)
+    val requiresReview: Boolean = false,
+    @Serializable(with = LenientBoolSerializer::class) val trendable: Boolean = true,
+)
+
+@Serializable
+internal data class AdminLinkDto(
+    @Serializable(with = FlexibleIdSerializer::class) val id: String? = null,
+    @Serializable(with = LenientUrlSerializer::class) val url: String? = null,
+    val title: String? = null,
+    @SerialName("provider_name") val providerName: String? = null,
+    @SerialName("requires_review") @Serializable(with = LenientBoolSerializer::class)
+    val requiresReview: Boolean = false,
+)
+
+internal fun AdminLinkDto.toDomain(): AdminLink = AdminLink(
+    id = id ?: url.orEmpty(),
+    url = url.orEmpty(),
+    title = title.orEmpty(),
+    providerName = providerName.orEmpty(),
+    requiresReview = requiresReview,
+)
+
+internal fun AdminTagDto.toDomain(): AdminTag {
+    val tagName = name.orEmpty()
+    val today = history.firstOrNull()
+    return AdminTag(
+        id = id ?: tagName,
+        name = tagName,
+        uses = today?.uses?.toIntOrNull() ?: 0,
+        accounts = today?.accounts?.toIntOrNull() ?: 0,
+        requiresReview = requiresReview,
+        trendable = trendable,
+    )
+}

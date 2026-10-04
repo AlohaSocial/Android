@@ -68,7 +68,7 @@
     <!-- Heading of the trending hashtags -->
     <string name="explore_tags">Hashtags</string>
     <!-- Heading of the popular accounts -->
-    <string name="explore_people">People</string>
+    <string name="photos_people">People</string>
     <!-- Shown when nothing is trending -->
     <string name="explore_empty">Nothing is trending right now.</string>
     <!-- Title of the screen that puts a post into an album -->

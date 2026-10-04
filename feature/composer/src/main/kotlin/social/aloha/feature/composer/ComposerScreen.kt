@@ -49,6 +49,7 @@ import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.model.CustomEmoji
 import social.aloha.core.model.Visibility
+import social.aloha.core.ui.ConfirmDialog
 import social.aloha.core.ui.readingWidth
 
 /**
@@ -170,7 +171,23 @@ private fun PostButton(state: ComposerUiState, actions: ComposerActions) {
         state.reply != null -> R.string.composer_post_reply
         else -> R.string.composer_post
     }
-    Button(onClick = actions::onPost, enabled = state.canPost, modifier = Modifier.padding(end = AlohaSpacing.s)) {
+    // asked first where the writer chose so; an edit saves as it always did
+    var asking by rememberSaveable { mutableStateOf(false) }
+    val confirm = state.confirmBeforePosting && !state.editing
+    if (asking) {
+        ConfirmDialog(
+            title = stringResource(R.string.composer_confirm_title),
+            body = stringResource(R.string.composer_confirm_body),
+            action = stringResource(label),
+            onDismiss = { asking = false },
+            onConfirm = actions::onPost,
+        )
+    }
+    Button(
+        onClick = { if (confirm) asking = true else actions.onPost() },
+        enabled = state.canPost,
+        modifier = Modifier.padding(end = AlohaSpacing.s),
+    ) {
         if (state.posting) {
             CircularProgressIndicator(
                 Modifier.size(PROGRESS).semantics {

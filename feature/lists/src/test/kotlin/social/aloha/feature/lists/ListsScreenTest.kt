@@ -80,6 +80,17 @@ class ListsScreenTest {
     }
 
     @Test
+    @Config(fontScale = 2f)
+    fun listsLargeFont() {
+        compose.enableAccessibilityChecks()
+        compose.setContent {
+            AlohaTheme { ListsScreen(ListsUiState(listOf(surf, design), loading = false), actions, {}) }
+        }
+        compose.onRoot().tryPerformAccessibilityChecks()
+        compose.onRoot().captureRoboImage("src/test/screenshots/lists-font200.png")
+    }
+
+    @Test
     fun `a group list's members are shown, and nobody can be added or removed`() {
         compose.enableAccessibilityChecks()
         val state = MembersUiState(members = listOf(StatusSamples.alice), loading = false, group = true)

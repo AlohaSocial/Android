@@ -68,6 +68,15 @@ class AudioScreenTest {
     }
 
     @Test
+    @Config(fontScale = 2f)
+    fun audioLargeFont() {
+        compose.enableAccessibilityChecks()
+        compose.setContent { AlohaTheme { AudioScreen(state, actions, accountButton = {}) } }
+        compose.onRoot().tryPerformAccessibilityChecks()
+        compose.onRoot().captureRoboImage("src/test/screenshots/audio-font200.png")
+    }
+
+    @Test
     fun miniPlayer() {
         compose.enableAccessibilityChecks()
         compose.setContent {

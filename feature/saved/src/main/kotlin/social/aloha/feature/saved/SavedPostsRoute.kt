@@ -39,6 +39,7 @@ import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.model.SensitiveMediaPolicy
 import social.aloha.core.navigation.SavedKind
 import social.aloha.core.navigation.SavedPostsKey
+import social.aloha.core.ui.LocalSensitiveMediaPolicy
 import social.aloha.core.ui.RichTextColors
 import social.aloha.core.ui.StatusActions
 import social.aloha.core.ui.StatusCard
@@ -125,7 +126,7 @@ internal fun SavedPostsScreen(
 
                 else -> LazyColumn(Modifier.fillMaxSize()) {
                     items(rows, key = { it.rowId }) { row ->
-                        StatusCard(row, now, SensitiveMediaPolicy.Blur, rowActions, showActions = false)
+                        StatusCard(row, now, LocalSensitiveMediaPolicy.current, rowActions, showActions = false)
                         actions.onUnarchive?.let { unarchive ->
                             // whose post, said aloud: every row has one
                             val label = stringResource(R.string.saved_unarchive_post, row.author.plainName)

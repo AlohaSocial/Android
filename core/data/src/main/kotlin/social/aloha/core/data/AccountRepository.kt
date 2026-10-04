@@ -72,6 +72,8 @@ public class AccountRepository @Inject constructor(
         val existing = dao.find(account.host, account.serverAccountId)
         val id = existing?.id ?: UUID.randomUUID().toString()
         vault.put(VaultKey.AccessToken(id), token.value)
+        // the new token comes from the server's registration as it is now
+        vault.remove(VaultKey.TokenClient(id))
         val entity = AccountEntity(
             id = id,
             instanceHost = account.host,
@@ -98,6 +100,7 @@ public class AccountRepository @Inject constructor(
     }
 
     /** The server refused the token: keep the account and its cache, ask for a new sign-in. */
+
     public suspend fun markNeedsReauth(id: String) {
         dao.setNeedsReauth(id, needsReauth = true)
     }
@@ -117,6 +120,7 @@ public class AccountRepository @Inject constructor(
     public suspend fun remove(id: String) {
         vault.remove(VaultKey.AccessToken(id))
         vault.remove(VaultKey.AppPassword(id))
+        vault.remove(VaultKey.TokenClient(id))
         dao.delete(id)
         if (preferences.activeAccountId.first() == id) preferences.setActiveAccountId(dao.all().firstOrNull()?.id)
     }
@@ -130,14 +134,30 @@ public class AccountRepository @Inject constructor(
         nextcloudBasic = vault.get(VaultKey.AppPassword(id)),
     )
 
-    /** The app's OAuth client on [host], registered once per server on this device. */
-    public suspend fun registration(host: String): ClientRegistration? {
-        val row = dao.registration(host) ?: return null
-        val secret = vault.get(VaultKey.ClientSecret(host)) ?: return null
-        return ClientRegistration(row.clientId, secret, row.scopes)
-    }
+    /**
+     * The app's OAuth client on [host], registered once per server on this device; for [accountId], the one
+     * its token was issued to, which revoking it takes.
+     */
+    public suspend fun registration(host: String, accountId: String? = null): ClientRegistration? =
+        accountId?.let { keptClient(vault.get(VaultKey.TokenClient(it))) }
+            ?: dao.registration(host)?.let { row ->
+                vault.get(VaultKey.ClientSecret(host))?.let { ClientRegistration(row.clientId, it, row.scopes) }
+            }
 
+    /**
+     * Stores [registration] as [host]'s. One that replaces another (a moderator's, with the admin scopes)
+     * leaves each account there the old client its token was issued to, so the token can still be revoked.
+     */
     public suspend fun saveRegistration(host: String, registration: ClientRegistration) {
+        val old = registration(host)?.takeIf { it.clientId != registration.clientId }
+        if (old != null) {
+            dao.all()
+                .filter {
+                    it.instanceHost.equals(host, ignoreCase = true) &&
+                        vault.get(VaultKey.TokenClient(it.id)) == null
+                }
+                .forEach { vault.put(VaultKey.TokenClient(it.id), "${old.clientId}\n${old.clientSecret}") }
+        }
         vault.put(VaultKey.ClientSecret(host), registration.clientSecret)
         dao.upsertRegistration(
             ClientRegistrationEntity(host, registration.clientId, registration.scopes, clock.millis()),
@@ -197,3 +217,7 @@ public data class NewAccount(
     val capabilities: ServerCapabilities,
     val profilePending: Boolean,
 )
+
+/** A client kept as `id` and secret on two lines; its scopes are not needed to revoke with it. */
+private fun keptClient(kept: String?): ClientRegistration? =
+    kept?.split('\n', limit = 2)?.takeIf { it.size == 2 }?.let { (id, secret) -> ClientRegistration(id, secret, "") }

@@ -4,6 +4,7 @@
 # On an emulator: the Maestro smoke flows against the release builds of both
 # flavors (to prove the R8 keep rules) and a startup Macrobenchmark
 # smoke. Budgets are gated on the device-lab run (docs/benchmarking.md), not here.
+# On a foldable: the signed-in flows (scripts/ui-flows.sh) against the mock server.
 name: ui
 
 on:
@@ -67,5 +68,52 @@ jobs:
         with:
           name: maestro-debug
           path: build/maestro
+          if-no-files-found: ignore
+          retention-days: 5
+
+  signed-in:
+    name: Signed-in flows on a foldable
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # check out the repository
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/.ghcup /opt/hostedtoolcache/CodeQL
+          df -h /
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm.rules
+          sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm
+      - name: Maestro
+        run: curl -fsSL "https://get.maestro.mobile.dev" | bash
+      # the debug build: it may reach the mock on the emulator's localhost in clear text; the mock is
+      # compiled here too, so the emulator only has to run it
+      - name: Debug build and the mock
+        run: ./gradlew :app:assembleGenericDebug :core:testing:compileDebugUnitTestKotlin
+      # a foldable for the tabletop step, with Chrome for the consent page
+      - uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
+        with:
+          api-level: 36
+          arch: x86_64
+          target: google_apis_playstore
+          profile: pixel_fold
+          script: MAESTRO="$HOME/.maestro/bin/maestro" scripts/ui-flows.sh
+      - if: failure()
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        with:
+          name: signed-in-debug
+          path: |
+            build/mock-requests.log
+            build/mock-server.log
+            ~/.maestro/tests
           if-no-files-found: ignore
           retention-days: 5

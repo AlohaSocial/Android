@@ -9,6 +9,7 @@ plugins {
 dependencies {
     implementation(project(":core:data"))
     implementation(project(":core:datastore"))
+    implementation(project(":core:sync"))
     // the player's view, drawn without its controls
     implementation(libs.androidx.media3.ui)
     testImplementation(project(":core:testing"))

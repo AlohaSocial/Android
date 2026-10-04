@@ -51,7 +51,10 @@ public class OAuthClient internal constructor(private val executor: RequestExecu
     }
 
     /** `POST /api/v1/apps` with the app's identity and both redirect URIs. */
-    public suspend fun register(apiBase: HttpUrl): ApiResult<ClientRegistration> {
+    public suspend fun register(
+        apiBase: HttpUrl,
+        scopes: String = OAuthIdentity.SCOPES,
+    ): ApiResult<ClientRegistration> {
         val endpoint = Endpoint(
             path = "api/v1/apps",
             method = HttpMethod.POST,
@@ -59,14 +62,14 @@ public class OAuthClient internal constructor(private val executor: RequestExecu
                 listOf(
                     QueryItem("client_name", OAuthIdentity.CLIENT_NAME),
                     QueryItem("redirect_uris", OAuthIdentity.REGISTERED_REDIRECTS),
-                    QueryItem("scopes", OAuthIdentity.SCOPES),
+                    QueryItem("scopes", scopes),
                     QueryItem("website", OAuthIdentity.WEBSITE),
                 ),
             ),
             authentication = Authentication.None,
         )
         val url = apiBase.newBuilder().addPathSegments(endpoint.path).build()
-        return executor.execute(request(endpoint, ApplicationDto.serializer()) { it.toDomain() }, url, "")
+        return executor.execute(request(endpoint, ApplicationDto.serializer()) { it.toDomain(scopes) }, url, "")
             .map { it.decoded.value }
     }
 
@@ -144,12 +147,11 @@ internal data class ApplicationDto(
     @Serializable(with = LenientUrlSerializer::class) val website: String? = null,
 )
 
-internal fun ApplicationDto.toDomain() = ClientRegistration(
+/** A server that does not echo the scopes is taken to have registered the ones [asked] for. */
+internal fun ApplicationDto.toDomain(asked: String = OAuthIdentity.SCOPES) = ClientRegistration(
     clientId,
     clientSecret,
-    scopes.joinToString(" ").ifEmpty {
-        OAuthIdentity.SCOPES
-    },
+    scopes.joinToString(" ").ifEmpty { asked },
 )
 
 @Serializable

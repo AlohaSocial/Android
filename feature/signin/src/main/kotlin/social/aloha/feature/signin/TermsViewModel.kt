@@ -30,7 +30,8 @@ internal class TermsViewModel @Inject constructor(private val preferences: AppPr
     }
 
     private companion object {
-        const val CURRENT_TERMS_VERSION = 1
+        // 2: what may not be posted, and the tools against it, as app stores ask of apps with user content
+        const val CURRENT_TERMS_VERSION = 2
         const val STOP_TIMEOUT_MILLIS = 5_000L
     }
 }

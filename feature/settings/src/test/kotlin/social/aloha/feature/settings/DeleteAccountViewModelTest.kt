@@ -98,7 +98,7 @@ class DeleteAccountViewModelTest {
         fixture.nextcloud,
     )
     private val signOuts =
-        AccountSignOut(push, fixture.removal, LocalNotifications(context, AvatarSource { null }), scope)
+        AccountSignOut(push, fixture.removal, LocalNotifications(context, avatars = AvatarSource { null }), scope)
     private val store = ViewModelStore()
     private val viewModel = DeleteAccountViewModel(fixture.accounts, fixture.removal, signOuts, scope).also {
         store.put("delete", it)

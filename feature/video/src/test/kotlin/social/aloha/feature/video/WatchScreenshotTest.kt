@@ -136,6 +136,10 @@ class WatchScreenshotTest {
     @Test
     fun watch() = capture("watch") { Watch(tabletop = false) }
 
+    @Test
+    @Config(fontScale = 2f)
+    fun watchLargeFont() = capture("watch-font200") { Watch(tabletop = false) }
+
     // a foldable half open like a laptop: the video above the fold, the rest scrolling below it
     @Test
     fun watchTabletop() = capture("watch-tabletop") { Watch(tabletop = true) }

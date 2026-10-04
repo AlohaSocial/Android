@@ -60,7 +60,9 @@ internal fun UnreadContent(account: SignedInAccount?, unread: Int) {
     Column(
         GlanceModifier.fillMaxSize().background(GlanceTheme.colors.widgetBackground).cornerRadius(CORNER).padding(PAD)
             .clickable(actionStartActivity(AppIntents.open(context, account.id, statusId = null)))
-            .semantics { contentDescription = "$spoken, ${account.qualifiedHandle}" },
+            .semantics {
+                contentDescription = context.getString(R.string.widget_for_account, spoken, account.qualifiedHandle)
+            },
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -131,7 +133,9 @@ internal fun ComposeContent(account: SignedInAccount?) {
     Column(
         GlanceModifier.fillMaxSize().background(GlanceTheme.colors.primaryContainer).cornerRadius(CORNER).padding(PAD)
             .clickable(actionStartActivity(AppIntents.compose(context, account.id)))
-            .semantics { contentDescription = "$label, ${account.qualifiedHandle}" },
+            .semantics {
+                contentDescription = context.getString(R.string.widget_for_account, label, account.qualifiedHandle)
+            },
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalAlignment = Alignment.CenterVertically,
     ) {

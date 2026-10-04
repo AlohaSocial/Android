@@ -45,6 +45,7 @@ import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.model.Status
 import social.aloha.core.ui.ListProgress
+import social.aloha.core.ui.LocalSensitiveMediaPolicy
 import social.aloha.core.ui.MediaImage
 import social.aloha.core.ui.rememberBlurHashPainter
 
@@ -161,7 +162,7 @@ internal fun PhotoSquare(post: Status, onOpen: (String) -> Unit, onRemove: ((Str
         when {
             first == null -> Unit
 
-            shown.sensitive -> {
+            shown.sensitive && !LocalSensitiveMediaPolicy.current.allowsAutomaticReveal -> {
                 val blur = rememberBlurHashPainter(first.blurhash)
                 val fill = Modifier.fillMaxSize()
                 blur?.let { Image(it, null, fill, contentScale = ContentScale.Crop) }

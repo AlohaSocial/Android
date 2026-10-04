@@ -35,6 +35,7 @@ import social.aloha.core.model.MediaAttachment
 import social.aloha.core.model.SignedInAccount
 import social.aloha.core.model.TimelineSource
 import social.aloha.core.model.VideoSources
+import social.aloha.core.sync.DeviceConditions
 import social.aloha.core.ui.RichTextColors
 import social.aloha.core.ui.StatusRowMapper
 import social.aloha.core.ui.StatusRowUi
@@ -50,6 +51,9 @@ internal data class ShortsUiState(
     /** Where shorts can come from on this server: the people followed, this server, everyone. */
     val sources: List<TimelineSource> = listOf(TimelineSource.Home),
     val muted: Boolean = true,
+    val loop: Boolean = true,
+    /** Whether a short waits for a tap as it comes into view: on mobile data, where the reader asked. */
+    val waitForTap: Boolean = false,
     val loadedOnce: Boolean = false,
     val trouble: Trouble? = null,
     val actionFailed: Boolean = false,
@@ -68,6 +72,7 @@ internal class ShortsViewModel @Inject constructor(
     private val preferences: ModePreferences,
     private val interactions: StatusInteractions,
     private val cache: RichTextCache,
+    private val conditions: DeviceConditions,
     clock: Clock,
 ) : ViewModel() {
     private val timeline: StateFlow<ModeTimeline?> =
@@ -91,6 +96,11 @@ internal class ShortsViewModel @Inject constructor(
             }
         }
         .combine(preferences.videosMuted) { state, muted -> state.copy(muted = muted) }
+        .combine(preferences.loopShorts) { state, loop -> state.copy(loop = loop) }
+        // ponytail: the network as the choice is read; a move to mobile data counts from the next change
+        .combine(preferences.autoplayOnMobileData) { state, autoplay ->
+            state.copy(waitForTap = !autoplay && conditions.metered)
+        }
         .combine(failed) { state, failed -> state.copy(actionFailed = failed) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_MILLIS), ShortsUiState())
 

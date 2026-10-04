@@ -4,7 +4,6 @@
 package social.aloha.android
 
 import android.content.Context
-import android.os.Build
 import androidx.core.content.pm.ShortcutInfoCompat
 import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.core.graphics.drawable.IconCompat
@@ -57,13 +56,10 @@ class AccountShortcuts @Inject constructor(
                 .setLongLived(true)
                 .setCategories(setOf(SHARE_CATEGORY))
                 .setIntent(AppIntents.compose(context, account.id))
-                // after the app's three, in the order the accounts were added
+                // after the app's three, in the order the reader arranged the accounts
                 .setRank(APP.size + index)
-            // with one account the launcher's New post already posts as it; before Android 13 an excluded
-            // shortcut is never published at all, which would take it out of the share sheet too
-            if (accounts.size == 1 && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                shortcut.setExcludedFromSurfaces(ShortcutInfoCompat.SURFACE_LAUNCHER)
-            }
+            // never excluded from the launcher, though with one account New post already posts as it:
+            // the system drops a dynamic shortcut excluded from it, which takes it out of the share sheet
             ShortcutManagerCompat.pushDynamicShortcut(context, shortcut.build())
         }
     }

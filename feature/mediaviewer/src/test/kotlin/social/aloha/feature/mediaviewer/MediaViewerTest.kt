@@ -102,4 +102,13 @@ class MediaViewerTest {
         compose.onRoot().tryPerformAccessibilityChecks()
         compose.onRoot().captureRoboImage("src/test/screenshots/media-viewer.png")
     }
+
+    @Test
+    @Config(fontScale = 2f)
+    fun viewerLargeFont() {
+        compose.enableAccessibilityChecks()
+        show(start = 0)
+        compose.onRoot().tryPerformAccessibilityChecks()
+        compose.onRoot().captureRoboImage("src/test/screenshots/media-viewer-font200.png")
+    }
 }

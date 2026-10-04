@@ -17,9 +17,23 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
+import social.aloha.core.data.server.ServerAbout
+import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaTheme
 import social.aloha.core.designsystem.ThemeMode
 import social.aloha.core.designsystem.ThemeSettings
+import social.aloha.core.model.AccentSource
+import social.aloha.core.model.AnnualArchetype
+import social.aloha.core.model.AnnualHashtag
+import social.aloha.core.model.AnnualMonth
+import social.aloha.core.model.AnnualReport
+import social.aloha.core.model.AnnualReportData
+import social.aloha.core.model.Appearance
+import social.aloha.core.model.InstanceDocument
+import social.aloha.core.model.InstanceRule
+import social.aloha.core.model.PublicDomainBlock
+import social.aloha.core.model.ReadingStyle
+import social.aloha.core.model.SensitiveMediaPolicy
 
 /** The settings list and a section at each width, each also run through the Accessibility Test Framework checks. */
 @RunWith(RobolectricTestRunner::class)
@@ -37,7 +51,17 @@ class SettingsScreenshotTest {
     }
 
     @Test
-    fun sections() = capture("settings-sections") { SettingsScreen(listOf(AboutSection), onBack = {}, onSection = {}) }
+    fun sections() = capture("settings-sections") {
+        SettingsScreen(
+            listOf(AccountsSection, AppearanceSection, MediaSection, AboutSection),
+            onBack = {},
+            onSection = {},
+            destinations = listOf(
+                SettingsDestination("filters", 250, R.string.settings_filters, AlohaIcons.Filtered) {
+                },
+            ),
+        )
+    }
 
     @Test
     @Config(fontScale = 2f)
@@ -47,6 +71,114 @@ class SettingsScreenshotTest {
 
     @Test
     fun about() = capture("settings-about") { SectionScreen(AboutSection, onBack = {}) }
+
+    @Test
+    fun accounts() = capture("settings-accounts") {
+        AccountsContent(
+            listOf(
+                AccountEntry("1", "Alice", "@alice@cloud.example", null, active = true, needsReauth = false),
+                AccountEntry("2", "Alice", "@alice@mastodon.example", null, active = false, needsReauth = true),
+            ),
+            onMove = { _, _ -> },
+            onSignInAgain = {},
+            onSignOut = {},
+        )
+    }
+
+    @Test
+    fun media() = capture("settings-media") {
+        MediaContent(MediaState(SensitiveMediaPolicy.ShowAll, changeable = true, refused = true), MediaActions())
+    }
+
+    @Test
+    fun mediaOnTheWebsite() = capture("settings-media-website") {
+        MediaContent(
+            MediaState(SensitiveMediaPolicy.Blur, changeable = false, autoplayOnMobileData = false),
+            MediaActions(),
+        )
+    }
+
+    @Test
+    fun server() = capture("settings-server") {
+        ServerContent(
+            ServerState(
+                "cloud.example",
+                ServerAbout(
+                    rules = listOf(InstanceRule("1", "Be kind")),
+                    privacyPolicy = InstanceDocument("<p>We keep little.</p>"),
+                    domainBlocks = listOf(PublicDomainBlock("spam.example")),
+                ),
+            ),
+        )
+    }
+
+    @Test
+    fun storage() = capture("settings-storage") { StorageContent(StorageState(bytes = 126_000_000), onClear = {}) }
+
+    @Test
+    fun reading() = capture("settings-reading") {
+        ReadingContent(ReadingStyle(compact = true, showCounts = false), onChange = {})
+    }
+
+    @Test
+    fun sound() = capture("settings-sound") { SoundContent(ReadingStyle(), onChange = {}, onNotificationSounds = {}) }
+
+    @Test
+    fun year() = capture("settings-year") {
+        val report = AnnualReport(
+            2026,
+            AnnualReportData(
+                archetype = AnnualArchetype.Oracle,
+                timeSeries = (1..12).map { AnnualMonth(it, statuses = if (it in 8..10) it * 2 else 0) },
+                topHashtags = listOf(AnnualHashtag("aloha", 3), AnnualHashtag("surf", 1)),
+            ),
+        )
+        YearScreen(
+            YearState(
+                loading = false,
+                reports = listOf(report, AnnualReport(2025)),
+                shown = 2026,
+                posts = mapOf(2026 to listOf(TopPost(TopKind.Favourites, "s1", "Surf\u2019s up at dawn"))),
+            ),
+            onOpenPost = {},
+            onYear = {},
+            onRetry = {},
+            onBack = {},
+        )
+    }
+
+    @Test
+    @Config(qualifiers = "+en-rXA")
+    fun mediaPseudolocale() = capture("settings-media-en-xa") {
+        MediaContent(MediaState(SensitiveMediaPolicy.Blur, changeable = true), MediaActions())
+    }
+
+    @Test
+    fun appLock() = capture("settings-privacy-lock") {
+        PrivacyContent(LockState(enabled = true, timeoutSeconds = 300), secure = true, onEnabled = {}, onTimeout = {})
+    }
+
+    @Test
+    fun privacyWithoutScreenLock() = capture("settings-privacy-no-screen-lock") {
+        PrivacyContent(LockState(), secure = false, onEnabled = {}, onTimeout = {})
+    }
+
+    @Test
+    fun appearance() = capture("settings-appearance") {
+        AppearanceContent(
+            AppearanceState(Appearance(accent = AccentSource.Custom, black = true), serverColour = true),
+            onChange = {},
+        )
+    }
+
+    @Test
+    @Config(fontScale = 2f)
+    fun appearanceLargeFont() = capture("settings-appearance-font200") {
+        AppearanceContent(AppearanceState(Appearance(accent = AccentSource.Custom)), onChange = {})
+    }
+
+    @Test
+    fun privacy() = capture("settings-privacy") { TextPage("Privacy", onClose = {}) { PrivacyStatement() } }
 
     @Test
     fun nextcloud() = capture("settings-nextcloud") {

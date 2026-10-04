@@ -14,6 +14,7 @@ import social.aloha.core.datastore.VaultKey
 import social.aloha.core.model.AccessToken
 import social.aloha.core.model.Account
 import social.aloha.core.model.ServerCapabilities
+import social.aloha.core.model.SignedInAccount
 import social.aloha.core.network.ApiError
 import social.aloha.core.network.ApiResult
 import social.aloha.core.network.Credentials
@@ -24,6 +25,7 @@ import social.aloha.core.network.errorOrNull
 import social.aloha.core.network.oauth.OAuthCallback
 import social.aloha.core.network.oauth.OAuthClient
 import social.aloha.core.network.oauth.OAuthEndpoints
+import social.aloha.core.network.oauth.OAuthIdentity
 import social.aloha.core.network.oauth.PendingAuthorization
 import social.aloha.core.network.oauth.authorizationUrl
 import social.aloha.core.network.valueOrNull
@@ -57,6 +59,32 @@ public class SignInCoordinator @Inject constructor(
         val (url, started) =
             authorizationUrl(OAuthEndpoints.from(metadata, base), base, registration.clientId, redirects.redirectUri())
         val pending = started.copy(nodeInfo = outcome.nodeInfo)
+        vault.put(VaultKey.PendingAuthorization, json.encodeToString(PendingAuthorization.serializer(), pending))
+        return Authorization.Started(url.toString())
+    }
+
+    /**
+     * A moderator's second authorisation of [account] for the admin scopes, finished by [complete] like a
+     * sign-in. A server refuses to authorise more than the app was registered with, so a registration made
+     * for the ordinary scopes is replaced by one that also lists the admin scopes.
+     */
+    public suspend fun beginModeration(account: SignedInAccount): Authorization {
+        val base = account.apiBase.toHttpUrlOrNull()
+            ?: return Authorization.Failed(SignInProblem.ServerProblem(null))
+        val kept = accounts.registration(base.host)?.takeIf { registration ->
+            OAuthIdentity.MODERATOR_SCOPES.split(' ').all { it in registration.scopes.split(' ') }
+        }
+        val registration = kept ?: when (val registered = oauth.register(base, OAuthIdentity.MODERATOR_SCOPES)) {
+            is ApiResult.Success -> registered.value.also { accounts.saveRegistration(base.host, it) }
+            is ApiResult.Failure -> return Authorization.Failed(registered.error.toProblem())
+        }
+        val (url, pending) = authorizationUrl(
+            OAuthEndpoints.from(oauth.metadata(base), base),
+            base,
+            registration.clientId,
+            redirects.redirectUri(),
+            scope = OAuthIdentity.MODERATOR_SCOPES,
+        )
         vault.put(VaultKey.PendingAuthorization, json.encodeToString(PendingAuthorization.serializer(), pending))
         return Authorization.Started(url.toString())
     }

@@ -73,6 +73,28 @@ class SavedPostsScreenTest {
     }
 
     @Test
+    @Config(fontScale = 2f)
+    fun `an archived post is put back on the profile from the archive, at twice the font size`() {
+        compose.enableAccessibilityChecks()
+        compose.setContent {
+            AlohaTheme {
+                SavedPostsScreen(
+                    SavedKind.Archived,
+                    state,
+                    mapper,
+                    Inert,
+                    actions(archive = true),
+                    now = StatusSamples.NOW,
+                )
+            }
+        }
+        compose.onRoot().tryPerformAccessibilityChecks()
+        compose.onRoot().captureRoboImage("src/test/screenshots/saved-archived-font200.png")
+        compose.onNodeWithText("Put back on profile").performClick()
+        assertEquals(listOf("unarchive:${StatusSamples.post().id}"), asked)
+    }
+
+    @Test
     fun `bookmarks offer nothing to put back, and say when there are none`() {
         val none = state.copy(posts = emptyList())
         compose.setContent {

@@ -98,4 +98,10 @@
     <string name="keys_reply">Reply</string>
     <!-- Keyboard shortcut N: starts a new post -->
     <string name="keys_compose">New post</string>
+    <!-- Shown while the app is locked -->
+    <string name="lock_title">Aloha Social is locked</string>
+    <!-- Button on the locked screen: ask for the fingerprint, face or screen lock -->
+    <string name="lock_unlock">Unlock</string>
+    <!-- Title of the system prompt that unlocks the app -->
+    <string name="lock_prompt">Unlock Aloha Social</string>
 </resources>

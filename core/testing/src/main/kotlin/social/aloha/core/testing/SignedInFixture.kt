@@ -14,10 +14,12 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
+import social.aloha.core.data.AccountOrder
 import social.aloha.core.data.AccountRemoval
 import social.aloha.core.data.AccountRepository
 import social.aloha.core.data.ClientFactory
 import social.aloha.core.data.NewAccount
+import social.aloha.core.data.SignInCoordinator
 import social.aloha.core.data.compose.ComposeRepository
 import social.aloha.core.data.compose.Outbox
 import social.aloha.core.data.compose.PostSender
@@ -46,7 +48,9 @@ import social.aloha.core.model.AccessToken
 import social.aloha.core.model.ServerCapabilities
 import social.aloha.core.model.SignedInAccount
 import social.aloha.core.network.RateLimiter
+import social.aloha.core.network.capabilities.CapabilityDetector
 import social.aloha.core.network.oauth.OAuthClient
+import social.aloha.core.network.oauth.OAuthIdentity
 
 /**
  * An account repository on an in-memory database and the clients it hands out, for a test that needs
@@ -67,8 +71,24 @@ public class SignedInFixture(private val context: Context) : Closeable {
         scope,
     )
 
+    public val order: AccountOrder = AccountOrder(database.accountOrderDao())
+
     public val clients: ClientFactory =
         ClientFactory(OkHttpClient(), RateLimiter(nowMillis = clock::millis), Dispatchers.IO, accounts)
+
+    /** Sign-in and a moderator's second authorisation, over the same accounts and vault. */
+    public val coordinator: SignInCoordinator by lazy {
+        val http = OkHttpClient()
+        val limiter = RateLimiter(nowMillis = clock::millis)
+        SignInCoordinator(
+            accounts,
+            vault,
+            OAuthClient(http, limiter, Dispatchers.IO),
+            CapabilityDetector(http, limiter, Dispatchers.IO) { clock.instant() },
+            { OAuthIdentity.SCHEME_REDIRECT },
+            clients,
+        )
+    }
 
     /** What the widgets would show, in memory. */
     public val widgets: WidgetUpdates = WidgetUpdates(context, WidgetFeedStore(InMemoryDataStore(emptyMap())))

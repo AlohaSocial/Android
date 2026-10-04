@@ -72,4 +72,286 @@
     <string name="settings_delete_too_often">Too many tries. Try again in an hour.</string>
     <!-- Deletion failed for any other reason -->
     <string name="settings_delete_failed">The account was not deleted. Nothing changed; try again later.</string>
+    <!-- Settings, About: opens the app's terms of use -->
+    <string name="settings_terms">Terms of use</string>
+    <!-- Settings, About: opens what the app does with the reader's data -->
+    <string name="settings_privacy">Privacy</string>
+    <!-- Settings, About: opens the open-source libraries the app is built from and their licences -->
+    <string name="settings_licences">Open-source licences</string>
+    <!-- Settings, About: opens the project's issue tracker, to report a problem -->
+    <string name="settings_issues">Report a problem</string>
+    <!-- Content description of the button that closes a page opened from Settings, About -->
+    <string name="settings_page_back">Back</string>
+    <!-- Privacy statement, first paragraph -->
+    <string name="privacy_nothing">Aloha Social collects nothing about you and sends nothing to its developers: no analytics, no crash reports, no advertising.</string>
+    <!-- Privacy statement, second paragraph -->
+    <string name="privacy_servers">It talks to the servers you sign in to, and loads the pictures, videos and link previews their posts point at from where they are kept. Your sign-in stays on this device, encrypted.</string>
+    <!-- Privacy statement, third paragraph -->
+    <string name="privacy_notifications">Notifications come through the push app you choose, which learns that a notification is waiting but not what it says, or from asking your server now and then. Translate sends a post\'s text to your server, which hands it to its translation service; where this device translates, the text stays on it.</string>
+    <!-- Privacy statement, fourth paragraph -->
+    <string name="privacy_posts">What you post, and whom you follow, your server keeps; its own privacy policy and rules apply there.</string>
+    <!-- Settings section: how the app looks -->
+    <string name="appearance_title">Appearance</string>
+    <!-- Appearance: heading over light, dark or as the system -->
+    <string name="appearance_mode">Theme</string>
+    <!-- Appearance theme choice: as the device is set -->
+    <string name="appearance_mode_system">As the system</string>
+    <!-- Appearance theme choice -->
+    <string name="appearance_mode_light">Light</string>
+    <!-- Appearance theme choice -->
+    <string name="appearance_mode_dark">Dark</string>
+    <!-- Appearance switch: pure black backgrounds while dark -->
+    <string name="appearance_black">Black</string>
+    <!-- Summary of the Black switch -->
+    <string name="appearance_black_summary">Pure black backgrounds while dark, for OLED screens</string>
+    <!-- Appearance: heading over the contrast choices -->
+    <string name="appearance_contrast">Contrast</string>
+    <!-- Contrast choice: as the device is set (Android 14 and later) -->
+    <string name="appearance_contrast_system">As the system</string>
+    <!-- Contrast choice -->
+    <string name="appearance_contrast_standard">Standard</string>
+    <!-- Contrast choice -->
+    <string name="appearance_contrast_high">High</string>
+    <!-- Appearance: heading over where the app's colours come from -->
+    <string name="appearance_colours">Colours</string>
+    <!-- Colours choice: the colour the reader's Nextcloud is themed with -->
+    <string name="appearance_colours_server">Your Nextcloud\'s colour</string>
+    <!-- Colours choice, while the reader's server wears no colour: it then shows the app's own -->
+    <string name="appearance_colours_no_server">Your server\'s colour, where it has one</string>
+    <!-- Colours choice: from the phone's wallpaper (Android 12 and later) -->
+    <string name="appearance_colours_wallpaper">From the wallpaper</string>
+    <!-- Colours choice: the app's own coral -->
+    <string name="appearance_colours_app">Aloha\'s own</string>
+    <!-- Colours choice: an accent the reader picks -->
+    <string name="appearance_colours_custom">An accent of your choice</string>
+    <!-- Name of an accent colour swatch, read by a screen reader -->
+    <string name="appearance_accent_coral">Coral</string>
+    <!-- Name of an accent colour swatch -->
+    <string name="appearance_accent_blue">Blue</string>
+    <!-- Name of an accent colour swatch -->
+    <string name="appearance_accent_green">Green</string>
+    <!-- Name of an accent colour swatch -->
+    <string name="appearance_accent_teal">Teal</string>
+    <!-- Name of an accent colour swatch -->
+    <string name="appearance_accent_violet">Violet</string>
+    <!-- Name of an accent colour swatch -->
+    <string name="appearance_accent_pink">Pink</string>
+    <!-- Name of an accent colour swatch -->
+    <string name="appearance_accent_yellow">Yellow</string>
+    <!-- Name of an accent colour swatch -->
+    <string name="appearance_accent_brown">Brown</string>
+    <!-- Settings list: opens the reader's filters, which hide or warn about posts by keyword -->
+    <string name="settings_filters">Filters</string>
+    <!-- Settings section: the signed-in accounts -->
+    <string name="settings_accounts_title">Accounts</string>
+    <!-- Under an account in Settings: it is the one in use. %1$s: its handle -->
+    <string name="accounts_in_use">%1$s, in use</string>
+    <!-- Under an account in Settings: its server no longer accepts its sign-in. %1$s: its handle -->
+    <string name="settings_accounts_needs_reauth">%1$s: sign in again to keep using it</string>
+    <!-- Content description: moves the account one place up the list. %1$s: its handle -->
+    <string name="accounts_move_up">Move %1$s up</string>
+    <!-- Content description: moves the account one place down the list. %1$s: its handle -->
+    <string name="accounts_move_down">Move %1$s down</string>
+    <!-- Button: sign the account in again -->
+    <string name="accounts_sign_in_again">Sign in again</string>
+    <!-- Button and dialog action: sign the account out of this device -->
+    <string name="settings_accounts_sign_out">Sign out</string>
+    <!-- Title of the dialog confirming a sign-out. %1$s: the account's handle -->
+    <string name="settings_accounts_sign_out_title">Sign out %1$s?</string>
+    <!-- Body of the dialog confirming a sign-out -->
+    <string name="settings_accounts_sign_out_body">The account stays on its server. What it read here, its drafts and any posts not sent yet go from this device.</string>
+    <!-- Settings section: pictures, video and sound -->
+    <string name="media_title">Media</string>
+    <!-- Media: heading over how media marked sensitive shows -->
+    <string name="media_sensitive">Media marked sensitive</string>
+    <!-- Sensitive media choice: covered, one press away -->
+    <string name="media_sensitive_blur">Covered, shown when pressed</string>
+    <!-- Sensitive media choice: always shown -->
+    <string name="media_sensitive_show">Always shown</string>
+    <!-- Sensitive media choice: not shown in lists, only in the post -->
+    <string name="media_sensitive_hide">Hidden, shown in the post only</string>
+    <!-- Media, on a server that keeps the choice on its website. %1$s: the current choice, such as "Always shown" -->
+    <string name="media_sensitive_on_website">%1$s. Your server keeps this choice on its website, where it can be changed.</string>
+    <!-- Shown when the server did not take the sensitive media choice -->
+    <string name="media_sensitive_refused">Your server did not take the change. Try again later.</string>
+    <!-- Media switch: shorts start without sound -->
+    <string name="media_start_muted">Start shorts muted</string>
+    <!-- Summary of the start muted switch -->
+    <string name="media_start_muted_summary">Sound comes on with the speaker button, and stays on until turned off</string>
+    <!-- Media switch: a short starts over when it ends -->
+    <string name="media_loop_shorts">Loop shorts</string>
+    <!-- Media switch: shorts play as they come into view on mobile data too -->
+    <string name="media_autoplay_mobile">Play shorts on mobile data</string>
+    <!-- Summary of the switch above -->
+    <string name="media_autoplay_mobile_summary">Off, a short waits for a tap on mobile data. On Wi-Fi shorts always play.</string>
+    <!-- Settings section: what the reader's server publishes about itself -->
+    <string name="server_title">About this server</string>
+    <!-- Under the About this server heading. %1$s: the server's address, such as cloud.example.com -->
+    <string name="server_host">%1$s</string>
+    <!-- While the server's pages are asked for -->
+    <string name="server_loading">Asking the server…</string>
+    <!-- About this server: the rules people agree to there -->
+    <string name="server_rules">Rules</string>
+    <!-- About this server: the administrator's own description -->
+    <string name="server_description">About</string>
+    <!-- About this server: its privacy policy -->
+    <string name="server_privacy">Privacy policy</string>
+    <!-- About this server: its terms of service -->
+    <string name="server_terms">Terms of service</string>
+    <!-- About this server: how busy it was, week by week -->
+    <string name="server_activity">Activity</string>
+    <!-- About this server: the other servers it knows -->
+    <string name="server_peers">Known servers</string>
+    <!-- About this server: the servers it refuses or limits -->
+    <string name="server_blocks">Moderated servers</string>
+    <!-- A moderated server: nothing from it reaches this one -->
+    <string name="server_block_blocked">Blocked</string>
+    <!-- A moderated server: its posts are hidden unless followed -->
+    <string name="server_block_limited">Limited</string>
+    <!-- Above a server page: when it last changed. %1$s: a date -->
+    <string name="server_updated">Last changed %1$s</string>
+    <!-- One week of server activity. %1$s: the date the week starts -->
+    <string name="server_week">Week of %1$s</string>
+    <!-- Settings section: what the app keeps on the device -->
+    <string name="storage_title">Storage</string>
+    <!-- Storage: the pictures and server answers kept to be quick -->
+    <string name="storage_cache">Pictures and answers kept to be quick</string>
+    <!-- Storage: the cache's size. %1$s: a size, such as 120 MB -->
+    <string name="storage_cache_size">%1$s, fetched again whenever needed</string>
+    <!-- Storage, after clearing. %1$s: what is left, such as 0 B -->
+    <string name="storage_cleared">Cleared, %1$s left</string>
+    <!-- Storage, while the size is measured -->
+    <string name="storage_measuring">Measuring…</string>
+    <!-- Button: empty the cache -->
+    <string name="storage_clear">Clear</string>
+    <!-- Settings section: how posts read -->
+    <string name="reading_title">Reading</string>
+    <!-- Reading switch: rows closer together -->
+    <string name="reading_compact">Compact</string>
+    <!-- Summary of the Compact switch -->
+    <string name="reading_compact_summary">Posts closer together, so more fit on the screen</string>
+    <!-- Reading switch: a post's text in a serif face -->
+    <string name="reading_serif">Serif text</string>
+    <!-- Reading switch: more room between a post's lines -->
+    <string name="reading_relaxed">More space between lines</string>
+    <!-- Reading switch: avatars as rounded squares instead of circles -->
+    <string name="reading_rounded">Rounded square avatars</string>
+    <!-- Reading switch: the numbers beside reply, boost and favourite -->
+    <string name="reading_counts">Show counts</string>
+    <!-- Summary of the Show counts switch -->
+    <string name="reading_counts_summary">How many replied, boosted and favourited, beside each button</string>
+    <!-- Reading switch: the number on Notifications in the navigation -->
+    <string name="reading_badge">Unread count on Notifications</string>
+    <!-- Settings section: haptic feedback and notification sounds -->
+    <string name="sound_title">Sound and haptics</string>
+    <!-- Switch: a light vibration as a post is boosted, favourited or bookmarked -->
+    <string name="sound_haptics">Haptic feedback</string>
+    <!-- Summary of the Haptic feedback switch -->
+    <string name="sound_haptics_summary">A light tick as you boost, favourite or bookmark</string>
+    <!-- Opens Android's settings for this app's notifications -->
+    <string name="sound_notifications">Notification sounds</string>
+    <!-- Summary of the row above -->
+    <string name="sound_notifications_summary">Each kind of notification sounds as Android\'s settings say</string>
+    <!-- Media switch: the picture viewer loads full-size pictures on mobile data too -->
+    <string name="media_full_pictures">Full-size pictures on mobile data</string>
+    <!-- Summary of the switch above -->
+    <string name="media_full_pictures_summary">Off, a picture opens at the size a list shows it, on mobile data only</string>
+    <!-- Title of the year in review screen, and its entry in Settings -->
+    <string name="year_title">Your year</string>
+    <!-- Heading of one year in review. %1$d: the year, such as 2026 -->
+    <string name="year_heading">Your %1$d</string>
+    <!-- Shown where the server keeps no year in review -->
+    <string name="year_none">Your server has no year in review for you yet.</string>
+    <!-- Shown where the server could not be asked -->
+    <string name="year_trouble">Couldn’t reach your server.</string>
+    <!-- Button: ask the server again -->
+    <string name="year_retry">Try again</string>
+    <!-- How many posts, and the busiest month. %1$s: such as "19 posts", %2$s: a month, such as September -->
+    <string name="year_posts_busiest">%1$s, most of them in %2$s</string>
+    <!-- The months chart, for a screen reader. %1$s: the months with posts and how many, such as "September 19" -->
+    <string name="year_chart">Posts by month: %1$s</string>
+    <!-- Heading over the hashtags used most -->
+    <string name="year_hashtags">Your hashtags</string>
+    <!-- Heading over the year’s top posts -->
+    <string name="year_top_posts">Your top posts</string>
+    <!-- Above a top post: the most boosted -->
+    <string name="year_top_boosts">Boosted most</string>
+    <!-- Above a top post: the most replied to -->
+    <string name="year_top_replies">Most replies</string>
+    <!-- Above a top post: the most favourited -->
+    <string name="year_top_favourites">Favourited most</string>
+    <!-- A top post with no text, only media -->
+    <string name="year_post_no_text">A post without text</string>
+    <!-- Archetype: wrote almost nothing -->
+    <string name="year_lurker">The quiet one</string>
+    <!-- What the quiet one did -->
+    <string name="year_lurker_line">You read more than you wrote.</string>
+    <!-- Archetype: mostly boosted other people -->
+    <string name="year_booster">The booster</string>
+    <!-- What the booster did -->
+    <string name="year_booster_line">You passed on what others wrote.</string>
+    <!-- Archetype: mostly asked questions -->
+    <string name="year_pollster">The pollster</string>
+    <!-- What the pollster did -->
+    <string name="year_pollster_line">You asked, and people answered.</string>
+    <!-- Archetype: mostly answered other people -->
+    <string name="year_replier">The replier</string>
+    <!-- What the replier did -->
+    <string name="year_replier_line">You answered other people more than anyone else.</string>
+    <!-- Archetype: mostly wrote their own posts, and was read -->
+    <string name="year_oracle">The oracle</string>
+    <!-- What the oracle did -->
+    <string name="year_oracle_line">You wrote your own posts, and people read them.</string>
+    <!-- Posts written in the year. %d: how many -->
+    <plurals name="year_posts">
+        <item quantity="one">%d post</item>
+        <item quantity="other">%d posts</item>
+    </plurals>
+    <!-- New followers in the year. %d: how many -->
+    <plurals name="year_followers">
+        <item quantity="one">%d new follower</item>
+        <item quantity="other">%d new followers</item>
+    </plurals>
+    <!-- How often a hashtag was used. %d: how many times -->
+    <plurals name="year_tag_uses">
+        <item quantity="one">used once</item>
+        <item quantity="other">used %d times</item>
+    </plurals>
+    <!-- Settings section: the app lock -->
+    <string name="privacy_title">Privacy and safety</string>
+    <!-- Switch: the app asks for a fingerprint, face or the screen lock -->
+    <string name="privacy_lock">App lock</string>
+    <!-- Summary of the App lock switch -->
+    <string name="privacy_lock_summary">Asks for your fingerprint, face or screen lock to open the app, and hides it in recent apps</string>
+    <!-- Shown instead of the switch where the device has no screen lock -->
+    <string name="privacy_lock_needs_screen_lock">The app lock needs a screen lock on this device. Set one in Android’s settings to use it.</string>
+    <!-- Heading over how long the app may be away before it locks -->
+    <string name="privacy_lock_after">Lock again after</string>
+    <!-- Lock again choice: every time the app leaves the screen -->
+    <string name="privacy_lock_immediately">Leaving the app</string>
+    <!-- Lock again choice. %d: minutes away -->
+    <plurals name="privacy_lock_minutes">
+        <item quantity="one">%d minute away</item>
+        <item quantity="other">%d minutes away</item>
+    </plurals>
+    <!-- Lock again choice. %d: hours away -->
+    <plurals name="privacy_lock_hours">
+        <item quantity="one">%d hour away</item>
+        <item quantity="other">%d hours away</item>
+    </plurals>
+    <!-- One week of server activity: posts written. %d: how many -->
+    <plurals name="server_week_posts">
+        <item quantity="one">%d post</item>
+        <item quantity="other">%d posts</item>
+    </plurals>
+    <!-- One week of server activity: people who signed in. %d: how many -->
+    <plurals name="server_week_logins">
+        <item quantity="one">%d sign-in</item>
+        <item quantity="other">%d sign-ins</item>
+    </plurals>
+    <!-- One week of server activity: new accounts. %d: how many -->
+    <plurals name="server_week_signups">
+        <item quantity="one">%d new account</item>
+        <item quantity="other">%d new accounts</item>
+    </plurals>
 </resources>

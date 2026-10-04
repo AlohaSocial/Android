@@ -14,13 +14,14 @@ debug signing key, so the benchmark builds install over it and keep the account.
 ```sh
 # the tasks uninstall the app when they finish unless told otherwise, which would sign it out
 KEEP=-Pandroid.injected.androidTest.leaveApksInstalledAfterRun=true
-# 1. baseline and startup profiles (writes app/src/main/generated/baselineProfiles)
-./gradlew :app:generateGenericReleaseBaselineProfile $KEEP
+# 1. baseline and startup profiles (writes app/src/main/generated/baselineProfiles); both flavours run
+#    the same code, so the merged profile serves every variant
+./gradlew :app:generateBaselineProfile $KEEP
 # 2. startup (TTID, TTFD) and timeline scrolling, with the profiles installed
 ./gradlew :benchmark:connectedGenericBenchmarkReleaseAndroidTest $KEEP
 ```
 
-With more than one device attached, set `ANDROID_SERIAL` to the phone's serial first.
+With more than one device attached, set `ANDROID_SERIAL` to the device's serial first. The profiles record which code runs, not how fast, so an emulator generates them as well as a phone; the timings below need the phone.
 The results land in
 `benchmark/build/outputs/connected_android_test_additional_output/`. Record the
 medians in `config/benchmark-baseline.json`, with the device, in the pull request

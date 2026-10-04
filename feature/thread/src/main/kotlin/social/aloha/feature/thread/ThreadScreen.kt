@@ -58,6 +58,7 @@ import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.model.SensitiveMediaPolicy
 import social.aloha.core.navigation.StatusListKind
+import social.aloha.core.ui.LocalSensitiveMediaPolicy
 import social.aloha.core.ui.ProvideLinkRouting
 import social.aloha.core.ui.StackedAvatars
 import social.aloha.core.ui.StatusActions
@@ -131,7 +132,7 @@ private fun Posts(
                     StatusCard(
                         item.row,
                         state.now,
-                        SensitiveMediaPolicy.Blur,
+                        LocalSensitiveMediaPolicy.current,
                         rowActions,
                         modifier = Modifier.padding(start = indent(item.depth)).semantics {
                             if (item.focused) heading()

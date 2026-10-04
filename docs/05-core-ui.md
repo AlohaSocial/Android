@@ -6,6 +6,7 @@ This is the Apple app's specification, carried over as the product contract for 
 
 | Topic | Android |
 |---|---|
+| Onboarding | The terms first, once per version, with Accept and Decline (Decline leaves the app); before the first account a welcome that says what the fediverse is, names Nextcloud Social first and links to a list of servers that take new accounts; after it, the optional modes (News, Audio) offered once in a sheet on Home. Adding a further account goes straight to the server's address. |
 | Navigation | `NavigationSuiteScaffold` with at most five items (Material 3); Profile is reached through the account avatar. On a phone, News or Audio, once on, takes the place of the one of Photos, Video or Shorts chosen in Settings; a rail or drawer adds them. Audio's mini player sits between the screens and the navigation. |
 | Colour | The server's theming colour seeds a Material 3 scheme (tonal spot); Android dynamic colour is an opt-in; boost, favourite and bookmark stay fixed (`SemanticContrastTest`). |
 | Themes | Mode × contrast × Black instead of seven named themes; no Dim. |
@@ -369,8 +370,8 @@ Grouped, searchable (on platforms with settings search).
 - **Sound & touch** — a tick on a like, a breath of air on a post, a two-note
   chime for a direct message, and a tap in the hand. Device-local, never sent to
   the server. Sound is off until it is turned on; touch follows Reduce Motion.
-- **Moderation** — the moderator's screens, where the account is an
-  administrator of the Nextcloud. See
+- **Moderation** — the moderator's screens, where the account's role on its
+  server allows moderating. See
   [11-safety-privacy-appstore.md](11-safety-privacy-appstore.md) §7.
 - **Privacy & Safety** — blocked accounts, muted accounts, blocked domains,
   data & storage, clear cache.

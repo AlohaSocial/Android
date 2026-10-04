@@ -55,6 +55,7 @@ import social.aloha.core.model.VideoChapter
 import social.aloha.core.model.VideoChapters
 import social.aloha.core.navigation.WatchKey
 import social.aloha.core.ui.ListProgress
+import social.aloha.core.ui.LocalSensitiveMediaPolicy
 import social.aloha.core.ui.R as UiR
 import social.aloha.core.ui.RichTextColors
 import social.aloha.core.ui.RoutedStatusActions
@@ -208,7 +209,7 @@ private fun Details(
                 }
                 item(key = "comments") { CommentsHeading(video, actions.onComment) }
                 items(state.comments, key = { it.rowId }) { comment ->
-                    StatusCard(comment, now, SensitiveMediaPolicy.Blur, rowActions)
+                    StatusCard(comment, now, LocalSensitiveMediaPolicy.current, rowActions)
                     HorizontalDivider()
                 }
             }

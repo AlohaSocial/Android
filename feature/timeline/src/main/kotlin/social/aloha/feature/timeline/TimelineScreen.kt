@@ -97,6 +97,7 @@ import social.aloha.core.model.SensitiveMediaPolicy
 import social.aloha.core.model.SwipeAction
 import social.aloha.core.model.TimelineSource
 import social.aloha.core.ui.ListProgress
+import social.aloha.core.ui.LocalSensitiveMediaPolicy
 import social.aloha.core.ui.NearEndEffect
 import social.aloha.core.ui.StackedAvatars
 import social.aloha.core.ui.StatusActions
@@ -248,7 +249,7 @@ private fun Rows(
                     StatusCard(
                         item.row,
                         state.now,
-                        SensitiveMediaPolicy.Blur,
+                        LocalSensitiveMediaPolicy.current,
                         rowActions,
                         Modifier.semantics { this.selected = chosen },
                     )

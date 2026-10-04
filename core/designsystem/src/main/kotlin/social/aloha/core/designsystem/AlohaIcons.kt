@@ -72,6 +72,7 @@ import androidx.compose.material.icons.outlined.NightsStay
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.NotificationsOff
 import androidx.compose.material.icons.outlined.OpenInBrowser
+import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.People
 import androidx.compose.material.icons.outlined.PersonAdd
 import androidx.compose.material.icons.outlined.PhotoAlbum
@@ -201,6 +202,7 @@ public object AlohaIcons {
     public val Send: ImageVector = Icons.AutoMirrored.Outlined.Send
     public val Story: ImageVector = Icons.Outlined.HistoryToggleOff
     public val Settings: ImageVector = Icons.Outlined.Settings
+    public val Appearance: ImageVector = Icons.Outlined.Palette
     public val About: ImageVector = Icons.Outlined.Info
     public val Nextcloud: ImageVector = Icons.Outlined.Cloud
     public val Rules: ImageVector = Icons.AutoMirrored.Outlined.Rule

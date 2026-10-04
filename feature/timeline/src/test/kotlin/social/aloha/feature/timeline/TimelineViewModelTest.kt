@@ -49,6 +49,7 @@ import social.aloha.core.database.CacheDatabase
 import social.aloha.core.datastore.AccountSettingsStore
 import social.aloha.core.datastore.AppPreferences
 import social.aloha.core.datastore.ModePreferences
+import social.aloha.core.datastore.ReadingPreferences
 import social.aloha.core.datastore.TokenVault
 import social.aloha.core.html.RichTextCache
 import social.aloha.core.media.ImagePrefetcher
@@ -127,6 +128,7 @@ class TimelineViewModelTest {
         TimelinePositions(cache.positionDao(), clients),
         settings,
         preferences,
+        ReadingPreferences(InMemoryDataStore(emptyPreferences())),
         modes,
         clock,
         ApplicationProvider.getApplicationContext<Context>().let { ImagePrefetcher(it, ImageLoader(it)) },

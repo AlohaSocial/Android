@@ -12,8 +12,14 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import social.aloha.core.model.AccentSource
+import social.aloha.core.model.Appearance
+import social.aloha.core.model.AppearanceContrast
+import social.aloha.core.model.AppearanceMode
 import social.aloha.core.model.QuietHours
 import social.aloha.core.model.SwipeAction
+import social.aloha.core.model.Visibility
+import social.aloha.core.model.Writing
 
 /**
  * App-wide settings that are not secrets: which account is active, which terms were accepted, and how
@@ -117,6 +123,48 @@ public class AppPreferences(private val store: DataStore<Preferences>) {
         store.edit { it[ACCEPTED_TERMS] = version }
     }
 
+    /** How the reader writes; a visibility a later build wrote reads as the server's. */
+    public val writing: Flow<Writing> = store.data.map {
+        Writing(
+            confirmBeforePosting = it[CONFIRM_POST] ?: false,
+            alwaysShowWarning = it[ALWAYS_WARNING] ?: false,
+            numberThreads = it[NUMBER_THREADS] ?: false,
+            visibility = Visibility.entries.firstOrNull { v -> v.name == it[DEFAULT_VISIBILITY] },
+            language = it[DEFAULT_LANGUAGE]?.takeIf { language -> language.isNotBlank() },
+        )
+    }
+
+    public suspend fun setWriting(writing: Writing) {
+        store.edit {
+            it[CONFIRM_POST] = writing.confirmBeforePosting
+            it[ALWAYS_WARNING] = writing.alwaysShowWarning
+            it[NUMBER_THREADS] = writing.numberThreads
+            it[DEFAULT_VISIBILITY] = writing.visibility?.name.orEmpty()
+            it[DEFAULT_LANGUAGE] = writing.language.orEmpty()
+        }
+    }
+
+    /** How the app looks; each part a later build does not know reads as its default. */
+    public val appearance: Flow<Appearance> = store.data.map {
+        Appearance(
+            mode = choice(it[THEME_MODE], AppearanceMode.System),
+            contrast = choice(it[THEME_CONTRAST], AppearanceContrast.System),
+            black = it[THEME_BLACK] ?: false,
+            accent = choice(it[THEME_ACCENT], AccentSource.Server),
+            customAccent = it[THEME_CUSTOM_ACCENT] ?: Appearance.DEFAULT_CUSTOM_ACCENT,
+        )
+    }
+
+    public suspend fun setAppearance(appearance: Appearance) {
+        store.edit {
+            it[THEME_MODE] = appearance.mode.name
+            it[THEME_CONTRAST] = appearance.contrast.name
+            it[THEME_BLACK] = appearance.black
+            it[THEME_ACCENT] = appearance.accent.name
+            it[THEME_CUSTOM_ACCENT] = appearance.customAccent
+        }
+    }
+
     private companion object {
         val SWIPE_END = stringPreferencesKey("swipe_towards_end")
         val SWIPE_START = stringPreferencesKey("swipe_towards_start")
@@ -128,7 +176,20 @@ public class AppPreferences(private val store: DataStore<Preferences>) {
         val QUIET_UNTIL = intPreferencesKey("quiet_until_hour")
         val ASKED_NOTIFICATIONS = booleanPreferencesKey("asked_for_notifications")
         val PUSH_ACCOUNTS = stringSetPreferencesKey("push_accounts")
+        val CONFIRM_POST = booleanPreferencesKey("confirm_before_posting")
+        val ALWAYS_WARNING = booleanPreferencesKey("always_show_warning")
+        val NUMBER_THREADS = booleanPreferencesKey("number_threads")
+        val DEFAULT_VISIBILITY = stringPreferencesKey("default_visibility")
+        val DEFAULT_LANGUAGE = stringPreferencesKey("default_language")
+        val THEME_MODE = stringPreferencesKey("theme_mode")
+        val THEME_CONTRAST = stringPreferencesKey("theme_contrast")
+        val THEME_BLACK = booleanPreferencesKey("theme_black")
+        val THEME_ACCENT = stringPreferencesKey("theme_accent")
+        val THEME_CUSTOM_ACCENT = intPreferencesKey("theme_custom_accent")
         const val ENDPOINT = "push_endpoint:"
+
+        inline fun <reified T : Enum<T>> choice(stored: String?, default: T): T =
+            enumValues<T>().firstOrNull { it.name == stored } ?: default
 
         /** A value a later build wrote, or none at all, reads as the default. */
         fun swipe(stored: String?, default: SwipeAction): SwipeAction =

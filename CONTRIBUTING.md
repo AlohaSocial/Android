@@ -25,6 +25,12 @@ A pull request merges only when every CI job is green:
 - unit tests and the Roborazzi screenshot comparison;
 - REUSE compliance and the Gradle dependency verification.
 
+The weekly `ui` workflow runs on emulators and gates nothing, but a change to
+sign-in, sharing, shortcuts, links or the watch page should pass
+`scripts/ui-flows.sh` locally: it signs the debug build in against the mock
+server and drives those surfaces as other apps and the system reach them (on a
+foldable emulator also the watch page in tabletop posture).
+
 There are no baseline files. When one is unavoidable (a dependency bump that
 brings findings you cannot fix in the same pull request), it is added with an
 issue link, and CI fails any pull request that grows a baseline.

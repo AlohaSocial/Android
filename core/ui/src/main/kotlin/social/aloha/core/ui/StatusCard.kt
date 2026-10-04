@@ -36,6 +36,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.UriHandler
 import androidx.compose.ui.res.pluralStringResource
@@ -155,6 +157,7 @@ public fun StatusCard(
         translations::getLanguage,
     )
     val customActions = customActions(row, actions, controls)
+    val compact = LocalReadingStyle.current.compact
     ProvideLinkRouting(onLink = actions::onLink) {
         Column(
             modifier = modifier
@@ -165,7 +168,7 @@ public fun StatusCard(
                     this.customActions = customActions
                     onClick { actions.onOpen(row.statusId).let { true } }
                 }
-                .padding(horizontal = AlohaSpacing.m, vertical = AlohaSpacing.s),
+                .padding(horizontal = AlohaSpacing.m, vertical = if (compact) AlohaSpacing.xs else AlohaSpacing.s),
             verticalArrangement = Arrangement.spacedBy(AlohaSpacing.xxs),
         ) {
             row.context?.let { ContextLineRow(it) }
@@ -221,12 +224,13 @@ private fun RowScope.StatusMain(
 
 @Composable
 public fun Avatar(url: String?, size: Dp, modifier: Modifier = Modifier) {
+    val shape = avatarShape()
     Surface(
         modifier = modifier.size(size),
-        shape = CircleShape,
+        shape = shape,
         color = MaterialTheme.colorScheme.surfaceContainerHighest,
     ) {
-        AsyncImage(model = url, contentDescription = null, modifier = Modifier.size(size).clip(CircleShape))
+        AsyncImage(model = url, contentDescription = null, modifier = Modifier.size(size).clip(shape))
     }
 }
 
@@ -413,6 +417,7 @@ private fun ActionRow(row: StatusRowUi, actions: StatusActions) {
 @Composable
 private fun Actions(row: StatusRowUi, actions: StatusActions) {
     val semantic = LocalAlohaSemanticColors.current
+    val tick = rememberTick()
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     ActionButton(AlohaIcons.Reply, row.counts.replies, muted) { actions.onReply(row) }
     ActionButton(
@@ -420,6 +425,7 @@ private fun Actions(row: StatusRowUi, actions: StatusActions) {
         row.counts.boosts,
         if (row.state.boosted) semantic.boost else muted,
     ) {
+        tick(!row.state.boosted)
         actions.onBoost(row)
     }
     ActionButton(
@@ -427,6 +433,7 @@ private fun Actions(row: StatusRowUi, actions: StatusActions) {
         row.counts.favourites,
         if (row.state.favourited) semantic.favourite else muted,
     ) {
+        tick(!row.state.favourited)
         actions.onFavourite(row)
     }
     ActionButton(
@@ -434,6 +441,7 @@ private fun Actions(row: StatusRowUi, actions: StatusActions) {
         null,
         if (row.state.bookmarked) semantic.bookmark else muted,
     ) {
+        tick(!row.state.bookmarked)
         actions.onBookmark(row)
     }
     // PeerTube's thumbs-down, read-only: the server carries the count but has no route to cast one
@@ -450,12 +458,22 @@ private fun Actions(row: StatusRowUi, actions: StatusActions) {
     }
 }
 
+/** A tick under the finger as a post changes; Android leaves it out where touch feedback is off. */
+@Composable
+private fun rememberTick(): (Boolean) -> Unit {
+    val haptics = LocalHapticFeedback.current
+    val ticks = LocalReadingStyle.current.haptics
+    return { on ->
+        if (ticks) haptics.performHapticFeedback(if (on) HapticFeedbackType.ToggleOn else HapticFeedbackType.ToggleOff)
+    }
+}
+
 @Composable
 private fun ActionButton(icon: ImageVector, count: Int?, tint: Color, onClick: () -> Unit) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         IconButton(onClick = onClick) { Icon(icon, contentDescription = null, tint = tint) }
         Text(
-            count?.takeIf { it > 0 }?.toString().orEmpty(),
+            count?.takeIf { it > 0 && LocalReadingStyle.current.showCounts }?.toString().orEmpty(),
             style = MaterialTheme.typography.labelMedium,
             color = tint,
             maxLines = 1,

@@ -165,6 +165,18 @@ public data class AnnouncementsKey(val readerId: String) : NavKey
 @Serializable
 public data class FiltersKey(val readerId: String) : NavKey
 
+/** Who [readerId] blocked and muted, and the servers they blocked. */
+@Serializable
+public data class BlockedKey(val readerId: String) : NavKey
+
+/** The moderation console of [readerId]'s server, for a moderator. */
+@Serializable
+public data class ModerationKey(val readerId: String) : NavKey
+
+/** [readerId]'s years in review. */
+@Serializable
+public data class YearKey(val readerId: String) : NavKey
+
 /** [readerId]'s filter [filterId] being changed, or a new one without. */
 @Serializable
 public data class FilterEditKey(val readerId: String, val filterId: String? = null) : NavKey

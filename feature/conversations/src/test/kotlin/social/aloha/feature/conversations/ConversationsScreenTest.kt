@@ -82,6 +82,15 @@ class ConversationsScreenTest {
     }
 
     @Test
+    @Config(fontScale = 2f)
+    fun conversationsLargeFont() {
+        compose.enableAccessibilityChecks()
+        compose.setContent { AlohaTheme { ConversationsScreen(state, actions, {}, now = StatusSamples.NOW) } }
+        compose.onRoot().tryPerformAccessibilityChecks()
+        compose.onRoot().captureRoboImage("src/test/screenshots/conversations-font200.png")
+    }
+
+    @Test
     fun `a new message offers mutual follows until a name is typed`() {
         val mutuals = NewMessageUiState(mutuals = listOf(StatusSamples.bob), loading = false)
         compose.enableAccessibilityChecks()

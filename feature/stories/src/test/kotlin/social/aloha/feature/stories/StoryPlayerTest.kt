@@ -7,11 +7,13 @@ import android.app.Application
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.junit4.accessibility.enableAccessibilityChecks
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.tryPerformAccessibilityChecks
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.captureRoboImage
 import org.junit.Assert.assertEquals
@@ -55,6 +57,7 @@ class StoryPlayerTest {
     private val bobs = StoryReel(StatusSamples.bob, listOf(Story("2"), Story("3", seen = true)), own = false)
 
     private fun play(start: Int) {
+        compose.enableAccessibilityChecks()
         compose.setContent {
             AlohaTheme { StoryPlayer(listOf(own, bobs), start, actions, onProfile = {}, onClose = { closed = true }) }
         }
@@ -95,6 +98,7 @@ class StoryPlayerTest {
         frame()
         compose.onNodeWithText("Sent to Bob").assertIsDisplayed()
         assertEquals("react:2 🔥", asked.last())
+        compose.onRoot().tryPerformAccessibilityChecks()
         compose.onRoot().captureRoboImage("src/test/screenshots/story-player.png")
     }
 
@@ -102,6 +106,7 @@ class StoryPlayerTest {
     fun `the reader's own say how many watched, and who`() {
         compose.mainClock.autoAdvance = false
         play(start = 0)
+        compose.onRoot().tryPerformAccessibilityChecks()
         compose.onRoot().captureRoboImage("src/test/screenshots/story-player-own.png")
         compose.onNodeWithText("Seen by 3").performClick()
         frame()

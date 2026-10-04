@@ -21,6 +21,38 @@ internal abstract class SettingsModule {
     companion object {
         @Provides
         @IntoSet
+        fun accounts(): SettingsSection = AccountsSection
+
+        @Provides
+        @IntoSet
+        fun appearance(): SettingsSection = AppearanceSection
+
+        @Provides
+        @IntoSet
+        fun reading(): SettingsSection = ReadingSection
+
+        @Provides
+        @IntoSet
+        fun sound(): SettingsSection = SoundSection
+
+        @Provides
+        @IntoSet
+        fun privacy(): SettingsSection = PrivacySection
+
+        @Provides
+        @IntoSet
+        fun media(): SettingsSection = MediaSection
+
+        @Provides
+        @IntoSet
+        fun storage(): SettingsSection = StorageSection
+
+        @Provides
+        @IntoSet
+        fun server(): SettingsSection = ServerSection
+
+        @Provides
+        @IntoSet
         fun about(): SettingsSection = AboutSection
 
         @Provides

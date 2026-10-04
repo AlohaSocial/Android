@@ -346,6 +346,7 @@
     </plurals>
     <!-- Spoken labels of a scheduled post's buttons; the placeholder is the start of its text -->
     <string name="scheduled_move_one">Change the time of \u201c%1$s\u201d</string>
+    <!-- Spoken label of a scheduled post's delete button. %1$s: the start of its text -->
     <string name="scheduled_delete_one">Delete \u201c%1$s\u201d</string>
     <!-- Button that picks another time for a scheduled post -->
     <string name="scheduled_move">Change time</string>
@@ -399,15 +400,21 @@
         <item quantity="one">%1$d of %2$d character</item>
         <item quantity="other">%1$d of %2$d characters</item>
     </plurals>
-    <!-- Screen-reader actions setting a picture's focal point: its middle, and near each edge -->
+    <!-- Screen-reader action setting a picture's focal point: its middle -->
     <string name="composer_media_focus_centre">Focus on the middle</string>
+    <!-- Screen-reader action setting a picture's focal point near its top edge -->
     <string name="composer_media_focus_top">Focus near the top</string>
+    <!-- Screen-reader action setting a picture's focal point near its bottom edge -->
     <string name="composer_media_focus_bottom">Focus near the bottom</string>
+    <!-- Screen-reader action setting a picture's focal point near its left edge -->
     <string name="composer_media_focus_left">Focus near the left</string>
+    <!-- Screen-reader action setting a picture's focal point near its right edge -->
     <string name="composer_media_focus_right">Focus near the right</string>
-    <!-- What stage an attachment's upload is at, for a screen reader -->
+    <!-- An attachment's upload stage, for a screen reader: not started yet -->
     <string name="composer_media_stage_waiting">Waiting to upload</string>
+    <!-- An attachment's upload stage, for a screen reader: being sent -->
     <string name="composer_media_stage_uploading">Uploading</string>
+    <!-- An attachment's upload stage, for a screen reader: sent, and the server is converting it -->
     <string name="composer_media_stage_processing">The server is preparing it</string>
     <!-- A trimmed video's size estimate when it is still over the server's limit; the placeholder is a size -->
     <string name="composer_video_estimate_over">About %1$s, still over the server\'s limit</string>
@@ -430,4 +437,26 @@
     <string name="composer_shorts_yes">Tag them</string>
     <!-- Button that never tags shorts -->
     <string name="composer_shorts_no">Don\'t tag</string>
+    <!-- Title of the dialog that asks before posting, where the writer chose to be asked -->
+    <string name="composer_confirm_title">Post this?</string>
+    <!-- Body of the dialog that asks before posting -->
+    <string name="composer_confirm_body">It goes out to everyone it is addressed to as soon as you post it.</string>
+    <!-- Writing setting: ask before posting -->
+    <string name="composer_settings_confirm">Ask before posting</string>
+    <!-- Writing setting: the content warning field is open in every new post -->
+    <string name="composer_settings_warning">Always show the content warning field</string>
+    <!-- Writing setting: number the parts of a thread -->
+    <string name="composer_settings_number">Number the parts of a thread</string>
+    <!-- Summary of the setting above -->
+    <string name="composer_settings_number_summary">Each part ends in 1/3, 2/3, 3/3, counted in its length</string>
+    <!-- Writing setting: heading over the default visibility of new posts -->
+    <string name="composer_settings_visibility">New posts are seen by</string>
+    <!-- Default visibility choice: as the reader's server says -->
+    <string name="composer_settings_visibility_server">As my server says</string>
+    <!-- Writing setting: heading over the default language of new posts -->
+    <string name="composer_settings_language">New posts are written in</string>
+    <!-- Default language choice: as the reader's server says, else the device's language -->
+    <string name="composer_settings_language_server">As my server says</string>
+    <!-- A file size in megabytes; %1$s is the number, already written as the reader's language writes numbers -->
+    <string name="composer_size_mb">%1$s MB</string>
 </resources>

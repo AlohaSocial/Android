@@ -454,7 +454,10 @@ private fun attachMessage(failure: AttachFailure?): String? = when (failure) {
     is AttachFailure.Unsupported -> stringResource(R.string.composer_attach_unsupported)
 
     is AttachFailure.TooLarge ->
-        stringResource(R.string.composer_attach_too_large, Attachments.size(failure.limitBytes))
+        stringResource(
+            R.string.composer_attach_too_large,
+            stringResource(R.string.composer_size_mb, Attachments.megabytes(failure.limitBytes)),
+        )
 
     AttachFailure.Unreadable -> stringResource(R.string.composer_attach_unreadable)
 
@@ -468,7 +471,10 @@ private fun attachMessage(failure: AttachFailure?): String? = when (failure) {
 @Composable
 private fun editMessage(failure: EditFailure?): String? = when (failure) {
     is EditFailure.StillTooLarge ->
-        stringResource(R.string.composer_edit_still_too_large, Attachments.size(failure.limitBytes))
+        stringResource(
+            R.string.composer_edit_still_too_large,
+            stringResource(R.string.composer_size_mb, Attachments.megabytes(failure.limitBytes)),
+        )
 
     EditFailure.Failed -> stringResource(R.string.composer_edit_failed)
 

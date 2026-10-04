@@ -70,6 +70,7 @@ import social.aloha.core.navigation.AlbumKey
 import social.aloha.core.navigation.AlbumsKey
 import social.aloha.core.navigation.AnnouncementsKey
 import social.aloha.core.navigation.AudioKey
+import social.aloha.core.navigation.BlockedKey
 import social.aloha.core.navigation.ComposerKey
 import social.aloha.core.navigation.ConversationsKey
 import social.aloha.core.navigation.DraftsKey
@@ -83,6 +84,7 @@ import social.aloha.core.navigation.ListKey
 import social.aloha.core.navigation.ListMembersKey
 import social.aloha.core.navigation.ListsKey
 import social.aloha.core.navigation.MediaViewerKey
+import social.aloha.core.navigation.ModerationKey
 import social.aloha.core.navigation.NewMessageKey
 import social.aloha.core.navigation.NewsKey
 import social.aloha.core.navigation.NotificationPolicyKey
@@ -110,6 +112,8 @@ import social.aloha.core.navigation.ThreadKey
 import social.aloha.core.navigation.TopLevelKey
 import social.aloha.core.navigation.VideoKey
 import social.aloha.core.navigation.WatchKey
+import social.aloha.core.navigation.YearKey
+import social.aloha.core.ui.LocalReadingStyle
 import social.aloha.core.ui.StatusNavigation
 import social.aloha.core.ui.openInBrowser
 import social.aloha.core.ui.openLink
@@ -126,6 +130,9 @@ import social.aloha.feature.hashtags.TagGroupRoute
 import social.aloha.feature.lists.ListMembersRoute
 import social.aloha.feature.lists.ListsRoute
 import social.aloha.feature.mediaviewer.MediaViewerRoute
+import social.aloha.feature.moderation.ModerationRoute
+import social.aloha.feature.moderation.R as ModerationR
+import social.aloha.feature.moderation.rememberModerator
 import social.aloha.feature.notifications.NotificationsRoute
 import social.aloha.feature.notifications.PolicyRoute
 import social.aloha.feature.notifications.RequestsRoute
@@ -140,19 +147,25 @@ import social.aloha.feature.profile.ProfileRoute
 import social.aloha.feature.profile.ReportRoute
 import social.aloha.feature.safety.AnnouncementsBanner
 import social.aloha.feature.safety.AnnouncementsRoute
+import social.aloha.feature.safety.BlockedRoute
 import social.aloha.feature.safety.FilterEditRoute
 import social.aloha.feature.safety.FiltersRoute
 import social.aloha.feature.safety.InterestsRoute
+import social.aloha.feature.safety.R as SafetyR
 import social.aloha.feature.saved.SavedPostsRoute
 import social.aloha.feature.search.SearchRoute
+import social.aloha.feature.settings.R as SettingsR
+import social.aloha.feature.settings.SettingsDestination
 import social.aloha.feature.settings.SettingsPlaceholder
 import social.aloha.feature.settings.SettingsRoute
 import social.aloha.feature.settings.SettingsSectionRoute
+import social.aloha.feature.settings.YearRoute
 import social.aloha.feature.shorts.ShortsRoute
 import social.aloha.feature.stories.StoriesRail
 import social.aloha.feature.thread.StatusListRoute
 import social.aloha.feature.thread.ThreadNavigation
 import social.aloha.feature.thread.ThreadRoute
+import social.aloha.feature.timeline.ModesOffer
 import social.aloha.feature.timeline.TagRoute
 import social.aloha.feature.timeline.TimelineFeed
 import social.aloha.feature.timeline.TimelineRoute
@@ -493,6 +506,11 @@ fun AlohaApp(
                                 onBack = { backStack.remove(key) },
                             )
                         }
+                        entry<BlockedKey> { key -> BlockedRoute(key, onBack = { backStack.remove(key) }) }
+                        entry<ModerationKey> { key -> ModerationRoute(key, onBack = { backStack.remove(key) }) }
+                        entry<YearKey> { key ->
+                            YearRoute(onOpenPost = statusNavigation::openThread, onBack = { backStack.remove(key) })
+                        }
                         entry<FiltersKey> { key ->
                             FiltersRoute(
                                 key,
@@ -543,9 +561,47 @@ fun AlohaApp(
                                 SettingsPlaceholder()
                             }),
                         ) {
-                            SettingsRoute(onBack = {
-                                backStack.removeLastOrNull()
-                            }, onSection = { backStack.push(SettingsSectionKey(it)) })
+                            val moderator = rememberModerator(readerId)
+                            SettingsRoute(
+                                onBack = { backStack.removeLastOrNull() },
+                                onSection = { backStack.push(SettingsSectionKey(it)) },
+                                destinations = listOf(
+                                    // where the account sheet leads too, so Settings is complete on its own
+                                    SettingsDestination(
+                                        "filters",
+                                        FILTERS_ORDER,
+                                        SettingsR.string.settings_filters,
+                                        AlohaIcons.Filtered,
+                                    ) {
+                                        backStack.push(FiltersKey(readerId))
+                                    },
+                                    SettingsDestination(
+                                        "blocked",
+                                        BLOCKED_ORDER,
+                                        SafetyR.string.blocked_title,
+                                        AlohaIcons.Report,
+                                    ) {
+                                        backStack.push(BlockedKey(readerId))
+                                    },
+                                    SettingsDestination(
+                                        "year",
+                                        YEAR_ORDER,
+                                        SettingsR.string.year_title,
+                                        AlohaIcons.Recent,
+                                    ) {
+                                        backStack.push(YearKey(readerId))
+                                    },
+                                ) + listOfNotNull(
+                                    SettingsDestination(
+                                        "moderation",
+                                        MODERATION_ORDER,
+                                        ModerationR.string.moderation_title,
+                                        AlohaIcons.Report,
+                                    ) {
+                                        backStack.push(ModerationKey(readerId))
+                                    }.takeIf { moderator },
+                                ),
+                            )
                         }
                         entry<SettingsSectionKey>(metadata = ListDetailSceneStrategy.detailPane()) {
                             SettingsSectionRoute(it.section, onBack = { backStack.removeLastOrNull() })
@@ -677,6 +733,8 @@ private fun ModeTimeline(
             }
         },
     )
+    // the optional modes are offered once, on the timeline every reader opens first
+    if (feed == TimelineFeed.Home) ModesOffer()
 }
 
 @Composable
@@ -771,7 +829,8 @@ private fun PushWhenAsked(destination: NavKey?, onTaken: () -> Unit, push: (NavK
 /** The unread notifications on their destination; nothing on the others, nor with none unread. */
 @Composable
 private fun DestinationBadge(key: TopLevelKey, unreadNotifications: Int) {
-    if (key == NotificationsKey && unreadNotifications > 0) Badge { Text(badgeCount(unreadNotifications)) }
+    val shown = LocalReadingStyle.current.unreadBadge
+    if (shown && key == NotificationsKey && unreadNotifications > 0) Badge { Text(badgeCount(unreadNotifications)) }
 }
 
 /** Whether a thread or a profile can open in a window of its own: where there is room, or beside another app. */
@@ -781,3 +840,15 @@ private fun canOpenWindows(): Boolean {
         .isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND)
     return wide || LocalActivity.current?.isInMultiWindowMode == true
 }
+
+// after Writing in the settings list, before Notifications
+private const val FILTERS_ORDER = 250
+
+// near the end of the list, before About this server
+private const val YEAR_ORDER = 970
+
+// after Sound and haptics, among what keeps the reader safe
+private const val BLOCKED_ORDER = 380
+
+/** Right after the reader's own blocks: the server's moderation, for its moderators. */
+private const val MODERATION_ORDER = 390

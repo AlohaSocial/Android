@@ -56,4 +56,8 @@
     <string name="widget_source_local">This server</string>
     <!-- Timeline choice: everyone the account's server knows -->
     <string name="widget_source_federated">Everyone</string>
+    <!-- In a widget while the app lock is on: posts are not shown on the home screen -->
+    <string name="widget_locked">Locked. Open Aloha Social to see posts.</string>
+    <!-- What a screen reader says for a widget: %1$s is what it shows or does (“3 unread notifications”, “New post”), %2$s the account it is for (@alice@example.social) -->
+    <string name="widget_for_account">%1$s, %2$s</string>
 </resources>

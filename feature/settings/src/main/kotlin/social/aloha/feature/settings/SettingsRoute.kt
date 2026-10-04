@@ -23,6 +23,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.paneTitle
@@ -33,11 +34,16 @@ import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.ui.SettingsSection
 import social.aloha.core.ui.readingColumn
 
-/** The list of sections; on a wide screen it stays beside the one opened. */
+/** The list of sections and [destinations]; on a wide screen it stays beside the one opened. */
 @Composable
-public fun SettingsRoute(onBack: () -> Unit, onSection: (String) -> Unit, modifier: Modifier = Modifier) {
+public fun SettingsRoute(
+    onBack: () -> Unit,
+    onSection: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    destinations: List<SettingsDestination> = emptyList(),
+) {
     val viewModel: SettingsViewModel = hiltViewModel()
-    SettingsScreen(viewModel.sections, onBack, onSection, modifier)
+    SettingsScreen(viewModel.sections, onBack, onSection, modifier, destinations)
 }
 
 /** One section, opened from the list. */
@@ -68,8 +74,14 @@ internal fun SettingsScreen(
     onBack: () -> Unit,
     onSection: (String) -> Unit,
     modifier: Modifier = Modifier,
+    destinations: List<SettingsDestination> = emptyList(),
 ) {
     val title = stringResource(R.string.settings_title)
+    // one list, sections and destinations alike in order
+    val rows = (
+        sections.map { Row(it.key, it.order, it.title, it.icon) { onSection(it.key) } } +
+            destinations.map { Row(it.key, it.order, it.title, it.icon, it.onOpen) }
+        ).sortedBy { it.order }
     Scaffold(
         modifier = modifier.semantics { paneTitle = title },
         topBar = {
@@ -82,16 +94,19 @@ internal fun SettingsScreen(
         },
     ) { padding ->
         LazyColumn(Modifier.padding(padding).readingColumn()) {
-            items(sections, key = { it.key }) { section ->
+            items(rows, key = { it.key }) { row ->
                 ListItem(
-                    modifier = Modifier.clickable(role = Role.Button) { onSection(section.key) },
-                    leadingContent = { Icon(section.icon, contentDescription = null) },
-                    headlineContent = { Text(stringResource(section.title)) },
+                    modifier = Modifier.clickable(role = Role.Button, onClick = row.onOpen),
+                    leadingContent = { Icon(row.icon, contentDescription = null) },
+                    headlineContent = { Text(stringResource(row.title)) },
                 )
             }
         }
     }
 }
+
+/** A row of the settings list. */
+private class Row(val key: String, val order: Int, val title: Int, val icon: ImageVector, val onOpen: () -> Unit)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

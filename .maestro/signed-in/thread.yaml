@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: 2026 Aloha Social contributors
+# SPDX-License-Identifier: MIT
+#
+# After a post's link opened the app (in a freeform window): the post is there to read.
+appId: social.aloha.android
+---
+- runFlow: system-ui.yaml
+- extendedWaitUntil:
+    visible: ".*Bob.s own post.*"
+    timeout: 20000

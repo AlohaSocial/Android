@@ -65,7 +65,7 @@ internal fun StatusBody(
             Text(
                 row.body,
                 inlineContent = rememberEmojiContent(row.emojis, animateEmoji),
-                style = style.contentDirection(),
+                style = style.asRead(LocalReadingStyle.current).contentDirection(),
             )
         }
         if (row.media.isNotEmpty()) MediaGrid(row.media, row.sensitive, policy) { actions.onMedia(row, it) }

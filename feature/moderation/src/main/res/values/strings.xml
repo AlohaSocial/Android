@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  SPDX-FileCopyrightText: 2026 Aloha Social contributors
+  SPDX-License-Identifier: MIT
+-->
+<resources>
+    <!-- Title of the moderation console, and its entry in Settings. Shown only to the server's moderators -->
+    <string name="moderation_title">Moderation</string>
+    <!-- Content description of the back arrow in the moderation console -->
+    <string name="moderation_back">Back</string>
+    <!-- Tab of the moderation console: reports people sent about posts and accounts -->
+    <string name="moderation_tab_reports">Reports</string>
+    <!-- Tab of the moderation console: the server's accounts, by standing -->
+    <string name="moderation_tab_accounts">Accounts</string>
+    <!-- Tab of the moderation console: hashtags and posts waiting before they may trend -->
+    <string name="moderation_tab_trends">Trends</string>
+    <!-- Shown when the account may moderate but the app has not been allowed to yet; a button below asks the server -->
+    <string name="moderation_consent">Your account can moderate this server, but Aloha Social isn’t allowed to yet. Your server asks you to confirm in the browser.</string>
+    <!-- Button that opens the server's page to allow the app to moderate -->
+    <string name="moderation_consent_allow">Allow moderation</string>
+    <!-- Shown when a list of the moderation console could not be loaded -->
+    <string name="moderation_failed">The server didn’t answer. Try again later.</string>
+    <!-- Button under the note that the server didn't answer: asks again -->
+    <string name="moderation_retry">Try again</string>
+    <!-- Snackbar after the server refused a moderation decision; the list is as it was -->
+    <string name="moderation_refused">Your server didn’t take that. Nothing changed.</string>
+    <!-- Filter chip: reports nobody has dealt with yet -->
+    <string name="moderation_reports_open">Open</string>
+    <!-- Filter chip: reports already dealt with -->
+    <string name="moderation_reports_resolved">Resolved</string>
+    <!-- Shown when no open report is waiting -->
+    <string name="moderation_reports_none">No reports are waiting.</string>
+    <!-- Shown when there is no resolved report -->
+    <string name="moderation_reports_none_resolved">No resolved reports.</string>
+    <!-- Who sent a report; %1$s is their handle, like @alice@example.social -->
+    <string name="moderation_report_by">Reported by %1$s</string>
+    <!-- Which moderator took the report; %1$s is their handle -->
+    <string name="moderation_report_taken">Taken by %1$s</string>
+    <!-- One of the posts a report points at, quoted; %1$s is the post's text -->
+    <string name="moderation_report_post">“%1$s”</string>
+    <!-- How many posts the report points at -->
+    <plurals name="moderation_report_posts">
+        <item quantity="one">%d post</item>
+        <item quantity="other">%d posts</item>
+    </plurals>
+    <!-- Button: the moderator takes the report, so others know someone is on it -->
+    <string name="moderation_report_take">Take</string>
+    <!-- Button: the moderator gives a report they took back to the queue -->
+    <string name="moderation_report_give_back">Give back</string>
+    <!-- Button: the report is dealt with, nothing more to do -->
+    <string name="moderation_report_resolve">Resolve</string>
+    <!-- Button: a resolved report goes back to the open queue -->
+    <string name="moderation_report_reopen">Reopen</string>
+    <!-- Button and confirmation: the account's posts stop reaching people who don't follow it (Mastodon's "limit") -->
+    <string name="moderation_limit">Limit</string>
+    <!-- Button and confirmation: nothing of the account is delivered or shown any more -->
+    <string name="moderation_suspend">Suspend</string>
+    <!-- Confirmation title before limiting; %1$s is the account's handle -->
+    <string name="moderation_limit_title">Limit %1$s?</string>
+    <!-- Confirmation text before limiting an account -->
+    <string name="moderation_limit_text">Their posts no longer reach people who don’t follow them. You can lift it later.</string>
+    <!-- Confirmation title before suspending; %1$s is the account's handle -->
+    <string name="moderation_suspend_title">Suspend %1$s?</string>
+    <!-- Confirmation text before suspending an account -->
+    <string name="moderation_suspend_text">Nothing of theirs is delivered or shown any more. You can lift it later.</string>
+    <!-- Button that closes a confirmation without doing anything -->
+    <string name="moderation_cancel">Cancel</string>
+    <!-- Filter chip: accounts in good standing -->
+    <string name="moderation_accounts_active">Active</string>
+    <!-- Filter chip: limited accounts -->
+    <string name="moderation_accounts_limited">Limited</string>
+    <!-- Filter chip: suspended accounts -->
+    <string name="moderation_accounts_suspended">Suspended</string>
+    <!-- Field above the accounts: finds those whose username starts as typed -->
+    <string name="moderation_accounts_find">Find by username</string>
+    <!-- Filter chip: accounts wherever they are -->
+    <string name="moderation_accounts_anywhere">Anywhere</string>
+    <!-- Filter chip: accounts on this server -->
+    <string name="moderation_accounts_local">This server</string>
+    <!-- Filter chip: accounts on other servers -->
+    <string name="moderation_accounts_remote">Other servers</string>
+    <!-- Shown when no account has the chosen standing -->
+    <string name="moderation_accounts_none">No accounts here.</string>
+    <!-- Button: lifts a limit from an account -->
+    <string name="moderation_lift_limit">Lift limit</string>
+    <!-- Button: lifts a suspension from an account -->
+    <string name="moderation_lift_suspension">Unsuspend</string>
+    <!-- Heading above the hashtags waiting for review -->
+    <string name="moderation_trends_tags">Hashtags</string>
+    <!-- Heading above the links waiting for review -->
+    <string name="moderation_trends_links">Links</string>
+    <!-- Heading above the posts waiting for review -->
+    <string name="moderation_trends_posts">Posts</string>
+    <!-- Shown when nothing waits for review under a heading -->
+    <string name="moderation_trends_none">Nothing is waiting for review.</string>
+    <!-- How often a hashtag was used today -->
+    <plurals name="moderation_trends_uses">
+        <item quantity="one">Used %d time today</item>
+        <item quantity="other">Used %d times today</item>
+    </plurals>
+    <!-- Button: the hashtag or post may trend -->
+    <string name="moderation_trends_allow">Allow</string>
+    <!-- Button: the hashtag or post is kept off the trending lists -->
+    <string name="moderation_trends_hide">Hide</string>
+</resources>

@@ -64,6 +64,8 @@ import social.aloha.core.media.mediaPlayer
 import social.aloha.core.model.AttachmentKind
 import social.aloha.core.model.MediaAttachment
 import social.aloha.core.model.VideoSource
+import social.aloha.core.ui.LocalOnMobileData
+import social.aloha.core.ui.LocalReadingStyle
 import social.aloha.core.ui.rememberBlurHashPainter
 
 /**
@@ -143,8 +145,10 @@ private fun Picture(
         PictureGestures({ zoomNow }, onZoom, onPan = { pan += it }, onDrag, onDismiss)
     }
     val blur = rememberBlurHashPainter(attachment.blurhash)
+    // on mobile data, where the reader chose so, the picture comes at the size a list shows it
+    val full = LocalReadingStyle.current.fullPicturesOnMobileData || !LocalOnMobileData.current
     AsyncImage(
-        model = attachment.url ?: attachment.previewUrl,
+        model = if (full) attachment.url ?: attachment.previewUrl else attachment.previewUrl ?: attachment.url,
         contentDescription = attachment.description,
         placeholder = blur,
         error = blur,

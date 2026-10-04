@@ -92,6 +92,7 @@ public fun ShortsRoute(
         if (state.shorts.isNotEmpty()) playback.show(pagerState.settledPage, muted)
     }
     LaunchedEffect(state.muted) { playback.setMuted(state.muted) }
+    LaunchedEffect(state.loop) { playback.setLoop(state.loop) }
     val actions = remember(viewModel) {
         object : ShortsActions {
             override fun onFavourite(short: ShortUi) = viewModel.onToggle(short.row.statusId, Toggle.Favourite)

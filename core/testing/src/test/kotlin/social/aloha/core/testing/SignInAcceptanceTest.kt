@@ -21,6 +21,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Assume.assumeTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.ParameterizedRobolectricTestRunner
@@ -175,6 +176,36 @@ class SignInAcceptanceTest(private val configuration: MockServerConfiguration) {
             assertNull(statuses.get(account.id, StatusSamples.post().id))
             assertEquals(AccountSettings(), settings.settings(account.id).first())
         }
+
+    @Test
+    fun `a moderator's new registration leaves a token issued before it revocable with the old client`() = runBlocking {
+        assumeTrue(configuration == MockServerConfiguration.NextcloudWithRewrite)
+        val server = finder.found(mock.origin.toString())
+        val authorize = (coordinator.beginAuthorization(server) as Authorization.Started).url.toHttpUrl()
+        val state = authorize.queryParameter("state") ?: error("state")
+        val account = (
+            coordinator.complete(
+                "alohasocial://oauth-callback/?code=mock-code&state=$state",
+            ) as SignInResult.SignedIn
+            ).account
+        // the server hands the moderator's registration a client of its own
+        mock.pin(
+            "POST",
+            "/api/v1/apps",
+            200,
+            """{"client_id":"moderator-client","client_secret":"moderator-secret",""" +
+                """"scopes":["read","write","follow","push","admin:read","admin:write"]}""",
+        )
+        val moderation = (coordinator.beginModeration(account) as Authorization.Started).url.toHttpUrl()
+        assertEquals("moderator-client", moderation.queryParameter("client_id"))
+        // the moderator did not finish in the browser: the token is still the old client's
+        coordinator.cancel()
+
+        removal.signOut(account)
+
+        val revoke = mock.requests.last { it.url.encodedPath.endsWith("/oauth/revoke") }.body?.utf8().orEmpty()
+        assertTrue(revoke, revoke.contains("client_id=${MockCredentials.CLIENT_ID}"))
+    }
 
     @Test
     fun `deleting on the server sends the typed handle with the app password, as an OCS request`() = runBlocking {

@@ -120,6 +120,13 @@ public interface RaisedNotificationDao {
     public suspend fun forget(accountId: String)
 }
 
+/** Where each account sits in the order the reader arranged them. */
+@Dao
+public interface AccountOrderDao {
+    @Query("UPDATE account SET sortIndex = :index WHERE id = :id")
+    public suspend fun setSortIndex(id: String, index: Int)
+}
+
 /** `accounts.db`: durable, versioned, migrated and never destroyed. */
 @Database(
     entities = [AccountEntity::class, ClientRegistrationEntity::class, RaisedNotificationEntity::class],
@@ -129,6 +136,8 @@ public interface RaisedNotificationDao {
 )
 public abstract class AccountsDatabase : RoomDatabase() {
     public abstract fun accountDao(): AccountDao
+
+    public abstract fun accountOrderDao(): AccountOrderDao
 
     public abstract fun raisedDao(): RaisedNotificationDao
 

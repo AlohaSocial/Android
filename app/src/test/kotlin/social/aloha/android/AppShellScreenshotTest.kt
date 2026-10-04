@@ -6,10 +6,12 @@ package social.aloha.android
 import android.app.Application
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.test.junit4.accessibility.enableAccessibilityChecks
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.tryPerformAccessibilityChecks
 import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.captureRoboImage
@@ -59,6 +61,7 @@ class AppShellScreenshotTest {
             SwitcherAccount("a", "Alice Example", "@alice@cloud.example", null, active = true, needsReauth = false),
             SwitcherAccount("b", "Alice at work", "@alice@mastodon.example", null, active = false, needsReauth = true),
         )
+        compose.enableAccessibilityChecks()
         compose.setContent {
             AlohaTheme(ThemeSettings(mode = ThemeMode.Light)) { AccountSheet(accounts, {}, AccountLinks(), {}, {}, {}) }
         }
@@ -66,13 +69,28 @@ class AppShellScreenshotTest {
         captureScreenRoboImage("src/test/screenshots/shell-accounts.png")
     }
 
+    @Test
+    @Config(qualifiers = RobolectricDeviceQualifiers.Pixel7)
+    fun locked() {
+        var asked = 0
+        compose.enableAccessibilityChecks()
+        compose.setContent { AlohaTheme(ThemeSettings(mode = ThemeMode.Light)) { LockScreen(onUnlock = { asked++ }) } }
+        compose.onRoot().tryPerformAccessibilityChecks()
+        compose.onRoot().captureRoboImage("src/test/screenshots/locked.png")
+        // the prompt comes at once, and again from the button
+        compose.onNodeWithText("Unlock").performClick()
+        org.junit.Assert.assertEquals(2, asked)
+    }
+
     private fun capture(name: String, mode: ThemeMode = ThemeMode.Light, select: String? = null) {
+        compose.enableAccessibilityChecks()
         compose.setContent {
             AlohaTheme(ThemeSettings(mode = mode)) {
                 AlohaApp("a", "1", timeline = { feed, _, _, _ -> Placeholder(feed.label()) }, nowPlaying = {})
             }
         }
         select?.let { compose.onNodeWithText(it).performClick() }
+        compose.onRoot().tryPerformAccessibilityChecks()
         compose.onRoot().captureRoboImage("src/test/screenshots/$name.png")
     }
 }

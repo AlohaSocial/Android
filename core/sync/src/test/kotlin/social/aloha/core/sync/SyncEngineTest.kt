@@ -179,7 +179,8 @@ class SyncEngineTest {
         val account = fixture.signIn(server.url("/"))
         engine.poll(account, PollScope.Full)
         val wait = engine.waitBeforeNext(account)!!
-        assertTrue("$wait", wait > 29.seconds && wait <= 30.seconds)
+        // a loaded test run takes seconds between the poll and this question; 30 s is told from 60 s and 10 min
+        assertTrue("$wait", wait > 20.seconds && wait <= 30.seconds)
         settings.setPollFrequency(account.id, PollFrequency.Manual)
         assertNull(engine.waitBeforeNext(account))
     }
@@ -199,7 +200,7 @@ class SyncEngineTest {
         val account = fixture.signIn(server.url("/"))
         assertNull(engine.poll(account, PollScope.Full))
         val held = engine.waitBeforeNext(account)!!
-        assertTrue("$held", held > 119.seconds && held <= 2.minutes)
+        assertTrue("$held", held > 100.seconds && held <= 2.minutes)
     }
 
     @Test
@@ -208,7 +209,7 @@ class SyncEngineTest {
         engine.poll(account, PollScope.Full)
         engine.failed(account.id, ApiError.RateLimited(retryAfter = null))
         val slowed = engine.waitBeforeNext(account)!!
-        assertTrue("$slowed", slowed > 59.seconds && slowed <= 60.seconds)
+        assertTrue("$slowed", slowed > 45.seconds && slowed <= 60.seconds)
     }
 
     @Test

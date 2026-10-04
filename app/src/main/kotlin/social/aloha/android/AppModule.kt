@@ -12,6 +12,7 @@ import coil3.request.ImageRequest
 import coil3.request.SuccessResult
 import coil3.request.allowHardware
 import coil3.toBitmap
+import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -19,6 +20,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Provider
 import social.aloha.core.data.CleartextAllowed
+import social.aloha.core.data.DeviceStorage
 import social.aloha.core.data.RedirectUriProvider
 import social.aloha.core.network.di.UserAgent
 import social.aloha.core.network.oauth.OAuthIdentity
@@ -68,4 +70,11 @@ object AppModule {
 
     private const val APP_LINK_HOST = "aloha.social"
     private const val AVATAR_PIXELS = 256
+}
+
+@Module
+@InstallIn(SingletonComponent::class)
+interface StorageModule {
+    @Binds
+    fun deviceStorage(caches: DeviceCaches): DeviceStorage
 }
