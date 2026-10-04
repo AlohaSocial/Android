@@ -106,8 +106,9 @@ class DeleteAccountViewModelTest {
 
     @After
     fun close() {
-        Dispatchers.resetMain()
+        // before resetMain: clearing a ViewModel cancels its work on the main dispatcher
         store.clear()
+        Dispatchers.resetMain()
         scope.cancel()
         fixture.close()
         web.close()
