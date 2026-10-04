@@ -29,7 +29,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import social.aloha.core.model.CharacterCount
+import social.aloha.core.model.LogArea
 import social.aloha.core.sync.UploadState
+import timber.log.Timber
 
 /** A short post as a card: whether it is on, which background, and how it looks. */
 @Immutable
@@ -180,7 +182,7 @@ internal class TextCards(
         // PNG is lossless; the quality it is given is ignored
         file.outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 0, it) }
         file
-    }.getOrNull()
+    }.onFailure { Timber.tag(LogArea.Compose.name).w("Text card not drawn: %s", it.javaClass.simpleName) }.getOrNull()
 
     companion object {
         const val MAX_CHARACTERS = 120

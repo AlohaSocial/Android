@@ -16,6 +16,8 @@ import java.util.Properties
 import javax.net.ssl.SSLEngine
 import javax.net.ssl.SSLSocket
 import javax.net.ssl.X509ExtendedKeyManager
+import social.aloha.core.model.LogArea
+import timber.log.Timber
 
 /**
  * Which system KeyChain alias to present as a client certificate for which host. The person picks
@@ -62,14 +64,14 @@ public class ClientCertificateKeyManager(private val context: Context, private v
 
     override fun getCertificateChain(alias: String): Array<X509Certificate>? = try {
         KeyChain.getCertificateChain(context, alias)
-    } catch (_: KeyChainException) {
-        null
+    } catch (e: KeyChainException) {
+        unavailable(e)
     }
 
     override fun getPrivateKey(alias: String): PrivateKey? = try {
         KeyChain.getPrivateKey(context, alias)
-    } catch (_: KeyChainException) {
-        null
+    } catch (e: KeyChainException) {
+        unavailable(e)
     }
 
     override fun getClientAliases(keyType: String?, issuers: Array<out Principal>?): Array<String>? = null
@@ -77,4 +79,9 @@ public class ClientCertificateKeyManager(private val context: Context, private v
     override fun getServerAliases(keyType: String?, issuers: Array<out Principal>?): Array<String>? = null
 
     override fun chooseServerAlias(keyType: String?, issuers: Array<out Principal>?, socket: Socket?): String? = null
+
+    private fun <T> unavailable(e: KeyChainException): T? {
+        Timber.tag(LogArea.Network.name).w("Client certificate unavailable: %s", e.javaClass.simpleName)
+        return null
+    }
 }

@@ -20,9 +20,11 @@ import social.aloha.core.data.compose.OutboxEntry
 import social.aloha.core.data.compose.PostSender
 import social.aloha.core.data.compose.UploadFile
 import social.aloha.core.data.map
+import social.aloha.core.model.LogArea
 import social.aloha.core.model.OutboxState
 import social.aloha.core.model.SignedInAccount
 import social.aloha.core.network.ApiError
+import timber.log.Timber
 
 /**
  * Sends one account's queued posts, oldest first. Each is first made whole on the server: what never
@@ -71,6 +73,7 @@ internal class OutboxWorker @AssistedInject constructor(
         }
 
         error is ApiError.Unauthorised -> {
+            Timber.tag(LogArea.Compose.name).i("Outbox of %s paused: token refused", account.id)
             outbox.settle(entry.id, OutboxState.Paused)
             outbox.setPaused(account.id, paused = true)
             notifications.paused(account.id, account.qualifiedHandle)
@@ -79,12 +82,14 @@ internal class OutboxWorker @AssistedInject constructor(
 
         // worth another try, a few times: one post that never goes must not hold the queue for ever
         error.isWorthRetrying && runAttemptCount < MAX_ATTEMPTS -> {
+            Timber.tag(LogArea.Compose.name).i("Post %s not sent, retried: %s", entry.id, error.javaClass.simpleName)
             outbox.settle(entry.id)
             Result.retry()
         }
 
         else -> {
             val message = (error as? ApiError.Unprocessable)?.message
+            Timber.tag(LogArea.Compose.name).w("Post %s not sent, given up: %s", entry.id, error.javaClass.simpleName)
             outbox.settle(entry.id, OutboxState.Failed, message)
             notifications.refused(account.id, entry.id, message)
             null

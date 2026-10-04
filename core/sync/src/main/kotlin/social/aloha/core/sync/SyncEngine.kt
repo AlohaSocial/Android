@@ -38,11 +38,13 @@ import social.aloha.core.data.sync.SyncSettings
 import social.aloha.core.data.sync.TimelineSignals
 import social.aloha.core.data.sync.UnreadCounts
 import social.aloha.core.data.sync.WidgetUpdates
+import social.aloha.core.model.LogArea
 import social.aloha.core.model.PollFrequency
 import social.aloha.core.model.SignedInAccount
 import social.aloha.core.network.ApiError
 import social.aloha.core.network.Backoff
 import social.aloha.core.network.endpoints.NotificationEndpoints
+import timber.log.Timber
 
 /**
  * Asks every signed-in account's server what is new while the app is open, at the pace [PollScheduler]
@@ -190,9 +192,15 @@ public class SyncEngine @Inject internal constructor(
             lastPoll[account.id] = clock.millis()
             val request = NotificationEndpoints.unreadCount(account.capabilities.groupedNotifications)
             when (val answer = clients.answer(account, request)) {
-                is Answer.Got -> answer.value.count.also { counted(account, it, pollScope) }
+                is Answer.Got -> answer.value.count.also {
+                    Timber.tag(LogArea.Sync.name).d("Poll of %s: %d unread", account.id, it)
+                    counted(account, it, pollScope)
+                }
 
                 is Answer.Missed -> {
+                    Timber.tag(
+                        LogArea.Sync.name,
+                    ).i("Poll of %s failed: %s", account.id, answer.error.javaClass.simpleName)
                     failed(account.id, answer.error)
                     null
                 }

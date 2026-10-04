@@ -16,11 +16,13 @@ import social.aloha.core.database.FilterDao
 import social.aloha.core.database.FilterEntity
 import social.aloha.core.database.StatusDao
 import social.aloha.core.model.Filter
+import social.aloha.core.model.LogArea
 import social.aloha.core.model.SignedInAccount
 import social.aloha.core.network.ApiError
 import social.aloha.core.network.ApiResult
 import social.aloha.core.network.endpoints.FilterDraft
 import social.aloha.core.network.endpoints.FilterEndpoints
+import timber.log.Timber
 
 /**
  * An account's v2 filters, fetched from the server and kept in the cache so they apply to cached rows
@@ -34,7 +36,8 @@ public class FilterRepository @Inject constructor(private val dao: FilterDao, pr
         rows.mapNotNull { row ->
             try {
                 StatusRepository.json.decodeFromString(Filter.serializer(), row.payloadJson)
-            } catch (_: SerializationException) {
+            } catch (e: SerializationException) {
+                Timber.tag(LogArea.App.name).w("Filter %s unreadable: %s", row.id, e.javaClass.simpleName)
                 null
             }
         }

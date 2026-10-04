@@ -47,12 +47,15 @@ internal object DecodingFailures {
 internal fun <T> Json.decodeOrRecord(serializer: KSerializer<T>, element: JsonElement, index: Int): T? = try {
     decodeFromJsonElement(serializer, element)
 } catch (e: SerializationException) {
-    DecodingFailures.record(DecodingFailure(index, serializer.descriptor.serialName, e.message.orEmpty()))
+    DecodingFailures.record(e.asFailure(index, serializer))
     null
 } catch (e: IllegalArgumentException) {
-    DecodingFailures.record(DecodingFailure(index, serializer.descriptor.serialName, e.message.orEmpty()))
+    DecodingFailures.record(e.asFailure(index, serializer))
     null
 }
+
+private fun Exception.asFailure(index: Int, serializer: KSerializer<*>) =
+    DecodingFailure(index, serializer.descriptor.serialName, message.orEmpty(), javaClass.simpleName)
 
 /** A list that decodes element by element and drops, and records, the elements that fail. */
 internal class LossyListSerializer<T>(private val element: KSerializer<T>) : KSerializer<List<T>> {

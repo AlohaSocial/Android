@@ -16,7 +16,9 @@ import social.aloha.core.data.AccountRepository
 import social.aloha.core.data.Answer
 import social.aloha.core.data.compose.MediaRepository
 import social.aloha.core.data.compose.UploadFile
+import social.aloha.core.model.LogArea
 import social.aloha.core.network.ApiError
+import timber.log.Timber
 
 /**
  * Uploads one file for one account, through [MediaRepository], as foreground work with its progress
@@ -70,10 +72,13 @@ internal class MediaUploadWorker @AssistedInject constructor(
         setForegroundAsync(notifications.info(id, name(), percent))
     }
 
-    private fun failure(error: ApiError): Result = when (error) {
-        is ApiError.Unprocessable -> failed(refused = true, message = error.message)
-        is ApiError.Server, is ApiError.Transport, is ApiError.RateLimited -> retry()
-        else -> failed(refused = true, message = null)
+    private fun failure(error: ApiError): Result {
+        Timber.tag(LogArea.Media.name).i("Upload attempt %d failed: %s", runAttemptCount, error.javaClass.simpleName)
+        return when (error) {
+            is ApiError.Unprocessable -> failed(refused = true, message = error.message)
+            is ApiError.Server, is ApiError.Transport, is ApiError.RateLimited -> retry()
+            else -> failed(refused = true, message = null)
+        }
     }
 
     private fun retry(): Result = if (runAttemptCount < MAX_ATTEMPTS) Result.retry() else failed(false, null)

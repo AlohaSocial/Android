@@ -14,6 +14,8 @@ import kotlinx.serialization.SerializationException
 import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
+import social.aloha.core.model.LogArea
+import timber.log.Timber
 
 /** Where a secret belongs. */
 public sealed class VaultKey(internal val name: String) {
@@ -88,16 +90,17 @@ public class TokenVault(
         if (blob.isEmpty()) return emptyMap()
         return try {
             json.decodeFromString(serializer, cipher.decrypt(blob).decodeToString())
-        } catch (_: GeneralSecurityException) {
-            startAgain()
-        } catch (_: SerializationException) {
-            startAgain()
-        } catch (_: IllegalArgumentException) {
-            startAgain()
+        } catch (e: GeneralSecurityException) {
+            startAgain(e)
+        } catch (e: SerializationException) {
+            startAgain(e)
+        } catch (e: IllegalArgumentException) {
+            startAgain(e)
         }
     }
 
-    private suspend fun startAgain(): Map<String, String> {
+    private suspend fun startAgain(e: Exception): Map<String, String> {
+        Timber.tag(LogArea.Auth.name).w("Vault unreadable, started again: %s", e.javaClass.simpleName)
         lost = true
         cipher.reset()
         store.updateData { EMPTY }

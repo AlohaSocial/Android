@@ -21,7 +21,7 @@ What the Play Console and F-Droid are told, and why each answer is true of the b
 | Is it processed ephemerally? | No | The server keeps what the reader posts. |
 | Is collection required or optional? | Required | A fediverse client cannot post without sending the post. |
 | Purposes | App functionality, account management | Nothing else: no analytics, advertising or personalisation by the developer. |
-| Location, contacts, calendar, health, financial info, device or other IDs, app info and performance (crash logs, diagnostics) | Not collected | No such permission, no crash reporting or analytics library. |
+| Location, contacts, calendar, health, financial info, device or other IDs, app info and performance (crash logs, diagnostics) | Not collected | No such permission, no crash reporting or analytics library. Settings, About, Share diagnostics builds a report of the build, the device, the servers’ software and the recent log on the device, and shows it; it leaves only when the person taps Share and picks an app in the system share sheet. Play counts as collected only what the app transmits off the device, which it does not, and exempts from sharing a transfer the user starts and expects. |
 
 ## Content rating (IARC questionnaire)
 

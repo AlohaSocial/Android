@@ -34,7 +34,7 @@ internal object AboutSection : SettingsSection {
     override val icon: ImageVector = AlohaIcons.About
 
     /** The pages About opens over Settings. */
-    private enum class Page { Terms, Privacy, Licences }
+    private enum class Page { Terms, Privacy, Licences, Diagnostics }
 
     @Composable
     override fun Content() {
@@ -50,12 +50,14 @@ internal object AboutSection : SettingsSection {
             PageRow(R.string.settings_licences) { page = Page.Licences }
             LinkRow(R.string.settings_source, SOURCE) { openInBrowser(context, SOURCE) }
             LinkRow(R.string.settings_issues, ISSUES) { openInBrowser(context, ISSUES) }
+            PageRow(R.string.settings_diagnostics) { page = Page.Diagnostics }
         }
         val close = { page = null }
         when (page) {
             Page.Terms -> TextPage(stringResource(R.string.settings_terms), close) { AppTerms() }
             Page.Privacy -> TextPage(stringResource(R.string.settings_privacy), close) { PrivacyStatement() }
             Page.Licences -> LicencesPage(close)
+            Page.Diagnostics -> DiagnosticsPage(close)
             null -> Unit
         }
     }

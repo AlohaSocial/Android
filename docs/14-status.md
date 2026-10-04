@@ -17,12 +17,14 @@ Each phase was one pull request into `main`.
 | 7 | [#15](https://github.com/AlohaSocial/Android/pull/15) | 2026-10-01 | Launcher shortcuts and Direct Share, "Open in Aloha", the keyboard, drag and drop, windows, the foldable watch page, push status and account deletion |
 | 8 | [#16](https://github.com/AlohaSocial/Android/pull/16) | 2026-10-02 | Translation by the server, else on the device |
 | 9 | [#17](https://github.com/AlohaSocial/Android/pull/17) | 2026-10-04 | Onboarding and terms, Settings completed, safety management, the app lock, localisation and accessibility passes, store material, performance, the moderation console, UI flow tests |
+| 10 | [#18](https://github.com/AlohaSocial/Android/pull/18) | 2026-10-04 | Notification digests at chosen times, a "You're caught up" line on Home and in Notifications, Mute conversation from a mention's notification, Reading's Show numbers switch covering every popularity number |
+| 11 | [#22](https://github.com/AlohaSocial/Android/pull/22) | 2026-10-04 | A swipe on a post that ticks once where it counts, tabs that swipe, tab and chip rows that stay pinned |
 
 Between the phases: CI artifact retention ([#3](https://github.com/AlohaSocial/Android/pull/3)), the device benchmark and baseline profiles ([#4](https://github.com/AlohaSocial/Android/pull/4)), looking an account up by its id ([#10](https://github.com/AlohaSocial/Android/pull/10)) and who favourited and boosted a post ([#13](https://github.com/AlohaSocial/Android/pull/13)).
 
 ## In progress
 
-Phase 10, healthy use, in [#18](https://github.com/AlohaSocial/Android/pull/18): notifications held for a digest at chosen times (a digest notification channel), a "You're caught up" line where the previous visit ended on Home and in Notifications, Mute conversation from a mention's notification and from its row, and Reading's Show numbers switch covering every popularity number. Not merged yet.
+Phase 12, logging and diagnostics: Timber with area tags, logcat in debug builds and a redacted in-memory buffer of the last 500 lines in release builds, request lines and dropped rows from the one request executor, every silent caught failure logged, Settings, About, Share diagnostics, and the R8 mappings attached to each GitHub release. Not merged yet.
 
 ## Not built
 

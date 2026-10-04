@@ -1,0 +1,45 @@
+# SPDX-FileCopyrightText: 2026 Aloha Social contributors
+# SPDX-License-Identifier: MIT
+#
+# Attaches each flavor's R8 mapping to a published release, built from its
+# tag, so a stack trace in a shared diagnostics report can go through retrace.
+# Play has the mapping already: an app bundle carries it.
+name: release-mapping
+
+on:
+  release:
+    types: [published]
+
+permissions: {}
+
+jobs:
+  mapping:
+    name: Attach the R8 mappings
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # upload release assets
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+        with:
+          cache-disabled: true # a release builds from nothing another run could have written
+      - name: Android platform 37
+        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-37.0" "build-tools;37.0.0" > /dev/null
+      - name: Assemble
+        run: ./gradlew assembleGenericRelease assembleGplayRelease
+      - name: Upload
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          for flavor in generic gplay; do
+            cp "app/build/outputs/mapping/${flavor}Release/mapping.txt" "mapping-$flavor.txt"
+          done
+          gh release upload "$TAG" mapping-generic.txt mapping-gplay.txt --clobber

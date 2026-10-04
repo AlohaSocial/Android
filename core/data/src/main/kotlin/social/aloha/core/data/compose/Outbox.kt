@@ -14,7 +14,9 @@ import kotlinx.coroutines.flow.map
 import kotlinx.serialization.json.Json
 import social.aloha.core.database.OutboxDao
 import social.aloha.core.database.OutboxEntity
+import social.aloha.core.model.LogArea
 import social.aloha.core.model.OutboxState
+import timber.log.Timber
 
 /** A post in the outbox, as the composer and the drafts list see it. */
 public data class OutboxEntry(
@@ -138,7 +140,7 @@ public class Outbox @Inject constructor(private val dao: OutboxDao, private val 
      */
     public suspend fun sweep(uploads: File, idle: Duration = SWEEP_IDLE) {
         val kept = dao.contents().mapNotNull { content ->
-            runCatching { json.decodeFromString(DraftPost.serializer(), content) }.getOrNull()
+            runCatching { json.decodeFromString(DraftPost.serializer(), content) }.onFailure(::unreadable).getOrNull()
         }.flatMapTo(HashSet()) { post -> post.files.map { it.absolutePath } }
         val cutoff = clock.millis() - idle.toMillis()
         uploads.listFiles().orEmpty()
@@ -162,5 +164,9 @@ public class Outbox @Inject constructor(private val dao: OutboxDao, private val 
             Instant.ofEpochMilli(row.updatedAt),
             row.error,
         )
-    }.getOrNull()
+    }.onFailure(::unreadable).getOrNull()
+}
+
+private fun unreadable(e: Throwable) {
+    Timber.tag(LogArea.Compose.name).w("Outbox post unreadable: %s", e.javaClass.simpleName)
 }

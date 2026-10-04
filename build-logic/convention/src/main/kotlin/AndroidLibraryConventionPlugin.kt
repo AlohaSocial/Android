@@ -25,6 +25,7 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
             registerUnitTestAggregate()
             // JUnit 5 for plain unit tests; the vintage engine runs the JUnit 4 tests Robolectric needs
             dependencies {
+                add("implementation", libs.library("timber"))
                 add("testImplementation", platform(libs.library("junit-bom")))
                 add("testImplementation", libs.library("junit-jupiter"))
                 add("testRuntimeOnly", libs.library("junit-vintage-engine"))

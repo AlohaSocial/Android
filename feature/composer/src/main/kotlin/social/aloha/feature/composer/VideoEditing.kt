@@ -23,6 +23,8 @@ import kotlin.coroutines.resume
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
+import social.aloha.core.model.LogArea
+import timber.log.Timber
 
 /** A video's length and frame, read from the file. */
 @Immutable
@@ -80,7 +82,7 @@ internal class VideoTransformer(private val context: Context) {
         } finally {
             retriever.release()
         }
-    }.getOrNull()
+    }.onFailure { Timber.tag(LogArea.Media.name).w("Video not read: %s", it.javaClass.simpleName) }.getOrNull()
 
     /** [input] with [edit] applied, written to [output]; false when Transformer could not do it. */
     suspend fun export(input: File, edit: VideoEdit?, output: File): Boolean = withContext(Dispatchers.Main) {

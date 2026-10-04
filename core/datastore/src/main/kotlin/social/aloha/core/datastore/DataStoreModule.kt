@@ -23,6 +23,8 @@ import java.io.OutputStream
 import javax.inject.Qualifier
 import javax.inject.Singleton
 import kotlinx.coroutines.Dispatchers
+import social.aloha.core.model.LogArea
+import timber.log.Timber
 
 /** The vault's bytes, stored as they are; the content is ciphertext. */
 internal object BlobSerializer : Serializer<ByteArray> {
@@ -85,7 +87,7 @@ internal object DataStoreModule {
     fun accountSettings(@ApplicationContext context: Context): AccountSettingsStore = AccountSettingsStore(
         DataStoreFactory.create(
             AccountSettingsSerializer,
-            corruptionHandler = ReplaceFileCorruptionHandler { AccountSettingsSerializer.defaultValue },
+            corruptionHandler = ReplaceFileCorruptionHandler { startOver("Account settings", it) },
         ) { File(context.filesDir, "datastore/account_settings.json") },
     )
 
@@ -95,9 +97,14 @@ internal object DataStoreModule {
     fun widgetFeed(@ApplicationContext context: Context): WidgetFeedStore = WidgetFeedStore(
         DataStoreFactory.create(
             WidgetFeedSerializer,
-            corruptionHandler = ReplaceFileCorruptionHandler { WidgetFeedSerializer.defaultValue },
+            corruptionHandler = ReplaceFileCorruptionHandler { startOver("Widget feed", it) },
         ) { File(context.noBackupFilesDir, "widget_feed.json") },
     )
+
+    private fun <T> startOver(what: String, e: CorruptionException): Map<String, T> {
+        Timber.tag(LogArea.App.name).w("%s unreadable, started over: %s", what, e.cause?.javaClass?.simpleName)
+        return emptyMap()
+    }
 }
 
 /** The device's preferences file, which [AppPreferences] and [ModePreferences] share. */
