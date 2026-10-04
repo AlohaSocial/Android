@@ -68,6 +68,7 @@ public class SyncEngine @Inject internal constructor(
     private val device: DeviceConditions,
     private val listeners: Set<@JvmSuppressWildcards PollListener>,
     private val background: BackgroundRefresh,
+    private val digests: DigestScheduler,
     @param:ApplicationScope private val scope: CoroutineScope,
     private val clock: Clock,
 ) {
@@ -86,7 +87,8 @@ public class SyncEngine @Inject internal constructor(
 
     /**
      * The app came to the foreground or left it; polling runs only while it is in front. The first call
-     * also starts keeping the background refresh scheduled and every account registered for push.
+     * also starts keeping the background refresh and the digest scheduled and every account registered
+     * for push.
      */
     public fun setForeground(inFront: Boolean) {
         if (inFront) noteInteraction()
@@ -97,6 +99,7 @@ public class SyncEngine @Inject internal constructor(
             if (loop == null) {
                 loop = scope.launch { run() }
                 scope.launch { background.keepScheduled() }
+                scope.launch { digests.keepScheduled() }
                 scope.launch { keepRegistered() }
             }
         }

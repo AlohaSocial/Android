@@ -38,6 +38,7 @@ import social.aloha.core.data.sync.TimelineSignals
 import social.aloha.core.data.sync.UnreadCounts
 import social.aloha.core.datastore.AccountSettingsStore
 import social.aloha.core.datastore.AppPreferences
+import social.aloha.core.datastore.NotificationPreferences
 import social.aloha.core.model.PollFrequency
 import social.aloha.core.network.ApiError
 import social.aloha.core.testing.InMemoryDataStore
@@ -79,7 +80,11 @@ class SyncEngineTest {
     }
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val preferences = AppPreferences(InMemoryDataStore(emptyPreferences()))
-    private val settings = SyncSettings(AccountSettingsStore(InMemoryDataStore(emptyMap())), preferences)
+    private val settings = SyncSettings(
+        AccountSettingsStore(InMemoryDataStore(emptyMap())),
+        preferences,
+        NotificationPreferences(InMemoryDataStore(emptyPreferences())),
+    )
     private val signals = TimelineSignals()
     private val unread = fixture.unread
     private val push = PushSubscriptions(fixture.clients, preferences)
@@ -108,6 +113,7 @@ class SyncEngineTest {
             },
         ),
         BackgroundRefresh(context, fixture.accounts, settings, push),
+        DigestScheduler(context, settings, fixture.clock),
         scope,
         fixture.clock,
     )

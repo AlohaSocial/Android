@@ -9,6 +9,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -52,6 +54,7 @@ import kotlinx.coroutines.launch
 import social.aloha.core.data.AccountRepository
 import social.aloha.core.data.sync.SyncSettings
 import social.aloha.core.designsystem.AlohaIcons
+import social.aloha.core.model.Digest
 import social.aloha.core.model.PollFrequency
 import social.aloha.core.model.QuietHours
 import social.aloha.core.sync.Distributor
@@ -61,17 +64,21 @@ import social.aloha.core.ui.SettingsSection
 import social.aloha.core.ui.SwitchRow
 import social.aloha.core.ui.openInBrowser
 
-/** [quiet] is null while there are no quiet hours. */
+/** [quiet] is null while there are no quiet hours, [digest] while notifications come as they arrive. */
 internal data class SyncSettingsUi(
     val frequency: PollFrequency = PollFrequency.Normal,
     val wifiOnly: Boolean = false,
     val quiet: QuietHours? = null,
+    val digest: Digest? = null,
 )
 
 /** The push distributors installed, and the one chosen; null for none. */
 internal data class PushUi(val distributors: List<Distributor> = emptyList(), val chosen: String? = null)
 
-/** How the active account's news arrives: the push app, how often it is asked, Wi-Fi only and quiet hours. */
+/**
+ * How the active account's news arrives: the push app, how often it is asked, Wi-Fi only, quiet hours and
+ * whether notifications wait for a digest.
+ */
 @HiltViewModel
 internal class NotificationsSettingsViewModel @Inject constructor(
     private val accounts: AccountRepository,
@@ -88,7 +95,13 @@ internal class NotificationsSettingsViewModel @Inject constructor(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val uiState: StateFlow<SyncSettingsUi> = accounts.activeAccount.filterNotNull().flatMapLatest { account ->
-        combine(settings.pollFrequency(account.id), settings.wifiOnly, settings.quietHours, ::SyncSettingsUi)
+        combine(
+            settings.pollFrequency(account.id),
+            settings.wifiOnly,
+            settings.quietHours,
+            settings.digest,
+            ::SyncSettingsUi,
+        )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_MILLIS), SyncSettingsUi())
 
     fun onFrequency(frequency: PollFrequency) {
@@ -102,6 +115,10 @@ internal class NotificationsSettingsViewModel @Inject constructor(
 
     fun onQuietHours(hours: QuietHours?) {
         viewModelScope.launch { settings.setQuietHours(hours) }
+    }
+
+    fun onDigest(digest: Digest?) {
+        viewModelScope.launch { settings.setDigest(digest) }
     }
 
     private companion object {
@@ -123,9 +140,13 @@ internal object NotificationsSettings : SettingsSection {
         val context = LocalContext.current
         Column {
             PushRows(push, viewModel::onDistributor) { openInBrowser(context, DISTRIBUTORS) }
-            SyncRows(state, viewModel::onFrequency, viewModel::onWifiOnly, viewModel::onQuietHours) {
-                openSettings(context)
-            }
+            SyncRows(
+                state,
+                viewModel::onFrequency,
+                viewModel::onWifiOnly,
+                viewModel::onQuietHours,
+                viewModel::onDigest,
+            ) { openSettings(context) }
         }
     }
 }
@@ -136,6 +157,7 @@ internal fun SyncRows(
     onFrequency: (PollFrequency) -> Unit,
     onWifiOnly: (Boolean) -> Unit,
     onQuietHours: (QuietHours?) -> Unit,
+    onDigest: (Digest?) -> Unit,
     onKinds: () -> Unit,
 ) {
     Column {
@@ -156,6 +178,7 @@ internal fun SyncRows(
             onWifiOnly,
             summary = stringResource(R.string.settings_wifi_only_summary),
         )
+        DeliveryRows(state.digest, onDigest)
         QuietRows(state.quiet, onQuietHours)
         ListItem(
             modifier = Modifier.clickable(role = Role.Button, onClick = onKinds),
@@ -184,6 +207,62 @@ internal fun PushRows(state: PushUi, onDistributor: (String?) -> Unit, onFind: (
         onDistributor,
     )
 }
+
+/**
+ * As they arrive, or held for a digest at the hours chosen: each hour a row that opens the time picker,
+ * taken away by its trailing button while more than one is left, one more added while fewer than the most.
+ */
+@Composable
+private fun DeliveryRows(digest: Digest?, onDigest: (Digest?) -> Unit) {
+    ChoiceRows(
+        stringResource(R.string.settings_delivery),
+        listOf(
+            false to stringResource(R.string.settings_delivery_now),
+            true to stringResource(R.string.settings_delivery_digest),
+        ),
+        digest != null,
+        { on -> onDigest(if (on) Digest.Default else null) },
+    )
+    if (digest == null) return
+    val context = LocalContext.current
+    // the hour being changed, or ADDING for a new one
+    var editing by remember { mutableStateOf<Int?>(null) }
+    digest.hours.forEach { hour ->
+        ListItem(
+            modifier = Modifier.clickable(role = Role.Button) { editing = hour },
+            headlineContent = { Text(stringResource(R.string.settings_digest_at, hourText(context, hour))) },
+            trailingContent = {
+                if (digest.hours.size > 1) {
+                    IconButton(onClick = { onDigest(digest.copy(hours = digest.hours - hour)) }) {
+                        Icon(AlohaIcons.Remove, stringResource(R.string.settings_digest_remove))
+                    }
+                }
+            },
+        )
+    }
+    if (digest.hours.size < Digest.MOST) {
+        ListItem(
+            modifier = Modifier.clickable(role = Role.Button) { editing = ADDING },
+            leadingContent = { Icon(AlohaIcons.Add, contentDescription = null) },
+            headlineContent = { Text(stringResource(R.string.settings_digest_add)) },
+        )
+    }
+    SwitchRow(
+        stringResource(R.string.settings_digest_personal),
+        digest.personalNow,
+        { onDigest(digest.copy(personalNow = it)) },
+        summary = stringResource(R.string.settings_digest_personal_summary),
+    )
+    editing?.let { hour ->
+        HourDialog(if (hour == ADDING) NOON else hour, onDismiss = { editing = null }) { picked ->
+            onDigest(digest.copy(hours = (digest.hours - hour + picked).distinct().sorted()))
+            editing = null
+        }
+    }
+}
+
+private const val ADDING = -1
+private const val NOON = 12
 
 @Composable
 private fun QuietRows(quiet: QuietHours?, onQuietHours: (QuietHours?) -> Unit) {

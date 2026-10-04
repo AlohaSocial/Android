@@ -33,6 +33,7 @@ import social.aloha.core.data.sync.SyncSettings
 import social.aloha.core.data.sync.UnreadCounts
 import social.aloha.core.datastore.AccountSettingsStore
 import social.aloha.core.datastore.AppPreferences
+import social.aloha.core.datastore.NotificationPreferences
 import social.aloha.core.model.NotificationKind
 import social.aloha.core.model.ServerCapabilities
 import social.aloha.core.testing.InMemoryDataStore
@@ -104,6 +105,7 @@ class NotificationsViewModelTest {
             SyncSettings(
                 AccountSettingsStore(InMemoryDataStore(emptyMap())),
                 AppPreferences(InMemoryDataStore(emptyPreferences())),
+                NotificationPreferences(InMemoryDataStore(emptyPreferences())),
             ),
             fixture.clock,
         )

@@ -75,6 +75,50 @@
     <string name="notification_channel_edits">Edits</string>
     <!-- Name of the notification channel for moderation and server administration -->
     <string name="notification_channel_moderation">Moderation</string>
+    <!-- Name of the notification channel for the summary raised at the digest times the person chose -->
+    <string name="notification_channel_digest">Digests</string>
+    <!-- Between the parts of a digest's one-line summary: "3 mentions · 2 favourites" -->
+    <string name="notification_digest_separator">" · "</string>
+    <!-- One part of a digest; %d is how many mentions and replies it holds -->
+    <plurals name="notification_digest_mentions">
+        <item quantity="one">%d mention</item>
+        <item quantity="other">%d mentions</item>
+    </plurals>
+    <!-- One part of a digest; %d is how many new posts, from people the person asked to be told about -->
+    <plurals name="notification_digest_posts">
+        <item quantity="one">%d new post</item>
+        <item quantity="other">%d new posts</item>
+    </plurals>
+    <!-- One part of a digest; %d is how many new followers and follow requests -->
+    <plurals name="notification_digest_follows">
+        <item quantity="one">%d new follower</item>
+        <item quantity="other">%d new followers</item>
+    </plurals>
+    <!-- One part of a digest; %d is how many boosts of the person's posts -->
+    <plurals name="notification_digest_boosts">
+        <item quantity="one">%d boost</item>
+        <item quantity="other">%d boosts</item>
+    </plurals>
+    <!-- One part of a digest; %d is how many favourites of the person's posts -->
+    <plurals name="notification_digest_favourites">
+        <item quantity="one">%d favourite</item>
+        <item quantity="other">%d favourites</item>
+    </plurals>
+    <!-- One part of a digest; %d is how many polls ended -->
+    <plurals name="notification_digest_polls">
+        <item quantity="one">%d poll ended</item>
+        <item quantity="other">%d polls ended</item>
+    </plurals>
+    <!-- One part of a digest; %d is how many posts the person interacted with were edited -->
+    <plurals name="notification_digest_edits">
+        <item quantity="one">%d edit</item>
+        <item quantity="other">%d edits</item>
+    </plurals>
+    <!-- One part of a digest; %d is how many notices from the server's moderators or administration -->
+    <plurals name="notification_digest_notices">
+        <item quantity="one">%d notice from your server</item>
+        <item quantity="other">%d notices from your server</item>
+    </plurals>
     <!-- Notification action that replies to the post right from the notification -->
     <string name="notification_reply">Reply</string>
     <!-- Hint in the reply field of a notification -->

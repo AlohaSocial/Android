@@ -26,6 +26,7 @@ import social.aloha.core.designsystem.AlohaTheme
 import social.aloha.core.designsystem.ThemeMode
 import social.aloha.core.designsystem.ThemeSettings
 import social.aloha.core.model.Account
+import social.aloha.core.model.Digest
 import social.aloha.core.model.NotificationKind
 import social.aloha.core.model.NotificationPolicy
 import social.aloha.core.model.NotificationRequest
@@ -198,6 +199,19 @@ class NotificationsScreenshotTest {
             onFrequency = {},
             onWifiOnly = {},
             onQuietHours = {},
+            onDigest = {},
+            onKinds = {},
+        )
+    }
+
+    @Test
+    fun syncSettingsDigest() = capture("notifications-settings-digest") {
+        SyncRows(
+            SyncSettingsUi(digest = Digest(hours = listOf(8, 18))),
+            onFrequency = {},
+            onWifiOnly = {},
+            onQuietHours = {},
+            onDigest = {},
             onKinds = {},
         )
     }
