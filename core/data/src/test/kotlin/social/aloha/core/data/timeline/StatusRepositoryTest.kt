@@ -6,9 +6,13 @@ package social.aloha.core.data.timeline
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import java.time.Clock
+import java.time.Instant
+import java.time.ZoneId
+import java.time.ZoneOffset
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -30,6 +34,21 @@ class StatusRepositoryTest {
     @After
     fun close() {
         database.close()
+    }
+
+    @Test
+    fun `a page fetched around a toggle cannot take it back, until the toggle is old`() = runBlocking {
+        val clock = SteppedClock()
+        val store = StatusRepository(database.statusDao(), clock)
+        val post = StatusSamples.post()
+        store.saveToggled("a", post.copy(favourited = true, favouritesCount = post.favouritesCount + 1))
+        store.saveAll("a", listOf(post, StatusSamples.boost))
+        assertTrue(store.get("a", post.id)!!.favourited)
+        assertEquals(post.favouritesCount + 1, store.get("a", post.id)!!.favouritesCount)
+        assertTrue(store.get("a", StatusSamples.boost.id)!!.reblog!!.favourited)
+        clock.now += StatusRepository.TOGGLE_HOLD
+        store.saveAll("a", listOf(post))
+        assertFalse(store.get("a", post.id)!!.favourited)
     }
 
     @Test
@@ -61,4 +80,12 @@ class StatusRepositoryTest {
             statuses.save("a", clip)
             assertEquals(ContentKind.Short, statuses.kinds("a", listOf(clip)).getValue("30"))
         }
+}
+
+private class SteppedClock(var now: Long = 0L) : Clock() {
+    override fun getZone(): ZoneId = ZoneOffset.UTC
+
+    override fun withZone(zone: ZoneId?): Clock = this
+
+    override fun instant(): Instant = Instant.ofEpochMilli(now)
 }

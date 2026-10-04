@@ -11,8 +11,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.PrimaryScrollableTabRow
-import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -30,6 +28,7 @@ import social.aloha.core.ui.RichTextColors
 import social.aloha.core.ui.StatusActions
 import social.aloha.core.ui.StatusNavigation
 import social.aloha.core.ui.StatusRowMapper
+import social.aloha.core.ui.TabPager
 import social.aloha.core.ui.TroubleStrip
 import social.aloha.core.ui.rememberThreadRoutedActions
 
@@ -98,17 +97,14 @@ internal fun ExploreScreen(
     rowActions: StatusActions,
     modifier: Modifier = Modifier,
 ) {
-    Column(modifier.fillMaxSize()) {
-        PrimaryScrollableTabRow(selectedTabIndex = state.tab.ordinal, edgePadding = AlohaSpacing.m) {
-            ExploreTab.entries.forEach { tab ->
-                Tab(
-                    selected = state.tab == tab,
-                    onClick = { actions.onTab(tab) },
-                    text = { Text(stringResource(tabName(tab))) },
-                )
-            }
-        }
-        when (state.tab) {
+    TabPager(
+        ExploreTab.entries,
+        state.tab,
+        actions::onTab,
+        { stringResource(tabName(it)) },
+        modifier.fillMaxSize(),
+    ) { tab ->
+        when (tab) {
             ExploreTab.Posts -> Loading(state.posts, actions::onRetry) {
                 PostsTab(it, state.viewer, mapper, rowActions)
             }

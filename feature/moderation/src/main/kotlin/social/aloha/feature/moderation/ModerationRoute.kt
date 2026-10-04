@@ -22,11 +22,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -61,6 +59,7 @@ import social.aloha.core.network.endpoints.AdminAccountEndpoints.Origin
 import social.aloha.core.network.endpoints.AdminAccountEndpoints.Standing
 import social.aloha.core.network.endpoints.ModerationEndpoints.TrendKind
 import social.aloha.core.ui.Avatar
+import social.aloha.core.ui.TabPager
 import social.aloha.core.ui.openInBrowser
 import social.aloha.core.ui.readingColumn
 
@@ -153,25 +152,32 @@ internal fun ModerationScreen(
         snackbarHost = { SnackbarHost(snackbars) },
     ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize()) {
-            if (state.tabs.size > 1 && tab != null) {
-                // sized to the labels, so a large font scrolls the tabs instead of breaking a word
-                PrimaryScrollableTabRow(selectedTabIndex = state.tabs.indexOf(tab), edgePadding = 0.dp) {
-                    state.tabs.forEach {
-                        Tab(
-                            selected = it == tab,
-                            onClick = { chosen = it },
-                            text = { Text(stringResource(tabTitle(it))) },
-                        )
-                    }
+            val page: @Composable (ModerationTab) -> Unit = {
+                when (it) {
+                    ModerationTab.Reports -> Reports(state, actions, confirm)
+                    ModerationTab.Accounts -> Accounts(state, actions, confirm)
+                    ModerationTab.Trends -> Trends(state, actions)
                 }
             }
             when {
                 state.role == null && state.failed -> Failed(actions.onRetry)
+
                 state.role == null -> Loading()
+
                 state.consent -> Consent(actions.onAllow)
-                tab == ModerationTab.Reports -> Reports(state, actions, confirm)
-                tab == ModerationTab.Accounts -> Accounts(state, actions, confirm)
-                tab == ModerationTab.Trends -> Trends(state, actions)
+
+                tab == null -> Unit
+
+                state.tabs.size > 1 -> TabPager(
+                    state.tabs,
+                    tab,
+                    { chosen = it },
+                    { stringResource(tabTitle(it)) },
+                    edgePadding = 0.dp,
+                    page = page,
+                )
+
+                else -> page(tab)
             }
         }
     }

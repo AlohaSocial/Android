@@ -20,11 +20,9 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -49,6 +47,7 @@ import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.navigation.BlockedKey
 import social.aloha.core.ui.Avatar
+import social.aloha.core.ui.TabPager
 import social.aloha.core.ui.readingColumn
 
 /** Who the reader blocked and muted, and the servers they blocked, each to be taken back. */
@@ -107,13 +106,15 @@ internal fun BlockedScreen(
         },
         snackbarHost = { SnackbarHost(snackbars) },
     ) { padding ->
-        Column(Modifier.padding(padding).fillMaxSize()) {
-            PrimaryTabRow(selectedTabIndex = tab.ordinal) {
-                BlockedTab.entries.forEach {
-                    Tab(selected = it == tab, onClick = { tab = it }, text = { Text(stringResource(tabTitle(it))) })
-                }
-            }
-            when (tab) {
+        TabPager(
+            BlockedTab.entries,
+            tab,
+            { tab = it },
+            { stringResource(tabTitle(it)) },
+            Modifier.padding(padding).fillMaxSize(),
+            scrollable = false,
+        ) { shown ->
+            when (shown) {
                 BlockedTab.Blocked -> People(
                     state.blocked,
                     state.failed,

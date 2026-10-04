@@ -37,7 +37,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.UriHandler
 import androidx.compose.ui.res.pluralStringResource
@@ -463,14 +462,11 @@ private fun DislikeCount(row: StatusRowUi, tint: Color) {
     }
 }
 
-/** A tick under the finger as a post changes; Android leaves it out where touch feedback is off. */
+/** A tick under the finger as a post changes: on, or off again. */
 @Composable
 private fun rememberTick(): (Boolean) -> Unit {
-    val haptics = LocalHapticFeedback.current
-    val ticks = LocalReadingStyle.current.haptics
-    return { on ->
-        if (ticks) haptics.performHapticFeedback(if (on) HapticFeedbackType.ToggleOn else HapticFeedbackType.ToggleOff)
-    }
+    val haptics = rememberHaptics()
+    return { on -> haptics(if (on) HapticFeedbackType.ToggleOn else HapticFeedbackType.ToggleOff) }
 }
 
 @Composable

@@ -117,8 +117,9 @@ class ModerationViewModelTest {
 
     @After
     fun close() {
-        Dispatchers.resetMain()
+        // before resetMain: clearing a ViewModel cancels its work on the main dispatcher
         store.clear()
+        Dispatchers.resetMain()
         fixture.close()
         server.close()
     }
