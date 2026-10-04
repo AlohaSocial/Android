@@ -11,6 +11,11 @@
   schedule: ["before 6am on monday"],
   packageRules: [
     {
+      // Maven Central rate-limits Renovate's runners, and its metadata run misses the test classpaths
+      matchManagers: ["gradle"],
+      skipArtifactsUpdate: true,
+    },
+    {
       // AGP, Kotlin and KSP move together; one pull request, benchmark re-run
       groupName: "toolchain",
       matchPackageNames: [
