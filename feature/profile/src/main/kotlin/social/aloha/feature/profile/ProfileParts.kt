@@ -58,6 +58,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -100,6 +102,7 @@ internal fun Header(
     state: ProfileUiState,
     actions: ProfileScreenActions,
     onProfile: (String) -> Unit,
+    drift: () -> Float = { 0f },
 ) {
     Column(Modifier.semantics { isTraversalGroup = true }) {
         Box {
@@ -107,9 +110,12 @@ internal fun Header(
                 model = header.headerUrl,
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxWidth().aspectRatio(
-                    BANNER_RATIO,
-                ).background(MaterialTheme.colorScheme.surfaceContainerHigh),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(BANNER_RATIO)
+                    .clipToBounds()
+                    .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                    .graphicsLayer { translationY = drift() },
             )
             Avatar(
                 header.author.avatarUrl,

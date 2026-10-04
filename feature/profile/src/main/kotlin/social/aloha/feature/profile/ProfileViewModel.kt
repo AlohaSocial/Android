@@ -47,6 +47,7 @@ import social.aloha.core.data.timeline.Toggle
 import social.aloha.core.data.trouble
 import social.aloha.core.html.RichTextCache
 import social.aloha.core.model.Account
+import social.aloha.core.model.FeaturedTag
 import social.aloha.core.model.Filter
 import social.aloha.core.model.MediaCollection
 import social.aloha.core.model.ProfileHighlights
@@ -101,6 +102,8 @@ internal class ProfileViewModel @AssistedInject constructor(
         val actionFailed: Boolean = false,
         val lists: List<ListChoice>? = null,
         val familiar: List<Account> = emptyList(),
+        val pinned: List<Status> = emptyList(),
+        val featuredTags: List<FeaturedTag> = emptyList(),
     )
 
     /** What is drawn, as opposed to what the screen is doing. */
@@ -318,6 +321,11 @@ internal class ProfileViewModel @AssistedInject constructor(
                 viewModelScope.launch {
                     profiles.highlights(reader, account.id)?.let { h -> control.update { it.copy(highlights = h) } }
                 }
+                viewModelScope.launch {
+                    val pinned = (featured.pinned(reader, account.id) as? Answer.Got)?.value.orEmpty()
+                    val tags = (featured.tags(reader, account.id) as? Answer.Got)?.value.orEmpty()
+                    control.update { it.copy(pinned = pinned, featuredTags = tags) }
+                }
                 loadTab(reader, control.value.tab, force)
             }
 
@@ -367,17 +375,15 @@ internal class ProfileViewModel @AssistedInject constructor(
         val stored = inputs.stored.rows.takeIf { inputs.stored.key == current }.orEmpty()
         storedRows = stored
         rows.use(inputs.colors)
-        val tabs = buildList {
-            addAll(listOf(ProfileTab.Posts, ProfileTab.Replies, ProfileTab.Media, ProfileTab.Videos))
-            if (reader.capabilities.collections) add(ProfileTab.Collections)
-            if (reader.capabilities.stories) add(ProfileTab.Stories)
-        }
         val decide = ProfilePresentation.decider(inputs.filters, now, cache)
         return ProfileUiState(
             header = account?.let { headerOf(it, inputs.colors, reader) },
             relation = control.relationship?.let(ProfilePresentation::relation),
             highlights = control.highlights,
-            tabs = tabs,
+            tabs = ProfilePresentation.tabs(
+                reader.capabilities,
+                control.pinned.isNotEmpty() || control.featuredTags.isNotEmpty(),
+            ),
             tab = control.tab,
             items = ProfilePresentation.items(stored, decide, { status, warning ->
                 rows.rowFor(status, reader.serverAccountId, warning?.titles, warning?.keywords.orEmpty())
@@ -394,6 +400,9 @@ internal class ProfileViewModel @AssistedInject constructor(
             lists = control.lists,
             familiar = control.familiar.map { Familiar(it.id, it.bestDisplayName, it.avatar) },
             knownHandle = key.acct?.let { if (it.startsWith('@')) it else "@$it" },
+            featured = ProfilePresentation.featured(control.pinned, control.featuredTags) {
+                rows.rowFor(it, reader.serverAccountId, null)
+            },
         )
     }
 

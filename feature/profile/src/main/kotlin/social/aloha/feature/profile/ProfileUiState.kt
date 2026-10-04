@@ -10,13 +10,18 @@ import social.aloha.core.data.Trouble
 import social.aloha.core.data.profile.ListChoice
 import social.aloha.core.data.profile.RelationshipChange
 import social.aloha.core.model.CustomEmoji
+import social.aloha.core.model.FeaturedTag
 import social.aloha.core.model.MediaCollection
 import social.aloha.core.model.ProfileHighlights
 import social.aloha.core.model.Story
 import social.aloha.core.ui.StatusRowUi
 
-/** The profile's tabs; the last two only where the server has them. */
-internal enum class ProfileTab { Posts, Replies, Media, Videos, Collections, Stories }
+/** The profile's tabs; Featured only where the account features something, the last two where the server has them. */
+internal enum class ProfileTab { Posts, Replies, Media, Featured, Videos, Collections, Stories }
+
+/** What an account features at the top of its profile: pinned posts and hashtags. */
+@Immutable
+internal data class FeaturedUi(val posts: List<StatusRowUi>, val tags: List<FeaturedTag>)
 
 /** What the header shows: who, what they say about themselves, and how many. */
 @Immutable
@@ -105,6 +110,7 @@ internal data class ProfileUiState(
     val familiar: List<Familiar> = emptyList(),
     /** The handle the profile was opened by, shown while the account loads. */
     val knownHandle: String? = null,
+    val featured: FeaturedUi? = null,
 )
 
 /** What changes the profile: its tabs and pages, and how the reader relates to the account. */

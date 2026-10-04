@@ -70,6 +70,16 @@
     <string name="profile_tab_media">Media</string>
     <!-- Tab with the account's videos -->
     <string name="profile_tab_videos">Videos</string>
+    <!-- Profile tab holding the account's posts, with chips for posts only, posts and replies, or media -->
+    <string name="profile_tab_timeline">Timeline</string>
+    <!-- Profile tab with the posts the account pinned and the hashtags it features -->
+    <string name="profile_tab_featured">Featured</string>
+    <!-- Heading in the Featured tab -->
+    <string name="profile_featured_pinned">Pinned posts</string>
+    <!-- Heading in the Featured tab -->
+    <string name="profile_featured_tags">Featured hashtags</string>
+    <!-- Button under a Featured section that shows the rest of it -->
+    <string name="profile_featured_view_all">View all</string>
     <!-- Tab with the account's media collections -->
     <string name="profile_tab_collections">Collections</string>
     <!-- Tab with the account's current stories -->
@@ -264,5 +274,10 @@
     <plurals name="profile_familiar_others">
         <item quantity="one">Followed by %1$s and %2$d other</item>
         <item quantity="other">Followed by %1$s and %2$d others</item>
+    </plurals>
+    <!-- Under a featured hashtag; %d is how many posts the account made with it -->
+    <plurals name="profile_featured_tag_posts">
+        <item quantity="one">%d post</item>
+        <item quantity="other">%d posts</item>
     </plurals>
 </resources>

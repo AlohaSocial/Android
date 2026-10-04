@@ -25,6 +25,7 @@ import social.aloha.core.designsystem.ThemeMode
 import social.aloha.core.designsystem.ThemeSettings
 import social.aloha.core.html.RichTextCache
 import social.aloha.core.model.AccountField
+import social.aloha.core.model.FeaturedTag
 import social.aloha.core.model.InstanceRule
 import social.aloha.core.model.MediaCollection
 import social.aloha.core.model.ProfileHighlights
@@ -180,6 +181,25 @@ class ProfileScreenshotTest {
             ),
             NoActions,
             NoActions,
+        )
+    }
+
+    @Test
+    fun featured() = capture("profile-featured") {
+        val shown = profile(highlights = false)
+        val posts = shown.items.filterIsInstance<ProfileItem.Post>().map { it.row }
+        val tags = listOf("surf", "aloha", "reef", "dawn").mapIndexed { index, name ->
+            FeaturedTag(id = "$index", name = name, statusesCount = 10 * (index + 1))
+        }
+        ProfileScreen(
+            shown.copy(
+                tabs = shown.tabs.toMutableList().apply { add(indexOf(ProfileTab.Videos), ProfileTab.Featured) },
+                tab = ProfileTab.Featured,
+                featured = FeaturedUi(posts, tags),
+            ),
+            NoActions,
+            NoActions,
+            listState = LazyListState(firstVisibleItemIndex = 1),
         )
     }
 

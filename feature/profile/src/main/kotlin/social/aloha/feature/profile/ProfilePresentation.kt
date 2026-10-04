@@ -9,10 +9,12 @@ import social.aloha.core.data.timeline.TimelineRow
 import social.aloha.core.html.RichTextCache
 import social.aloha.core.html.StatusHtmlParser
 import social.aloha.core.model.Account
+import social.aloha.core.model.FeaturedTag
 import social.aloha.core.model.FeedMode
 import social.aloha.core.model.Filter
 import social.aloha.core.model.FilterContext
 import social.aloha.core.model.Relationship
+import social.aloha.core.model.ServerCapabilities
 import social.aloha.core.model.Status
 import social.aloha.core.model.TimelineKey
 import social.aloha.core.model.TimelineSource
@@ -45,7 +47,7 @@ internal object ProfilePresentation {
             TimelineSource.Account(accountId, includeReplies = false, onlyMedia = true),
         )
 
-        ProfileTab.Collections, ProfileTab.Stories -> null
+        ProfileTab.Featured, ProfileTab.Collections, ProfileTab.Stories -> null
     }
 
     fun header(account: Account, cache: RichTextCache, colors: RichTextColors, isSelf: Boolean): ProfileHeader {
@@ -75,6 +77,19 @@ internal object ProfilePresentation {
             memorial = account.memorial,
         )
     }
+
+    /** The three timelines, Featured where the account features something, Videos, then what the server has. */
+    fun tabs(capabilities: ServerCapabilities, featured: Boolean): List<ProfileTab> = buildList {
+        addAll(listOf(ProfileTab.Posts, ProfileTab.Replies, ProfileTab.Media))
+        if (featured) add(ProfileTab.Featured)
+        add(ProfileTab.Videos)
+        if (capabilities.collections) add(ProfileTab.Collections)
+        if (capabilities.stories) add(ProfileTab.Stories)
+    }
+
+    /** What the account features, its posts drawn by [row]; none when it features nothing. */
+    fun featured(pinned: List<Status>, tags: List<FeaturedTag>, row: (Status) -> StatusRowUi): FeaturedUi? =
+        FeaturedUi(pinned.map(row), tags).takeIf { it.posts.isNotEmpty() || it.tags.isNotEmpty() }
 
     fun relation(relationship: Relationship): Relation = Relation(
         following = relationship.following,

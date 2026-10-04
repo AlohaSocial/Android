@@ -47,6 +47,7 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -58,6 +59,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -93,6 +95,7 @@ import social.aloha.core.ui.contentDirection
 import social.aloha.core.ui.fullDate
 import social.aloha.core.ui.readingWidth
 import social.aloha.core.ui.rememberEmojiContent
+import social.aloha.core.ui.rememberReducedMotion
 import social.aloha.core.ui.swipeTabs
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -107,11 +110,13 @@ internal fun ProfileScreen(
 ) {
     val title = state.header?.author?.plainName.orEmpty()
     var asking by rememberSaveable { mutableStateOf<Asking?>(null) }
+    val bar = TopAppBarDefaults.pinnedScrollBehavior()
     Scaffold(
-        modifier = modifier.semantics { paneTitle = title },
+        modifier = modifier.nestedScroll(bar.nestedScrollConnection).semantics { paneTitle = title },
         topBar = {
             TopAppBar(
                 title = { ScrolledTitle(title, state.header?.posts, listState) },
+                scrollBehavior = bar,
                 navigationIcon = {
                     IconButton(onClick = actions::onBack) {
                         Icon(AlohaIcons.Back, stringResource(R.string.profile_back))
@@ -151,13 +156,19 @@ private fun Content(
 ) {
     // on a wide window the profile keeps a reading width, centred, rather than stretching banner and text
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
-        val at = state.tabs.indexOf(state.tab)
+        val shown = shownTabs(state.tabs)
+        val at = shown.indexOf(shownTab(state.tab))
         val tabsAt = if (state.highlights != null) 2 else 1
         var keepPinned by remember { mutableStateOf(false) }
+        var timeline by rememberSaveable { mutableStateOf(ProfileTab.Posts) }
+        if (state.tab in TIMELINE) timeline = state.tab
         val choose = { tab: ProfileTab ->
             keepPinned = listState.firstVisibleItemIndex >= tabsAt
             actions.onTab(tab)
         }
+        val swipeTo = { tab: ProfileTab? -> tab?.let { choose(if (it == ProfileTab.Posts) timeline else it) } }
+        val pinned by remember(tabsAt) { derivedStateOf { listState.firstVisibleItemIndex >= tabsAt } }
+        val reduced = rememberReducedMotion()
         LaunchedEffect(state.tab) {
             if (keepPinned) listState.scrollToItem(tabsAt)
             keepPinned = false
@@ -165,20 +176,30 @@ private fun Content(
         LazyColumn(
             state = listState,
             modifier = Modifier.readingWidth().fillMaxSize().swipeTabs(
-                next = { state.tabs.getOrNull(at + 1)?.let(choose) },
-                previous = { state.tabs.getOrNull(at - 1)?.let(choose) },
+                next = { swipeTo(shown.getOrNull(at + 1)) },
+                previous = { swipeTo(shown.getOrNull(at - 1)) },
             ),
             contentPadding = PaddingValues(bottom = AlohaSpacing.xl),
         ) {
             item(key = "header", contentType = "header") {
                 ProvideLinkRouting(onLink = rowActions::onLink) {
-                    Header(header, state, actions, rowActions::onProfile)
+                    // the banner drifts at half the speed of the list, under what scrolls over it
+                    val drift = {
+                        if (reduced ||
+                            listState.firstVisibleItemIndex > 0
+                        ) {
+                            0f
+                        } else {
+                            listState.firstVisibleItemScrollOffset / 2f
+                        }
+                    }
+                    Header(header, state, actions, rowActions::onProfile, drift)
                 }
             }
             state.highlights?.let { highlights ->
                 item(key = "highlights", contentType = "highlights") { Highlights(highlights) }
             }
-            stickyHeader(key = "tabs", contentType = "tabs") { Tabs(state, choose) }
+            stickyHeader(key = "tabs", contentType = "tabs") { Tabs(state, pinned, timeline, choose) }
             tabContent(state, actions, rowActions)
         }
     }
@@ -189,6 +210,8 @@ private fun LazyListScope.tabContent(state: ProfileUiState, actions: ProfileScre
         ProfileTab.Collections -> listed(state.collections, MediaCollection::id) { CollectionRow(it, actions) }
 
         ProfileTab.Stories -> listed(state.stories, Story::id) { StoryRow(it, actions) }
+
+        ProfileTab.Featured -> state.featured?.let { featured(it, state.now, rowActions) }
 
         else -> {
             if (state.items.isEmpty()) {
@@ -234,28 +257,6 @@ private fun <T : Any> LazyListScope.listed(entries: List<T>?, key: (T) -> String
         }
     }
 }
-
-@Composable
-private fun Tabs(state: ProfileUiState, onTab: (ProfileTab) -> Unit) {
-    PrimaryScrollableTabRow(
-        selectedTabIndex = state.tabs.indexOf(state.tab).coerceAtLeast(0),
-        edgePadding = AlohaSpacing.m,
-    ) {
-        state.tabs.forEach { tab ->
-            Tab(selected = tab == state.tab, onClick = { onTab(tab) }, text = { Text(stringResource(tab.label)) })
-        }
-    }
-}
-
-private val ProfileTab.label: Int
-    get() = when (this) {
-        ProfileTab.Posts -> R.string.profile_tab_posts
-        ProfileTab.Replies -> R.string.profile_tab_replies
-        ProfileTab.Media -> R.string.profile_tab_media
-        ProfileTab.Videos -> R.string.profile_tab_videos
-        ProfileTab.Collections -> R.string.profile_tab_collections
-        ProfileTab.Stories -> R.string.profile_tab_stories
-    }
 
 @Composable
 private fun Menu(state: ProfileUiState, actions: ProfileScreenActions, ask: (Asking) -> Unit) {
