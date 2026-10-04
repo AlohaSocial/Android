@@ -118,8 +118,8 @@ public enum class StatusMenuItem {
  *
  * @param now the time ages are counted from; the list passes one clock so every row agrees.
  * @param canReact whether the server takes emoji reactions (shown in a thread, where they are fetched).
- * @param focused the post a thread is about: larger text, the full date it was made, and its content the
- *   full width of the card rather than beside the avatar.
+ * @param focused the post a thread is about: larger text, its content the full width of the card rather
+ *   than beside the avatar, and no tap to open it, since it is open.
  */
 @Composable
 public fun StatusCard(
@@ -262,13 +262,6 @@ private fun StatusContent(
             StatusBody(row, policy, actions, flags.canReact, flags.animateEmoji, flags.focused, controls)
         }
         controls.translation?.let { TranslationLine(it, controls.onShowOriginal, controls.onGetLanguage) }
-        if (flags.focused) {
-            Text(
-                fullDate(row.createdAt),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
         if (flags.showActions) ActionRow(row, actions)
     }
 }

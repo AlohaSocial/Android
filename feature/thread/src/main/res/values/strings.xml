@@ -33,6 +33,14 @@
     <string name="thread_reactions">Reactions</string>
     <!-- Button under an edited post that opens its earlier versions -->
     <string name="thread_edit_history">Edit history</string>
+    <!-- The bar at the bottom of a thread that starts a reply; %s is the focused post's author -->
+    <string name="thread_reply_to">Reply to %s</string>
+    <!-- Chip shown once the post a thread is about has scrolled out of view; a tap scrolls back to it -->
+    <string name="thread_back_to_post">Back to the post</string>
+    <!-- What a tap on the focused post's date does, said by a screen reader -->
+    <string name="thread_date_seconds">Show the seconds</string>
+    <!-- After the focused post's date: the app it was written with; %s is the app's name -->
+    <string name="thread_via">via %s</string>
     <!-- Heading of the sheet listing a post's earlier versions -->
     <string name="thread_history_title">Edit history</string>
     <!-- The first version of an edited post, in its history -->

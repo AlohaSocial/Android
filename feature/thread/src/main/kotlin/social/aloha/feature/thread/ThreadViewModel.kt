@@ -275,6 +275,8 @@ internal class ThreadViewModel @AssistedInject constructor(
             history = control.history,
             actionFailed = control.actionFailed,
             people = control.people,
+            readerAvatar = account.avatarUrl,
+            application = focused?.displayed?.application,
         )
     }
 

@@ -16,6 +16,7 @@ import androidx.compose.material.icons.automirrored.outlined.VolumeOff
 import androidx.compose.material.icons.automirrored.outlined.VolumeUp
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.AmpStories
+import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Check
@@ -207,6 +208,8 @@ public object AlohaIcons {
     public val Nextcloud: ImageVector = Icons.Outlined.Cloud
     public val Rules: ImageVector = Icons.AutoMirrored.Outlined.Rule
     public val NewPosts: ImageVector = Icons.Filled.ArrowUpward
+    public val ArrowUpward: ImageVector = Icons.Filled.ArrowUpward
+    public val ArrowDownward: ImageVector = Icons.Filled.ArrowDownward
     public val Timeline: ImageVector = Icons.Outlined.ViewAgenda
     public val AddAccount: ImageVector = Icons.Outlined.PersonAdd
     public val SignOut: ImageVector = Icons.AutoMirrored.Outlined.Logout

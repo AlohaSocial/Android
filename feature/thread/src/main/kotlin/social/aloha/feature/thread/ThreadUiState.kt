@@ -7,6 +7,7 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.ui.text.AnnotatedString
 import java.time.Instant
 import social.aloha.core.data.Trouble
+import social.aloha.core.model.ApplicationSummary
 import social.aloha.core.model.CustomEmoji
 import social.aloha.core.model.Reaction
 import social.aloha.core.navigation.StatusListKind
@@ -57,6 +58,10 @@ internal data class ThreadUiState(
     val archive: Boolean = false,
     /** A post was just archived, which the screen confirms. */
     val archived: Boolean = false,
+    /** The reader's own avatar, on the reply bar. */
+    val readerAvatar: String? = null,
+    /** The app the focused post was written with, where the server says. */
+    val application: ApplicationSummary? = null,
 )
 
 /** What a pushed list of the focused post shows. */

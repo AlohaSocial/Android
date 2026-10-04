@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -104,6 +105,14 @@ internal fun ThreadScreen(
             )
         },
         snackbarHost = { SnackbarHost(snackbars) },
+        bottomBar = {
+            val focused = state.items.firstNotNullOfOrNull { (it as? ThreadItem.Post)?.takeIf { post -> post.focused } }
+            if (focused != null &&
+                !state.gone
+            ) {
+                ReplyBar(focused.row, state.readerAvatar) { rowActions.onReply(focused.row) }
+            }
+        },
     ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize()) {
             state.trouble?.takeIf { !state.gone }?.let { TroubleStrip(it) }
@@ -117,6 +126,11 @@ internal fun ThreadScreen(
                     state.items.isEmpty() -> Loading()
                     else -> Posts(state, actions, rowActions, listState)
                 }
+                BackToPost(
+                    listState,
+                    state.items.indexOfFirst { it is ThreadItem.Post && it.focused },
+                    Modifier.align(Alignment.TopCenter).padding(top = AlohaSpacing.s),
+                )
             }
         }
     }
@@ -133,6 +147,7 @@ private fun Posts(
     listState: LazyListState,
 ) {
     val fresh = rememberFreshKeys(state.items.map { it.key })
+    val links = remember(state.items) { connections(state.items) }
     val revealMode = LocalReadingStyle.current.revealWarnings
     val reveals = remember(revealMode) { WarningReveals(revealMode) }
     CompositionLocalProvider(LocalWarningReveals provides reveals) {
@@ -141,7 +156,10 @@ private fun Posts(
             modifier = Modifier.readingColumn(),
             contentPadding = PaddingValues(bottom = AlohaSpacing.xl),
         ) {
-            items(state.items, key = { it.key }, contentType = { it::class }) { item ->
+            itemsIndexed(state.items, key = { _, item ->
+                item.key
+            }, contentType = { _, item -> item::class }) { index, item ->
+                val link = links[index]
                 when (item) {
                     is ThreadItem.Post -> {
                         // the indent shows how deep a reply sits; a screen reader says it, and finds the post
@@ -152,12 +170,25 @@ private fun Posts(
                             state.now,
                             LocalSensitiveMediaPolicy.current,
                             rowActions,
-                            modifier = Modifier.freshHighlight(
-                                item.key in fresh,
-                            ).padding(start = indent(item.depth)).semantics {
-                                if (item.focused) heading()
-                                if (item.depth > 0) stateDescription = level
-                            },
+                            modifier = Modifier
+                                .freshHighlight(item.key in fresh)
+                                .connector(
+                                    link,
+                                    item.depth,
+                                    parentDepth = if (item.depth ==
+                                        0
+                                    ) {
+                                        0
+                                    } else {
+                                        item.depth - 1
+                                    },
+                                    ::indent,
+                                )
+                                .padding(start = indent(item.depth))
+                                .semantics {
+                                    if (item.focused) heading()
+                                    if (item.depth > 0) stateDescription = level
+                                },
                             canReact = item.focused && state.canReact,
                             focused = item.focused,
                         )
@@ -169,7 +200,8 @@ private fun Posts(
                         modifier = Modifier.padding(start = indent(item.depth + 1)),
                     ) { Text(pluralStringResource(R.plurals.thread_more_replies, item.count, item.count)) }
                 }
-                PostDivider()
+                // a post and the reply under it read as one block, joined by their line
+                if (!link.down) PostDivider()
             }
         }
     }
@@ -179,6 +211,8 @@ private fun Posts(
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun Footer(state: ThreadUiState, actions: ThreadScreenActions) {
+    val focused = state.items.firstNotNullOfOrNull { (it as? ThreadItem.Post)?.takeIf { post -> post.focused } }
+    focused?.let { PostedLine(it.row.createdAt, state.application) }
     if (state.lists.isEmpty() && !state.edited) return
     FlowRow(
         modifier = Modifier.fillMaxWidth().padding(horizontal = AlohaSpacing.m, vertical = AlohaSpacing.xs),
@@ -191,7 +225,7 @@ private fun Footer(state: ThreadUiState, actions: ThreadScreenActions) {
                     StackedAvatars(it, LIST_AVATAR)
                     Spacer(Modifier.width(AlohaSpacing.s))
                 }
-                Text(listLabel(kind, count))
+                Text(boldNumber(listLabel(kind, count), count.takeIf { LocalReadingStyle.current.showCounts }))
             }
         }
         if (state.edited) {
@@ -306,7 +340,7 @@ private fun FocusOnce(state: ThreadUiState, listState: LazyListState) {
     }
 }
 
-private fun indent(depth: Int) = INDENT * depth.coerceAtMost(ThreadShape.MAX_DEPTH)
+internal fun indent(depth: Int) = INDENT * depth.coerceAtMost(ThreadShape.MAX_DEPTH)
 
 private val INDENT = 12.dp
 
