@@ -6,7 +6,7 @@ SPDX-PackageSupplier = "Aloha Social contributors"
 SPDX-PackageDownloadLocation = "https://github.com/AlohaSocial/Android"
 
 [[annotations]]
-path = ["**/*.md", "LICENSE", "docs/**", "**/src/test/screenshots/**", "config/**/*.json", ".maestro/**", "fastlane/**", "core/testing/src/main/resources/fixtures/**", "core/database/schemas/**", "**/generated/baselineProfiles/**"]
+path = ["**/*.md", "LICENSE", ".idea/copyright/**", "docs/**", "**/src/test/screenshots/**", "config/**/*.json", ".maestro/**", "fastlane/**", "core/testing/src/main/resources/fixtures/**", "core/database/schemas/**", "**/generated/baselineProfiles/**"]
 precedence = "aggregate"
 SPDX-FileCopyrightText = "2026 Aloha Social contributors"
 SPDX-License-Identifier = "MIT"
@@ -22,3 +22,9 @@ path = ["gradle/verification-metadata.xml", "gradle/verification-keyring.keys"]
 precedence = "aggregate"
 SPDX-FileCopyrightText = "2026 Aloha Social contributors"
 SPDX-License-Identifier = "MIT"
+
+[[annotations]]
+path = [".idea/icon*.svg", ".idea/icon*.png", "app/src/test/screenshots/launcher-icon.png"]
+precedence = "override"
+SPDX-FileCopyrightText = "2026 Aloha Social project"
+SPDX-License-Identifier = "LicenseRef-AlohaSocialTrademarks"

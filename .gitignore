@@ -22,9 +22,14 @@ output-metadata.json
 local.properties
 .attach_pid*
 
-# IDE (shared code style stays)
+# IDE (shared code style, copyright profile and project icon stay)
 .idea/*
 !.idea/codeStyles/
+!.idea/copyright/
+!.idea/icon.svg
+!.idea/icon.png
+!.idea/icon_dark.svg
+!.idea/icon_dark.png
 *.iml
 .vscode/
 .fleet/
