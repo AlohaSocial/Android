@@ -37,12 +37,14 @@ import org.robolectric.RobolectricTestRunner
 import social.aloha.core.data.AccountRepository
 import social.aloha.core.data.ClientFactory
 import social.aloha.core.data.NewAccount
+import social.aloha.core.data.thread.ReplyNudges
 import social.aloha.core.data.thread.ThreadRepository
 import social.aloha.core.data.timeline.StatusInteractions
 import social.aloha.core.data.timeline.StatusRepository
 import social.aloha.core.data.timeline.Toggle
 import social.aloha.core.database.AccountsDatabase
 import social.aloha.core.database.CacheDatabase
+import social.aloha.core.datastore.AccountSettingsStore
 import social.aloha.core.datastore.AppPreferences
 import social.aloha.core.datastore.TokenVault
 import social.aloha.core.html.RichTextCache
@@ -62,6 +64,9 @@ import social.aloha.core.ui.RichTextColors
  * reply to that below, reactions only from their own route, and two versions in the edit history.
  */
 private class Conversation : Dispatcher() {
+    /** A reply someone else posted after the thread was first opened. */
+    @Volatile var grown = false
+
     private val template = JsonObject(NumberedTimeline.homeTemplate() + ("reblog" to JsonNull))
 
     private fun status(id: String, replyTo: String?, vararg extra: Pair<String, JsonPrimitive>) = JsonObject(
@@ -98,7 +103,10 @@ private class Conversation : Dispatcher() {
         path.endsWith("/context") -> JsonObject(
             mapOf(
                 "ancestors" to JsonArray(listOf(status("a1", null))),
-                "descendants" to JsonArray(listOf(status("r1", "f"), status("r2", "r1"))),
+                "descendants" to JsonArray(
+                    listOf(status("r1", "f"), status("r2", "r1")) +
+                        if (grown) listOf(status("r3", "f")) else emptyList(),
+                ),
             ),
         ).toString()
 
@@ -130,6 +138,7 @@ private class Conversation : Dispatcher() {
 @RunWith(RobolectricTestRunner::class)
 class ThreadViewModelTest {
     private val clock = Clock.systemUTC()
+    private val conversation = Conversation()
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val context = ApplicationProvider.getApplicationContext<android.content.Context>()
     private val accountsDb = Room.inMemoryDatabaseBuilder(context, AccountsDatabase::class.java).build()
@@ -145,7 +154,7 @@ class ThreadViewModelTest {
         ClientFactory(OkHttpClient(), RateLimiter(nowMillis = clock::millis), Dispatchers.IO, accounts)
     private val statuses = StatusRepository(cache.statusDao(), clock)
     private val server = MockWebServer().apply {
-        dispatcher = Conversation()
+        dispatcher = conversation
         start()
     }
 
@@ -173,6 +182,12 @@ class ThreadViewModelTest {
             StatusInteractions(statuses, clients),
             RichTextCache(),
             clock,
+            ReplyNudges(
+                AppPreferences(InMemoryDataStore(emptyPreferences())),
+                AccountSettingsStore(InMemoryDataStore(emptyMap())),
+                clients,
+                clock,
+            ),
         ).apply { onColors(RichTextColors(Color.Blue, Color.Gray, Color.LightGray)) }
     }
 
@@ -239,6 +254,19 @@ class ThreadViewModelTest {
     fun `a thread opened from an edited mark opens with the post's edits`() = runBlocking {
         val history = open("f", history = true).await { it.history != null }.history!!
         assertEquals(listOf("Edited"), history.drop(1).map { it.body.text.trim() })
+    }
+
+    @Test
+    fun `replies a refresh finds wait behind Show, so the list stays where it is`() = runBlocking {
+        val viewModel = open("f")
+        viewModel.await { !it.loading && it.posts().size == 4 }
+        conversation.grown = true
+        viewModel.onRefresh()
+        val held = viewModel.await { it.pendingReplies == 1 }
+        assertEquals(listOf("a1", "f", "r1", "r2"), held.posts().map { it.row.statusId })
+        viewModel.onShowReplies()
+        val shown = viewModel.await { it.pendingReplies == 0 && it.posts().size == 5 }
+        assertTrue("r3" in shown.posts().map { it.row.statusId })
     }
 
     @Test

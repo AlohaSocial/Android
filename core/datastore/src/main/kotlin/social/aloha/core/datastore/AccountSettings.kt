@@ -47,6 +47,10 @@ public data class AccountSettings(
     val tagGroups: Map<String, List<String>> = emptyMap(),
     val hideStrangers: Boolean = false,
     val pollFrequency: PollFrequency = PollFrequency.Normal,
+    /** The reply nudges turned off on this account, by name. */
+    val silencedNudges: Set<String> = emptySet(),
+    /** Who this account was nudged about before a first reply, so as not to be again. */
+    val nudgedAuthors: Set<String> = emptySet(),
 )
 
 /**

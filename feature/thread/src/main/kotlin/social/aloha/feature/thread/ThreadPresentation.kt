@@ -30,6 +30,16 @@ internal object ThreadPresentation {
         }
     }
 
+    /** The focused post with its extras, built again only when the post or they change. */
+    class Extras {
+        private var last: Triple<Status, Pair<Card?, List<Reaction>?>, Status>? = null
+
+        fun of(status: Status, card: Card?, reactions: List<Reaction>?): Status {
+            last?.let { (source, extras, shown) -> if (source === status && extras == card to reactions) return shown }
+            return withExtras(status, card, reactions).also { last = Triple(status, card to reactions, it) }
+        }
+    }
+
     /** The focused post with what only the thread fetches: its card, when it carries none, and its reactions. */
     fun withExtras(status: Status, card: Card?, reactions: List<Reaction>?): Status {
         val shown = status.displayed

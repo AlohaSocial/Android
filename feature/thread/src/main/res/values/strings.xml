@@ -33,6 +33,28 @@
     <string name="thread_reactions">Reactions</string>
     <!-- Button under an edited post that opens its earlier versions -->
     <string name="thread_edit_history">Edit history</string>
+    <!-- Snackbar in a thread when a refresh found replies the reader has not seen; the list stays where it is -->
+    <string name="thread_more_replies_found">More replies found</string>
+    <!-- The snackbar's button: puts the replies it found into the thread -->
+    <string name="thread_more_replies_show">Show</string>
+    <!-- Title of the sheet before replying to a post more than three months old -->
+    <string name="thread_nudge_old_title">This post is from a while ago</string>
+    <!-- Body of that sheet -->
+    <string name="thread_nudge_old_body">It was posted more than three months ago. You can still reply, but it may no longer be relevant.</string>
+    <!-- Title of the sheet before a first reply to someone who does not follow the reader -->
+    <string name="thread_nudge_stranger_title">Before you reply</string>
+    <!-- First line of that sheet -->
+    <string name="thread_nudge_stranger_follow">They don’t follow you, so this may be the first they hear from you.</string>
+    <!-- Second line of that sheet -->
+    <string name="thread_nudge_stranger_read">Read the replies first: your point may already be made.</string>
+    <!-- Third line of that sheet -->
+    <string name="thread_nudge_stranger_kind">Be kind: your reply lands in their notifications.</string>
+    <!-- The nudge sheet's main button: goes on to the reply -->
+    <string name="thread_nudge_reply">Reply</string>
+    <!-- The nudge sheet's button: goes on to the reply, and never shows this sheet again for the account in use -->
+    <string name="thread_nudge_silence_account">Reply, and don’t show this again for this account</string>
+    <!-- The nudge sheet's button: goes on to the reply, and never shows this sheet again on any account -->
+    <string name="thread_nudge_silence_all">Reply, and don’t show this again on any account</string>
     <!-- The bar at the bottom of a thread that starts a reply; %s is the focused post's author -->
     <string name="thread_reply_to">Reply to %s</string>
     <!-- Chip shown once the post a thread is about has scrolled out of view; a tap scrolls back to it -->

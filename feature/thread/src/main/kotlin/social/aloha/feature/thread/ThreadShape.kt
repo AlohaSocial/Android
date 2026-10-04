@@ -71,6 +71,20 @@ internal object ThreadShape {
         }
     }
 
+    /** [lines] without the replies in [held] and everything under them, which are not shown yet. */
+    fun without(lines: List<ThreadLine>, held: Set<String>): List<ThreadLine> {
+        if (held.isEmpty()) return lines
+        var skipBelow = Int.MAX_VALUE
+        return lines.filter { line ->
+            val depth = (line as? ThreadLine.Reply)?.depth ?: (line as? ThreadLine.More)?.depth ?: 0
+            when {
+                depth > skipBelow -> false
+                line is ThreadLine.Reply && line.statusId in held -> false.also { skipBelow = depth }
+                else -> true.also { skipBelow = Int.MAX_VALUE }
+            }
+        }
+    }
+
     private fun count(parentId: String, children: Map<String, List<Status>>): Int {
         var total = 0
         val pending = ArrayDeque(listOf(parentId))

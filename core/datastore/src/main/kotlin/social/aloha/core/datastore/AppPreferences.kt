@@ -88,6 +88,13 @@ public class AppPreferences(private val store: DataStore<Preferences>) {
         store.edit { it[WARN_DESCRIPTION] = warn }
     }
 
+    /** The reply nudges turned off on every account, by name. */
+    public val silencedNudges: Flow<Set<String>> = store.data.map { it[SILENCED_NUDGES].orEmpty() }
+
+    public suspend fun silenceNudge(name: String) {
+        store.edit { it[SILENCED_NUDGES] = it[SILENCED_NUDGES].orEmpty() + name }
+    }
+
     public suspend fun setSwipeTowardsEnd(action: SwipeAction) {
         store.edit { it[SWIPE_END] = action.name }
     }
@@ -154,6 +161,7 @@ public class AppPreferences(private val store: DataStore<Preferences>) {
         val TAG_SHORTS = booleanPreferencesKey("tag_shorts")
         val WIFI_ONLY_SYNC = booleanPreferencesKey("wifi_only_sync")
         val ASKED_NOTIFICATIONS = booleanPreferencesKey("asked_for_notifications")
+        val SILENCED_NUDGES = stringSetPreferencesKey("silenced_nudges")
         val PUSH_ACCOUNTS = stringSetPreferencesKey("push_accounts")
         val CONFIRM_POST = booleanPreferencesKey("confirm_before_posting")
         val ALWAYS_WARNING = booleanPreferencesKey("always_show_warning")

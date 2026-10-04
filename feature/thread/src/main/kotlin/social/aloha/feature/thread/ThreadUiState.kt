@@ -7,6 +7,7 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.ui.text.AnnotatedString
 import java.time.Instant
 import social.aloha.core.data.Trouble
+import social.aloha.core.data.thread.ReplyNudge
 import social.aloha.core.model.ApplicationSummary
 import social.aloha.core.model.CustomEmoji
 import social.aloha.core.model.Reaction
@@ -62,6 +63,12 @@ internal data class ThreadUiState(
     val readerAvatar: String? = null,
     /** The app the focused post was written with, where the server says. */
     val application: ApplicationSummary? = null,
+    /** A pause before a reply, waiting for the reader's answer. */
+    val nudge: ReplyNudge? = null,
+    /** A reply to open now, the nudge answered or never needed. */
+    val replyTo: String? = null,
+    /** Replies a refresh found, held back until the reader asks for them, so the list stays put. */
+    val pendingReplies: Int = 0,
 )
 
 /** What a pushed list of the focused post shows. */
