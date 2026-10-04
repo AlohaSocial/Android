@@ -31,6 +31,8 @@
     <string name="notifications_muted">Conversation muted</string>
     <!-- Brief notice after muting a conversation failed -->
     <string name="notifications_mute_failed">That didn’t go through. Try again.</string>
+    <!-- Opens everyone in a grouped notification, while the reader hides the numbers -->
+    <string name="notifications_others_plain">Show everyone</string>
     <!-- Spoken before a notification the person has not seen yet -->
     <string name="notifications_unread">New</string>
     <!-- Shown when there are no notifications yet -->

@@ -3,6 +3,8 @@
 
 package social.aloha.feature.thread
 
+import androidx.annotation.PluralsRes
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -58,6 +60,7 @@ import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.model.SensitiveMediaPolicy
 import social.aloha.core.navigation.StatusListKind
+import social.aloha.core.ui.LocalReadingStyle
 import social.aloha.core.ui.LocalSensitiveMediaPolicy
 import social.aloha.core.ui.ProvideLinkRouting
 import social.aloha.core.ui.StackedAvatars
@@ -183,6 +186,15 @@ private fun Footer(state: ThreadUiState, actions: ThreadScreenActions) {
 
 private val LIST_AVATAR = 24.dp
 
+/** [plural] with [count], or [plain] while the reader hides the numbers. */
+@Composable
+private fun counted(@PluralsRes plural: Int, @StringRes plain: Int, count: Int?): String =
+    if (LocalReadingStyle.current.showCounts) {
+        pluralStringResource(plural, count ?: 0, count ?: 0)
+    } else {
+        stringResource(plain)
+    }
+
 /**
  * The avatars a favourites or boosts button draws, at most a few: while who they are is still on its
  * way, a circle for each the count names, so the button keeps its width; once known, those the server
@@ -200,8 +212,8 @@ private val PEOPLE_KINDS = setOf(StatusListKind.FavouritedBy, StatusListKind.Boo
 
 @Composable
 private fun listLabel(kind: StatusListKind, count: Int?): String = when (kind) {
-    StatusListKind.FavouritedBy -> pluralStringResource(R.plurals.thread_favourites, count ?: 0, count ?: 0)
-    StatusListKind.BoostedBy -> pluralStringResource(R.plurals.thread_boosts, count ?: 0, count ?: 0)
+    StatusListKind.FavouritedBy -> counted(R.plurals.thread_favourites, R.string.thread_favourites_plain, count)
+    StatusListKind.BoostedBy -> counted(R.plurals.thread_boosts, R.string.thread_boosts_plain, count)
     StatusListKind.Quotes -> stringResource(R.string.thread_quotes)
     StatusListKind.Reactions -> stringResource(R.string.thread_reactions)
 }

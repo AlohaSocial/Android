@@ -236,10 +236,10 @@
     <string name="reading_relaxed">More space between lines</string>
     <!-- Reading switch: avatars as rounded squares instead of circles -->
     <string name="reading_rounded">Rounded square avatars</string>
-    <!-- Reading switch: the numbers beside reply, boost and favourite -->
-    <string name="reading_counts">Show counts</string>
-    <!-- Summary of the Show counts switch -->
-    <string name="reading_counts_summary">How many replied, boosted and favourited, beside each button</string>
+    <!-- Reading switch: every popularity number in the app -->
+    <string name="reading_counts">Show numbers</string>
+    <!-- Summary of the Show numbers switch -->
+    <string name="reading_counts_summary">How many replied, boosted, favourited or follow, on posts, profiles and notifications. Off, the people stay and the numbers go.</string>
     <!-- Reading switch: the number on Notifications in the navigation -->
     <string name="reading_badge">Unread count on Notifications</string>
     <!-- Settings section: haptic feedback and notification sounds -->

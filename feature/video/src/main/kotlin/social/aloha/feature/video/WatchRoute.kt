@@ -55,6 +55,7 @@ import social.aloha.core.model.VideoChapter
 import social.aloha.core.model.VideoChapters
 import social.aloha.core.navigation.WatchKey
 import social.aloha.core.ui.ListProgress
+import social.aloha.core.ui.LocalReadingStyle
 import social.aloha.core.ui.LocalSensitiveMediaPolicy
 import social.aloha.core.ui.R as UiR
 import social.aloha.core.ui.RichTextColors
@@ -255,6 +256,7 @@ private fun About(video: StatusRowUi, title: String, following: Boolean?, action
 @Composable
 private fun Counts(video: StatusRowUi) {
     val details = video.video ?: return
+    if (!LocalReadingStyle.current.showCounts) return
     val parts = listOfNotNull(
         details.views.takeIf { it > 0 }?.let { pluralStringResource(UiR.plurals.video_views, it, it) },
         details.likes.takeIf { it > 0 }?.let { pluralStringResource(R.plurals.watch_likes, it, it) },

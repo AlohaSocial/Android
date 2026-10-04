@@ -121,7 +121,9 @@ private fun ReactionLabel(reaction: Reaction) {
         } else {
             Text(reaction.name)
         }
-        Text(reaction.count.toString(), style = MaterialTheme.typography.labelLarge)
+        if (LocalReadingStyle.current.showCounts) {
+            Text(reaction.count.toString(), style = MaterialTheme.typography.labelLarge)
+        }
     }
 }
 

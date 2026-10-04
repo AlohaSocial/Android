@@ -69,6 +69,7 @@ import social.aloha.core.model.NotificationKind
 import social.aloha.core.sync.NotificationText
 import social.aloha.core.ui.CaughtUpDivider
 import social.aloha.core.ui.ListProgress
+import social.aloha.core.ui.LocalReadingStyle
 import social.aloha.core.ui.NearEndEffect
 import social.aloha.core.ui.PostAge
 import social.aloha.core.ui.R as UiR
@@ -289,15 +290,26 @@ private fun RowScope.RowContent(row: NotificationRowUi, summary: String, age: Po
         }
         if (row.groupKey != null && row.others > 0) {
             TextButton(onClick = { actions.onOthers(row.groupKey) }) {
-                Text(pluralStringResource(R.plurals.notifications_others, row.others, row.others))
+                Text(
+                    if (LocalReadingStyle.current.showCounts) {
+                        pluralStringResource(R.plurals.notifications_others, row.others, row.others)
+                    } else {
+                        stringResource(R.string.notifications_others_plain)
+                    },
+                )
             }
         }
     }
 }
 
 @Composable
-private fun summary(row: NotificationRowUi): String =
-    NotificationText.summary(LocalResources.current, row.kind, row.name, row.others)
+private fun summary(row: NotificationRowUi): String = NotificationText.summary(
+    LocalResources.current,
+    row.kind,
+    row.name,
+    row.others,
+    withCount = LocalReadingStyle.current.showCounts,
+)
 
 @Composable
 private fun Empty(filtered: Boolean) {

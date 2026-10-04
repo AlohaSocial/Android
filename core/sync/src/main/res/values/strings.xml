@@ -31,6 +31,8 @@
         <item quantity="one">%1$s and %2$d other</item>
         <item quantity="other">%1$s and %2$d others</item>
     </plurals>
+    <!-- The people in a grouped notification while the reader hides the numbers; %s is the newest one's name -->
+    <string name="notifications_and_others_plain">%s and others</string>
     <!-- %s is who did it, one name or "Alice and 3 others" -->
     <string name="notifications_mention">%s mentioned you</string>
     <!-- %s is who did it, one name or "Alice and 3 others" -->

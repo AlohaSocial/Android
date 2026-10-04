@@ -7,6 +7,7 @@ import android.Manifest
 import android.app.Application
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.junit4.accessibility.enableAccessibilityChecks
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onRoot
@@ -33,8 +34,10 @@ import social.aloha.core.model.NotificationRequest
 import social.aloha.core.model.PolicyDecision
 import social.aloha.core.model.PollFrequency
 import social.aloha.core.model.QuietHours
+import social.aloha.core.model.ReadingStyle
 import social.aloha.core.model.Status
 import social.aloha.core.sync.Distributor
+import social.aloha.core.ui.LocalReadingStyle
 
 /** The notifications screens, each also run through the Accessibility Test Framework checks. */
 @RunWith(RobolectricTestRunner::class)
@@ -189,6 +192,13 @@ class NotificationsScreenshotTest {
             onOpenProfile = {},
             onBack = {},
         )
+    }
+
+    @Test
+    fun numbersOff() = capture("notifications-numbers-off") {
+        CompositionLocalProvider(LocalReadingStyle provides ReadingStyle(showCounts = false)) {
+            NotificationsScreen(list, actions, navigationIcon = {})
+        }
     }
 
     @Test

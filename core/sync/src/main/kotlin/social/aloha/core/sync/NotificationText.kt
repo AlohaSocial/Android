@@ -11,13 +11,22 @@ import social.aloha.core.model.NotificationKind
  * raises: "Alice and 34 others favourited your post".
  */
 public object NotificationText {
-    /** [name] is the newest one to do it, null when the server did not say; [others] how many more did. */
-    public fun summary(resources: Resources, kind: NotificationKind, name: String?, others: Int): String {
+    /**
+     * [name] is the newest one to do it, null when the server did not say; [others] how many more did,
+     * named as a number unless [withCount] is off, when they are just "others".
+     */
+    public fun summary(
+        resources: Resources,
+        kind: NotificationKind,
+        name: String?,
+        others: Int,
+        withCount: Boolean = true,
+    ): String {
         val first = name ?: resources.getString(R.string.notifications_someone)
-        val who = if (others > 0) {
-            resources.getQuantityString(R.plurals.notifications_and_others, others, first, others)
-        } else {
-            first
+        val who = when {
+            others <= 0 -> first
+            withCount -> resources.getQuantityString(R.plurals.notifications_and_others, others, first, others)
+            else -> resources.getString(R.string.notifications_and_others_plain, first)
         }
         return when (kind) {
             NotificationKind.Mention -> resources.getString(R.string.notifications_mention, who)

@@ -53,12 +53,11 @@ public fun VideoCard(row: StatusRowUi, watched: Double?, onOpen: () -> Unit, mod
     val video = row.media.firstOrNull { it.type.isVideo } ?: row.media.firstOrNull()
     val length = (video?.meta?.original?.duration ?: row.video?.duration)?.let(VideoChapters::clock)
     val title = videoTitle(row)
-    val views = row.video?.views?.takeIf { it > 0 }
     val label = listOfNotNull(
         title,
         row.author.plainName,
         length?.let { stringResource(R.string.video_length, it) },
-        views?.let { pluralStringResource(R.plurals.video_views, it, it) },
+        viewsLabel(row),
         watched?.let { stringResource(R.string.video_watched, (it * PERCENT).toInt()) },
         stringResource(R.string.video_sensitive).takeIf { row.sensitive },
     ).joinToString(", ")
@@ -95,10 +94,7 @@ public fun VideoCard(row: StatusRowUi, watched: Double?, onOpen: () -> Unit, mod
             }
         }
         Text(title, style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
-        val byline = listOfNotNull(
-            row.author.plainName,
-            views?.let { pluralStringResource(R.plurals.video_views, it, it) },
-        ).joinToString(" · ")
+        val byline = listOfNotNull(row.author.plainName, viewsLabel(row)).joinToString(" · ")
         Text(
             byline,
             style = MaterialTheme.typography.bodySmall,
@@ -136,6 +132,12 @@ public fun videoTitle(row: StatusRowUi): String = row.video?.title
     ?: row.spoiler?.text?.takeIf { it.isNotBlank() }
     ?: row.plainText.lineSequence().firstOrNull { it.isNotBlank() }?.trim()
     ?: stringResource(R.string.video_untitled)
+
+/** "12 views", or null for none, or while the reader hides the numbers. */
+@Composable
+private fun viewsLabel(row: StatusRowUi): String? = row.video?.views
+    ?.takeIf { it > 0 && LocalReadingStyle.current.showCounts }
+    ?.let { pluralStringResource(R.plurals.video_views, it, it) }
 
 private val AttachmentKind.isVideo: Boolean get() = this == AttachmentKind.Video || this == AttachmentKind.Gifv
 

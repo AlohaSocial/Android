@@ -5,6 +5,7 @@ package social.aloha.feature.profile
 
 import android.app.Application
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.junit4.accessibility.enableAccessibilityChecks
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onRoot
@@ -26,8 +27,10 @@ import social.aloha.core.model.AccountField
 import social.aloha.core.model.InstanceRule
 import social.aloha.core.model.MediaCollection
 import social.aloha.core.model.ProfileHighlights
+import social.aloha.core.model.ReadingStyle
 import social.aloha.core.navigation.PeopleKind
 import social.aloha.core.testing.StatusSamples
+import social.aloha.core.ui.LocalReadingStyle
 import social.aloha.core.ui.RichLinkTarget
 import social.aloha.core.ui.RichTextColors
 import social.aloha.core.ui.StatusActions
@@ -124,6 +127,13 @@ class ProfileScreenshotTest {
 
     @Test
     fun followsYou() = capture("profile-follows-you") { ProfileScreen(profile(), NoActions, NoActions) }
+
+    @Test
+    fun numbersOff() = capture("profile-numbers-off") {
+        CompositionLocalProvider(LocalReadingStyle provides ReadingStyle(showCounts = false)) {
+            ProfileScreen(profile(), NoActions, NoActions)
+        }
+    }
 
     @Test
     fun followingDark() = capture("profile-following-dark", ThemeSettings(mode = ThemeMode.Dark)) {
