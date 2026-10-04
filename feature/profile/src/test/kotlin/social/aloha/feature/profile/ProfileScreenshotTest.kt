@@ -4,6 +4,7 @@
 package social.aloha.feature.profile
 
 import android.app.Application
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.junit4.accessibility.enableAccessibilityChecks
@@ -129,6 +130,16 @@ class ProfileScreenshotTest {
     fun followsYou() = capture("profile-follows-you") { ProfileScreen(profile(), NoActions, NoActions) }
 
     @Test
+    fun tabsPinned() = capture("profile-tabs-pinned") {
+        val shown = profile()
+        val posts = shown.items.filterIsInstance<ProfileItem.Post>()
+        val many = shown.copy(
+            items = List(PINNED_POSTS) { ProfileItem.Post(posts[it % posts.size].row.copy(rowId = "p$it")) },
+        )
+        ProfileScreen(many, NoActions, NoActions, listState = LazyListState(firstVisibleItemIndex = PINNED_POSTS / 2))
+    }
+
+    @Test
     fun numbersOff() = capture("profile-numbers-off") {
         CompositionLocalProvider(LocalReadingStyle provides ReadingStyle(showCounts = false)) {
             ProfileScreen(profile(), NoActions, NoActions)
@@ -191,5 +202,9 @@ class ProfileScreenshotTest {
         override fun onSend() = Unit
         override fun onMute() = Unit
         override fun onBlock() = Unit
+    }
+
+    private companion object {
+        const val PINNED_POSTS = 10
     }
 }
