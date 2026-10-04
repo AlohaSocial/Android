@@ -4,7 +4,9 @@
 package social.aloha.core.ui
 
 import android.provider.Settings
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FiniteAnimationSpec
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.spring
@@ -14,6 +16,7 @@ import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
@@ -22,9 +25,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import social.aloha.core.designsystem.AlohaMotion
@@ -94,6 +99,57 @@ public fun Modifier.itemMotion(item: LazyItemScope): Modifier = if (rememberRedu
         )
     }
 }
+
+/**
+ * A shake from side to side, with a tick, each time [trigger] goes up: an action that failed, or a link
+ * to what is already open. Nothing moves where motion is reduced; the tick stays.
+ */
+@Composable
+public fun Modifier.shake(trigger: Int): Modifier {
+    val offset = remember { Animatable(0f) }
+    val reduced = rememberReducedMotion()
+    val haptics = rememberHaptics()
+    LaunchedEffect(trigger) {
+        if (trigger == 0) return@LaunchedEffect
+        haptics(HapticFeedbackType.Reject)
+        if (!reduced) {
+            offset.snapTo(0f)
+            offset.animateTo(
+                0f,
+                spring(dampingRatio = SHAKE_DAMPING, stiffness = Spring.StiffnessMedium),
+                SHAKE_VELOCITY,
+            )
+        }
+    }
+    return graphicsLayer { translationX = offset.value }
+}
+
+/**
+ * A row the reader has not seen yet, washed in the primary colour at a quarter and fading out over two
+ * seconds; where motion is reduced it stays for the two seconds and then goes at once.
+ */
+@Composable
+public fun Modifier.freshHighlight(fresh: Boolean): Modifier {
+    val alpha = remember { Animatable(if (fresh) FRESH_ALPHA else 0f) }
+    val reduced = rememberReducedMotion()
+    LaunchedEffect(fresh) {
+        if (!fresh) return@LaunchedEffect
+        alpha.snapTo(FRESH_ALPHA)
+        if (reduced) {
+            delay(FRESH_MILLIS.toLong())
+            alpha.snapTo(0f)
+        } else {
+            alpha.animateTo(0f, tween(FRESH_MILLIS, easing = AlohaMotion.Standard))
+        }
+    }
+    val primary = MaterialTheme.colorScheme.primary
+    return drawBehind { if (alpha.value > 0f) drawRect(primary.copy(alpha = alpha.value)) }
+}
+
+private const val SHAKE_DAMPING = 0.25f
+private const val SHAKE_VELOCITY = 2_400f
+private const val FRESH_ALPHA = 0.25f
+private const val FRESH_MILLIS = 2_000
 
 /** How far a pressed button shrinks. */
 public const val SQUISH: Float = 0.85f

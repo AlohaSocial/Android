@@ -72,8 +72,10 @@ import social.aloha.core.ui.StatusActions
 import social.aloha.core.ui.StatusCard
 import social.aloha.core.ui.TroubleStrip
 import social.aloha.core.ui.WarningReveals
+import social.aloha.core.ui.freshHighlight
 import social.aloha.core.ui.fullDate
 import social.aloha.core.ui.readingColumn
+import social.aloha.core.ui.shake
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -84,6 +86,7 @@ internal fun ThreadScreen(
     modifier: Modifier = Modifier,
     snackbars: SnackbarHostState = remember { SnackbarHostState() },
     listState: LazyListState = rememberLazyListState(),
+    shake: Int = 0,
 ) {
     val title = stringResource(R.string.thread_title)
     val bar = TopAppBarDefaults.pinnedScrollBehavior()
@@ -107,7 +110,7 @@ internal fun ThreadScreen(
             RefreshBox(
                 refreshing = state.loading && state.items.isNotEmpty(),
                 onRefresh = actions::onRefresh,
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.fillMaxSize().shake(shake),
             ) {
                 when {
                     state.gone -> Message(stringResource(R.string.thread_gone))
@@ -129,6 +132,7 @@ private fun Posts(
     rowActions: StatusActions,
     listState: LazyListState,
 ) {
+    val fresh = rememberFreshKeys(state.items.map { it.key })
     val revealMode = LocalReadingStyle.current.revealWarnings
     val reveals = remember(revealMode) { WarningReveals(revealMode) }
     CompositionLocalProvider(LocalWarningReveals provides reveals) {
@@ -148,7 +152,9 @@ private fun Posts(
                             state.now,
                             LocalSensitiveMediaPolicy.current,
                             rowActions,
-                            modifier = Modifier.padding(start = indent(item.depth)).semantics {
+                            modifier = Modifier.freshHighlight(
+                                item.key in fresh,
+                            ).padding(start = indent(item.depth)).semantics {
                                 if (item.focused) heading()
                                 if (item.depth > 0) stateDescription = level
                             },
@@ -303,3 +309,20 @@ private fun FocusOnce(state: ThreadUiState, listState: LazyListState) {
 private fun indent(depth: Int) = INDENT * depth.coerceAtMost(ThreadShape.MAX_DEPTH)
 
 private val INDENT = 12.dp
+
+/**
+ * The keys a refresh brought that were not on screen before, so their rows can say so; nothing on the
+ * first load, when everything is new.
+ */
+@Composable
+private fun rememberFreshKeys(keys: List<String>): Set<String> {
+    var seen by remember { mutableStateOf<Set<String>?>(null) }
+    var fresh by remember { mutableStateOf(emptySet<String>()) }
+    LaunchedEffect(keys) {
+        if (keys.isEmpty()) return@LaunchedEffect
+        val before = seen
+        fresh = if (before == null) emptySet() else keys.toSet() - before
+        seen = (before ?: emptySet()) + keys
+    }
+    return fresh
+}

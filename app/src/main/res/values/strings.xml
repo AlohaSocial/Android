@@ -48,6 +48,8 @@
     <string name="reauth_sign_in_again">Sign in again</string>
     <!-- Button in the top bar that opens the accounts; %s is the handle of the account in use -->
     <string name="accounts_button">Accounts, signed in as %s</string>
+    <!-- What a long press on the account button does, said by a screen reader; %s is the next account's handle -->
+    <string name="accounts_switch_to">Switch to %s</string>
     <!-- Heading of the sheet listing the signed-in accounts -->
     <string name="accounts_title">Accounts</string>
     <!-- Read aloud for the account in use, in the list of accounts -->

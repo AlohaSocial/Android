@@ -121,6 +121,7 @@ import social.aloha.core.ui.readingColumn
 import social.aloha.core.ui.rememberReducedMotion
 import social.aloha.core.ui.rememberTopScroll
 import social.aloha.core.ui.scrollToTop
+import social.aloha.core.ui.shake
 import social.aloha.core.ui.squish
 import social.aloha.core.ui.topScrollTail
 
@@ -144,6 +145,7 @@ internal fun TimelineScreen(
     toolbar: @Composable () -> Unit = {},
     header: @Composable () -> Unit = {},
     onVideo: (String) -> Unit = {},
+    shake: Int = 0,
 ) {
     val bar = TopAppBarDefaults.pinnedScrollBehavior()
     val scrollToTop = rememberTopScroll(listState)
@@ -184,7 +186,7 @@ internal fun TimelineScreen(
             RefreshBox(
                 refreshing = state.refreshing,
                 onRefresh = actions::onRefresh,
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.fillMaxSize().shake(shake),
             ) {
                 // the app is fully drawn once the reader sees posts, or learns there are none
                 ReportDrawnWhen { state.items.isNotEmpty() || state.loadedOnce }

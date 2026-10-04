@@ -7,6 +7,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -49,8 +50,10 @@ public fun ThreadRoute(key: ThreadKey, navigation: ThreadNavigation, modifier: M
             snackbars.showSnackbar(archived)
         }
     }
+    var shakes by remember { mutableIntStateOf(0) }
     LaunchedEffect(state.actionFailed) {
         if (state.actionFailed) {
+            shakes++
             viewModel.onNoticeShown(archived = false)
             snackbars.showSnackbar(failed)
         }
@@ -65,9 +68,9 @@ public fun ThreadRoute(key: ThreadKey, navigation: ThreadNavigation, modifier: M
             albums = { state.albums },
             archive = { state.archive },
         ) {
-            // the focused post is already open; a tap on it does nothing
+            // the focused post is already open: a link to it shakes the list instead
             override fun onOpen(statusId: String) {
-                if (statusId != key.statusId) super.onOpen(statusId)
+                if (statusId != key.statusId) super.onOpen(statusId) else shakes++
             }
 
             override fun onHistory(row: StatusRowUi) {
@@ -109,7 +112,7 @@ public fun ThreadRoute(key: ThreadKey, navigation: ThreadNavigation, modifier: M
         }
     }
 
-    ThreadScreen(state, screenActions, rowActions, modifier, snackbars)
+    ThreadScreen(state, screenActions, rowActions, modifier, snackbars, shake = shakes)
 
     deleting?.let { request ->
         DeleteStatusDialog(
