@@ -8,7 +8,9 @@ This is the Apple app's specification, carried over as the product contract for 
 |---|---|
 | Pickers | Photo Picker (`PickVisualMedia`) and the Storage Access Framework; no storage permission. |
 | Processing | Media3 `Transformer` for HEIC/MOV conversion and trim; filters are `ColorMatrix` values. |
-| Uploads | A WorkManager worker in the foreground with a `ProgressStyle` notification on Android 16+ (`setProgress` below). |
+| Uploads | A WorkManager worker in the foreground with an ongoing `NotificationCompat` progress notification (`setProgress`), on every Android version. |
+| Nextcloud files (§6) | No WebDAV browser: the picker is a path field with the recent paths, sent to `POST /api/v1/media/from-file` with the account's token. |
+| AI alt text (§5) | Not built; see [10-intelligence.md](10-intelligence.md). |
 | Server facts | `Idempotency-Key` is honoured for an hour; `scheduled_at` needs five minutes' lead; the place picker stays hidden until the server stores places. |
 | Stories | A "Share as a story" toggle where the server has stories and the post is new and alone (no thread, poll, schedule, reply or edit), with at most 500 characters, holding one picture or video, or nothing but its words drawn as a card (the card's own renderer, square). The medium goes through the composer's own preparation and upload; the text is the caption, which is also how a screen reader reads a card. A picture or a card shows for 5, 10 or 15 s, picked under the post; a clip plays to its end (30 s is sent, which the server clamps). A story never waits in the outbox. Stickers are not built. |
 
@@ -170,7 +172,7 @@ media sweep to collect.
 - Editing an alt text after upload uses `PUT /api/v1/media/{id}`.
 - Alt text travels as the ActivityPub `name`, both directions — so what is
   written here is what a remote reader gets.
-- The AI alt-text generator ([10-ai-features.md](https://github.com/AlohaSocial/Apple/blob/main/docs/10-ai-features.md) §4) fills
+- The AI alt-text generator ([10-intelligence.md](10-intelligence.md)) fills
   the field as an editable draft, clearly marked as generated, never posted
   unreviewed.
 
@@ -230,7 +232,7 @@ mobile connection this is the difference between possible and not.
   browser over `/remote.php/dav/files/{loginName}/`: folders, thumbnails from
   Nextcloud's own preview endpoint, and only the file types this server's
   `supported_mime_types` accepts. See
-  [14-open-questions.md](https://github.com/AlohaSocial/Apple/blob/main/docs/14-open-questions.md) §7.
+  [03-auth-and-accounts.md](03-auth-and-accounts.md), The Nextcloud underneath.
 - Without that connection it degrades to a path field with recent paths, which
   still works because the server resolves the path itself.
 - A traversal, a folder, or a missing file is a 422 — surfaced as "That file

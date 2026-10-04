@@ -69,7 +69,7 @@ style:
     active: true
     methods:
       - value: 'kotlin.io.println'
-        reason: 'Use Timber'
+        reason: 'The app has no logging; report a failure through the UI state or a test'
       - value: 'kotlinx.coroutines.runBlocking'
         reason: 'Blocking bridges are not allowed outside tests'
       - value: 'java.lang.System.currentTimeMillis'
@@ -82,7 +82,7 @@ style:
       - value: 'android.webkit.*'
         reason: 'No WebView; sign-in uses Custom Tabs'
       - value: 'android.util.Log'
-        reason: 'Use Timber'
+        reason: 'The app has no logging; report a failure through the UI state or a test'
       - value: 'kotlinx.coroutines.GlobalScope'
         reason: 'Scope work to a lifecycle or an injected scope'
       - value: 'androidx.security.crypto.*'

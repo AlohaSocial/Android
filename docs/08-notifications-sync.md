@@ -9,7 +9,12 @@ This is the Apple app's specification, carried over as the product contract for 
 | Background | WorkManager, 15-minute floor; the foreground poll table is unchanged. |
 | Push | UnifiedPush against Nextcloud WebPush (verified end to end; the administrator must set `webpush_enabled`) and Mastodon Web Push, one registration per account with the distributor the person picks in Settings; the Nextcloud push proxy over FCM follows in a later release. A push is not read: it asks the account's server now, through the same poll, so what is raised is decided, worded and deduplicated in one place and an older server's `aesgcm` payload works as well as RFC 8291. A pushed account is still polled, at most every 10 minutes. |
 | Payload | A Nextcloud push carries `{nid, app, subject, type, id}`; `id` is Social's object hash, so the client refreshes notifications from its marker. |
-| Local notifications | One notification channel per account and kind (mentions, follows, favourites, boosts, polls, new posts, edits, moderation) in a channel group per account; the system's channel settings are the per-kind, per-account switches. Mentions are `MessagingStyle` with a long-lived conversation shortcut per author. The permission is asked on the notifications tab, and once asked, the button opens the system settings. |
+| Push and §1, §5, §6 | The text below predates push on this server. Nextcloud Social still serves neither streaming nor a Web Push route of its own, but the connected Nextcloud's notifications app does Web Push (`ocs/v2.php/apps/notifications/api/v2/webpush`), so push works on Nextcloud Social through UnifiedPush, and §6's Web Push path is live, not dormant. Polling remains the baseline and the fallback. |
+| Streaming (§6) | Not built. Capability detection records the server's streaming address (`SyncTier.Streaming`), but nothing opens a socket; polling and push cover the foreground. |
+| Push proxy (§2) | The Nextcloud push proxy over FCM is not built; see [14-status.md](14-status.md). |
+| Widgets (§4) | `WidgetUpdates.redraw()` (Glance) instead of `WidgetCenter.reloadAllTimelines()`, called when the unread count or the mentions change, when the app leaves the foreground, and on sign-out; the widgets have no schedule of their own. |
+| Maintenance (§4) | No maintenance task: the cache sweep and the upload-copy sweep run once at each launch. See [04-data-model.md](04-data-model.md). |
+| Local notifications | One notification channel per account and kind (mentions, follows, favourites, boosts, polls, new posts, edits, moderation) in a channel group per account; the system's channel settings are the per-kind, per-account switches. Mentions are `MessagingStyle` with a long-lived conversation shortcut per author. The permission is asked on the notifications tab, and once asked, the button opens the system settings. A digest channel, which holds notifications for chosen times, is in progress and not merged. |
 
 ---
 
@@ -42,7 +47,7 @@ upgrades automatically.
 Tier selection is per account, from `ServerCapabilities`, re-evaluated when
 capabilities refresh. **Social announcing no Web Push does not settle it**: the
 Nextcloud underneath has the notifications app and a push proxy, and connecting
-it is a real push path — see [14-open-questions.md](https://github.com/AlohaSocial/Apple/blob/main/docs/14-open-questions.md) §7. Tiers compose: streaming handles the foreground, polling
+it is a real push path — see [14-status.md](14-status.md). Tiers compose: streaming handles the foreground, polling
 still runs in the background where there is no Web Push.
 
 ## 3. Polling

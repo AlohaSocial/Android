@@ -13,10 +13,10 @@ This is the Apple app's specification, carried over as the product contract for 
 | Accessibility | TalkBack semantics, 48 dp targets, 200 % font with non-linear scaling. |
 | Account sheet | Where the iPad sidebar lists them, the sheet behind the account avatar leads to Direct messages, Bookmarks, Favourites, Lists, Hashtags, Filters, Announcements and Settings, and on Nextcloud Social to Archived posts and Interests too. Search is on Home's toolbar; while announcements are unread, Home says how many above its timeline. |
 | App icon | One adaptive icon, the mark from AlohaSocial/Logos on its sand, with a one-colour layer for themed icons; no icon variants. The splash screen shows the same mark on sand, or on the deep sea at night. |
-| Keyboard | With a hardware keyboard the timeline takes focus and the same keys work: `J`/`K` select a post, which is highlighted and scrolled to, `L` or `F` favourites it, `B` boosts, `R` replies, `O` or Enter opens; `N` starts a new post. `?` and Meta+`/` open the system's keyboard shortcuts list, which the app fills, instead of a list of its own. A key held with Ctrl, Alt or Meta is left to the system. |
-| Windows | Where the Mac opens new windows, a post's and a profile's menu offer "Open in new window" once the window is medium width or wider, or beside another app; it opens in split screen next to the current one or as a desktop window. Pictures and videos dragged in from another app attach to the post being written. Half open like a laptop, a foldable keeps the video on the upper half of the watch page. |
-| Shortcuts and sharing | Long-pressing the icon offers New post, Search and Notifications for the account in use, and with more than one account "Post as" each; in the share sheet each account is a Direct Share target. "Open in Aloha" in the share sheet opens a shared post's page here, looked up through the reader's server; Nextcloud Social's own links, under `/index.php/apps/social/`, open in the app like any other. |
+| Keyboard, windows, shortcuts | The keyboard keys, "Open in new window", drag and drop, the foldable watch page, launcher shortcuts, Direct Share and "Open in Aloha" are in [09-platform-integrations.md](09-platform-integrations.md). |
 | Translation | A post's menu offers Translate when the post names a language the reader does not read (the app's language, else the system's languages) and the server translates, from that language into the reader's first when it lists the pairs it can do. The server's translation takes the post's place in every screen until "Show original"; the line under it names the service when the server does. A server without a translation service answers 503 with a sentence of its own, shown as it is, unless the device can translate instead: from Android 12, where the system has an on-device translation service (on Pixels, Android System Intelligence), the post's text is translated on the device and sent nowhere, "Translated on this device". A language not yet downloaded is offered through the system's translation settings ("Get language"). No translation library ships in the app, in either flavor. |
+| Intelligence (§9) | No such section: Translate is in a post's menu, and nothing else is built. See [10-intelligence.md](10-intelligence.md). |
+| Your year (§9) | A section of its own in Settings, not under an account. |
 | Deleting the account | Settings → Delete account. On Nextcloud Social, once the Nextcloud is connected, after the handle is typed out (the server's own confirmation, never a password); elsewhere the server's website does it. |
 
 ---
@@ -78,7 +78,7 @@ No custom blur stacks, no reimplemented navigation bars.
 - The accent is a warm coral-to-amber; boost is green, favourite is amber,
   bookmark is violet — kept distinct at the smallest size a badge is drawn and
   distinguishable under the common colour-vision deficiencies, verified by the
-  contrast test in [12-conventions-quality.md](https://github.com/AlohaSocial/Apple/blob/main/docs/12-conventions-quality.md) §5.
+  contrast test (`SemanticContrastTest`, see [12-conventions-quality.md](12-conventions-quality.md)).
 - **Themes**: a small set of built-in themes (System, Warm Light, Warm Dark,
   High Contrast Light, High Contrast Dark, Dim, Black) plus a custom theme with
   a user-chosen accent. Themes change colour roles only, never layout or type
@@ -189,7 +189,7 @@ Rules:
 - New content arriving above the current scroll position **never moves it**.
   Instead a floating "N new posts" pill appears; tapping it scrolls to top and
   inserts. This is a hard requirement.
-- "Load more" gap rows as described in [04-data-model.md](https://github.com/AlohaSocial/Apple/blob/main/docs/04-data-model.md) §3.
+- "Load more" gap rows as described in [04-data-model.md](04-data-model.md).
 - Infinite scroll pages on `next` from the `Link` header, triggered 10 rows from
   the end, one request in flight at a time.
 - **Remember position across launches** per timeline, restored only if the
@@ -355,7 +355,7 @@ Grouped, searchable (on platforms with settings search).
 - **Notifications** — per-type local notification toggles, polling frequency,
   quiet hours, the server-side policy screen, the requests inbox.
 - **Intelligence** — the on-device AI toggles. See
-  [10-ai-features.md](https://github.com/AlohaSocial/Apple/blob/main/docs/10-ai-features.md).
+  [10-intelligence.md](10-intelligence.md).
 - **Filters** — v2 filter management: a filter is a title, the contexts it
   applies in, warn or hide, an optional expiry and the words that match. **v2
   only**: a filter of three words is three ids in v1 and one in v2, and an

@@ -2,7 +2,8 @@
 
 ## Requirements
 
-- JDK 21 and an Android SDK with platform 37 and build-tools 36 or newer.
+- JDK 21 and an Android SDK with platform 37 and build-tools 37.0.0, which is what
+  CI installs. `compileSdk` is 37, `targetSdk` 36 and `minSdk` 26.
 - Nothing else: there are no API keys and no app-wide secrets. OAuth clients are
   registered at runtime per server through `POST /api/v1/apps`.
 
@@ -13,7 +14,8 @@ repositories to `StateFlow` UI state. `:core:*` modules hold everything two
 features share; `:feature:*` modules see only `:core:*`; `:app` wires them
 together. The allowed module edges are enforced by `./gradlew alohaArchitectureCheck`
 (`build-logic/convention/src/main/kotlin/social/aloha/buildlogic/ModuleRules.kt`).
-`:core:model` and `:core:html` are pure Kotlin modules with no Android SDK.
+`:core:model` and `:core:html` are pure Kotlin modules with no Android SDK. The
+whole picture is in [docs/01-architecture.md](docs/01-architecture.md).
 
 ## Quality gates
 
@@ -21,9 +23,26 @@ A pull request merges only when every CI job is green:
 
 - `detekt` and `ktlintCheck` (android_studio style, 120 columns) with zero findings;
 - Android Lint with warnings as errors;
-- `alohaArchitectureCheck`;
-- unit tests and the Roborazzi screenshot comparison;
+- `alohaArchitectureCheck`, which runs `alohaStringsCheck` too: every string has
+  a translator comment on the line above it and is defined in one module only;
+- `alohaUnitTests` and `alohaScreenshotTests`: every module's unit tests and
+  Roborazzi comparison, with the Accessibility Test Framework checking each
+  screenshot test's screen;
+- every variant assembles, and the release APKs stay within 2 % of
+  `config/size-baseline.json` (`scripts/check-apk-size.sh`); a pull request that
+  grows the app on purpose moves the baseline to CI's measurement;
 - REUSE compliance and the Gradle dependency verification.
+
+Run them locally with
+
+```sh
+./gradlew detekt ktlintCheck lint alohaArchitectureCheck alohaUnitTests alohaScreenshotTests
+```
+
+Debug builds carry the pseudolocales `en-XA` (accented, longer) and `ar-XB`
+(mirrored); switch the device to them to see a screen stretched and mirrored.
+A weekly OSV scan (`osv.yml`) reports known vulnerabilities in the dependencies
+and gates nothing.
 
 The weekly `ui` workflow runs on emulators and gates nothing, but a change to
 sign-in, sharing, shortcuts, links or the watch page should pass
@@ -38,8 +57,11 @@ issue link, and CI fails any pull request that grows a baseline.
 ## Code conventions
 
 - Kotlin only. No `!!`, no `runBlocking` outside tests, no `GlobalScope`, no
-  `android.util.Log` (Timber), no hard-coded dispatchers, no `System.currentTimeMillis`
-  (inject a `Clock`). detekt enforces these.
+  hard-coded dispatchers, no `System.currentTimeMillis` (inject a `Clock`).
+  detekt enforces these.
+- No logging. There is no logging framework, and detekt forbids
+  `android.util.Log` and `println`: a failure reaches the person through the UI
+  state, and a developer through a test.
 - `:core:*` modules use explicit API mode; public declarations carry KDoc that
   states behaviour and constraints.
 - Comments say what the code does or which server behaviour it works around,

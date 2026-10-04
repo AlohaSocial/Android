@@ -19,34 +19,12 @@ This is the Apple app's specification, carried over as the product contract for 
 | Rate limiting | A read answered 429 with a `Retry-After` of five seconds or less (or none) is retried once, after the per-host limiter has waited it out; a write never is. |
 | TLS | System CAs, plus certificates a person trusted for one host, kept in app-private storage and never system-wide. A client certificate is picked from the system KeyChain per host and presented to that host only. |
 | Video routes | `/media/playlist/{nid}` takes the **document** row id, which is the attachment's `id`, not the status's. A federated video's `video.captions` are addresses at its origin, not proxied. |
-| Link cards | `card.image` is the linked page's `og:image` at its own address (`LinkPreviewService`), not a copy on the server. |
+| Link cards | `card.image` is the linked page's `og:image` at its own address; the server's `LinkPreviewService` keeps no copy. |
 | Stories | Every route the client calls exists with the fields above; the v1.2 routes take `sid`, `self-expire` a numeric id. A story's `media` is the same attachment as a post's, served by the reader's server. A reply (`comment`) is kept beside the story for its poster, not delivered as a direct message. |
 
-### Finding the API base
+### Finding the API base and signing in
 
-Mastodon apps build `https://host/api/v1/…`. Nextcloud Social serves its routes under the app path, and at the domain root only where the administrator installed the rewrite rules. A native client can target the app path directly, so the probe tries every shape at once:
-
-| Rank | Candidate | Accepted when |
-|---|---|---|
-| 0 | the `issuer` of `/.well-known/oauth-authorization-server` at the domain root | the issuer is on the host the person typed |
-| 1 | the domain root | |
-| 2 | `/index.php/apps/social/` | |
-| 3 | `/apps/social/` (pretty URLs) | |
-| 4, 5 | a path the person typed, and the app path beneath it | a path was typed |
-
-A candidate qualifies when `api/v2/instance`, or `api/v1/instance`, answers with a non-empty `domain`, so a Nextcloud login page answering 200 does not. The lowest rank that qualifies wins, however fast a worse one answered. Each request has five seconds and the whole probe ten. NodeInfo is read from the domain root's `/.well-known/nodeinfo` directory, with 2.1 then 2.0 as fallbacks, as the cross-check of the software.
-
-A hand-typed API address is probed on its own, keeping only scheme, host, port and path: credentials, a query or a fragment typed into it would otherwise be shown back and sent with every request. When no candidate gets any HTTP answer (the name does not resolve, the connection fails or times out), the server is reported unreachable, not as missing its API, so a typo never reads as a missing web-server rule. An untrusted certificate stops the probe with the chain, for the person to decide. A base that stopped answering is probed for anew at most once an hour per host.
-
-### Signing in
-
-- The app registers once per server with both redirect URIs, newline-separated, and the scopes `read write follow push`. A registration the token endpoint refuses with 401 is forgotten, so the next attempt registers again.
-- The redirect is the verified App Link `https://aloha.social/oauth/callback`; the custom scheme `alohasocial://oauth-callback` is used only where link verification failed on the device. Nextcloud Social adds a `/` to the scheme redirect, so it arrives as `alohasocial://oauth-callback/?code=…`.
-- PKCE is S256 only. Verified on 0.26.97: `code_challenge_method=plain` answers 400 `unsupported code_challenge_method`, a wrong verifier answers 401 `invalid code_verifier`, and a code is single-use.
-- The authorisation, token and userinfo endpoints come from the server's metadata only when they are on the API base's origin, and are fixed when the attempt begins; the exchange never fetches metadata again. OAuth requests never follow a redirect, which would carry the code, the secret or the verifier to wherever it points.
-- The attempt in flight (state, verifier, endpoints, NodeInfo) is kept in the encrypted vault, not in saved state, so it survives the process dying while the browser tab is open and never reaches a Bundle.
-- A callback is matched by its `state` before anything else in it is read: one for another attempt, a denial included, is dropped, and the sign-in on screen keeps waiting.
-- A new account that `verify_credentials` answers 500 for is created from `/oauth/userinfo` with its profile pending.
+The probe for the API base and the OAuth sign-in are in [03-auth-and-accounts.md](03-auth-and-accounts.md).
 
 ### Capabilities on Android
 
@@ -55,7 +33,7 @@ A hand-typed API address is probed on its own, keeping only scheme, host, port a
 ---
 
 Everything in this document was verified against Nextcloud Social `master`
-(app version 0.19.95 / 0.24.1 line, September 2026) — its `docs/API.md`,
+(app version 0.26.97, September 2026; 0.26.108 where a section says so) — its `docs/API.md`,
 `docs/Mastodon-Compatibility.md` and its controller route attributes — and
 against the Mastodon 4.3 client API.
 
@@ -436,7 +414,7 @@ name the story in a **`sid` parameter**, never in the path
 
 **Account deletion** *(Nextcloud session, not a bearer token)* —
 `POST /api/v1/account/delete`, sent with the Nextcloud **app password** as HTTP
-Basic. See [03-auth-and-accounts.md](https://github.com/AlohaSocial/Apple/blob/main/docs/03-auth-and-accounts.md) §5.
+Basic. See [03-auth-and-accounts.md](03-auth-and-accounts.md), Signing out and deleting.
 
 **Direct messages** — `GET /api/v1.1/direct/compose/mutuals`, the people a
 message can be started with. The rest of Pixelfed's `direct/thread` family —

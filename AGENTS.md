@@ -7,8 +7,10 @@ Guidance for coding agents working in this repository. Humans: see
 
 - Read the issue the change belongs to and its acceptance criteria, and the
   checklist of the pull request template.
-- Run `./gradlew detekt ktlintCheck lint alohaArchitectureCheck testGenericDebugUnitTest verifyRoborazziGenericDebug`
+- Run `./gradlew detekt ktlintCheck lint alohaArchitectureCheck alohaUnitTests alohaScreenshotTests`
   before and after; a change is finished when it is green.
+- [docs/12-conventions-quality.md](docs/12-conventions-quality.md) describes the
+  test layers and every CI job.
 
 ## Rules
 
