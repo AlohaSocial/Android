@@ -16,6 +16,7 @@ import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
 import org.junit.jupiter.api.TestInstance
+import social.aloha.core.data.diagnostics.LogBuffer
 import social.aloha.core.model.TimelineFilters
 import social.aloha.core.model.TimelineSource
 import social.aloha.core.network.ApiClient
@@ -57,6 +58,7 @@ import social.aloha.core.network.endpoints.StoryEndpoints
 import social.aloha.core.network.endpoints.TagEndpoints
 import social.aloha.core.network.endpoints.TimelineEndpoints
 import social.aloha.core.network.endpoints.VideoEndpoints
+import timber.log.Timber
 
 /**
  * Every body the dev instance answered, decoded through the endpoint factory that asks for it: the
@@ -68,6 +70,8 @@ class CorpusDecodingTest {
     private lateinit var server: MockSocialServer
     private lateinit var client: ApiClient
     private val dropped = mutableListOf<Pair<String, DecodingFailure>>()
+    private val logged = mutableListOf<String>()
+    private val buffer = LogBuffer(Clock.systemUTC())
     private val upload = File.createTempFile("upload", ".jpg").apply { writeBytes(byteArrayOf(1, 2, 3)) }
 
     private val status = "1790637085797595891"
@@ -209,6 +213,14 @@ class CorpusDecodingTest {
 
     @BeforeAll
     fun start() {
+        Timber.plant(
+            buffer,
+            object : Timber.Tree() {
+                override fun log(priority: Int, tag: String?, message: String, t: Throwable?) {
+                    synchronized(logged) { logged += message }
+                }
+            },
+        )
         server = MockSocialServer(MockServerConfiguration.NextcloudWithoutRewrite).start()
         client = ApiClient(
             server.apiBase,
@@ -224,6 +236,7 @@ class CorpusDecodingTest {
 
     @AfterAll
     fun stop() {
+        Timber.uprootAll()
         server.close()
         upload.delete()
     }
@@ -237,6 +250,7 @@ class CorpusDecodingTest {
                 val result = runBlocking { client.execute(request) }
                 assertTrue(result is ApiResult.Success, "$name: $result")
                 assertEquals(emptyList<Pair<String, DecodingFailure>>(), dropped, name)
+                assertNothingSecretLogged(name)
             }
         }
 
@@ -259,5 +273,17 @@ class CorpusDecodingTest {
                 client.execute(InstanceEndpoints.privacyPolicy())
             }.let { (it as ApiResult.Failure).error },
         )
+    }
+
+    /** No credential the mock hands out reaches a log line, at any level, before or after redaction. */
+    private fun assertNothingSecretLogged(name: String) {
+        val lines = synchronized(logged) { logged.toList() } + buffer.lines()
+        assertTrue(lines.isNotEmpty(), name)
+        listOf(
+            MockCredentials.ACCESS_TOKEN,
+            MockCredentials.CLIENT_SECRET,
+            MockCredentials.AUTHORIZATION_CODE,
+            MockCredentials.APP_PASSWORD,
+        ).forEach { secret -> assertTrue(lines.none { secret in it }, "$name: $secret logged") }
     }
 }
