@@ -3,7 +3,7 @@
 A fediverse client for Android phones, tablets and foldables. It speaks the
 Mastodon client API, so it works with Mastodon, GoToSocial, Akkoma and anything
 else that serves that protocol, and its primary target is
-[Nextcloud Social](https://github.com/nextcloud/social), whose photo, video,
+[Nextcloud Social](https://github.com/AlohaSocial/social), whose photo, video,
 short-video, news and story extensions it uses where the server offers them.
 
 The Android sibling of [Aloha Social for Apple platforms](https://github.com/AlohaSocial/Apple),
