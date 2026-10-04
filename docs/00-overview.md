@@ -10,6 +10,19 @@ This is the Apple app's specification, carried over as the product contract for 
 | Design | Material 3 (1.4 stable) instead of the iOS materials; the navigation suite is a bar, rail or drawer by window size. |
 | Dependencies | Jetpack and a short list of libraries instead of "Apple frameworks only"; no analytics or crash SDK in either flavor. |
 | Distribution | Two flavors: `generic` for F-Droid, `gplay` for Google Play. |
+| Toolchain (§3) | Kotlin 2.4 with Compose, Android Gradle Plugin 9.4, JDK 21; `compileSdk` 37, `targetSdk` 36, `minSdk` 26 (Android 8.0). See [01-architecture.md](01-architecture.md). |
+| Runtime dependencies (§8.6) | Not zero: Jetpack (Compose, Room, DataStore, WorkManager, Media3, Glance, Navigation 3) and Hilt, plus OkHttp, kotlinx.serialization, Coil, the UnifiedPush connector, MaterialKolor and AboutLibraries. None reports anything to anyone. |
+| On-device AI (§5) | Translation only: the server's, else the system's on-device translation. Rewrite, alt-text drafts and summaries are not built; see [10-intelligence.md](10-intelligence.md). |
+| App Intents, Shortcuts, share extension (§5) | Launcher shortcuts, Direct Share, the share target and "Open in Aloha"; see [09-platform-integrations.md](09-platform-integrations.md). |
+| Handoff, Spotlight (§5) | No Android counterpart is built. |
+| Live Activities for uploads (§5) | An ongoing progress notification while an upload runs. |
+| Widgets, deep links (§5) | Four Glance widgets; `web+ap` and `alohasocial://open` links. See [09-platform-integrations.md](09-platform-integrations.md). |
+| Dynamic Type, VoiceOver, Reduce Motion (§5, §8.4) | Font scale up to 200 % with non-linear scaling and TalkBack. Of Reduce Motion, only animated emoji follow the system: they stand still when animations are off. |
+| String Catalogs (§5) | `strings.xml` with a translator comment on every string; English only so far. |
+| Startup budget (§8.3) | The first timeline row from cache (TTFD) within 1.2 s, and the first frame (TTID) within 800 ms, at the median on a Pixel 6a class phone, instead of 400 ms on an iPhone 15; see [benchmarking.md](benchmarking.md). |
+| Shorts frame rate (§8.5) | Frame overrun P90 ≤ 0 ms and P99 ≤ 8 ms, measured on the Home timeline scroll; Shorts has no benchmark of its own. |
+| Cloud sync (§6) | None. Android's own backup carries the accounts list and the settings, never a token; see [04-data-model.md](04-data-model.md). |
+| Status | What is built and what is not: [14-status.md](14-status.md). |
 
 ---
 
@@ -120,7 +133,7 @@ Full treatment in [06-media-modes.md](06-media-modes.md).
   Video is posted through the Mastodon media + status routes instead.
 - **No custom server-side feed algorithm.** Ordering is the server's.
 - **No cross-account merged timeline** in 1.0. Deferred, noted in
-  [14-open-questions.md](https://github.com/AlohaSocial/Apple/blob/main/docs/14-open-questions.md).
+  [14-status.md](14-status.md).
 - **No cloud sync of app state.** Settings and drafts are device-local in 1.0;
   iCloud sync is a post-1.0 consideration.
 
@@ -132,7 +145,7 @@ Used consistently across every document and expected in the code.
 |---|---|
 | **Instance** | A server, identified by host. |
 | **Account** | One authenticated identity on one instance. The app holds many. |
-| **API base** | The URL prefix Mastodon routes hang off. Not always the root — see [03-auth-and-accounts.md](https://github.com/AlohaSocial/Apple/blob/main/docs/03-auth-and-accounts.md) §2. |
+| **API base** | The URL prefix Mastodon routes hang off. Not always the root — see [03-auth-and-accounts.md](03-auth-and-accounts.md). |
 | **Capability** | A runtime-detected server feature. See [02-server-api.md](02-server-api.md) §4. |
 | **Status** | A post. Mastodon's word; used in code and never in UI. |
 | **Post** | What a status is called in user-facing text. |

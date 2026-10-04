@@ -7,7 +7,7 @@ This is the Apple app's specification, carried over as the product contract for 
 | Topic | Android |
 |---|---|
 | Store | Google Play's UGC policy and Data safety form (filled per flavor) instead of App Review; F-Droid for `generic`. The answers and the listing are in [12-store.md](12-store.md). |
-| Locking | An opt-in biometric or device-credential app lock; authentication-bound encryption of direct messages is an optional later addition. |
+| Locking | An opt-in app lock with the fingerprint, face or screen lock (the platform `BiometricPrompt` from Android 10, the device-credential screen before; a device with no screen lock opens unlocked). *Lock again after* asks again on leaving the app, or after 1, 5 or 15 minutes or an hour away. While the lock is on, the app is hidden in Recents and from screen capture (`FLAG_SECURE`), the Mentions and Latest posts widgets show nothing, and notifications carry no actions. Authentication-bound encryption of direct messages is an optional later addition. See [09-platform-integrations.md](09-platform-integrations.md). |
 | Backups | `dataExtractionRules` and `fullBackupContent` keep the token vault, the cache, and the posts not yet out (`outbox.db`, drafts and direct messages among them, with the copies in `files/uploads` they attach) off backups and device transfers. |
 | Public timelines | The "accounts I don't follow" switch is per account, on the device, and narrows the local and federated timelines only. Whether the reader follows an author is asked of the server for the authors on screen, a batch at a time; until it answers, their posts are held back. |
 | Media sessions | The video and audio playback services are exported, as a media session must be; their sessions refuse `COMMAND_SET_MEDIA_ITEM` and `COMMAND_CHANGE_MEDIA_ITEMS`, so no other app can make the player fetch an address. |
@@ -30,7 +30,7 @@ optional.
   keywords, contexts (home, notifications, public, thread, account), action
   (`warn` / `hide`), expiry.
 - Client-side application of the same filters, so a filter takes effect
-  immediately over cached content. See [04-data-model.md](https://github.com/AlohaSocial/Apple/blob/main/docs/04-data-model.md) §6.
+  immediately over cached content. See [04-data-model.md](04-data-model.md).
 - Sensitive media honours the account's `reading:expand:media` policy, including
   `hide_all` which does not draw the media at all.
 - Content warnings collapse body and media together.

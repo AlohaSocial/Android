@@ -55,6 +55,9 @@ Each requirement, and where the app meets it:
 | `FOREGROUND_SERVICE_MEDIA_PLAYBACK` | Audio and video that keep playing in the background |
 | `USE_BIOMETRIC` | The app lock |
 | `WRITE_EXTERNAL_STORAGE` (Android 9 and older only) | Saving a picture to the shared Pictures folder |
+| `READ_EXTERNAL_STORAGE` (Android 12L and older only) | Nothing reads shared storage. The build adds it beside the permission above, so the app declares it to cap it |
+| `WAKE_LOCK` | Keeping playback (Media3) and background work (WorkManager) running with the screen off; both libraries declare it |
+| `RECEIVE_BOOT_COMPLETED` | WorkManager scheduling its work again after a restart: background refresh and the outbox |
 
 ## F-Droid
 
