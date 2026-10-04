@@ -16,6 +16,8 @@
     <string name="search_recent">Recent</string>
     <!-- Forgets the recent searches -->
     <string name="search_recent_clear">Clear</string>
+    <!-- Filter chip above the search results: every part of the answer -->
+    <string name="search_all">All</string>
     <!-- Heading over the accounts found -->
     <string name="search_accounts">Accounts</string>
     <!-- Heading over the hashtags found -->
