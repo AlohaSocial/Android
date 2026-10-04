@@ -17,6 +17,7 @@ package social.aloha.core.model
  * @param haptics a light tick under the finger as a post is boosted, favourited or bookmarked.
  * @param fullPicturesOnMobileData the viewer loads a picture at full size on mobile data too; off, its
  *   preview there, as lists show it.
+ * @param postLines a hairline between posts in every list of them.
  */
 public data class ReadingStyle(
     val compact: Boolean = false,
@@ -27,4 +28,5 @@ public data class ReadingStyle(
     val unreadBadge: Boolean = true,
     val haptics: Boolean = true,
     val fullPicturesOnMobileData: Boolean = true,
+    val postLines: Boolean = true,
 )

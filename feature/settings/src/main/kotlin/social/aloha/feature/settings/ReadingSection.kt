@@ -64,6 +64,9 @@ internal fun ReadingContent(style: ReadingStyle, onChange: ((ReadingStyle) -> Re
         SwitchRow(stringResource(R.string.reading_relaxed), style.relaxed, { on ->
             onChange { it.copy(relaxed = on) }
         })
+        SwitchRow(stringResource(R.string.reading_lines), style.postLines, { on ->
+            onChange { it.copy(postLines = on) }
+        })
         SwitchRow(stringResource(R.string.reading_rounded), style.roundedAvatars, { on ->
             onChange { it.copy(roundedAvatars = on) }
         })

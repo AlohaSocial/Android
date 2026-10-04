@@ -158,7 +158,7 @@ class ThreadViewModelTest {
         server.close()
     }
 
-    private suspend fun open(statusId: String): ThreadViewModel {
+    private suspend fun open(statusId: String, history: Boolean = false): ThreadViewModel {
         Dispatchers.setMain(Dispatchers.Unconfined)
         val apiBase = server.url("/")
         val capabilities = ServerCapabilities.minimal(apiBase.toString()).copy(softwareName = "nextcloud-social")
@@ -167,7 +167,7 @@ class ThreadViewModelTest {
             AccessToken(MockCredentials.ACCESS_TOKEN, ""),
         )
         return ThreadViewModel(
-            ThreadKey(account.id, statusId),
+            ThreadKey(account.id, statusId, history),
             accounts,
             ThreadRepository(statuses, clients),
             StatusInteractions(statuses, clients),
@@ -233,6 +233,12 @@ class ThreadViewModelTest {
         assertEquals(listOf("Edited"), history.drop(1).map { it.body.text.trim() })
         viewModel.onHistory(open = false)
         assertEquals(null, viewModel.await { it.history == null }.history)
+    }
+
+    @Test
+    fun `a thread opened from an edited mark opens with the post's edits`() = runBlocking {
+        val history = open("f", history = true).await { it.history != null }.history!!
+        assertEquals(listOf("Edited"), history.drop(1).map { it.body.text.trim() })
     }
 
     @Test

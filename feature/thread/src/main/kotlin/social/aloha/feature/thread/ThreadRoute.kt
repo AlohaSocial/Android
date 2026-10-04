@@ -70,6 +70,10 @@ public fun ThreadRoute(key: ThreadKey, navigation: ThreadNavigation, modifier: M
                 if (statusId != key.statusId) super.onOpen(statusId)
             }
 
+            override fun onHistory(row: StatusRowUi) {
+                if (row.statusId == key.statusId) viewModel.onHistory(open = true) else super.onHistory(row)
+            }
+
             override fun onBoost(row: StatusRowUi) = viewModel.onToggle(row.statusId, Toggle.Boost)
 
             override fun onFavourite(row: StatusRowUi) = viewModel.onToggle(row.statusId, Toggle.Favourite)

@@ -82,6 +82,7 @@ import social.aloha.core.ui.Avatar
 import social.aloha.core.ui.ListProgress
 import social.aloha.core.ui.LocalSensitiveMediaPolicy
 import social.aloha.core.ui.NearEndEffect
+import social.aloha.core.ui.PostDivider
 import social.aloha.core.ui.ProvideLinkRouting
 import social.aloha.core.ui.StatusActions
 import social.aloha.core.ui.StatusCard
@@ -208,7 +209,7 @@ private fun LazyListScope.tabContent(state: ProfileUiState, actions: ProfileScre
                         }
                     }
                 }
-                HorizontalDivider()
+                PostDivider()
             }
             if (state.loadingOlder) {
                 item(key = "older") { ListProgress() }

@@ -38,6 +38,7 @@ public class ReadingPreferences(private val store: DataStore<Preferences>) {
             unreadBadge = it[UNREAD_BADGE] ?: true,
             haptics = it[HAPTICS] ?: true,
             fullPicturesOnMobileData = it[FULL_PICTURES] ?: true,
+            postLines = it[POST_LINES] ?: true,
         )
     }
 
@@ -51,6 +52,7 @@ public class ReadingPreferences(private val store: DataStore<Preferences>) {
             it[UNREAD_BADGE] = style.unreadBadge
             it[HAPTICS] = style.haptics
             it[FULL_PICTURES] = style.fullPicturesOnMobileData
+            it[POST_LINES] = style.postLines
         }
     }
 
@@ -65,5 +67,6 @@ public class ReadingPreferences(private val store: DataStore<Preferences>) {
         val UNREAD_BADGE = booleanPreferencesKey("reading_unread_badge")
         val HAPTICS = booleanPreferencesKey("haptics")
         val FULL_PICTURES = booleanPreferencesKey("full_pictures_on_mobile_data")
+        val POST_LINES = booleanPreferencesKey("reading_post_lines")
     }
 }

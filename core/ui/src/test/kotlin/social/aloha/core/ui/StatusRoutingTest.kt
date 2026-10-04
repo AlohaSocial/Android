@@ -25,7 +25,7 @@ class StatusRoutingTest {
     private var windows: ((String?, String?) -> Unit)? = null
 
     private val navigation = object : StatusNavigation {
-        override fun openThread(statusId: String) {
+        override fun openThread(statusId: String, history: Boolean) {
             opened += "thread $statusId"
         }
 

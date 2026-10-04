@@ -121,6 +121,7 @@ internal class ThreadViewModel @AssistedInject constructor(
 
     init {
         viewModelScope.launch { load(account.filterNotNull().first()) }
+        if (key.history) onHistory(open = true)
     }
 
     /** Rows are rendered with the theme's colours, which only the screen knows. */
@@ -172,8 +173,8 @@ internal class ThreadViewModel @AssistedInject constructor(
     fun onHistory(open: Boolean) {
         if (!open) return control.update { it.copy(history = null) }
         viewModelScope.launch {
-            val account = account.value ?: return@launch
-            val colors = colors.value ?: return@launch
+            val account = account.filterNotNull().first()
+            val colors = colors.filterNotNull().first()
             when (val answer = threads.history(account, key.statusId)) {
                 // parsed once here, not on every redraw of the thread under the sheet
                 is Answer.Got -> {

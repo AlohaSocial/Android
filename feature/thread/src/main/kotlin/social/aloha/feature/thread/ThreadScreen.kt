@@ -22,7 +22,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -62,6 +61,7 @@ import social.aloha.core.model.SensitiveMediaPolicy
 import social.aloha.core.navigation.StatusListKind
 import social.aloha.core.ui.LocalReadingStyle
 import social.aloha.core.ui.LocalSensitiveMediaPolicy
+import social.aloha.core.ui.PostDivider
 import social.aloha.core.ui.ProvideLinkRouting
 import social.aloha.core.ui.StackedAvatars
 import social.aloha.core.ui.StatusActions
@@ -152,7 +152,7 @@ private fun Posts(
                     modifier = Modifier.padding(start = indent(item.depth + 1)),
                 ) { Text(pluralStringResource(R.plurals.thread_more_replies, item.count, item.count)) }
             }
-            HorizontalDivider()
+            PostDivider()
         }
     }
 }

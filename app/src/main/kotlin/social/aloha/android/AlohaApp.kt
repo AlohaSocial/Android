@@ -284,8 +284,8 @@ fun AlohaApp(
     var viewing by rememberSaveable(stateSaver = ViewingSaver) { mutableStateOf<MediaViewerKey?>(null) }
     val statusNavigation = remember(backStack, readerId) {
         object : ThreadNavigation, ProfileNavigation {
-            override fun openThread(statusId: String) {
-                backStack.push(ThreadKey(readerId, statusId))
+            override fun openThread(statusId: String, history: Boolean) {
+                backStack.push(ThreadKey(readerId, statusId, history))
             }
 
             override fun openList(statusId: String, kind: StatusListKind) {

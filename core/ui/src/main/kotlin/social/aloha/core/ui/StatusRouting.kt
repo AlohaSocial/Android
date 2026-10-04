@@ -25,7 +25,8 @@ import social.aloha.core.model.Card
 
 /** Where a post sends the person: its thread, a profile by id or handle, a hashtag, or a reply to it. */
 public interface StatusNavigation {
-    public fun openThread(statusId: String)
+    /** The thread of [statusId]; with [history], the post's edits open over it. */
+    public fun openThread(statusId: String, history: Boolean = false)
 
     public fun openProfile(accountId: String?, acct: String?)
 
@@ -146,6 +147,8 @@ public abstract class RoutedStatusActions(
     public abstract fun onPin(row: StatusRowUi)
 
     override fun onOpen(statusId: String): Unit = navigation().openThread(statusId)
+
+    override fun onHistory(row: StatusRowUi): Unit = navigation().openThread(row.statusId, history = true)
 
     override fun onProfile(accountId: String): Unit = navigation().openProfile(accountId, null)
 

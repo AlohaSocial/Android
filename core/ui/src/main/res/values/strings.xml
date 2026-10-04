@@ -20,6 +20,8 @@
     <string name="status_bot">Automated account</string>
     <!-- Badge on a post that was edited after it was published -->
     <string name="status_edited">Edited</string>
+    <!-- Screen reader action on an edited post: opens the list of its earlier versions -->
+    <string name="status_action_history">Edit history</string>
     <!-- Badge on a post only followers can see -->
     <string name="status_visibility_private">Followers only</string>
     <!-- Badge on a direct message -->

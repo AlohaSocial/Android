@@ -12,7 +12,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -36,6 +35,7 @@ import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.model.SensitiveMediaPolicy
 import social.aloha.core.navigation.TagGroupKey
 import social.aloha.core.ui.LocalSensitiveMediaPolicy
+import social.aloha.core.ui.PostDivider
 import social.aloha.core.ui.RichTextColors
 import social.aloha.core.ui.StatusActions
 import social.aloha.core.ui.StatusCard
@@ -103,7 +103,7 @@ internal fun TagGroupScreen(
                 else -> LazyColumn(Modifier.fillMaxSize()) {
                     items(rows, key = { it.rowId }) { row ->
                         StatusCard(row, now, LocalSensitiveMediaPolicy.current, rowActions, showActions = false)
-                        HorizontalDivider()
+                        PostDivider()
                     }
                     if (!state.done) {
                         item(key = "more") {

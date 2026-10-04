@@ -14,7 +14,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -57,6 +56,7 @@ import social.aloha.core.navigation.WatchKey
 import social.aloha.core.ui.ListProgress
 import social.aloha.core.ui.LocalReadingStyle
 import social.aloha.core.ui.LocalSensitiveMediaPolicy
+import social.aloha.core.ui.PostDivider
 import social.aloha.core.ui.R as UiR
 import social.aloha.core.ui.RichTextColors
 import social.aloha.core.ui.RoutedStatusActions
@@ -211,7 +211,7 @@ private fun Details(
                 item(key = "comments") { CommentsHeading(video, actions.onComment) }
                 items(state.comments, key = { it.rowId }) { comment ->
                     StatusCard(comment, now, LocalSensitiveMediaPolicy.current, rowActions)
-                    HorizontalDivider()
+                    PostDivider()
                 }
             }
 
