@@ -177,7 +177,8 @@ class NotificationRaiserTest {
             NotificationCompat.getAction(mention, it)!!
         }
         assertTrue(actions.first().remoteInputs!!.isNotEmpty())
-        assertEquals(listOf("Reply", "Favourite", "Boost"), actions.map { it.title.toString() })
+        // a mention's third button mutes the thread rather than boosting it
+        assertEquals(listOf("Reply", "Favourite", "Mute conversation"), actions.map { it.title.toString() })
         // nothing is done from a locked phone
         assertTrue(actions.all { it.isAuthenticationRequired })
         // a favourite notice is about the person's own post: nothing to favourite or answer there

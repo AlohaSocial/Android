@@ -22,6 +22,7 @@ import mockwebserver3.MockWebServer
 import mockwebserver3.RecordedRequest
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -31,6 +32,7 @@ import social.aloha.core.data.notifications.NotificationFiltering
 import social.aloha.core.data.notifications.NotificationsRepository
 import social.aloha.core.data.sync.SyncSettings
 import social.aloha.core.data.sync.UnreadCounts
+import social.aloha.core.data.timeline.StatusInteractions
 import social.aloha.core.datastore.AccountSettingsStore
 import social.aloha.core.datastore.AppPreferences
 import social.aloha.core.datastore.NotificationPreferences
@@ -52,6 +54,8 @@ private class Notifications : Dispatcher() {
 
             path.endsWith("/markers") && request.method == "GET" ->
                 json("""{"notifications":{"last_read_id":"100","version":1}}""")
+
+            path.endsWith("/statuses/s1/mute") -> json(POST.replace("\"account\"", "\"muted\":true,\"account\""))
 
             path.endsWith("/api/v2/notifications/policy") ->
                 json("""{"for_not_following":"accept","summary":{"pending_requests_count":4}}""")
@@ -107,6 +111,7 @@ class NotificationsViewModelTest {
                 AppPreferences(InMemoryDataStore(emptyPreferences())),
                 NotificationPreferences(InMemoryDataStore(emptyPreferences())),
             ),
+            StatusInteractions(fixture.statuses, fixture.clients),
             fixture.clock,
         )
     }
@@ -132,6 +137,17 @@ class NotificationsViewModelTest {
         assertEquals("Hello", favourites.preview)
         assertTrue(notifications.asked.any { it.startsWith("POST /api/v1/markers") && "last_read_id%5D=120" in it })
         assertEquals(0, unread.of(fixture.accounts.all().single().id))
+    }
+
+    @Test
+    fun `muting from a mention mutes its conversation on the server, and says so once`() = runBlocking {
+        viewModel.onShown(isShown = true)
+        val state = await { it.rows.isNotEmpty() }
+        viewModel.onMuteConversation(state.rows.single { it.kind == NotificationKind.Mention }.key)
+        assertEquals(R.string.notifications_muted, await { it.notice != null }.notice)
+        assertTrue(notifications.asked.any { it.startsWith("POST /api/v1/statuses/s1/mute") })
+        viewModel.onNoticeShown()
+        assertNull(await { it.notice == null }.notice)
     }
 
     @Test

@@ -127,6 +127,8 @@
     <string name="notification_favourite">Favourite</string>
     <!-- Notification action that boosts the post -->
     <string name="notification_boost">Boost</string>
+    <!-- Notification action on a mention that mutes its conversation: no more notifications from that thread -->
+    <string name="notification_mute">Mute conversation</string>
     <!-- Name of the notification channel for the brief notice while a push is looked at, in the system's notification settings -->
     <string name="sync_channel">Checking for new activity</string>
     <!-- Description of that channel -->

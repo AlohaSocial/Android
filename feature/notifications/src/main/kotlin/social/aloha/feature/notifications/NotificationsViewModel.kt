@@ -30,6 +30,8 @@ import social.aloha.core.data.notifications.NotificationsRepository
 import social.aloha.core.data.notifications.preview
 import social.aloha.core.data.sync.SyncSettings
 import social.aloha.core.data.sync.UnreadCounts
+import social.aloha.core.data.timeline.StatusInteractions
+import social.aloha.core.data.timeline.Toggle
 import social.aloha.core.data.trouble
 import social.aloha.core.model.Account
 import social.aloha.core.model.NotificationItem
@@ -68,6 +70,8 @@ internal data class NotificationsUiState(
     val group: GroupSheet? = null,
     val now: Instant = Instant.EPOCH,
     val askedForPermission: Boolean = false,
+    /** What a brief notice says after an action, as a string resource; null for none. */
+    val notice: Int? = null,
 )
 
 /**
@@ -82,6 +86,7 @@ internal class NotificationsViewModel @Inject constructor(
     private val filtering: NotificationFiltering,
     unread: UnreadCounts,
     private val settings: SyncSettings,
+    private val interactions: StatusInteractions,
     clock: Clock,
 ) : ViewModel() {
     private data class Control(
@@ -95,6 +100,7 @@ internal class NotificationsViewModel @Inject constructor(
         val trouble: Trouble? = null,
         val pendingRequests: Int = 0,
         val group: GroupSheet? = null,
+        val notice: Int? = null,
     )
 
     private val account: StateFlow<SignedInAccount?> = accounts.activeAccount
@@ -127,6 +133,7 @@ internal class NotificationsViewModel @Inject constructor(
                 group = control.group,
                 now = now,
                 askedForPermission = asked,
+                notice = control.notice,
             )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_MILLIS), NotificationsUiState())
 
@@ -200,6 +207,21 @@ internal class NotificationsViewModel @Inject constructor(
         }
     }
 
+    /** Mutes the conversation of the mention or reply [key]; a mute already there stays. */
+    fun onMuteConversation(key: String) {
+        val account = account.value ?: return
+        val status = control.value.items.firstOrNull { it.key == key }?.status ?: return
+        viewModelScope.launch {
+            val error = if (status.muted) null else interactions.toggle(account, status, Toggle.MuteConversation)
+            val notice = if (error == null) R.string.notifications_muted else R.string.notifications_mute_failed
+            control.update { it.copy(notice = notice) }
+        }
+    }
+
+    fun onNoticeShown() {
+        control.update { it.copy(notice = null) }
+    }
+
     fun onAskedForPermission() {
         viewModelScope.launch { settings.setAskedForNotifications() }
     }
@@ -253,24 +275,24 @@ internal class NotificationsViewModel @Inject constructor(
         is Answer.Missed -> copy(refreshing = false, loadedOnce = true, trouble = answer.error.trouble)
     }
 
-    private fun NotificationItem.toRow(marker: String?) = NotificationRowUi(
-        key = key,
-        kind = kind,
-        name = newest?.bestDisplayName,
-        others = others,
-        avatars = accounts.map { it.avatar },
-        preview = preview(),
-        statusId = status?.id,
-        accountId = newest?.id,
-        groupKey = groupKey,
-        unread = marker != null && NotificationItem.isNewer(newestId, marker),
-        at = latestAt,
-    )
-
-    private fun Set<NotificationKind>.expanded(): Set<NotificationKind> =
-        if (NotificationKind.Follow in this) this + NotificationKind.FollowRequest else this
-
     private companion object {
         const val STOP_MILLIS = 5_000L
     }
 }
+
+private fun NotificationItem.toRow(marker: String?) = NotificationRowUi(
+    key = key,
+    kind = kind,
+    name = newest?.bestDisplayName,
+    others = others,
+    avatars = accounts.map { it.avatar },
+    preview = preview(),
+    statusId = status?.id,
+    accountId = newest?.id,
+    groupKey = groupKey,
+    unread = marker != null && NotificationItem.isNewer(newestId, marker),
+    at = latestAt,
+)
+
+private fun Set<NotificationKind>.expanded(): Set<NotificationKind> =
+    if (NotificationKind.Follow in this) this + NotificationKind.FollowRequest else this

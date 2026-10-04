@@ -19,6 +19,11 @@ internal interface NotificationsActions {
 
     fun onOthers(groupKey: String)
 
+    /** No more notifications from the conversation a mention or reply belongs to. */
+    fun onMuteConversation(row: NotificationRowUi)
+
+    fun onNoticeShown()
+
     fun onPolicy()
 
     fun onRequests()

@@ -105,6 +105,10 @@ class NotificationsScreenshotTest {
 
         override fun onOthers(groupKey: String) = Unit
 
+        override fun onMuteConversation(row: NotificationRowUi) = Unit
+
+        override fun onNoticeShown() = Unit
+
         override fun onPolicy() = Unit
 
         override fun onRequests() = Unit

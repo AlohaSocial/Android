@@ -25,6 +25,12 @@
         <item quantity="one">Show %d other</item>
         <item quantity="other">Show all %d others</item>
     </plurals>
+    <!-- Action on a mention or reply, by long press and for screen readers: no more notifications from that thread -->
+    <string name="notifications_mute_conversation">Mute conversation</string>
+    <!-- Brief notice after a conversation was muted -->
+    <string name="notifications_muted">Conversation muted</string>
+    <!-- Brief notice after muting a conversation failed -->
+    <string name="notifications_mute_failed">That didn’t go through. Try again.</string>
     <!-- Spoken before a notification the person has not seen yet -->
     <string name="notifications_unread">New</string>
     <!-- Shown when there are no notifications yet -->

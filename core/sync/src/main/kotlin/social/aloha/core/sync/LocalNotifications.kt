@@ -44,8 +44,8 @@ public fun notificationsAllowed(context: Context): Boolean = Build.VERSION.SDK_I
 /**
  * What the device shows of an account's notifications. Each is raised under the notification's key, so
  * a group that grows is updated in place, without alerting again; mentions read as a conversation with
- * their author, and one can be answered, favourited or boosted from the notification once the phone is
- * unlocked. A private mention or a moderation notice shows only that it arrived on a locked screen. A
+ * their author, and one can be answered, favourited and muted or boosted from the notification once the
+ * phone is unlocked. A private mention or a moderation notice shows only that it arrived on a locked screen. A
  * tap opens the post, or the profile of whoever did it, in the account it came to. With the digest on,
  * what it held back is raised as one summary instead, at the times chosen.
  */
@@ -203,10 +203,14 @@ public class LocalNotifications @Inject constructor(
             ).addRemoteInput(reply).setAllowGeneratedReplies(true).setAuthenticationRequired(true)
                 .setSemanticAction(NotificationCompat.Action.SEMANTIC_ACTION_REPLY).build(),
         )
-        listOf(
-            NotificationActions.Kind.Favourite to R.string.notification_favourite,
-            NotificationActions.Kind.Boost to R.string.notification_boost,
-        ).forEach { (kind, label) ->
+        // three buttons fit: a mention's third mutes its conversation, since the shade is where a thread
+        // that turned sour keeps coming back; a followed account's new post offers the boost instead
+        val third = if (item.kind == NotificationKind.Mention) {
+            NotificationActions.Kind.Mute to R.string.notification_mute
+        } else {
+            NotificationActions.Kind.Boost to R.string.notification_boost
+        }
+        listOf(NotificationActions.Kind.Favourite to R.string.notification_favourite, third).forEach { (kind, label) ->
             builder.addAction(
                 NotificationCompat.Action.Builder(
                     R.drawable.ic_notification,
