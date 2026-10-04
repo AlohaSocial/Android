@@ -4,6 +4,7 @@
 package social.aloha.core.data.timeline
 
 import java.time.Clock
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.Dispatchers
@@ -29,6 +30,7 @@ import social.aloha.core.model.Status
 @Singleton
 public class StatusRepository @Inject constructor(private val dao: StatusDao, private val clock: Clock) {
     private val decoded = DecodedStatuses()
+    private val toggles = Toggles(clock)
 
     public fun observe(accountId: String, statusId: String): Flow<Status?> = dao.observe(accountId, statusId).map {
         it?.let { entity -> decoded.of(accountId, entity.serverId, entity.payloadJson, entity.cachedAt) }
@@ -80,6 +82,16 @@ public class StatusRepository @Inject constructor(private val dao: StatusDao, pr
     }
 
     /**
+     * Stores what the reader's own toggle set on [status], a favourite, a boost, a bookmark, as [save]
+     * does. For [TOGGLE_HOLD] after, a page fetched around it, which may predate it, cannot take that
+     * back: what was toggled is kept on any copy stored meanwhile.
+     */
+    public suspend fun saveToggled(accountId: String, status: Status) {
+        toggles.remember(accountId, status)
+        save(accountId, status)
+    }
+
+    /**
      * What each of [statuses] is, for the mode it belongs in. The server's description decides; where
      * it described too little, what a player saw since and settled through [reclassify] does.
      */
@@ -116,7 +128,7 @@ public class StatusRepository @Inject constructor(private val dao: StatusDao, pr
     /** The rows to store for [statuses], keeping what a player settled about any of them. */
     internal suspend fun entities(accountId: String, statuses: List<Status>): List<CachedStatusEntity> {
         val kinds = kinds(accountId, statuses)
-        return statuses.map { entity(accountId, it, kinds.getValue(it.id)) }
+        return statuses.map { entity(accountId, toggles.applied(accountId, it), kinds.getValue(it.id)) }
     }
 
     /** A deletion, or a 404 on refetch: the status goes, and from every timeline. */
@@ -146,6 +158,9 @@ public class StatusRepository @Inject constructor(private val dao: StatusDao, pr
 
     internal companion object {
         const val MAXIMUM_BOUND_IDS = 900
+
+        /** How long a toggle outweighs pages fetched around it: longer than a page takes to arrive. */
+        const val TOGGLE_HOLD = 30_000L
         val json = Json {
             ignoreUnknownKeys = true
             encodeDefaults = false
@@ -185,3 +200,34 @@ private class DecodedStatuses(private val capacity: Int = CAPACITY) {
 }
 
 private fun kindOf(name: String): ContentKind? = ContentKind.entries.firstOrNull { it.name == name }
+
+/** The reader's recent toggles, by account and status, and when each was made. */
+private class Toggles(private val clock: Clock) {
+    private class Toggled(val at: Long, val status: Status)
+
+    private val made = ConcurrentHashMap<String, Toggled>()
+
+    fun remember(accountId: String, status: Status) {
+        made["$accountId/${status.id}"] = Toggled(clock.millis(), status)
+    }
+
+    /** [status] with what a recent toggle set on it, or on what it boosts, kept. */
+    fun applied(accountId: String, status: Status): Status {
+        val now = clock.millis()
+        fun recent(id: String) = made["$accountId/$id"]?.takeIf { now - it.at < StatusRepository.TOGGLE_HOLD }?.status
+        val boosted = status.reblog?.let { reblog -> recent(reblog.id)?.let { reblog.keeping(it) } }
+        val own = recent(status.id)?.let { status.keeping(it) } ?: status
+        return if (boosted != null) own.copy(reblog = boosted) else own
+    }
+}
+
+/** [this] with the interaction state of [toggled]: what the reader set, and the counts that came with it. */
+private fun Status.keeping(toggled: Status): Status = copy(
+    favourited = toggled.favourited,
+    favouritesCount = toggled.favouritesCount,
+    reblogged = toggled.reblogged,
+    reblogsCount = toggled.reblogsCount,
+    bookmarked = toggled.bookmarked,
+    pinned = toggled.pinned,
+    muted = toggled.muted,
+)

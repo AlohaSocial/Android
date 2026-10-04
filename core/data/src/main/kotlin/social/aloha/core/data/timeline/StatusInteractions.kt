@@ -32,16 +32,20 @@ public class StatusInteractions @Inject constructor(
     private val statuses: StatusRepository,
     private val clients: ClientFactory,
 ) {
-    /** Flips [toggle] on [status], the post shown (a boost's target); null when the server agreed. */
-    public suspend fun toggle(account: SignedInAccount, status: Status, toggle: Toggle): ApiError? {
+    /**
+     * Flips [toggle] on [shown], the post shown (a boost's target), from its stored copy where there is
+     * one, which a toggle just before may already have changed; null when the server agreed.
+     */
+    public suspend fun toggle(account: SignedInAccount, shown: Status, toggle: Toggle): ApiError? {
         val client = clients.forAccount(account) ?: return ApiError.NotFound
+        val status = statuses.get(account.id, shown.id) ?: shown
         val (guess, action) = flipped(status, toggle)
-        statuses.save(account.id, guess)
+        statuses.saveToggled(account.id, guess)
         return when (val answer = client.execute(StatusEndpoints.action(status.id, action))) {
             // boosting answers with the new boost, which carries the post as the server now has it
-            is ApiResult.Success -> null.also { statuses.save(account.id, answer.value.reblog ?: answer.value) }
+            is ApiResult.Success -> null.also { statuses.saveToggled(account.id, answer.value.reblog ?: answer.value) }
 
-            is ApiResult.Failure -> answer.error.also { statuses.save(account.id, status) }
+            is ApiResult.Failure -> answer.error.also { statuses.saveToggled(account.id, status) }
         }
     }
 
