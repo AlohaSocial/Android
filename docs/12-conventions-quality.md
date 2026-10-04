@@ -61,6 +61,7 @@ Every workflow starts with no permissions and grants each job what it needs, pin
 | `osv.yml` | Mondays, or by hand | OSV-Scanner over the dependencies | No |
 | `supply-chain.yml` | Push to `main` | Submits the Gradle dependency graph, so dependency alerts cover it | No |
 | `verification-metadata.yml` | By hand | Regenerates `gradle/verification-metadata.xml` and the keyring on Linux, for review | No |
+| `release-mapping.yml` | A release is published | Builds both release flavours from its tag, without the Gradle cache, and attaches their R8 mappings to the release | No |
 
 Every artifact is kept five days.
 
@@ -91,7 +92,15 @@ Every artifact is kept five days.
 
 ## Logging
 
-The app does not log. There is no logging framework, and detekt forbids `android.util.Log` and `println` in app code. A failure reaches the person through the screen's state (a `Trouble`, an error with Retry) and a developer through a test against the fixture corpus; nothing is written to logcat to be read later, and no crash reporter or analytics library is included in either flavour.
+Logging goes through Timber; detekt forbids `android.util.Log` and `println`. Every line names its area with a tag from `LogArea` (`App`, `Auth`, `Network`, `Sync`, `Push`, `Compose`, `Media`, `Moderation`): `Timber.tag(LogArea.Network.name).w(…)`. The tag Timber would derive is a lambda's name in a debug build and an obfuscated letter in a release build.
+
+- A debug build logs to logcat.
+- A release build keeps the last 500 lines at `INFO` and above in memory (`LogBuffer`), each redacted and then cut at 1,000 characters. R8 removes the `VERBOSE` and `DEBUG` calls with their arguments. Nothing is written to disk and nothing is sent: Settings, About, Share diagnostics shows the report, and the person shares it if they choose.
+- A line may carry ids, paths without their query, status codes, exception class names and durations. Never a token, password, post or message text, handle, display name or media address, and never an exception's message or the throwable itself, since either may quote a response or an address.
+- `DEBUG` is for the developer at the device: each request that succeeded, each poll that did. `INFO` is the lifecycle: a request or poll that failed, push registration, retries, an account asked to sign in again. `WARN` is a failure the app gets over without telling anyone: a stored value it could not read, a row lossy decoding dropped, a post it gave up on.
+- A caught failure shows on screen, logs a `WARN`, or carries a comment saying why silence is right.
+- `release-mapping.yml` attaches each flavour's R8 mapping to its GitHub release, so a trace from a shared report can go through `retrace`; Play gets the mapping with the app bundle.
+- No crash reporter or analytics library is included in either flavour.
 
 ## Code conventions
 

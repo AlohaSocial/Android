@@ -102,3 +102,9 @@ A repository call answers an `Answer<T>`: `Got(value)` or `Missed(error)`, where
 For the screen, an error collapses to a `Trouble`: `Offline` (no transport), `RateLimited` (429) or `Server` (everything else). A list that has cached content keeps showing it and adds a `TroubleStrip` (`core/ui/.../TroubleStrip.kt`): an inline strip announced politely to a screen reader, never a blocking overlay. Each feature words the strip for what it was doing. A 401 never deletes anything: the account is marked as needing to sign in again and keeps its cache; see [03-auth-and-accounts.md](03-auth-and-accounts.md).
 
 Writes made offline wait in the outbox and are sent by a WorkManager worker once a network is back; a favourite, boost, bookmark or pin is written to the cache first and put back if the server refuses (`StatusInteractions`).
+
+## Logging
+
+`AlohaApplication` plants one Timber tree: `DebugTree`, to logcat, in a debug build; `LogBuffer` (`:core:data`, `diagnostics`) in a release build, a singleton ring buffer of the last 500 lines that redacts each line before keeping it. `Diagnostics` reads it for Settings, About, Share diagnostics, together with the build (`AppBuild`, provided by `:app` from `BuildConfig`), the device, each account's server software and the last process exits.
+
+Every Android module can log; `:core:model` and `:core:html` are pure Kotlin and do not. Tags come from `LogArea` in `:core:model`. The request lines and dropped rows come from `RequestExecutor`, which every request goes through, so the OAuth flow, the server probe and each account's client log alike. Image and media loads share the HTTP client but not the executor, and are not logged: their addresses carry names. The rules for what a line may carry are in [12-conventions-quality.md](12-conventions-quality.md).

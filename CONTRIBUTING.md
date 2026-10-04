@@ -59,9 +59,12 @@ issue link, and CI fails any pull request that grows a baseline.
 - Kotlin only. No `!!`, no `runBlocking` outside tests, no `GlobalScope`, no
   hard-coded dispatchers, no `System.currentTimeMillis` (inject a `Clock`).
   detekt enforces these.
-- No logging. There is no logging framework, and detekt forbids
-  `android.util.Log` and `println`: a failure reaches the person through the UI
-  state, and a developer through a test.
+- Log through Timber, tagged with a `LogArea`; detekt forbids `android.util.Log`
+  and `println`. A line carries ids, paths without their query, status codes,
+  exception class names and durations, never a token, password, post text,
+  handle, display name, media address or exception message. Debug builds log to
+  logcat; release builds keep the last 500 lines in memory for Settings, About,
+  Share diagnostics. The rules are in `docs/12-conventions-quality.md`.
 - `:core:*` modules use explicit API mode; public declarations carry KDoc that
   states behaviour and constraints.
 - Comments say what the code does or which server behaviour it works around,
