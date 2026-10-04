@@ -457,4 +457,6 @@
     <string name="composer_settings_language">New posts are written in</string>
     <!-- Default language choice: as the reader's server says, else the device's language -->
     <string name="composer_settings_language_server">As my server says</string>
+    <!-- A file size in megabytes; %1$s is the number, already written as the reader's language writes numbers -->
+    <string name="composer_size_mb">%1$s MB</string>
 </resources>

@@ -6,6 +6,7 @@ package social.aloha.feature.composer
 import android.net.Uri
 import androidx.compose.runtime.Immutable
 import java.io.File
+import java.text.NumberFormat
 import java.util.Locale
 import java.util.UUID
 import kotlinx.coroutines.CoroutineScope
@@ -304,8 +305,11 @@ internal class Attachments(
         /** Mastodon's own limit on a description. */
         const val DESCRIPTION_LIMIT = 1500
 
-        /** [bytes] as a person reads a size: "40 MB". */
-        fun size(bytes: Long): String = String.format(Locale.getDefault(), "%.0f MB", bytes / MEGABYTE)
+        /**
+         * [bytes] in whole megabytes as servers count them (1024 × 1024), so a 40 MB limit reads 40, written
+         * as the reader's language writes numbers; the unit is the string `composer_size_mb` around it.
+         */
+        fun megabytes(bytes: Long): String = NumberFormat.getIntegerInstance().format(Math.round(bytes / MEGABYTE))
 
         private const val MEGABYTE = 1024.0 * 1024.0
     }
