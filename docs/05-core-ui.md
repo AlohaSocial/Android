@@ -18,6 +18,8 @@ This is the Apple app's specification, carried over as the product contract for 
 | Intelligence (§9) | No such section: Translate is in a post's menu, and nothing else is built. See [10-intelligence.md](10-intelligence.md). |
 | Your year (§9) | A section of its own in Settings, not under an account. |
 | Deleting the account | Settings → Delete account. On Nextcloud Social, once the Nextcloud is connected, after the handle is typed out (the server's own confirmation, never a password); elsewhere the server's website does it. |
+| Caught-up line | Home draws "You’re caught up" above the newest post read before this visit, the newer of the position this device stored and the server's home read marker; it stays for the visit while the marker moves on, and a tap returns to the newest posts. Notifications draws the same line between the rows newer than the notifications marker and the rest; a long press on a mention or reply row mutes its conversation. |
+| Show numbers | Settings → Reading → Show numbers hides every popularity number at once: the counts beside reply, boost, favourite and reactions, a video's views and likes, the favourites and boosts buttons under an open post, a profile's posts, following and followers, "and 34 others" in a grouped notification, the year's followers. Poll results, unread counts and limits always show. |
 
 ---
 

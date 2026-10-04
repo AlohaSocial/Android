@@ -219,6 +219,19 @@ class NotificationsScreenshotTest {
     }
 
     @Test
+    @Config(fontScale = 2f)
+    fun syncSettingsDigestLargeFont() = capture("notifications-settings-digest-font200") {
+        SyncRows(
+            SyncSettingsUi(digest = Digest(hours = listOf(8, 18))),
+            onFrequency = {},
+            onWifiOnly = {},
+            onQuietHours = {},
+            onDigest = {},
+            onKinds = {},
+        )
+    }
+
+    @Test
     fun syncSettingsDigest() = capture("notifications-settings-digest") {
         SyncRows(
             SyncSettingsUi(digest = Digest(hours = listOf(8, 18))),

@@ -128,6 +128,13 @@ class TimelineScreenshotTest {
     }
 
     @Test
+    @Config(fontScale = 2f)
+    fun caughtUpLargeFont() = capture("timeline-caught-up-font200") {
+        val posts = posts()
+        loaded(listOf(posts[0], TimelineItem.CaughtUp, posts[1]))
+    }
+
+    @Test
     fun empty() = capture("timeline-empty") { loaded(emptyList()) }
 
     @Test
