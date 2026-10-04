@@ -46,6 +46,7 @@ public class ReadingPreferences(private val store: DataStore<Preferences>) {
             collapseLong = it[COLLAPSE_LONG] ?: true,
             missingAltBadge = it[MISSING_ALT] ?: false,
             previewless = it[PREVIEWLESS] ?: false,
+            reduceMotion = it[REDUCE_MOTION] ?: false,
         )
     }
 
@@ -64,6 +65,7 @@ public class ReadingPreferences(private val store: DataStore<Preferences>) {
             it[COLLAPSE_LONG] = style.collapseLong
             it[MISSING_ALT] = style.missingAltBadge
             it[PREVIEWLESS] = style.previewless
+            it[REDUCE_MOTION] = style.reduceMotion
         }
     }
 
@@ -83,5 +85,6 @@ public class ReadingPreferences(private val store: DataStore<Preferences>) {
         val COLLAPSE_LONG = booleanPreferencesKey("reading_collapse_long")
         val MISSING_ALT = booleanPreferencesKey("reading_missing_alt_badge")
         val PREVIEWLESS = booleanPreferencesKey("reading_previewless")
+        val REDUCE_MOTION = booleanPreferencesKey("reading_reduce_motion")
     }
 }

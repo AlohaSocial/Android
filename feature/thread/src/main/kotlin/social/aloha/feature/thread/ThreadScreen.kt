@@ -34,7 +34,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -45,6 +45,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
@@ -65,6 +66,7 @@ import social.aloha.core.ui.LocalSensitiveMediaPolicy
 import social.aloha.core.ui.LocalWarningReveals
 import social.aloha.core.ui.PostDivider
 import social.aloha.core.ui.ProvideLinkRouting
+import social.aloha.core.ui.RefreshBox
 import social.aloha.core.ui.StackedAvatars
 import social.aloha.core.ui.StatusActions
 import social.aloha.core.ui.StatusCard
@@ -84,11 +86,13 @@ internal fun ThreadScreen(
     listState: LazyListState = rememberLazyListState(),
 ) {
     val title = stringResource(R.string.thread_title)
+    val bar = TopAppBarDefaults.pinnedScrollBehavior()
     Scaffold(
-        modifier = modifier.semantics { paneTitle = title },
+        modifier = modifier.nestedScroll(bar.nestedScrollConnection).semantics { paneTitle = title },
         topBar = {
             TopAppBar(
                 title = { Text(title) },
+                scrollBehavior = bar,
                 navigationIcon = {
                     IconButton(onClick = actions::onBack) {
                         Icon(AlohaIcons.Back, stringResource(R.string.thread_back))
@@ -100,8 +104,8 @@ internal fun ThreadScreen(
     ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize()) {
             state.trouble?.takeIf { !state.gone }?.let { TroubleStrip(it) }
-            PullToRefreshBox(
-                isRefreshing = state.loading && state.items.isNotEmpty(),
+            RefreshBox(
+                refreshing = state.loading && state.items.isNotEmpty(),
                 onRefresh = actions::onRefresh,
                 modifier = Modifier.fillMaxSize(),
             ) {

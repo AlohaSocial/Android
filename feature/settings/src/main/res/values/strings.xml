@@ -246,6 +246,10 @@
     <string name="reading_counts_summary">How many replied, boosted, favourited or follow, on posts, profiles and notifications. Off, the people stay and the numbers go.</string>
     <!-- Reading switch: a thin line between one post and the next in every list of posts -->
     <string name="reading_lines">Lines between posts</string>
+    <!-- Reading switch: no animation anywhere in the app -->
+    <string name="reading_reduce_motion">Reduce motion</string>
+    <!-- Summary of the switch above -->
+    <string name="reading_reduce_motion_summary">Nothing slides, springs or fades: lists jump, buttons stay still, screens change at once.</string>
     <!-- Reading switch: a long post shows its first lines and an Expand button -->
     <string name="reading_collapse">Shorten long posts</string>
     <!-- Reading switch: media posted without a description carries a "no ALT" badge -->

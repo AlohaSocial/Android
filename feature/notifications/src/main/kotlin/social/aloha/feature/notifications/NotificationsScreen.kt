@@ -36,7 +36,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -47,6 +47,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -73,6 +74,7 @@ import social.aloha.core.ui.LocalReadingStyle
 import social.aloha.core.ui.NearEndEffect
 import social.aloha.core.ui.PostAge
 import social.aloha.core.ui.R as UiR
+import social.aloha.core.ui.RefreshBox
 import social.aloha.core.ui.StackedAvatars
 import social.aloha.core.ui.TroubleStrip
 import social.aloha.core.ui.readingColumn
@@ -106,12 +108,14 @@ internal fun NotificationsScreen(
             actions.onNoticeShown()
         }
     }
+    val bar = TopAppBarDefaults.pinnedScrollBehavior()
     Scaffold(
-        modifier = modifier.semantics { paneTitle = title },
+        modifier = modifier.nestedScroll(bar.nestedScrollConnection).semantics { paneTitle = title },
         snackbarHost = { SnackbarHost(snackbars) },
         topBar = {
             TopAppBar(
                 title = { Text(title) },
+                scrollBehavior = bar,
                 navigationIcon = navigationIcon,
                 actions = {
                     IconButton(onClick = actions::onRefresh) {
@@ -126,8 +130,8 @@ internal fun NotificationsScreen(
             Chips(state.kinds, actions)
             PermissionBanner(state.askedForPermission, actions::onAskedForPermission)
             state.trouble?.let { TroubleStrip(stringResource(it.message)) }
-            PullToRefreshBox(
-                isRefreshing = state.refreshing,
+            RefreshBox(
+                refreshing = state.refreshing,
                 onRefresh = actions::onRefresh,
                 modifier = Modifier.fillMaxSize(),
             ) {

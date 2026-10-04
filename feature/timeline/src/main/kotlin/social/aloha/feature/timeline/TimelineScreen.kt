@@ -48,7 +48,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -63,6 +63,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
@@ -88,6 +89,7 @@ import social.aloha.core.ui.ListProgress
 import social.aloha.core.ui.LocalSensitiveMediaPolicy
 import social.aloha.core.ui.NearEndEffect
 import social.aloha.core.ui.PostDivider
+import social.aloha.core.ui.RefreshBox
 import social.aloha.core.ui.StackedAvatars
 import social.aloha.core.ui.StatusActions
 import social.aloha.core.ui.StatusCard
@@ -115,11 +117,13 @@ internal fun TimelineScreen(
     header: @Composable () -> Unit = {},
     onVideo: (String) -> Unit = {},
 ) {
+    val bar = TopAppBarDefaults.pinnedScrollBehavior()
     Scaffold(
-        modifier = modifier.semantics { paneTitle = title },
+        modifier = modifier.nestedScroll(bar.nestedScrollConnection).semantics { paneTitle = title },
         topBar = {
             TopAppBar(
                 title = { Text(title) },
+                scrollBehavior = bar,
                 navigationIcon = navigationIcon,
                 actions = {
                     onSearch?.let {
@@ -148,8 +152,8 @@ internal fun TimelineScreen(
             header()
             if (state.sources.size > 1) SourceRow(state.source, state.sources, actions::onSource)
             state.trouble?.let { TroubleStrip(it) }
-            PullToRefreshBox(
-                isRefreshing = state.refreshing,
+            RefreshBox(
+                refreshing = state.refreshing,
                 onRefresh = actions::onRefresh,
                 modifier = Modifier.fillMaxSize(),
             ) {

@@ -22,6 +22,7 @@ package social.aloha.core.model
  * @param collapseLong a post's text taller than a screenful's third is clipped behind Expand.
  * @param missingAltBadge a "no ALT" badge on media posted without a description.
  * @param previewless media listed as rows (kind, description, sensitive) instead of drawn, to save data and calm.
+ * @param reduceMotion no animation anywhere in the app, whatever the system's animation scale.
  */
 public data class ReadingStyle(
     val compact: Boolean = false,
@@ -37,6 +38,7 @@ public data class ReadingStyle(
     val collapseLong: Boolean = true,
     val missingAltBadge: Boolean = false,
     val previewless: Boolean = false,
+    val reduceMotion: Boolean = false,
 )
 
 /** Which other posts in a thread open with a content warning the reader opened: those with the same warning. */

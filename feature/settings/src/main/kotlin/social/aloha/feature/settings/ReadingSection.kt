@@ -78,6 +78,9 @@ internal fun ReadingContent(style: ReadingStyle, onChange: ((ReadingStyle) -> Re
         SwitchRow(stringResource(R.string.reading_badge), style.unreadBadge, { on ->
             onChange { it.copy(unreadBadge = on) }
         })
+        SwitchRow(stringResource(R.string.reading_reduce_motion), style.reduceMotion, { on ->
+            onChange { it.copy(reduceMotion = on) }
+        }, stringResource(R.string.reading_reduce_motion_summary))
         SwitchRow(stringResource(R.string.reading_collapse), style.collapseLong, { on ->
             onChange { it.copy(collapseLong = on) }
         })

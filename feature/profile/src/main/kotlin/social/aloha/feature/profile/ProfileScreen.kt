@@ -47,7 +47,6 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -84,6 +83,7 @@ import social.aloha.core.ui.LocalSensitiveMediaPolicy
 import social.aloha.core.ui.NearEndEffect
 import social.aloha.core.ui.PostDivider
 import social.aloha.core.ui.ProvideLinkRouting
+import social.aloha.core.ui.RefreshBox
 import social.aloha.core.ui.StatusActions
 import social.aloha.core.ui.StatusCard
 import social.aloha.core.ui.TroubleStrip
@@ -122,7 +122,7 @@ internal fun ProfileScreen(
     ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize()) {
             state.trouble?.takeIf { !state.gone }?.let { TroubleStrip(it) }
-            PullToRefreshBox(isRefreshing = state.loading && state.header != null, onRefresh = actions::onRefresh) {
+            RefreshBox(refreshing = state.loading && state.header != null, onRefresh = actions::onRefresh) {
                 when {
                     state.gone -> Message(stringResource(R.string.profile_gone))
                     state.header == null -> Loading()

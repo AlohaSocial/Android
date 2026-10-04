@@ -4,6 +4,7 @@
 package social.aloha.core.ui
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -385,7 +386,10 @@ private fun rememberTick(): (Boolean) -> Unit {
 @Composable
 private fun ActionButton(icon: ImageVector, count: Int?, tint: Color, onClick: () -> Unit) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        IconButton(onClick = onClick) { Icon(icon, contentDescription = null, tint = tint) }
+        val interactions = remember { MutableInteractionSource() }
+        IconButton(onClick = onClick, interactionSource = interactions, modifier = Modifier.squish(interactions)) {
+            Icon(icon, contentDescription = null, tint = tint)
+        }
         Text(
             count?.takeIf { it > 0 && LocalReadingStyle.current.showCounts }?.toString().orEmpty(),
             style = MaterialTheme.typography.labelMedium,
