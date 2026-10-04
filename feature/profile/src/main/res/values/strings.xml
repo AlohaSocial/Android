@@ -125,7 +125,25 @@
     <!-- Menu item that opens the reader's private note about the account, and that dialog's title -->
     <string name="profile_note">Personal note</string>
     <!-- Label of the note field -->
-    <string name="profile_note_label">Note</string>
+    <string name="profile_note_label">Your note about them</string>
+    <!-- Toast after a long press copied a profile's handle, on Android versions that do not confirm a copy themselves -->
+    <string name="profile_handle_copied">Handle copied</string>
+    <!-- What a long press on a profile's handle does, said by a screen reader -->
+    <string name="profile_handle_copy">Copy the handle</string>
+    <!-- Sheet opened from the server chip after a handle: what a server is on the fediverse -->
+    <string name="profile_server_explainer">This is the server the account lives on. The fediverse is made of many servers, run by different people and groups, that talk to each other: you can follow and reply to anyone on any of them. The part after the second @ in a handle says which server someone is on, so two people can share a name on different servers.</string>
+    <!-- Under a profile's counts; %s is one or two names of people the reader follows -->
+    <string name="profile_familiar">Followed by %s</string>
+    <!-- Title of the sheet listing the people the reader follows who follow this account -->
+    <string name="profile_familiar_title">Followers you know</string>
+    <!-- On a profile: when the account joined; %s is a month and year, such as September 2024 -->
+    <string name="profile_joined">Joined %s</string>
+    <!-- Notice on a profile that moved; %s is the handle it moved to -->
+    <string name="profile_moved">This account has moved to %s</string>
+    <!-- Button on that notice: opens the new account -->
+    <string name="profile_moved_open">Open</string>
+    <!-- Notice on an account kept in memory of someone who died -->
+    <string name="profile_memorial">In memoriam. This account is kept in remembrance; nobody posts from it any more.</string>
     <!-- Under the note field: nobody else sees it -->
     <string name="profile_note_private">Only you can see this.</string>
     <!-- Button that saves the note -->
@@ -242,4 +260,9 @@
     <string name="profile_report_blocked">Blocked</string>
     <!-- What a screen reader says for the posting highlights: %1$s is the heading ("Highlights"), %2$s how many posts (“12 posts”), %3$s the rhythm (“Posting steadily”) -->
     <string name="profile_highlights_spoken">%1$s: %2$s, %3$s</string>
+    <!-- Under a profile's counts; %1$s is one or two names of people the reader follows, %2$d how many more -->
+    <plurals name="profile_familiar_others">
+        <item quantity="one">Followed by %1$s and %2$d other</item>
+        <item quantity="other">Followed by %1$s and %2$d others</item>
+    </plurals>
 </resources>

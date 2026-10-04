@@ -95,7 +95,12 @@ import social.aloha.core.ui.readingWidth
 import social.aloha.core.ui.rememberEmojiContent
 
 @Composable
-internal fun Header(header: ProfileHeader, state: ProfileUiState, actions: ProfileScreenActions) {
+internal fun Header(
+    header: ProfileHeader,
+    state: ProfileUiState,
+    actions: ProfileScreenActions,
+    onProfile: (String) -> Unit,
+) {
     Column(Modifier.semantics { isTraversalGroup = true }) {
         Box {
             AsyncImage(
@@ -138,12 +143,9 @@ internal fun Header(header: ProfileHeader, state: ProfileUiState, actions: Profi
                 style = MaterialTheme.typography.headlineSmall.contentDirection(),
                 modifier = Modifier.semantics { heading() },
             )
-            Text(
-                header.author.handle,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            HandleRow(header.author.handle)
             Badges(header, state.relation)
+            Notices(header, onProfile)
             if (header.note.isNotEmpty()) {
                 Text(
                     header.note,
@@ -152,7 +154,11 @@ internal fun Header(header: ProfileHeader, state: ProfileUiState, actions: Profi
                 )
             }
             header.fields.forEach { Field(it) }
+            header.joined?.let { Joined(it) }
             Counts(header, actions)
+            FamiliarFollowers(state.familiar, onProfile)
+            val relation = state.relation
+            if (!header.isSelf && relation != null) NoteField(relation.note) { actions.onChange(it) }
         }
     }
 }

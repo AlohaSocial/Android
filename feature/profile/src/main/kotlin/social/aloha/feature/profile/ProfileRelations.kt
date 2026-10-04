@@ -68,7 +68,6 @@ internal fun RelationItems(
             ask(Asking.Lists)
         }
     }
-    item(R.string.profile_note) { ask(Asking.Note) }
     if (relation.muting) {
         item(R.string.profile_unmute) { actions.onChange(RelationshipChange.Unmute) }
     } else {
@@ -145,11 +144,6 @@ internal fun RelationDialog(
             onDone,
         ) { confirm(RelationshipChange.RemoveFollower) }
 
-        Asking.Note -> NoteDialog(state.relation?.note.orEmpty(), onDone) {
-            onDone()
-            confirm(RelationshipChange.Note(it))
-        }
-
         Asking.Lists -> ListsDialog(state.lists, actions::onListed, onDone)
     }
 }
@@ -189,29 +183,6 @@ private fun MuteDialog(handle: String, onDismiss: () -> Unit, onMute: (Relations
             TextButton(onClick = { onMute(RelationshipChange.Mute(notifications, seconds)) }) {
                 Text(stringResource(R.string.profile_mute))
             }
-        },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.profile_cancel)) } },
-    )
-}
-
-/** The reader's own note about the account; only they see it. */
-@Composable
-private fun NoteDialog(note: String, onDismiss: () -> Unit, onSave: (String) -> Unit) {
-    var text by rememberSaveable { mutableStateOf(note) }
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.profile_note)) },
-        text = {
-            OutlinedTextField(
-                value = text,
-                onValueChange = { text = it },
-                label = { Text(stringResource(R.string.profile_note_label)) },
-                supportingText = { Text(stringResource(R.string.profile_note_private)) },
-                modifier = Modifier.fillMaxWidth(),
-            )
-        },
-        confirmButton = {
-            TextButton(onClick = { onSave(text.trim()) }) { Text(stringResource(R.string.profile_save)) }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.profile_cancel)) } },
     )

@@ -34,13 +34,24 @@ internal data class ProfileHeader(
     val isSelf: Boolean,
     /** The account's server when it is not the reader's own, which can then be blocked as a whole. */
     val domain: String?,
+    val joined: Instant? = null,
+    /** Where the account moved to, when it did. */
+    val movedTo: Moved? = null,
+    val memorial: Boolean = false,
 ) {
+    @Immutable
+    data class Moved(val id: String, val handle: String)
+
     @Immutable
     data class Field(val name: AnnotatedString, val value: AnnotatedString, val verified: Boolean)
 }
 
+/** One of the people the reader follows who also follow the account. */
+@Immutable
+internal data class Familiar(val id: String, val name: String, val avatarUrl: String?)
+
 /** What the profile asks about before it changes how the reader relates to the account. */
-internal enum class Asking { Block, Mute, BlockDomain, RemoveFollower, Note, Lists }
+internal enum class Asking { Block, Mute, BlockDomain, RemoveFollower, Lists }
 
 /** How the reader relates to the account, as far as the controls care. */
 @Immutable
@@ -90,6 +101,10 @@ internal data class ProfileUiState(
     val actionFailed: Boolean = false,
     /** The reader's lists, once asked for, each saying whether the account is on it. */
     val lists: List<ListChoice>? = null,
+    /** The people the reader follows who follow this account too. */
+    val familiar: List<Familiar> = emptyList(),
+    /** The handle the profile was opened by, shown while the account loads. */
+    val knownHandle: String? = null,
 )
 
 /** What changes the profile: its tabs and pages, and how the reader relates to the account. */

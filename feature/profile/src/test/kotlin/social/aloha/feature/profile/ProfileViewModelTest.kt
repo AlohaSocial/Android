@@ -39,6 +39,7 @@ import social.aloha.core.data.AccountRepository
 import social.aloha.core.data.ClientFactory
 import social.aloha.core.data.NewAccount
 import social.aloha.core.data.profile.FollowedAuthors
+import social.aloha.core.data.profile.ProfileFeatured
 import social.aloha.core.data.profile.ProfileRepository
 import social.aloha.core.data.profile.RelationshipChange
 import social.aloha.core.data.timeline.FilterRepository
@@ -179,6 +180,7 @@ class ProfileViewModelTest {
             StatusInteractions(statuses, clients),
             RichTextCache(),
             clock,
+            ProfileFeatured(clients),
         ).apply { onColors(RichTextColors(Color.Blue, Color.Gray, Color.LightGray)) }
     }
 

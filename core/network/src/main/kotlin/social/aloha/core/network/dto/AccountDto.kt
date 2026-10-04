@@ -48,6 +48,7 @@ internal data class AccountDto(
     @Serializable(with = LossyListSerializer::class) val emojis: List<CustomEmojiDto> = emptyList(),
     @Serializable(with = AccountSourceOrNull::class) val source: AccountSourceDto? = null,
     @Serializable(with = AccountOrNull::class) val moved: AccountDto? = null,
+    @Serializable(with = LenientBoolSerializer::class) val memorial: Boolean = false,
 )
 
 @Serializable
@@ -101,6 +102,7 @@ internal fun AccountDto.toDomain(): Account {
         emojis = emojis.map { it.toDomain() },
         source = source?.toDomain(),
         moved = moved?.toDomain(),
+        memorial = memorial,
     )
 }
 

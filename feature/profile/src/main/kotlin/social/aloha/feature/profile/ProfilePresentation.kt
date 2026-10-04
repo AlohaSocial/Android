@@ -70,6 +70,9 @@ internal object ProfilePresentation {
             isSelf = isSelf,
             // the reader's server names its own accounts without one
             domain = account.acct.substringAfter('@', "").ifEmpty { null },
+            joined = account.createdAt,
+            movedTo = account.moved?.let { ProfileHeader.Moved(it.id, it.qualifiedHandle) },
+            memorial = account.memorial,
         )
     }
 

@@ -34,6 +34,7 @@ import social.aloha.core.data.AccountRepository
 import social.aloha.core.data.Answer
 import social.aloha.core.data.Trouble
 import social.aloha.core.data.profile.ListChoice
+import social.aloha.core.data.profile.ProfileFeatured
 import social.aloha.core.data.profile.ProfileRepository
 import social.aloha.core.data.profile.RelationshipChange
 import social.aloha.core.data.timeline.FilterRepository
@@ -76,6 +77,7 @@ internal class ProfileViewModel @AssistedInject constructor(
     private val interactions: StatusInteractions,
     private val cache: RichTextCache,
     private val clock: Clock,
+    private val featured: ProfileFeatured,
 ) : ViewModel(),
     ProfileActions {
     @AssistedFactory
@@ -98,6 +100,7 @@ internal class ProfileViewModel @AssistedInject constructor(
         val stories: List<Story>? = null,
         val actionFailed: Boolean = false,
         val lists: List<ListChoice>? = null,
+        val familiar: List<Account> = emptyList(),
     )
 
     /** What is drawn, as opposed to what the screen is doing. */
@@ -307,6 +310,10 @@ internal class ProfileViewModel @AssistedInject constructor(
                             control.update { it.copy(relationship = r) }
                         }
                     }
+                    viewModelScope.launch {
+                        val familiar = featured.familiarFollowers(reader, account.id)
+                        control.update { it.copy(familiar = familiar) }
+                    }
                 }
                 viewModelScope.launch {
                     profiles.highlights(reader, account.id)?.let { h -> control.update { it.copy(highlights = h) } }
@@ -385,6 +392,8 @@ internal class ProfileViewModel @AssistedInject constructor(
             now = now,
             actionFailed = control.actionFailed,
             lists = control.lists,
+            familiar = control.familiar.map { Familiar(it.id, it.bestDisplayName, it.avatar) },
+            knownHandle = key.acct?.let { if (it.startsWith('@')) it else "@$it" },
         )
     }
 

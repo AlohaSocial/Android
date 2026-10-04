@@ -145,6 +145,8 @@ class ProfileTabsTest {
     }
 
     @Test
+    // a phone's height, so the tab row shows under a header that has the reader's note field
+    @Config(qualifiers = "w411dp-h891dp")
     fun `a tab chosen with the header in view leaves the list where it is`() {
         showFollowing()
         compose.onNodeWithText("Media").performClick()

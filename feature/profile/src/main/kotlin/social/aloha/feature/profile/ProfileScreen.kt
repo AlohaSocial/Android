@@ -49,6 +49,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -79,6 +80,7 @@ import social.aloha.core.model.SensitiveMediaPolicy
 import social.aloha.core.model.Story
 import social.aloha.core.ui.Avatar
 import social.aloha.core.ui.ListProgress
+import social.aloha.core.ui.LocalReadingStyle
 import social.aloha.core.ui.LocalSensitiveMediaPolicy
 import social.aloha.core.ui.NearEndEffect
 import social.aloha.core.ui.PostDivider
@@ -109,7 +111,7 @@ internal fun ProfileScreen(
         modifier = modifier.semantics { paneTitle = title },
         topBar = {
             TopAppBar(
-                title = { Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                title = { ScrolledTitle(title, state.header?.posts, listState) },
                 navigationIcon = {
                     IconButton(onClick = actions::onBack) {
                         Icon(AlohaIcons.Back, stringResource(R.string.profile_back))
@@ -125,7 +127,7 @@ internal fun ProfileScreen(
             RefreshBox(refreshing = state.loading && state.header != null, onRefresh = actions::onRefresh) {
                 when {
                     state.gone -> Message(stringResource(R.string.profile_gone))
-                    state.header == null -> Loading()
+                    state.header == null -> ProfileSkeleton(state.knownHandle)
                     else -> Content(state, state.header, actions, rowActions, listState)
                 }
             }
@@ -169,7 +171,9 @@ private fun Content(
             contentPadding = PaddingValues(bottom = AlohaSpacing.xl),
         ) {
             item(key = "header", contentType = "header") {
-                ProvideLinkRouting(onLink = rowActions::onLink) { Header(header, state, actions) }
+                ProvideLinkRouting(onLink = rowActions::onLink) {
+                    Header(header, state, actions, rowActions::onProfile)
+                }
             }
             state.highlights?.let { highlights ->
                 item(key = "highlights", contentType = "highlights") { Highlights(highlights) }
@@ -326,11 +330,20 @@ private fun Message(text: String) {
     }
 }
 
+/** The name, and once the header has scrolled away, how many posts under it. */
 @Composable
-private fun Loading() {
-    val loading = stringResource(R.string.profile_loading)
-    Box(Modifier.fillMaxSize().semantics { contentDescription = loading }, contentAlignment = Alignment.Center) {
-        CircularProgressIndicator()
+private fun ScrolledTitle(title: String, posts: Int?, listState: LazyListState) {
+    val scrolled by remember { derivedStateOf { listState.firstVisibleItemIndex > 0 } }
+    Column {
+        Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        if (scrolled && posts != null && LocalReadingStyle.current.showCounts) {
+            Text(
+                pluralStringResource(R.plurals.profile_posts, posts, NumberFormat.getIntegerInstance().format(posts)),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+            )
+        }
     }
 }
 

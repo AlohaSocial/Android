@@ -162,6 +162,33 @@ class ProfileScreenshotTest {
     fun tablet() = capture("profile-tablet") { ProfileScreen(profile(), NoActions, NoActions) }
 
     @Test
+    fun notices() = capture("profile-notices") {
+        val colors = RichTextColors.fromTheme()
+        val moved = StatusSamples.bob.copy(
+            createdAt = StatusSamples.NOW.minusSeconds(400L * 24 * 3600),
+            moved = StatusSamples.alice,
+        )
+        ProfileScreen(
+            profile().copy(
+                header = ProfilePresentation.header(moved, cache, colors, isSelf = false),
+                highlights = null,
+                familiar = listOf(
+                    Familiar("1", "Alice Example", null),
+                    Familiar("2", "Carol", null),
+                    Familiar("3", "Dana", null),
+                ),
+            ),
+            NoActions,
+            NoActions,
+        )
+    }
+
+    @Test
+    fun skeleton() = capture("profile-skeleton") {
+        ProfileScreen(ProfileUiState(knownHandle = "@bob@other.social"), NoActions, NoActions)
+    }
+
+    @Test
     fun gone() = capture("profile-gone") {
         ProfileScreen(ProfileUiState(loading = false, gone = true), NoActions, NoActions)
     }
