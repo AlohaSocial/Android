@@ -236,4 +236,6 @@
     <string name="profile_report_muted">Muted</string>
     <!-- Button label once the account is blocked after reporting -->
     <string name="profile_report_blocked">Blocked</string>
+    <!-- What a screen reader says for the posting highlights: %1$s is the heading ("Highlights"), %2$s how many posts (“12 posts”), %3$s the rhythm (“Posting steadily”) -->
+    <string name="profile_highlights_spoken">%1$s: %2$s, %3$s</string>
 </resources>

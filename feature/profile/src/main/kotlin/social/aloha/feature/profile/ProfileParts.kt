@@ -264,10 +264,11 @@ internal fun Highlights(highlights: ProfileHighlights) {
     )
     val total = pluralStringResource(R.plurals.profile_highlights_total, highlights.total, highlights.total)
     val heading = stringResource(R.string.profile_highlights)
+    val spoken = stringResource(R.string.profile_highlights_spoken, heading, total, rhythm)
     val tallest = highlights.weeks.maxOrNull()?.coerceAtLeast(1) ?: 1
     Column(
         Modifier.fillMaxWidth().padding(AlohaSpacing.m).clearAndSetSemantics {
-            contentDescription = "$heading: $total, $rhythm"
+            contentDescription = spoken
         },
         verticalArrangement = Arrangement.spacedBy(AlohaSpacing.xs),
     ) {
