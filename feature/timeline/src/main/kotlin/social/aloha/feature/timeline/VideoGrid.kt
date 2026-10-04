@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import social.aloha.core.designsystem.AlohaSpacing
+import social.aloha.core.ui.CaughtUpDivider
 import social.aloha.core.ui.ListProgress
 import social.aloha.core.ui.VideoCard
 
@@ -40,7 +41,7 @@ internal fun VideoGrid(
             state.items,
             key = { it.key },
             contentType = { it::class },
-            span = { if (it is TimelineItem.Gap) GridItemSpan(maxLineSpan) else GridItemSpan(1) },
+            span = { if (it is TimelineItem.Post) GridItemSpan(1) else GridItemSpan(maxLineSpan) },
         ) { item ->
             when (item) {
                 is TimelineItem.Post -> VideoCard(item.row, watched[item.row.statusId], onOpen = {
@@ -48,6 +49,8 @@ internal fun VideoGrid(
                 })
 
                 is TimelineItem.Gap -> GapRow(item, actions)
+
+                TimelineItem.CaughtUp -> CaughtUpDivider(onClick = actions::onCaughtUp)
             }
         }
         if (state.loadingOlder) {

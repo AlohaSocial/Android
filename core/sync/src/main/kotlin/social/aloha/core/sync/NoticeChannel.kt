@@ -23,6 +23,7 @@ internal enum class NoticeChannel(val suffix: String, val title: Int, val import
     Posts("posts", R.string.notification_channel_posts, NotificationManager.IMPORTANCE_DEFAULT),
     Edits("edits", R.string.notification_channel_edits, NotificationManager.IMPORTANCE_LOW),
     Moderation("moderation", R.string.notification_channel_moderation, NotificationManager.IMPORTANCE_HIGH),
+    Digest("digest", R.string.notification_channel_digest, NotificationManager.IMPORTANCE_DEFAULT),
     ;
 
     companion object {

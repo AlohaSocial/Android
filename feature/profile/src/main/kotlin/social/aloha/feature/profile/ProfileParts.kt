@@ -85,6 +85,7 @@ import social.aloha.core.model.ProfileHighlights
 import social.aloha.core.model.SensitiveMediaPolicy
 import social.aloha.core.model.Story
 import social.aloha.core.ui.Avatar
+import social.aloha.core.ui.LocalReadingStyle
 import social.aloha.core.ui.ProvideLinkRouting
 import social.aloha.core.ui.StatusActions
 import social.aloha.core.ui.StatusCard
@@ -232,21 +233,37 @@ private fun Field(field: ProfileHeader.Field) {
     }
 }
 
+/** Posts, following and followers; without the numbers, the two lists are still a tap away. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun Counts(header: ProfileHeader, actions: ProfileScreenActions) {
     val format = remember { NumberFormat.getIntegerInstance() }
+    val numbers = LocalReadingStyle.current.showCounts
     FlowRow(verticalArrangement = Arrangement.Center) {
-        Text(
-            pluralStringResource(R.plurals.profile_posts, header.posts, format.format(header.posts)),
-            style = MaterialTheme.typography.labelLarge,
-            modifier = Modifier.padding(end = AlohaSpacing.s).align(Alignment.CenterVertically),
-        )
+        if (numbers) {
+            Text(
+                pluralStringResource(R.plurals.profile_posts, header.posts, format.format(header.posts)),
+                style = MaterialTheme.typography.labelLarge,
+                modifier = Modifier.padding(end = AlohaSpacing.s).align(Alignment.CenterVertically),
+            )
+        }
         TextButton(onClick = { actions.onPeople(followers = false) }) {
-            Text(stringResource(R.string.profile_following_count, format.format(header.following)))
+            Text(
+                if (numbers) {
+                    stringResource(R.string.profile_following_count, format.format(header.following))
+                } else {
+                    stringResource(R.string.profile_following_plain)
+                },
+            )
         }
         TextButton(onClick = { actions.onPeople(followers = true) }) {
-            Text(pluralStringResource(R.plurals.profile_followers, header.followers, format.format(header.followers)))
+            Text(
+                if (numbers) {
+                    pluralStringResource(R.plurals.profile_followers, header.followers, format.format(header.followers))
+                } else {
+                    stringResource(R.string.profile_followers_plain)
+                },
+            )
         }
     }
 }

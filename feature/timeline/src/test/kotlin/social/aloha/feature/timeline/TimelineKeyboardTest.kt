@@ -72,6 +72,8 @@ class TimelineKeyboardTest {
         override fun onMenu(row: StatusRowUi, item: StatusMenuItem) = Unit
         override fun onRefresh() = Unit
         override fun onRevealPending() = Unit
+
+        override fun onCaughtUp() = Unit
         override fun onScrolledToTop() = Unit
         override fun onRestored() = Unit
         override fun onSource(source: TimelineSource) = Unit

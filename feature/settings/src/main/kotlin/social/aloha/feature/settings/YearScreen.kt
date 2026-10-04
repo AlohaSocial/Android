@@ -51,6 +51,7 @@ import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.model.AnnualArchetype
 import social.aloha.core.model.AnnualReport
+import social.aloha.core.ui.LocalReadingStyle
 import social.aloha.core.ui.readingColumn
 
 /** The reader's years in review; a top post opens its thread through [onOpenPost]. */
@@ -177,10 +178,12 @@ private fun Summary(report: AnnualReport) {
             if (busiest != null) stringResource(R.string.year_posts_busiest, posts, busiest) else posts,
             style = MaterialTheme.typography.bodyLarge,
         )
-        Text(
-            pluralStringResource(R.plurals.year_followers, data.totalFollowers, data.totalFollowers),
-            style = MaterialTheme.typography.bodyLarge,
-        )
+        if (LocalReadingStyle.current.showCounts) {
+            Text(
+                pluralStringResource(R.plurals.year_followers, data.totalFollowers, data.totalFollowers),
+                style = MaterialTheme.typography.bodyLarge,
+            )
+        }
         Months(report)
     }
 }

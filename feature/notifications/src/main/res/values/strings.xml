@@ -25,6 +25,14 @@
         <item quantity="one">Show %d other</item>
         <item quantity="other">Show all %d others</item>
     </plurals>
+    <!-- Action on a mention or reply, by long press and for screen readers: no more notifications from that thread -->
+    <string name="notifications_mute_conversation">Mute conversation</string>
+    <!-- Brief notice after a conversation was muted -->
+    <string name="notifications_muted">Conversation muted</string>
+    <!-- Brief notice after muting a conversation failed -->
+    <string name="notifications_mute_failed">That didn’t go through. Try again.</string>
+    <!-- Opens everyone in a grouped notification, while the reader hides the numbers -->
+    <string name="notifications_others_plain">Show everyone</string>
     <!-- Spoken before a notification the person has not seen yet -->
     <string name="notifications_unread">New</string>
     <!-- Shown when there are no notifications yet -->
@@ -128,6 +136,22 @@
     <string name="notifications_permission_rationale">Get told about mentions, replies and follows while Aloha Social is closed.</string>
     <!-- Button that asks to show notifications, or opens the system settings once asked -->
     <string name="notifications_permission_turn_on">Turn on notifications</string>
+    <!-- Heading of the rows choosing whether notifications are raised as they arrive or held for a digest -->
+    <string name="settings_delivery">Delivery</string>
+    <!-- Choice: every notification is raised the moment it arrives -->
+    <string name="settings_delivery_now">As they arrive</string>
+    <!-- Choice: notifications wait and are raised together, as one summary, at the times chosen below -->
+    <string name="settings_delivery_digest">In a digest, at times I choose</string>
+    <!-- One of the digest times; %s is the time as the device writes it ("08:00" or "8:00 AM"); tapping changes it -->
+    <string name="settings_digest_at">At %s</string>
+    <!-- Spoken for the button that takes one digest time away -->
+    <string name="settings_digest_remove">Remove this time</string>
+    <!-- Row that adds another digest time -->
+    <string name="settings_digest_add">Add a time</string>
+    <!-- Switch: some mentions are not held for the digest -->
+    <string name="settings_digest_personal">Personal mentions right away</string>
+    <!-- Below that switch -->
+    <string name="settings_digest_personal_summary">Private mentions, and mentions from people you follow, are raised as they arrive. Everything else waits for the digest. A digest time inside quiet hours waits until they end.</string>
     <!-- Switch: no notifications are raised during a daily window -->
     <string name="settings_quiet_hours">Quiet hours</string>
     <!-- Summary of the quiet hours; %1$s is when they start, %2$s when they end -->

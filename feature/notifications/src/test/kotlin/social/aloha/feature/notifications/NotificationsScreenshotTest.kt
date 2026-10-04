@@ -7,6 +7,7 @@ import android.Manifest
 import android.app.Application
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.junit4.accessibility.enableAccessibilityChecks
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onRoot
@@ -26,14 +27,17 @@ import social.aloha.core.designsystem.AlohaTheme
 import social.aloha.core.designsystem.ThemeMode
 import social.aloha.core.designsystem.ThemeSettings
 import social.aloha.core.model.Account
+import social.aloha.core.model.Digest
 import social.aloha.core.model.NotificationKind
 import social.aloha.core.model.NotificationPolicy
 import social.aloha.core.model.NotificationRequest
 import social.aloha.core.model.PolicyDecision
 import social.aloha.core.model.PollFrequency
 import social.aloha.core.model.QuietHours
+import social.aloha.core.model.ReadingStyle
 import social.aloha.core.model.Status
 import social.aloha.core.sync.Distributor
+import social.aloha.core.ui.LocalReadingStyle
 
 /** The notifications screens, each also run through the Accessibility Test Framework checks. */
 @RunWith(RobolectricTestRunner::class)
@@ -103,6 +107,10 @@ class NotificationsScreenshotTest {
         override fun onOpen(row: NotificationRowUi) = Unit
 
         override fun onOthers(groupKey: String) = Unit
+
+        override fun onMuteConversation(row: NotificationRowUi) = Unit
+
+        override fun onNoticeShown() = Unit
 
         override fun onPolicy() = Unit
 
@@ -187,6 +195,13 @@ class NotificationsScreenshotTest {
     }
 
     @Test
+    fun numbersOff() = capture("notifications-numbers-off") {
+        CompositionLocalProvider(LocalReadingStyle provides ReadingStyle(showCounts = false)) {
+            NotificationsScreen(list, actions, navigationIcon = {})
+        }
+    }
+
+    @Test
     @Config(fontScale = 2f)
     fun syncSettingsLargeFont() = capture("notifications-settings-font200") {
         SyncRows(
@@ -198,6 +213,32 @@ class NotificationsScreenshotTest {
             onFrequency = {},
             onWifiOnly = {},
             onQuietHours = {},
+            onDigest = {},
+            onKinds = {},
+        )
+    }
+
+    @Test
+    @Config(fontScale = 2f)
+    fun syncSettingsDigestLargeFont() = capture("notifications-settings-digest-font200") {
+        SyncRows(
+            SyncSettingsUi(digest = Digest(hours = listOf(8, 18))),
+            onFrequency = {},
+            onWifiOnly = {},
+            onQuietHours = {},
+            onDigest = {},
+            onKinds = {},
+        )
+    }
+
+    @Test
+    fun syncSettingsDigest() = capture("notifications-settings-digest") {
+        SyncRows(
+            SyncSettingsUi(digest = Digest(hours = listOf(8, 18))),
+            onFrequency = {},
+            onWifiOnly = {},
+            onQuietHours = {},
+            onDigest = {},
             onKinds = {},
         )
     }

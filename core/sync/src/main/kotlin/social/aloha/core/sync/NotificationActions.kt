@@ -36,7 +36,7 @@ import social.aloha.core.model.Visibility
 
 /** What a notification's buttons do, and what their intents carry to do it. */
 internal object NotificationActions {
-    enum class Kind { Reply, Favourite, Boost }
+    enum class Kind { Reply, Favourite, Boost, Mute }
 
     const val EXTRA_TEXT = "reply"
     const val ACCOUNT = "account"
@@ -146,8 +146,8 @@ public class NotificationActionReceiver : BroadcastReceiver() {
 }
 
 /**
- * Favourites or boosts the post a notification is about, as the account it came to, then takes the
- * notification away. A favourite or boost that is already there stays.
+ * Favourites, boosts or mutes the post a notification is about, as the account it came to, then takes
+ * the notification away. A favourite, boost or mute that is already there stays.
  */
 @HiltWorker
 internal class NotificationActionWorker @AssistedInject constructor(
@@ -192,6 +192,7 @@ private fun NotificationActions.Kind.toggleFor(status: Status): Toggle? {
     return when (this) {
         NotificationActions.Kind.Favourite -> Toggle.Favourite.takeUnless { shown.favourited }
         NotificationActions.Kind.Boost -> Toggle.Boost.takeUnless { shown.reblogged }
+        NotificationActions.Kind.Mute -> Toggle.MuteConversation.takeUnless { shown.muted }
         NotificationActions.Kind.Reply -> null
     }
 }

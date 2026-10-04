@@ -72,6 +72,11 @@ internal object DataStoreModule {
 
     @Provides
     @Singleton
+    fun notificationPreferences(@AppStore store: DataStore<Preferences>): NotificationPreferences =
+        NotificationPreferences(store)
+
+    @Provides
+    @Singleton
     fun appLockPreferences(@AppStore store: DataStore<Preferences>): AppLockPreferences = AppLockPreferences(store)
 
     // an unreadable file starts over from the defaults rather than failing every screen that reads it

@@ -35,6 +35,10 @@
     </plurals>
     <!-- Count of accounts it follows; opens the list. %s is the formatted number -->
     <string name="profile_following_count">%s following</string>
+    <!-- Opens the list of accounts it follows, while the reader hides the numbers -->
+    <string name="profile_following_plain">Following</string>
+    <!-- Opens the list of its followers, while the reader hides the numbers -->
+    <string name="profile_followers_plain">Followers</string>
     <!-- Count of its followers; opens the list. %s is the formatted number -->
     <plurals name="profile_followers">
         <item quantity="one">%s follower</item>

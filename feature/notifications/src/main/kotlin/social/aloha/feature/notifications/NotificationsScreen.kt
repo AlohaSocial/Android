@@ -5,12 +5,14 @@ package social.aloha.feature.notifications
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -21,38 +23,53 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.paneTitle
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import java.time.Instant
+import kotlinx.coroutines.launch
 import social.aloha.core.data.Trouble
 import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.designsystem.badgeCount
 import social.aloha.core.model.NotificationKind
 import social.aloha.core.sync.NotificationText
+import social.aloha.core.ui.CaughtUpDivider
 import social.aloha.core.ui.ListProgress
+import social.aloha.core.ui.LocalReadingStyle
 import social.aloha.core.ui.NearEndEffect
 import social.aloha.core.ui.PostAge
 import social.aloha.core.ui.R as UiR
@@ -81,8 +98,17 @@ internal fun NotificationsScreen(
     modifier: Modifier = Modifier,
 ) {
     val title = stringResource(R.string.notifications_title)
+    val snackbars = remember { SnackbarHostState() }
+    val notice = state.notice?.let { stringResource(it) }
+    LaunchedEffect(notice) {
+        if (notice != null) {
+            snackbars.showSnackbar(notice)
+            actions.onNoticeShown()
+        }
+    }
     Scaffold(
         modifier = modifier.semantics { paneTitle = title },
+        snackbarHost = { SnackbarHost(snackbars) },
         topBar = {
             TopAppBar(
                 title = { Text(title) },
@@ -153,20 +179,35 @@ private fun Chips(kinds: Set<NotificationKind>, actions: NotificationsActions) {
     }
 }
 
+/** The rows, with the caught-up line between the last one new since the previous visit and the first seen. */
 @Composable
 private fun Rows(state: NotificationsUiState, actions: NotificationsActions) {
     val listState = rememberLazyListState()
+    val scope = rememberCoroutineScope()
     NearEndEffect(listState, state.rows.size, actions::onNearEnd)
     LazyColumn(
         state = listState,
         modifier = Modifier.readingColumn(),
         contentPadding = PaddingValues(bottom = AlohaSpacing.xl),
     ) {
-        items(state.rows, key = { it.key }) { row -> NotificationRow(row, state.now, actions) }
+        state.rows.forEachIndexed { index, row ->
+            if (index > 0 && state.rows[index - 1].unread && !row.unread) {
+                item(key = CAUGHT_UP) {
+                    CaughtUpDivider(onClick = { scope.launch { listState.animateScrollToItem(0) } })
+                }
+            }
+            item(key = row.key) { NotificationRow(row, state.now, actions) }
+        }
         if (state.loadingOlder) item { ListProgress() }
     }
 }
 
+private const val CAUGHT_UP = "caught-up"
+
+/**
+ * One notification. A mention or reply can mute its conversation: a long press offers it, and a screen
+ * reader finds it among the row's actions.
+ */
 @Composable
 internal fun NotificationRow(row: NotificationRowUi, now: Instant, actions: NotificationsActions) {
     val summary = summary(row)
@@ -175,57 +216,100 @@ internal fun NotificationRow(row: NotificationRowUi, now: Instant, actions: Noti
     val unread = stringResource(R.string.notifications_unread)
     val description = listOfNotNull(unread.takeIf { row.unread }, summary, row.preview, spokenAge).joinToString(". ")
     val background = if (row.unread) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surface
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .background(background)
-            .clickable(role = Role.Button) { actions.onOpen(row) }
-            .semantics { contentDescription = description }
-            .padding(horizontal = AlohaSpacing.m, vertical = AlohaSpacing.s),
-        horizontalArrangement = Arrangement.spacedBy(AlohaSpacing.m),
-    ) {
-        Icon(
-            row.kind.icon,
-            contentDescription = null,
-            tint = row.kind.tint(),
-            modifier = Modifier.padding(top = AlohaSpacing.xs).size(KIND_ICON),
-        )
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(AlohaSpacing.xs)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                if (row.avatars.isNotEmpty()) StackedAvatars(row.avatars, AVATAR)
-                Box(Modifier.weight(1f))
-                Text(
-                    age.short(stringResource(UiR.string.status_age_now)),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+    val mutable = row.kind == NotificationKind.Mention && row.statusId != null
+    val mute = stringResource(R.string.notifications_mute_conversation)
+    var menu by remember { mutableStateOf(false) }
+    Box {
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .background(background)
+                .combinedClickable(
+                    role = Role.Button,
+                    onLongClick = { if (mutable) menu = true },
+                    onClick = { actions.onOpen(row) },
                 )
-            }
-            Text(
-                summary,
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = if (row.unread) FontWeight.SemiBold else null,
-            )
-            row.preview?.let {
-                Text(
-                    it,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = PREVIEW_LINES,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-            if (row.groupKey != null && row.others > 0) {
-                TextButton(onClick = { actions.onOthers(row.groupKey) }) {
-                    Text(pluralStringResource(R.plurals.notifications_others, row.others, row.others))
+                .semantics {
+                    contentDescription = description
+                    if (mutable) {
+                        customActions = listOf(
+                            CustomAccessibilityAction(mute) {
+                                actions.onMuteConversation(row)
+                                true
+                            },
+                        )
+                    }
                 }
+                .padding(horizontal = AlohaSpacing.m, vertical = AlohaSpacing.s),
+            horizontalArrangement = Arrangement.spacedBy(AlohaSpacing.m),
+        ) { RowContent(row, summary, age, actions) }
+        DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+            DropdownMenuItem(
+                text = { Text(mute) },
+                leadingIcon = { Icon(AlohaIcons.MuteConversation, contentDescription = null) },
+                onClick = {
+                    menu = false
+                    actions.onMuteConversation(row)
+                },
+            )
+        }
+    }
+}
+
+@Composable
+private fun RowScope.RowContent(row: NotificationRowUi, summary: String, age: PostAge, actions: NotificationsActions) {
+    Icon(
+        row.kind.icon,
+        contentDescription = null,
+        tint = row.kind.tint(),
+        modifier = Modifier.padding(top = AlohaSpacing.xs).size(KIND_ICON),
+    )
+    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(AlohaSpacing.xs)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            if (row.avatars.isNotEmpty()) StackedAvatars(row.avatars, AVATAR)
+            Box(Modifier.weight(1f))
+            Text(
+                age.short(stringResource(UiR.string.status_age_now)),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        Text(
+            summary,
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = if (row.unread) FontWeight.SemiBold else null,
+        )
+        row.preview?.let {
+            Text(
+                it,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = PREVIEW_LINES,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        if (row.groupKey != null && row.others > 0) {
+            TextButton(onClick = { actions.onOthers(row.groupKey) }) {
+                Text(
+                    if (LocalReadingStyle.current.showCounts) {
+                        pluralStringResource(R.plurals.notifications_others, row.others, row.others)
+                    } else {
+                        stringResource(R.string.notifications_others_plain)
+                    },
+                )
             }
         }
     }
 }
 
 @Composable
-private fun summary(row: NotificationRowUi): String =
-    NotificationText.summary(LocalResources.current, row.kind, row.name, row.others)
+private fun summary(row: NotificationRowUi): String = NotificationText.summary(
+    LocalResources.current,
+    row.kind,
+    row.name,
+    row.others,
+    withCount = LocalReadingStyle.current.showCounts,
+)
 
 @Composable
 private fun Empty(filtered: Boolean) {

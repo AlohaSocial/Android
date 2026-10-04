@@ -66,6 +66,10 @@ public fun NotificationsRoute(
 
             override fun onOthers(groupKey: String) = viewModel.onOthers(groupKey)
 
+            override fun onMuteConversation(row: NotificationRowUi) = viewModel.onMuteConversation(row.key)
+
+            override fun onNoticeShown() = viewModel.onNoticeShown()
+
             override fun onPolicy() = onPolicy()
 
             override fun onRequests() = onRequests()

@@ -22,7 +22,7 @@ Between the phases: CI artifact retention ([#3](https://github.com/AlohaSocial/A
 
 ## In progress
 
-Phase 10, healthy use: notifications held for a digest at chosen times (a digest notification channel), and a mark where the previous visit ended. Not merged yet.
+Phase 10, healthy use, in [#18](https://github.com/AlohaSocial/Android/pull/18): notifications held for a digest at chosen times (a digest notification channel), a "You're caught up" line where the previous visit ended on Home and in Notifications, Mute conversation from a mention's notification and from its row, and Reading's Show numbers switch covering every popularity number. Not merged yet.
 
 ## Not built
 

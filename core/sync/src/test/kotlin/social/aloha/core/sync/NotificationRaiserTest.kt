@@ -35,6 +35,8 @@ import social.aloha.core.data.sync.SyncSettings
 import social.aloha.core.data.sync.UnreadCounts
 import social.aloha.core.datastore.AccountSettingsStore
 import social.aloha.core.datastore.AppPreferences
+import social.aloha.core.datastore.NotificationPreferences
+import social.aloha.core.model.Digest
 import social.aloha.core.model.QuietHours
 import social.aloha.core.model.ServerCapabilities
 import social.aloha.core.testing.InMemoryDataStore
@@ -71,6 +73,9 @@ private class Page : Dispatcher() {
                     """"most_recent_notification_id":"90","sample_account_ids":["1"]}]}""",
             )
 
+            // nobody followed: a relationship list with no one in it
+            path.endsWith("/relationships") -> json("[]")
+
             else -> json("{}")
         }
     }
@@ -96,6 +101,7 @@ class NotificationRaiserTest {
     private val settings = SyncSettings(
         AccountSettingsStore(InMemoryDataStore(emptyMap())),
         AppPreferences(InMemoryDataStore(emptyPreferences())),
+        NotificationPreferences(InMemoryDataStore(emptyPreferences())),
     )
     private val shade = shadowOf(context.getSystemService(NotificationManager::class.java))
 
@@ -171,7 +177,8 @@ class NotificationRaiserTest {
             NotificationCompat.getAction(mention, it)!!
         }
         assertTrue(actions.first().remoteInputs!!.isNotEmpty())
-        assertEquals(listOf("Reply", "Favourite", "Boost"), actions.map { it.title.toString() })
+        // a mention's third button mutes the thread rather than boosting it
+        assertEquals(listOf("Reply", "Favourite", "Mute conversation"), actions.map { it.title.toString() })
         // nothing is done from a locked phone
         assertTrue(actions.all { it.isAuthenticationRequired })
         // a favourite notice is about the person's own post: nothing to favourite or answer there
@@ -204,6 +211,34 @@ class NotificationRaiserTest {
         settings.setQuietHours(null)
         raiser().onUnreadChanged(account, count = 2)
         assertEquals(2, raised().size)
+    }
+
+    @Test
+    fun `with the digest on, a private mention is raised at once and the rest wait for one summary`() = runBlocking {
+        val account = signIn()
+        settings.setDigest(Digest(hours = listOf(8, 18)))
+        page.visibility = "direct"
+        val raiser = raiser()
+        assertTrue(raiser.onUnreadChanged(account, count = 3))
+        assertEquals(listOf(":mentions"), raised().map { it.channelId.substringAfter(account.id) })
+        raiser.digest()
+        val digest = raised().single { it.channelId.endsWith(":digest") }
+        // the follow at 90 is below the read marker at 100, so the two favourites are all that waited
+        assertEquals("2 new notifications", digest.extras.getString(Notification.EXTRA_TITLE))
+        assertEquals("2 favourites", digest.extras.getString(Notification.EXTRA_TEXT))
+        // the digest said it: a second one, and the next poll, add nothing
+        raiser.digest()
+        raiser.onUnreadChanged(account, count = 3)
+        assertEquals(2, raised().size)
+    }
+
+    @Test
+    fun `without personal mentions at once, the digest holds every notification`() = runBlocking {
+        val account = signIn()
+        settings.setDigest(Digest(hours = listOf(8), personalNow = false))
+        page.visibility = "direct"
+        assertTrue(raiser().onUnreadChanged(account, count = 3))
+        assertEquals(0, raised().size)
     }
 
     @Test

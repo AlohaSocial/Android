@@ -149,6 +149,11 @@ class StatusCardScreenshotTest {
     fun everydayRightToLeft() = capture("status-everyday-rtl", direction = LayoutDirection.Rtl) { Rows(everyday) }
 
     @Test
+    fun caughtUpRightToLeft() = capture("caught-up-rtl", direction = LayoutDirection.Rtl) {
+        Surface(color = MaterialTheme.colorScheme.background) { CaughtUpDivider(onClick = {}) }
+    }
+
+    @Test
     fun warnings() = capture("status-warnings") {
         Rows(listOf(StatusSamples.spoiler, StatusSamples.sensitive, StatusSamples.selfReply))
     }

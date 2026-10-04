@@ -48,6 +48,7 @@ import social.aloha.core.datastore.ModePreferences
 import social.aloha.core.datastore.ReadingPreferences
 import social.aloha.core.media.ImagePrefetcher
 import social.aloha.core.model.FeedMode
+import social.aloha.core.model.NotificationItem
 import social.aloha.core.model.SignedInAccount
 import social.aloha.core.model.Status
 import social.aloha.core.model.SwipeAction
@@ -94,6 +95,8 @@ internal class TimelineViewModel @AssistedInject constructor(
         val restoreTo: TimelineUiState.Restore? = null,
         val scrollToTop: Boolean = false,
         val actionFailed: Boolean = false,
+        /** The newest post read before this visit, above which the caught-up line goes; fixed for the visit. */
+        val caughtUpAt: String? = null,
     )
 
     private val colors = MutableStateFlow<RichTextColors?>(null)
@@ -128,7 +131,12 @@ internal class TimelineViewModel @AssistedInject constructor(
         combine(preferences.swipeTowardsEnd, preferences.swipeTowardsStart) { end, start -> end to start }
 
     /** What of [Control] the rows are built from; the rest changes the screen without rebuilding them. */
-    private data class Shaping(val held: Set<String>, val loadingGaps: Set<String>, val scrollToTop: Boolean)
+    private data class Shaping(
+        val held: Set<String>,
+        val loadingGaps: Set<String>,
+        val scrollToTop: Boolean,
+        val caughtUpAt: String?,
+    )
 
     /**
      * The rows with what they were shaped by, so a revealed pill, its rows and the scroll to them arrive
@@ -150,7 +158,7 @@ internal class TimelineViewModel @AssistedInject constructor(
                 colors.filterNotNull(),
                 accountSettings,
                 combine(pager.states, control) { paging, control ->
-                    Shaping(paging.held, paging.loadingGaps, control.scrollToTop)
+                    Shaping(paging.held, paging.loadingGaps, control.scrollToTop, control.caughtUpAt)
                 }.distinctUntilChanged(),
             ) {
                     stored,
@@ -170,7 +178,8 @@ internal class TimelineViewModel @AssistedInject constructor(
                     .distinctBy { it.id }
                     .take(PILL_AVATARS)
                     .map { it.avatar }
-                Shown(rows.build(account, key.source, stored, shape), held.size, avatars, shaping.scrollToTop)
+                val built = caughtUp(rows.build(account, key.source, stored, shape), shaping.caughtUpAt)
+                Shown(built, held.size, avatars, shaping.scrollToTop)
             }
         }
         .flowOn(Dispatchers.Default)
@@ -292,6 +301,10 @@ internal class TimelineViewModel @AssistedInject constructor(
         control.update { it.copy(scrollToTop = true) }
     }
 
+    override fun onCaughtUp() {
+        control.update { it.copy(scrollToTop = true) }
+    }
+
     override fun onScrolledToTop() {
         control.update { it.copy(scrollToTop = false) }
     }
@@ -370,20 +383,39 @@ internal class TimelineViewModel @AssistedInject constructor(
         return account to key.first()
     }
 
-    /** Waits for the first rows, then asks the screen to scroll to where this timeline was left. */
+    /**
+     * Marks where the previous visit ended, then, for a reader who restores, waits for the first rows
+     * and asks the screen to scroll there.
+     */
     private fun scheduleRestore(account: SignedInAccount, key: TimelineKey) {
         restoreJob?.cancel()
         restoreJob = viewModelScope.launch {
+            val saved = positions.saved(account, key)
+            // the read marker is home's own: another mode's timeline of the same source starts where it was left
+            val marker = positions.homeMarker(account)?.takeIf { key == TimelineKey.home() }
+            // the newest post read on any device is where this visit's news ends
+            val newestRead = listOfNotNull(saved?.statusId, marker).maxWithOrNull { a, b ->
+                when {
+                    a == b -> 0
+                    NotificationItem.isNewer(a, b) -> 1
+                    else -> -1
+                }
+            }
+            control.update { it.copy(caughtUpAt = newestRead) }
             // a reader who chose so starts at the newest post every time
             if (!reading.restorePosition.first()) return@launch
-            // the read marker is home's own: another mode's timeline of the same source starts where it was left
-            val saved = positions.saved(account, key)
-                ?: positions.homeMarker(account)?.takeIf { key == TimelineKey.home() }?.let { TimelinePosition(it, 0) }
-            saved ?: return@launch
+            val restore = saved ?: marker?.let { TimelinePosition(it, 0) } ?: return@launch
             val shown = items.first { it.items.isNotEmpty() }.items
-            val index = shown.indexOfFirst { it.key == saved.statusId }
-            if (index > 0) control.update { it.copy(restoreTo = TimelineUiState.Restore(index, saved.offset)) }
+            val index = shown.indexOfFirst { it.key == restore.statusId }
+            if (index > 0) control.update { it.copy(restoreTo = TimelineUiState.Restore(index, restore.offset)) }
         }
+    }
+
+    /** [items] with the caught-up line above the post [at], when that post is shown and is not the newest. */
+    private fun caughtUp(items: List<TimelineItem>, at: String?): List<TimelineItem> {
+        val index = if (at == null) -1 else items.indexOfFirst { it.key == at }
+        if (index <= 0) return items
+        return items.subList(0, index) + TimelineItem.CaughtUp + items.subList(index, items.size)
     }
 
     private suspend fun savePosition(position: TimelinePosition) {
@@ -417,5 +449,5 @@ internal class TimelineViewModel @AssistedInject constructor(
 
 private fun imagesOf(item: TimelineItem): List<String> = when (item) {
     is TimelineItem.Post -> listOfNotNull(item.row.author.avatarUrl) + item.row.media.mapNotNull { it.previewUrl }
-    is TimelineItem.Gap -> emptyList()
+    is TimelineItem.Gap, TimelineItem.CaughtUp -> emptyList()
 }

@@ -56,6 +56,8 @@ class TimelineScreenshotTest {
         override fun onMenu(row: StatusRowUi, item: StatusMenuItem) = Unit
         override fun onRefresh() = Unit
         override fun onRevealPending() = Unit
+
+        override fun onCaughtUp() = Unit
         override fun onScrolledToTop() = Unit
         override fun onRestored() = Unit
         override fun onSource(source: TimelineSource) = Unit
@@ -117,6 +119,19 @@ class TimelineScreenshotTest {
         ).mapIndexed { index, status -> TimelineItem.Post(mapper.map(status.copy(id = "photo$index"), "1", null)) }
         loaded(photos + photos.mapIndexed { index, item -> TimelineItem.Post(item.row.copy(rowId = "more$index")) })
             .copy(grid = true)
+    }
+
+    @Test
+    fun caughtUp() = capture("timeline-caught-up") {
+        val posts = posts()
+        loaded(listOf(posts[0], TimelineItem.CaughtUp, posts[1]))
+    }
+
+    @Test
+    @Config(fontScale = 2f)
+    fun caughtUpLargeFont() = capture("timeline-caught-up-font200") {
+        val posts = posts()
+        loaded(listOf(posts[0], TimelineItem.CaughtUp, posts[1]))
     }
 
     @Test

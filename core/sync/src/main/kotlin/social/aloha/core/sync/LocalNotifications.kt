@@ -44,9 +44,10 @@ public fun notificationsAllowed(context: Context): Boolean = Build.VERSION.SDK_I
 /**
  * What the device shows of an account's notifications. Each is raised under the notification's key, so
  * a group that grows is updated in place, without alerting again; mentions read as a conversation with
- * their author, and one can be answered, favourited or boosted from the notification once the phone is
- * unlocked. A private mention or a moderation notice shows only that it arrived on a locked screen. A
- * tap opens the post, or the profile of whoever did it, in the account it came to.
+ * their author, and one can be answered, favourited and muted or boosted from the notification once the
+ * phone is unlocked. A private mention or a moderation notice shows only that it arrived on a locked screen. A
+ * tap opens the post, or the profile of whoever did it, in the account it came to. With the digest on,
+ * what it held back is raised as one summary instead, at the times chosen.
  */
 public class LocalNotifications @Inject constructor(
     @param:ApplicationContext private val context: Context,
@@ -82,6 +83,31 @@ public class LocalNotifications @Inject constructor(
             post(tag(account.id), item.key.hashCode(), builder.build())
         }
         summary(account)
+    }
+
+    /**
+     * Raises what the digest held back of [account] as one notification: how many, and of what kind,
+     * opening the account's notifications. The one before it, if still up, is replaced.
+     */
+    internal fun showDigest(account: SignedInAccount, items: List<NotificationItem>, manyAccounts: Boolean) {
+        if (!allowed || items.isEmpty()) return
+        ensureChannels(context, account)
+        val lines = DIGEST_LINES.mapNotNull { (channel, plural) ->
+            val count = items.filter { NoticeChannel.of(it.kind) == channel }.sumOf { it.count }
+            if (count > 0) context.resources.getQuantityString(plural, count, count) else null
+        }
+        val total = items.sumOf { it.count }
+        val builder = NotificationCompat.Builder(context, channelId(account.id, NoticeChannel.Digest))
+            .setSmallIcon(R.drawable.ic_notification)
+            .setContentTitle(context.resources.getQuantityString(R.plurals.notification_summary, total, total))
+            .setContentText(lines.joinToString(context.getString(R.string.notification_digest_separator)))
+            .setStyle(NotificationCompat.BigTextStyle().bigText(lines.joinToString("\n")))
+            .setGroup(group(account.id))
+            .setContentIntent(open(account.id, item = null))
+            .setAutoCancel(true)
+            .setCategory(NotificationCompat.CATEGORY_SOCIAL)
+        if (manyAccounts) builder.setSubText(account.qualifiedHandle)
+        post(tag(account.id), DIGEST_ID, builder.build())
     }
 
     /** Takes [key]'s notification of [accountId] away, once it was acted on. */
@@ -177,10 +203,14 @@ public class LocalNotifications @Inject constructor(
             ).addRemoteInput(reply).setAllowGeneratedReplies(true).setAuthenticationRequired(true)
                 .setSemanticAction(NotificationCompat.Action.SEMANTIC_ACTION_REPLY).build(),
         )
-        listOf(
-            NotificationActions.Kind.Favourite to R.string.notification_favourite,
-            NotificationActions.Kind.Boost to R.string.notification_boost,
-        ).forEach { (kind, label) ->
+        // three buttons fit: a mention's third mutes its conversation, since the shade is where a thread
+        // that turned sour keeps coming back; a followed account's new post offers the boost instead
+        val third = if (item.kind == NotificationKind.Mention) {
+            NotificationActions.Kind.Mute to R.string.notification_mute
+        } else {
+            NotificationActions.Kind.Boost to R.string.notification_boost
+        }
+        listOf(NotificationActions.Kind.Favourite to R.string.notification_favourite, third).forEach { (kind, label) ->
             builder.addAction(
                 NotificationCompat.Action.Builder(
                     R.drawable.ic_notification,
@@ -211,10 +241,11 @@ public class LocalNotifications @Inject constructor(
                 PendingIntent.FLAG_UPDATE_CURRENT,
         )
 
-    private fun open(accountId: String, item: NotificationItem): PendingIntent = PendingIntent.getActivity(
+    /** What a tap opens: [item]'s post or author, or the account's notifications for a digest. */
+    private fun open(accountId: String, item: NotificationItem?): PendingIntent = PendingIntent.getActivity(
         context,
         0,
-        AppIntents.open(context, accountId, item.status?.id, item.newest?.id),
+        AppIntents.open(context, accountId, item?.status?.id, item?.newest?.id),
         PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
     )
 
@@ -240,7 +271,20 @@ public class LocalNotifications @Inject constructor(
 
     public companion object {
         private const val SUMMARY_ID = 0
+        private const val DIGEST_ID = 1
         private const val PREVIEW = 500
+
+        // the order a digest names its parts in: what asks for an answer first, what merely happened last
+        private val DIGEST_LINES = listOf(
+            NoticeChannel.Mentions to R.plurals.notification_digest_mentions,
+            NoticeChannel.Posts to R.plurals.notification_digest_posts,
+            NoticeChannel.Follows to R.plurals.notification_digest_follows,
+            NoticeChannel.Boosts to R.plurals.notification_digest_boosts,
+            NoticeChannel.Favourites to R.plurals.notification_digest_favourites,
+            NoticeChannel.Polls to R.plurals.notification_digest_polls,
+            NoticeChannel.Edits to R.plurals.notification_digest_edits,
+            NoticeChannel.Moderation to R.plurals.notification_digest_notices,
+        )
 
         private fun tag(accountId: String) = "notifications:$accountId"
 

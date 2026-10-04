@@ -15,6 +15,8 @@ This is the Apple app's specification, carried over as the product contract for 
 | Widgets (§4) | `WidgetUpdates.redraw()` (Glance) instead of `WidgetCenter.reloadAllTimelines()`, called when the unread count or the mentions change, when the app leaves the foreground, and on sign-out; the widgets have no schedule of their own. |
 | Maintenance (§4) | No maintenance task: the cache sweep and the upload-copy sweep run once at each launch. See [04-data-model.md](04-data-model.md). |
 | Local notifications | One notification channel per account and kind (mentions, follows, favourites, boosts, polls, new posts, edits, moderation) in a channel group per account; the system's channel settings are the per-kind, per-account switches. Mentions are `MessagingStyle` with a long-lived conversation shortcut per author. The permission is asked on the notifications tab, and once asked, the button opens the system settings. A digest channel, which holds notifications for chosen times, is in progress and not merged. |
+| Digest | Settings → Notifications → Delivery: as they arrive, or held and raised as one summary per account at one to four hours of the day (`Digest`, `DigestScheduler`, a WorkManager one-shot per digest hour, no alarm permission); private mentions and mentions from people followed may still come at once; a digest hour inside quiet hours waits for their end; the widgets redraw at digest times while the digest is on. Nothing is kept on the device for it: the digest raises what the server still lists as unread and not yet raised. |
+| Acting from the shade | A mention's notification offers Reply, Favourite and Mute conversation; a followed account's new post offers Reply, Favourite and Boost (three buttons fit). None while the app lock is on. |
 
 ---
 

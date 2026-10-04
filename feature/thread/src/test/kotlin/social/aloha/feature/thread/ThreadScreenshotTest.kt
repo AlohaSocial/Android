@@ -5,6 +5,7 @@ package social.aloha.feature.thread
 
 import android.app.Application
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.junit4.accessibility.enableAccessibilityChecks
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onRoot
@@ -28,8 +29,10 @@ import social.aloha.core.designsystem.ThemeMode
 import social.aloha.core.designsystem.ThemeSettings
 import social.aloha.core.html.RichTextCache
 import social.aloha.core.model.Reaction
+import social.aloha.core.model.ReadingStyle
 import social.aloha.core.navigation.StatusListKind
 import social.aloha.core.testing.StatusSamples
+import social.aloha.core.ui.LocalReadingStyle
 import social.aloha.core.ui.RichLinkTarget
 import social.aloha.core.ui.RichTextColors
 import social.aloha.core.ui.StatusActions
@@ -122,6 +125,13 @@ class ThreadScreenshotTest {
 
     @Test
     fun conversation() = capture("thread-conversation") { ThreadScreen(thread(), NoActions, NoActions) }
+
+    @Test
+    fun numbersOff() = capture("thread-numbers-off") {
+        CompositionLocalProvider(LocalReadingStyle provides ReadingStyle(showCounts = false)) {
+            ThreadScreen(thread(), NoActions, NoActions)
+        }
+    }
 
     @Test
     fun conversationDark() = capture("thread-conversation-dark", ThemeSettings(mode = ThemeMode.Dark)) {

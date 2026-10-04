@@ -444,17 +444,22 @@ private fun Actions(row: StatusRowUi, actions: StatusActions) {
         tick(!row.state.bookmarked)
         actions.onBookmark(row)
     }
-    // PeerTube's thumbs-down, read-only: the server carries the count but has no route to cast one
-    if (row.counts.dislikes > 0 && row.media.any { it.type.isPlayable }) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(AlohaIcons.Dislike, contentDescription = null, tint = muted, modifier = Modifier.size(SMALL_ICON))
-            Text(
-                row.counts.dislikes.toString(),
-                style = MaterialTheme.typography.labelMedium,
-                color = muted,
-                modifier = Modifier.padding(start = AlohaSpacing.xxs),
-            )
-        }
+    DislikeCount(row, muted)
+}
+
+/** PeerTube's thumbs-down, read-only: the server carries the count but has no route to cast one. */
+@Composable
+private fun DislikeCount(row: StatusRowUi, tint: Color) {
+    val shown = row.counts.dislikes > 0 && LocalReadingStyle.current.showCounts && row.media.any { it.type.isPlayable }
+    if (!shown) return
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Icon(AlohaIcons.Dislike, contentDescription = null, tint = tint, modifier = Modifier.size(SMALL_ICON))
+        Text(
+            row.counts.dislikes.toString(),
+            style = MaterialTheme.typography.labelMedium,
+            color = tint,
+            modifier = Modifier.padding(start = AlohaSpacing.xxs),
+        )
     }
 }
 

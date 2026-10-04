@@ -23,6 +23,10 @@
         <item quantity="one">%d boost</item>
         <item quantity="other">%d boosts</item>
     </plurals>
+    <!-- The favourites button while the reader hides the numbers -->
+    <string name="thread_favourites_plain">Favourites</string>
+    <!-- The boosts button while the reader hides the numbers -->
+    <string name="thread_boosts_plain">Boosts</string>
     <!-- Button under the post that opens the posts quoting it -->
     <string name="thread_quotes">Quotes</string>
     <!-- Button under the post that opens its emoji reactions -->

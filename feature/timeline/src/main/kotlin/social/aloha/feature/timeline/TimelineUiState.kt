@@ -49,6 +49,11 @@ internal sealed interface TimelineItem {
     data class Gap(val id: String, val loading: Boolean) : TimelineItem {
         override val key: String get() = id
     }
+
+    /** The line above the newest post of the previous visit: the posts above it are new since. */
+    data object CaughtUp : TimelineItem {
+        override val key: String get() = "caught-up"
+    }
 }
 
 /**
@@ -94,6 +99,9 @@ internal data class TimelineUiState(
 internal interface TimelineScreenActions {
     fun onRefresh()
     fun onRevealPending()
+
+    /** The caught-up line was tapped: back to the newest posts. */
+    fun onCaughtUp()
     fun onScrolledToTop()
     fun onRestored()
     fun onSource(source: TimelineSource)

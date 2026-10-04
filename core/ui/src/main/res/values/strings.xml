@@ -202,6 +202,10 @@
     <string name="status_cancel">Cancel</string>
     <!-- Read aloud as a spinner appears while more of a list loads -->
     <string name="list_loading">Loading</string>
+    <!-- On the line in a list below which everything was already seen on the previous visit -->
+    <string name="caught_up">You’re caught up</string>
+    <!-- Spoken for that line; %s is its text. Tapping it goes back to the newest posts -->
+    <string name="caught_up_spoken">%s. Everything below was here last time. Back to the newest</string>
     <!-- Brief notice after an action on a post failed -->
     <string name="status_action_failed">That didn\'t go through. Try again.</string>
     <!-- Brief notice after a post's link was copied -->

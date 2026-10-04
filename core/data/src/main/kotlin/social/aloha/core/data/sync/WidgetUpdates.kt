@@ -10,6 +10,8 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
+import social.aloha.core.datastore.NotificationPreferences
 import social.aloha.core.datastore.WidgetFeedStore
 import social.aloha.core.model.MentionSnippet
 import social.aloha.core.model.WidgetFeed
@@ -17,20 +19,27 @@ import social.aloha.core.model.WidgetFeed
 /**
  * What the home screen widgets show, kept where they read it without the network, and the redraw that
  * follows a change. A redraw reaches every widget of the app on a home screen, whichever kind it is.
+ * While notifications come as a digest, a change is stored but drawn only when the digest is, so the
+ * widgets prompt no more often than the notifications do.
  */
 @Singleton
 public class WidgetUpdates @Inject constructor(
     @param:ApplicationContext private val context: Context,
     private val store: WidgetFeedStore,
+    private val preferences: NotificationPreferences? = null,
 ) {
     public fun feed(accountId: String): Flow<WidgetFeed> = store.feed(accountId)
 
     public suspend fun setUnread(accountId: String, count: Int) {
-        if (store.update(accountId) { it.copy(unread = count) }) redraw()
+        if (store.update(accountId) { it.copy(unread = count) }) redrawUnlessHeld()
     }
 
     public suspend fun setMentions(accountId: String, mentions: List<MentionSnippet>) {
-        if (store.update(accountId) { it.copy(mentions = mentions) }) redraw()
+        if (store.update(accountId) { it.copy(mentions = mentions) }) redrawUnlessHeld()
+    }
+
+    private suspend fun redrawUnlessHeld() {
+        if (preferences?.digest?.first() == null) redraw()
     }
 
     public suspend fun forget(accountId: String) {
