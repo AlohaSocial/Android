@@ -53,6 +53,10 @@
     <string name="timeline_rate_limited">Your server asked the app to slow down. Try again in a moment.</string>
     <!-- A row standing for posts not loaded yet between two parts of the timeline -->
     <string name="timeline_gap">Load missing posts</string>
+    <!-- The same row, for a reader scrolling up to it: the posts load just above the ones they read -->
+    <string name="timeline_gap_above">Load missing posts above</string>
+    <!-- The same row, for a reader scrolling down to it: the posts load just below the ones they read -->
+    <string name="timeline_gap_below">Load missing posts below</string>
     <!-- Title of the empty timeline -->
     <string name="timeline_empty_title">Nothing here yet</string>
     <!-- Text of the empty home timeline -->

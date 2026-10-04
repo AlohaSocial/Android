@@ -91,6 +91,50 @@ class TimelineMergeTest {
     }
 
     @Test
+    fun `a gap filled from below takes the posts just above the row under it, and a short page closes it`() {
+        val existing = slots("9", "8") + Slot.gap("8", 970) + listOf(Slot("3", 960), Slot("2", 950))
+        val plan = TimelineMerge.plan(
+            existing,
+            listOf("6", "5", "4"),
+            Direction.FillingGap("gap:8", fromBelow = true),
+            pageWasFull = false,
+        )
+        assertEquals(listOf("9", "8", "6", "5", "4", "3", "2"), plan.slots.ids())
+        assertEquals(listOf("gap:8"), plan.closedGaps)
+        assertTrue(plan.openedGaps.isEmpty())
+        assertTrue(TimelineMerge.isWellFormed(plan.slots))
+    }
+
+    @Test
+    fun `a full page from below leaves the gap above what it filled, where the reader has not read yet`() {
+        val existing = slots("9", "8") + Slot.gap("8", 970) + listOf(Slot("3", 960), Slot("2", 950))
+        val plan = TimelineMerge.plan(
+            existing,
+            listOf("6", "5", "4"),
+            Direction.FillingGap("gap:8", fromBelow = true),
+            pageWasFull = true,
+        )
+        assertEquals(listOf("9", "8", "gap:6", "6", "5", "4", "3", "2"), plan.slots.ids())
+        assertEquals(listOf("gap:6"), plan.openedGaps)
+        assertTrue(TimelineMerge.isWellFormed(plan.slots))
+    }
+
+    @Test
+    fun `a page from below that reaches the rows above closes the gap and adds only what lies under them`() {
+        val existing = slots("9", "8") + Slot.gap("8", 970) + listOf(Slot("3", 960))
+        val plan = TimelineMerge.plan(
+            existing,
+            listOf("9", "8", "5", "4"),
+            Direction.FillingGap("gap:8", fromBelow = true),
+            pageWasFull = true,
+        )
+        assertEquals(listOf("9", "8", "5", "4", "3"), plan.slots.ids())
+        assertTrue(plan.openedGaps.isEmpty())
+        assertEquals(listOf("5", "4"), plan.inserted)
+        assertTrue(TimelineMerge.isWellFormed(plan.slots))
+    }
+
+    @Test
     fun `an empty gap-fill page proves the ranges touch and closes the gap`() {
         val existing = slots("9", "8") + Slot.gap("8", 970) + Slot("7", 960)
         val plan = TimelineMerge.plan(existing, emptyList(), Direction.FillingGap("gap:8"), pageWasFull = false)

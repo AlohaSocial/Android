@@ -76,7 +76,7 @@ internal fun PhotoGrid(
         ) { item ->
             when (item) {
                 is TimelineItem.Post -> Cell(item.row, onOpen = { rowActions.onMedia(item.row, 0) })
-                is TimelineItem.Gap -> GapRow(item, actions)
+                is TimelineItem.Gap -> GapRow(item, fromBelow = null) { actions.onFillGap(item.id) }
                 TimelineItem.CaughtUp -> CaughtUpDivider(onClick = actions::onCaughtUp)
             }
         }

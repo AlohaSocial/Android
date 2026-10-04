@@ -18,6 +18,7 @@ import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
+import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -71,8 +72,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalConfiguration
@@ -233,6 +238,7 @@ private fun Rows(
     val onKey = timelineKeyHandler(state, rowActions, listState, focus, onCompose, selected) { selected = it }
     val keyboard = LocalConfiguration.current.keyboard == Configuration.KEYBOARD_QWERTY
     LaunchedEffect(keyboard) { if (keyboard) focus.requestFocus() }
+    val gaps = rememberGapFilling(state, actions, listState)
     LazyColumn(
         state = listState,
         modifier = Modifier
@@ -244,7 +250,7 @@ private fun Rows(
         contentPadding = PaddingValues(bottom = AlohaSpacing.xl),
     ) {
         items(state.items, key = { it.key }, contentType = { it::class }) { item ->
-            Column(Modifier.itemMotion(this)) { TimelineRow(state, item, selected, actions, rowActions) }
+            Column(Modifier.itemMotion(this)) { TimelineRow(state, item, selected, actions, rowActions, gaps) }
         }
         if (state.loadingOlder) {
             item(contentType = "footer") { ListProgress() }
@@ -260,6 +266,7 @@ private fun TimelineRow(
     selected: String?,
     actions: TimelineScreenActions,
     rowActions: StatusActions,
+    gaps: GapFilling,
 ) {
     when (item) {
         is TimelineItem.Post -> SwipeRow(
@@ -288,21 +295,89 @@ private fun TimelineRow(
             )
         }
 
-        is TimelineItem.Gap -> GapRow(item, actions)
+        is TimelineItem.Gap -> GapRow(item, gaps.fromBelow) { gaps.fill(item) }
 
         TimelineItem.CaughtUp -> CaughtUpDivider(onClick = actions::onCaughtUp)
     }
     if (item != TimelineItem.CaughtUp) PostDivider()
 }
 
+/**
+ * Posts not loaded yet, between two torn edges. In the list it fills from the side the reader came from:
+ * [fromBelow] when they were scrolling up towards it, otherwise from above; a grid ([fromBelow] null)
+ * fills from above and says nothing of a side.
+ */
 @Composable
-internal fun GapRow(gap: TimelineItem.Gap, actions: TimelineScreenActions) {
-    if (gap.loading) {
-        ListProgress(size = GAP_PROGRESS)
-    } else {
-        Box(Modifier.fillMaxWidth().padding(AlohaSpacing.s), contentAlignment = Alignment.Center) {
-            OutlinedButton(onClick = { actions.onFillGap(gap.id) }) { Text(stringResource(R.string.timeline_gap)) }
+internal fun GapRow(gap: TimelineItem.Gap, fromBelow: Boolean?, onFill: () -> Unit) {
+    val torn = MaterialTheme.colorScheme.outlineVariant
+    Box(
+        Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surfaceContainerLow)
+            .tornEdges(torn)
+            .padding(AlohaSpacing.s),
+        contentAlignment = Alignment.Center,
+    ) {
+        if (gap.loading) {
+            ListProgress(size = GAP_PROGRESS)
+        } else {
+            val label = when (fromBelow) {
+                null -> R.string.timeline_gap
+                true -> R.string.timeline_gap_above
+                false -> R.string.timeline_gap_below
+            }
+            OutlinedButton(onClick = onFill) { Text(stringResource(label)) }
         }
+    }
+}
+
+/** A zigzag along the top and the bottom, as paper torn across. */
+private fun Modifier.tornEdges(color: Color): Modifier = drawBehind {
+    val tooth = TOOTH.toPx()
+    listOf(0f to tooth, size.height to size.height - tooth).forEach { (edge, peak) ->
+        val path = Path().apply {
+            moveTo(0f, edge)
+            var x = 0f
+            while (x < size.width) {
+                lineTo(x + tooth / 2, peak)
+                lineTo(x + tooth, edge)
+                x += tooth
+            }
+        }
+        drawPath(path, color, style = Stroke(width = 1.dp.toPx()))
+    }
+}
+
+/** Where the list's gaps fill from, and how the rows under a gap keep their place while it fills from below. */
+internal class GapFilling(val fromBelow: Boolean, val fill: (TimelineItem.Gap) -> Unit)
+
+/**
+ * A reader scrolling up towards a gap came from below it: it fills from the post under it, and that
+ * post stays where it is on screen while the new ones arrive above it.
+ */
+@Composable
+private fun rememberGapFilling(
+    state: TimelineUiState,
+    actions: TimelineScreenActions,
+    listState: LazyListState,
+): GapFilling {
+    var anchor by remember { mutableStateOf<Pair<String, Int>?>(null) }
+    LaunchedEffect(state.items) {
+        val (key, offset) = anchor ?: return@LaunchedEffect
+        if (state.items.any { it is TimelineItem.Gap && it.loading }) return@LaunchedEffect
+        anchor = null
+        val index = state.items.indexOfFirst { it.key == key }.takeIf { it >= 0 } ?: return@LaunchedEffect
+        listState.scrollToItem(index)
+        listState.scrollBy(-offset.toFloat())
+    }
+    val fromBelow = listState.lastScrolledBackward
+    return GapFilling(fromBelow) { gap ->
+        if (fromBelow) {
+            val below = state.items.getOrNull(state.items.indexOf(gap) + 1)?.key
+            val visible = listState.layoutInfo.visibleItemsInfo.firstOrNull { it.key == below }
+            anchor = if (below != null && visible != null) below to visible.offset else null
+        }
+        actions.onFillGap(gap.id, fromBelow)
     }
 }
 
@@ -537,6 +612,7 @@ private val SKELETON_NAME = 120.dp
 private val SKELETON_SHORT = 180.dp
 private val SKELETON_LINE = 14.dp
 private val GAP_PROGRESS = 24.dp
+private val TOOTH = 12.dp
 
 /** The home list's test tag, which the scroll benchmark finds it by. */
 internal const val TIMELINE_LIST = "timeline"

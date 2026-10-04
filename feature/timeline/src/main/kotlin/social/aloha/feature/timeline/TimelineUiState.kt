@@ -110,7 +110,9 @@ internal interface TimelineScreenActions {
     fun onGrid(grid: Boolean)
     fun onScrolled(rowId: String, offset: Int)
     fun onNearEnd()
-    fun onFillGap(gapId: String)
+
+    /** Fills a gap from the post above it, or, [fromBelow], from the post under it upwards. */
+    fun onFillGap(gapId: String, fromBelow: Boolean = false)
 
     /** A swipe that changes the post; a reply opens the post instead, which the screen does. */
     fun onSwipe(row: StatusRowUi, action: SwipeAction)

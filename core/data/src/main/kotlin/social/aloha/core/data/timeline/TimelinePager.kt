@@ -110,13 +110,14 @@ public class TimelinePager(
     }
 
     /** Fills [gapId] from just below the post over it. */
-    public fun fillGap(gapId: String) {
+    public fun fillGap(gapId: String, fromBelow: Boolean = false) {
         val index = stored.indexOfFirst { it.id == gapId }.takeIf { it >= 0 } ?: return
         val above = stored.subList(0, index).lastOrNull { it is TimelineRow.Post }?.id
+        val below = if (fromBelow) stored.drop(index + 1).firstOrNull { it is TimelineRow.Post }?.id else null
         state.update { it.copy(loadingGaps = it.loadingGaps + gapId) }
         scope.launch {
             val (account, key) = current() ?: return@launch
-            val outcome = timelines.fillGap(account, key, gapId, above)
+            val outcome = timelines.fillGap(account, key, gapId, above, below)
             if (!current().shows(account, key)) return@launch
             state.update { now ->
                 now.copy(

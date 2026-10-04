@@ -349,7 +349,7 @@ internal class TimelineViewModel @AssistedInject constructor(
     /** The list came within ten rows of its end: the next page, unless one is on its way or there is none. */
     override fun onNearEnd() = pager.older()
 
-    override fun onFillGap(gapId: String) = pager.fillGap(gapId)
+    override fun onFillGap(gapId: String, fromBelow: Boolean) = pager.fillGap(gapId, fromBelow)
 
     override fun onSwipe(row: StatusRowUi, action: SwipeAction) {
         when (action) {
