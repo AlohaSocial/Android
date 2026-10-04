@@ -1,0 +1,38 @@
+# SPDX-FileCopyrightText: 2026 Aloha Social contributors
+# SPDX-License-Identifier: MIT
+#
+# Signs in to the mock server (scripts/ui-flows.sh serves it at ${SERVER}) the way a person does: the
+# terms, the server address, the browser's consent page, back into the app, the home timeline.
+appId: social.aloha.android
+---
+- launchApp:
+    clearState: true
+- runFlow: system-ui.yaml
+- tapOn: "Agree and continue"
+- tapOn: "Add your account"
+- tapOn: "Your server"
+- inputText: ${SERVER}
+- tapOn: "Continue"
+- tapOn: "Sign in"
+# a browser that has never run asks its first questions before it shows the page
+- repeat:
+    times: 4
+    commands:
+      - runFlow:
+          when:
+            visible: "Use without an account|Stay signed out|No thanks|No, thanks|Accept & continue|Got it"
+          commands:
+            - tapOn: "Use without an account|Stay signed out|No thanks|No, thanks|Accept & continue|Got it"
+- extendedWaitUntil:
+    visible: "Authorize"
+    timeout: 30000
+- tapOn: "Authorize"
+- extendedWaitUntil:
+    visible: "Make it yours"
+    timeout: 30000
+- tapOn: "Done"
+# Home, with the mock's timeline under it
+- extendedWaitUntil:
+    visible: "Following"
+    timeout: 20000
+- assertVisible: ".*@alice.*"

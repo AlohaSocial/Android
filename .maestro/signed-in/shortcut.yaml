@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: 2026 Aloha Social contributors
+# SPDX-License-Identifier: MIT
+#
+# After a launcher shortcut's intent: ${SCREEN} (text or description) shows, and Back leaves it.
+appId: social.aloha.android
+---
+- extendedWaitUntil:
+    visible: ${SCREEN}
+    timeout: 15000
+- back

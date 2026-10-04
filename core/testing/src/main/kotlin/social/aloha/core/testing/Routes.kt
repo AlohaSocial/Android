@@ -3,6 +3,7 @@
 
 package social.aloha.core.testing
 
+import java.net.URLEncoder
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
@@ -15,6 +16,9 @@ public object MockCredentials {
     public const val ACCESS_TOKEN: String = "mock-access-token"
     public const val CLIENT_ID: String = "mock-client-id"
     public const val CLIENT_SECRET: String = "mock-client-secret"
+
+    /** What the consent page hands back to the app; any code is exchanged for [ACCESS_TOKEN]. */
+    public const val AUTHORIZATION_CODE: String = "mock-authorization-code"
 
     /** A token the server treats as revoked: every authenticated route answers 401. */
     public const val REVOKED_TOKEN: String = "revoked-token"
@@ -68,11 +72,33 @@ internal class Routes(private val configuration: MockServerConfiguration) {
     fun synthesized(method: String, url: HttpUrl, authorization: String?): Fixture? {
         val path = resolvePath(url.encodedPath) ?: return null
         return when {
+            method == "GET" && path.endsWith("/oauth/authorize") -> consent(path, url)
             method == "POST" && path.endsWith("/oauth/revoke") -> json(path, "{}")
             configuration == MockServerConfiguration.NextcloudConnected -> loginFlow(method, path)
             configuration == MockServerConfiguration.Mastodon -> mastodon(method, path, authorization)
             else -> null
         }
+    }
+
+    /**
+     * The consent page a person sees in the browser: one link back to the app with a code and the state it
+     * was asked with, so a UI test can sign in by tapping "Authorize" as a person would.
+     */
+    private fun consent(path: String, url: HttpUrl): Fixture {
+        val back = url.queryParameter("redirect_uri").orEmpty() + "?code=" + MockCredentials.AUTHORIZATION_CODE +
+            "&state=" + URLEncoder.encode(url.queryParameter("state").orEmpty(), "UTF-8")
+        val href = back.replace("&", "&amp;").replace("\"", "&quot;")
+        return Fixture(
+            name = "synthesized$path",
+            method = "GET",
+            path = path,
+            query = emptyMap(),
+            status = OK,
+            headers = mapOf("content-type" to "text/html; charset=utf-8"),
+            body = """<!doctype html><html><head><meta name="viewport" content="width=device-width">""" +
+                """<title>Mock server</title></head><body><h1>Mock server</h1>""" +
+                """<p><a href="$href" style="font-size:2em">Authorize</a></p></body></html>""",
+        )
     }
 
     /** The sign-in routes of the Mastodon shape, which the captured discovery documents do not include. */

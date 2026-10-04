@@ -1,0 +1,12 @@
+# SPDX-FileCopyrightText: 2026 Aloha Social contributors
+# SPDX-License-Identifier: MIT
+#
+# A freshly booted CI emulator often shows "System UI isn't responding" over the app; wait it out
+# (text selectors match the whole text, so the pattern needs its wildcards).
+appId: social.aloha.android
+---
+- runFlow:
+    when:
+      visible: ".*isn't responding.*"
+    commands:
+      - tapOn: "Wait"

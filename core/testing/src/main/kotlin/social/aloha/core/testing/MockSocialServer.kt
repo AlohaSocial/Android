@@ -58,14 +58,15 @@ public class MockSocialServer(public val configuration: MockServerConfiguration)
     /** The origin a person would type. */
     public val origin: HttpUrl get() = server.url("/")
 
-    public fun start(): MockSocialServer = apply {
+    /** Starts on [port], or on any free one when 0. */
+    public fun start(port: Int = 0): MockSocialServer = apply {
         server.dispatcher = object : Dispatcher() {
             override fun dispatch(request: RecordedRequest): MockResponse {
                 recorded += request
                 return answer(request)
             }
         }
-        server.start()
+        server.start(port)
     }
 
     /** Answers `method path` (path without query) with the fixture [name] from now on, e.g. a per-person variant. */

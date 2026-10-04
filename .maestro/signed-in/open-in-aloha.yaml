@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: 2026 Aloha Social contributors
+# SPDX-License-Identifier: MIT
+#
+# After "Open in Aloha" was handed a profile address: the profile opens, and Back returns.
+appId: social.aloha.android
+---
+- extendedWaitUntil:
+    visible: "@bob"
+    timeout: 15000
+- tapOn: "Back"

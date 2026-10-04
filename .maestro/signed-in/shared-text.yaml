@@ -1,0 +1,14 @@
+# SPDX-FileCopyrightText: 2026 Aloha Social contributors
+# SPDX-License-Identifier: MIT
+#
+# After `am start -a android.intent.action.SEND` (the share sheet, or a Direct Share target): the
+# composer holds ${TEXT} and posts as the signed-in account; closed, the draft is discarded.
+appId: social.aloha.android
+---
+- extendedWaitUntil:
+    visible: ${TEXT}
+    timeout: 15000
+- assertVisible:
+    text: "Posting as @alice@localhost"
+- tapOn: "Close"
+- tapOn: "Discard"

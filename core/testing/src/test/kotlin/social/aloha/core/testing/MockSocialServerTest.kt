@@ -149,4 +149,16 @@ class MockSocialServerTest {
         ).execute()
         poll.use { assertTrue(it.body.string().contains(MockCredentials.APP_PASSWORD)) }
     }
+
+    @Test
+    fun `the consent page links back to the app with a code and the state it was asked with`() {
+        val server = start(MockServerConfiguration.NextcloudWithRewrite)
+        val page = server.get("/oauth/authorize?redirect_uri=alohasocial://oauth-callback&state=a%2Bb", token = null)
+        assertEquals(200, page.code)
+        val body = page.body.string()
+        assertTrue(
+            "href=\"alohasocial://oauth-callback?code=${MockCredentials.AUTHORIZATION_CODE}&amp;state=a%2Bb\"" in body,
+            body,
+        )
+    }
 }
