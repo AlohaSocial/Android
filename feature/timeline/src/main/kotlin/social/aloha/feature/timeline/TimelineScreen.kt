@@ -47,30 +47,22 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Surface
-import androidx.compose.material3.SwipeToDismissBox
-import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
-import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.testTag
@@ -85,15 +77,11 @@ import androidx.compose.ui.semantics.paneTitle
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.launch
 import social.aloha.core.data.Trouble
 import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaSpacing
-import social.aloha.core.designsystem.LocalAlohaSemanticColors
-import social.aloha.core.model.SensitiveMediaPolicy
 import social.aloha.core.model.SwipeAction
 import social.aloha.core.model.TimelineSource
 import social.aloha.core.ui.CaughtUpDivider
@@ -103,7 +91,6 @@ import social.aloha.core.ui.NearEndEffect
 import social.aloha.core.ui.StackedAvatars
 import social.aloha.core.ui.StatusActions
 import social.aloha.core.ui.StatusCard
-import social.aloha.core.ui.StatusRowUi
 import social.aloha.core.ui.TroubleStrip
 import social.aloha.core.ui.readingColumn
 
@@ -268,86 +255,6 @@ private fun Rows(
     }
 }
 
-/**
- * Swiping a post across does what the settings chose for each direction (favouriting towards the end
- * and boosting towards the start until chosen otherwise); a direction set to nothing stays still, and
- * the row springs back either way.
- */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun SwipeRow(
-    row: StatusRowUi,
-    selected: Boolean,
-    towardsEnd: SwipeAction,
-    towardsStart: SwipeAction,
-    onSwipe: (StatusRowUi, SwipeAction) -> Unit,
-    content: @Composable () -> Unit,
-) {
-    val current by rememberUpdatedState(row)
-    val swipe = rememberSwipeToDismissBoxState()
-    val scope = rememberCoroutineScope()
-    SwipeToDismissBox(
-        state = swipe,
-        enableDismissFromStartToEnd = towardsEnd != SwipeAction.None,
-        enableDismissFromEndToStart = towardsStart != SwipeAction.None,
-        backgroundContent = {
-            val end = swipe.dismissDirection == SwipeToDismissBoxValue.StartToEnd
-            Row(
-                Modifier.fillMaxSize().background(
-                    MaterialTheme.colorScheme.surfaceContainerHigh,
-                ).padding(horizontal = AlohaSpacing.l),
-                horizontalArrangement = if (end) Arrangement.Start else Arrangement.End,
-                verticalAlignment = Alignment.CenterVertically,
-            ) { SwipeIcon(if (end) towardsEnd else towardsStart) }
-        },
-        onDismiss = { value ->
-            when (value) {
-                SwipeToDismissBoxValue.StartToEnd -> onSwipe(current, towardsEnd)
-                SwipeToDismissBoxValue.EndToStart -> onSwipe(current, towardsStart)
-                SwipeToDismissBoxValue.Settled -> Unit
-            }
-            scope.launch { swipe.reset() }
-        },
-    ) {
-        // the post the keyboard selected stands out from the rest, by a bar along its start as well as
-        // by its colour
-        val bar = MaterialTheme.colorScheme.primary
-        Surface(
-            color = MaterialTheme.colorScheme.run { if (selected) surfaceContainerHigh else background },
-            modifier = Modifier.drawWithContent {
-                drawContent()
-                if (selected) {
-                    val x = if (layoutDirection == LayoutDirection.Ltr) 0f else size.width - SELECTED_BAR.toPx()
-                    drawRect(bar, Offset(x, 0f), Size(SELECTED_BAR.toPx(), size.height))
-                }
-            },
-        ) { content() }
-    }
-}
-
-@Composable
-private fun SwipeIcon(action: SwipeAction) {
-    val semantic = LocalAlohaSemanticColors.current
-    val muted = MaterialTheme.colorScheme.onSurfaceVariant
-    val (icon, tint) = when (action) {
-        SwipeAction.Favourite -> AlohaIcons.Favourited to semantic.favourite
-        SwipeAction.Boost -> AlohaIcons.Boosted to semantic.boost
-        SwipeAction.Bookmark -> AlohaIcons.Bookmarked to semantic.bookmark
-        SwipeAction.Reply -> AlohaIcons.Reply to muted
-        SwipeAction.None -> return
-    }
-    Icon(icon, stringResource(swipeLabel(action)), tint = tint)
-}
-
-/** What each swipe choice is called, here and in the settings. */
-internal fun swipeLabel(action: SwipeAction): Int = when (action) {
-    SwipeAction.Favourite -> R.string.timeline_swipe_favourite
-    SwipeAction.Boost -> R.string.timeline_swipe_boost
-    SwipeAction.Bookmark -> R.string.timeline_swipe_bookmark
-    SwipeAction.Reply -> R.string.timeline_swipe_reply
-    SwipeAction.None -> R.string.timeline_swipe_none
-}
-
 @Composable
 internal fun GapRow(gap: TimelineItem.Gap, actions: TimelineScreenActions) {
     if (gap.loading) {
@@ -390,7 +297,6 @@ private fun NewPostsPill(count: Int, avatars: List<String?>, onReveal: () -> Uni
 }
 
 private val PILL_AVATAR = 24.dp
-private val SELECTED_BAR = 3.dp
 
 @Composable
 private fun SourceRow(source: TimelineSource, sources: List<TimelineSource>, onSource: (TimelineSource) -> Unit) {
