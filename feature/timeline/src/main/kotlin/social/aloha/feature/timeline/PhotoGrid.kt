@@ -43,6 +43,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaSpacing
+import social.aloha.core.ui.CaughtUpDivider
 import social.aloha.core.ui.ListProgress
 import social.aloha.core.ui.MediaImage
 import social.aloha.core.ui.StatusActions
@@ -71,11 +72,12 @@ internal fun PhotoGrid(
             state.items,
             key = { it.key },
             contentType = { it::class },
-            span = { if (it is TimelineItem.Gap) GridItemSpan(maxLineSpan) else GridItemSpan(1) },
+            span = { if (it is TimelineItem.Post) GridItemSpan(1) else GridItemSpan(maxLineSpan) },
         ) { item ->
             when (item) {
                 is TimelineItem.Post -> Cell(item.row, onOpen = { rowActions.onMedia(item.row, 0) })
                 is TimelineItem.Gap -> GapRow(item, actions)
+                TimelineItem.CaughtUp -> CaughtUpDivider(onClick = actions::onCaughtUp)
             }
         }
         if (state.loadingOlder) {

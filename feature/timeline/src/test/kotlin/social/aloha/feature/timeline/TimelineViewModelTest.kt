@@ -40,6 +40,7 @@ import social.aloha.core.data.sync.TimelineSignals
 import social.aloha.core.data.timeline.FilterRepository
 import social.aloha.core.data.timeline.StatusInteractions
 import social.aloha.core.data.timeline.StatusRepository
+import social.aloha.core.data.timeline.TimelinePosition
 import social.aloha.core.data.timeline.TimelinePositions
 import social.aloha.core.data.timeline.TimelineRepository
 import social.aloha.core.data.timeline.Toggle
@@ -191,6 +192,28 @@ class TimelineViewModelTest {
             // one off screen is not kept fresh: it refreshes when it is shown again
             assertFalse(signals.onScreen(account.id))
         }
+
+    @Test
+    fun `the caught-up line sits above the newest post read before, from this device or the server`() = runBlocking {
+        await { it.loadedOnce && it.items.isNotEmpty() }
+        // nothing read before: no line
+        assertFalse(await { it.loadedOnce }.items.any { it is TimelineItem.CaughtUp })
+        val account = accounts.activeAccount.value!!
+        // the previous visit on this device ended at 95, and the process started over
+        TimelinePositions(cache.positionDao(), clients).save(account, TimelineKey.home(), TimelinePosition("95", 0))
+        viewModel = create(TimelineFeed.Home)
+        val state = await { it.items.any { item -> item is TimelineItem.CaughtUp } }
+        assertEquals("95", state.items[state.items.indexOf(TimelineItem.CaughtUp) + 1].key)
+        // the restore lands on the post itself, the line just above the top edge
+        assertEquals(TimelineUiState.Restore(index = 6, offset = 0), await { it.restoreTo != null }.restoreTo)
+        // another device read on to 98: the line follows the newest read anywhere
+        timeline.homeMarker = 98
+        viewModel = create(TimelineFeed.Home)
+        val synced = await { it.items.any { item -> item is TimelineItem.CaughtUp } }
+        assertEquals("98", synced.items[synced.items.indexOf(TimelineItem.CaughtUp) + 1].key)
+        viewModel.onCaughtUp()
+        assertTrue(await { it.scrollToTop }.scrollToTop)
+    }
 
     @Test
     fun `nearing the end loads the next page below`() = runBlocking {

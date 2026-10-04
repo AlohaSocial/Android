@@ -31,6 +31,9 @@ public class NumberedTimeline(template: JsonObject = homeTemplate()) : Dispatche
     @Volatile public var media: (Int) -> List<JsonObject> = { emptyList() }
 
     @Volatile public var narrows: Boolean = false
+
+    /** The home read marker the server keeps, by post number; null for a server that keeps none. */
+    @Volatile public var homeMarker: Int? = null
     private val template = JsonObject(template + ("reblog" to JsonNull))
 
     override fun dispatch(request: RecordedRequest): MockResponse {
@@ -39,10 +42,12 @@ public class NumberedTimeline(template: JsonObject = homeTemplate()) : Dispatche
         return when {
             action != null -> action(action.groupValues[1], action.groupValues[2])
             path.endsWith("/filters") -> json("[]")
-            path.endsWith("/markers") -> json("{}")
+            path.endsWith("/markers") -> json(homeMarker?.let { marker(it) } ?: "{}")
             else -> page(request.url)
         }
     }
+
+    private fun marker(post: Int) = """{"home":{"last_read_id":"$post","version":1}}"""
 
     private fun page(url: HttpUrl): MockResponse {
         val ids = pick(url, url.queryParameter("limit")?.toInt() ?: DEFAULT_LIMIT)

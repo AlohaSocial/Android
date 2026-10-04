@@ -96,6 +96,7 @@ import social.aloha.core.designsystem.LocalAlohaSemanticColors
 import social.aloha.core.model.SensitiveMediaPolicy
 import social.aloha.core.model.SwipeAction
 import social.aloha.core.model.TimelineSource
+import social.aloha.core.ui.CaughtUpDivider
 import social.aloha.core.ui.ListProgress
 import social.aloha.core.ui.LocalSensitiveMediaPolicy
 import social.aloha.core.ui.NearEndEffect
@@ -256,8 +257,10 @@ private fun Rows(
                 }
 
                 is TimelineItem.Gap -> GapRow(item, actions)
+
+                TimelineItem.CaughtUp -> CaughtUpDivider(onClick = actions::onCaughtUp)
             }
-            HorizontalDivider()
+            if (item != TimelineItem.CaughtUp) HorizontalDivider()
         }
         if (state.loadingOlder) {
             item(contentType = "footer") { ListProgress() }

@@ -32,6 +32,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -46,12 +47,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import java.time.Instant
+import kotlinx.coroutines.launch
 import social.aloha.core.data.Trouble
 import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.designsystem.badgeCount
 import social.aloha.core.model.NotificationKind
 import social.aloha.core.sync.NotificationText
+import social.aloha.core.ui.CaughtUpDivider
 import social.aloha.core.ui.ListProgress
 import social.aloha.core.ui.NearEndEffect
 import social.aloha.core.ui.PostAge
@@ -153,19 +156,30 @@ private fun Chips(kinds: Set<NotificationKind>, actions: NotificationsActions) {
     }
 }
 
+/** The rows, with the caught-up line between the last one new since the previous visit and the first seen. */
 @Composable
 private fun Rows(state: NotificationsUiState, actions: NotificationsActions) {
     val listState = rememberLazyListState()
+    val scope = rememberCoroutineScope()
     NearEndEffect(listState, state.rows.size, actions::onNearEnd)
     LazyColumn(
         state = listState,
         modifier = Modifier.readingColumn(),
         contentPadding = PaddingValues(bottom = AlohaSpacing.xl),
     ) {
-        items(state.rows, key = { it.key }) { row -> NotificationRow(row, state.now, actions) }
+        state.rows.forEachIndexed { index, row ->
+            if (index > 0 && state.rows[index - 1].unread && !row.unread) {
+                item(key = CAUGHT_UP) {
+                    CaughtUpDivider(onClick = { scope.launch { listState.animateScrollToItem(0) } })
+                }
+            }
+            item(key = row.key) { NotificationRow(row, state.now, actions) }
+        }
         if (state.loadingOlder) item { ListProgress() }
     }
 }
+
+private const val CAUGHT_UP = "caught-up"
 
 @Composable
 internal fun NotificationRow(row: NotificationRowUi, now: Instant, actions: NotificationsActions) {
