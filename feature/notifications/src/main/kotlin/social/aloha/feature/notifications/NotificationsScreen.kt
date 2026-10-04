@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
@@ -76,10 +77,16 @@ import social.aloha.core.ui.PostAge
 import social.aloha.core.ui.R as UiR
 import social.aloha.core.ui.RefreshBox
 import social.aloha.core.ui.StackedAvatars
+import social.aloha.core.ui.TopBarTitle
 import social.aloha.core.ui.TroubleStrip
+import social.aloha.core.ui.itemMotion
 import social.aloha.core.ui.readingColumn
+import social.aloha.core.ui.rememberReducedMotion
+import social.aloha.core.ui.rememberTopScroll
+import social.aloha.core.ui.scrollToTop
 import social.aloha.core.ui.short
 import social.aloha.core.ui.spoken
+import social.aloha.core.ui.topScrollTail
 
 /** The chips across the top, each backed by the server's `types` filter. */
 private val FILTERS = listOf(
@@ -109,12 +116,14 @@ internal fun NotificationsScreen(
         }
     }
     val bar = TopAppBarDefaults.pinnedScrollBehavior()
+    val listState = rememberLazyListState()
+    val scrollToTop = rememberTopScroll(listState)
     Scaffold(
         modifier = modifier.nestedScroll(bar.nestedScrollConnection).semantics { paneTitle = title },
         snackbarHost = { SnackbarHost(snackbars) },
         topBar = {
             TopAppBar(
-                title = { Text(title) },
+                title = { TopBarTitle(title, scrollToTop) },
                 scrollBehavior = bar,
                 navigationIcon = navigationIcon,
                 actions = {
@@ -136,7 +145,7 @@ internal fun NotificationsScreen(
                 modifier = Modifier.fillMaxSize(),
             ) {
                 when {
-                    state.rows.isNotEmpty() -> Rows(state, actions)
+                    state.rows.isNotEmpty() -> Rows(state, actions, listState)
                     state.loadedOnce -> Empty(state.kinds.isNotEmpty())
                     else -> ListProgress()
                 }
@@ -185,9 +194,10 @@ private fun Chips(kinds: Set<NotificationKind>, actions: NotificationsActions) {
 
 /** The rows, with the caught-up line between the last one new since the previous visit and the first seen. */
 @Composable
-private fun Rows(state: NotificationsUiState, actions: NotificationsActions) {
-    val listState = rememberLazyListState()
+private fun Rows(state: NotificationsUiState, actions: NotificationsActions, listState: LazyListState) {
     val scope = rememberCoroutineScope()
+    val tail = topScrollTail()
+    val reduced = rememberReducedMotion()
     NearEndEffect(listState, state.rows.size, actions::onNearEnd)
     LazyColumn(
         state = listState,
@@ -197,10 +207,10 @@ private fun Rows(state: NotificationsUiState, actions: NotificationsActions) {
         state.rows.forEachIndexed { index, row ->
             if (index > 0 && state.rows[index - 1].unread && !row.unread) {
                 item(key = CAUGHT_UP) {
-                    CaughtUpDivider(onClick = { scope.launch { listState.animateScrollToItem(0) } })
+                    CaughtUpDivider(onClick = { scope.launch { listState.scrollToTop(tail, reduced) } })
                 }
             }
-            item(key = row.key) { NotificationRow(row, state.now, actions) }
+            item(key = row.key) { Box(Modifier.itemMotion(this)) { NotificationRow(row, state.now, actions) } }
         }
         if (state.loadingOlder) item { ListProgress() }
     }

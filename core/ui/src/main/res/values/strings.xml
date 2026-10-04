@@ -20,6 +20,10 @@
     <string name="status_bot">Automated account</string>
     <!-- Badge on a post that was edited after it was published -->
     <string name="status_edited">Edited</string>
+    <!-- What a tap on a screen's title does, said by a screen reader: the list goes back to its top -->
+    <string name="list_scroll_to_top">Scroll to top</string>
+    <!-- Screen reader action on the new posts pill: hides it, leaving the new posts where they wait -->
+    <string name="list_new_posts_dismiss">Dismiss</string>
     <!-- Screen reader action on an edited post: opens the list of its earlier versions -->
     <string name="status_action_history">Edit history</string>
     <!-- Badge on a post only followers can see -->

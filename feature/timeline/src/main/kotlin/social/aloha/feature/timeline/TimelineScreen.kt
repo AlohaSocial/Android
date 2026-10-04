@@ -6,9 +6,20 @@ package social.aloha.feature.timeline
 import android.content.res.Configuration
 import androidx.activity.compose.ReportDrawnWhen
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.focusable
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -65,12 +76,15 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.paneTitle
@@ -81,6 +95,7 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.distinctUntilChanged
 import social.aloha.core.data.Trouble
 import social.aloha.core.designsystem.AlohaIcons
+import social.aloha.core.designsystem.AlohaMotion
 import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.model.SwipeAction
 import social.aloha.core.model.TimelineSource
@@ -89,12 +104,20 @@ import social.aloha.core.ui.ListProgress
 import social.aloha.core.ui.LocalSensitiveMediaPolicy
 import social.aloha.core.ui.NearEndEffect
 import social.aloha.core.ui.PostDivider
+import social.aloha.core.ui.R as UiR
 import social.aloha.core.ui.RefreshBox
 import social.aloha.core.ui.StackedAvatars
 import social.aloha.core.ui.StatusActions
 import social.aloha.core.ui.StatusCard
+import social.aloha.core.ui.TopBarTitle
 import social.aloha.core.ui.TroubleStrip
+import social.aloha.core.ui.itemMotion
 import social.aloha.core.ui.readingColumn
+import social.aloha.core.ui.rememberReducedMotion
+import social.aloha.core.ui.rememberTopScroll
+import social.aloha.core.ui.scrollToTop
+import social.aloha.core.ui.squish
+import social.aloha.core.ui.topScrollTail
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -118,11 +141,12 @@ internal fun TimelineScreen(
     onVideo: (String) -> Unit = {},
 ) {
     val bar = TopAppBarDefaults.pinnedScrollBehavior()
+    val scrollToTop = rememberTopScroll(listState)
     Scaffold(
         modifier = modifier.nestedScroll(bar.nestedScrollConnection).semantics { paneTitle = title },
         topBar = {
             TopAppBar(
-                title = { Text(title) },
+                title = { TopBarTitle(title, scrollToTop) },
                 scrollBehavior = bar,
                 navigationIcon = navigationIcon,
                 actions = {
@@ -220,43 +244,55 @@ private fun Rows(
         contentPadding = PaddingValues(bottom = AlohaSpacing.xl),
     ) {
         items(state.items, key = { it.key }, contentType = { it::class }) { item ->
-            when (item) {
-                is TimelineItem.Post -> SwipeRow(
-                    item.row,
-                    item.key == selected,
-                    state.swipeTowardsEnd,
-                    state.swipeTowardsStart,
-                    onSwipe = { row, action ->
-                        if (action ==
-                            SwipeAction.Reply
-                        ) {
-                            rowActions.onReply(row)
-                        } else {
-                            actions.onSwipe(row, action)
-                        }
-                    },
-                ) {
-                    // on the card itself, the one node a screen reader reads of the row
-                    val chosen = item.key == selected
-                    StatusCard(
-                        item.row,
-                        state.now,
-                        LocalSensitiveMediaPolicy.current,
-                        rowActions,
-                        Modifier.semantics { this.selected = chosen },
-                    )
-                }
-
-                is TimelineItem.Gap -> GapRow(item, actions)
-
-                TimelineItem.CaughtUp -> CaughtUpDivider(onClick = actions::onCaughtUp)
-            }
-            if (item != TimelineItem.CaughtUp) PostDivider()
+            Column(Modifier.itemMotion(this)) { TimelineRow(state, item, selected, actions, rowActions) }
         }
         if (state.loadingOlder) {
             item(contentType = "footer") { ListProgress() }
         }
     }
+}
+
+/** One row of the list: a post, a gap or the caught-up line, and the line under it. */
+@Composable
+private fun TimelineRow(
+    state: TimelineUiState,
+    item: TimelineItem,
+    selected: String?,
+    actions: TimelineScreenActions,
+    rowActions: StatusActions,
+) {
+    when (item) {
+        is TimelineItem.Post -> SwipeRow(
+            item.row,
+            item.key == selected,
+            state.swipeTowardsEnd,
+            state.swipeTowardsStart,
+            onSwipe = { row, action ->
+                if (action ==
+                    SwipeAction.Reply
+                ) {
+                    rowActions.onReply(row)
+                } else {
+                    actions.onSwipe(row, action)
+                }
+            },
+        ) {
+            // on the card itself, the one node a screen reader reads of the row
+            val chosen = item.key == selected
+            StatusCard(
+                item.row,
+                state.now,
+                LocalSensitiveMediaPolicy.current,
+                rowActions,
+                Modifier.semantics { this.selected = chosen },
+            )
+        }
+
+        is TimelineItem.Gap -> GapRow(item, actions)
+
+        TimelineItem.CaughtUp -> CaughtUpDivider(onClick = actions::onCaughtUp)
+    }
+    if (item != TimelineItem.CaughtUp) PostDivider()
 }
 
 @Composable
@@ -270,17 +306,40 @@ internal fun GapRow(gap: TimelineItem.Gap, actions: TimelineScreenActions) {
     }
 }
 
+/**
+ * How many new posts wait, and who wrote them: it arrives decelerating and leaves accelerating, squishes
+ * under the finger, and a flick upwards sends it away until more arrive.
+ */
 @Composable
 private fun NewPostsPill(count: Int, avatars: List<String?>, onReveal: () -> Unit, modifier: Modifier) {
-    AnimatedVisibility(visible = count > 0, modifier = modifier) {
+    var dismissed by remember { mutableStateOf<Int?>(null) }
+    val reduced = rememberReducedMotion()
+    AnimatedVisibility(
+        visible = count > 0 && count != dismissed,
+        modifier = modifier,
+        enter = if (reduced) EnterTransition.None else pillEnter,
+        exit = if (reduced) ExitTransition.None else pillExit,
+    ) {
         val label = pluralStringResource(R.plurals.timeline_new_posts, count, count)
+        val dismiss = stringResource(UiR.string.list_new_posts_dismiss)
+        val interactions = remember { MutableInteractionSource() }
+        val flick = with(LocalDensity.current) { FLICK.toPx() }
         // who posted says it at a glance, beside how many
         Button(
             onClick = onReveal,
-            modifier = Modifier.semantics {
-                contentDescription = label
-                liveRegion = LiveRegionMode.Polite
-            },
+            interactionSource = interactions,
+            modifier = Modifier
+                .squish(interactions)
+                .draggable(
+                    rememberDraggableState {},
+                    Orientation.Vertical,
+                    onDragStopped = { velocity -> if (velocity < -flick) dismissed = count },
+                )
+                .semantics {
+                    contentDescription = label
+                    liveRegion = LiveRegionMode.Polite
+                    customActions = listOf(CustomAccessibilityAction(dismiss) { true.also { dismissed = count } })
+                },
             contentPadding = if (avatars.isEmpty()) {
                 ButtonDefaults.ContentPadding
             } else {
@@ -301,6 +360,12 @@ private fun NewPostsPill(count: Int, avatars: List<String?>, onReveal: () -> Uni
 }
 
 private val PILL_AVATAR = 24.dp
+private val FLICK = 600.dp
+private val pillEnter =
+    slideInVertically(tween(AlohaMotion.MEDIUM, easing = AlohaMotion.EmphasizedDecelerate)) { -it } +
+        fadeIn(tween(AlohaMotion.MEDIUM, easing = AlohaMotion.EmphasizedDecelerate))
+private val pillExit = slideOutVertically(tween(AlohaMotion.SHORT, easing = AlohaMotion.EmphasizedAccelerate)) { -it } +
+    fadeOut(tween(AlohaMotion.SHORT, easing = AlohaMotion.EmphasizedAccelerate))
 
 @Composable
 private fun SourceRow(source: TimelineSource, sources: List<TimelineSource>, onSource: (TimelineSource) -> Unit) {
@@ -456,9 +521,11 @@ private fun ListEffects(state: TimelineUiState, actions: TimelineScreenActions, 
             actions.onRestored()
         }
     }
+    val tail = topScrollTail()
+    val reduced = rememberReducedMotion()
     LaunchedEffect(state.scrollToTop) {
         if (state.scrollToTop) {
-            listState.animateScrollToItem(0)
+            listState.scrollToTop(tail, reduced)
             actions.onScrolledToTop()
         }
     }

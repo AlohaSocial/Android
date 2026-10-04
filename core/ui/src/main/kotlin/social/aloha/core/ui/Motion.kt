@@ -8,9 +8,11 @@ import androidx.compose.animation.core.FiniteAnimationSpec
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.interaction.InteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
@@ -25,6 +27,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
+import social.aloha.core.designsystem.AlohaMotion
 
 /**
  * Whether motion is to be left out: the reader turned on Reduce motion in Reading, or the system asks for
@@ -73,6 +76,23 @@ public fun RefreshBox(
             .collect { haptics(HapticFeedbackType.GestureThresholdActivate) }
     }
     PullToRefreshBox(refreshing, onRefresh, modifier, state = state, content = content)
+}
+
+/**
+ * A list row's arrival, move and departure, as rows are revealed, filled in or taken away; none where
+ * motion is reduced. [item] is the row's scope in its lazy list.
+ */
+@Composable
+public fun Modifier.itemMotion(item: LazyItemScope): Modifier = if (rememberReducedMotion()) {
+    this
+} else {
+    with(item) {
+        animateItem(
+            fadeInSpec = tween(AlohaMotion.MEDIUM, easing = AlohaMotion.EmphasizedDecelerate),
+            placementSpec = tween(AlohaMotion.MEDIUM, easing = AlohaMotion.Emphasized),
+            fadeOutSpec = tween(AlohaMotion.SHORT, easing = AlohaMotion.EmphasizedAccelerate),
+        )
+    }
 }
 
 /** How far a pressed button shrinks. */
