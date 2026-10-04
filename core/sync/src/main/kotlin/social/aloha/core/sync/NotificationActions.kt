@@ -29,10 +29,13 @@ import social.aloha.core.data.compose.DraftSegment
 import social.aloha.core.data.di.ApplicationScope
 import social.aloha.core.data.timeline.StatusInteractions
 import social.aloha.core.data.timeline.Toggle
+import social.aloha.core.model.LogArea
 import social.aloha.core.model.NotificationItem
 import social.aloha.core.model.SignedInAccount
 import social.aloha.core.model.Status
 import social.aloha.core.model.Visibility
+import social.aloha.core.network.ApiError
+import timber.log.Timber
 
 /** What a notification's buttons do, and what their intents carry to do it. */
 internal object NotificationActions {
@@ -170,10 +173,19 @@ internal class NotificationActionWorker @AssistedInject constructor(
                 Result.success()
             }
 
-            // a tap is not worth trying forever: after a few attempts it is let go
-            is Answer.Missed ->
-                if (found.error.isWorthRetrying && runAttemptCount < MAX_ATTEMPTS) Result.retry() else Result.success()
+            is Answer.Missed -> missed(kind, found.error)
         }
+    }
+
+    // a tap is not worth trying forever: after a few attempts it is let go
+    private fun missed(kind: NotificationActions.Kind, error: ApiError): Result {
+        Timber.tag(LogArea.Sync.name).i(
+            "%s from a notification failed, attempt %d: %s",
+            kind,
+            runAttemptCount,
+            error.javaClass.simpleName,
+        )
+        return if (error.isWorthRetrying && runAttemptCount < MAX_ATTEMPTS) Result.retry() else Result.success()
     }
 
     private suspend fun act(account: SignedInAccount, kind: NotificationActions.Kind, status: Status) {

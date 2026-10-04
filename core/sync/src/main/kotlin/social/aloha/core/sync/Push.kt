@@ -28,7 +28,9 @@ import org.unifiedpush.android.connector.data.PushMessage
 import social.aloha.core.data.AccountRepository
 import social.aloha.core.data.nextcloud.NextcloudConnection
 import social.aloha.core.data.sync.PushSubscriptions
+import social.aloha.core.model.LogArea
 import social.aloha.core.model.SignedInAccount
+import timber.log.Timber
 
 /** A push distributor installed on the device: its package, and the name it shows. */
 public data class Distributor(val packageName: String, val label: String)
@@ -67,11 +69,13 @@ public class PushRegistrar @Inject constructor(
             UnifiedPush.unregister(context, PushInstance.nextcloud(it.id))
         }
         if (packageName == null) {
+            Timber.tag(LogArea.Push.name).i("Push turned off, polled instead")
             UnifiedPush.removeDistributor(context)
             // the servers and Nextclouds stop pushing to an endpoint nobody reads any more
             all.forEach { stopOnServer(it) }
             return
         }
+        Timber.tag(LogArea.Push.name).i("Distributor %s chosen", packageName)
         UnifiedPush.saveDistributor(context, packageName)
         registerAll()
     }
@@ -98,7 +102,7 @@ public class PushRegistrar @Inject constructor(
         try {
             UnifiedPush.register(context, instance = instance, vapid = vapid)
         } catch (_: UnifiedPush.VapidNotValidException) {
-            // a key in a form Web Push does not take: this account stays polled
+            Timber.tag(LogArea.Push.name).w("VAPID key refused for %s, polled instead", instance)
         }
     }
 
@@ -148,6 +152,7 @@ public class AlohaPushService : PushService() {
     override fun onNewEndpoint(endpoint: PushEndpoint, instance: String) {
         val keys = endpoint.pubKeySet ?: return
         val (account, viaNextcloud) = PushInstance.of(instance)
+        Timber.tag(LogArea.Push.name).i("New endpoint for %s", instance)
         val job = if (viaNextcloud) PushWork.Job.SubscribeNextcloud else PushWork.Job.Subscribe
         PushWork.enqueue(this, account, job, endpoint.url, keys.pubKey, keys.auth, instance = instance)
     }
@@ -167,10 +172,12 @@ public class AlohaPushService : PushService() {
     }
 
     override fun onRegistrationFailed(reason: FailedReason, instance: String) {
+        Timber.tag(LogArea.Push.name).w("Registration of %s failed: %s", instance, reason)
         PushWork.enqueue(this, PushInstance.of(instance).first, PushWork.Job.Lost)
     }
 
     override fun onUnregistered(instance: String) {
+        Timber.tag(LogArea.Push.name).i("%s unregistered", instance)
         PushWork.enqueue(this, PushInstance.of(instance).first, PushWork.Job.Lost)
     }
 
@@ -199,7 +206,9 @@ internal class PushWork @AssistedInject constructor(
 
     override suspend fun doWork(): Result {
         val account = inputData.getString(ACCOUNT)?.let { accounts.byId(it) } ?: return Result.success()
-        val failed = run(account, Job.valueOf(inputData.getString(JOB) ?: Job.Poll.name))
+        val job = Job.valueOf(inputData.getString(JOB) ?: Job.Poll.name)
+        val failed = run(account, job)
+        if (failed) Timber.tag(LogArea.Push.name).i("%s for %s failed, attempt %d", job, account.id, runAttemptCount)
         return if (failed && runAttemptCount < MAX_ATTEMPTS) Result.retry() else Result.success()
     }
 

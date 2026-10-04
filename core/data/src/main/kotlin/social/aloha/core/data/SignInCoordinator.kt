@@ -13,6 +13,7 @@ import social.aloha.core.datastore.TokenVault
 import social.aloha.core.datastore.VaultKey
 import social.aloha.core.model.AccessToken
 import social.aloha.core.model.Account
+import social.aloha.core.model.LogArea
 import social.aloha.core.model.ServerCapabilities
 import social.aloha.core.model.SignedInAccount
 import social.aloha.core.network.ApiError
@@ -29,6 +30,7 @@ import social.aloha.core.network.oauth.OAuthIdentity
 import social.aloha.core.network.oauth.PendingAuthorization
 import social.aloha.core.network.oauth.authorizationUrl
 import social.aloha.core.network.valueOrNull
+import timber.log.Timber
 
 /**
  * Sign-in from a discovered server to a stored, active account: register the app once per server,
@@ -184,7 +186,8 @@ public class SignInCoordinator @Inject constructor(
     private suspend fun pending(): PendingAuthorization? = vault.get(VaultKey.PendingAuthorization)?.let {
         try {
             json.decodeFromString(PendingAuthorization.serializer(), it)
-        } catch (_: SerializationException) {
+        } catch (e: SerializationException) {
+            Timber.tag(LogArea.Auth.name).w("Pending authorization unreadable: %s", e.javaClass.simpleName)
             null
         }
     }

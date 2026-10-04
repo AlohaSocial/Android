@@ -42,7 +42,7 @@ public class ApiClient internal constructor(
         http: OkHttpClient,
         rateLimiter: RateLimiter,
         ioDispatcher: CoroutineDispatcher,
-        failureListener: DecodingFailureListener = DecodingFailureListener { _, _ -> },
+        failureListener: DecodingFailureListener = LogDropped,
         onUnauthorised: suspend () -> Unit = {},
     ) : this(apiBase, credentials, RequestExecutor(http, rateLimiter, ioDispatcher, failureListener), onUnauthorised)
 

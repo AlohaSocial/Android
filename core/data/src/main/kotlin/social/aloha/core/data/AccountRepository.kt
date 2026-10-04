@@ -29,9 +29,11 @@ import social.aloha.core.datastore.TokenVault
 import social.aloha.core.datastore.VaultKey
 import social.aloha.core.model.AccessToken
 import social.aloha.core.model.ClientRegistration
+import social.aloha.core.model.LogArea
 import social.aloha.core.model.ServerCapabilities
 import social.aloha.core.model.SignedInAccount
 import social.aloha.core.network.Credentials
+import timber.log.Timber
 
 /**
  * Every account on this device and which one is active. Rows live in `accounts.db`, secrets in the
@@ -100,8 +102,8 @@ public class AccountRepository @Inject constructor(
     }
 
     /** The server refused the token: keep the account and its cache, ask for a new sign-in. */
-
     public suspend fun markNeedsReauth(id: String) {
+        Timber.tag(LogArea.Auth.name).i("Account %s needs a new sign-in", id)
         dao.setNeedsReauth(id, needsReauth = true)
     }
 
@@ -195,7 +197,8 @@ public class AccountRepository @Inject constructor(
         capabilities = capabilitiesJson?.let {
             try {
                 json.decodeFromString(ServerCapabilities.serializer(), it)
-            } catch (_: SerializationException) {
+            } catch (e: SerializationException) {
+                Timber.tag(LogArea.App.name).w("Capabilities of account %s unreadable: %s", id, e.javaClass.simpleName)
                 null
             }
         } ?: ServerCapabilities.minimal(apiBase),

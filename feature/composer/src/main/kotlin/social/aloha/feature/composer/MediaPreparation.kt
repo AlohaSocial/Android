@@ -20,9 +20,11 @@ import java.io.File
 import java.util.UUID
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import social.aloha.core.model.LogArea
 import social.aloha.core.model.ServerLimits
 import social.aloha.core.ui.copyTo
 import social.aloha.core.ui.extensionFor
+import timber.log.Timber
 
 /** What the server's limits make of a file before it is sent. */
 internal sealed interface Preflight {
@@ -186,6 +188,7 @@ internal class MediaPreparation(
             write(canvas, png, target)
             Picked(target, rename(original.fileName, mime), mime)
         }.getOrElse {
+            Timber.tag(LogArea.Media.name).w("Filter not applied: %s", it.javaClass.simpleName)
             target.delete()
             null
         }.also {
@@ -213,7 +216,7 @@ internal class MediaPreparation(
                     decoder.setTargetSize(info.size.width * MAX_EDGE / edge, info.size.height * MAX_EDGE / edge)
                 }
             }
-        }.getOrNull()
+        }.onFailure { Timber.tag(LogArea.Media.name).w("Photo not decoded: %s", it.javaClass.simpleName) }.getOrNull()
     } else {
         val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
         BitmapFactory.decodeFile(file.absolutePath, bounds)

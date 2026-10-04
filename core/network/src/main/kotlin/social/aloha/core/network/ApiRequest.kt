@@ -11,8 +11,11 @@ import kotlinx.serialization.json.jsonArray
 import social.aloha.core.network.decoding.DecodingFailures
 import social.aloha.core.network.decoding.decodeOrRecord
 
-/** One element a lossy array dropped, kept so the loss is logged rather than silent. */
-public data class DecodingFailure(val index: Int, val typeName: String, val reason: String)
+/**
+ * One element a lossy array dropped, kept so the loss is logged rather than silent. [error] is the
+ * exception's class, what the log keeps; [reason] is its message, which may quote the JSON.
+ */
+public data class DecodingFailure(val index: Int, val typeName: String, val reason: String, val error: String)
 
 /**
  * An [Endpoint] together with how its response becomes a domain value. The wire DTO and its mapping

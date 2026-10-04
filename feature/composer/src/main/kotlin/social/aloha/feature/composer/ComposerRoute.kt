@@ -42,9 +42,11 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import java.time.Instant
 import social.aloha.core.model.CustomEmoji
+import social.aloha.core.model.LogArea
 import social.aloha.core.model.Visibility
 import social.aloha.core.navigation.ComposerKey
 import social.aloha.core.ui.isForeignContent
+import timber.log.Timber
 
 /** Which of the composer's dialogs is open; saved, so turning the phone keeps it open. */
 private class Dialogs(
@@ -263,7 +265,9 @@ private fun rememberCamera(viewModel: ComposerViewModel, state: ComposerUiState,
         target = uri.toString()
         short = capture is Capture.Short
         contract.seconds = (capture as? Capture.Short)?.seconds
-        runCatching { if (isPhoto) photo.launch(uri) else video.launch(uri) }
+        runCatching { if (isPhoto) photo.launch(uri) else video.launch(uri) }.onFailure {
+            Timber.tag(LogArea.Compose.name).w("Camera not opened: %s", it.javaClass.simpleName)
+        }
     }
 }
 
