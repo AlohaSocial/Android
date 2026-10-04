@@ -7,6 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -45,7 +46,12 @@ import social.aloha.core.ui.openInBrowser
 /** A page over Settings, full screen, with a way back: the terms, the privacy statement, the licences. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun AboutPage(title: String, onClose: () -> Unit, content: @Composable (Modifier) -> Unit) {
+internal fun AboutPage(
+    title: String,
+    onClose: () -> Unit,
+    actions: @Composable RowScope.() -> Unit = {},
+    content: @Composable (Modifier) -> Unit,
+) {
     Dialog(
         onDismissRequest = onClose,
         properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
@@ -60,6 +66,7 @@ internal fun AboutPage(title: String, onClose: () -> Unit, content: @Composable 
                             Icon(AlohaIcons.Back, stringResource(R.string.settings_page_back))
                         }
                     },
+                    actions = actions,
                 )
             },
         ) { padding -> content(Modifier.padding(padding)) }

@@ -80,6 +80,10 @@
     <string name="settings_licences">Open-source licences</string>
     <!-- Settings, About: opens the project's issue tracker, to report a problem -->
     <string name="settings_issues">Report a problem</string>
+    <!-- Settings, About: opens a plain-text report of the app’s version, the device and the app’s recent log, to read and then share with a bug report; also the title of that page -->
+    <string name="settings_diagnostics">Share diagnostics</string>
+    <!-- Content description of the button on the diagnostics page that hands the report to the system share sheet -->
+    <string name="settings_diagnostics_share">Share</string>
     <!-- Content description of the button that closes a page opened from Settings, About -->
     <string name="settings_page_back">Back</string>
     <!-- Privacy statement, first paragraph -->

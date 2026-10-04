@@ -22,6 +22,7 @@ import javax.inject.Provider
 import social.aloha.core.data.CleartextAllowed
 import social.aloha.core.data.DeviceStorage
 import social.aloha.core.data.RedirectUriProvider
+import social.aloha.core.data.diagnostics.AppBuild
 import social.aloha.core.network.di.UserAgent
 import social.aloha.core.network.oauth.OAuthIdentity
 import social.aloha.core.sync.AvatarSource
@@ -38,6 +39,9 @@ object AppModule {
     @Provides
     @CleartextAllowed
     fun cleartextAllowed(): Boolean = BuildConfig.DEBUG
+
+    @Provides
+    fun appBuild(): AppBuild = AppBuild(BuildConfig.VERSION_NAME, BuildConfig.FLAVOR)
 
     /**
      * The verified App Link when this install is verified for aloha.social, so no other app can
