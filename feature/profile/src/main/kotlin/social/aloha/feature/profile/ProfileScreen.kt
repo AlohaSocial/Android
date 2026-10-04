@@ -90,6 +90,7 @@ import social.aloha.core.ui.contentDirection
 import social.aloha.core.ui.fullDate
 import social.aloha.core.ui.readingWidth
 import social.aloha.core.ui.rememberEmojiContent
+import social.aloha.core.ui.swipeTabs
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -147,9 +148,23 @@ private fun Content(
 ) {
     // on a wide window the profile keeps a reading width, centred, rather than stretching banner and text
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
+        val at = state.tabs.indexOf(state.tab)
+        val tabsAt = if (state.highlights != null) 2 else 1
+        var keepPinned by remember { mutableStateOf(false) }
+        val choose = { tab: ProfileTab ->
+            keepPinned = listState.firstVisibleItemIndex >= tabsAt
+            actions.onTab(tab)
+        }
+        LaunchedEffect(state.tab) {
+            if (keepPinned) listState.scrollToItem(tabsAt)
+            keepPinned = false
+        }
         LazyColumn(
             state = listState,
-            modifier = Modifier.readingWidth().fillMaxSize(),
+            modifier = Modifier.readingWidth().fillMaxSize().swipeTabs(
+                next = { state.tabs.getOrNull(at + 1)?.let(choose) },
+                previous = { state.tabs.getOrNull(at - 1)?.let(choose) },
+            ),
             contentPadding = PaddingValues(bottom = AlohaSpacing.xl),
         ) {
             item(key = "header", contentType = "header") {
@@ -158,7 +173,7 @@ private fun Content(
             state.highlights?.let { highlights ->
                 item(key = "highlights", contentType = "highlights") { Highlights(highlights) }
             }
-            stickyHeader(key = "tabs", contentType = "tabs") { Tabs(state, actions) }
+            stickyHeader(key = "tabs", contentType = "tabs") { Tabs(state, choose) }
             tabContent(state, actions, rowActions)
         }
     }
@@ -172,7 +187,7 @@ private fun LazyListScope.tabContent(state: ProfileUiState, actions: ProfileScre
 
         else -> {
             if (state.items.isEmpty()) {
-                item(key = "empty") { Empty(loading = state.loading) }
+                item(key = "empty") { Empty(loading = state.loading, Modifier.fillParentMaxHeight()) }
             }
             items(state.items, key = { it.key }, contentType = { it::class }) { item ->
                 when (item) {
@@ -204,9 +219,9 @@ private fun LazyListScope.tabContent(state: ProfileUiState, actions: ProfileScre
 
 private fun <T : Any> LazyListScope.listed(entries: List<T>?, key: (T) -> String, row: @Composable (T) -> Unit) {
     when {
-        entries == null -> item(key = "empty") { Empty(loading = true) }
+        entries == null -> item(key = "empty") { Empty(loading = true, Modifier.fillParentMaxHeight()) }
 
-        entries.isEmpty() -> item(key = "empty") { Empty(loading = false) }
+        entries.isEmpty() -> item(key = "empty") { Empty(loading = false, Modifier.fillParentMaxHeight()) }
 
         else -> items(entries, key = key) { entry ->
             row(entry)
@@ -216,15 +231,13 @@ private fun <T : Any> LazyListScope.listed(entries: List<T>?, key: (T) -> String
 }
 
 @Composable
-private fun Tabs(state: ProfileUiState, actions: ProfileScreenActions) {
+private fun Tabs(state: ProfileUiState, onTab: (ProfileTab) -> Unit) {
     PrimaryScrollableTabRow(
         selectedTabIndex = state.tabs.indexOf(state.tab).coerceAtLeast(0),
         edgePadding = AlohaSpacing.m,
     ) {
         state.tabs.forEach { tab ->
-            Tab(selected = tab == state.tab, onClick = {
-                actions.onTab(tab)
-            }, text = { Text(stringResource(tab.label)) })
+            Tab(selected = tab == state.tab, onClick = { onTab(tab) }, text = { Text(stringResource(tab.label)) })
         }
     }
 }
@@ -286,13 +299,21 @@ private fun TroubleStrip(trouble: Trouble) {
     TroubleStrip(stringResource(if (trouble == Trouble.Offline) R.string.profile_offline else R.string.profile_error))
 }
 
+/**
+ * A tab still loading, or with nothing in it. [modifier] lets it fill the screen below the tabs, so tabs
+ * pinned under the bar stay pinned while it loads instead of the list falling back to the header.
+ */
 @Composable
-private fun Empty(loading: Boolean) {
-    if (loading) {
-        ListProgress()
-    } else {
-        Box(Modifier.fillMaxWidth().padding(AlohaSpacing.l), contentAlignment = Alignment.Center) {
-            Text(stringResource(R.string.profile_empty), style = MaterialTheme.typography.bodyLarge)
+private fun Empty(loading: Boolean, modifier: Modifier = Modifier) {
+    Box(modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
+        if (loading) {
+            ListProgress()
+        } else {
+            Text(
+                stringResource(R.string.profile_empty),
+                Modifier.padding(AlohaSpacing.l),
+                style = MaterialTheme.typography.bodyLarge,
+            )
         }
     }
 }

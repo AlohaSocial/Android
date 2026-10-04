@@ -301,7 +301,7 @@ private fun Results(state: SearchUiState, rowActions: StatusActions, now: Instan
     var part by rememberSaveable { mutableStateOf(Part.All) }
     val shown = { which: Part, has: Boolean -> has && (part == Part.All || part == which) }
     LazyColumn(Modifier.fillMaxSize()) {
-        item(key = "parts") { Parts(state, part) { part = it } }
+        stickyHeader(key = "parts") { Parts(state, part) { part = it } }
         section(R.string.search_accounts, shown(Part.Accounts, state.accounts.isNotEmpty())) {
             itemsIndexed(state.accounts, key = { _, person -> "a:${person.author.id}" }) { index, person ->
                 Grouped(index, state.accounts.size, Modifier.padding(horizontal = AlohaSpacing.s)) {
@@ -343,16 +343,19 @@ private fun Parts(state: SearchUiState, part: Part, onPart: (Part) -> Unit) {
     }
     // one part found leaves nothing to choose between
     if (present.size <= 2) return
-    LazyRow(
-        contentPadding = PaddingValues(horizontal = AlohaSpacing.m),
-        horizontalArrangement = Arrangement.spacedBy(AlohaSpacing.s),
-    ) {
-        items(present, key = { it.name }) {
-            FilterChip(
-                selected = it == part,
-                onClick = { onPart(it) },
-                label = { Text(stringResource(it.title)) },
-            )
+    Surface(color = MaterialTheme.colorScheme.surface) {
+        LazyRow(
+            modifier = Modifier.fillMaxWidth(),
+            contentPadding = PaddingValues(horizontal = AlohaSpacing.m),
+            horizontalArrangement = Arrangement.spacedBy(AlohaSpacing.s),
+        ) {
+            items(present, key = { it.name }) {
+                FilterChip(
+                    selected = it == part,
+                    onClick = { onPart(it) },
+                    label = { Text(stringResource(it.title)) },
+                )
+            }
         }
     }
 }

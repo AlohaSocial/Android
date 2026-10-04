@@ -24,6 +24,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -82,7 +83,7 @@ internal fun PostsTab(posts: List<Status>, viewer: String, mapper: StatusRowMapp
 internal fun HashtagsTab(tags: List<Tag>, state: ExploreUiState, actions: ExploreActions, rowActions: StatusActions) {
     LazyColumn(Modifier.fillMaxSize()) {
         if (state.periods) {
-            item(key = "periods") {
+            stickyHeader(key = "periods") {
                 Chips {
                     Explore.PERIODS.forEach { period ->
                         FilterChip(
@@ -223,7 +224,7 @@ internal fun DirectoryTab(
     rowActions: StatusActions,
 ) {
     LazyColumn(Modifier.fillMaxSize()) {
-        item(key = "order") {
+        stickyHeader(key = "order") {
             Chips {
                 DirectoryOrder.entries.forEach { order ->
                     FilterChip(
@@ -275,12 +276,14 @@ private fun Person(
 
 @Composable
 private fun Chips(content: @Composable () -> Unit) {
-    Row(
-        Modifier.horizontalScroll(
-            rememberScrollState(),
-        ).padding(horizontal = AlohaSpacing.m, vertical = AlohaSpacing.xs),
-        horizontalArrangement = Arrangement.spacedBy(AlohaSpacing.xs),
-    ) { content() }
+    Surface(color = MaterialTheme.colorScheme.surface) {
+        Row(
+            Modifier.fillMaxWidth().horizontalScroll(
+                rememberScrollState(),
+            ).padding(horizontal = AlohaSpacing.m, vertical = AlohaSpacing.xs),
+            horizontalArrangement = Arrangement.spacedBy(AlohaSpacing.xs),
+        ) { content() }
+    }
 }
 
 /** A heading and what is under it, where there is anything. */
