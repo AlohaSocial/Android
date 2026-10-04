@@ -114,6 +114,8 @@ internal data class CardControls(
     val translation: TranslationUi? = null,
     val onShowOriginal: () -> Unit = {},
     val onGetLanguage: () -> Unit = {},
+    val collapse: Collapse = Collapse(),
+    val onRehide: (() -> Unit)? = null,
 )
 
 /**

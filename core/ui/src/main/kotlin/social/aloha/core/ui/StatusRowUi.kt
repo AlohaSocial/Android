@@ -54,6 +54,8 @@ public data class StatusRowUi(
     val language: String?,
     /** What the server knows about the post's video beyond the file: its title, length, views. */
     val video: VideoDetails? = null,
+    /** The words a filter matched, painted once the reader shows the filtered post anyway. */
+    val filterMatches: List<String> = emptyList(),
 ) {
     @Immutable
     public data class AuthorUi(
@@ -120,6 +122,7 @@ public class StatusRowMapper(private val cache: RichTextCache, private val color
         viewerAccountId: String?,
         filterWarning: List<String>? = null,
         showContext: Boolean = true,
+        filterMatches: List<String> = emptyList(),
     ): StatusRowUi {
         val shown = status.displayed
         val quoted = shown.quote?.quotedStatus
@@ -157,6 +160,7 @@ public class StatusRowMapper(private val cache: RichTextCache, private val color
             isOwn = viewerAccountId != null && shown.account.id == viewerAccountId,
             language = shown.language,
             video = shown.video,
+            filterMatches = filterMatches,
         )
     }
 

@@ -373,7 +373,7 @@ internal class ProfileViewModel @AssistedInject constructor(
             tabs = tabs,
             tab = control.tab,
             items = ProfilePresentation.items(stored, decide, { status, warning ->
-                rows.rowFor(status, reader.serverAccountId, warning)
+                rows.rowFor(status, reader.serverAccountId, warning?.titles, warning?.keywords.orEmpty())
             }, control.loadingGaps),
             collections = control.collections,
             stories = control.stories,

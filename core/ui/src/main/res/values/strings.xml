@@ -36,6 +36,28 @@
     <string name="status_filtered">Filtered: %s</string>
     <!-- Button that reveals a post hidden by a filter -->
     <string name="status_filtered_show">Show anyway</string>
+    <!-- Button on an opened content warning: closes it over the post again -->
+    <string name="status_warning_rehide">Re-hide</string>
+    <!-- Description of the eye in a post's header once its warning or filter was opened: hides the post again -->
+    <string name="status_rehide">Hide again</string>
+    <!-- Button under a long post's shortened text: shows all of it -->
+    <string name="status_expand">Expand</string>
+    <!-- Button under a long post's full text: shortens it again -->
+    <string name="status_collapse">Collapse</string>
+    <!-- Pill on sensitive media once shown: covers it again -->
+    <string name="status_media_hide">Hide</string>
+    <!-- Badge on media posted without a description; shown when Reading asks for it -->
+    <string name="status_media_no_alt">No ALT</string>
+    <!-- Title of the sheet showing a picture's description, opened from its ALT badge -->
+    <string name="status_media_description">Description</string>
+    <!-- Label on a media row, in the mode that lists media instead of showing it: the media is marked sensitive -->
+    <string name="status_media_sensitive">Sensitive</string>
+    <!-- Kind of a media row in the mode that lists media instead of showing it -->
+    <string name="status_media_picture">Picture</string>
+    <!-- Kind of a media row in the mode that lists media instead of showing it -->
+    <string name="status_media_audio">Audio</string>
+    <!-- Kind of a media row in the mode that lists media instead of showing it: a file the app cannot show -->
+    <string name="status_media_file">File</string>
     <!-- Cover over sensitive media -->
     <string name="status_sensitive_cover">Sensitive content</string>
     <!-- Hint under the sensitive-media cover -->

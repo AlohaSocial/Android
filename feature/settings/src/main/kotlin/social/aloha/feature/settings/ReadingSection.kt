@@ -22,6 +22,8 @@ import kotlinx.coroutines.launch
 import social.aloha.core.datastore.ReadingPreferences
 import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.model.ReadingStyle
+import social.aloha.core.model.WarningReveal
+import social.aloha.core.ui.ChoiceRows
 import social.aloha.core.ui.SettingsSection
 import social.aloha.core.ui.SwitchRow
 
@@ -76,5 +78,23 @@ internal fun ReadingContent(style: ReadingStyle, onChange: ((ReadingStyle) -> Re
         SwitchRow(stringResource(R.string.reading_badge), style.unreadBadge, { on ->
             onChange { it.copy(unreadBadge = on) }
         })
+        SwitchRow(stringResource(R.string.reading_collapse), style.collapseLong, { on ->
+            onChange { it.copy(collapseLong = on) }
+        })
+        SwitchRow(stringResource(R.string.reading_missing_alt), style.missingAltBadge, { on ->
+            onChange { it.copy(missingAltBadge = on) }
+        })
+        SwitchRow(stringResource(R.string.reading_previewless), style.previewless, { on ->
+            onChange { it.copy(previewless = on) }
+        }, stringResource(R.string.reading_previewless_summary))
+        ChoiceRows(
+            stringResource(R.string.reading_reveal_title),
+            listOf(
+                WarningReveal.Never to stringResource(R.string.reading_reveal_never),
+                WarningReveal.SameAuthor to stringResource(R.string.reading_reveal_author),
+                WarningReveal.Everyone to stringResource(R.string.reading_reveal_everyone),
+            ),
+            style.revealWarnings,
+        ) { reveal -> onChange { it.copy(revealWarnings = reveal) } }
     }
 }

@@ -99,7 +99,7 @@ internal object ProfilePresentation {
     fun items(
         stored: List<TimelineRow>,
         decide: (Status) -> FilterEvaluator.Decision,
-        row: (Status, List<String>?) -> StatusRowUi,
+        row: (Status, FilterEvaluator.Decision.Warn?) -> StatusRowUi,
         loadingGaps: Set<String>,
     ): List<ProfileItem> = stored.mapNotNull { stored ->
         when (stored) {
@@ -107,7 +107,7 @@ internal object ProfilePresentation {
 
             is TimelineRow.Post -> when (val decision = decide(stored.status)) {
                 FilterEvaluator.Decision.Hide -> null
-                is FilterEvaluator.Decision.Warn -> ProfileItem.Post(row(stored.status, decision.titles))
+                is FilterEvaluator.Decision.Warn -> ProfileItem.Post(row(stored.status, decision))
                 FilterEvaluator.Decision.Show -> ProfileItem.Post(row(stored.status, null))
             }
         }

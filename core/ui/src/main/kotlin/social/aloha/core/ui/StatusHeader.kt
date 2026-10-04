@@ -70,6 +70,7 @@ internal fun StatusHeader(
     now: Instant,
     animateEmoji: Boolean,
     onHistory: () -> Unit,
+    controls: CardControls,
     modifier: Modifier = Modifier,
 ) {
     val marks = MaterialTheme.colorScheme.onSurfaceVariant
@@ -95,16 +96,18 @@ internal fun StatusHeader(
                     Icon(AlohaIcons.Bot, stringResource(R.string.status_bot), Modifier.size(SMALL_ICON), tint = marks)
                 }
             }
-            if (row.edited) {
-                Icon(
-                    AlohaIcons.Edited,
-                    stringResource(R.string.status_edited),
-                    Modifier.clip(CircleShape).clickable(onClick = onHistory).padding(MARK_PADDING).size(SMALL_ICON),
-                    tint = marks,
-                )
-            }
+            if (row.edited) Mark(AlohaIcons.Edited, stringResource(R.string.status_edited), onHistory)
             visibilityIcon(row.visibility)?.let { (icon, text) ->
                 Icon(icon, stringResource(text), Modifier.size(SMALL_ICON), tint = marks)
+            }
+            controls.onRehide?.let { Mark(AlohaIcons.Sensitive, stringResource(R.string.status_rehide), it) }
+            val collapse = controls.collapse
+            if (collapse.collapsible && collapse.tall) {
+                Mark(
+                    if (collapse.expanded) AlohaIcons.ExpandLess else AlohaIcons.ExpandMore,
+                    stringResource(if (collapse.expanded) R.string.status_collapse else R.string.status_expand),
+                    collapse.onExpand,
+                )
             }
         }
         Row {
@@ -140,6 +143,17 @@ private fun visibilityIcon(visibility: Visibility): Pair<ImageVector, Int>? = wh
     Visibility.Unknown -> AlohaIcons.VisibilityPrivate to R.string.status_visibility_private
 
     Visibility.Public -> null
+}
+
+/** A mark in the header the reader can tap: edited, hide again, expand or collapse. */
+@Composable
+private fun Mark(icon: ImageVector, label: String, onClick: () -> Unit) {
+    Icon(
+        icon,
+        label,
+        Modifier.clip(CircleShape).clickable(onClick = onClick).padding(MARK_PADDING).size(SMALL_ICON),
+        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
 }
 
 private val MARK_PADDING = 4.dp

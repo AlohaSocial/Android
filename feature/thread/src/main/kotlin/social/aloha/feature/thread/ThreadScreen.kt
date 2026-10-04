@@ -36,6 +36,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -61,12 +62,14 @@ import social.aloha.core.model.SensitiveMediaPolicy
 import social.aloha.core.navigation.StatusListKind
 import social.aloha.core.ui.LocalReadingStyle
 import social.aloha.core.ui.LocalSensitiveMediaPolicy
+import social.aloha.core.ui.LocalWarningReveals
 import social.aloha.core.ui.PostDivider
 import social.aloha.core.ui.ProvideLinkRouting
 import social.aloha.core.ui.StackedAvatars
 import social.aloha.core.ui.StatusActions
 import social.aloha.core.ui.StatusCard
 import social.aloha.core.ui.TroubleStrip
+import social.aloha.core.ui.WarningReveals
 import social.aloha.core.ui.fullDate
 import social.aloha.core.ui.readingColumn
 
@@ -122,37 +125,42 @@ private fun Posts(
     rowActions: StatusActions,
     listState: LazyListState,
 ) {
-    LazyColumn(
-        state = listState,
-        modifier = Modifier.readingColumn(),
-        contentPadding = PaddingValues(bottom = AlohaSpacing.xl),
-    ) {
-        items(state.items, key = { it.key }, contentType = { it::class }) { item ->
-            when (item) {
-                is ThreadItem.Post -> {
-                    // the indent shows how deep a reply sits; a screen reader says it, and finds the post by heading
-                    val level = stringResource(R.string.thread_reply_level, item.depth)
-                    StatusCard(
-                        item.row,
-                        state.now,
-                        LocalSensitiveMediaPolicy.current,
-                        rowActions,
-                        modifier = Modifier.padding(start = indent(item.depth)).semantics {
-                            if (item.focused) heading()
-                            if (item.depth > 0) stateDescription = level
-                        },
-                        canReact = item.focused && state.canReact,
-                        focused = item.focused,
-                    )
-                    if (item.focused) Footer(state, actions)
-                }
+    val revealMode = LocalReadingStyle.current.revealWarnings
+    val reveals = remember(revealMode) { WarningReveals(revealMode) }
+    CompositionLocalProvider(LocalWarningReveals provides reveals) {
+        LazyColumn(
+            state = listState,
+            modifier = Modifier.readingColumn(),
+            contentPadding = PaddingValues(bottom = AlohaSpacing.xl),
+        ) {
+            items(state.items, key = { it.key }, contentType = { it::class }) { item ->
+                when (item) {
+                    is ThreadItem.Post -> {
+                        // the indent shows how deep a reply sits; a screen reader says it, and finds the post
+                        // by heading
+                        val level = stringResource(R.string.thread_reply_level, item.depth)
+                        StatusCard(
+                            item.row,
+                            state.now,
+                            LocalSensitiveMediaPolicy.current,
+                            rowActions,
+                            modifier = Modifier.padding(start = indent(item.depth)).semantics {
+                                if (item.focused) heading()
+                                if (item.depth > 0) stateDescription = level
+                            },
+                            canReact = item.focused && state.canReact,
+                            focused = item.focused,
+                        )
+                        if (item.focused) Footer(state, actions)
+                    }
 
-                is ThreadItem.More -> TextButton(
-                    onClick = { actions.onMore(item.parentId) },
-                    modifier = Modifier.padding(start = indent(item.depth + 1)),
-                ) { Text(pluralStringResource(R.plurals.thread_more_replies, item.count, item.count)) }
+                    is ThreadItem.More -> TextButton(
+                        onClick = { actions.onMore(item.parentId) },
+                        modifier = Modifier.padding(start = indent(item.depth + 1)),
+                    ) { Text(pluralStringResource(R.plurals.thread_more_replies, item.count, item.count)) }
+                }
+                PostDivider()
             }
-            PostDivider()
         }
     }
 }

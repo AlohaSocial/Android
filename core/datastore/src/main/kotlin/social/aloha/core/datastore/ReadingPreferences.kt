@@ -7,9 +7,11 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.stringPreferencesKey
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import social.aloha.core.model.ReadingStyle
+import social.aloha.core.model.WarningReveal
 
 /** How the reader reads the device's timelines, kept beside the app's other preferences. */
 public class ReadingPreferences(private val store: DataStore<Preferences>) {
@@ -39,6 +41,11 @@ public class ReadingPreferences(private val store: DataStore<Preferences>) {
             haptics = it[HAPTICS] ?: true,
             fullPicturesOnMobileData = it[FULL_PICTURES] ?: true,
             postLines = it[POST_LINES] ?: true,
+            revealWarnings = WarningReveal.entries.firstOrNull { reveal -> reveal.name == it[REVEAL_WARNINGS] }
+                ?: WarningReveal.Never,
+            collapseLong = it[COLLAPSE_LONG] ?: true,
+            missingAltBadge = it[MISSING_ALT] ?: false,
+            previewless = it[PREVIEWLESS] ?: false,
         )
     }
 
@@ -53,6 +60,10 @@ public class ReadingPreferences(private val store: DataStore<Preferences>) {
             it[HAPTICS] = style.haptics
             it[FULL_PICTURES] = style.fullPicturesOnMobileData
             it[POST_LINES] = style.postLines
+            it[REVEAL_WARNINGS] = style.revealWarnings.name
+            it[COLLAPSE_LONG] = style.collapseLong
+            it[MISSING_ALT] = style.missingAltBadge
+            it[PREVIEWLESS] = style.previewless
         }
     }
 
@@ -68,5 +79,9 @@ public class ReadingPreferences(private val store: DataStore<Preferences>) {
         val HAPTICS = booleanPreferencesKey("haptics")
         val FULL_PICTURES = booleanPreferencesKey("full_pictures_on_mobile_data")
         val POST_LINES = booleanPreferencesKey("reading_post_lines")
+        val REVEAL_WARNINGS = stringPreferencesKey("reading_reveal_warnings")
+        val COLLAPSE_LONG = booleanPreferencesKey("reading_collapse_long")
+        val MISSING_ALT = booleanPreferencesKey("reading_missing_alt_badge")
+        val PREVIEWLESS = booleanPreferencesKey("reading_previewless")
     }
 }

@@ -18,6 +18,10 @@ package social.aloha.core.model
  * @param fullPicturesOnMobileData the viewer loads a picture at full size on mobile data too; off, its
  *   preview there, as lists show it.
  * @param postLines a hairline between posts in every list of them.
+ * @param revealWarnings in a thread, whether opening one content warning opens the same warning elsewhere.
+ * @param collapseLong a post's text taller than a screenful's third is clipped behind Expand.
+ * @param missingAltBadge a "no ALT" badge on media posted without a description.
+ * @param previewless media listed as rows (kind, description, sensitive) instead of drawn, to save data and calm.
  */
 public data class ReadingStyle(
     val compact: Boolean = false,
@@ -29,4 +33,11 @@ public data class ReadingStyle(
     val haptics: Boolean = true,
     val fullPicturesOnMobileData: Boolean = true,
     val postLines: Boolean = true,
+    val revealWarnings: WarningReveal = WarningReveal.Never,
+    val collapseLong: Boolean = true,
+    val missingAltBadge: Boolean = false,
+    val previewless: Boolean = false,
 )
+
+/** Which other posts in a thread open with a content warning the reader opened: those with the same warning. */
+public enum class WarningReveal { Never, SameAuthor, Everyone }

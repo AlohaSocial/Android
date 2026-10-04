@@ -18,7 +18,8 @@ public class FilterEvaluator(filters: List<Filter>, private val context: FilterC
     public sealed interface Decision {
         public data object Show : Decision
 
-        public data class Warn(val titles: List<String>) : Decision
+        /** Shown behind a warning naming the filters' [titles]; [keywords] are the words that matched. */
+        public data class Warn(val titles: List<String>, val keywords: List<String> = emptyList()) : Decision
 
         public data object Hide : Decision
     }
@@ -36,21 +37,26 @@ public class FilterEvaluator(filters: List<Filter>, private val context: FilterC
      */
     public fun decision(status: Status, text: String): Decision {
         val shown = status.displayed
-        val serverMatches = shown.filtered.orEmpty().map { it.filter }.filter {
-            context in it.context &&
-                !it.isExpired(now)
+        val serverResults = shown.filtered.orEmpty().filter {
+            context in it.filter.context && !it.filter.isExpired(now)
         }
         val localMatches = active.filter { (filter, patterns) ->
             filter.statuses.any { it.statusId == shown.id } || patterns.any { it.containsMatchIn(text) }
-        }.map { it.first }
-        val matching = (serverMatches + localMatches).distinctBy { it.id }
+        }
+        val matching = (serverResults.map { it.filter } + localMatches.map { it.first }).distinctBy { it.id }
         return when {
             matching.isEmpty() -> Decision.Show
 
             // hiding wins over warning, whatever order the filters come in
             matching.any { it.filterAction == FilterAction.Hide } -> Decision.Hide
 
-            else -> Decision.Warn(matching.map { it.title })
+            else -> {
+                val local = localMatches.flatMap { (_, patterns) ->
+                    patterns.flatMap { it.findAll(text).map { m -> m.value } }
+                }
+                val keywords = serverResults.flatMap { it.keywordMatches.orEmpty() } + local
+                Decision.Warn(matching.map { it.title }, keywords.distinctBy { it.lowercase() })
+            }
         }
     }
 

@@ -45,7 +45,10 @@ class FilterEvaluatorTest {
 
     @Test
     fun `a warn filter collapses behind its title`() {
-        assertEquals(Decision.Warn(listOf("Test f1")), decide("election news", filter("election", FilterAction.Warn)))
+        assertEquals(
+            Decision.Warn(listOf("Test f1"), listOf("election")),
+            decide("election news", filter("election", FilterAction.Warn)),
+        )
     }
 
     @Test
@@ -116,7 +119,7 @@ class FilterEvaluatorTest {
         val serverFilter = Filter("s", "Server side", listOf(FilterContext.Public), filterAction = FilterAction.Warn)
         val flagged = status().copy(filtered = listOf(FilterResult(serverFilter, keywordMatches = listOf("x"))))
         assertEquals(
-            Decision.Warn(listOf("Server side")),
+            Decision.Warn(listOf("Server side"), listOf("x")),
             decide("nothing to match", status = flagged, context = FilterContext.Public),
         )
         assertEquals(Decision.Show, decide("nothing to match", status = flagged, context = FilterContext.Home))
