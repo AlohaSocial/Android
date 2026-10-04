@@ -37,7 +37,7 @@ class ArchitectureConventionPlugin : Plugin<Project> {
         }
         val strings = target.tasks.register("alohaStringsCheck", StringsCheckTask::class.java) {
             group = "verification"
-            description = "Fails on a string without a translator comment of its own."
+            description = "Fails on a string without a translator comment of its own, or named as another module's."
             files.from(
                 target.fileTree(target.rootDir) {
                     include("**/src/main/res/values/strings.xml")
@@ -96,6 +96,16 @@ abstract class StringsCheckTask : DefaultTask() {
         if (bare.isNotEmpty()) {
             throw GradleException("Strings without a translator comment above them:\n" + bare.joinToString("\n"))
         }
-        logger.lifecycle("Strings: every one has its translator comment")
+        // resources merge by name: the app's own, or whichever module wins, silently replaces the other's
+        val shared = files.files.flatMap { file ->
+            file.readLines().mapNotNull { entry.find(it) }.map { "${it.groupValues[1]} ${it.groupValues[2]}" to file }
+        }.groupBy({ it.first }, { it.second }).filterValues { it.size > 1 }
+        if (shared.isNotEmpty()) {
+            throw GradleException(
+                "Strings defined in more than one module, so one replaces the other:\n" +
+                    shared.map { (name, where) -> "$name: ${where.joinToString { it.path }}" }.joinToString("\n"),
+            )
+        }
+        logger.lifecycle("Strings: every one has its translator comment and a name no other module uses")
     }
 }

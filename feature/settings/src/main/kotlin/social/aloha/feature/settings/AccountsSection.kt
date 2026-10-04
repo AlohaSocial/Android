@@ -96,7 +96,7 @@ internal class AccountsSettingsViewModel @Inject constructor(
 internal object AccountsSection : SettingsSection {
     override val key: String = "accounts"
     override val order: Int = 10
-    override val title: Int = R.string.accounts_title
+    override val title: Int = R.string.settings_accounts_title
     override val icon: ImageVector = AlohaIcons.Members
 
     @Composable
@@ -127,7 +127,7 @@ internal fun AccountsContent(
                 supportingContent = {
                     Text(
                         when {
-                            entry.needsReauth -> stringResource(R.string.accounts_needs_reauth, entry.handle)
+                            entry.needsReauth -> stringResource(R.string.settings_accounts_needs_reauth, entry.handle)
                             entry.active -> stringResource(R.string.accounts_in_use, entry.handle)
                             else -> entry.handle
                         },
@@ -156,16 +156,18 @@ internal fun AccountsContent(
                         Text(stringResource(R.string.accounts_sign_in_again))
                     }
                 }
-                TextButton(onClick = { leaving = entry.id }) { Text(stringResource(R.string.accounts_sign_out)) }
+                TextButton(onClick = { leaving = entry.id }) {
+                    Text(stringResource(R.string.settings_accounts_sign_out))
+                }
             }
         }
     }
     val going = entries.firstOrNull { it.id == leaving }
     if (going != null) {
         ConfirmDialog(
-            title = stringResource(R.string.accounts_sign_out_title, going.handle),
-            body = stringResource(R.string.accounts_sign_out_body),
-            action = stringResource(R.string.accounts_sign_out),
+            title = stringResource(R.string.settings_accounts_sign_out_title, going.handle),
+            body = stringResource(R.string.settings_accounts_sign_out_body),
+            action = stringResource(R.string.settings_accounts_sign_out),
             onDismiss = { leaving = null },
             onConfirm = { onSignOut(going.id) },
         )
