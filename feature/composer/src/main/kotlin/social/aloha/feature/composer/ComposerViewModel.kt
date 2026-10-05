@@ -51,7 +51,9 @@ import social.aloha.core.data.di.ApplicationScope
 import social.aloha.core.data.stories.Stories
 import social.aloha.core.data.timeline.StatusInteractions
 import social.aloha.core.datastore.AppPreferences
+import social.aloha.core.datastore.IntelligencePreferences
 import social.aloha.core.html.StatusHtmlParser
+import social.aloha.core.intelligence.Intelligence
 import social.aloha.core.model.CharacterCount
 import social.aloha.core.model.CustomEmoji
 import social.aloha.core.model.LengthRule
@@ -88,6 +90,8 @@ internal class ComposerViewModel @AssistedInject constructor(
     mediaRepository: MediaRepository,
     private val preferences: AppPreferences,
     stories: Stories,
+    intelligence: Intelligence,
+    intelligenceChoices: IntelligencePreferences,
 ) : ViewModel() {
     @AssistedFactory
     interface Factory {
@@ -121,6 +125,7 @@ internal class ComposerViewModel @AssistedInject constructor(
 
     /** The pictures, videos and files of each post; the screen describes and removes them here. */
     val attachments = Attachments(uploads, mediaRepository, preparation, viewModelScope)
+    val altText = AltTextDrafts(intelligence, intelligenceChoices.choices, attachments, viewModelScope)
 
     /** Filters, trims and smaller sizes, each uploaded in place of what it changed. */
     val edits = MediaEdits(attachments, preparation, videos, viewModelScope)
@@ -267,6 +272,11 @@ internal class ComposerViewModel @AssistedInject constructor(
 
     init {
         viewModelScope.launch { start() }
+        viewModelScope.launch {
+            altText.state.map { it.on }.distinctUntilChanged().collect { on ->
+                control.update { it.copy(draftsAltText = on) }
+            }
+        }
         viewModelScope.launch {
             // a post begun from nothing offers the one put aside last
             // a new post is named a draft at once; one stored under that name is being reopened

@@ -44,6 +44,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -70,13 +71,16 @@ import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.launch
 import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.designsystem.ContrastLevel
 import social.aloha.core.designsystem.black
 import social.aloha.core.designsystem.seededColorScheme
+import social.aloha.core.intelligence.Drafted
 import social.aloha.core.ui.moves
 
 /**
@@ -88,8 +92,15 @@ import social.aloha.core.ui.moves
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun MediaEditor(attachment: Attachment, video: VideoInfo?, onDone: (String, Focus?, MediaChange?) -> Unit) {
-    var description by remember(attachment.id) { mutableStateOf(attachment.description) }
+internal fun MediaEditor(
+    attachment: Attachment,
+    video: VideoInfo?,
+    drafts: AltTextDrafts?,
+    unchecked: Boolean = false,
+    onDone: (String, Focus?, MediaChange?) -> Unit,
+) {
+    val mark = drafts?.mark.orEmpty()
+    val described = remember(attachment.id) { Described(attachment.description, mark, unchecked) }
     var focus by remember(attachment.id) { mutableStateOf(attachment.focus) }
     var filter by remember(attachment.id) { mutableStateOf(attachment.filter) }
     var cut by remember(attachment.id, video) { mutableStateOf(video?.let(VideoEdit::whole)) }
@@ -103,7 +114,7 @@ internal fun MediaEditor(attachment: Attachment, video: VideoInfo?, onDone: (Str
 
             else -> null
         }
-        onDone(description, focus, change)
+        onDone(described.result, focus, change)
     }
     Dialog(
         onDismissRequest = finish,
@@ -131,7 +142,8 @@ internal fun MediaEditor(attachment: Attachment, video: VideoInfo?, onDone: (Str
                     if (attachment.isPicture) FocusPicker(attachment, focus, filter) { focus = it }
                     if (attachment.filterable) FilterRow(attachment, filter) { filter = it }
                     if (video != null) cut?.let { VideoTrim(attachment, video, it) { changed -> cut = changed } }
-                    DescriptionField(description) { description = it }
+                    Drafting(attachment, drafts, described)
+                    DescriptionField(described.text, described.mark, described.drafts, described::onTyped)
                     AltTextHelp()
                 }
             }
@@ -139,21 +151,50 @@ internal fun MediaEditor(attachment: Attachment, video: VideoInfo?, onDone: (Str
     }
 }
 
-/** The description, with the keyboard up as soon as the page opens. */
+/**
+ * While nothing is written, a way to draft a description for [attachment] on the device; over one just
+ * drafted, the note that it was.
+ */
 @Composable
-private fun DescriptionField(description: String, onDescription: (String) -> Unit) {
+private fun Drafting(attachment: Attachment, drafts: AltTextDrafts?, described: Described) {
+    if (described.checking) GeneratedNote()
+    if (drafts == null || described.text.isNotBlank()) return
+    val drafting by drafts.state.collectAsStateWithLifecycle()
+    if (!drafts.offers(attachment, drafting.on)) return
+    val scope = rememberCoroutineScope()
+    var busy by remember(attachment.id) { mutableStateOf(false) }
+    var failed by remember(attachment.id) { mutableStateOf(false) }
+    DraftButton(busy, failed) {
+        scope.launch {
+            busy = true
+            val drafted = drafts.draft(attachment)
+            busy = false
+            failed = drafted !is Drafted.Text
+            if (drafted is Drafted.Text) described.onDrafted(drafted.text)
+        }
+    }
+}
+
+/**
+ * The description, with the keyboard up as soon as the page opens, and again after each of [drafts]; a
+ * [mark] after it while the draft is as drafted, which counts toward the limit.
+ */
+@Composable
+private fun DescriptionField(description: String, mark: String?, drafts: Int, onDescription: (String) -> Unit) {
     val focus = remember { FocusRequester() }
-    LaunchedEffect(focus) { focus.requestFocus() }
+    LaunchedEffect(focus, drafts) { focus.requestFocus() }
+    val marked = mark?.length ?: 0
     OutlinedTextField(
         value = description,
-        onValueChange = { onDescription(it.take(Attachments.DESCRIPTION_LIMIT)) },
+        onValueChange = { onDescription(it.take(Attachments.DESCRIPTION_LIMIT - marked)) },
         label = { Text(stringResource(R.string.composer_media_description)) },
+        suffix = mark?.let { { Text(it) } },
         supportingText = {
             Text(
                 pluralStringResource(
                     R.plurals.composer_media_description_count,
                     Attachments.DESCRIPTION_LIMIT,
-                    description.length,
+                    description.length + marked,
                     Attachments.DESCRIPTION_LIMIT,
                 ),
             )

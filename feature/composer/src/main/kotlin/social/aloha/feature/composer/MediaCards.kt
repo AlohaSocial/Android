@@ -56,7 +56,7 @@ import social.aloha.core.ui.reorderItem
  * a card to another place, and a screen reader moves it with the card's actions.
  */
 @Composable
-internal fun MediaStrip(attachments: List<Attachment>, actions: ComposerActions) {
+internal fun MediaStrip(attachments: List<Attachment>, actions: ComposerActions, drafts: Boolean = false) {
     val reordering = rememberReordering(attachments, key = { it.id }, gap = AlohaSpacing.s) { order ->
         actions.onOrderMedia(order.map { it.id })
     }
@@ -66,6 +66,7 @@ internal fun MediaStrip(attachments: List<Attachment>, actions: ComposerActions)
                 MediaCard(
                     attachment,
                     actions,
+                    drafts && attachment.isPicture && attachment.source != null,
                     reordering.moves(index),
                     Modifier.reorderItem(reordering, attachment).longPressDrag(reordering, attachment),
                 )
@@ -82,6 +83,7 @@ internal fun MediaStrip(attachments: List<Attachment>, actions: ComposerActions)
 private fun MediaCard(
     attachment: Attachment,
     actions: ComposerActions,
+    draftable: Boolean,
     moves: List<CustomAccessibilityAction>,
     modifier: Modifier,
 ) {
@@ -120,6 +122,12 @@ private fun MediaCard(
             if (failed) {
                 TextButton(onClick = { actions.onRetryMedia(attachment.id) }) {
                     Text(stringResource(R.string.composer_media_retry))
+                }
+            }
+            // where the call for a description is, a way to have one drafted
+            if (draftable && !described && !failed) {
+                IconButton(onClick = { actions.onDraftAlt(attachment.id) }) {
+                    Icon(AlohaIcons.Intelligence, stringResource(R.string.composer_alt_draft_for, attachment.fileName))
                 }
             }
             IconButton(onClick = { actions.onRemoveMedia(attachment.id) }) {

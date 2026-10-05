@@ -278,7 +278,7 @@ class ComposerScreenshotTest {
             UploadState.Done("1", null),
             description = "Surfers at sunrise",
         )
-        MediaEditor(picture, video = null) { _, _, _ -> }
+        MediaEditor(picture, video = null, drafts = null) { _, _, _ -> }
     }
 
     @Test

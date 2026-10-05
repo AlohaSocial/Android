@@ -13,6 +13,7 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.work.testing.WorkManagerTestInitHelper
 import java.net.URLDecoder
 import java.time.Clock
+import java.util.Optional
 import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope
@@ -52,7 +53,9 @@ import social.aloha.core.database.CacheDatabase
 import social.aloha.core.database.OutboxDatabase
 import social.aloha.core.datastore.AccountSettingsStore
 import social.aloha.core.datastore.AppPreferences
+import social.aloha.core.datastore.IntelligencePreferences
 import social.aloha.core.datastore.TokenVault
+import social.aloha.core.intelligence.Intelligence
 import social.aloha.core.model.AccessToken
 import social.aloha.core.model.ServerCapabilities
 import social.aloha.core.model.ServerLimits
@@ -254,12 +257,17 @@ internal abstract class ComposerTestSetup {
     protected val outboxDb = Room.inMemoryDatabaseBuilder(context, OutboxDatabase::class.java).build()
     protected val outbox = Outbox(outboxDb.outboxDao(), clock)
 
+    /** The on-device features as a build without them has them; a test about them sets its own. */
+    protected var intelligence = Intelligence(context, Optional.empty(), Optional.empty())
+
     protected suspend fun open(
         writing: Writing = Writing(),
         key: (String) -> ComposerKey = { ComposerKey(it) },
         software: String = "nextcloud-social",
     ): ComposerViewModel {
         Dispatchers.setMain(Dispatchers.Unconfined)
+        val choices = IntelligencePreferences(InMemoryDataStore(emptyPreferences()))
+        choices.update { it.copy(altText = true) }
         WorkManagerTestInitHelper.initializeTestWorkManager(context)
         val apiBase = server.url("/")
         val capabilities = ServerCapabilities.minimal(apiBase.toString()).copy(
@@ -289,6 +297,8 @@ internal abstract class ComposerTestSetup {
             MediaRepository(clients),
             AppPreferences(InMemoryDataStore(emptyPreferences())).also { it.setWriting(writing) },
             Stories(clients, clock),
+            intelligence,
+            choices,
         ).also(opened::add)
     }
 

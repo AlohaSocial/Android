@@ -517,4 +517,31 @@
     <string name="composer_quote_confirm">Quote</string>
     <!-- Answers no to the question above -->
     <string name="composer_quote_cancel">Cancel</string>
+    <!-- Media editor: drafts a description on the device from what it recognises in the picture -->
+    <string name="composer_alt_draft">Draft a description</string>
+    <!-- Attachment card: drafts a description on the device for the picture whose file name is %1$s -->
+    <string name="composer_alt_draft_for">Draft a description for %1$s</string>
+    <!-- Media editor: when the device could not draft a description for the picture -->
+    <string name="composer_alt_draft_failed">This device could not draft a description for this picture. Try again in a moment, or write one.</string>
+    <!-- Media editor: over a description drafted on the device, until the writer changes it -->
+    <string name="composer_alt_generated">Generated, please check</string>
+    <!-- Warning before posting media without descriptions: has the device draft them all -->
+    <string name="composer_alt_draft_all">Draft descriptions</string>
+    <!-- Media editor: what the draft button says to a screen reader while the device drafts the description -->
+    <string name="composer_alt_drafting_one">Drafting</string>
+    <!-- Dialog title while the device drafts descriptions for several pictures -->
+    <string name="composer_alt_drafting">Drafting descriptions</string>
+    <!-- Drafting descriptions: which picture (%1$d) of how many (%2$d) -->
+    <string name="composer_alt_drafting_count">Picture %1$d of %2$d</string>
+    <!-- Drafting descriptions: stops after the picture under way -->
+    <string name="composer_alt_drafting_stop">Stop</string>
+    <!-- Warning before posting descriptions drafted on the device that nobody looked at; %d is how many -->
+    <plurals name="composer_alt_unchecked_title">
+        <item quantity="one">%d drafted description is not checked</item>
+        <item quantity="other">%d drafted descriptions are not checked</item>
+    </plurals>
+    <!-- Warning before posting unchecked drafted descriptions: what posting now means -->
+    <string name="composer_alt_unchecked_body">They were drafted on this device and go out as they are, marked as AI generated, unless you look at them first.</string>
+    <!-- Warning before posting unchecked drafted descriptions: opens the first of them -->
+    <string name="composer_alt_check">Check them</string>
 </resources>

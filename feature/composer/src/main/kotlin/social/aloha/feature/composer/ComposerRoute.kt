@@ -12,6 +12,8 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.draganddrop.dragAndDropTarget
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
@@ -54,7 +56,13 @@ private class Dialogs(
     val short: MutableState<String?>,
     /** The picker open over the composer, if any. */
     val picker: MutableState<Picker?>,
-)
+    /** Drafted descriptions nobody has looked at, said before posting. */
+    val unchecked: MutableState<Boolean>,
+) {
+    fun post(viewModel: ComposerViewModel) {
+        if (viewModel.altText.unchecked().isEmpty()) viewModel.onPost() else unchecked.value = true
+    }
+}
 
 /** The pickers that open over the composer, one at a time. */
 private enum class Picker { Gifs, NextcloudFile, Schedule }
@@ -84,6 +92,7 @@ public fun ComposerRoute(
         rememberSaveable { mutableStateOf(false) },
         rememberSaveable { mutableStateOf(null) },
         rememberSaveable { mutableStateOf(null) },
+        rememberSaveable { mutableStateOf(false) },
     )
     val scheduled by rememberUpdatedState(onScheduledPosts)
     val drafts by rememberUpdatedState(onDrafts)
@@ -150,7 +159,7 @@ private fun rememberActions(
                 if (current.warnMissingDescription && current.undescribed) {
                     dialogs.undescribed.value = true
                 } else {
-                    viewModel.onPost()
+                    dialogs.post(viewModel)
                 }
             }
 
@@ -225,6 +234,8 @@ private fun rememberActions(
                 dialogs.editing.value = id
             }
 
+            override fun onDraftAlt(id: String) = viewModel.altText.draftAll(only = id)
+
             override fun onRemoveMedia(id: String) = viewModel.attachments.remove(id)
 
             override fun onOrderMedia(ids: List<String>) = viewModel.attachments.order(ids)
@@ -291,7 +302,6 @@ private fun rememberCamera(viewModel: ComposerViewModel, state: ComposerUiState,
 @Composable
 private fun ComposerDialogs(state: ComposerUiState, viewModel: ComposerViewModel, dialogs: Dialogs, done: () -> Unit) {
     var editing by dialogs.editing
-    var undescribed by dialogs.undescribed
     var discarding by dialogs.discarding
     editing?.let { id ->
         // an attachment removed while its sheet was open closes the sheet
@@ -300,29 +310,21 @@ private fun ComposerDialogs(state: ComposerUiState, viewModel: ComposerViewModel
             editing = null
         } else {
             val info by produceState<VideoInfo?>(null, id) { value = viewModel.edits.info(id) }
-            MediaEditor(attachment, info) { description, focus, change ->
+            val unchecked = id in viewModel.altText.unchecked()
+            MediaEditor(attachment, info, viewModel.altText, unchecked) { description, focus, change ->
                 viewModel.attachments.describe(id, description, focus)
+                viewModel.altText.checked(id)
                 when (change) {
                     is MediaChange.Filter -> viewModel.edits.applyFilter(id, change.filter)
                     is MediaChange.Video -> viewModel.edits.editVideo(id, change.edit)
                     null -> Unit
                 }
-                editing = null
+                // checking drafts goes on to the next one nobody has looked at
+                editing = viewModel.altText.unchecked().firstOrNull().takeIf { unchecked }
             }
         }
     }
-    if (undescribed) {
-        UndescribedDialog(
-            onDescribe = {
-                undescribed = false
-                editing = state.attachments.flatten().firstOrNull { it.description.isBlank() }?.id
-            },
-            onPostAnyway = {
-                undescribed = false
-                viewModel.onPost()
-            },
-        )
-    }
+    DescriptionDialogs(state, viewModel, dialogs) { editing = it }
     dialogs.short.value?.let { recorded ->
         ShortsDialog { tag ->
             dialogs.short.value = null
@@ -444,9 +446,12 @@ private fun LeaveDialog(editing: Boolean, onSave: () -> Unit, onDiscard: () -> U
     )
 }
 
-/** A warning, never a block: posting without descriptions stays one tap away. */
+/**
+ * A warning, never a block: posting without descriptions stays one tap away; with [onDraft], the
+ * device drafts them, for the writer to check.
+ */
 @Composable
-private fun UndescribedDialog(onDescribe: () -> Unit, onPostAnyway: () -> Unit) {
+private fun UndescribedDialog(onDescribe: () -> Unit, onDraft: (() -> Unit)?, onPostAnyway: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDescribe,
         title = { Text(stringResource(R.string.composer_undescribed_title)) },
@@ -455,9 +460,76 @@ private fun UndescribedDialog(onDescribe: () -> Unit, onPostAnyway: () -> Unit) 
             TextButton(onClick = onDescribe) { Text(stringResource(R.string.composer_undescribed_add)) }
         },
         dismissButton = {
-            TextButton(onClick = onPostAnyway) { Text(stringResource(R.string.composer_undescribed_post)) }
+            // its own row wraps too, so the three fit a narrow phone at a large text size
+            FlowRow(horizontalArrangement = Arrangement.End) {
+                onDraft?.let { TextButton(onClick = it) { Text(stringResource(R.string.composer_alt_draft_all)) } }
+                TextButton(onClick = onPostAnyway) { Text(stringResource(R.string.composer_undescribed_post)) }
+            }
         },
     )
+}
+
+/**
+ * The warnings about descriptions before posting: media without one, and drafts nobody has checked; and
+ * a batch of drafts under way.
+ */
+@Composable
+private fun DescriptionDialogs(
+    state: ComposerUiState,
+    viewModel: ComposerViewModel,
+    dialogs: Dialogs,
+    onEdit: (String) -> Unit,
+) {
+    var undescribed by dialogs.undescribed
+    if (undescribed) {
+        val pictures = state.attachments.flatten().any { it.description.isBlank() && viewModel.altText.offers(it) }
+        UndescribedDialog(
+            onDescribe = {
+                undescribed = false
+                state.attachments.flatten().firstOrNull { it.description.isBlank() }?.id?.let(onEdit)
+            },
+            onDraft = {
+                undescribed = false
+                viewModel.altText.draftAll()
+            }.takeIf { pictures },
+            onPostAnyway = {
+                undescribed = false
+                dialogs.post(viewModel)
+            },
+        )
+    }
+    val drafting by viewModel.altText.state.collectAsStateWithLifecycle()
+    drafting.progress?.let { DraftingDialog(it, viewModel.altText::cancel) }
+    // a batch that ends with drafts to check says so at once
+    var batch by remember { mutableStateOf(false) }
+    LaunchedEffect(drafting.progress != null) {
+        if (drafting.progress != null) {
+            batch = true
+        } else if (batch) {
+            batch = false
+            if (viewModel.altText.unchecked().isNotEmpty()) dialogs.unchecked.value = true
+        }
+    }
+    if (dialogs.unchecked.value) {
+        val unchecked = viewModel.altText.unchecked()
+        // after the app was closed over it, what it warned about may be gone
+        if (unchecked.isEmpty()) {
+            dialogs.unchecked.value = false
+            return
+        }
+        UncheckedDialog(
+            unchecked.size,
+            onCheck = {
+                dialogs.unchecked.value = false
+                onEdit(unchecked.first())
+            },
+            onPostAnyway = {
+                dialogs.unchecked.value = false
+                viewModel.onPost()
+            },
+            onDismiss = { dialogs.unchecked.value = false },
+        )
+    }
 }
 
 @Composable
