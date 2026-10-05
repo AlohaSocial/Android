@@ -48,4 +48,12 @@ class ThemingTest {
         )
         assertEquals(ColourSource.Seed, themeOf(chosen.copy(accent = AccentSource.App), nextcloud).colourSource)
     }
+
+    @Test
+    fun `a colour per account wears the account's own accent, and the shared one where it has none`() {
+        val custom = Appearance(accent = AccentSource.Custom, customAccent = 1, accentPerAccount = true)
+        assertEquals(ColourSource.Server(2), themeOf(custom, null, accountAccent = 2).colourSource)
+        assertEquals(ColourSource.Server(1), themeOf(custom, null, accountAccent = null).colourSource)
+        assertEquals(ColourSource.Server(1), themeOf(custom.copy(accentPerAccount = false), null, 2).colourSource)
+    }
 }

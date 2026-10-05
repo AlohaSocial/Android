@@ -128,6 +128,10 @@
     <string name="appearance_colours_app">Aloha\'s own</string>
     <!-- Colours choice: an accent the reader picks -->
     <string name="appearance_colours_custom">An accent of your choice</string>
+    <!-- Appearance switch under the accent swatches: each signed-in account keeps its own accent -->
+    <string name="appearance_accent_per_account">Colour per account</string>
+    <!-- Summary of the switch above -->
+    <string name="appearance_accent_per_account_summary">Each account keeps the accent you choose while it is in use, so switching shows whose timeline it is.</string>
     <!-- Name of an accent colour swatch, read by a screen reader -->
     <string name="appearance_accent_coral">Coral</string>
     <!-- Name of an accent colour swatch -->

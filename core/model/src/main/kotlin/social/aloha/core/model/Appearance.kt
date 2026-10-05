@@ -8,6 +8,8 @@ package social.aloha.core.model
  *
  * @param black dark backgrounds pure black, for OLED screens; only while dark.
  * @param customAccent the colour the scheme grows from with [AccentSource.Custom], as `0xAARRGGBB`.
+ * @param accentPerAccount with [AccentSource.Custom], each account keeps its own accent, so switching
+ *   shows whose app it is; an account without one wears [customAccent].
  */
 public data class Appearance(
     val mode: AppearanceMode = AppearanceMode.System,
@@ -15,6 +17,7 @@ public data class Appearance(
     val black: Boolean = false,
     val accent: AccentSource = AccentSource.Server,
     val customAccent: Int = DEFAULT_CUSTOM_ACCENT,
+    val accentPerAccount: Boolean = false,
 ) {
     public companion object {
         /** The app's own coral, where a custom accent starts out. */

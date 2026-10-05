@@ -51,6 +51,8 @@ public data class AccountSettings(
     val silencedNudges: Set<String> = emptySet(),
     /** Who this account was nudged about before a first reply, so as not to be again. */
     val nudgedAuthors: Set<String> = emptySet(),
+    /** This account's own accent, where Appearance gives each account one, as `0xAARRGGBB`. */
+    val accent: Int? = null,
 )
 
 /**

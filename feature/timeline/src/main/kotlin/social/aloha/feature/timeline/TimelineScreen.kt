@@ -102,6 +102,7 @@ import social.aloha.core.data.Trouble
 import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaMotion
 import social.aloha.core.designsystem.AlohaSpacing
+import social.aloha.core.designsystem.LocalBlackTheme
 import social.aloha.core.model.SwipeAction
 import social.aloha.core.model.TimelineSource
 import social.aloha.core.ui.CaughtUpDivider
@@ -382,67 +383,6 @@ private fun rememberGapFilling(
         actions.onFillGap(gap.id, fromBelow)
     }
 }
-
-/**
- * How many new posts wait, and who wrote them: it arrives decelerating and leaves accelerating, squishes
- * under the finger, and a flick upwards sends it away until more arrive.
- */
-@Composable
-private fun NewPostsPill(count: Int, avatars: List<String?>, onReveal: () -> Unit, modifier: Modifier) {
-    var dismissed by remember { mutableStateOf<Int?>(null) }
-    val reduced = rememberReducedMotion()
-    AnimatedVisibility(
-        visible = count > 0 && count != dismissed,
-        modifier = modifier,
-        enter = if (reduced) EnterTransition.None else pillEnter,
-        exit = if (reduced) ExitTransition.None else pillExit,
-    ) {
-        val label = pluralStringResource(R.plurals.timeline_new_posts, count, count)
-        val dismiss = stringResource(UiR.string.list_new_posts_dismiss)
-        val interactions = remember { MutableInteractionSource() }
-        val flick = with(LocalDensity.current) { FLICK.toPx() }
-        // who posted says it at a glance, beside how many
-        Button(
-            onClick = onReveal,
-            interactionSource = interactions,
-            modifier = Modifier
-                .squish(interactions)
-                .draggable(
-                    rememberDraggableState {},
-                    Orientation.Vertical,
-                    onDragStopped = { velocity -> if (velocity < -flick) dismissed = count },
-                )
-                .semantics {
-                    contentDescription = label
-                    liveRegion = LiveRegionMode.Polite
-                    customActions = listOf(CustomAccessibilityAction(dismiss) { true.also { dismissed = count } })
-                },
-            contentPadding = if (avatars.isEmpty()) {
-                ButtonDefaults.ContentPadding
-            } else {
-                ButtonDefaults.ButtonWithIconContentPadding
-            },
-        ) {
-            if (avatars.isEmpty()) {
-                Text(label)
-            } else {
-                Icon(AlohaIcons.NewPosts, contentDescription = null, modifier = Modifier.size(ButtonDefaults.IconSize))
-                Spacer(Modifier.width(ButtonDefaults.IconSpacing))
-                StackedAvatars(avatars, PILL_AVATAR, ring = MaterialTheme.colorScheme.primary)
-                Spacer(Modifier.width(ButtonDefaults.IconSpacing))
-                Text(label)
-            }
-        }
-    }
-}
-
-private val PILL_AVATAR = 24.dp
-private val FLICK = 600.dp
-private val pillEnter =
-    slideInVertically(tween(AlohaMotion.MEDIUM, easing = AlohaMotion.EmphasizedDecelerate)) { -it } +
-        fadeIn(tween(AlohaMotion.MEDIUM, easing = AlohaMotion.EmphasizedDecelerate))
-private val pillExit = slideOutVertically(tween(AlohaMotion.SHORT, easing = AlohaMotion.EmphasizedAccelerate)) { -it } +
-    fadeOut(tween(AlohaMotion.SHORT, easing = AlohaMotion.EmphasizedAccelerate))
 
 @Composable
 private fun SourceRow(source: TimelineSource, sources: List<TimelineSource>, onSource: (TimelineSource) -> Unit) {

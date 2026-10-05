@@ -140,6 +140,7 @@ public class AppPreferences(private val store: DataStore<Preferences>) {
             black = it[THEME_BLACK] ?: false,
             accent = choice(it[THEME_ACCENT], AccentSource.Server),
             customAccent = it[THEME_CUSTOM_ACCENT] ?: Appearance.DEFAULT_CUSTOM_ACCENT,
+            accentPerAccount = it[THEME_ACCENT_PER_ACCOUNT] ?: false,
         )
     }
 
@@ -150,6 +151,7 @@ public class AppPreferences(private val store: DataStore<Preferences>) {
             it[THEME_BLACK] = appearance.black
             it[THEME_ACCENT] = appearance.accent.name
             it[THEME_CUSTOM_ACCENT] = appearance.customAccent
+            it[THEME_ACCENT_PER_ACCOUNT] = appearance.accentPerAccount
         }
     }
 
@@ -173,6 +175,7 @@ public class AppPreferences(private val store: DataStore<Preferences>) {
         val THEME_BLACK = booleanPreferencesKey("theme_black")
         val THEME_ACCENT = stringPreferencesKey("theme_accent")
         val THEME_CUSTOM_ACCENT = intPreferencesKey("theme_custom_accent")
+        val THEME_ACCENT_PER_ACCOUNT = booleanPreferencesKey("theme_accent_per_account")
         const val ENDPOINT = "push_endpoint:"
 
         inline fun <reified T : Enum<T>> choice(stored: String?, default: T): T =

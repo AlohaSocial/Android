@@ -15,7 +15,9 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.LocalContext
 
 public enum class ThemeMode { System, Light, Dark }
@@ -34,6 +36,9 @@ public sealed interface ColourSource {
 
     public data object Seed : ColourSource
 }
+
+/** Whether the Black theme is on, where filled pills draw outlined instead. */
+public val LocalBlackTheme: ProvidableCompositionLocal<Boolean> = staticCompositionLocalOf { false }
 
 @Immutable
 public data class ThemeSettings(
@@ -62,6 +67,7 @@ public fun AlohaTheme(settings: ThemeSettings = ThemeSettings(), content: @Compo
     }
     CompositionLocalProvider(
         LocalAlohaSemanticColors provides if (dark) AlohaSemanticColors.Dark else AlohaSemanticColors.Light,
+        LocalBlackTheme provides (dark && settings.black),
     ) {
         MaterialTheme(colorScheme = scheme, shapes = AlohaShapes, content = content)
     }
