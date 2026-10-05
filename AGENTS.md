@@ -49,6 +49,10 @@ Guidance for coding agents working in this repository. Humans: see
 - `remember` and `pointerInput` are keyed on stable ids, not on data objects
   that change while in use; per-item state (scroll positions, drags) survives
   the list around it changing.
+- A row in a keyed lazy list that can leave the list and come back (removed,
+  then undone) holds no `rememberSaveable` state such as
+  `rememberSwipeToDismissBoxState`: the list restores it under the same key, and
+  the row returns as it left, swiped away and removed again.
 - An object put into a `CompositionLocal` is made once and reads its values
   through `State`, so a value changing recomposes only what reads it.
 - Every animation goes through `motion()` or checks `rememberReducedMotion()`.
