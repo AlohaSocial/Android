@@ -278,4 +278,12 @@
         <item quantity="one">%d post</item>
         <item quantity="other">%d posts</item>
     </plurals>
+    <!-- Toolbar button on one’s own profile, and the title of the dialog showing it as a QR code -->
+    <string name="profile_qr_title">Profile QR code</string>
+    <!-- Said by a screen reader on the QR code; %1$s is the handle -->
+    <string name="profile_qr_described">QR code that opens %1$s</string>
+    <!-- Button in that dialog: share the profile’s link instead -->
+    <string name="profile_qr_share">Share link</string>
+    <!-- Button closing that dialog -->
+    <string name="profile_qr_close">Close</string>
 </resources>

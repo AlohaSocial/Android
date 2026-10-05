@@ -82,6 +82,7 @@ internal fun ProfileScreen(
     val title = state.header?.author?.plainName.orEmpty()
     var asking by rememberSaveable { mutableStateOf<Asking?>(null) }
     val bar = TopAppBarDefaults.pinnedScrollBehavior()
+    var showingQr by rememberSaveable { mutableStateOf(false) }
     Scaffold(
         modifier = modifier.nestedScroll(bar.nestedScrollConnection).semantics { paneTitle = title },
         topBar = {
@@ -93,7 +94,17 @@ internal fun ProfileScreen(
                         Icon(AlohaIcons.Back, stringResource(R.string.profile_back))
                     }
                 },
-                actions = { Menu(state, actions, ask = { asking = it }) },
+                actions = {
+                    val header = state.header
+                    val url = header?.url
+                    if (header?.isSelf == true && url != null) {
+                        IconButton(onClick = { showingQr = true }) {
+                            Icon(AlohaIcons.QrCode, stringResource(R.string.profile_qr_title))
+                        }
+                        if (showingQr) ProfileQrDialog(url, header.author.handle) { showingQr = false }
+                    }
+                    Menu(state, actions, ask = { asking = it })
+                },
             )
         },
         snackbarHost = { SnackbarHost(snackbars) },
