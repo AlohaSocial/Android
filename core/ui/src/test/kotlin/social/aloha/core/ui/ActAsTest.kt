@@ -5,24 +5,29 @@ package social.aloha.core.ui
 
 import android.app.Application
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.Text
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
+import com.github.takahirom.roborazzi.captureScreenRoboImage
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import org.robolectric.annotation.GraphicsMode
 import social.aloha.core.designsystem.AlohaTheme
 import social.aloha.core.html.RichTextCache
 import social.aloha.core.testing.StatusSamples
 
 @RunWith(RobolectricTestRunner::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(sdk = [36], application = Application::class, qualifiers = RobolectricDeviceQualifiers.Pixel7)
 class ActAsTest {
     @get:Rule
@@ -61,5 +66,38 @@ class ActAsTest {
         compose.onNodeWithText("Alice").assertDoesNotExist()
         compose.onNodeWithText("Bob").performClick()
         assertEquals(listOf(Triple("b", StatusSamples.post().url, PostAct.Favourite)), done)
+    }
+
+    // a menu is a window of its own, so the whole screen is captured
+    @OptIn(ExperimentalRoborazziApi::class)
+    @Test
+    fun boostFor() {
+        compose.setContent {
+            AlohaTheme {
+                CompositionLocalProvider(LocalActAs provides actAs) {
+                    val row = StatusRowMapper(
+                        RichTextCache(),
+                        RichTextColors.fromTheme(),
+                    ).map(StatusSamples.post(), "9")
+                    Box { BoostWithMenu(row, Inert, open = true) {} }
+                }
+            }
+        }
+        compose.waitForIdle()
+        captureScreenRoboImage("src/test/screenshots/boost-for.png")
+    }
+
+    private object Inert : StatusActions {
+        override fun onOpen(statusId: String) = Unit
+        override fun onProfile(accountId: String) = Unit
+        override fun onLink(target: RichLinkTarget) = Unit
+        override fun onMedia(row: StatusRowUi, index: Int) = Unit
+        override fun onReply(row: StatusRowUi) = Unit
+        override fun onBoost(row: StatusRowUi) = Unit
+        override fun onFavourite(row: StatusRowUi) = Unit
+        override fun onBookmark(row: StatusRowUi) = Unit
+        override fun onVote(row: StatusRowUi, choices: List<Int>) = Unit
+        override fun onReact(row: StatusRowUi, name: String, add: Boolean) = Unit
+        override fun onMenu(row: StatusRowUi, item: StatusMenuItem) = Unit
     }
 }

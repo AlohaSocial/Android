@@ -57,4 +57,14 @@ class PinnedFeedsTest {
         feeds.save(reader, listOf(list, everyone, following, list))
         assertEquals(listOf(list, following), feeds.feeds(reader).first())
     }
+
+    @Test
+    fun `a feed renamed keeps its name and icon, and one removed leaves the rest as they were`() = runBlocking {
+        val reader = account()
+        val renamed = following.copy(name = "Friends first", icon = "news")
+        feeds.save(reader, listOf(renamed, local, everyone))
+        assertEquals(listOf(renamed, local, everyone), feeds.feeds(reader).first())
+        feeds.save(reader, listOf(renamed, everyone))
+        assertEquals(listOf(renamed, everyone), feeds.feeds(reader).first())
+    }
 }

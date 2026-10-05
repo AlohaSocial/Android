@@ -18,8 +18,10 @@ import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.tryPerformAccessibilityChecks
 import androidx.compose.ui.unit.LayoutDirection
+import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.captureRoboImage
+import com.github.takahirom.roborazzi.captureScreenRoboImage
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -113,6 +115,16 @@ class HomeScreenTest {
         "home-feed-banner",
         HomeFeedsState(listOf(feeds[1], feeds[0])),
     )
+
+    // the list is a window of its own, so the whole screen is captured
+    @OptIn(ExperimentalRoborazziApi::class)
+    @Test
+    fun switcherOpen() {
+        compose.setContent { AlohaTheme { Home(HomeFeedsState(feeds, unread = setOf(feeds[2].id))) } }
+        compose.onNodeWithText("Following").performClick()
+        compose.waitForIdle()
+        captureScreenRoboImage("src/test/screenshots/home-feeds-switcher.png")
+    }
 
     @Test
     fun `a feed added while Home is open joins its pages`() {

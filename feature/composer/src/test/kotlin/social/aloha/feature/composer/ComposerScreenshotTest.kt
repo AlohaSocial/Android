@@ -14,7 +14,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.test.junit4.accessibility.enableAccessibilityChecks
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.tryPerformAccessibilityChecks
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
@@ -25,6 +27,7 @@ import com.github.takahirom.roborazzi.captureScreenRoboImage
 import java.io.File
 import java.time.Instant
 import java.util.TimeZone
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -276,6 +279,28 @@ class ComposerScreenshotTest {
             description = "Surfers at sunrise",
         )
         MediaEditor(picture, video = null) { _, _, _ -> }
+    }
+
+    @Test
+    fun `a mention chip leaves that person out`() {
+        var left: String? = null
+        val leaving = object : ComposerActions by NoActions {
+            override fun onLeaveOut(handle: String) {
+                left = handle
+            }
+        }
+        compose.setContent {
+            AlohaTheme {
+                ComposerScreen(
+                    fresh.copy(mentioned = listOf("@bob@remote.example", "@kai")),
+                    listOf(value("@bob@remote.example @kai Count me in")),
+                    spoiler = "",
+                    actions = leaving,
+                )
+            }
+        }
+        compose.onNodeWithContentDescription("Leave out @kai").performClick()
+        assertEquals("@kai", left)
     }
 
     @Test
