@@ -27,7 +27,7 @@ Between the phases: CI artifact retention ([#3](https://github.com/AlohaSocial/A
 
 ## In progress
 
-Nothing at the moment.
+Phase 17, intelligence: alt text drafted on the device, marked as AI generated and checked before posting; a draft rewritten on the device with its mentions, hashtags and links kept; a thread summarised in a sheet; and a whole thread translated on one tap. Alt-text drafts come in both builds, by open software; rewriting and summaries need Gemini Nano and are in the Play build only. Each is off until turned on. Not merged yet.
 
 ## Not built
 
@@ -39,7 +39,6 @@ Nothing at the moment.
 | Push through the Nextcloud push proxy (FCM) | [08-notifications-sync.md](08-notifications-sync.md) §2 | Push is UnifiedPush in both flavours. FCM would be `gplay` only and needs the push proxy to allow the app |
 | Encrypted direct messages bound to the app lock | [11-safety-privacy-appstore.md](11-safety-privacy-appstore.md) | The app lock guards the screen, not the data |
 | Streaming | [08-notifications-sync.md](08-notifications-sync.md) §6 | The streaming address is detected and unused; polling and push cover it |
-| Rewrite, alt-text drafts, summaries | [10-intelligence.md](10-intelligence.md) | Translation is the only AI-related feature |
 | Push from Nextcloud Social to Mastodon clients | [08-notifications-sync.md](08-notifications-sync.md) §2 | Social serves no Web Push API yet ([AlohaSocial/social#2479](https://github.com/AlohaSocial/social/issues/2479)); against it the app polls, and "Get notifications from" filters what polling finds |
 | Searching one profile's posts on Nextcloud Social | [05-core-ui.md](05-core-ui.md) §5 | Social ignores `account_id` in search ([AlohaSocial/social#2481](https://github.com/AlohaSocial/social/issues/2481)), so the field is left out there |
 | A cross-account merged timeline | [00-overview.md](00-overview.md) §6 | Deferred past 1.0 by the specification itself |

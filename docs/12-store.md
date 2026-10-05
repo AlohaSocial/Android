@@ -4,7 +4,7 @@ What the Play Console and F-Droid are told, and why each answer is true of the b
 
 ## Flavours
 
-`generic` (F-Droid) and `gplay` (Google Play) are the same code today: neither carries a library the other does not. Every answer below holds for both. The day `gplay` gains Google Play services (a push distributor, say), its Data safety answers change with it.
+`generic` (F-Droid) carries no Google library apart from the open-source LiteRT runtime its alt-text drafts use, which reports to no one. `gplay` (Google Play) adds Google's ML Kit to reach Gemini Nano ([10-intelligence.md](10-intelligence.md)), each off until the reader turns it on. ML Kit would send Google diagnostics about its own use; the Play build removes the backend that sends them, so the app transmits none, and the answers below hold for both builds. Gemini Nano runs in Android's AICore service, which is part of Android, not of the app, and is not the app's to declare.
 
 ## Data safety (Play Console)
 
@@ -20,7 +20,7 @@ What the Play Console and F-Droid are told, and why each answer is true of the b
 | Data shared with third parties | No | The developer receives nothing. The reader’s server is the service they chose and sign in to, not a third party of the developer’s; a translation goes to the server, which hands it to the translation service it uses. |
 | Is it processed ephemerally? | No | The server keeps what the reader posts. |
 | Is collection required or optional? | Required | A fediverse client cannot post without sending the post. |
-| Purposes | App functionality, account management | Nothing else: no analytics, advertising or personalisation by the developer. |
+| Purposes | App functionality, account management | Nothing else: no analytics, advertising or personalisation by the developer, and none by the libraries in either build ([10-intelligence.md](10-intelligence.md), Telemetry). |
 | Location, contacts, calendar, health, financial info, device or other IDs, app info and performance (crash logs, diagnostics) | Not collected | No such permission, no crash reporting or analytics library. Settings, About, Share diagnostics builds a report of the build, the device, the servers’ software and the recent log on the device, and shows it; it leaves only when the person taps Share and picks an app in the system share sheet. Play counts as collected only what the app transmits off the device, which it does not, and exempts from sharing a transfer the user starts and expects. |
 
 ## Content rating (IARC questionnaire)
