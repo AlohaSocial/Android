@@ -136,7 +136,7 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="alohasocial" />
+                <data android:scheme="${oauthScheme}" />
                 <data android:host="oauth-callback" />
             </intent-filter>
         </activity>

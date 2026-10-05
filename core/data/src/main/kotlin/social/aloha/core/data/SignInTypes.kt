@@ -6,11 +6,15 @@ package social.aloha.core.data
 import java.security.cert.X509Certificate
 import java.time.Instant
 import social.aloha.core.model.SignedInAccount
+import social.aloha.core.network.oauth.OAuthIdentity
 import social.aloha.core.network.probe.ProbeOutcome
 
 /** Which redirect URI this install can receive; the app decides from its App Link verification state. */
 public fun interface RedirectUriProvider {
     public fun redirectUri(): String
+
+    /** Every redirect URI this install can receive, one per line, as a server registers the app with them. */
+    public fun registeredRedirects(): String = OAuthIdentity.REGISTERED_REDIRECTS
 }
 
 /** What looking for a server found. */

@@ -30,6 +30,7 @@ import org.robolectric.RobolectricTestRunner
 import social.aloha.core.data.AccountRepository
 import social.aloha.core.data.Authorization
 import social.aloha.core.data.ClientFactory
+import social.aloha.core.data.RedirectUriProvider
 import social.aloha.core.data.SignInCoordinator
 import social.aloha.core.data.SignInResult
 import social.aloha.core.database.AccountsDatabase
@@ -80,12 +81,14 @@ class LiveInstanceTest {
     private val limiter = RateLimiter(nowMillis = Clock.systemUTC()::millis)
     private val oauth = OAuthClient(http, limiter, Dispatchers.IO)
     private val clients = ClientFactory(http, limiter, Dispatchers.IO, accounts)
-    private val coordinator = SignInCoordinator(
+    private val coordinator = coordinator { OAuthIdentity.SCHEME_REDIRECT }
+
+    private fun coordinator(redirects: RedirectUriProvider) = SignInCoordinator(
         accounts,
         vault,
         oauth,
         CapabilityDetector(http, limiter, Dispatchers.IO) { Instant.now() },
-        { OAuthIdentity.SCHEME_REDIRECT },
+        redirects,
         clients,
     )
 
@@ -105,8 +108,8 @@ class LiveInstanceTest {
             ).outcome
     }
 
-    private suspend fun begin(): HttpUrl = (
-        coordinator.beginAuthorization(
+    private suspend fun begin(with: SignInCoordinator = coordinator): HttpUrl = (
+        with.beginAuthorization(
             testServerFinder(http, limiter).found(server.orEmpty()),
         ) as Authorization.Started
         )
@@ -140,6 +143,22 @@ class LiveInstanceTest {
         assertTrue(account.capabilities.onlyVideoFilter)
         val me = clients.forAccount(account)?.execute(AccountEndpoints.verifyCredentials())
         assertTrue("$me", me is ApiResult.Success)
+    }
+
+    @Test
+    fun `an install with a callback scheme of its own signs in through it`() = runBlocking {
+        probe()
+        val own = "alohasocial-qa://oauth-callback"
+        val qa = coordinator(
+            object : RedirectUriProvider {
+                override fun redirectUri(): String = own
+
+                override fun registeredRedirects(): String = "${OAuthIdentity.APP_LINK_REDIRECT}\n$own"
+            },
+        )
+        val callback = consent(begin(qa))
+        assertTrue(callback, callback.startsWith(own))
+        assertTrue(qa.complete(callback) is SignInResult.SignedIn)
     }
 
     @Test

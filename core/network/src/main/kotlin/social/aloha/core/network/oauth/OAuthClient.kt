@@ -50,10 +50,11 @@ public class OAuthClient internal constructor(private val executor: RequestExecu
         return (executor.execute(request, url, authorization = "") as? ApiResult.Success)?.value?.decoded?.value
     }
 
-    /** `POST /api/v1/apps` with the app's identity and both redirect URIs. */
+    /** `POST /api/v1/apps` with the app's identity and its redirect URIs. */
     public suspend fun register(
         apiBase: HttpUrl,
         scopes: String = OAuthIdentity.SCOPES,
+        redirectUris: String = OAuthIdentity.REGISTERED_REDIRECTS,
     ): ApiResult<ClientRegistration> {
         val endpoint = Endpoint(
             path = "api/v1/apps",
@@ -61,7 +62,7 @@ public class OAuthClient internal constructor(private val executor: RequestExecu
             body = Body.Form(
                 listOf(
                     QueryItem("client_name", OAuthIdentity.CLIENT_NAME),
-                    QueryItem("redirect_uris", OAuthIdentity.REGISTERED_REDIRECTS),
+                    QueryItem("redirect_uris", redirectUris),
                     QueryItem("scopes", scopes),
                     QueryItem("website", OAuthIdentity.WEBSITE),
                 ),

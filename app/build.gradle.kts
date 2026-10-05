@@ -12,6 +12,10 @@ plugins {
     alias(libs.plugins.aboutlibraries)
 }
 
+// CI's QA build: a debug build under its own application ID, name and sign-in callback, so it installs
+// alongside any other Aloha build
+val qa = providers.gradleProperty("aloha.qa").orNull == "true"
+
 android {
     namespace = "social.aloha.android"
     defaultConfig {
@@ -19,6 +23,16 @@ android {
         versionCode = 1
         versionName = "0.1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        manifestPlaceholders["oauthScheme"] = "alohasocial"
+        buildConfigField("String", "OAUTH_SCHEME", "\"alohasocial\"")
+    }
+    if (qa) {
+        buildTypes.getByName("debug") {
+            applicationIdSuffix = ".qa"
+            manifestPlaceholders["oauthScheme"] = "alohasocial-qa"
+            buildConfigField("String", "OAUTH_SCHEME", "\"alohasocial-qa\"")
+        }
+        sourceSets.getByName("debug").res.directories.add("src/qa/res")
     }
     buildFeatures {
         buildConfig = true
