@@ -199,7 +199,7 @@ open class MainActivity : ComponentActivity() {
     override fun onUserLeaveHint() {
         super.onUserLeaveHint()
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S && playback.wantsPictureInPicture.value) {
-            enterPictureInPictureMode(pictureInPictureParams())
+            enterPictureInPictureMode(pictureInPictureParams(this, playback.player.isPlaying))
         }
     }
 

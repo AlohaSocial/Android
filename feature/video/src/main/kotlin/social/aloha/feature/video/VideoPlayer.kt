@@ -5,6 +5,7 @@ package social.aloha.feature.video
 
 import android.app.Activity
 import android.app.PictureInPictureParams
+import android.content.Context
 import android.graphics.Rect
 import android.os.Build
 import android.util.Rational
@@ -51,7 +52,10 @@ internal fun VideoPlayer(
     }
     val activity = LocalActivity.current
     var bounds by remember { mutableStateOf<Rect?>(null) }
-    LaunchedEffect(activity, pictureInPicture, bounds) { activity?.offerPictureInPicture(pictureInPicture, bounds) }
+    val playing = rememberPlaying(player)
+    LaunchedEffect(activity, pictureInPicture, bounds, playing) {
+        activity?.offerPictureInPicture(pictureInPicture, bounds, playing)
+    }
     AndroidView(
         factory = { context ->
             PlayerView(context).apply {
@@ -75,11 +79,15 @@ internal fun VideoPlayer(
 
 /**
  * The video alone, filling the picture-in-picture window over the app, which stays as it was beneath:
- * the window has its own controls.
+ * the window has its own buttons, to go back or forward 10 seconds and to play or pause.
  */
 @OptIn(UnstableApi::class)
 @Composable
 public fun PictureInPicturePlayer(playback: VideoPlayback, modifier: Modifier = Modifier) {
+    val activity = LocalActivity.current
+    val playing = rememberPlaying(playback.player)
+    WindowButtons(playback.player)
+    LaunchedEffect(activity, playing) { activity?.offerPictureInPicture(wanted = true, bounds = null, playing) }
     AndroidView(
         factory = { context ->
             PlayerView(context).apply {
@@ -97,13 +105,22 @@ public fun PictureInPicturePlayer(playback: VideoPlayback, modifier: Modifier = 
  * shape, from where it is on screen. From Android 12 the system enters it on its own when [wanted];
  * before that the activity asks as the reader leaves (see [pictureInPictureParams]).
  */
-private fun Activity.offerPictureInPicture(wanted: Boolean, bounds: Rect?) {
-    setPictureInPictureParams(pictureInPictureParams(bounds, autoEnter = wanted))
+private fun Activity.offerPictureInPicture(wanted: Boolean, bounds: Rect?, playing: Boolean) {
+    setPictureInPictureParams(pictureInPictureParams(this, playing, bounds, autoEnter = wanted))
 }
 
-/** The picture-in-picture window's shape and where it grows from; [autoEnter] lets Android 12 and later enter it. */
-public fun pictureInPictureParams(bounds: Rect? = null, autoEnter: Boolean = false): PictureInPictureParams {
+/**
+ * The picture-in-picture window's shape, where it grows from, and its buttons as the video is [playing];
+ * [autoEnter] lets Android 12 and later enter it.
+ */
+public fun pictureInPictureParams(
+    context: Context,
+    playing: Boolean,
+    bounds: Rect? = null,
+    autoEnter: Boolean = false,
+): PictureInPictureParams {
     val builder = PictureInPictureParams.Builder().setAspectRatio(Rational(WIDTH, HEIGHT))
+        .setActions(windowActions(context, playing))
     bounds?.let(builder::setSourceRectHint)
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) builder.setAutoEnterEnabled(autoEnter)
     return builder.build()
