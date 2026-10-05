@@ -106,12 +106,15 @@ import social.aloha.core.designsystem.LocalBlackTheme
 import social.aloha.core.model.SwipeAction
 import social.aloha.core.model.TimelineSource
 import social.aloha.core.ui.CaughtUpDivider
+import social.aloha.core.ui.EmptyAction
+import social.aloha.core.ui.EmptyState
 import social.aloha.core.ui.ListProgress
 import social.aloha.core.ui.LocalSensitiveMediaPolicy
 import social.aloha.core.ui.NearEndEffect
 import social.aloha.core.ui.PostDivider
 import social.aloha.core.ui.R as UiR
 import social.aloha.core.ui.RefreshBox
+import social.aloha.core.ui.Skeleton
 import social.aloha.core.ui.StackedAvatars
 import social.aloha.core.ui.StatusActions
 import social.aloha.core.ui.StatusCard
@@ -219,8 +222,8 @@ private fun Content(
     state.items.isNotEmpty() && state.grid == true -> PhotoGrid(state, actions, rowActions, gridState)
     state.items.isNotEmpty() && state.watched != null -> VideoGrid(state, actions, onVideo, gridState)
     state.items.isNotEmpty() -> Rows(state, actions, rowActions, listState, onCompose)
-    state.loadedOnce -> EmptyState(state.source, TimelineSource.Local in state.sources, state.sparse, actions)
-    else -> Skeleton()
+    state.loadedOnce -> Empty(state.source, TimelineSource.Local in state.sources, state.sparse, actions)
+    else -> Skeleton(Modifier.fillMaxSize(), stringResource(R.string.timeline_loading))
 }
 
 /**
@@ -449,79 +452,6 @@ private fun TroubleStrip(trouble: Trouble) {
     TroubleStrip(stringResource(text))
 }
 
-@Composable
-private fun EmptyState(source: TimelineSource, canExplore: Boolean, sparse: Boolean, actions: TimelineScreenActions) {
-    Column(
-        Modifier.fillMaxSize().padding(AlohaSpacing.l),
-        verticalArrangement = Arrangement.spacedBy(AlohaSpacing.s, Alignment.CenterVertically),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Text(
-            stringResource(R.string.timeline_empty_title),
-            style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.semantics {
-                heading()
-            },
-        )
-        if (source == TimelineSource.Home) {
-            Text(stringResource(R.string.timeline_empty_home), style = MaterialTheme.typography.bodyMedium)
-            if (canExplore) {
-                Button(onClick = {
-                    actions.onSource(TimelineSource.Local)
-                }) { Text(stringResource(R.string.timeline_empty_explore)) }
-            }
-        } else {
-            Text(stringResource(R.string.timeline_empty_public), style = MaterialTheme.typography.bodyMedium)
-        }
-        // said once, where it explains the emptiness: the server leaves the narrowing to the device
-        if (sparse) {
-            Text(
-                stringResource(R.string.timeline_empty_sparse),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-    }
-}
-
-/** Placeholders the shape of posts while the very first page loads, read as one "loading" element. */
-@Composable
-private fun Skeleton() {
-    val loading = stringResource(R.string.timeline_loading)
-    Column(Modifier.fillMaxSize().semantics(mergeDescendants = true) { contentDescription = loading }) {
-        repeat(SKELETON_ROWS) {
-            Row(Modifier.padding(AlohaSpacing.m), horizontalArrangement = Arrangement.spacedBy(AlohaSpacing.s)) {
-                Box(
-                    Modifier.size(
-                        SKELETON_AVATAR,
-                    ).background(MaterialTheme.colorScheme.surfaceContainerHigh, CircleShape),
-                )
-                Column(verticalArrangement = Arrangement.spacedBy(AlohaSpacing.xs)) {
-                    Box(
-                        Modifier.width(
-                            SKELETON_NAME,
-                        ).height(
-                            SKELETON_LINE,
-                        ).background(MaterialTheme.colorScheme.surfaceContainerHigh, MaterialTheme.shapes.extraSmall),
-                    )
-                    Box(
-                        Modifier.fillMaxWidth().height(
-                            SKELETON_LINE,
-                        ).background(MaterialTheme.colorScheme.surfaceContainerHigh, MaterialTheme.shapes.extraSmall),
-                    )
-                    Box(
-                        Modifier.width(
-                            SKELETON_SHORT,
-                        ).height(
-                            SKELETON_LINE,
-                        ).background(MaterialTheme.colorScheme.surfaceContainerHigh, MaterialTheme.shapes.extraSmall),
-                    )
-                }
-            }
-        }
-    }
-}
-
 /** The list's side of the conversation: where it is, when it nears its end, and the scrolls it was asked for. */
 @Composable
 private fun ListEffects(state: TimelineUiState, actions: TimelineScreenActions, listState: LazyListState) {
@@ -552,13 +482,22 @@ private fun ListEffects(state: TimelineUiState, actions: TimelineScreenActions, 
     }
 }
 
-private const val SKELETON_ROWS = 5
-private val SKELETON_AVATAR = 44.dp
-private val SKELETON_NAME = 120.dp
-private val SKELETON_SHORT = 180.dp
-private val SKELETON_LINE = 14.dp
 private val GAP_PROGRESS = 24.dp
 private val TOOTH = 12.dp
 
 /** The home list's test tag, which the scroll benchmark finds it by. */
 internal const val TIMELINE_LIST = "timeline"
+
+@Composable
+private fun Empty(source: TimelineSource, canExplore: Boolean, sparse: Boolean, actions: TimelineScreenActions) {
+    val home = source == TimelineSource.Home
+    val body = stringResource(if (home) R.string.timeline_empty_home else R.string.timeline_empty_public)
+    // said once, where it explains the emptiness: the server leaves the narrowing to the device
+    val narrowing = if (sparse) stringResource(R.string.timeline_empty_sparse) else null
+    val explore = stringResource(R.string.timeline_empty_explore)
+    EmptyState(
+        stringResource(R.string.timeline_empty_title),
+        body = listOfNotNull(body, narrowing).joinToString("\n\n"),
+        action = if (home && canExplore) EmptyAction(explore) { actions.onSource(TimelineSource.Local) } else null,
+    )
+}

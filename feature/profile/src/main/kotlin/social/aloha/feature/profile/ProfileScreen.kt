@@ -81,6 +81,7 @@ import social.aloha.core.model.ProfileHighlights
 import social.aloha.core.model.SensitiveMediaPolicy
 import social.aloha.core.model.Story
 import social.aloha.core.ui.Avatar
+import social.aloha.core.ui.EmptyState
 import social.aloha.core.ui.ListProgress
 import social.aloha.core.ui.LocalReadingStyle
 import social.aloha.core.ui.LocalSensitiveMediaPolicy
@@ -88,6 +89,7 @@ import social.aloha.core.ui.NearEndEffect
 import social.aloha.core.ui.PostDivider
 import social.aloha.core.ui.ProvideLinkRouting
 import social.aloha.core.ui.RefreshBox
+import social.aloha.core.ui.Skeleton
 import social.aloha.core.ui.StatusActions
 import social.aloha.core.ui.StatusCard
 import social.aloha.core.ui.TroubleStrip
@@ -311,17 +313,7 @@ private fun TroubleStrip(trouble: Trouble) {
  */
 @Composable
 private fun Empty(loading: Boolean, modifier: Modifier = Modifier) {
-    Box(modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
-        if (loading) {
-            ListProgress()
-        } else {
-            Text(
-                stringResource(R.string.profile_empty),
-                Modifier.padding(AlohaSpacing.l),
-                style = MaterialTheme.typography.bodyLarge,
-            )
-        }
-    }
+    if (loading) Skeleton(modifier) else EmptyState(stringResource(R.string.profile_empty), modifier)
 }
 
 @Composable

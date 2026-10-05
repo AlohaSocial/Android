@@ -68,6 +68,7 @@ import social.aloha.core.ui.LocalWarningReveals
 import social.aloha.core.ui.PostDivider
 import social.aloha.core.ui.ProvideLinkRouting
 import social.aloha.core.ui.RefreshBox
+import social.aloha.core.ui.Skeleton
 import social.aloha.core.ui.StackedAvatars
 import social.aloha.core.ui.StatusActions
 import social.aloha.core.ui.StatusCard
@@ -123,7 +124,7 @@ internal fun ThreadScreen(
             ) {
                 when {
                     state.gone -> Message(stringResource(R.string.thread_gone))
-                    state.items.isEmpty() -> Loading()
+                    state.items.isEmpty() -> Skeleton(Modifier.fillMaxSize(), stringResource(R.string.thread_loading))
                     else -> Posts(state, actions, rowActions, listState)
                 }
                 BackToPost(
@@ -316,14 +317,6 @@ private fun TroubleStrip(trouble: Trouble) {
 private fun Message(text: String) {
     Box(Modifier.fillMaxSize().padding(AlohaSpacing.l), contentAlignment = Alignment.Center) {
         Text(text, style = MaterialTheme.typography.bodyLarge)
-    }
-}
-
-@Composable
-private fun Loading() {
-    val loading = stringResource(R.string.thread_loading)
-    Box(Modifier.fillMaxSize().semantics { contentDescription = loading }, contentAlignment = Alignment.Center) {
-        CircularProgressIndicator()
     }
 }
 

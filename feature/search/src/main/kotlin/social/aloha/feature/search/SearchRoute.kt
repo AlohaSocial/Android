@@ -70,9 +70,11 @@ import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.model.SensitiveMediaPolicy
 import social.aloha.core.navigation.SearchKey
 import social.aloha.core.ui.AccountRow
+import social.aloha.core.ui.EmptyState
 import social.aloha.core.ui.LocalSensitiveMediaPolicy
 import social.aloha.core.ui.RichLinkTarget
 import social.aloha.core.ui.RichTextColors
+import social.aloha.core.ui.Skeleton
 import social.aloha.core.ui.StatusActions
 import social.aloha.core.ui.StatusCard
 import social.aloha.core.ui.StatusNavigation
@@ -250,13 +252,13 @@ private fun Found(
             explore()
         }
 
-        state.searched && state.empty -> Message(stringResource(R.string.search_nothing, state.query.trim()))
+        state.searched && state.empty -> EmptyState(stringResource(R.string.search_nothing, state.query.trim()))
 
         state.searched -> Results(state, rowActions, now)
 
         trouble != null -> Trouble(trouble)
 
-        else -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+        else -> Skeleton()
     }
 }
 
@@ -399,13 +401,6 @@ private fun LazyListScope.section(heading: Int, shown: Boolean, content: LazyLis
 @Composable
 private fun Trouble(trouble: Trouble) {
     TroubleStrip(stringResource(if (trouble == Trouble.Offline) R.string.search_offline else R.string.search_error))
-}
-
-@Composable
-private fun Message(text: String) {
-    Box(Modifier.fillMaxSize().padding(AlohaSpacing.l), contentAlignment = Alignment.Center) {
-        Text(text, style = MaterialTheme.typography.bodyLarge)
-    }
 }
 
 private val BAR = 64.dp

@@ -67,6 +67,7 @@ import social.aloha.core.network.endpoints.AdminAccountEndpoints.Origin
 import social.aloha.core.network.endpoints.AdminAccountEndpoints.Standing
 import social.aloha.core.network.endpoints.ModerationEndpoints.TrendKind
 import social.aloha.core.ui.Avatar
+import social.aloha.core.ui.Skeleton
 import social.aloha.core.ui.openInBrowser
 import social.aloha.core.ui.readingColumn
 
@@ -275,11 +276,10 @@ internal fun Note(text: String) {
 }
 
 @Composable
-internal fun Loading() {
-    CircularProgressIndicator(Modifier.padding(AlohaSpacing.l))
-}
+internal fun Loading() = Skeleton(rows = LOADING_ROWS, avatar = AVATAR)
 
 internal val AVATAR = 40.dp
+private const val LOADING_ROWS = 3
 internal const val COMMENT_LINES = 3
 
 /** Of the posts a report points at, the first few show; the count says how many there are. */

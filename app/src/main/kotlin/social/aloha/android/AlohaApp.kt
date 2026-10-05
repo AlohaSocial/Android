@@ -420,11 +420,15 @@ fun AlohaApp(
             // the navigation already pads its side for the system bars; the screens must not pad it again
             Column(Modifier.consumeWindowInsets(suiteInsets(suiteType))) {
                 CompositionLocalProvider(LocalReselections provides reselections) {
+                    val transitions = rememberScreenTransitions()
                     NavDisplay(
                         modifier = Modifier.weight(1f),
                         backStack = backStack,
                         onBack = { backStack.removeLastOrNull() },
                         sceneStrategies = listOf(panes),
+                        transitionSpec = { transitions.forward() },
+                        popTransitionSpec = { transitions.back() },
+                        predictivePopTransitionSpec = { transitions.predictiveBack() },
                         entryDecorators = listOf(
                             rememberSaveableStateHolderNavEntryDecorator(),
                             rememberViewModelStoreNavEntryDecorator(),

@@ -35,8 +35,10 @@
     <string name="notifications_others_plain">Show everyone</string>
     <!-- Spoken before a notification the person has not seen yet -->
     <string name="notifications_unread">New</string>
-    <!-- Shown when there are no notifications yet -->
-    <string name="notifications_empty">Nothing yet. Mentions, boosts, favourites and follows land here.</string>
+    <!-- Heading shown when there are no notifications yet -->
+    <string name="notifications_empty">Nothing yet</string>
+    <!-- Under the heading above: what will show here -->
+    <string name="notifications_empty_body">Mentions, boosts, favourites and follows land here.</string>
     <!-- Shown when the chosen filters match no notification -->
     <string name="notifications_empty_filtered">No notifications of this kind.</string>
     <!-- The notifications could not be loaded without a network -->

@@ -55,6 +55,8 @@ import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.model.AccountList
 import social.aloha.core.model.ListRepliesPolicy
 import social.aloha.core.navigation.ListsKey
+import social.aloha.core.ui.EmptyState
+import social.aloha.core.ui.Skeleton
 
 /** The reader's lists: each opens its timeline; made, set and deleted here, but for those a group keeps. */
 @Composable
@@ -121,11 +123,11 @@ internal fun ListsScreen(
                     }
                 }
 
-                state.loading -> CircularProgressIndicator(Modifier.align(Alignment.Center))
+                state.loading -> Skeleton()
 
                 state.failed -> Retry(actions.onRetry)
 
-                else -> Message(stringResource(R.string.lists_none))
+                else -> EmptyState(stringResource(R.string.lists_none))
             }
         }
     }
@@ -298,13 +300,6 @@ internal fun Retry(onRetry: () -> Unit) {
         Button(onClick = onRetry, modifier = Modifier.padding(top = AlohaSpacing.m)) {
             Text(stringResource(R.string.lists_retry))
         }
-    }
-}
-
-@Composable
-internal fun Message(text: String) {
-    Box(Modifier.fillMaxSize().padding(AlohaSpacing.l), contentAlignment = Alignment.Center) {
-        Text(text, style = MaterialTheme.typography.bodyLarge)
     }
 }
 

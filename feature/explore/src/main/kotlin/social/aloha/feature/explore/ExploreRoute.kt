@@ -24,6 +24,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import social.aloha.core.data.Trouble
 import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.network.endpoints.DirectoryOrder
+import social.aloha.core.ui.EmptyState
 import social.aloha.core.ui.RichTextColors
 import social.aloha.core.ui.StatusActions
 import social.aloha.core.ui.StatusNavigation
@@ -147,11 +148,7 @@ internal fun Failed(trouble: Trouble, onRetry: () -> Unit) {
 }
 
 @Composable
-internal fun Empty(text: Int) {
-    Box(Modifier.fillMaxSize().padding(AlohaSpacing.l), contentAlignment = Alignment.Center) {
-        Text(stringResource(text), style = MaterialTheme.typography.bodyLarge)
-    }
-}
+internal fun Empty(text: Int) = EmptyState(stringResource(text))
 
 private fun tabName(tab: ExploreTab): Int = when (tab) {
     ExploreTab.Posts -> R.string.explore_posts

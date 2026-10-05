@@ -71,6 +71,7 @@ import social.aloha.core.designsystem.badgeCount
 import social.aloha.core.model.NotificationKind
 import social.aloha.core.sync.NotificationText
 import social.aloha.core.ui.CaughtUpDivider
+import social.aloha.core.ui.EmptyState
 import social.aloha.core.ui.ListProgress
 import social.aloha.core.ui.LocalReadingStyle
 import social.aloha.core.ui.NearEndEffect
@@ -78,6 +79,7 @@ import social.aloha.core.ui.PostAge
 import social.aloha.core.ui.PostTime
 import social.aloha.core.ui.R as UiR
 import social.aloha.core.ui.RefreshBox
+import social.aloha.core.ui.Skeleton
 import social.aloha.core.ui.StackedAvatars
 import social.aloha.core.ui.TopBarTitle
 import social.aloha.core.ui.TroubleStrip
@@ -145,8 +147,16 @@ internal fun NotificationsScreen(
                 ) {
                     when {
                         state.rows.isNotEmpty() -> Rows(state, actions, listState)
-                        state.loadedOnce -> Empty(state.kinds.isNotEmpty())
-                        else -> ListProgress()
+
+                        state.loadedOnce && state.kinds.isNotEmpty() ->
+                            EmptyState(stringResource(R.string.notifications_empty_filtered))
+
+                        state.loadedOnce -> EmptyState(
+                            stringResource(R.string.notifications_empty),
+                            body = stringResource(R.string.notifications_empty_body),
+                        )
+
+                        else -> Skeleton(Modifier.fillMaxSize())
                     }
                 }
             }
@@ -332,16 +342,6 @@ private fun summary(row: NotificationRowUi): String = NotificationText.summary(
     row.others,
     withCount = LocalReadingStyle.current.showCounts,
 )
-
-@Composable
-private fun Empty(filtered: Boolean) {
-    Box(Modifier.fillMaxSize().padding(AlohaSpacing.l), contentAlignment = Alignment.Center) {
-        Text(
-            stringResource(if (filtered) R.string.notifications_empty_filtered else R.string.notifications_empty),
-            style = MaterialTheme.typography.bodyLarge,
-        )
-    }
-}
 
 private val NotificationKind.icon: ImageVector
     get() = when (this) {
