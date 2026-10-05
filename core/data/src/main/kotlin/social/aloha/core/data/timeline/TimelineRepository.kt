@@ -210,7 +210,8 @@ public class TimelineRepository @Inject constructor(
      * One visible page. A media mode keeps only what belongs in it, whatever the server narrowed, and
      * fetches on until the page is full: at most [OverFetch.MAXIMUM_UPSTREAM_PAGES] upstream pages,
      * stopping at a short page so nothing is skipped. `pageWasFull` is about what the server sent, not
-     * what survived the filter, and the cursor is the last upstream page's.
+     * what survived the filter, and the cursor is the last upstream page's. A page asked for above a post
+     * (`min_id`) goes on upwards, through `prev`: `next` would lead back down into the rows below it.
      */
     private suspend fun harvest(client: ApiClient, fetch: Fetch): ApiResult<Harvest> {
         val mode = fetch.key.mode
@@ -218,10 +219,11 @@ public class TimelineRepository @Inject constructor(
         val onDevice = mode != FeedMode.Home
         val budget = minOf(OverFetch.MAXIMUM_UPSTREAM_PAGES, OverFetch.multiplier(mode))
         val request = TimelineEndpoints.timeline(fetch.key.source, serverFilters, Paging.DEFAULT_LIMIT, fetch.anchor)
+        val upwards = fetch.anchor is PageAnchor.NewerThan
         val kept = mutableListOf<Status>()
         var last = Harvest(emptyList(), pageWasFull = false, nextCursor = fetch.cursor)
         for (page in 1..budget) {
-            val fetched = when (val result = page(client, request, last.nextCursor)) {
+            val fetched = when (val result = page(client, request, last.nextCursor, upwards)) {
                 is ApiResult.Failure -> return result
                 is ApiResult.Success -> result.value
             }
@@ -233,16 +235,18 @@ public class TimelineRepository @Inject constructor(
         return ApiResult.Success(last.copy(statuses = kept))
     }
 
-    /** One upstream page: the request, or the cursor that continues it. */
+    /** One upstream page: the request, or the cursor that continues it, down or [upwards]. */
     private suspend fun page(
         client: ApiClient,
         request: ApiRequest<List<Status>>,
         cursor: HttpUrl?,
+        upwards: Boolean,
     ): ApiResult<Harvest> {
         val result =
             cursor?.let { client.page(it, request, Paging.DEFAULT_LIMIT) } ?: client.page(request, Paging.DEFAULT_LIMIT)
         return result.map {
-            Harvest(it.items, pageWasFull = it.rawCount >= Paging.DEFAULT_LIMIT, nextCursor = it.link.next)
+            val further = if (upwards) it.link.previous else it.link.next
+            Harvest(it.items, pageWasFull = it.rawCount >= Paging.DEFAULT_LIMIT, nextCursor = further)
         }
     }
 }

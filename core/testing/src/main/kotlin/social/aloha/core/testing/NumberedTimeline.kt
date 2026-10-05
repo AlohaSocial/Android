@@ -61,7 +61,12 @@ public class NumberedTimeline(template: JsonObject = homeTemplate()) : Dispatche
                 .removeAllQueryParameters("since_id")
                 .setQueryParameter("max_id", it.toString())
                 .build()
-            builder.addHeader("link", "<$next>; rel=\"next\"")
+            val prev = url.newBuilder()
+                .removeAllQueryParameters("max_id")
+                .removeAllQueryParameters("since_id")
+                .setQueryParameter("min_id", ids.max().toString())
+                .build()
+            builder.addHeader("link", "<$next>; rel=\"next\", <$prev>; rel=\"prev\"")
         }
         return builder.build()
     }
