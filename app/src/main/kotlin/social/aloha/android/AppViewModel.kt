@@ -24,7 +24,6 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -112,8 +111,9 @@ class AppViewModel @Inject constructor(
     /** The theme every window wears: the reader's choice, coloured by their server where they chose it. */
     @OptIn(ExperimentalCoroutinesApi::class)
     val theme: StateFlow<ThemeSettings?> = accounts.activeAccount.flatMapLatest { reader ->
-        val accent = reader?.let { accountSettings.settings(it.id).map { settings -> settings.accent } } ?: flowOf(null)
-        combine(appPreferences.appearance, accent) { look, own -> themeOf(look, reader?.capabilities?.theme, own) }
+        combine(appPreferences.appearance, accountSettings.accent(reader?.id)) { look, own ->
+            themeOf(look, reader?.capabilities?.theme, own)
+        }
     }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     private val external = MutableStateFlow<String?>(null)

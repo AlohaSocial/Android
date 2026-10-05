@@ -45,6 +45,7 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.model.WarningReveal
@@ -212,11 +213,11 @@ internal fun Collapsible(
     }
 }
 
-/** The last [FADE] of what is drawn fading out, where a collapsed text is cut. */
-private fun Modifier.fadingBottom(): Modifier = graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)
-    .drawWithContent {
+/** The last [height] of what is drawn fading out, where a text is cut short. */
+public fun Modifier.fadingBottom(height: Dp = FADE): Modifier =
+    graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen).drawWithContent {
         drawContent()
-        val fade = FADE.toPx()
+        val fade = height.toPx()
         drawRect(
             Brush.verticalGradient(
                 listOf(Color.Black, Color.Transparent),
@@ -275,15 +276,10 @@ internal fun rememberHiding(row: StatusRowUi, focused: Boolean): Hiding {
         spoilerRevealed = spoilerRevealed,
         onSpoiler = {
             ownSpoiler = !spoilerRevealed
-            if (warning != null) {
-                if (spoilerRevealed) {
-                    reveals?.closed(
-                        row.author.id,
-                        warning,
-                    )
-                } else {
-                    reveals?.opened(row.author.id, warning)
-                }
+            when {
+                warning == null -> Unit
+                spoilerRevealed -> reveals?.closed(row.author.id, warning)
+                else -> reveals?.opened(row.author.id, warning)
             }
         },
         collapse = Collapse(

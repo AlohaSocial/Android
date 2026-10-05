@@ -30,8 +30,6 @@
     <string name="viewer_zoom_in">Zoom in</string>
     <!-- Zooms out of the picture -->
     <string name="viewer_zoom_out">Zoom out</string>
-    <!-- The badge on a picture its author described; keep it short, it is a badge -->
-    <string name="viewer_alt">ALT</string>
     <!-- Under a long picture description in the viewer: shows all of it -->
     <string name="viewer_more_text">more</string>
     <!-- Under a picture description shown in full: shortens it again -->
@@ -50,8 +48,4 @@
     <string name="viewer_bookmark">Bookmark</string>
     <!-- Viewer button, on a post the reader bookmarked -->
     <string name="viewer_unbookmark">Remove bookmark</string>
-    <!-- Title of the picture's description -->
-    <string name="viewer_alt_title">Description</string>
-    <!-- Closes the picture's description -->
-    <string name="viewer_alt_close">Close</string>
 </resources>

@@ -3,14 +3,11 @@
 
 package social.aloha.feature.explore
 
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -26,6 +23,7 @@ import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.network.endpoints.DirectoryOrder
 import social.aloha.core.ui.EmptyState
 import social.aloha.core.ui.RichTextColors
+import social.aloha.core.ui.Skeleton
 import social.aloha.core.ui.StatusActions
 import social.aloha.core.ui.StatusNavigation
 import social.aloha.core.ui.StatusRowMapper
@@ -129,7 +127,7 @@ internal fun ExploreScreen(
 @Composable
 private fun <T> Loading(load: Load<T>, onRetry: () -> Unit, content: @Composable (T) -> Unit) {
     when (load) {
-        Load.Waiting -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+        Load.Waiting -> Skeleton()
         is Load.Failed -> Failed(load.trouble, onRetry)
         is Load.Loaded -> content(load.value)
     }

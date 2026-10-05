@@ -152,4 +152,4 @@ private const val FRESH_ALPHA = 0.25f
 private const val FRESH_MILLIS = 2_000
 
 /** How far a pressed button shrinks. */
-public const val SQUISH: Float = 0.85f
+private const val SQUISH: Float = 0.85f

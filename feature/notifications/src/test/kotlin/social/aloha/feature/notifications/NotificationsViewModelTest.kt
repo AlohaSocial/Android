@@ -29,9 +29,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import social.aloha.core.data.notifications.NotificationFiltering
-import social.aloha.core.data.notifications.NotificationsRepository
 import social.aloha.core.data.sync.SyncSettings
-import social.aloha.core.data.sync.UnreadCounts
 import social.aloha.core.data.timeline.StatusInteractions
 import social.aloha.core.datastore.AccountSettingsStore
 import social.aloha.core.datastore.AppPreferences

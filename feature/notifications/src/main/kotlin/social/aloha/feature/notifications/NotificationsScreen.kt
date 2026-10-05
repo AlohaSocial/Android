@@ -4,7 +4,6 @@
 package social.aloha.feature.notifications
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -20,17 +19,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material3.Badge
-import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -67,7 +62,6 @@ import kotlinx.coroutines.launch
 import social.aloha.core.data.Trouble
 import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaSpacing
-import social.aloha.core.designsystem.badgeCount
 import social.aloha.core.model.NotificationKind
 import social.aloha.core.sync.NotificationText
 import social.aloha.core.ui.CaughtUpDivider
@@ -80,7 +74,6 @@ import social.aloha.core.ui.PostTime
 import social.aloha.core.ui.R as UiR
 import social.aloha.core.ui.RefreshBox
 import social.aloha.core.ui.Skeleton
-import social.aloha.core.ui.StackedAvatars
 import social.aloha.core.ui.TopBarTitle
 import social.aloha.core.ui.TroubleStrip
 import social.aloha.core.ui.itemMotion
@@ -88,7 +81,6 @@ import social.aloha.core.ui.readingColumn
 import social.aloha.core.ui.rememberReducedMotion
 import social.aloha.core.ui.rememberTopScroll
 import social.aloha.core.ui.scrollToTop
-import social.aloha.core.ui.short
 import social.aloha.core.ui.spoken
 import social.aloha.core.ui.topScrollTail
 

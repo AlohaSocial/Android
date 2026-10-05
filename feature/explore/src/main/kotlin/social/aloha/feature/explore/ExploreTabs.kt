@@ -50,7 +50,6 @@ import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.model.Account
 import social.aloha.core.model.Card
-import social.aloha.core.model.SensitiveMediaPolicy
 import social.aloha.core.model.StarterPack
 import social.aloha.core.model.Status
 import social.aloha.core.model.Tag

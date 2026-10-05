@@ -7,7 +7,6 @@ import android.net.Uri
 import androidx.compose.runtime.Immutable
 import java.io.File
 import java.text.NumberFormat
-import java.util.Locale
 import java.util.UUID
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

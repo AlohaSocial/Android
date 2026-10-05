@@ -36,7 +36,7 @@ public val LocalReselections: ProvidableCompositionLocal<Flow<Unit>> = staticCom
  * than a short one.
  */
 @Stable
-public class TopScroller(private val list: LazyListState, private val tail: Float, private val now: () -> Long) {
+internal class TopScroller(private val list: LazyListState, private val tail: Float, private val now: () -> Long) {
     private var back: Triple<Int, Int, Long>? = null
 
     /** Up, or back down where the reader was if the list is at its top already; false when nothing moved. */

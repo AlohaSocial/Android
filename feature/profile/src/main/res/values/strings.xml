@@ -132,8 +132,6 @@
     <string name="profile_lists">Add to lists</string>
     <!-- Shown when the reader has no lists -->
     <string name="profile_lists_none">You have no lists yet.</string>
-    <!-- Menu item that opens the reader's private note about the account, and that dialog's title -->
-    <string name="profile_note">Personal note</string>
     <!-- Label of the note field -->
     <string name="profile_note_label">Your note about them</string>
     <!-- Toast after a long press copied a profile's handle, on Android versions that do not confirm a copy themselves -->

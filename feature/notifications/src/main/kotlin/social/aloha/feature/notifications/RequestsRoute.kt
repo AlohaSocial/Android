@@ -4,7 +4,6 @@
 package social.aloha.feature.notifications
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -23,7 +22,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -54,6 +52,7 @@ import social.aloha.core.html.RichTextCache
 import social.aloha.core.model.NotificationRequest
 import social.aloha.core.navigation.NotificationRequestsKey
 import social.aloha.core.ui.AccountRow
+import social.aloha.core.ui.EmptyState
 import social.aloha.core.ui.ListProgress
 import social.aloha.core.ui.RichTextColors
 import social.aloha.core.ui.StatusRowMapper
@@ -156,9 +155,9 @@ internal fun RequestsScreen(
             if (state.decisionFailed) TroubleStrip(stringResource(R.string.requests_failed))
             val requests = state.requests
             when {
-                state.failed -> Message(stringResource(R.string.requests_error))
+                state.failed -> EmptyState(stringResource(R.string.requests_error))
                 requests == null -> ListProgress()
-                requests.isEmpty() -> Message(stringResource(R.string.requests_empty))
+                requests.isEmpty() -> EmptyState(stringResource(R.string.requests_empty))
                 else -> Requests(requests, state.busy, onAccept, onDismiss, onOpenProfile)
             }
         }
@@ -235,12 +234,5 @@ private fun Requests(
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun Message(text: String) {
-    Box(Modifier.fillMaxSize().padding(AlohaSpacing.l), contentAlignment = Alignment.Center) {
-        Text(text, style = MaterialTheme.typography.bodyLarge)
     }
 }

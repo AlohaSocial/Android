@@ -36,8 +36,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -47,8 +45,6 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import java.time.Instant
 import kotlinx.coroutines.launch
@@ -57,7 +53,6 @@ import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.model.ApplicationSummary
 import social.aloha.core.ui.Avatar
-import social.aloha.core.ui.LocalReadingStyle
 import social.aloha.core.ui.StatusRowUi
 import social.aloha.core.ui.fullDate
 import social.aloha.core.ui.motion
@@ -153,13 +148,7 @@ internal fun PostedLine(createdAt: Instant, application: ApplicationSummary?) {
             Text(
                 stringResource(R.string.thread_via, app.name),
                 style = MaterialTheme.typography.labelMedium,
-                color = if (website !=
-                    null
-                ) {
-                    MaterialTheme.colorScheme.primary
-                } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant
-                },
+                color = with(MaterialTheme.colorScheme) { if (website != null) primary else onSurfaceVariant },
                 modifier = if (website != null) Modifier.clickable { openInBrowser(context, website) } else Modifier,
             )
         }
