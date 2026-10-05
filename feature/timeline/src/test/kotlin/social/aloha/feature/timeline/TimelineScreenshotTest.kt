@@ -5,10 +5,13 @@ package social.aloha.feature.timeline
 
 import android.app.Application
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.test.junit4.accessibility.enableAccessibilityChecks
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.tryPerformAccessibilityChecks
+import androidx.compose.ui.unit.LayoutDirection
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.captureRoboImage
 import org.junit.Rule
@@ -81,11 +84,16 @@ class TimelineScreenshotTest {
     private fun capture(
         name: String,
         settings: ThemeSettings = ThemeSettings(mode = ThemeMode.Light),
+        direction: LayoutDirection = LayoutDirection.Ltr,
         state: @Composable () -> TimelineUiState,
     ) {
         compose.enableAccessibilityChecks()
         // home always offers a new post
-        compose.setContent { AlohaTheme(settings) { TimelineScreen(state(), NoActions, NoActions, onCompose = {}) } }
+        compose.setContent {
+            CompositionLocalProvider(LocalLayoutDirection provides direction) {
+                AlohaTheme(settings) { TimelineScreen(state(), NoActions, NoActions, onCompose = {}) }
+            }
+        }
         compose.onRoot().tryPerformAccessibilityChecks()
         compose.onRoot().captureRoboImage("src/test/screenshots/$name.png")
     }
@@ -135,15 +143,28 @@ class TimelineScreenshotTest {
         loaded(listOf(posts[0], TimelineItem.CaughtUp, posts[1]))
     }
 
-    @Test
-    fun boostCarousel() = capture("timeline-boosts") {
+    @Composable
+    private fun folded(): TimelineUiState {
         val mapper = StatusRowMapper(cache, RichTextColors.fromTheme())
         val boosts = listOf(StatusSamples.bob, StatusSamples.alice, StatusSamples.bob).mapIndexed { index, booster ->
             mapper.map(StatusSamples.boost.copy(id = "boost$index", account = booster), "1", null)
         }
         val posts = posts()
-        loaded(listOf(posts[0], TimelineItem.Boosts(boosts), posts[2]))
+        return loaded(listOf(posts[0], TimelineItem.Boosts(boosts), posts[2]))
     }
+
+    @Test
+    fun boostCarousel() = capture("timeline-boosts") { folded() }
+
+    @Test
+    fun boostCarouselDark() = capture("timeline-boosts-dark", ThemeSettings(mode = ThemeMode.Dark)) { folded() }
+
+    @Test
+    @Config(fontScale = 2f)
+    fun boostCarouselLargeFont() = capture("timeline-boosts-font200") { folded() }
+
+    @Test
+    fun boostCarouselRightToLeft() = capture("timeline-boosts-rtl", direction = LayoutDirection.Rtl) { folded() }
 
     @Test
     fun empty() = capture("timeline-empty") { loaded(emptyList()) }
