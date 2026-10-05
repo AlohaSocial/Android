@@ -88,6 +88,10 @@
     <string name="composer_media_alt_help_body">Alt text describes a picture for people who can’t see it: a screen reader reads it aloud, and some apps show it in place of the picture. Say what matters in it, as you would to a friend on the phone: who is there, what happens, and any words it shows.</string>
     <!-- Said by a screen reader on a chip above a reply’s text; %1$s is a handle, and tapping leaves them out -->
     <string name="composer_mention_leave_out">Leave out %1$s</string>
+    <!-- Card at the top of an empty new post, opening the draft put aside last -->
+    <string name="composer_resume">Continue where you left off</string>
+    <!-- Composer menu item, and the title of the sheet showing the post as its readers will see it -->
+    <string name="composer_preview">Preview</string>
     <!-- Title of the language list -->
     <string name="composer_language_title">Language of the post</string>
     <!-- Toolbar button that opens the custom emoji of the server -->

@@ -80,6 +80,7 @@ class ComposerScreenshotTest {
         override fun onRemoveSegment(index: Int) = Unit
         override fun onAuthor(id: String) = Unit
         override fun onLeaveOut(handle: String) = Unit
+        override fun onResume(id: String) = Unit
         override fun onPickMedia() = Unit
         override fun onPickFiles() = Unit
         override fun onCapture(capture: Capture) = Unit
@@ -199,6 +200,25 @@ class ComposerScreenshotTest {
             spoiler = "",
             actions = NoActions,
         )
+    }
+
+    @Test
+    fun resume() = capture("composer-resume") {
+        ComposerScreen(
+            fresh.copy(resume = ResumeUi("d1", "Paddling out at dawn, who’s in? The swell looks")),
+            listOf(value("")),
+            spoiler = "",
+            actions = NoActions,
+        )
+    }
+
+    @Test
+    fun preview() = captureScreen("composer-preview") {
+        PreviewSheet(
+            fresh.copy(spoilerShown = true),
+            listOf("Paddling out at dawn.\n\nWho’s in?"),
+            spoiler = "Early mornings",
+        ) {}
     }
 
     @Test

@@ -34,6 +34,9 @@ internal interface ComposerActions :
 
     fun onAuthor(id: String)
 
+    /** Opens draft [id] in place of the empty post. */
+    fun onResume(id: String)
+
     /** Takes [handle] out of the people a reply is addressed to. */
     fun onLeaveOut(handle: String)
 

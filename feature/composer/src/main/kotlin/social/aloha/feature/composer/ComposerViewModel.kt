@@ -55,6 +55,7 @@ import social.aloha.core.html.StatusHtmlParser
 import social.aloha.core.model.CharacterCount
 import social.aloha.core.model.CustomEmoji
 import social.aloha.core.model.LengthRule
+import social.aloha.core.model.OutboxState
 import social.aloha.core.model.Preferences
 import social.aloha.core.model.ReplyPrefix
 import social.aloha.core.model.ServerLimits
@@ -78,7 +79,7 @@ internal class ComposerViewModel @AssistedInject constructor(
     private val accounts: AccountRepository,
     private val compose: ComposeRepository,
     sender: PostSender,
-    outbox: Outbox,
+    private val outbox: Outbox,
     queue: PostQueue,
     interactions: StatusInteractions,
     @ApplicationScope appScope: CoroutineScope,
@@ -266,6 +267,14 @@ internal class ComposerViewModel @AssistedInject constructor(
 
     init {
         viewModelScope.launch { start() }
+        viewModelScope.launch {
+            // a post begun from nothing offers the one put aside last
+            // a new post is named a draft at once; one stored under that name is being reopened
+            if (!key.blank || key.draftId?.let { outbox.get(it) } != null) return@launch
+            val latest = outbox.observe(key.readerId).first()
+                .filter { it.state == OutboxState.Draft && it.id != key.draftId }.maxByOrNull { it.updatedAt }
+            control.update { it.copy(resume = latest?.let { draft -> ResumeUi(draft.id, excerpt(draft.post)) }) }
+        }
         viewModelScope.launch {
             snapshotFlow { segments.first().text }.collect { if (cards.state.value.on) cards.onText(it) }
         }
@@ -599,6 +608,18 @@ private fun prefilled(status: Status, account: SignedInAccount): TextFieldValue 
     val text = if (handles.isEmpty()) "" else handles.joinToString(" ", postfix = " ")
     return TextFieldValue(text, TextRange(text.length))
 }
+
+/** A key that opens a new post with nothing in it yet. */
+private val ComposerKey.blank: Boolean
+    get() = replyToId == null && replyToUrl == null && editId == null && redraftId == null &&
+        sharedText == null && sharedMedia.isEmpty() && !story && !direct && quoteId == null
+
+private fun excerpt(post: DraftPost): String = CharacterCount.prefix(
+    post.segments.firstOrNull()?.text?.trim().orEmpty().ifEmpty {
+        post.spoiler.orEmpty()
+    },
+    EXCERPT,
+)
 
 private fun excerpt(status: Status): String =
     CharacterCount.prefix(StatusHtmlParser.plainText(status.content).trim(), EXCERPT)

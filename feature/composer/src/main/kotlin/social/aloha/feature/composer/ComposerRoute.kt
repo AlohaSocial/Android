@@ -61,7 +61,8 @@ private enum class Picker { Gifs, NextcloudFile, Schedule }
 
 /**
  * The composer for [key]; [onDone] leaves it, once posted, discarded or kept as a draft;
- * [onScheduledPosts] and [onDrafts] open those lists, [onSearch] search for who a mention could not find.
+ * [onScheduledPosts] and [onDrafts] open those lists, [onSearch] search for who a mention could not find,
+ * [onDraft] a draft in place of an empty post.
  */
 @Composable
 public fun ComposerRoute(
@@ -71,6 +72,7 @@ public fun ComposerRoute(
     onDrafts: () -> Unit,
     modifier: Modifier = Modifier,
     onSearch: (String) -> Unit = {},
+    onDraft: (String) -> Unit = {},
 ) {
     val viewModel = hiltViewModel<ComposerViewModel, ComposerViewModel.Factory>(key = key.toString()) { it.create(key) }
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -86,7 +88,8 @@ public fun ComposerRoute(
     val scheduled by rememberUpdatedState(onScheduledPosts)
     val drafts by rememberUpdatedState(onDrafts)
     val search by rememberUpdatedState(onSearch)
-    val elsewhere = Elsewhere({ scheduled() }, { drafts() }) { search(it) }
+    val draft by rememberUpdatedState(onDraft)
+    val elsewhere = Elsewhere({ scheduled() }, { drafts() }, { search(it) }) { draft(it) }
     val actions = rememberActions(viewModel, state, dialogs, elsewhere) { done() }
     val hue = MaterialTheme.colorScheme.primary.toArgb()
     LaunchedEffect(hue) { viewModel.cards.onHue(hue) }
@@ -107,8 +110,13 @@ public fun ComposerRoute(
     ComposerDialogs(state, viewModel, dialogs) { done() }
 }
 
-/** The lists the composer opens, and search. */
-private class Elsewhere(val scheduledPosts: () -> Unit, val drafts: () -> Unit, val search: (String) -> Unit)
+/** The lists the composer opens, search, and a draft in its place. */
+private class Elsewhere(
+    val scheduledPosts: () -> Unit,
+    val drafts: () -> Unit,
+    val search: (String) -> Unit,
+    val draft: (String) -> Unit,
+)
 
 /**
  * The composer's actions, made once; what they decide on (the state, what the pickers accept) is
@@ -167,6 +175,8 @@ private fun rememberActions(
             override fun onRemoveSegment(index: Int) = viewModel.onSegments(index)
 
             override fun onAuthor(id: String) = viewModel.onAuthor(id)
+
+            override fun onResume(id: String) = elsewhere.draft(id)
 
             override fun onLeaveOut(handle: String) =
                 viewModel.onText(0, ComposerText.without(viewModel.segments.first(), handle))

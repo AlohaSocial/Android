@@ -53,6 +53,10 @@ internal data class CompletionsUi(
     }
 }
 
+/** The draft a new, empty composer offers to go back to: its id, and how it begins. */
+@Immutable
+internal data class ResumeUi(val draftId: String, val excerpt: String)
+
 /** Who may quote the post, where the server lets its writer choose. */
 internal enum class QuotePolicy(val wire: String?) { Anyone(null), Followers("followers"), Nobody("nobody") }
 
@@ -123,6 +127,8 @@ internal data class ComposerUiState(
     val overFrom: List<Int?> = listOf(null),
     /** The people a reply to several is addressed to, still in its text, each to be left out; else empty. */
     val mentioned: List<String> = emptyList(),
+    /** The latest draft, offered while a new post is still empty. */
+    val resume: ResumeUi? = null,
     /** The language the opening post reads as, where the device is sure enough of it. */
     val detected: String? = null,
     val games: List<ComposerGames.Kind> = emptyList(),
@@ -183,6 +189,9 @@ internal data class ComposerUiState(
     val canPost: Boolean
         get() = ready && author != null && !posting && !empty && remaining.all { it >= 0 } && (uploaded || canWait) &&
             poll?.ready(maxPollOptionCharacters) != false
+
+    /** Another post can join the thread: an edit changes one post, and a scheduled one cannot be answered yet. */
+    val threadable: Boolean get() = !posting && scheduledAt == null && !editing
 
     /** A post of its own, not a reply to one or one written again: what a story can be. */
     val fresh: Boolean get() = !editing && reply == null && replaces == null

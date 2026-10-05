@@ -38,12 +38,15 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import social.aloha.core.data.AccountRepository
+import social.aloha.core.data.compose.Outbox
 import social.aloha.core.data.timeline.PinnedFeeds
 import social.aloha.core.data.timeline.TimelinePositions
 import social.aloha.core.data.timeline.TimelineRepository
@@ -53,6 +56,7 @@ import social.aloha.core.datastore.AccountSettingsStore
 import social.aloha.core.datastore.AppPreferences
 import social.aloha.core.datastore.ReadingPreferences
 import social.aloha.core.designsystem.AlohaIcons
+import social.aloha.core.model.OutboxState
 import social.aloha.core.model.PinnedFeed
 import social.aloha.core.model.SignedInAccount
 import social.aloha.core.model.SwipeAction
@@ -74,6 +78,8 @@ internal data class HomeFeedsState(
     val showReplies: Boolean = true,
     val swipeBetween: Boolean = false,
     val titleNext: Boolean = false,
+    /** The reader has a draft put aside. */
+    val draft: Boolean = false,
 )
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -86,6 +92,7 @@ internal class HomeFeedsViewModel @Inject constructor(
     private val positions: TimelinePositions,
     preferences: AppPreferences,
     reading: ReadingPreferences,
+    outbox: Outbox,
 ) : ViewModel(),
     HomeActions {
     private val account = accounts.activeAccount.stateIn(viewModelScope, SharingStarted.Eagerly, null)
@@ -95,14 +102,15 @@ internal class HomeFeedsViewModel @Inject constructor(
     }
 
     val state: StateFlow<HomeFeedsState> = account.filterNotNull().flatMapLatest { reader ->
-        combine(pinned.feeds(reader), settings.settings(reader.id), unread, noSwipes, reading.titleNextFeed) {
-                feeds,
-                own,
-                dots,
-                swipe,
-                next,
-            ->
-            HomeFeedsState(feeds, dots, own.explainedFeeds, own.showBoosts, own.showReplies, swipe, next)
+        val drafts = outbox.observe(reader.id).map { list -> list.any { it.state == OutboxState.Draft } }
+        combine(
+            pinned.feeds(reader),
+            settings.settings(reader.id),
+            unread,
+            combine(noSwipes, reading.titleNextFeed, ::Pair),
+            drafts.distinctUntilChanged(),
+        ) { feeds, own, dots, (swipe, next), draft ->
+            HomeFeedsState(feeds, dots, own.explainedFeeds, own.showBoosts, own.showReplies, swipe, next, draft)
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_MILLIS), HomeFeedsState())
 
@@ -237,7 +245,9 @@ internal fun HomeScreen(
                 },
             )
         },
-        floatingActionButton = { ComposeButton(chrome, expanded = !lists.getValue(current.id).canScrollBackward) },
+        floatingActionButton = {
+            ComposeButton(chrome, expanded = !lists.getValue(current.id).canScrollBackward, draft = state.draft)
+        },
     ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize()) {
             chrome.header()

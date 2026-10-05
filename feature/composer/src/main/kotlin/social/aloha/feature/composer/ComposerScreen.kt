@@ -23,6 +23,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -44,6 +45,7 @@ import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.paneTitle
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaSpacing
@@ -66,6 +68,8 @@ internal fun ComposerScreen(
     snackbars: SnackbarHostState = remember { SnackbarHostState() },
 ) {
     val title = stringResource(if (state.reply != null) R.string.composer_title_reply else R.string.composer_title)
+    var previewing by rememberSaveable { mutableStateOf(false) }
+    if (previewing) PreviewSheet(state, segments.map { it.text }, spoiler) { previewing = false }
     Scaffold(
         modifier = modifier.semantics { paneTitle = title },
         topBar = {
@@ -81,7 +85,7 @@ internal fun ComposerScreen(
                     }
                 },
                 actions = {
-                    ComposerMenu(actions)
+                    ComposerMenu(actions) { previewing = true }
                     if (!state.postAtBottom) PostButton(state, actions)
                 },
             )
@@ -110,6 +114,7 @@ internal fun ComposerScreen(
 /** The post as written: what it answers, its warning, each segment of the thread, its poll and time. */
 @Composable
 private fun Writing(state: ComposerUiState, segments: List<TextFieldValue>, spoiler: String, actions: ComposerActions) {
+    state.resume?.let { ResumeCard(it, segments, spoiler, actions::onResume) }
     state.reply?.let { ReplyLine(it) }
     if (state.editing) {
         Text(
@@ -125,21 +130,26 @@ private fun Writing(state: ComposerUiState, segments: List<TextFieldValue>, spoi
     }
     GamesHint(state.games)
     state.scheduledAt?.let { ScheduleLine(it, actions::onPickSchedule) { actions.onSchedule(null) } }
-    // an edit changes one post; a scheduled one cannot be answered yet
-    val threadable = !state.posting && state.scheduledAt == null && !state.editing
-    TextButton(onClick = actions::onAddSegment, enabled = threadable) {
+    TextButton(onClick = actions::onAddSegment, enabled = state.threadable) {
         Icon(AlohaIcons.AddToThread, contentDescription = null)
         Text(stringResource(R.string.composer_add_segment), Modifier.padding(start = AlohaSpacing.xs))
     }
 }
 
-/** What is kept apart from the post being written: the posts waiting for their time, and the drafts. */
+/** How the post will look, and what is kept apart from it: the posts waiting for their time, and the drafts. */
 @Composable
-private fun ComposerMenu(actions: ComposerActions) {
+private fun ComposerMenu(actions: ComposerActions, onPreview: () -> Unit) {
     var open by remember { mutableStateOf(false) }
     Box {
         IconButton(onClick = { open = true }) { Icon(AlohaIcons.More, stringResource(R.string.composer_more)) }
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.composer_preview)) },
+                onClick = {
+                    open = false
+                    onPreview()
+                },
+            )
             DropdownMenuItem(
                 text = { Text(stringResource(R.string.drafts_title)) },
                 onClick = {
@@ -196,6 +206,29 @@ private fun PostButton(state: ComposerUiState, actions: ComposerActions) {
             )
         } else {
             Text(stringResource(label))
+        }
+    }
+}
+
+/** The draft put aside last, to go back to instead of starting anew, while nothing is written yet. */
+@Composable
+private fun ResumeCard(resume: ResumeUi, segments: List<TextFieldValue>, spoiler: String, onResume: (String) -> Unit) {
+    if (segments.any { it.text.isNotBlank() } || spoiler.isNotBlank()) return
+    OutlinedCard(
+        onClick = { onResume(resume.draftId) },
+        modifier = Modifier.fillMaxWidth().padding(top = AlohaSpacing.s),
+    ) {
+        Column(Modifier.padding(AlohaSpacing.m), verticalArrangement = Arrangement.spacedBy(AlohaSpacing.xs)) {
+            Text(stringResource(R.string.composer_resume), style = MaterialTheme.typography.titleSmall)
+            if (resume.excerpt.isNotBlank()) {
+                Text(
+                    resume.excerpt,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
         }
     }
 }
