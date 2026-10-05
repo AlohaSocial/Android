@@ -53,7 +53,7 @@ class WatchScreenshotTest {
     val compose = createComposeRule()
 
     private val nowhere = object : StatusNavigation {
-        override fun openThread(statusId: String) = Unit
+        override fun openThread(statusId: String, history: Boolean) = Unit
         override fun openProfile(accountId: String?, acct: String?) = Unit
         override fun openTag(name: String) = Unit
         override fun openWeb(url: String) = Unit

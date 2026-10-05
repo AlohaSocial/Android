@@ -14,7 +14,7 @@ import social.aloha.core.model.Status
  * thread, which is its own context, builds its rows without [showContext] lines.
  */
 public class StatusRowCache(private val cache: RichTextCache, private val showContext: Boolean = true) {
-    private val built = IdentityHashMap<Status, Pair<List<String>?, StatusRowUi>>()
+    private val built = IdentityHashMap<Status, Pair<Pair<List<String>?, List<String>>, StatusRowUi>>()
     private val byStatusId = HashMap<String, Status>()
     private var mapper: StatusRowMapper? = null
     private var colors: RichTextColors? = null
@@ -30,13 +30,19 @@ public class StatusRowCache(private val cache: RichTextCache, private val showCo
     }
 
     @Synchronized
-    public fun rowFor(status: Status, viewer: String, warning: List<String>?): StatusRowUi {
+    public fun rowFor(
+        status: Status,
+        viewer: String,
+        warning: List<String>?,
+        matches: List<String> = emptyList(),
+    ): StatusRowUi {
         byStatusId[status.displayed.id] = status.displayed
-        built[status]?.takeIf { it.first == warning }?.let { return it.second }
+        built[status]?.takeIf { it.first == warning to matches }?.let { return it.second }
         if (built.size > CAPACITY) built.clear()
-        return checkNotNull(mapper) { "use() the colours first" }.map(status, viewer, warning, showContext).also {
+        val mapper = checkNotNull(mapper) { "use() the colours first" }
+        return mapper.map(status, viewer, warning, showContext, matches).also {
             built[status] =
-                warning to it
+                (warning to matches) to it
         }
     }
 

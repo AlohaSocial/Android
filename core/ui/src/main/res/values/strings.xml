@@ -6,6 +6,8 @@
 <resources>
     <!-- Age of a post less than a minute old, in the timeline and read aloud -->
     <string name="status_age_now">now</string>
+    <!-- Accessibility action on a post's age or time: shows its full date and time in a tooltip -->
+    <string name="status_age_show_date">Show the date</string>
     <!-- Line above a boosted post; %s is the name of the person who boosted it -->
     <string name="status_context_boosted">Boosted by %s</string>
     <!-- Line above a post pinned to a profile -->
@@ -20,6 +22,12 @@
     <string name="status_bot">Automated account</string>
     <!-- Badge on a post that was edited after it was published -->
     <string name="status_edited">Edited</string>
+    <!-- What a tap on a screen's title does, said by a screen reader: the list goes back to its top -->
+    <string name="list_scroll_to_top">Scroll to top</string>
+    <!-- Screen reader action on the new posts pill: hides it, leaving the new posts where they wait -->
+    <string name="list_new_posts_dismiss">Dismiss</string>
+    <!-- Screen reader action on an edited post: opens the list of its earlier versions -->
+    <string name="status_action_history">Edit history</string>
     <!-- Badge on a post only followers can see -->
     <string name="status_visibility_private">Followers only</string>
     <!-- Badge on a direct message -->
@@ -34,6 +42,28 @@
     <string name="status_filtered">Filtered: %s</string>
     <!-- Button that reveals a post hidden by a filter -->
     <string name="status_filtered_show">Show anyway</string>
+    <!-- Button on an opened content warning: closes it over the post again -->
+    <string name="status_warning_rehide">Re-hide</string>
+    <!-- Description of the eye in a post's header once its warning or filter was opened: hides the post again -->
+    <string name="status_rehide">Hide again</string>
+    <!-- Button under a long post's shortened text: shows all of it -->
+    <string name="status_expand">Expand</string>
+    <!-- Button under a long post's full text: shortens it again -->
+    <string name="status_collapse">Collapse</string>
+    <!-- Pill on sensitive media once shown: covers it again -->
+    <string name="status_media_hide">Hide</string>
+    <!-- Badge on media posted without a description; shown when Reading asks for it -->
+    <string name="status_media_no_alt">No ALT</string>
+    <!-- Title of the sheet showing a picture's description, opened from its ALT badge -->
+    <string name="status_media_description">Description</string>
+    <!-- Label on a media row, in the mode that lists media instead of showing it: the media is marked sensitive -->
+    <string name="status_media_sensitive">Sensitive</string>
+    <!-- Kind of a media row in the mode that lists media instead of showing it -->
+    <string name="status_media_picture">Picture</string>
+    <!-- Kind of a media row in the mode that lists media instead of showing it -->
+    <string name="status_media_audio">Audio</string>
+    <!-- Kind of a media row in the mode that lists media instead of showing it: a file the app cannot show -->
+    <string name="status_media_file">File</string>
     <!-- Cover over sensitive media -->
     <string name="status_sensitive_cover">Sensitive content</string>
     <!-- Hint under the sensitive-media cover -->

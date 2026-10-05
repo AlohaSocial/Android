@@ -57,6 +57,7 @@ import social.aloha.core.model.Tag
 import social.aloha.core.network.endpoints.DirectoryOrder
 import social.aloha.core.ui.AccountRow
 import social.aloha.core.ui.LocalSensitiveMediaPolicy
+import social.aloha.core.ui.PostDivider
 import social.aloha.core.ui.RichLinkTarget
 import social.aloha.core.ui.StatusActions
 import social.aloha.core.ui.StatusCard
@@ -70,7 +71,7 @@ internal fun PostsTab(posts: List<Status>, viewer: String, mapper: StatusRowMapp
     LazyColumn(Modifier.fillMaxSize()) {
         items(rows, key = { it.rowId }) { row ->
             StatusCard(row, now, LocalSensitiveMediaPolicy.current, rowActions, showActions = false)
-            HorizontalDivider()
+            PostDivider()
         }
     }
 }

@@ -6,9 +6,21 @@ package social.aloha.feature.timeline
 import android.content.res.Configuration
 import androidx.activity.compose.ReportDrawnWhen
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.focusable
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
+import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -39,7 +51,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -49,7 +60,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -61,16 +72,24 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.paneTitle
@@ -81,18 +100,34 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.distinctUntilChanged
 import social.aloha.core.data.Trouble
 import social.aloha.core.designsystem.AlohaIcons
+import social.aloha.core.designsystem.AlohaMotion
 import social.aloha.core.designsystem.AlohaSpacing
+import social.aloha.core.designsystem.LocalBlackTheme
 import social.aloha.core.model.SwipeAction
 import social.aloha.core.model.TimelineSource
 import social.aloha.core.ui.CaughtUpDivider
+import social.aloha.core.ui.EmptyAction
+import social.aloha.core.ui.EmptyState
 import social.aloha.core.ui.ListProgress
 import social.aloha.core.ui.LocalSensitiveMediaPolicy
 import social.aloha.core.ui.NearEndEffect
+import social.aloha.core.ui.PostDivider
+import social.aloha.core.ui.R as UiR
+import social.aloha.core.ui.RefreshBox
+import social.aloha.core.ui.Skeleton
 import social.aloha.core.ui.StackedAvatars
 import social.aloha.core.ui.StatusActions
 import social.aloha.core.ui.StatusCard
+import social.aloha.core.ui.TopBarTitle
 import social.aloha.core.ui.TroubleStrip
+import social.aloha.core.ui.itemMotion
 import social.aloha.core.ui.readingColumn
+import social.aloha.core.ui.rememberReducedMotion
+import social.aloha.core.ui.rememberTopScroll
+import social.aloha.core.ui.scrollToTop
+import social.aloha.core.ui.shake
+import social.aloha.core.ui.squish
+import social.aloha.core.ui.topScrollTail
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -114,12 +149,16 @@ internal fun TimelineScreen(
     toolbar: @Composable () -> Unit = {},
     header: @Composable () -> Unit = {},
     onVideo: (String) -> Unit = {},
+    shake: Int = 0,
 ) {
+    val bar = TopAppBarDefaults.pinnedScrollBehavior()
+    val scrollToTop = rememberTopScroll(listState)
     Scaffold(
-        modifier = modifier.semantics { paneTitle = title },
+        modifier = modifier.nestedScroll(bar.nestedScrollConnection).semantics { paneTitle = title },
         topBar = {
             TopAppBar(
-                title = { Text(title) },
+                title = { TopBarTitle(title, scrollToTop) },
+                scrollBehavior = bar,
                 navigationIcon = navigationIcon,
                 actions = {
                     onSearch?.let {
@@ -148,10 +187,10 @@ internal fun TimelineScreen(
             header()
             if (state.sources.size > 1) SourceRow(state.source, state.sources, actions::onSource)
             state.trouble?.let { TroubleStrip(it) }
-            PullToRefreshBox(
-                isRefreshing = state.refreshing,
+            RefreshBox(
+                refreshing = state.refreshing,
                 onRefresh = actions::onRefresh,
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.fillMaxSize().shake(shake),
             ) {
                 // the app is fully drawn once the reader sees posts, or learns there are none
                 ReportDrawnWhen { state.items.isNotEmpty() || state.loadedOnce }
@@ -183,8 +222,8 @@ private fun Content(
     state.items.isNotEmpty() && state.grid == true -> PhotoGrid(state, actions, rowActions, gridState)
     state.items.isNotEmpty() && state.watched != null -> VideoGrid(state, actions, onVideo, gridState)
     state.items.isNotEmpty() -> Rows(state, actions, rowActions, listState, onCompose)
-    state.loadedOnce -> EmptyState(state.source, TimelineSource.Local in state.sources, state.sparse, actions)
-    else -> Skeleton()
+    state.loadedOnce -> Empty(state.source, TimelineSource.Local in state.sources, state.sparse, actions)
+    else -> Skeleton(Modifier.fillMaxSize(), stringResource(R.string.timeline_loading))
 }
 
 /**
@@ -205,6 +244,7 @@ private fun Rows(
     val onKey = timelineKeyHandler(state, rowActions, listState, focus, onCompose, selected) { selected = it }
     val keyboard = LocalConfiguration.current.keyboard == Configuration.KEYBOARD_QWERTY
     LaunchedEffect(keyboard) { if (keyboard) focus.requestFocus() }
+    val gaps = rememberGapFilling(state, actions, listState)
     LazyColumn(
         state = listState,
         modifier = Modifier
@@ -216,38 +256,7 @@ private fun Rows(
         contentPadding = PaddingValues(bottom = AlohaSpacing.xl),
     ) {
         items(state.items, key = { it.key }, contentType = { it::class }) { item ->
-            when (item) {
-                is TimelineItem.Post -> SwipeRow(
-                    item.row,
-                    item.key == selected,
-                    state.swipeTowardsEnd,
-                    state.swipeTowardsStart,
-                    onSwipe = { row, action ->
-                        if (action ==
-                            SwipeAction.Reply
-                        ) {
-                            rowActions.onReply(row)
-                        } else {
-                            actions.onSwipe(row, action)
-                        }
-                    },
-                ) {
-                    // on the card itself, the one node a screen reader reads of the row
-                    val chosen = item.key == selected
-                    StatusCard(
-                        item.row,
-                        state.now,
-                        LocalSensitiveMediaPolicy.current,
-                        rowActions,
-                        Modifier.semantics { this.selected = chosen },
-                    )
-                }
-
-                is TimelineItem.Gap -> GapRow(item, actions)
-
-                TimelineItem.CaughtUp -> CaughtUpDivider(onClick = actions::onCaughtUp)
-            }
-            if (item != TimelineItem.CaughtUp) HorizontalDivider()
+            Column(Modifier.itemMotion(this)) { TimelineRow(state, item, selected, actions, rowActions, gaps) }
         }
         if (state.loadingOlder) {
             item(contentType = "footer") { ListProgress() }
@@ -255,48 +264,130 @@ private fun Rows(
     }
 }
 
+/** One row of the list: a post, a gap or the caught-up line, and the line under it. */
 @Composable
-internal fun GapRow(gap: TimelineItem.Gap, actions: TimelineScreenActions) {
-    if (gap.loading) {
-        ListProgress(size = GAP_PROGRESS)
-    } else {
-        Box(Modifier.fillMaxWidth().padding(AlohaSpacing.s), contentAlignment = Alignment.Center) {
-            OutlinedButton(onClick = { actions.onFillGap(gap.id) }) { Text(stringResource(R.string.timeline_gap)) }
-        }
-    }
-}
-
-@Composable
-private fun NewPostsPill(count: Int, avatars: List<String?>, onReveal: () -> Unit, modifier: Modifier) {
-    AnimatedVisibility(visible = count > 0, modifier = modifier) {
-        val label = pluralStringResource(R.plurals.timeline_new_posts, count, count)
-        // who posted says it at a glance, beside how many
-        Button(
-            onClick = onReveal,
-            modifier = Modifier.semantics {
-                contentDescription = label
-                liveRegion = LiveRegionMode.Polite
-            },
-            contentPadding = if (avatars.isEmpty()) {
-                ButtonDefaults.ContentPadding
-            } else {
-                ButtonDefaults.ButtonWithIconContentPadding
+private fun TimelineRow(
+    state: TimelineUiState,
+    item: TimelineItem,
+    selected: String?,
+    actions: TimelineScreenActions,
+    rowActions: StatusActions,
+    gaps: GapFilling,
+) {
+    when (item) {
+        is TimelineItem.Post -> SwipeRow(
+            item.row,
+            item.key == selected,
+            state.swipeTowardsEnd,
+            state.swipeTowardsStart,
+            onSwipe = { row, action ->
+                if (action ==
+                    SwipeAction.Reply
+                ) {
+                    rowActions.onReply(row)
+                } else {
+                    actions.onSwipe(row, action)
+                }
             },
         ) {
-            if (avatars.isEmpty()) {
-                Text(label)
-            } else {
-                Icon(AlohaIcons.NewPosts, contentDescription = null, modifier = Modifier.size(ButtonDefaults.IconSize))
-                Spacer(Modifier.width(ButtonDefaults.IconSpacing))
-                StackedAvatars(avatars, PILL_AVATAR, ring = MaterialTheme.colorScheme.primary)
-                Spacer(Modifier.width(ButtonDefaults.IconSpacing))
-                Text(label)
+            // on the card itself, the one node a screen reader reads of the row
+            val chosen = item.key == selected
+            StatusCard(
+                item.row,
+                state.now,
+                LocalSensitiveMediaPolicy.current,
+                rowActions,
+                Modifier.semantics { this.selected = chosen },
+            )
+        }
+
+        is TimelineItem.Boosts -> BoostCarousel(item, state.now, rowActions) { actions.onExpandBoosts(item.key) }
+
+        is TimelineItem.Gap -> GapRow(item, gaps.fromBelow) { gaps.fill(item) }
+
+        TimelineItem.CaughtUp -> CaughtUpDivider(onClick = actions::onCaughtUp)
+    }
+    if (item != TimelineItem.CaughtUp) PostDivider()
+}
+
+/**
+ * Posts not loaded yet, between two torn edges. In the list it fills from the side the reader came from:
+ * [fromBelow] when they were scrolling up towards it, otherwise from above; a grid ([fromBelow] null)
+ * fills from above and says nothing of a side.
+ */
+@Composable
+internal fun GapRow(gap: TimelineItem.Gap, fromBelow: Boolean?, onFill: () -> Unit) {
+    val torn = MaterialTheme.colorScheme.outlineVariant
+    Box(
+        Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surfaceContainerLow)
+            .tornEdges(torn)
+            .padding(AlohaSpacing.s),
+        contentAlignment = Alignment.Center,
+    ) {
+        if (gap.loading) {
+            ListProgress(size = GAP_PROGRESS)
+        } else {
+            val label = when (fromBelow) {
+                null -> R.string.timeline_gap
+                true -> R.string.timeline_gap_above
+                false -> R.string.timeline_gap_below
             }
+            OutlinedButton(onClick = onFill) { Text(stringResource(label)) }
         }
     }
 }
 
-private val PILL_AVATAR = 24.dp
+/** A zigzag along the top and the bottom, as paper torn across. */
+private fun Modifier.tornEdges(color: Color): Modifier = drawBehind {
+    val tooth = TOOTH.toPx()
+    listOf(0f to tooth, size.height to size.height - tooth).forEach { (edge, peak) ->
+        val path = Path().apply {
+            moveTo(0f, edge)
+            var x = 0f
+            while (x < size.width) {
+                lineTo(x + tooth / 2, peak)
+                lineTo(x + tooth, edge)
+                x += tooth
+            }
+        }
+        drawPath(path, color, style = Stroke(width = 1.dp.toPx()))
+    }
+}
+
+/** Where the list's gaps fill from, and how the rows under a gap keep their place while it fills from below. */
+internal class GapFilling(val fromBelow: Boolean, val fill: (TimelineItem.Gap) -> Unit)
+
+/**
+ * A reader scrolling up towards a gap came from below it: it fills from the post under it, and that
+ * post stays where it is on screen while the new ones arrive above it.
+ */
+@Composable
+private fun rememberGapFilling(
+    state: TimelineUiState,
+    actions: TimelineScreenActions,
+    listState: LazyListState,
+): GapFilling {
+    var anchor by remember { mutableStateOf<Pair<String, Int>?>(null) }
+    LaunchedEffect(state.items) {
+        val (key, offset) = anchor ?: return@LaunchedEffect
+        if (state.items.any { it is TimelineItem.Gap && it.loading }) return@LaunchedEffect
+        anchor = null
+        val index = state.items.indexOfFirst { it.key == key }.takeIf { it >= 0 } ?: return@LaunchedEffect
+        listState.scrollToItem(index)
+        listState.scrollBy(-offset.toFloat())
+    }
+    val fromBelow = listState.lastScrolledBackward
+    return GapFilling(fromBelow) { gap ->
+        if (fromBelow) {
+            val below = state.items.getOrNull(state.items.indexOf(gap) + 1)?.key
+            val visible = listState.layoutInfo.visibleItemsInfo.firstOrNull { it.key == below }
+            anchor = if (below != null && visible != null) below to visible.offset else null
+        }
+        actions.onFillGap(gap.id, fromBelow)
+    }
+}
 
 @Composable
 private fun SourceRow(source: TimelineSource, sources: List<TimelineSource>, onSource: (TimelineSource) -> Unit) {
@@ -361,79 +452,6 @@ private fun TroubleStrip(trouble: Trouble) {
     TroubleStrip(stringResource(text))
 }
 
-@Composable
-private fun EmptyState(source: TimelineSource, canExplore: Boolean, sparse: Boolean, actions: TimelineScreenActions) {
-    Column(
-        Modifier.fillMaxSize().padding(AlohaSpacing.l),
-        verticalArrangement = Arrangement.spacedBy(AlohaSpacing.s, Alignment.CenterVertically),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Text(
-            stringResource(R.string.timeline_empty_title),
-            style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.semantics {
-                heading()
-            },
-        )
-        if (source == TimelineSource.Home) {
-            Text(stringResource(R.string.timeline_empty_home), style = MaterialTheme.typography.bodyMedium)
-            if (canExplore) {
-                Button(onClick = {
-                    actions.onSource(TimelineSource.Local)
-                }) { Text(stringResource(R.string.timeline_empty_explore)) }
-            }
-        } else {
-            Text(stringResource(R.string.timeline_empty_public), style = MaterialTheme.typography.bodyMedium)
-        }
-        // said once, where it explains the emptiness: the server leaves the narrowing to the device
-        if (sparse) {
-            Text(
-                stringResource(R.string.timeline_empty_sparse),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-    }
-}
-
-/** Placeholders the shape of posts while the very first page loads, read as one "loading" element. */
-@Composable
-private fun Skeleton() {
-    val loading = stringResource(R.string.timeline_loading)
-    Column(Modifier.fillMaxSize().semantics(mergeDescendants = true) { contentDescription = loading }) {
-        repeat(SKELETON_ROWS) {
-            Row(Modifier.padding(AlohaSpacing.m), horizontalArrangement = Arrangement.spacedBy(AlohaSpacing.s)) {
-                Box(
-                    Modifier.size(
-                        SKELETON_AVATAR,
-                    ).background(MaterialTheme.colorScheme.surfaceContainerHigh, CircleShape),
-                )
-                Column(verticalArrangement = Arrangement.spacedBy(AlohaSpacing.xs)) {
-                    Box(
-                        Modifier.width(
-                            SKELETON_NAME,
-                        ).height(
-                            SKELETON_LINE,
-                        ).background(MaterialTheme.colorScheme.surfaceContainerHigh, MaterialTheme.shapes.extraSmall),
-                    )
-                    Box(
-                        Modifier.fillMaxWidth().height(
-                            SKELETON_LINE,
-                        ).background(MaterialTheme.colorScheme.surfaceContainerHigh, MaterialTheme.shapes.extraSmall),
-                    )
-                    Box(
-                        Modifier.width(
-                            SKELETON_SHORT,
-                        ).height(
-                            SKELETON_LINE,
-                        ).background(MaterialTheme.colorScheme.surfaceContainerHigh, MaterialTheme.shapes.extraSmall),
-                    )
-                }
-            }
-        }
-    }
-}
-
 /** The list's side of the conversation: where it is, when it nears its end, and the scrolls it was asked for. */
 @Composable
 private fun ListEffects(state: TimelineUiState, actions: TimelineScreenActions, listState: LazyListState) {
@@ -442,7 +460,9 @@ private fun ListEffects(state: TimelineUiState, actions: TimelineScreenActions, 
         snapshotFlow { listState.firstVisibleItemIndex to listState.firstVisibleItemScrollOffset }
             .distinctUntilChanged()
             .collect { (index, offset) ->
-                (items.getOrNull(index) as? TimelineItem.Post)?.let { actions.onScrolled(it.key, offset) }
+                items.getOrNull(index)
+                    ?.takeIf { it is TimelineItem.Post || it is TimelineItem.Boosts }
+                    ?.let { actions.onScrolled(it.key, offset) }
             }
     }
     NearEndEffect(listState, items.size, actions::onNearEnd)
@@ -452,20 +472,32 @@ private fun ListEffects(state: TimelineUiState, actions: TimelineScreenActions, 
             actions.onRestored()
         }
     }
+    val tail = topScrollTail()
+    val reduced = rememberReducedMotion()
     LaunchedEffect(state.scrollToTop) {
         if (state.scrollToTop) {
-            listState.animateScrollToItem(0)
+            listState.scrollToTop(tail, reduced)
             actions.onScrolledToTop()
         }
     }
 }
 
-private const val SKELETON_ROWS = 5
-private val SKELETON_AVATAR = 44.dp
-private val SKELETON_NAME = 120.dp
-private val SKELETON_SHORT = 180.dp
-private val SKELETON_LINE = 14.dp
 private val GAP_PROGRESS = 24.dp
+private val TOOTH = 12.dp
 
 /** The home list's test tag, which the scroll benchmark finds it by. */
 internal const val TIMELINE_LIST = "timeline"
+
+@Composable
+private fun Empty(source: TimelineSource, canExplore: Boolean, sparse: Boolean, actions: TimelineScreenActions) {
+    val home = source == TimelineSource.Home
+    val body = stringResource(if (home) R.string.timeline_empty_home else R.string.timeline_empty_public)
+    // said once, where it explains the emptiness: the server leaves the narrowing to the device
+    val narrowing = if (sparse) stringResource(R.string.timeline_empty_sparse) else null
+    val explore = stringResource(R.string.timeline_empty_explore)
+    EmptyState(
+        stringResource(R.string.timeline_empty_title),
+        body = listOfNotNull(body, narrowing).joinToString("\n\n"),
+        action = if (home && canExplore) EmptyAction(explore) { actions.onSource(TimelineSource.Local) } else null,
+    )
+}

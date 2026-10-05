@@ -30,6 +30,7 @@ class StatusCardAccessibilityTest {
     val compose = createComposeRule()
 
     private val votes = mutableListOf<List<Int>>()
+    private val histories = mutableListOf<String>()
 
     private val actions = object : StatusActions {
         override fun onOpen(statusId: String) = Unit
@@ -45,6 +46,9 @@ class StatusCardAccessibilityTest {
         }
         override fun onReact(row: StatusRowUi, name: String, add: Boolean) = Unit
         override fun onMenu(row: StatusRowUi, item: StatusMenuItem) = Unit
+        override fun onHistory(row: StatusRowUi) {
+            histories += row.statusId
+        }
     }
 
     private fun show(status: Status) {
@@ -89,5 +93,18 @@ class StatusCardAccessibilityTest {
         assertTrue(labels().contains("Vote"))
         perform("Vote")
         assertEquals(listOf(listOf(1)), votes)
+    }
+
+    @Test
+    fun `an edited post offers its edit history`() {
+        show(StatusSamples.direct)
+        perform("Edit history")
+        assertEquals(listOf("21"), histories)
+    }
+
+    @Test
+    fun `a post never edited has no history to offer`() {
+        show(StatusSamples.post())
+        assertTrue("Edit history" !in labels())
     }
 }

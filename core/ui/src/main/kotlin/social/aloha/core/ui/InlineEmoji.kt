@@ -45,15 +45,3 @@ private fun emojiSlots(emojis: List<CustomEmoji>, animate: Boolean, size: TextUn
                 )
             }
     }
-
-/**
- * Whether the system asks for no animation: the developer option or the accessibility setting that
- * turns animations off sets the animator duration scale to zero.
- */
-@Composable
-public fun rememberReducedMotion(): Boolean {
-    val resolver = LocalContext.current.contentResolver
-    return remember(resolver) {
-        Settings.Global.getFloat(resolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) == 0f
-    }
-}

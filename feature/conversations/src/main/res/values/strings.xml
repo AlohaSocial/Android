@@ -24,8 +24,6 @@
     <string name="conversations_unread">Unread</string>
     <!-- Names a conversation with no one else in it -->
     <string name="conversations_only_you">Only you</string>
-    <!-- How long ago something was, when it was just now -->
-    <string name="conversations_age_now">now</string>
     <!-- Takes a conversation off the list; %1$s is whom it is with -->
     <string name="conversations_delete">Remove conversation with %1$s</string>
     <!-- Title of the dialog asking before a conversation is taken off the list -->

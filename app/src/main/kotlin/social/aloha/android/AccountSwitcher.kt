@@ -4,11 +4,14 @@
 package social.aloha.android
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -21,14 +24,18 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -42,6 +49,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.ui.Avatar
+import social.aloha.core.ui.rememberHaptics
 
 /**
  * The account in use, as an avatar in the top bar, and the sheet behind it: every signed-in account
@@ -53,7 +61,27 @@ internal fun AccountSwitcher(viewModel: AppViewModel, links: AccountLinks) {
     var open by remember { mutableStateOf(false) }
     val active = accounts.firstOrNull { it.active } ?: return
     val label = stringResource(R.string.accounts_button, active.handle)
-    IconButton(onClick = { open = true }, modifier = Modifier.semantics { contentDescription = label }) {
+    val next = accounts.getOrNull((accounts.indexOf(active) + 1) % accounts.size)?.takeIf { it != active }
+    val haptics = rememberHaptics()
+    val switchLabel = next?.let { stringResource(R.string.accounts_switch_to, it.handle) }
+    Box(
+        Modifier
+            .minimumInteractiveComponentSize()
+            .clip(CircleShape)
+            .combinedClickable(
+                role = Role.Button,
+                onLongClickLabel = switchLabel,
+                onLongClick = next?.let {
+                    {
+                        haptics(HapticFeedbackType.LongPress)
+                        viewModel.switchTo(it.id)
+                    }
+                },
+                onClick = { open = true },
+            )
+            .semantics { contentDescription = label },
+        contentAlignment = Alignment.Center,
+    ) {
         Avatar(active.avatarUrl, BUTTON_AVATAR)
     }
     if (open) {

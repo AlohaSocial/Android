@@ -88,6 +88,13 @@ public class AppPreferences(private val store: DataStore<Preferences>) {
         store.edit { it[WARN_DESCRIPTION] = warn }
     }
 
+    /** The reply nudges turned off on every account, by name. */
+    public val silencedNudges: Flow<Set<String>> = store.data.map { it[SILENCED_NUDGES].orEmpty() }
+
+    public suspend fun silenceNudge(name: String) {
+        store.edit { it[SILENCED_NUDGES] = it[SILENCED_NUDGES].orEmpty() + name }
+    }
+
     public suspend fun setSwipeTowardsEnd(action: SwipeAction) {
         store.edit { it[SWIPE_END] = action.name }
     }
@@ -133,6 +140,7 @@ public class AppPreferences(private val store: DataStore<Preferences>) {
             black = it[THEME_BLACK] ?: false,
             accent = choice(it[THEME_ACCENT], AccentSource.Server),
             customAccent = it[THEME_CUSTOM_ACCENT] ?: Appearance.DEFAULT_CUSTOM_ACCENT,
+            accentPerAccount = it[THEME_ACCENT_PER_ACCOUNT] ?: false,
         )
     }
 
@@ -143,6 +151,7 @@ public class AppPreferences(private val store: DataStore<Preferences>) {
             it[THEME_BLACK] = appearance.black
             it[THEME_ACCENT] = appearance.accent.name
             it[THEME_CUSTOM_ACCENT] = appearance.customAccent
+            it[THEME_ACCENT_PER_ACCOUNT] = appearance.accentPerAccount
         }
     }
 
@@ -154,6 +163,7 @@ public class AppPreferences(private val store: DataStore<Preferences>) {
         val TAG_SHORTS = booleanPreferencesKey("tag_shorts")
         val WIFI_ONLY_SYNC = booleanPreferencesKey("wifi_only_sync")
         val ASKED_NOTIFICATIONS = booleanPreferencesKey("asked_for_notifications")
+        val SILENCED_NUDGES = stringSetPreferencesKey("silenced_nudges")
         val PUSH_ACCOUNTS = stringSetPreferencesKey("push_accounts")
         val CONFIRM_POST = booleanPreferencesKey("confirm_before_posting")
         val ALWAYS_WARNING = booleanPreferencesKey("always_show_warning")
@@ -165,6 +175,7 @@ public class AppPreferences(private val store: DataStore<Preferences>) {
         val THEME_BLACK = booleanPreferencesKey("theme_black")
         val THEME_ACCENT = stringPreferencesKey("theme_accent")
         val THEME_CUSTOM_ACCENT = intPreferencesKey("theme_custom_accent")
+        val THEME_ACCENT_PER_ACCOUNT = booleanPreferencesKey("theme_accent_per_account")
         const val ENDPOINT = "push_endpoint:"
 
         inline fun <reified T : Enum<T>> choice(stored: String?, default: T): T =

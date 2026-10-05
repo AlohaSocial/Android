@@ -42,12 +42,22 @@ internal fun homeSources(capabilities: ServerCapabilities): List<TimelineSource>
 internal sealed interface TimelineItem {
     val key: String
 
+    /** Whether this item shows the row [rowId], so a position saved at that row finds it. */
+    fun shows(rowId: String): Boolean = key == rowId
+
     data class Post(val row: StatusRowUi) : TimelineItem {
         override val key: String get() = row.rowId
     }
 
     data class Gap(val id: String, val loading: Boolean) : TimelineItem {
         override val key: String get() = id
+    }
+
+    /** Boosts in a row on Home, folded into one row of cards; it takes its first post's key. */
+    data class Boosts(val rows: List<StatusRowUi>) : TimelineItem {
+        override val key: String get() = rows.first().rowId
+
+        override fun shows(rowId: String): Boolean = rows.any { it.rowId == rowId }
     }
 
     /** The line above the newest post of the previous visit: the posts above it are new since. */
@@ -110,7 +120,12 @@ internal interface TimelineScreenActions {
     fun onGrid(grid: Boolean)
     fun onScrolled(rowId: String, offset: Int)
     fun onNearEnd()
-    fun onFillGap(gapId: String)
+
+    /** Fills a gap from the post above it, or, [fromBelow], from the post under it upwards. */
+    fun onFillGap(gapId: String, fromBelow: Boolean = false)
+
+    /** The boosts folded under [key] go back into the list as posts. */
+    fun onExpandBoosts(key: String)
 
     /** A swipe that changes the post; a reply opens the post instead, which the screen does. */
     fun onSwipe(row: StatusRowUi, action: SwipeAction)

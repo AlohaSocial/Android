@@ -17,6 +17,8 @@ import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -50,7 +52,7 @@ import social.aloha.core.html.StatusHtmlParser
 import social.aloha.core.model.Conversation
 import social.aloha.core.navigation.ConversationsKey
 import social.aloha.core.ui.Avatar
-import social.aloha.core.ui.PostAge
+import social.aloha.core.ui.PostTime
 import social.aloha.core.ui.short
 
 /**
@@ -213,7 +215,7 @@ private fun ConversationRow(
             .semantics { if (conversation.unread) stateDescription = unread },
         leadingContent = { Avatar(conversation.accounts.firstOrNull()?.avatar, AVATAR) },
         overlineContent = last?.let {
-            { Text(PostAge.of(it.createdAt, now).short(stringResource(R.string.conversations_age_now))) }
+            { PostTime(it.createdAt, now, LocalTextStyle.current, LocalContentColor.current) }
         },
         headlineContent = { Text(names, fontWeight = weight, maxLines = 1, overflow = TextOverflow.Ellipsis) },
         supportingContent = { Text(excerpt, fontWeight = weight, maxLines = 2, overflow = TextOverflow.Ellipsis) },

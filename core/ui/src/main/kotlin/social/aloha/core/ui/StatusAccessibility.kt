@@ -60,7 +60,7 @@ internal fun accessibilityLabel(row: StatusRowUi, now: Instant, bodyShown: Boole
     ) {
         return stringResource(R.string.status_accessibility_spoiler, row.author.plainName, age, spoiler.text)
     }
-    val context = row.context?.let { contextText(it) }
+    val context = row.context?.let { contextText(it, now, spoken = true) }
     val media = row.media.size.takeIf { it > 0 }?.let { pluralStringResource(R.plurals.status_media_count, it, it) }
     val poll = if (row.poll != null) stringResource(R.string.status_poll) else null
     val quote = row.quote?.let { stringResource(R.string.status_quote, it.author.plainName) + ": " + it.excerpt.text }
@@ -79,14 +79,28 @@ internal fun accessibilityLabel(row: StatusRowUi, now: Instant, bodyShown: Boole
         .joinToString(". ")
 }
 
+/** The line above a post, as shown or, [spoken], as a screen reader says it; a boost's own age included. */
 @Composable
-private fun contextText(context: StatusRowUi.ContextLine): String = when (context) {
-    is StatusRowUi.ContextLine.BoostedBy -> stringResource(R.string.status_context_boosted, context.name)
-    StatusRowUi.ContextLine.Pinned -> stringResource(R.string.status_context_pinned)
-    StatusRowUi.ContextLine.ContinuedThread -> stringResource(R.string.status_context_thread)
-    is StatusRowUi.ContextLine.ReplyingTo -> stringResource(R.string.status_context_replying_to, context.handle)
-    StatusRowUi.ContextLine.Replying -> stringResource(R.string.status_context_replying)
-}
+internal fun contextText(context: StatusRowUi.ContextLine, now: Instant, spoken: Boolean = false): String =
+    when (context) {
+        is StatusRowUi.ContextLine.BoostedBy -> listOfNotNull(
+            stringResource(R.string.status_context_boosted, context.name),
+            context.at?.let {
+                val age = PostAge.of(it, now)
+                val justNow = stringResource(R.string.status_age_now)
+                if (spoken) age.spoken(justNow) else age.short(justNow)
+            },
+            context.reply?.let { contextText(it, now, spoken) },
+        ).joinToString(if (spoken) ". " else " · ")
+
+        StatusRowUi.ContextLine.Pinned -> stringResource(R.string.status_context_pinned)
+
+        StatusRowUi.ContextLine.ContinuedThread -> stringResource(R.string.status_context_thread)
+
+        is StatusRowUi.ContextLine.ReplyingTo -> stringResource(R.string.status_context_replying_to, context.handle)
+
+        StatusRowUi.ContextLine.Replying -> stringResource(R.string.status_context_replying)
+    }
 
 /**
  * What a card's own controls hold, which a screen reader reaches through [customActions] as well:
@@ -100,6 +114,8 @@ internal data class CardControls(
     val translation: TranslationUi? = null,
     val onShowOriginal: () -> Unit = {},
     val onGetLanguage: () -> Unit = {},
+    val collapse: Collapse = Collapse(),
+    val onRehide: (() -> Unit)? = null,
 )
 
 /**
@@ -130,9 +146,13 @@ internal fun customActions(
         action(stringResource(text)) { actions.onMenu(row, item) }
     }
     val spoiler = spoilerActions(row, controls)
+    val history = listOfNotNull(
+        if (row.edited) action(stringResource(R.string.status_action_history)) { actions.onHistory(row) } else null,
+    )
     // behind a closed content warning, only opening it is offered: the rest is not on screen
-    if (row.spoiler != null && !controls.spoilerRevealed) return spoiler + base + menu
-    return spoiler + base + links + media + pollActions(row, actions, controls) + attachedActions(row, actions) + menu
+    if (row.spoiler != null && !controls.spoilerRevealed) return spoiler + base + history + menu
+    return spoiler + base + links + media + pollActions(row, actions, controls) + attachedActions(row, actions) +
+        history + menu
 }
 
 /** Choosing each option, then voting, while the poll takes votes. */

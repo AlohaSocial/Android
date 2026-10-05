@@ -64,7 +64,7 @@ public class LocalNotifications @Inject constructor(
         ensureChannels(context, account)
         items.forEach { item ->
             val builder = NotificationCompat.Builder(context, channelId(account.id, NoticeChannel.of(item.kind)))
-                .setSmallIcon(R.drawable.ic_notification)
+                .setSmallIcon(smallIcon(item.kind))
                 .setWhen(item.latestAt.toEpochMilli())
                 .setGroup(group(account.id))
                 .setContentIntent(open(account.id, item))
@@ -300,3 +300,24 @@ private val NotificationItem.answerable: Boolean
 private val NotificationItem.private: Boolean
     get() = (kind == NotificationKind.Mention && status?.visibility == Visibility.Direct) ||
         NoticeChannel.of(kind) == NoticeChannel.Moderation
+
+/** The status bar's icon for a notification of [kind]: what happened, at a glance, before it is opened. */
+internal fun smallIcon(kind: NotificationKind): Int = when (kind) {
+    NotificationKind.Favourite -> R.drawable.ic_notification_favourite
+
+    NotificationKind.Reblog -> R.drawable.ic_notification_boost
+
+    NotificationKind.Follow, NotificationKind.FollowRequest, NotificationKind.AdminSignUp ->
+        R.drawable.ic_notification_follow
+
+    NotificationKind.Mention -> R.drawable.ic_notification_mention
+
+    NotificationKind.Poll -> R.drawable.ic_notification_poll
+
+    NotificationKind.Update -> R.drawable.ic_notification_edit
+
+    NotificationKind.ModerationWarning, NotificationKind.SeveredRelationships, NotificationKind.AdminReport ->
+        R.drawable.ic_notification_moderation
+
+    else -> R.drawable.ic_notification
+}

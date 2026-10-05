@@ -41,6 +41,8 @@ import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.model.Account
 import social.aloha.core.navigation.ListMembersKey
 import social.aloha.core.ui.Avatar
+import social.aloha.core.ui.EmptyState
+import social.aloha.core.ui.Skeleton
 
 /** Who is in one list: added from those the reader follows and removed here, unless a group keeps them. */
 @Composable
@@ -88,7 +90,7 @@ internal fun MembersScreen(
         Box(Modifier.padding(padding).fillMaxSize()) {
             when {
                 state.failed && state.members.isEmpty() -> Retry(actions.onRetry)
-                state.loading && state.members.isEmpty() -> CircularProgressIndicator(Modifier.align(Alignment.Center))
+                state.loading && state.members.isEmpty() -> Skeleton()
                 else -> Members(state, actions)
             }
         }
@@ -134,7 +136,7 @@ private fun Members(state: MembersUiState, actions: MembersActions) {
                 },
             )
         }
-        if (state.members.isEmpty()) item(key = "none") { Message(stringResource(R.string.lists_members_none)) }
+        if (state.members.isEmpty()) item(key = "none") { EmptyState(stringResource(R.string.lists_members_none)) }
         items(state.members, key = { "m:${it.id}" }) { person ->
             Person(person, actions.onProfile) {
                 if (!state.group) {

@@ -22,6 +22,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
+import social.aloha.core.data.timeline.Toggle
 import social.aloha.core.designsystem.AlohaTheme
 import social.aloha.core.designsystem.ThemeMode
 import social.aloha.core.designsystem.ThemeSettings
@@ -61,6 +62,14 @@ class MediaViewerTest {
         override fun onReport() {
             asked += "report"
         }
+
+        override fun onReply() {
+            asked += "reply"
+        }
+
+        override fun onToggle(toggle: Toggle) {
+            asked += toggle.name
+        }
     }
 
     private val pictures =
@@ -79,20 +88,32 @@ class MediaViewerTest {
         compose.onNodeWithContentDescription("Zoom in").assertIsEnabled().performClick()
         compose.onNodeWithContentDescription("Zoom out").assertIsEnabled()
         compose.onNodeWithContentDescription("Close").performClick()
+        compose.waitForIdle()
         assertEquals(listOf("close"), asked)
     }
 
     @Test
-    fun `the ALT badge shows the author's description`() {
+    fun `the author's description reads under the picture`() {
         show(start = 0)
-        compose.onNodeWithText("ALT").performClick()
         compose.onNodeWithText("A sunny beach").assertExists()
     }
 
     @Test
-    fun `a picture without a description has no ALT badge at all`() {
+    fun `a picture without a description shows none`() {
         show(start = 1)
-        compose.onNodeWithText("ALT").assertDoesNotExist()
+        compose.onNodeWithText("A sunny beach").assertDoesNotExist()
+    }
+
+    @Test
+    fun `the post's own actions are in the viewer`() {
+        compose.setContent {
+            AlohaTheme(ThemeSettings(mode = ThemeMode.Dark)) {
+                MediaViewer(pictures, 0, { emptyList() }, actions, status = StatusSamples.post())
+            }
+        }
+        compose.onNodeWithContentDescription("Favourite").performClick()
+        compose.onNodeWithContentDescription("Reply").performClick()
+        assertEquals(listOf("Favourite", "reply"), asked)
     }
 
     @Test

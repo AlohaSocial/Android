@@ -19,12 +19,13 @@ Each phase was one pull request into `main`.
 | 9 | [#17](https://github.com/AlohaSocial/Android/pull/17) | 2026-10-04 | Onboarding and terms, Settings completed, safety management, the app lock, localisation and accessibility passes, store material, performance, the moderation console, UI flow tests |
 | 10 | [#18](https://github.com/AlohaSocial/Android/pull/18) | 2026-10-04 | Notification digests at chosen times, a "You're caught up" line on Home and in Notifications, Mute conversation from a mention's notification, Reading's Show numbers switch covering every popularity number |
 | 11 | [#22](https://github.com/AlohaSocial/Android/pull/22) | 2026-10-04 | A swipe on a post that ticks once where it counts, tabs that swipe, tab and chip rows that stay pinned |
+| 12 | [#27](https://github.com/AlohaSocial/Android/pull/27) | 2026-10-04 | Logging with area tags, a redacted in-memory log in release builds, Share diagnostics, the R8 mappings on each release |
 
 Between the phases: CI artifact retention ([#3](https://github.com/AlohaSocial/Android/pull/3)), the device benchmark and baseline profiles ([#4](https://github.com/AlohaSocial/Android/pull/4)), looking an account up by its id ([#10](https://github.com/AlohaSocial/Android/pull/10)) and who favourited and boosted a post ([#13](https://github.com/AlohaSocial/Android/pull/13)).
 
 ## In progress
 
-Phase 12, logging and diagnostics: Timber with area tags, logcat in debug builds and a redacted in-memory buffer of the last 500 lines in release builds, request lines and dropped rows from the one request executor, every silent caught failure logged, Settings, About, Share diagnostics, and the R8 mappings attached to each GitHub release. Not merged yet.
+Phase 13, look, feel and motion ([#28](https://github.com/AlohaSocial/Android/pull/28)): a post card with a two-line header, hidden content that says what it hides, motion that Reduce motion stills, a thread with connectors and a reply bar, the profile header and tabs, notification cards, Black without tints and a colour per account, a viewer tinted by its picture, text size, times instead of ages, folded boosts, screens that slide, one skeleton and one empty state. Not merged yet.
 
 ## Not built
 
@@ -53,3 +54,5 @@ Phase 12, logging and diagnostics: Timber with area tags, logcat in debug builds
 | Runtime dependencies | None outside Apple's frameworks | Jetpack and a short list of libraries ([00-overview.md](00-overview.md)) |
 | Themes | Seven named themes and a custom accent | Light, dark or system, with contrast and a black option; the server's colour or dynamic colour ([05-core-ui.md](05-core-ui.md)) |
 | Settings, Intelligence and Your year | An Intelligence section; Your year under the account | No Intelligence section; Your year is a Settings section of its own |
+| Post header | One line: name, handle with host where it differs, age | Two lines: name and marks, then age and the handle in full; open for review ([05-core-ui.md](05-core-ui.md)) |
+| Reduce motion | Slides and scales become cross-fades | Every animation jumps to its end, with Reduce motion in Reading or the system animation scale at 0 ([05-core-ui.md](05-core-ui.md)) |

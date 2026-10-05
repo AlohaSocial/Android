@@ -4,13 +4,14 @@
 package social.aloha.core.ui
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -46,6 +47,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -83,6 +85,9 @@ public interface StatusActions {
 
     public fun onMenu(row: StatusRowUi, item: StatusMenuItem)
 
+    /** The edits of [row], from its "edited" mark; without a screen of its own for them, the post. */
+    public fun onHistory(row: StatusRowUi): Unit = onOpen(row.statusId)
+
     /** The menu items this screen can carry out; the others are not offered. */
     public val menu: Set<StatusMenuItem> get() = StatusMenuItem.entries.toSet()
 }
@@ -113,7 +118,8 @@ public enum class StatusMenuItem {
  *
  * @param now the time ages are counted from; the list passes one clock so every row agrees.
  * @param canReact whether the server takes emoji reactions (shown in a thread, where they are fetched).
- * @param focused the post a thread is about: larger text and the full date it was made.
+ * @param focused the post a thread is about: larger text, its content the full width of the card rather
+ *   than beside the avatar, and no tap to open it, since it is open.
  */
 @Composable
 public fun StatusCard(
@@ -130,30 +136,32 @@ public fun StatusCard(
     // a translation takes the post's place, everywhere the card reads it: its text, its label, its links
     val translations = LocalStatusTranslations.current
     val translation = translations.stateOf(post.statusId)
-    val row = translated(post, translation)
+    val translatedRow = translated(post, translation)
     val offered = translation == null && translations.offers(post)
     val actions = remember(screenActions, translations, offered, translation) {
         TranslatingActions(screenActions, translations, offered, translation)
     }
-    var filterRevealed by rememberSaveable(row.rowId) { mutableStateOf(false) }
-    val warning = row.filterWarning
-    if (warning != null && !filterRevealed) {
-        FilteredPlaceholder(warning, onReveal = { filterRevealed = true }, modifier = modifier)
+    val hiding = rememberHiding(translatedRow, focused)
+    val warning = translatedRow.filterWarning
+    if (warning != null && !hiding.filterRevealed) {
+        FilteredPlaceholder(warning, onReveal = hiding.onFilterReveal, modifier = modifier)
         return
     }
-    var spoilerRevealed by rememberSaveable(row.rowId) { mutableStateOf(false) }
+    val row = withMatchesPainted(translatedRow, warning != null)
     var pollChoice by rememberSaveable(row.rowId) { mutableStateOf(listOf<Int>()) }
-    val bodyShown = row.spoiler == null || spoilerRevealed
+    val bodyShown = row.spoiler == null || hiding.spoilerRevealed
     val label = listOfNotNull(accessibilityLabel(row, now, bodyShown), translation?.let { translationText(it) })
         .joinToString(". ")
     val controls = CardControls(
-        spoilerRevealed,
-        { spoilerRevealed = !spoilerRevealed },
+        hiding.spoilerRevealed,
+        hiding.onSpoiler,
         pollChoice,
         { pollChoice = it },
         translation,
         { translations.showOriginal(row.statusId) },
         translations::getLanguage,
+        hiding.collapse,
+        hiding.rehide(row),
     )
     val customActions = customActions(row, actions, controls)
     val compact = LocalReadingStyle.current.compact
@@ -161,30 +169,61 @@ public fun StatusCard(
         Column(
             modifier = modifier
                 .fillMaxWidth()
-                .clickable { actions.onOpen(row.statusId) }
-                .clearAndSetSemantics {
-                    contentDescription = label
-                    this.customActions = customActions
-                    onClick { actions.onOpen(row.statusId).let { true } }
-                }
+                .opens(label, customActions, onOpen = { actions.onOpen(row.statusId) }.takeUnless { focused })
                 .padding(horizontal = AlohaSpacing.m, vertical = if (compact) AlohaSpacing.xs else AlohaSpacing.s),
             verticalArrangement = Arrangement.spacedBy(AlohaSpacing.xxs),
         ) {
-            row.context?.let { ContextLineRow(it) }
-            Row(horizontalArrangement = Arrangement.spacedBy(AlohaSpacing.s)) {
-                Avatar(row.author.avatarUrl, AVATAR, Modifier.clickable { actions.onProfile(row.author.id) })
-                StatusMain(
-                    row,
-                    now,
-                    policy,
-                    actions,
-                    Flags(showActions, canReact, animateEmoji, focused),
-                    controls,
-                )
+            ReadingTextSize {
+                row.context?.let { ContextLineRow(it, now) }
+                CardLayout(row, now, policy, actions, Flags(showActions, canReact, animateEmoji, focused), controls)
             }
         }
     }
 }
+
+/**
+ * The avatar beside the header, and the content under the name, so text, media, poll and cards hang in
+ * one column; a focused post takes the full width under the header instead.
+ */
+@Composable
+private fun CardLayout(
+    row: StatusRowUi,
+    now: Instant,
+    policy: SensitiveMediaPolicy,
+    actions: StatusActions,
+    flags: Flags,
+    controls: CardControls,
+) {
+    val avatar = @Composable {
+        Avatar(row.author.avatarUrl, AVATAR, Modifier.clickable { actions.onProfile(row.author.id) })
+    }
+    if (flags.focused) {
+        Row(horizontalArrangement = Arrangement.spacedBy(AlohaSpacing.s)) {
+            avatar()
+            StatusHeader(row, now, flags.animateEmoji, { actions.onHistory(row) }, controls, Modifier.weight(1f))
+        }
+        StatusContent(row, policy, actions, flags, controls)
+    } else {
+        Row(horizontalArrangement = Arrangement.spacedBy(AlohaSpacing.s)) {
+            avatar()
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(AlohaSpacing.xs)) {
+                StatusHeader(row, now, flags.animateEmoji, { actions.onHistory(row) }, controls)
+                StatusContent(row, policy, actions, flags, controls)
+            }
+        }
+    }
+}
+
+/**
+ * The card as one element for a screen reader, read as [label] with [actions] as its custom actions, and
+ * opened by a tap through [onOpen]; the focused post passes none, since it is the one open.
+ */
+private fun Modifier.opens(label: String, actions: List<CustomAccessibilityAction>, onOpen: (() -> Unit)?): Modifier =
+    (if (onOpen != null) clickable(onClick = onOpen) else this).clearAndSetSemantics {
+        contentDescription = label
+        customActions = actions
+        if (onOpen != null) onClick { onOpen().let { true } }
+    }
 
 /** How a card is drawn, beyond the row it draws. */
 private data class Flags(
@@ -194,29 +233,37 @@ private data class Flags(
     val focused: Boolean,
 )
 
+/** Everything under the header: the warning, the body, the translation, the date, the actions. */
 @Composable
-private fun RowScope.StatusMain(
+private fun StatusContent(
     row: StatusRowUi,
-    now: Instant,
     policy: SensitiveMediaPolicy,
     actions: StatusActions,
     flags: Flags,
     controls: CardControls,
 ) {
-    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(AlohaSpacing.xs)) {
-        StatusHeader(row, now, flags.animateEmoji)
-        row.spoiler?.let { SpoilerToggle(it, row, controls.spoilerRevealed, flags.animateEmoji, controls.onSpoiler) }
+    Column(verticalArrangement = Arrangement.spacedBy(AlohaSpacing.xs)) {
+        row.spoiler?.let { spoiler ->
+            HiddenCard(
+                HiddenEdge.Warning,
+                AlohaIcons.ContentWarning,
+                stringResource(
+                    if (controls.spoilerRevealed) R.string.status_warning_rehide else R.string.status_filtered_show,
+                ),
+                controls.onSpoiler,
+            ) {
+                Text(
+                    spoiler,
+                    inlineContent = rememberEmojiContent(row.emojis, flags.animateEmoji),
+                    style = MaterialTheme.typography.bodyMedium.contentDirection(),
+                    modifier = Modifier.weight(1f),
+                )
+            }
+        }
         if (row.spoiler == null || controls.spoilerRevealed) {
             StatusBody(row, policy, actions, flags.canReact, flags.animateEmoji, flags.focused, controls)
         }
         controls.translation?.let { TranslationLine(it, controls.onShowOriginal, controls.onGetLanguage) }
-        if (flags.focused) {
-            Text(
-                fullDate(row.createdAt),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
         if (flags.showActions) ActionRow(row, actions)
     }
 }
@@ -233,166 +280,34 @@ public fun Avatar(url: String?, size: Dp, modifier: Modifier = Modifier) {
     }
 }
 
-@Composable
-private fun ContextLineRow(context: StatusRowUi.ContextLine) {
-    val (icon, text) = when (context) {
-        is StatusRowUi.ContextLine.BoostedBy ->
-            AlohaIcons.Boost to
-                stringResource(R.string.status_context_boosted, context.name)
-
-        StatusRowUi.ContextLine.Pinned -> AlohaIcons.Pinned to stringResource(R.string.status_context_pinned)
-
-        StatusRowUi.ContextLine.ContinuedThread -> AlohaIcons.Thread to stringResource(R.string.status_context_thread)
-
-        is StatusRowUi.ContextLine.ReplyingTo ->
-            AlohaIcons.Reply to
-                stringResource(R.string.status_context_replying_to, context.handle)
-
-        StatusRowUi.ContextLine.Replying -> AlohaIcons.Reply to stringResource(R.string.status_context_replying)
-    }
-    val tint = when (context) {
-        is StatusRowUi.ContextLine.BoostedBy -> LocalAlohaSemanticColors.current.boost
-        else -> MaterialTheme.colorScheme.onSurfaceVariant
-    }
-    Row(
-        modifier = Modifier.padding(start = AVATAR + AlohaSpacing.s),
-        horizontalArrangement = Arrangement.spacedBy(AlohaSpacing.xxs),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(SMALL_ICON))
-        Text(
-            text,
-            style = MaterialTheme.typography.labelMedium,
-            color = tint,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-    }
-}
-
-@Composable
-private fun StatusHeader(row: StatusRowUi, now: Instant, animateEmoji: Boolean) {
-    val muted = MaterialTheme.colorScheme.onSurfaceVariant
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(AlohaSpacing.xxs),
-    ) {
-        // who takes the room left over; when and the badges keep theirs
-        Row(
-            modifier = Modifier.weight(1f),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(AlohaSpacing.xxs),
-        ) {
-            Text(
-                row.author.name,
-                inlineContent = rememberEmojiContent(row.emojis, animateEmoji),
-                style = MaterialTheme.typography.titleSmall.contentDirection(),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                // no weight: measured first, so the name keeps its room and the handle gives way
-            )
-            if (row.author.bot) {
-                Icon(AlohaIcons.Bot, stringResource(R.string.status_bot), Modifier.size(SMALL_ICON), tint = muted)
-            }
-            Text(
-                row.author.handle,
-                style = MaterialTheme.typography.bodySmall.contentDirection(),
-                color = muted,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f, fill = false),
-            )
-        }
-        Text(
-            PostAge.of(row.createdAt, now).short(stringResource(R.string.status_age_now)),
-            style = MaterialTheme.typography.bodySmall,
-            color = muted,
-            maxLines = 1,
-        )
-        if (row.edited) {
-            Icon(
-                AlohaIcons.Edited,
-                stringResource(R.string.status_edited),
-                Modifier.size(SMALL_ICON),
-                tint = muted,
-            )
-        }
-        visibilityIcon(row.visibility)?.let { (icon, text) ->
-            Icon(icon, stringResource(text), Modifier.size(SMALL_ICON), tint = muted)
-        }
-    }
-}
-
-private fun visibilityIcon(visibility: Visibility): Pair<ImageVector, Int>? = when (visibility) {
-    Visibility.Private -> AlohaIcons.VisibilityPrivate to R.string.status_visibility_private
-
-    Visibility.Direct -> AlohaIcons.VisibilityDirect to R.string.status_visibility_direct
-
-    Visibility.Unlisted -> AlohaIcons.VisibilityUnlisted to R.string.status_visibility_unlisted
-
-    // an unknown visibility is treated as the most restrictive, so it is marked as such
-    Visibility.Unknown -> AlohaIcons.VisibilityPrivate to R.string.status_visibility_private
-
-    Visibility.Public -> null
-}
-
-/** A content warning collapses the body and the media, both. */
-@Composable
-private fun SpoilerToggle(
-    spoiler: androidx.compose.ui.text.AnnotatedString,
-    row: StatusRowUi,
-    revealed: Boolean,
-    animateEmoji: Boolean,
-    onToggle: () -> Unit,
-) {
-    Surface(
-        onClick = onToggle,
-        shape = MaterialTheme.shapes.small,
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
-        modifier = Modifier.fillMaxWidth(),
-    ) {
-        Row(
-            Modifier.padding(AlohaSpacing.s),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(AlohaSpacing.xs),
-        ) {
-            Icon(AlohaIcons.ContentWarning, contentDescription = null, modifier = Modifier.size(SMALL_ICON))
-            Text(
-                spoiler,
-                inlineContent = rememberEmojiContent(row.emojis, animateEmoji),
-                style = MaterialTheme.typography.bodyMedium.contentDirection(),
-                modifier = Modifier.weight(1f),
-            )
-            Text(
-                stringResource(if (revealed) R.string.status_spoiler_hide else R.string.status_spoiler_show),
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.primary,
-            )
-            Icon(
-                if (revealed) AlohaIcons.ExpandLess else AlohaIcons.ExpandMore,
-                contentDescription = null,
-                modifier = Modifier.size(SMALL_ICON),
-            )
-        }
-    }
-}
-
+/** A post a filter warns about, in its place: the filters' names, with their dotted edge. */
 @Composable
 private fun FilteredPlaceholder(titles: List<String>, onReveal: () -> Unit, modifier: Modifier) {
-    Row(
-        modifier = modifier.fillMaxWidth().padding(horizontal = AlohaSpacing.m, vertical = AlohaSpacing.xs),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(AlohaSpacing.s),
+    HiddenCard(
+        HiddenEdge.Filter,
+        AlohaIcons.Filtered,
+        stringResource(R.string.status_filtered_show),
+        onReveal,
+        modifier.padding(horizontal = AlohaSpacing.m, vertical = AlohaSpacing.xs),
     ) {
-        Icon(AlohaIcons.Filtered, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
         Text(
             stringResource(R.string.status_filtered, titles.joinToString()),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.weight(1f),
         )
-        TextButton(onClick = onReveal) { Text(stringResource(R.string.status_filtered_show)) }
     }
+}
+
+/** A filtered post shown anyway, its matched words painted in the error colours. */
+@Composable
+private fun withMatchesPainted(row: StatusRowUi, filtered: Boolean): StatusRowUi {
+    if (!filtered || row.filterMatches.isEmpty()) return row
+    val style = SpanStyle(
+        color = MaterialTheme.colorScheme.onErrorContainer,
+        background = MaterialTheme.colorScheme.errorContainer,
+    )
+    return remember(row, style) { row.copy(body = highlighted(row.body, row.filterMatches, style)) }
 }
 
 /** The four actions and the menu. Counts sit beside their button; the row itself reads as one element. */
@@ -472,7 +387,10 @@ private fun rememberTick(): (Boolean) -> Unit {
 @Composable
 private fun ActionButton(icon: ImageVector, count: Int?, tint: Color, onClick: () -> Unit) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        IconButton(onClick = onClick) { Icon(icon, contentDescription = null, tint = tint) }
+        val interactions = remember { MutableInteractionSource() }
+        IconButton(onClick = onClick, interactionSource = interactions, modifier = Modifier.squish(interactions)) {
+            Icon(icon, contentDescription = null, tint = tint)
+        }
         Text(
             count?.takeIf { it > 0 && LocalReadingStyle.current.showCounts }?.toString().orEmpty(),
             style = MaterialTheme.typography.labelMedium,

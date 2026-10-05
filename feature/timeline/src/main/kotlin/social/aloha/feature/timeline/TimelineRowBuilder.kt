@@ -104,7 +104,10 @@ internal class TimelineRowBuilder @Inject constructor(
         }
         return when (decision) {
             FilterEvaluator.Decision.Hide -> null
-            is FilterEvaluator.Decision.Warn -> TimelineItem.Post(rows.rowFor(status, viewer, decision.titles))
+
+            is FilterEvaluator.Decision.Warn ->
+                TimelineItem.Post(rows.rowFor(status, viewer, decision.titles, decision.keywords))
+
             FilterEvaluator.Decision.Show -> TimelineItem.Post(rows.rowFor(status, viewer, null))
         }
     }

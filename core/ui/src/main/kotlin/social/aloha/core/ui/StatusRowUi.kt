@@ -54,6 +54,8 @@ public data class StatusRowUi(
     val language: String?,
     /** What the server knows about the post's video beyond the file: its title, length, views. */
     val video: VideoDetails? = null,
+    /** The words a filter matched, painted once the reader shows the filtered post anyway. */
+    val filterMatches: List<String> = emptyList(),
 ) {
     @Immutable
     public data class AuthorUi(
@@ -88,7 +90,13 @@ public data class StatusRowUi(
     /** The one line above a post that says why it is here; never two. */
     @Immutable
     public sealed interface ContextLine {
-        public data class BoostedBy(val name: String) : ContextLine
+        /** A boost: who boosted, when, and the reply line of the boosted post where it is a reply. */
+        public data class BoostedBy(
+            val name: String,
+            val avatarUrl: String? = null,
+            val at: Instant? = null,
+            val reply: ContextLine? = null,
+        ) : ContextLine
 
         public data object Pinned : ContextLine
 
@@ -114,6 +122,7 @@ public class StatusRowMapper(private val cache: RichTextCache, private val color
         viewerAccountId: String?,
         filterWarning: List<String>? = null,
         showContext: Boolean = true,
+        filterMatches: List<String> = emptyList(),
     ): StatusRowUi {
         val shown = status.displayed
         val quoted = shown.quote?.quotedStatus
@@ -151,26 +160,31 @@ public class StatusRowMapper(private val cache: RichTextCache, private val color
             isOwn = viewerAccountId != null && shown.account.id == viewerAccountId,
             language = shown.language,
             video = shown.video,
+            filterMatches = filterMatches,
         )
     }
 
     private fun contextOf(status: Status): StatusRowUi.ContextLine? {
         val shown = status.displayed
-        val replyTo = shown.inReplyToAccountId
         return when {
-            status.booster != null -> StatusRowUi.ContextLine.BoostedBy(status.account.bestDisplayName)
+            status.booster != null -> StatusRowUi.ContextLine.BoostedBy(
+                status.account.bestDisplayName,
+                status.account.avatar,
+                status.createdAt,
+                replyOf(shown),
+            )
 
             shown.pinned -> StatusRowUi.ContextLine.Pinned
 
-            replyTo == null -> null
-
-            replyTo == shown.account.id -> StatusRowUi.ContextLine.ContinuedThread
-
-            else -> shown.mentions.firstOrNull {
-                it.id == replyTo
-            }?.let { StatusRowUi.ContextLine.ReplyingTo("@${it.acct}") }
-                ?: StatusRowUi.ContextLine.Replying
+            else -> replyOf(shown)
         }
+    }
+
+    private fun replyOf(shown: Status): StatusRowUi.ContextLine? {
+        val replyTo = shown.inReplyToAccountId ?: return null
+        if (replyTo == shown.account.id) return StatusRowUi.ContextLine.ContinuedThread
+        val mention = shown.mentions.firstOrNull { it.id == replyTo }
+        return mention?.let { StatusRowUi.ContextLine.ReplyingTo("@${it.acct}") } ?: StatusRowUi.ContextLine.Replying
     }
 
     /** An account as a row draws it: its name with custom emoji, handle and avatar. */

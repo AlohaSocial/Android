@@ -6,9 +6,12 @@ package social.aloha.core.navigation
 import androidx.navigation3.runtime.NavKey
 import kotlinx.serialization.Serializable
 
-/** A post and the conversation around it, as [readerId] (the app's id for the reading account) sees it. */
+/**
+ * A post and the conversation around it, as [readerId] (the app's id for the reading account) sees it;
+ * with [history], the post's edits open over it.
+ */
 @Serializable
-public data class ThreadKey(val readerId: String, val statusId: String) : NavKey
+public data class ThreadKey(val readerId: String, val statusId: String, val history: Boolean = false) : NavKey
 
 /**
  * A profile as [readerId] sees it: by the account's [id] on the reader's server, or by its handle where

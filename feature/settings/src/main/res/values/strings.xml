@@ -128,6 +128,10 @@
     <string name="appearance_colours_app">Aloha\'s own</string>
     <!-- Colours choice: an accent the reader picks -->
     <string name="appearance_colours_custom">An accent of your choice</string>
+    <!-- Appearance switch under the accent swatches: each signed-in account keeps its own accent -->
+    <string name="appearance_accent_per_account">Colour per account</string>
+    <!-- Summary of the switch above -->
+    <string name="appearance_accent_per_account_summary">Each account keeps the accent you choose while it is in use, so switching shows whose timeline it is.</string>
     <!-- Name of an accent colour swatch, read by a screen reader -->
     <string name="appearance_accent_coral">Coral</string>
     <!-- Name of an accent colour swatch -->
@@ -234,6 +238,8 @@
     <string name="reading_compact">Compact</string>
     <!-- Summary of the Compact switch -->
     <string name="reading_compact_summary">Posts closer together, so more fit on the screen</string>
+    <!-- Reading slider: how large a post's text, names and times read, on top of the system's font size -->
+    <string name="reading_text_size">Text size</string>
     <!-- Reading switch: a post's text in a serif face -->
     <string name="reading_serif">Serif text</string>
     <!-- Reading switch: more room between a post's lines -->
@@ -244,6 +250,36 @@
     <string name="reading_counts">Show numbers</string>
     <!-- Summary of the Show numbers switch -->
     <string name="reading_counts_summary">How many replied, boosted, favourited or follow, on posts, profiles and notifications. Off, the people stay and the numbers go.</string>
+    <!-- Reading switch: a thin line between one post and the next in every list of posts -->
+    <string name="reading_lines">Lines between posts</string>
+    <!-- Reading switch: no animation anywhere in the app -->
+    <string name="reading_reduce_motion">Reduce motion</string>
+    <!-- Summary of the switch above -->
+    <string name="reading_reduce_motion_summary">Nothing slides, springs or fades: lists jump, buttons stay still, screens change at once.</string>
+    <!-- Reading switch: a post's time as a clock or date instead of how long ago it was -->
+    <string name="reading_absolute_times">Times instead of ages</string>
+    <!-- Summary of the switch above; the quoted values are examples of each form -->
+    <string name="reading_absolute_times_summary">“14:32” or “3 Oct” instead of “5m” or “2d”. A tap on either shows the full date.</string>
+    <!-- Reading switch: consecutive boosts on Home fold into one horizontal row -->
+    <string name="reading_boost_carousel">Fold boosts in a row</string>
+    <!-- Summary of the switch above -->
+    <string name="reading_boost_carousel_summary">Three or more boosts in a row on Home become one row of posts to swipe through.</string>
+    <!-- Reading switch: a long post shows its first lines and an Expand button -->
+    <string name="reading_collapse">Shorten long posts</string>
+    <!-- Reading switch: media posted without a description carries a "no ALT" badge -->
+    <string name="reading_missing_alt">Mark media without a description</string>
+    <!-- Reading switch: pictures and videos in posts listed as text rows instead of shown -->
+    <string name="reading_previewless">List media instead of showing it</string>
+    <!-- Summary of the switch above -->
+    <string name="reading_previewless_summary">Each picture or video becomes a row with its kind and description, for less data and a calmer timeline. A tap still opens it.</string>
+    <!-- Reading heading: what happens to other posts in a thread when the reader opens a content warning -->
+    <string name="reading_reveal_title">Opening a content warning in a thread</string>
+    <!-- Choice under the heading above: every warning stays closed until opened -->
+    <string name="reading_reveal_never">Opens only that post</string>
+    <!-- Choice under the heading above -->
+    <string name="reading_reveal_author">Also opens the same warning by the same person</string>
+    <!-- Choice under the heading above -->
+    <string name="reading_reveal_everyone">Also opens the same warning by anyone</string>
     <!-- Reading switch: the number on Notifications in the navigation -->
     <string name="reading_badge">Unread count on Notifications</string>
     <!-- Settings section: haptic feedback and notification sounds -->

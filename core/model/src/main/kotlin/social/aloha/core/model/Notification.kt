@@ -14,7 +14,20 @@ public data class Notification(
     val account: Account,
     @Serializable(with = InstantSerializer::class) val createdAt: Instant = Instant.EPOCH,
     val status: Status? = null,
+    val severance: SeveranceEvent? = null,
+    val warning: ModerationWarning? = null,
 )
+
+/**
+ * Why follows were cut: [type] `domain_block` (the reader's server blocked [targetName]),
+ * `user_domain_block` (the reader blocked it) or `account_suspension` (a moderator suspended it).
+ */
+@Serializable
+public data class SeveranceEvent(val type: String, val targetName: String)
+
+/** A moderator's warning to the reader: what was done to the account, [action], and what they wrote. */
+@Serializable
+public data class ModerationWarning(val id: String, val action: String, val text: String = "")
 
 /**
  * A page of grouped notifications (Mastodon 4.3). Forty favourites of one post are one group and
@@ -48,4 +61,6 @@ public data class NotificationGroup(
     @Serializable(with = InstantSerializer::class) val latestPageNotificationAt: Instant? = null,
     val sampleAccountIds: List<String> = emptyList(),
     val statusId: String? = null,
+    val severance: SeveranceEvent? = null,
+    val warning: ModerationWarning? = null,
 )

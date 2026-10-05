@@ -3,10 +3,13 @@
 
 package social.aloha.feature.thread
 
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -49,8 +52,10 @@ public fun ThreadRoute(key: ThreadKey, navigation: ThreadNavigation, modifier: M
             snackbars.showSnackbar(archived)
         }
     }
+    var shakes by remember { mutableIntStateOf(0) }
     LaunchedEffect(state.actionFailed) {
         if (state.actionFailed) {
+            shakes++
             viewModel.onNoticeShown(archived = false)
             snackbars.showSnackbar(failed)
         }
@@ -65,10 +70,16 @@ public fun ThreadRoute(key: ThreadKey, navigation: ThreadNavigation, modifier: M
             albums = { state.albums },
             archive = { state.archive },
         ) {
-            // the focused post is already open; a tap on it does nothing
+            // the focused post is already open: a link to it shakes the list instead
             override fun onOpen(statusId: String) {
-                if (statusId != key.statusId) super.onOpen(statusId)
+                if (statusId != key.statusId) super.onOpen(statusId) else shakes++
             }
+
+            override fun onHistory(row: StatusRowUi) {
+                if (row.statusId == key.statusId) viewModel.onHistory(open = true) else super.onHistory(row)
+            }
+
+            override fun onReply(row: StatusRowUi) = viewModel.replies.onReply(row.statusId)
 
             override fun onBoost(row: StatusRowUi) = viewModel.onToggle(row.statusId, Toggle.Boost)
 
@@ -105,7 +116,23 @@ public fun ThreadRoute(key: ThreadKey, navigation: ThreadNavigation, modifier: M
         }
     }
 
-    ThreadScreen(state, screenActions, rowActions, modifier, snackbars)
+    val found = stringResource(R.string.thread_more_replies_found)
+    val show = stringResource(R.string.thread_more_replies_show)
+    LaunchedEffect(state.pendingReplies > 0) {
+        if (state.pendingReplies > 0) {
+            val answer = snackbars.showSnackbar(found, actionLabel = show, duration = SnackbarDuration.Indefinite)
+            if (answer == SnackbarResult.ActionPerformed) viewModel.onShowReplies()
+        }
+    }
+    LaunchedEffect(state.replyTo) {
+        state.replyTo?.let {
+            nav.openComposer(it)
+            viewModel.replies.onReplyOpened()
+        }
+    }
+
+    ThreadScreen(state, screenActions, rowActions, modifier, snackbars, shake = shakes)
+    state.nudge?.let { NudgeSheet(it, viewModel.replies::onNudged) }
 
     deleting?.let { request ->
         DeleteStatusDialog(

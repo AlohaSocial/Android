@@ -25,6 +25,7 @@ import social.aloha.core.designsystem.ThemeMode
 import social.aloha.core.designsystem.ThemeSettings
 import social.aloha.core.html.RichTextCache
 import social.aloha.core.model.AccountField
+import social.aloha.core.model.FeaturedTag
 import social.aloha.core.model.InstanceRule
 import social.aloha.core.model.MediaCollection
 import social.aloha.core.model.ProfileHighlights
@@ -160,6 +161,52 @@ class ProfileScreenshotTest {
     @Test
     @Config(qualifiers = RobolectricDeviceQualifiers.MediumTablet)
     fun tablet() = capture("profile-tablet") { ProfileScreen(profile(), NoActions, NoActions) }
+
+    @Test
+    fun notices() = capture("profile-notices") {
+        val colors = RichTextColors.fromTheme()
+        val moved = StatusSamples.bob.copy(
+            createdAt = StatusSamples.NOW.minusSeconds(400L * 24 * 3600),
+            moved = StatusSamples.alice,
+        )
+        ProfileScreen(
+            profile().copy(
+                header = ProfilePresentation.header(moved, cache, colors, isSelf = false),
+                highlights = null,
+                familiar = listOf(
+                    Familiar("1", "Alice Example", null),
+                    Familiar("2", "Carol", null),
+                    Familiar("3", "Dana", null),
+                ),
+            ),
+            NoActions,
+            NoActions,
+        )
+    }
+
+    @Test
+    fun featured() = capture("profile-featured") {
+        val shown = profile(highlights = false)
+        val posts = shown.items.filterIsInstance<ProfileItem.Post>().map { it.row }
+        val tags = listOf("surf", "aloha", "reef", "dawn").mapIndexed { index, name ->
+            FeaturedTag(id = "$index", name = name, statusesCount = 10 * (index + 1))
+        }
+        ProfileScreen(
+            shown.copy(
+                tabs = shown.tabs.toMutableList().apply { add(indexOf(ProfileTab.Videos), ProfileTab.Featured) },
+                tab = ProfileTab.Featured,
+                featured = FeaturedUi(posts, tags),
+            ),
+            NoActions,
+            NoActions,
+            listState = LazyListState(firstVisibleItemIndex = 1),
+        )
+    }
+
+    @Test
+    fun skeleton() = capture("profile-skeleton") {
+        ProfileScreen(ProfileUiState(knownHandle = "@bob@other.social"), NoActions, NoActions)
+    }
 
     @Test
     fun gone() = capture("profile-gone") {

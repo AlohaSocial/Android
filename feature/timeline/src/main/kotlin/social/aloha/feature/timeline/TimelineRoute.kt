@@ -9,6 +9,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -59,9 +60,11 @@ public fun TimelineRoute(
         viewModel.onShown(isShown = true)
         onPauseOrDispose { viewModel.onShown(isShown = false) }
     }
+    var shakes by remember { mutableIntStateOf(0) }
     LaunchedEffect(state.actionFailed) {
         if (state.actionFailed) {
             viewModel.onActionFailureShown()
+            shakes++
             snackbars.showSnackbar(failed)
         }
     }
@@ -109,6 +112,7 @@ public fun TimelineRoute(
         toolbar = toolbar,
         header = header,
         onVideo = nav::openVideo,
+        shake = shakes,
     )
 
     deleting?.let { request ->

@@ -117,15 +117,24 @@ public class TimelineRepository @Inject constructor(
     ): PageOutcome =
         fetchAndMerge(Fetch(account, key, PageAnchor.OlderThan(oldestId), cursor, TimelineMerge.Direction.Older))
 
-    /** Fills [gapId] from just below [aboveId], the post over it; closed only when the page proves the ranges touch. */
+    /**
+     * Fills [gapId] from just below [aboveId], the post over it, or, given [belowId], from just above the
+     * post under it; closed only when the page proves the ranges touch.
+     */
     public suspend fun fillGap(
         account: SignedInAccount,
         key: TimelineKey,
         gapId: String,
         aboveId: String?,
+        belowId: String? = null,
     ): PageOutcome {
-        val anchor = aboveId?.let(PageAnchor::OlderThan) ?: PageAnchor.Cold
-        return fetchAndMerge(Fetch(account, key, anchor, cursor = null, TimelineMerge.Direction.FillingGap(gapId)))
+        val anchor = when {
+            belowId != null -> PageAnchor.NewerThan(belowId)
+            aboveId != null -> PageAnchor.OlderThan(aboveId)
+            else -> PageAnchor.Cold
+        }
+        val direction = TimelineMerge.Direction.FillingGap(gapId, fromBelow = belowId != null)
+        return fetchAndMerge(Fetch(account, key, anchor, cursor = null, direction))
     }
 
     /** One fetch of one timeline: where it starts, and how its page merges. */
@@ -163,7 +172,11 @@ public class TimelineRepository @Inject constructor(
         val existing = dao.entries(account.id, key.storageKey).map {
             TimelineMerge.Slot(it.statusId, it.position, it.isGap)
         }
-        val plan = TimelineMerge.plan(existing, harvest.statuses.map { it.id }, fetch.direction, harvest.pageWasFull)
+        // a min_id page may come oldest first; the merge reads every page newest first
+        val fromBelow = (fetch.direction as? TimelineMerge.Direction.FillingGap)?.fromBelow == true
+        val ordered = if (fromBelow) harvest.statuses.sortedByDescending { it.createdAt } else harvest.statuses
+        val page = ordered.map { it.id }
+        val plan = TimelineMerge.plan(existing, page, fetch.direction, harvest.pageWasFull)
         val kept = plan.slots.take(CachePolicy.rowsFor(key.storageKey))
         val now = clock.millis()
         // every status on the page is written, not only the new ones: a cached one may have been edited

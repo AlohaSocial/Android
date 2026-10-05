@@ -31,6 +31,8 @@ import kotlinx.coroutines.withContext
 import social.aloha.core.data.AccountRepository
 import social.aloha.core.data.Answer
 import social.aloha.core.data.Trouble
+import social.aloha.core.data.thread.ReplyNudge
+import social.aloha.core.data.thread.ReplyNudges
 import social.aloha.core.data.thread.ThreadRepository
 import social.aloha.core.data.timeline.StatusInteractions
 import social.aloha.core.data.timeline.Toggle
@@ -62,6 +64,7 @@ internal class ThreadViewModel @AssistedInject constructor(
     private val interactions: StatusInteractions,
     private val cache: RichTextCache,
     private val clock: Clock,
+    private val nudges: ReplyNudges,
 ) : ViewModel() {
     @AssistedFactory
     interface Factory {
@@ -78,6 +81,9 @@ internal class ThreadViewModel @AssistedInject constructor(
         val actionFailed: Boolean = false,
         val archived: Boolean = false,
         val people: Map<StatusListKind, List<String?>> = emptyMap(),
+        /** The replies the reader has seen, null before the first load; [held] the others. */
+        val known: Set<String>? = null,
+        val held: Set<String> = emptySet(),
     )
 
     private val colors = MutableStateFlow<RichTextColors?>(null)
@@ -87,13 +93,15 @@ internal class ThreadViewModel @AssistedInject constructor(
 
     @Volatile private var stored: Map<String, Status> = emptyMap()
 
-    /** The focused post with its extras, built again only when the post or they change. */
-    private var focusedShown: Triple<Status, Control, Status>? = null
+    private val extras = ThreadPresentation.Extras()
 
     private val account: StateFlow<SignedInAccount?> = accounts.accounts
         .map { all -> all.firstOrNull { it.id == key.readerId } }
         .distinctUntilChanged()
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
+    /** Replies from this thread, past their nudge. */
+    val replies: ReplyGate = ReplyGate(viewModelScope, nudges, { account.value }, { stored[it] })
 
     val uiState: StateFlow<ThreadUiState> = combine(account.filterNotNull(), lines) { account, lines ->
         account to lines
@@ -108,6 +116,7 @@ internal class ThreadViewModel @AssistedInject constructor(
                 ),
                 colors.filterNotNull(),
                 control,
+                replies.state,
                 minuteTicks(clock),
                 ::Snapshot,
             )
@@ -121,6 +130,7 @@ internal class ThreadViewModel @AssistedInject constructor(
 
     init {
         viewModelScope.launch { load(account.filterNotNull().first()) }
+        if (key.history) onHistory(open = true)
     }
 
     /** Rows are rendered with the theme's colours, which only the screen knows. */
@@ -168,12 +178,17 @@ internal class ThreadViewModel @AssistedInject constructor(
         control.update { if (archived) it.copy(archived = false) else it.copy(actionFailed = false) }
     }
 
+    /** Shows the replies a refresh found and held back. */
+    fun onShowReplies() {
+        control.update { it.copy(known = it.known.orEmpty() + it.held, held = emptySet()) }
+    }
+
     /** The focused post's edits, fetched for the sheet when [open]; the sheet gone otherwise. */
     fun onHistory(open: Boolean) {
         if (!open) return control.update { it.copy(history = null) }
         viewModelScope.launch {
-            val account = account.value ?: return@launch
-            val colors = colors.value ?: return@launch
+            val account = account.filterNotNull().first()
+            val colors = colors.filterNotNull().first()
             when (val answer = threads.history(account, key.statusId)) {
                 // parsed once here, not on every redraw of the thread under the sheet
                 is Answer.Got -> {
@@ -201,7 +216,16 @@ internal class ThreadViewModel @AssistedInject constructor(
             is Answer.Got -> {
                 val conversation = answer.value
                 lines.value = ThreadShape.of(conversation.focused.id, conversation.ancestors, conversation.descendants)
-                control.update { it.copy(loading = false, trouble = null) }
+                val replies = conversation.descendants.filter { it.account.id != account.serverAccountId }.map { it.id }
+                control.update {
+                    val known = it.known
+                    it.copy(
+                        loading = false,
+                        trouble = null,
+                        known = known ?: replies.toSet(),
+                        held = if (known == null) emptySet() else it.held + (replies - known),
+                    )
+                }
                 loadExtras(account, conversation.focused)
             }
 
@@ -251,16 +275,22 @@ internal class ThreadViewModel @AssistedInject constructor(
         val stored: Map<String, Status>,
         val colors: RichTextColors,
         val control: Control,
+        val replies: ReplyState,
         val now: Instant,
     )
 
     private fun state(account: SignedInAccount, lines: List<ThreadLine>, snapshot: Snapshot): ThreadUiState {
         val control = snapshot.control
-        val focused = snapshot.stored[key.statusId]?.let { withExtras(it, control) }
+        val focused = snapshot.stored[key.statusId]?.let { extras.of(it, control.card, control.reactions) }
         rows.use(snapshot.colors)
         val shown = focused?.let { snapshot.stored + (key.statusId to it) } ?: (snapshot.stored - key.statusId)
         return ThreadUiState(
-            items = ThreadPresentation.items(lines, shown, rows, account.serverAccountId),
+            items = ThreadPresentation.items(
+                ThreadShape.without(lines, control.held),
+                shown,
+                rows,
+                account.serverAccountId,
+            ),
             loading = control.loading,
             trouble = control.trouble,
             gone = control.gone || (!control.loading && focused == null),
@@ -274,16 +304,12 @@ internal class ThreadViewModel @AssistedInject constructor(
             history = control.history,
             actionFailed = control.actionFailed,
             people = control.people,
+            readerAvatar = account.avatarUrl,
+            application = focused?.displayed?.application,
+            nudge = snapshot.replies.nudge?.first,
+            replyTo = snapshot.replies.replyTo,
+            pendingReplies = control.held.size,
         )
-    }
-
-    private fun withExtras(status: Status, control: Control): Status {
-        focusedShown?.let { (source, extras, shown) ->
-            if (source === status && extras.card == control.card && extras.reactions == control.reactions) return shown
-        }
-        return ThreadPresentation.withExtras(status, control.card, control.reactions).also {
-            focusedShown = Triple(status, control, it)
-        }
     }
 
     private companion object {

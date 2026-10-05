@@ -5,6 +5,7 @@ package social.aloha.feature.profile
 
 import androidx.compose.ui.graphics.Color
 import androidx.datastore.preferences.core.emptyPreferences
+import androidx.lifecycle.ViewModelStore
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import java.time.Clock
@@ -39,6 +40,7 @@ import social.aloha.core.data.AccountRepository
 import social.aloha.core.data.ClientFactory
 import social.aloha.core.data.NewAccount
 import social.aloha.core.data.profile.FollowedAuthors
+import social.aloha.core.data.profile.ProfileFeatured
 import social.aloha.core.data.profile.ProfileRepository
 import social.aloha.core.data.profile.RelationshipChange
 import social.aloha.core.data.timeline.FilterRepository
@@ -153,8 +155,12 @@ class ProfileViewModelTest {
         start()
     }
 
+    private val store = ViewModelStore()
+
     @After
     fun close() {
+        // before resetMain: clearing a ViewModel cancels its work on the main dispatcher
+        store.clear()
         Dispatchers.resetMain()
         scope.cancel()
         accountsDb.close()
@@ -179,7 +185,11 @@ class ProfileViewModelTest {
             StatusInteractions(statuses, clients),
             RichTextCache(),
             clock,
-        ).apply { onColors(RichTextColors(Color.Blue, Color.Gray, Color.LightGray)) }
+            ProfileFeatured(clients),
+        ).apply {
+            onColors(RichTextColors(Color.Blue, Color.Gray, Color.LightGray))
+            store.put("profile-${'$'}id-${'$'}acct", this)
+        }
     }
 
     private suspend fun ProfileViewModel.await(predicate: (ProfileUiState) -> Boolean): ProfileUiState =

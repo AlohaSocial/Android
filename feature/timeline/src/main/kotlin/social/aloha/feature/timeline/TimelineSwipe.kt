@@ -45,6 +45,7 @@ import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.designsystem.LocalAlohaSemanticColors
 import social.aloha.core.model.SwipeAction
 import social.aloha.core.ui.StatusRowUi
+import social.aloha.core.ui.motion
 import social.aloha.core.ui.rememberHaptics
 
 /**
@@ -68,6 +69,9 @@ internal fun SwipeRow(
     val scope = rememberCoroutineScope()
     val offset = remember { Animatable(0f) }
     val pop = remember { Animatable(1f) }
+    val release = motion(spring<Float>(stiffness = Spring.StiffnessMediumLow))
+    val cancel = motion(spring<Float>())
+    val bounce = motion(spring<Float>(dampingRatio = Spring.DampingRatioMediumBouncy))
     val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     BoxWithConstraints {
         val width = with(LocalDensity.current) { maxWidth.toPx() }
@@ -87,11 +91,11 @@ internal fun SwipeRow(
                         val action = actionAt(dragged, threshold, ends)
                         dragged = 0f
                         if (action != SwipeAction.None) onSwipe(current, action)
-                        scope.launch { offset.animateTo(0f, spring(stiffness = Spring.StiffnessMediumLow)) }
+                        scope.launch { offset.animateTo(0f, release) }
                     },
                     onDragCancel = {
                         dragged = 0f
-                        scope.launch { offset.animateTo(0f, spring()) }
+                        scope.launch { offset.animateTo(0f, cancel) }
                     },
                 ) { change, dx ->
                     val next = within(dragged + if (rtl) -dx else dx, limit, ends)
@@ -102,7 +106,7 @@ internal fun SwipeRow(
                         haptics(HapticFeedbackType.GestureThresholdActivate)
                         scope.launch {
                             pop.snapTo(POP)
-                            pop.animateTo(1f, spring(dampingRatio = Spring.DampingRatioMediumBouncy))
+                            pop.animateTo(1f, bounce)
                         }
                     }
                     counted = past

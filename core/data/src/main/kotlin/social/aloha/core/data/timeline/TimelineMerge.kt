@@ -39,8 +39,12 @@ public object TimelineMerge {
         /** A cold load, or a pull that replaces everything. */
         public data object Cold : Direction
 
-        /** Filling one gap, closed only when the page proves the two ranges now touch. */
-        public data class FillingGap(val id: String) : Direction
+        /**
+         * Filling one gap, closed only when the page proves the two ranges now touch: from the post above
+         * it downwards (`max_id`), or, [fromBelow], from the post below it upwards (`min_id`, the page
+         * newest first), so a reader coming up from below reads on from where they are.
+         */
+        public data class FillingGap(val id: String, val fromBelow: Boolean = false) : Direction
     }
 
     /**
@@ -69,7 +73,9 @@ public object TimelineMerge {
 
         direction == Direction.Older -> older(existing, page)
 
-        else -> gapFill(existing, page, (direction as Direction.FillingGap).id, pageWasFull)
+        (direction as Direction.FillingGap).fromBelow -> gapFillFromBelow(existing, page, direction.id, pageWasFull)
+
+        else -> gapFill(existing, page, direction.id, pageWasFull)
     }
 
     private fun newer(existing: List<Slot>, page: List<String>, pageWasFull: Boolean): Plan {
@@ -109,6 +115,32 @@ public object TimelineMerge {
         val filled = fresh.mapIndexed { index, id -> Slot(id, upper - 1 - index) }
         val gap = if (gapSurvives) Slot.gap(fresh.last(), upper - 1 - fresh.size) else null
         val middle = filled + listOfNotNull(gap)
+        return Plan(
+            above + middle + pushedBelow(below, middle.lastOrNull()?.position ?: upper),
+            inserted = fresh,
+            closedGaps = listOf(gapId),
+            openedGaps = listOfNotNull(gap?.statusId),
+        )
+    }
+
+    /**
+     * The mirror of [gapFill]: the page holds the posts just above the row under the gap, newest first.
+     * What reaches a row cached above is already shown; only a full page that does not leaves more in
+     * between, and the gap then stays above what was filled in, where the reader has not read yet.
+     */
+    private fun gapFillFromBelow(existing: List<Slot>, page: List<String>, gapId: String, pageWasFull: Boolean): Plan {
+        val gapIndex = existing.indexOfFirst { it.statusId == gapId }
+        if (gapIndex < 0) return Plan(existing)
+        val above = existing.subList(0, gapIndex)
+        val below = existing.subList(gapIndex + 1, existing.size)
+        val aboveIds = above.mapTo(HashSet()) { it.statusId }
+        val reaches = page.indexOfLast { it in aboveIds }
+        val fresh = unknown(existing, page.drop(reaches + 1))
+        val gapSurvives = pageWasFull && fresh.isNotEmpty() && reaches < 0
+        val upper = above.lastOrNull()?.position ?: (below.firstOrNull()?.position ?: 0) + fresh.size + 2
+        val gap = if (gapSurvives) Slot.gap(fresh.first(), upper - 1) else null
+        val start = gap?.position ?: upper
+        val middle = listOfNotNull(gap) + fresh.mapIndexed { index, id -> Slot(id, start - 1 - index) }
         return Plan(
             above + middle + pushedBelow(below, middle.lastOrNull()?.position ?: upper),
             inserted = fresh,

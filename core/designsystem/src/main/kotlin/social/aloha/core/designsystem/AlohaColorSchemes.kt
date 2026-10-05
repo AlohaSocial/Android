@@ -27,8 +27,14 @@ public enum class ContrastLevel(internal val level: Double) {
 public fun seededColorScheme(@ColorInt seed: Int, dark: Boolean, contrast: ContrastLevel): ColorScheme =
     SchemeTonalSpot(Hct.fromInt(seed), dark, contrast.level).toColorScheme()
 
-/** The Black option: a dark scheme whose surfaces start at pure black and step up for containers. */
+/**
+ * The Black option: a dark scheme whose surfaces start at pure black and step up for containers, its
+ * tonal containers neutral too, so nothing glows tinted on an OLED screen.
+ */
 public fun ColorScheme.black(): ColorScheme = copy(
+    primaryContainer = BLACK_CONTAINER,
+    secondaryContainer = BLACK_CONTAINER,
+    tertiaryContainer = BLACK_CONTAINER,
     background = Color.Black,
     surface = Color.Black,
     surfaceDim = Color.Black,
@@ -39,3 +45,6 @@ public fun ColorScheme.black(): ColorScheme = copy(
     surfaceContainerHighest = Color(0xFF242428),
     surfaceBright = Color(0xFF2A2A2E),
 )
+
+/** Neutral 900, where Black puts a tinted container. */
+private val BLACK_CONTAINER = Color(0xFF1B1B1E)

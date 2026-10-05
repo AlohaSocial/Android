@@ -13,6 +13,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
 import java.util.UUID
 import javax.inject.Inject
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -22,6 +23,8 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -32,6 +35,7 @@ import social.aloha.core.data.ReauthRequest
 import social.aloha.core.data.compose.Outbox
 import social.aloha.core.data.sync.UnreadCounts
 import social.aloha.core.data.timeline.CacheSweeper
+import social.aloha.core.datastore.AccountSettingsStore
 import social.aloha.core.datastore.AppPreferences
 import social.aloha.core.datastore.ModePreferences
 import social.aloha.core.designsystem.ThemeSettings
@@ -95,6 +99,7 @@ class AppViewModel @Inject constructor(
     private val reauth: ReauthRequest,
     preferences: ModePreferences,
     appPreferences: AppPreferences,
+    accountSettings: AccountSettingsStore,
     savedState: SavedStateHandle,
     @ApplicationContext private val context: Context,
 ) : ViewModel() {
@@ -105,8 +110,10 @@ class AppViewModel @Inject constructor(
     }.stateIn(viewModelScope, SharingStarted.Eagerly, ModeNavigation())
 
     /** The theme every window wears: the reader's choice, coloured by their server where they chose it. */
-    val theme: StateFlow<ThemeSettings?> = combine(appPreferences.appearance, accounts.activeAccount) { look, reader ->
-        themeOf(look, reader?.capabilities?.theme)
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val theme: StateFlow<ThemeSettings?> = accounts.activeAccount.flatMapLatest { reader ->
+        val accent = reader?.let { accountSettings.settings(it.id).map { settings -> settings.accent } } ?: flowOf(null)
+        combine(appPreferences.appearance, accent) { look, own -> themeOf(look, reader?.capabilities?.theme, own) }
     }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     private val external = MutableStateFlow<String?>(null)

@@ -53,6 +53,7 @@ class TimelineSwipeTest {
     }
 
     private val actions = object : StatusActions, TimelineScreenActions {
+        override fun onExpandBoosts(key: String) = Unit
         override fun onSwipe(row: StatusRowUi, action: SwipeAction) {
             done += "${action.name.lowercase()} ${row.statusId}"
         }
@@ -79,7 +80,7 @@ class TimelineSwipeTest {
         override fun onGrid(grid: Boolean) = Unit
         override fun onScrolled(rowId: String, offset: Int) = Unit
         override fun onNearEnd() = Unit
-        override fun onFillGap(gapId: String) = Unit
+        override fun onFillGap(gapId: String, fromBelow: Boolean) = Unit
     }
 
     @Composable

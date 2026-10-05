@@ -26,8 +26,16 @@ class StatusRowMapperTest {
         val row = mapper.map(StatusSamples.boost, viewerAccountId = null)
         assertEquals("20", row.rowId)
         assertEquals("10", row.statusId)
-        assertEquals(ContextLine.BoostedBy("Bob"), row.context)
+        val boost = StatusSamples.boost
+        assertEquals(ContextLine.BoostedBy("Bob", boost.account.avatar, boost.createdAt), row.context)
         assertEquals("Alice Example", row.author.plainName)
+    }
+
+    @Test
+    fun `a boosted reply says both on one line`() {
+        val boostedReply = StatusSamples.boost.copy(reblog = StatusSamples.reply)
+        val context = mapper.map(boostedReply, null).context as ContextLine.BoostedBy
+        assertEquals(ContextLine.ReplyingTo("@bob@other.social"), context.reply)
     }
 
     @Test
@@ -47,7 +55,7 @@ class StatusRowMapperTest {
     fun `a pinned post says so, but a boost says who boosted first`() {
         assertEquals(ContextLine.Pinned, mapper.map(StatusSamples.post().copy(pinned = true), null).context)
         val pinnedBoost = StatusSamples.boost.copy(reblog = StatusSamples.post().copy(pinned = true))
-        assertEquals(ContextLine.BoostedBy("Bob"), mapper.map(pinnedBoost, null).context)
+        assertTrue(mapper.map(pinnedBoost, null).context is ContextLine.BoostedBy)
     }
 
     @Test

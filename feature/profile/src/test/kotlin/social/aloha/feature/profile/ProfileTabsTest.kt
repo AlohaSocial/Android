@@ -123,13 +123,16 @@ class ProfileTabsTest {
     }
 
     @Test
-    fun `a swipe across moves to the next tab, and back`() {
-        show(ProfileTab.Replies)
+    @Config(qualifiers = "w411dp-h891dp")
+    fun `a swipe across moves from the timeline to the next tab, and back to the timeline last shown`() {
+        showFollowing()
+        compose.onNodeWithText("Media").performClick()
+        compose.waitForIdle()
         compose.onRoot().performTouchInput { swipeLeft() }
         compose.waitForIdle()
         compose.onRoot().performTouchInput { swipeRight() }
         compose.waitForIdle()
-        assertEquals(listOf(ProfileTab.Media, ProfileTab.Posts), chosen)
+        assertEquals(listOf(ProfileTab.Media, ProfileTab.Videos, ProfileTab.Media), chosen)
     }
 
     @Test
@@ -139,12 +142,14 @@ class ProfileTabsTest {
         compose.waitForIdle()
         compose.onRoot().performTouchInput { swipeLeft() }
         compose.waitForIdle()
-        assertEquals(listOf(ProfileTab.Replies), chosen)
+        assertEquals(listOf(ProfileTab.Videos), chosen)
         assertEquals(TABS_AT, list.firstVisibleItemIndex)
-        compose.onNodeWithText("Posts & replies").assertIsDisplayed()
+        compose.onNodeWithText("Videos").assertIsDisplayed()
     }
 
     @Test
+    // a phone's height, so the tab row shows under a header that has the reader's note field
+    @Config(qualifiers = "w411dp-h891dp")
     fun `a tab chosen with the header in view leaves the list where it is`() {
         showFollowing()
         compose.onNodeWithText("Media").performClick()

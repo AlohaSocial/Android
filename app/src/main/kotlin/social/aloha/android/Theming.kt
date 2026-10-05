@@ -17,25 +17,31 @@ import social.aloha.core.model.NextcloudTheme
  * The theme the reader chose, with the colour their Nextcloud wears where they chose the server's;
  * a server that wears none (Mastodon, or Theming turned off) leaves the app's own.
  */
-internal fun themeOf(appearance: Appearance, server: NextcloudTheme?): ThemeSettings = ThemeSettings(
-    mode = when (appearance.mode) {
-        AppearanceMode.System -> ThemeMode.System
-        AppearanceMode.Light -> ThemeMode.Light
-        AppearanceMode.Dark -> ThemeMode.Dark
-    },
-    contrast = when (appearance.contrast) {
-        AppearanceContrast.System -> ContrastPreference.FollowSystem
-        AppearanceContrast.Standard -> ContrastPreference.Standard
-        AppearanceContrast.High -> ContrastPreference.High
-    },
-    black = appearance.black,
-    colourSource = when (appearance.accent) {
-        AccentSource.Server -> server?.colourHex?.let(::argb)?.let(ColourSource::Server) ?: ColourSource.Seed
-        AccentSource.Wallpaper -> ColourSource.Dynamic
-        AccentSource.App -> ColourSource.Seed
-        AccentSource.Custom -> ColourSource.Server(appearance.customAccent)
-    },
-)
+internal fun themeOf(appearance: Appearance, server: NextcloudTheme?, accountAccent: Int? = null): ThemeSettings =
+    ThemeSettings(
+        mode = when (appearance.mode) {
+            AppearanceMode.System -> ThemeMode.System
+            AppearanceMode.Light -> ThemeMode.Light
+            AppearanceMode.Dark -> ThemeMode.Dark
+        },
+        contrast = when (appearance.contrast) {
+            AppearanceContrast.System -> ContrastPreference.FollowSystem
+            AppearanceContrast.Standard -> ContrastPreference.Standard
+            AppearanceContrast.High -> ContrastPreference.High
+        },
+        black = appearance.black,
+        colourSource = when (appearance.accent) {
+            AccentSource.Server -> server?.colourHex?.let(::argb)?.let(ColourSource::Server) ?: ColourSource.Seed
+
+            AccentSource.Wallpaper -> ColourSource.Dynamic
+
+            AccentSource.App -> ColourSource.Seed
+
+            AccentSource.Custom -> ColourSource.Server(
+                accountAccent?.takeIf { appearance.accentPerAccount } ?: appearance.customAccent,
+            )
+        },
+    )
 
 /** `#rrggbb`, as [NextcloudTheme] normalises it, as an opaque ARGB colour. */
 private fun argb(hex: String): Int? = hex.removePrefix("#").toIntOrNull(HEX)?.let { it or OPAQUE }

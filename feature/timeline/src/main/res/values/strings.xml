@@ -45,6 +45,20 @@
         <item quantity="one">%d new post</item>
         <item quantity="other">%d new posts</item>
     </plurals>
+    <!-- Above boosts in a row folded into one row of cards; %1$s is the first booster, %2$d how many others boosted -->
+    <plurals name="timeline_boosts_summary">
+        <item quantity="one">%1$s and %2$d other boosted</item>
+        <item quantity="other">%1$s and %2$d others boosted</item>
+    </plurals>
+    <!-- The same, when one person boosted them all; %1$s is who, %2$d how many posts -->
+    <plurals name="timeline_boosts_by_one">
+        <item quantity="one">%1$s boosted %2$d post</item>
+        <item quantity="other">%1$s boosted %2$d posts</item>
+    </plurals>
+    <!-- Read aloud for the line above folded boosts; %1$s lists everyone who boosted, e.g. “Bob, Ana and Kim” -->
+    <string name="timeline_boosts_spoken">Boosted by %1$s</string>
+    <!-- Button beside folded boosts: puts them back in the list as posts -->
+    <string name="timeline_boosts_expand">Show as posts</string>
     <!-- Strip over the timeline when the server cannot be reached; the cached posts stay -->
     <string name="timeline_offline">You\'re offline. These are the posts saved on this device.</string>
     <!-- Strip over the timeline when the server answered with an error -->
@@ -53,6 +67,10 @@
     <string name="timeline_rate_limited">Your server asked the app to slow down. Try again in a moment.</string>
     <!-- A row standing for posts not loaded yet between two parts of the timeline -->
     <string name="timeline_gap">Load missing posts</string>
+    <!-- The same row, for a reader scrolling up to it: the posts load just above the ones they read -->
+    <string name="timeline_gap_above">Load missing posts above</string>
+    <!-- The same row, for a reader scrolling down to it: the posts load just below the ones they read -->
+    <string name="timeline_gap_below">Load missing posts below</string>
     <!-- Title of the empty timeline -->
     <string name="timeline_empty_title">Nothing here yet</string>
     <!-- Text of the empty home timeline -->

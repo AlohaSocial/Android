@@ -19,6 +19,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -55,20 +56,10 @@ internal fun StatusBody(
     controls: CardControls = CardControls(),
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(AlohaSpacing.s)) {
-        if (row.body.isNotEmpty()) {
-            // the post a thread is about reads larger than the replies around it
-            val style = if (focused) {
-                MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Normal)
-            } else {
-                MaterialTheme.typography.bodyLarge
-            }
-            Text(
-                row.body,
-                inlineContent = rememberEmojiContent(row.emojis, animateEmoji),
-                style = style.asRead(LocalReadingStyle.current).contentDirection(),
-            )
+        if (row.body.isNotEmpty()) BodyText(row, animateEmoji, focused, controls.collapse)
+        if (row.media.isNotEmpty()) {
+            MediaGrid(row.media, row.sensitive, policy, row.spoiler?.text) { actions.onMedia(row, it) }
         }
-        if (row.media.isNotEmpty()) MediaGrid(row.media, row.sensitive, policy) { actions.onMedia(row, it) }
         row.poll?.let {
             PollView(it, controls.pollChoice, controls.onPollChoice) { choices -> actions.onVote(row, choices) }
         }
@@ -78,6 +69,31 @@ internal fun StatusBody(
         }
         row.quote?.let { QuoteCard(it) { actions.onOpen(it.statusId) } }
         StatusExtras(row, canReact, actions)
+    }
+}
+
+/** The post's text, larger when [focused]; a long one clipped behind Expand where Reading collapses them. */
+@Composable
+private fun BodyText(row: StatusRowUi, animateEmoji: Boolean, focused: Boolean, collapse: Collapse) {
+    // the post a thread is about reads larger than the replies around it
+    val style = if (focused) {
+        MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Normal)
+    } else {
+        MaterialTheme.typography.bodyLarge
+    }
+    val text = @Composable {
+        Text(
+            row.body,
+            inlineContent = rememberEmojiContent(row.emojis, animateEmoji),
+            style = style.asRead(LocalReadingStyle.current).contentDirection(),
+        )
+    }
+    if (!collapse.collapsible) return text()
+    Collapsible(collapsed = !collapse.expanded, onTall = collapse.onTall, content = text)
+    if (collapse.tall) {
+        TextButton(onClick = collapse.onExpand) {
+            Text(stringResource(if (collapse.expanded) R.string.status_collapse else R.string.status_expand))
+        }
     }
 }
 
@@ -95,109 +111,8 @@ private fun StatusExtras(row: StatusRowUi, canReact: Boolean, actions: StatusAct
     if (canReact || row.reactions.isNotEmpty()) ReactionRow(row, canReact, actions)
 }
 
-/**
- * Laid out by count: one at its own shape within bounds, two side by side, three or four in a grid. What
- * is sensitive is covered while the policy says so, and is not even downloaded until revealed.
- */
 @Composable
-internal fun MediaGrid(
-    media: List<MediaAttachment>,
-    sensitive: Boolean,
-    policy: SensitiveMediaPolicy,
-    onOpen: (Int) -> Unit,
-) {
-    val covered = sensitive && !policy.allowsAutomaticReveal
-    if (covered && !policy.drawsAtAll) {
-        Text(
-            stringResource(R.string.status_sensitive_hidden),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        return
-    }
-    var revealed by rememberSaveable(media.firstOrNull()?.id) { mutableStateOf(false) }
-    val shown = media.take(MAX_TILES)
-    Box(Modifier.fillMaxWidth().clip(MaterialTheme.shapes.medium)) {
-        when (shown.size) {
-            1 -> Tile(
-                shown[0],
-                Modifier.fillMaxWidth().aspectRatio(
-                    shown[0].displayAspectRatio.toFloat().coerceIn(MIN_ASPECT, MAX_ASPECT),
-                ),
-                covered && !revealed,
-            ) { onOpen(0) }
-
-            else -> Grid(shown, covered && !revealed, onOpen)
-        }
-        if (covered && !revealed) SensitiveCover(Modifier.matchParentSize()) { revealed = true }
-    }
-}
-
-@Composable
-private fun Grid(media: List<MediaAttachment>, hidden: Boolean, onOpen: (Int) -> Unit) {
-    val rows = if (media.size == 2) listOf(media.indices.toList()) else media.indices.chunked(2)
-    val aspect = if (media.size == 2) PAIR_ASPECT else 1f
-    Column(verticalArrangement = Arrangement.spacedBy(GUTTER)) {
-        rows.forEach { indices ->
-            Row(horizontalArrangement = Arrangement.spacedBy(GUTTER)) {
-                indices.forEach { index ->
-                    Tile(media[index], Modifier.weight(1f).aspectRatio(aspect), hidden) { onOpen(index) }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun Tile(attachment: MediaAttachment, modifier: Modifier, hidden: Boolean, onOpen: () -> Unit) {
-    Box(modifier.clickable(enabled = !hidden, onClick = onOpen)) {
-        if (hidden) {
-            // the cover shows the blurhash only: nothing is fetched from a sensitive post until it is revealed
-            Box(Modifier.matchParentSize().background(MaterialTheme.colorScheme.surfaceContainerHighest)) {
-                rememberBlurHashPainter(attachment.blurhash)?.let {
-                    androidx.compose.foundation.Image(
-                        it,
-                        null,
-                        Modifier.matchParentSize(),
-                        contentScale = ContentScale.Crop,
-                    )
-                }
-            }
-        } else {
-            MediaImage(attachment, attachment.description, Modifier.matchParentSize(), fitToAspect = false)
-            if (attachment.type.isPlayable &&
-                attachment.type != AttachmentKind.Audio
-            ) {
-                PlayBadge(Modifier.align(Alignment.Center))
-            }
-            if (attachment.hasAltText) AltBadge(Modifier.align(Alignment.BottomStart).padding(AlohaSpacing.xs))
-        }
-    }
-}
-
-@Composable
-private fun SensitiveCover(modifier: Modifier, onReveal: () -> Unit) {
-    Column(
-        modifier = modifier.background(Color.Black.copy(alpha = COVER_ALPHA)).clickable(onClick = onReveal),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
-        Icon(AlohaIcons.Sensitive, contentDescription = null, tint = Color.White)
-        Text(
-            stringResource(R.string.status_sensitive_cover),
-            style = MaterialTheme.typography.titleSmall,
-            color = Color.White,
-        )
-        Text(
-            stringResource(R.string.status_sensitive_show),
-            style = MaterialTheme.typography.bodySmall,
-            color = Color.White,
-        )
-    }
-}
-
-@Composable
-private fun PlayBadge(modifier: Modifier) {
+internal fun PlayBadge(modifier: Modifier) {
     Surface(
         modifier.size(PLAY_BADGE),
         shape = MaterialTheme.shapes.extraLarge,
@@ -208,18 +123,6 @@ private fun PlayBadge(modifier: Modifier) {
             contentDescription = stringResource(R.string.status_media_video),
             tint = Color.White,
             modifier = Modifier.padding(AlohaSpacing.xs),
-        )
-    }
-}
-
-@Composable
-private fun AltBadge(modifier: Modifier) {
-    Surface(modifier, shape = MaterialTheme.shapes.extraSmall, color = Color.Black.copy(alpha = COVER_ALPHA)) {
-        Text(
-            stringResource(R.string.status_alt_badge),
-            style = MaterialTheme.typography.labelSmall,
-            color = Color.White,
-            modifier = Modifier.padding(horizontal = AlohaSpacing.xxs),
         )
     }
 }
@@ -347,15 +250,9 @@ private fun ReactionRow(row: StatusRowUi, canReact: Boolean, actions: StatusActi
  */
 public fun TextStyle.contentDirection(): TextStyle = copy(textDirection = TextDirection.Content)
 
-private const val MAX_TILES = 4
-private const val MIN_ASPECT = 0.8f
-private const val MAX_ASPECT = 1.91f
-private const val PAIR_ASPECT = 0.9f
 private const val CARD_ASPECT = 1.91f
 private const val VIDEO_ASPECT = 16f / 9f
-private const val COVER_ALPHA = 0.55f
 private const val QUOTE_LINES = 4
-private val GUTTER = 2.dp
 private val PLAY_BADGE = 48.dp
 private val QUOTE_AVATAR = 24.dp
 private val QUOTE_ICON = 16.dp

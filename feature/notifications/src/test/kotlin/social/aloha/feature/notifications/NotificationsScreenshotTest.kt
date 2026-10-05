@@ -10,12 +10,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.junit4.accessibility.enableAccessibilityChecks
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.tryPerformAccessibilityChecks
 import androidx.test.core.app.ApplicationProvider
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.captureRoboImage
 import java.time.Instant
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -28,6 +32,7 @@ import social.aloha.core.designsystem.ThemeMode
 import social.aloha.core.designsystem.ThemeSettings
 import social.aloha.core.model.Account
 import social.aloha.core.model.Digest
+import social.aloha.core.model.ModerationWarning
 import social.aloha.core.model.NotificationKind
 import social.aloha.core.model.NotificationPolicy
 import social.aloha.core.model.NotificationRequest
@@ -35,6 +40,7 @@ import social.aloha.core.model.PolicyDecision
 import social.aloha.core.model.PollFrequency
 import social.aloha.core.model.QuietHours
 import social.aloha.core.model.ReadingStyle
+import social.aloha.core.model.SeveranceEvent
 import social.aloha.core.model.Status
 import social.aloha.core.sync.Distributor
 import social.aloha.core.ui.LocalReadingStyle
@@ -72,7 +78,7 @@ class NotificationsScreenshotTest {
             kind = kind,
             name = "Alice Example",
             others = others,
-            avatars = List(minOf(others + 1, 4)) { null },
+            people = List(minOf(others + 1, 4)) { NotificationRowUi.Person("$it", "Person $it", null) },
             preview = "Surf report for the north shore: waist high and glassy, going out at seven.",
             statusId = "s1",
             accountId = "1",
@@ -117,10 +123,35 @@ class NotificationsScreenshotTest {
         override fun onRequests() = Unit
 
         override fun onAskedForPermission() = Unit
+        override fun onProfile(accountId: String) = Unit
+        override fun onFollowRequest(row: NotificationRowUi, accept: Boolean) = Unit
+        override fun onMarkAllRead() = Unit
+        override fun onLearnMore(url: String) = Unit
     }
 
     @Test
     fun notifications() = capture("notifications") { NotificationsScreen(list, actions, navigationIcon = {}) }
+
+    @Test
+    @Config(qualifiers = RobolectricDeviceQualifiers.MediumTablet)
+    fun notificationsTablet() = capture("notifications-tablet") {
+        NotificationsScreen(list, actions, navigationIcon = {})
+    }
+
+    @Test
+    fun overflowHoldsTheActionsOnAPhone() {
+        var marked = false
+        val marking = object : NotificationsActions by actions {
+            override fun onMarkAllRead() {
+                marked = true
+            }
+        }
+        compose.setContent { AlohaTheme { NotificationsScreen(list, marking, navigationIcon = {}) } }
+        compose.onNodeWithContentDescription("Mark all as read").assertDoesNotExist()
+        compose.onNodeWithContentDescription("More options").performClick()
+        compose.onNodeWithText("Mark all as read").performClick()
+        assertTrue(marked)
+    }
 
     @Test
     fun notificationsDark() = capture("notifications-dark", ThemeSettings(mode = ThemeMode.Dark)) {
@@ -131,6 +162,22 @@ class NotificationsScreenshotTest {
     @Config(fontScale = 2f)
     fun notificationsLargeFont() = capture("notifications-font200") {
         NotificationsScreen(list.copy(kinds = setOf(NotificationKind.Mention)), actions, navigationIcon = {})
+    }
+
+    @Test
+    fun notices() = capture("notifications-notices") {
+        val rows = listOf(
+            row(NotificationKind.FollowRequest, "request", minutes = 2).copy(preview = null),
+            row(NotificationKind.SeveredRelationships, "severed", minutes = 60).copy(
+                preview = null,
+                severance = SeveranceEvent("domain_block", "spam.example"),
+            ),
+            row(NotificationKind.ModerationWarning, "warning", minutes = 120).copy(
+                preview = null,
+                warning = ModerationWarning("9", "silence", "Please keep spoilers behind a content warning."),
+            ),
+        )
+        NotificationsScreen(list.copy(rows = rows, origin = "https://social.example"), actions, navigationIcon = {})
     }
 
     @Test

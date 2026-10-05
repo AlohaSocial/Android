@@ -43,6 +43,8 @@ public data class Account(
     val emojis: List<CustomEmoji> = emptyList(),
     val source: AccountSource? = null,
     val moved: Account? = null,
+    /** Kept in memory of someone who died; nobody posts from it any more. */
+    val memorial: Boolean = false,
 ) {
     /** What a person reads; never empty, it falls back through the handle. */
     val bestDisplayName: String

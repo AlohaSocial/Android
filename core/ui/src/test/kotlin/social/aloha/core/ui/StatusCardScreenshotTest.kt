@@ -5,7 +5,6 @@ package social.aloha.core.ui
 
 import android.app.Application
 import androidx.compose.foundation.layout.Column
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
@@ -13,7 +12,9 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.test.junit4.accessibility.enableAccessibilityChecks
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.tryPerformAccessibilityChecks
 import androidx.compose.ui.unit.LayoutDirection
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
@@ -67,6 +68,7 @@ class StatusCardScreenshotTest {
         statuses: List<Status>,
         policy: SensitiveMediaPolicy = SensitiveMediaPolicy.Blur,
         filtered: Boolean = false,
+        matches: List<String> = emptyList(),
     ) {
         val mapper = StatusRowMapper(cache, RichTextColors.fromTheme())
         Surface(color = MaterialTheme.colorScheme.background) {
@@ -77,12 +79,13 @@ class StatusCardScreenshotTest {
                             status,
                             viewerAccountId = "1",
                             filterWarning = if (filtered) listOf("Spoilers") else null,
+                            filterMatches = matches,
                         ),
                         StatusSamples.NOW,
                         policy,
                         NoActions,
                     )
-                    HorizontalDivider()
+                    PostDivider()
                 }
             }
         }
@@ -92,12 +95,14 @@ class StatusCardScreenshotTest {
         name: String,
         settings: ThemeSettings = ThemeSettings(mode = ThemeMode.Light),
         direction: LayoutDirection = LayoutDirection.Ltr,
+        before: () -> Unit = {},
         content: @Composable () -> Unit,
     ) {
         compose.enableAccessibilityChecks()
         compose.setContent {
             CompositionLocalProvider(LocalLayoutDirection provides direction) { AlohaTheme(settings) { content() } }
         }
+        before()
         compose.onRoot().tryPerformAccessibilityChecks()
         compose.onRoot().captureRoboImage("src/test/screenshots/$name.png")
     }
@@ -207,7 +212,43 @@ class StatusCardScreenshotTest {
     }
 
     @Test
+    fun textSize() = capture("status-text-size-150") {
+        CompositionLocalProvider(LocalReadingStyle provides ReadingStyle(textScale = ReadingStyle.MAX_TEXT_SCALE)) {
+            Rows(everyday)
+        }
+    }
+
+    @Test
     fun attachments() = capture("status-attachments") {
         Rows(listOf(StatusSamples.poll, StatusSamples.pollResults, StatusSamples.linked, StatusSamples.quoting))
+    }
+
+    @Test
+    fun filteredShown() = capture("status-filtered-shown", before = {
+        compose.onNodeWithText("Show anyway").performClick()
+    }) {
+        Rows(listOf(StatusSamples.post()), filtered = true, matches = listOf("beach"))
+    }
+
+    @Test
+    fun longPost() = capture("status-long-collapsed") {
+        val long = (1..12).joinToString("</p><p>") {
+            "Day $it at the reef: the water was clear and the fish were many."
+        }
+        Rows(listOf(StatusSamples.post("<p>$long</p>")))
+    }
+
+    @Test
+    fun previewless() = capture("status-previewless") {
+        CompositionLocalProvider(LocalReadingStyle provides ReadingStyle(previewless = true)) {
+            Rows(listOf(StatusSamples.gallery, StatusSamples.sensitive))
+        }
+    }
+
+    @Test
+    fun missingAlt() = capture("status-missing-alt") {
+        CompositionLocalProvider(LocalReadingStyle provides ReadingStyle(missingAltBadge = true)) {
+            Rows(listOf(StatusSamples.gallery), policy = SensitiveMediaPolicy.ShowAll)
+        }
     }
 }

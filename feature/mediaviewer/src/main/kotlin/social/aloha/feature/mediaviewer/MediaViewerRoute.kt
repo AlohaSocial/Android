@@ -49,7 +49,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import social.aloha.core.data.AccountRepository
+import social.aloha.core.data.timeline.StatusInteractions
 import social.aloha.core.data.timeline.StatusRepository
+import social.aloha.core.data.timeline.Toggle
 import social.aloha.core.model.MediaAttachment
 import social.aloha.core.model.SignedInAccount
 import social.aloha.core.model.Status
@@ -59,8 +61,11 @@ import social.aloha.core.navigation.MediaViewerKey
 import social.aloha.core.ui.StatusNavigation
 import social.aloha.core.ui.openInBrowser
 
-/** The post whose attachments the viewer shows, as the reader's server sees it; null until known. */
-internal data class ViewedPost(val reader: SignedInAccount, val status: Status)
+/**
+ * The post whose attachments the viewer shows, as the reader's server sees it; null until known.
+ * [stored] is the entry as stored, a boost where it was one, which the actions act on.
+ */
+internal data class ViewedPost(val reader: SignedInAccount, val status: Status, val stored: Status = status)
 
 /** The post behind a viewer: the attachments it shows, and whose they are, for a report. */
 @HiltViewModel(assistedFactory = MediaViewerViewModel.Factory::class)
@@ -68,6 +73,7 @@ internal class MediaViewerViewModel @AssistedInject constructor(
     @Assisted private val key: MediaViewerKey,
     private val accounts: AccountRepository,
     private val statuses: StatusRepository,
+    private val interactions: StatusInteractions,
 ) : ViewModel() {
     @AssistedFactory
     interface Factory {
@@ -80,9 +86,17 @@ internal class MediaViewerViewModel @AssistedInject constructor(
     init {
         viewModelScope.launch {
             val reader = accounts.byId(key.readerId) ?: return@launch
-            // a viewer opens from a post on screen, which is stored
-            statuses.get(reader.id, key.statusId)?.let { state.value = ViewedPost(reader, it.displayed) }
+            // a viewer opens from a post on screen, which is stored; a toggle here shows as it changes there
+            statuses.observe(reader.id, key.statusId).collect { stored ->
+                stored?.let { state.value = ViewedPost(reader, it.displayed, it) }
+            }
         }
+    }
+
+    /** Boosts, favourites or bookmarks the post, or takes it back. */
+    fun onToggle(toggle: Toggle) {
+        val viewed = state.value ?: return
+        viewModelScope.launch { interactions.toggle(viewed.reader, viewed.stored, toggle) }
     }
 
     fun sources(attachment: MediaAttachment): List<VideoSource> {
@@ -121,7 +135,7 @@ public fun MediaViewerRoute(
         }
         pending = null
     }
-    BackHandler(onBack = onClose)
+    BackHandler(enabled = post == null, onBack = onClose)
     val actions = remember(viewModel) {
         object : MediaViewerActions {
             override fun onClose() = close()
@@ -157,6 +171,14 @@ public fun MediaViewerRoute(
                 close()
                 nav.report(status.account.id, status.account.acct, status.id)
             }
+
+            override fun onReply() {
+                val status = post?.status ?: return
+                close()
+                nav.openComposer(status.id)
+            }
+
+            override fun onToggle(toggle: Toggle) = viewModel.onToggle(toggle)
         }
     }
     Box(modifier.fillMaxSize()) {
@@ -166,7 +188,7 @@ public fun MediaViewerRoute(
                 CircularProgressIndicator(color = Color.White)
             }
         } else {
-            MediaViewer(viewed.status.mediaAttachments, key.index, viewModel::sources, actions)
+            MediaViewer(viewed.status.mediaAttachments, key.index, viewModel::sources, actions, status = viewed.status)
         }
         SnackbarHost(snackbars, Modifier.align(Alignment.BottomCenter))
     }

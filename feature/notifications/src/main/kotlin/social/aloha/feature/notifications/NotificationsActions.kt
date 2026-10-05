@@ -5,8 +5,24 @@ package social.aloha.feature.notifications
 
 import social.aloha.core.model.NotificationKind
 
-/** What the screen asks of whoever shows it. */
-internal interface NotificationsActions {
+/** What a notification's row asks for. */
+internal interface NotificationRowActions {
+    fun onOpen(row: NotificationRowUi)
+
+    fun onOthers(groupKey: String)
+
+    /** No more notifications from the conversation a mention or reply belongs to. */
+    fun onMuteConversation(row: NotificationRowUi)
+
+    fun onProfile(accountId: String)
+
+    fun onFollowRequest(row: NotificationRowUi, accept: Boolean)
+
+    fun onLearnMore(url: String)
+}
+
+/** What the screen asks of whoever shows it, its rows' asks among them. */
+internal interface NotificationsActions : NotificationRowActions {
     fun onRefresh()
 
     fun onKind(kind: NotificationKind)
@@ -15,13 +31,6 @@ internal interface NotificationsActions {
 
     fun onNearEnd()
 
-    fun onOpen(row: NotificationRowUi)
-
-    fun onOthers(groupKey: String)
-
-    /** No more notifications from the conversation a mention or reply belongs to. */
-    fun onMuteConversation(row: NotificationRowUi)
-
     fun onNoticeShown()
 
     fun onPolicy()
@@ -29,4 +38,6 @@ internal interface NotificationsActions {
     fun onRequests()
 
     fun onAskedForPermission()
+
+    fun onMarkAllRead()
 }

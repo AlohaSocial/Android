@@ -10,13 +10,18 @@ import social.aloha.core.data.Trouble
 import social.aloha.core.data.profile.ListChoice
 import social.aloha.core.data.profile.RelationshipChange
 import social.aloha.core.model.CustomEmoji
+import social.aloha.core.model.FeaturedTag
 import social.aloha.core.model.MediaCollection
 import social.aloha.core.model.ProfileHighlights
 import social.aloha.core.model.Story
 import social.aloha.core.ui.StatusRowUi
 
-/** The profile's tabs; the last two only where the server has them. */
-internal enum class ProfileTab { Posts, Replies, Media, Videos, Collections, Stories }
+/** The profile's tabs; Featured only where the account features something, the last two where the server has them. */
+internal enum class ProfileTab { Posts, Replies, Media, Featured, Videos, Collections, Stories }
+
+/** What an account features at the top of its profile: pinned posts and hashtags. */
+@Immutable
+internal data class FeaturedUi(val posts: List<StatusRowUi>, val tags: List<FeaturedTag>)
 
 /** What the header shows: who, what they say about themselves, and how many. */
 @Immutable
@@ -34,13 +39,24 @@ internal data class ProfileHeader(
     val isSelf: Boolean,
     /** The account's server when it is not the reader's own, which can then be blocked as a whole. */
     val domain: String?,
+    val joined: Instant? = null,
+    /** Where the account moved to, when it did. */
+    val movedTo: Moved? = null,
+    val memorial: Boolean = false,
 ) {
+    @Immutable
+    data class Moved(val id: String, val handle: String)
+
     @Immutable
     data class Field(val name: AnnotatedString, val value: AnnotatedString, val verified: Boolean)
 }
 
+/** One of the people the reader follows who also follow the account. */
+@Immutable
+internal data class Familiar(val id: String, val name: String, val avatarUrl: String?)
+
 /** What the profile asks about before it changes how the reader relates to the account. */
-internal enum class Asking { Block, Mute, BlockDomain, RemoveFollower, Note, Lists }
+internal enum class Asking { Block, Mute, BlockDomain, RemoveFollower, Lists }
 
 /** How the reader relates to the account, as far as the controls care. */
 @Immutable
@@ -90,6 +106,11 @@ internal data class ProfileUiState(
     val actionFailed: Boolean = false,
     /** The reader's lists, once asked for, each saying whether the account is on it. */
     val lists: List<ListChoice>? = null,
+    /** The people the reader follows who follow this account too. */
+    val familiar: List<Familiar> = emptyList(),
+    /** The handle the profile was opened by, shown while the account loads. */
+    val knownHandle: String? = null,
+    val featured: FeaturedUi? = null,
 )
 
 /** What changes the profile: its tabs and pages, and how the reader relates to the account. */

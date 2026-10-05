@@ -4,6 +4,12 @@
 package social.aloha.feature.audio
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.expandIn
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkOut
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -28,6 +34,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaSpacing
+import social.aloha.core.ui.rememberReducedMotion
 
 /**
  * The sound playing, docked above the navigation wherever the reader is: what it is and who posted it,
@@ -48,7 +55,13 @@ internal fun MiniPlayer(
     onStop: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    AnimatedVisibility(now != null, modifier) {
+    val reduced = rememberReducedMotion()
+    AnimatedVisibility(
+        now != null,
+        modifier,
+        enter = if (reduced) EnterTransition.None else fadeIn() + expandIn(),
+        exit = if (reduced) ExitTransition.None else shrinkOut() + fadeOut(),
+    ) {
         val playing = now ?: return@AnimatedVisibility
         Surface(tonalElevation = ELEVATION, modifier = Modifier.fillMaxWidth()) {
             Row(

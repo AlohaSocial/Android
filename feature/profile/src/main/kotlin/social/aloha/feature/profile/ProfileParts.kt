@@ -58,6 +58,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -95,16 +97,25 @@ import social.aloha.core.ui.readingWidth
 import social.aloha.core.ui.rememberEmojiContent
 
 @Composable
-internal fun Header(header: ProfileHeader, state: ProfileUiState, actions: ProfileScreenActions) {
+internal fun Header(
+    header: ProfileHeader,
+    state: ProfileUiState,
+    actions: ProfileScreenActions,
+    onProfile: (String) -> Unit,
+    drift: () -> Float = { 0f },
+) {
     Column(Modifier.semantics { isTraversalGroup = true }) {
         Box {
             AsyncImage(
                 model = header.headerUrl,
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxWidth().aspectRatio(
-                    BANNER_RATIO,
-                ).background(MaterialTheme.colorScheme.surfaceContainerHigh),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(BANNER_RATIO)
+                    .clipToBounds()
+                    .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                    .graphicsLayer { translationY = drift() },
             )
             Avatar(
                 header.author.avatarUrl,
@@ -138,12 +149,9 @@ internal fun Header(header: ProfileHeader, state: ProfileUiState, actions: Profi
                 style = MaterialTheme.typography.headlineSmall.contentDirection(),
                 modifier = Modifier.semantics { heading() },
             )
-            Text(
-                header.author.handle,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            HandleRow(header.author.handle)
             Badges(header, state.relation)
+            Notices(header, onProfile)
             if (header.note.isNotEmpty()) {
                 Text(
                     header.note,
@@ -152,7 +160,11 @@ internal fun Header(header: ProfileHeader, state: ProfileUiState, actions: Profi
                 )
             }
             header.fields.forEach { Field(it) }
+            header.joined?.let { Joined(it) }
             Counts(header, actions)
+            FamiliarFollowers(state.familiar, onProfile)
+            val relation = state.relation
+            if (!header.isSelf && relation != null) NoteField(relation.note) { actions.onChange(it) }
         }
     }
 }

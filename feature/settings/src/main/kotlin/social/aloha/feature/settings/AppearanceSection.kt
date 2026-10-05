@@ -38,13 +38,18 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import social.aloha.core.data.AccountRepository
+import social.aloha.core.datastore.AccountSettingsStore
 import social.aloha.core.datastore.AppPreferences
 import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaSpacing
@@ -58,16 +63,36 @@ import social.aloha.core.ui.SwitchRow
 
 /** What Appearance shows: the reader's choices, and whether their server wears a colour to offer. */
 @Immutable
-internal data class AppearanceState(val appearance: Appearance = Appearance(), val serverColour: Boolean = false)
+internal data class AppearanceState(
+    val appearance: Appearance = Appearance(),
+    val serverColour: Boolean = false,
+    /** The accent of the account in use, where each account keeps one. */
+    val accountAccent: Int? = null,
+)
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 internal class AppearanceViewModel @Inject constructor(
     accounts: AccountRepository,
     private val preferences: AppPreferences,
+    private val settings: AccountSettingsStore,
 ) : ViewModel() {
-    val state: StateFlow<AppearanceState> = combine(preferences.appearance, accounts.activeAccount) { look, reader ->
-        AppearanceState(look, reader?.capabilities?.theme?.hasColour == true)
+    private val reader = accounts.activeAccount
+
+    val state: StateFlow<AppearanceState> = reader.flatMapLatest { account ->
+        val accent = account?.let { settings.settings(it.id).map { own -> own.accent } } ?: flowOf(null)
+        combine(preferences.appearance, accent) { look, own ->
+            AppearanceState(look, account?.capabilities?.theme?.hasColour == true, own)
+        }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_MILLIS), AppearanceState())
+
+    /** The account in use takes [colour] as its own accent. */
+    fun accountAccent(colour: Int) {
+        viewModelScope.launch {
+            val id = reader.first()?.id ?: return@launch
+            settings.update(id) { it.copy(accent = colour) }
+        }
+    }
 
     fun change(made: (Appearance) -> Appearance) {
         viewModelScope.launch { preferences.setAppearance(made(preferences.appearance.first())) }
@@ -88,13 +113,17 @@ internal object AppearanceSection : SettingsSection {
     override fun Content() {
         val viewModel: AppearanceViewModel = hiltViewModel()
         val state by viewModel.state.collectAsStateWithLifecycle()
-        AppearanceContent(state, viewModel::change)
+        AppearanceContent(state, viewModel::change, viewModel::accountAccent)
     }
 }
 
 /** Light or dark, contrast, black, and where the colours come from. */
 @Composable
-internal fun AppearanceContent(state: AppearanceState, onChange: ((Appearance) -> Appearance) -> Unit) {
+internal fun AppearanceContent(
+    state: AppearanceState,
+    onChange: ((Appearance) -> Appearance) -> Unit,
+    onAccountAccent: (Int) -> Unit = {},
+) {
     val look = state.appearance
     Column {
         ChoiceRows(
@@ -146,7 +175,16 @@ internal fun AppearanceContent(state: AppearanceState, onChange: ((Appearance) -
             look.accent,
         ) { accent -> onChange { it.copy(accent = accent) } }
         if (look.accent == AccentSource.Custom) {
-            AccentSwatches(look.customAccent) { colour -> onChange { it.copy(customAccent = colour) } }
+            val own = look.accentPerAccount
+            AccentSwatches(state.accountAccent?.takeIf { own } ?: look.customAccent) { colour ->
+                if (own) onAccountAccent(colour) else onChange { it.copy(customAccent = colour) }
+            }
+            SwitchRow(
+                stringResource(R.string.appearance_accent_per_account),
+                own,
+                { per -> onChange { it.copy(accentPerAccount = per) } },
+                stringResource(R.string.appearance_accent_per_account_summary),
+            )
         }
     }
 }
