@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material3.AssistChip
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilterChip
@@ -42,6 +41,7 @@ import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -135,7 +135,8 @@ internal fun SegmentField(
             state.quote != null -> R.string.composer_placeholder_quote
             else -> R.string.composer_placeholder
         }
-        SegmentText(value, label, hint, readOnly = posted || state.posting) { actions.onText(index, it) }
+        val over = state.overFrom.getOrNull(index)
+        SegmentText(value, label, hint, over, readOnly = posted || state.posting) { actions.onText(index, it) }
         if (index == 0) QuoteParts(state, actions)
         state.attachments.getOrNull(index)?.takeIf { it.isNotEmpty() }?.let { MediaStrip(it, actions) }
         if (index == 0) OpeningExtras(state, actions)
@@ -143,17 +144,24 @@ internal fun SegmentField(
     }
 }
 
-/** A post's text, coloured as it is typed; [label] names it within a thread, [hint] shows while it is empty. */
+/**
+ * A post's text, coloured as it is typed, what is past the limit from [overFrom] in the error colours; [label]
+ * names it within a thread, [hint] shows while it is empty.
+ */
 @Composable
 private fun SegmentText(
     value: TextFieldValue,
     label: String?,
     hint: Int,
+    overFrom: Int?,
     readOnly: Boolean,
     onText: (TextFieldValue) -> Unit,
 ) {
-    val link = MaterialTheme.colorScheme.primary
-    val highlight = remember(link) { HighlightTransformation(link) }
+    val colors = MaterialTheme.colorScheme
+    val highlight = remember(colors, overFrom) {
+        val over = SpanStyle(color = colors.onErrorContainer, background = colors.errorContainer)
+        HighlightTransformation(colors.primary, over, overFrom)
+    }
     TextField(
         value = value,
         onValueChange = onText,
@@ -180,26 +188,6 @@ private fun SegmentFooter(index: Int, posted: Boolean, state: ComposerUiState, a
             IconButton(onClick = { actions.onRemoveSegment(index) }, enabled = !state.posting) {
                 Icon(AlohaIcons.Remove, stringResource(R.string.composer_remove_segment))
             }
-        }
-    }
-}
-
-@Composable
-internal fun Suggestions(
-    suggestions: List<Suggestion>,
-    onSuggestion: (Suggestion) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = AlohaSpacing.m),
-        horizontalArrangement = Arrangement.spacedBy(AlohaSpacing.xs),
-    ) {
-        suggestions.forEach { suggestion ->
-            AssistChip(
-                onClick = { onSuggestion(suggestion) },
-                label = { Text(suggestion.label, maxLines = 1) },
-                leadingIcon = suggestion.imageUrl?.let { url -> { Avatar(url, CHIP_IMAGE) } },
-            )
         }
     }
 }
@@ -251,7 +239,12 @@ internal fun Toolbar(
     }
     if (emojis) EmojiSheet(state.emojis, onPick = actions::onEmoji, onDismiss = { emojis = false })
     if (languages) {
-        LanguageDialog(state.language, onPick = actions::onLanguage, onDismiss = { languages = false })
+        LanguageDialog(
+            state.language,
+            state.detected,
+            onPick = actions::onLanguage,
+            onDismiss = { languages = false },
+        )
     }
 }
 
@@ -451,6 +444,5 @@ private val CW_PRESETS = listOf(
 )
 
 private val AVATAR = 32.dp
-private val CHIP_IMAGE = 18.dp
 
 private val TOUCH = 48.dp

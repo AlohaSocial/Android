@@ -128,6 +128,7 @@ internal class ComposerViewModel @AssistedInject constructor(
     /** The post quoted, and what quoting it asks of the writer. */
     val quoting = Quoting(compose, preferences, control, viewModelScope) { onPost() }
     private val completions = Completions(compose, viewModelScope)
+    private val languages = LanguageDetection(context)
     private val poster = ThreadPoster(sender, interactions, gameWords(context))
 
     /** The post kept as a draft while it is written, and when the composer closes. */
@@ -195,7 +196,7 @@ internal class ComposerViewModel @AssistedInject constructor(
     val uiState: StateFlow<ComposerUiState> = combine(
         control,
         snapshotFlow { Written(segments.map { it.text }, spoiler) },
-        completions.suggestions,
+        completions.offered,
         media,
         extras,
     ) { state, text, found, media, extras ->
@@ -208,17 +209,22 @@ internal class ComposerViewModel @AssistedInject constructor(
         // the card is an attachment only to the server; the strip shows what the writer attached
         val attached = media.attachments.map { list -> list.filterNot { it.id == cards.attachmentId } }
         val cardFits = poll == null && TextCards.fits(text.segments.first(), text.segments.size, attached.first().size)
+        val numbers = text.segments.indices.map { numbering(media.writing.numberThreads, it, text.segments.size) }
+        val fits = { index: Int, segment: String ->
+            CharacterCount.remaining(segment + numbers[index], cw, limits, rule)
+        }
+        val remaining = text.segments.mapIndexed(fits)
         state.copy(
-            remaining = text.segments.mapIndexed { index, segment ->
-                val number = numbering(media.writing.numberThreads, index, text.segments.size)
-                CharacterCount.remaining(segment + number, cw, limits, rule)
+            remaining = remaining,
+            overFrom = text.segments.mapIndexed { index, segment ->
+                if (remaining[index] < 0) ComposerText.overFrom(segment) { fits(index, it) >= 0 } else null
             },
             empty = text.segments.withIndex().any { (index, segment) ->
                 segment.isBlank() && media.attachments.getOrElse(index) { emptyList() }.isEmpty() &&
                     !(index == 0 && poll != null)
             },
             games = text.segments.flatMap(ComposerGames::kinds).distinct(),
-            suggestions = found,
+            completions = found,
             attachments = attached,
             card = card,
             cardFits = cardFits,
@@ -262,6 +268,13 @@ internal class ComposerViewModel @AssistedInject constructor(
                     delay(AUTOSAVE_MILLIS)
                     drafts.save(reader?.id, it)
                 }
+        }
+        viewModelScope.launch {
+            snapshotFlow { segments.first().text }.distinctUntilChanged().collectLatest {
+                delay(DETECT_MILLIS)
+                val detected = languages.detect(ComposerText.prose(it))
+                control.update { state -> state.copy(detected = detected) }
+            }
         }
         viewModelScope.launch {
             snapshotFlow { segments.getOrNull(focused)?.let(ComposerText::completing) }.collect { completing ->
@@ -488,6 +501,7 @@ internal class ComposerViewModel @AssistedInject constructor(
     private companion object {
         const val STOP_MILLIS = 5_000L
         const val AUTOSAVE_MILLIS = 2_000L
+        const val DETECT_MILLIS = 600L
     }
 }
 

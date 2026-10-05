@@ -61,7 +61,7 @@ private enum class Picker { Gifs, NextcloudFile, Schedule }
 
 /**
  * The composer for [key]; [onDone] leaves it, once posted, discarded or kept as a draft;
- * [onScheduledPosts] and [onDrafts] open those lists.
+ * [onScheduledPosts] and [onDrafts] open those lists, [onSearch] search for who a mention could not find.
  */
 @Composable
 public fun ComposerRoute(
@@ -70,6 +70,7 @@ public fun ComposerRoute(
     onScheduledPosts: () -> Unit,
     onDrafts: () -> Unit,
     modifier: Modifier = Modifier,
+    onSearch: (String) -> Unit = {},
 ) {
     val viewModel = hiltViewModel<ComposerViewModel, ComposerViewModel.Factory>(key = key.toString()) { it.create(key) }
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -84,7 +85,9 @@ public fun ComposerRoute(
     )
     val scheduled by rememberUpdatedState(onScheduledPosts)
     val drafts by rememberUpdatedState(onDrafts)
-    val actions = rememberActions(viewModel, state, dialogs, Elsewhere({ scheduled() }, { drafts() })) { done() }
+    val search by rememberUpdatedState(onSearch)
+    val elsewhere = Elsewhere({ scheduled() }, { drafts() }) { search(it) }
+    val actions = rememberActions(viewModel, state, dialogs, elsewhere) { done() }
     val hue = MaterialTheme.colorScheme.primary.toArgb()
     LaunchedEffect(hue) { viewModel.cards.onHue(hue) }
 
@@ -104,8 +107,8 @@ public fun ComposerRoute(
     ComposerDialogs(state, viewModel, dialogs) { done() }
 }
 
-/** The lists the composer opens. */
-private class Elsewhere(val scheduledPosts: () -> Unit, val drafts: () -> Unit)
+/** The lists the composer opens, and search. */
+private class Elsewhere(val scheduledPosts: () -> Unit, val drafts: () -> Unit, val search: (String) -> Unit)
 
 /**
  * The composer's actions, made once; what they decide on (the state, what the pickers accept) is
@@ -154,6 +157,8 @@ private fun rememberActions(
             override fun onQuotePolicy(policy: QuotePolicy) = viewModel.onQuotePolicy(policy)
 
             override fun onSuggestion(suggestion: Suggestion) = viewModel.onSuggestion(suggestion)
+
+            override fun onFindPeople(query: String) = elsewhere.search(query)
 
             override fun onEmoji(emoji: CustomEmoji) = viewModel.onEmoji(emoji)
 

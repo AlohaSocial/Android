@@ -47,8 +47,6 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaSpacing
-import social.aloha.core.model.CustomEmoji
-import social.aloha.core.model.Visibility
 import social.aloha.core.ui.ConfirmDialog
 import social.aloha.core.ui.readingWidth
 
@@ -100,9 +98,7 @@ internal fun ComposerScreen(
                     .padding(horizontal = AlohaSpacing.m),
                 verticalArrangement = Arrangement.spacedBy(AlohaSpacing.s),
             ) { Writing(state, segments, spoiler, actions) }
-            if (state.suggestions.isNotEmpty()) {
-                Suggestions(state.suggestions, actions::onSuggestion, Modifier.readingWidth())
-            }
+            CompletionStrip(state.completions, state.emojis, actions, Modifier.readingWidth())
             HorizontalDivider()
             Toolbar(state, spoiler, actions, Modifier.readingWidth(), showCounter = segments.size == 1)
         }

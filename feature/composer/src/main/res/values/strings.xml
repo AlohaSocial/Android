@@ -70,6 +70,14 @@
     <string name="composer_language">Language: %1$s</string>
     <!-- The post's language is not set -->
     <string name="composer_language_none">Not set</string>
+    <!-- First row of the language list: the language the post reads as, found on the device; %1$s is its name -->
+    <string name="composer_language_detected">Detected: %1$s</string>
+    <!-- Chip over the keyboard when no account matches the mention being typed; opens search -->
+    <string name="composer_find_people">Find who you’re looking for</string>
+    <!-- Chip over the keyboard when no custom emoji matches what is typed; opens the emoji picker -->
+    <string name="composer_browse_emoji">Browse emoji</string>
+    <!-- Said by a screen reader while completions for the word being typed load -->
+    <string name="composer_completions_loading">Looking for matches</string>
     <!-- Title of the language list -->
     <string name="composer_language_title">Language of the post</string>
     <!-- Toolbar button that opens the custom emoji of the server -->

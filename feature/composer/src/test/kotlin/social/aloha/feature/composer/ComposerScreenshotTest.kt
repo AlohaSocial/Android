@@ -74,6 +74,7 @@ class ComposerScreenshotTest {
         override fun onLanguage(language: String?) = Unit
         override fun onQuotePolicy(policy: QuotePolicy) = Unit
         override fun onSuggestion(suggestion: Suggestion) = Unit
+        override fun onFindPeople(query: String) = Unit
         override fun onEmoji(emoji: CustomEmoji) = Unit
         override fun onAddSegment() = Unit
         override fun onRemoveSegment(index: Int) = Unit
@@ -164,7 +165,11 @@ class ComposerScreenshotTest {
             spoilerShown = true,
             remaining = listOf(120, -12),
             games = listOf(ComposerGames.Kind.Dice),
-            suggestions = listOf(Suggestion("@bob@remote.example", "Bob · @bob@remote.example", null)),
+            completions = CompletionsUi(
+                CompletionKind.Account,
+                "bo",
+                listOf(Suggestion("@bob@remote.example", "Bob · @bob@remote.example", null)),
+            ),
         ),
         listOf(value("@bob@remote.example I'm in, /dice decides the time"), value("And bring a board @bo")),
         spoiler = "Early mornings",
@@ -179,6 +184,30 @@ class ComposerScreenshotTest {
 
     @Test
     fun replyThread() = capture("composer-reply-thread") { ReplyInThread() }
+
+    @Test
+    fun overLimitWhileLooking() = capture("composer-over-limit") {
+        ComposerScreen(
+            fresh.copy(
+                remaining = listOf(-6),
+                overFrom = listOf(30),
+                completions = CompletionsUi(CompletionKind.Account, "kai", loading = true),
+            ),
+            listOf(value("Paddling out at dawn, who’s in? @kai")),
+            spoiler = "",
+            actions = NoActions,
+        )
+    }
+
+    @Test
+    fun nobodyFound() = capture("composer-find-people") {
+        ComposerScreen(
+            fresh.copy(completions = CompletionsUi(CompletionKind.Account, "kai")),
+            listOf(value("Paddling out at dawn @kai")),
+            spoiler = "",
+            actions = NoActions,
+        )
+    }
 
     @Test
     @Config(fontScale = 2f)

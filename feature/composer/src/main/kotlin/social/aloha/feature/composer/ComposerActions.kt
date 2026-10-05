@@ -12,7 +12,8 @@ import social.aloha.core.model.Visibility
 internal interface ComposerActions :
     MediaActions,
     LaterActions,
-    QuoteActions {
+    QuoteActions,
+    TypingActions {
     fun onClose()
 
     fun onPost()
@@ -27,10 +28,6 @@ internal interface ComposerActions :
 
     fun onQuotePolicy(policy: QuotePolicy)
 
-    fun onSuggestion(suggestion: Suggestion)
-
-    fun onEmoji(emoji: CustomEmoji)
-
     fun onAddSegment()
 
     fun onRemoveSegment(index: Int)
@@ -42,6 +39,16 @@ internal interface ComposerActions :
 
     /** How long the story's picture or card shows for. */
     fun onStorySeconds(seconds: Int)
+}
+
+/** What helps with the words: completing the one at the cursor, and putting in emoji. */
+internal interface TypingActions {
+    fun onSuggestion(suggestion: Suggestion)
+
+    /** Opens search for [query], where no account the server knows matches it. */
+    fun onFindPeople(query: String)
+
+    fun onEmoji(emoji: CustomEmoji)
 }
 
 /** What the controls for later do: scheduling, and the posts kept for later. */

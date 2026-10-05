@@ -84,9 +84,9 @@ public data class ReportKey(
     val remote: Boolean get() = handle.removePrefix("@").contains('@')
 }
 
-/** Search, as [readerId]: accounts, hashtags and posts, from anywhere by their address. */
+/** Search, as [readerId]: accounts, hashtags and posts, from anywhere by their address; [query] typed already. */
 @Serializable
-public data class SearchKey(val readerId: String) : NavKey
+public data class SearchKey(val readerId: String, val query: String = "") : NavKey
 
 /** [readerId]'s lists. */
 @Serializable

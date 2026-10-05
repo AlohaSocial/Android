@@ -643,6 +643,7 @@ fun AlohaApp(
                                     onDone = { backStack.remove(it) },
                                     onScheduledPosts = { backStack.push(ScheduledPostsKey(it.readerId)) },
                                     onDrafts = { backStack.push(DraftsKey(it.readerId)) },
+                                    onSearch = { query -> backStack.push(SearchKey(it.readerId, query)) },
                                 )
                             }
                             entry<DraftsKey> { drafts ->

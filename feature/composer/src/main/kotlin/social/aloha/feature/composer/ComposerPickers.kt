@@ -89,7 +89,7 @@ internal fun EmojiSheet(emojis: List<CustomEmoji>, onPick: (CustomEmoji) -> Unit
  * the device's first, and "not set" for a post that should not claim one.
  */
 @Composable
-internal fun LanguageDialog(current: String?, onPick: (String?) -> Unit, onDismiss: () -> Unit) {
+internal fun LanguageDialog(current: String?, detected: String?, onPick: (String?) -> Unit, onDismiss: () -> Unit) {
     val languages = remember(current) {
         val device = Locale.getDefault().language
         // each name looked up once, not at every comparison of the sort
@@ -103,6 +103,15 @@ internal fun LanguageDialog(current: String?, onPick: (String?) -> Unit, onDismi
         title = { Text(stringResource(R.string.composer_language_title)) },
         text = {
             LazyColumn(Modifier.heightIn(max = SHEET_HEIGHT).selectableGroup()) {
+                if (detected != null) {
+                    item(key = "detected") {
+                        val name = languageName(detected) ?: detected
+                        LanguageRow(stringResource(R.string.composer_language_detected, name), selected = false) {
+                            onPick(detected)
+                            onDismiss()
+                        }
+                    }
+                }
                 item(key = "none") {
                     LanguageRow(stringResource(R.string.composer_language_none), current == null) {
                         onPick(null)

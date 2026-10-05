@@ -18,12 +18,13 @@ import social.aloha.core.model.SignedInAccount
 /**
  * What the word at the cursor could become: accounts for `@` and hashtags for `#` from the server,
  * each asked once a quarter second after typing stops and kept for the rest of the session, and the
- * server's custom emoji for `:`, filtered here. The writer's recent hashtags come first. Only emoji
- * the server lists in its picker are offered; one typed by hand still posts and renders.
+ * server's custom emoji for `:`, filtered here. The hashtag as typed comes first, then the writer's
+ * recent ones. Only emoji the server lists in its picker are offered; one typed by hand still posts and
+ * renders.
  */
 internal class Completions(private val compose: ComposeRepository, private val scope: CoroutineScope) {
-    private val found = MutableStateFlow<List<Suggestion>>(emptyList())
-    val suggestions: StateFlow<List<Suggestion>> = found.asStateFlow()
+    private val found = MutableStateFlow(CompletionsUi())
+    val offered: StateFlow<CompletionsUi> = found.asStateFlow()
 
     private val asked = HashMap<Pair<CompletionKind, String>, List<Suggestion>>()
     private var job: Job? = null
@@ -37,10 +38,13 @@ internal class Completions(private val compose: ComposeRepository, private val s
             completing.kind == CompletionKind.Emoji -> emoji(completing.query, emojis)
             else -> asked[cacheKey]
         }
-        if (known != null || completing == null) {
-            found.value = known.orEmpty()
+        if (completing == null) {
+            found.value = CompletionsUi()
             return
         }
+        val shown = CompletionsUi(completing.kind, completing.query, known.orEmpty(), loading = known == null)
+        found.value = shown
+        if (known != null) return
         job = scope.launch {
             delay(DEBOUNCE_MILLIS)
             val result = when (completing.kind) {
@@ -48,7 +52,7 @@ internal class Completions(private val compose: ComposeRepository, private val s
                 else -> hashtags(reader, completing.query)
             }
             if (result != null && cacheKey != null) asked[cacheKey] = result
-            found.value = result.orEmpty()
+            found.value = shown.copy(items = result ?: typed(completing), loading = false)
         }
     }
 
@@ -56,8 +60,14 @@ internal class Completions(private val compose: ComposeRepository, private val s
     fun forget() {
         job?.cancel()
         asked.clear()
-        found.value = emptyList()
+        found.value = CompletionsUi()
     }
+
+    // what was typed is offered as it is, a new hashtag being as good as a known one
+    private fun typed(completing: Completing): List<Suggestion> =
+        if (completing.kind == CompletionKind.Hashtag) listOf(tag(completing.query)) else emptyList()
+
+    private fun tag(name: String) = Suggestion("#$name", "#$name", null)
 
     private suspend fun accounts(reader: SignedInAccount, query: String): List<Suggestion>? =
         (compose.accounts(reader, query) as? Answer.Got)?.value?.map { account ->
@@ -68,7 +78,7 @@ internal class Completions(private val compose: ComposeRepository, private val s
     private suspend fun hashtags(reader: SignedInAccount, query: String): List<Suggestion>? {
         val recent = compose.recentTags(reader).filter { it.startsWith(query, ignoreCase = true) }
         val server = (compose.hashtags(reader, query) as? Answer.Got)?.value ?: return null
-        return (recent + server).distinctBy(String::lowercase).take(MAX_SHOWN).map { Suggestion("#$it", "#$it", null) }
+        return (listOf(query) + recent + server).distinctBy(String::lowercase).take(MAX_SHOWN).map(::tag)
     }
 
     private fun emoji(query: String, emojis: List<CustomEmoji>): List<Suggestion> {

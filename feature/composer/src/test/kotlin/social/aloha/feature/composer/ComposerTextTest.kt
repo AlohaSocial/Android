@@ -53,6 +53,19 @@ class ComposerTextTest {
     }
 
     @Test
+    fun `what is past the limit starts where the longest fitting beginning ends`() {
+        assertEquals(5, ComposerText.overFrom("hello world") { it.length <= 5 })
+        assertEquals(0, ComposerText.overFrom("hello") { false })
+        // an emoji outside the basic plane is never split
+        assertEquals(1, ComposerText.overFrom("a\uD83C\uDF0Ab") { it.length <= 2 })
+    }
+
+    @Test
+    fun `the language is read from the words, not the mentions, tags and links`() {
+        assertEquals("aloha kakou", ComposerText.prose("@bob aloha #surf kakou https://x.test/a"))
+    }
+
+    @Test
     fun `the hashtags a post uses are found without their hash`() {
         assertEquals(listOf("Surf", "café"), ComposerText.hashtags("#Surf and #café, not #1 or a#b"))
     }

@@ -103,7 +103,7 @@ internal class SearchViewModel @AssistedInject constructor(
     }
 
     private val reader = MutableStateFlow<SignedInAccount?>(null)
-    private val query = MutableStateFlow("")
+    private val query = MutableStateFlow(key.query)
     private val colors = MutableStateFlow<RichTextColors?>(null)
     private val control = MutableStateFlow(SearchUiState())
 

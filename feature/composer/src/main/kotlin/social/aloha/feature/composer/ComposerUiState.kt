@@ -36,6 +36,23 @@ internal enum class QuoteNotice { Unlisted, Linked }
 @Immutable
 internal data class Suggestion(val replacement: String, val label: String, val imageUrl: String?)
 
+/** What is offered for the word at the cursor: nothing while [kind] is null, [loading] while the server is asked. */
+@Immutable
+internal data class CompletionsUi(
+    val kind: CompletionKind? = null,
+    val query: String = "",
+    val items: List<Suggestion> = emptyList(),
+    val loading: Boolean = false,
+) {
+    /** Whether the strip shows: something offered, being looked for, or a way on from there. */
+    fun shown(hasEmojis: Boolean): Boolean = when (kind) {
+        null -> false
+        CompletionKind.Account -> true
+        CompletionKind.Emoji -> loading || items.isNotEmpty() || hasEmojis
+        CompletionKind.Hashtag -> loading || items.isNotEmpty()
+    }
+}
+
 /** Who may quote the post, where the server lets its writer choose. */
 internal enum class QuotePolicy(val wire: String?) { Anyone(null), Followers("followers"), Nobody("nobody") }
 
@@ -102,8 +119,12 @@ internal data class ComposerUiState(
     val quoteConfirmed: Boolean = false,
     /** Characters left in each segment of the thread, negative when over. */
     val remaining: List<Int> = listOf(0),
+    /** Where each segment's text goes past the limit; null for one within it. */
+    val overFrom: List<Int?> = listOf(null),
+    /** The language the opening post reads as, where the device is sure enough of it. */
+    val detected: String? = null,
     val games: List<ComposerGames.Kind> = emptyList(),
-    val suggestions: List<Suggestion> = emptyList(),
+    val completions: CompletionsUi = CompletionsUi(),
     val emojis: List<CustomEmoji> = emptyList(),
     /** The attachments of each segment of the thread. */
     val attachments: List<List<Attachment>> = listOf(emptyList()),
