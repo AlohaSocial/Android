@@ -32,6 +32,24 @@
     <string name="viewer_zoom_out">Zoom out</string>
     <!-- The badge on a picture its author described; keep it short, it is a badge -->
     <string name="viewer_alt">ALT</string>
+    <!-- Under a long picture description in the viewer: shows all of it -->
+    <string name="viewer_more_text">more</string>
+    <!-- Under a picture description shown in full: shortens it again -->
+    <string name="viewer_less">less</string>
+    <!-- Viewer button: replies to the post the picture belongs to -->
+    <string name="viewer_reply">Reply</string>
+    <!-- Viewer button -->
+    <string name="viewer_boost">Boost</string>
+    <!-- Viewer button, on a post the reader boosted -->
+    <string name="viewer_unboost">Undo boost</string>
+    <!-- Viewer button -->
+    <string name="viewer_favourite">Favourite</string>
+    <!-- Viewer button, on a post the reader favourited -->
+    <string name="viewer_unfavourite">Undo favourite</string>
+    <!-- Viewer button -->
+    <string name="viewer_bookmark">Bookmark</string>
+    <!-- Viewer button, on a post the reader bookmarked -->
+    <string name="viewer_unbookmark">Remove bookmark</string>
     <!-- Title of the picture's description -->
     <string name="viewer_alt_title">Description</string>
     <!-- Closes the picture's description -->

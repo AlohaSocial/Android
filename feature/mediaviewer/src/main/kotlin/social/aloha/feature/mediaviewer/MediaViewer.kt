@@ -3,7 +3,12 @@
 
 package social.aloha.feature.mediaviewer
 
+import androidx.activity.compose.BackHandler
 import androidx.annotation.OptIn
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animate
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -32,10 +37,13 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -45,17 +53,22 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.PointerEvent
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.util.VelocityTracker
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.paneTitle
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.PlayerView
 import coil3.compose.AsyncImage
 import kotlin.math.abs
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.media.LadderPlayback
@@ -63,10 +76,12 @@ import social.aloha.core.media.Sound
 import social.aloha.core.media.mediaPlayer
 import social.aloha.core.model.AttachmentKind
 import social.aloha.core.model.MediaAttachment
+import social.aloha.core.model.Status
 import social.aloha.core.model.VideoSource
 import social.aloha.core.ui.LocalOnMobileData
 import social.aloha.core.ui.LocalReadingStyle
 import social.aloha.core.ui.rememberBlurHashPainter
+import social.aloha.core.ui.rememberReducedMotion
 
 /**
  * The shared media viewer, edge to edge over a dimmed backdrop, from any mode: [attachments] from
@@ -83,14 +98,19 @@ internal fun MediaViewer(
     videoSources: (MediaAttachment) -> List<VideoSource>,
     actions: MediaViewerActions,
     modifier: Modifier = Modifier,
+    status: Status? = null,
 ) {
     val pager = rememberPagerState(start.coerceIn(0, (attachments.size - 1).coerceAtLeast(0))) { attachments.size }
     var drag by remember { mutableFloatStateOf(0f) }
     val zooms = remember { mutableStateOf(mapOf<Int, Float>()) }
     val title = stringResource(R.string.viewer_title)
+    val motion = rememberViewerMotion(actions::onClose) { drag = it }
+    BackHandler(onBack = motion::close)
+    val backdrop = backdropWhilePaging(pager, attachments)
     Box(
         modifier.fillMaxSize()
-            .background(Color.Black.copy(alpha = (1f - abs(drag) / DISMISS_DISTANCE).coerceIn(MINIMUM_BACKDROP, 1f)))
+            .graphicsLayer { alpha = motion.shown }
+            .background(backdrop.copy(alpha = (1f - abs(drag) / DISMISS_DISTANCE).coerceIn(MINIMUM_BACKDROP, 1f)))
             .semantics { paneTitle = title },
     ) {
         HorizontalPager(
@@ -99,7 +119,13 @@ internal fun MediaViewer(
             userScrollEnabled = (zooms.value[pager.currentPage] ?: 1f) <= 1f,
         ) { page ->
             val attachment = attachments[page]
-            Box(Modifier.fillMaxSize().graphicsLayer { translationY = if (page == pager.currentPage) drag else 0f }) {
+            Box(
+                Modifier.fillMaxSize().graphicsLayer {
+                    translationY = if (page == pager.currentPage) drag else 0f
+                    scaleX = OPENED_FROM + (1f - OPENED_FROM) * motion.shown
+                    scaleY = scaleX
+                },
+            ) {
                 when (attachment.type) {
                     AttachmentKind.Video, AttachmentKind.Gifv, AttachmentKind.Audio ->
                         Clip(attachment, videoSources(attachment), playing = page == pager.settledPage)
@@ -109,22 +135,33 @@ internal fun MediaViewer(
                         zoom = zooms.value[page] ?: 1f,
                         onZoom = { zooms.value = zooms.value + (page to it) },
                         onDrag = { drag = it },
-                        onDismiss = actions::onClose,
+                        onDismiss = motion::fling,
                     )
                 }
             }
         }
         val current = attachments.getOrNull(pager.currentPage)
-        TopBar(current, pager.currentPage, attachments.size, actions)
-        if (current != null && current.type == AttachmentKind.Image) {
-            ZoomButtons(
-                zoom = zooms.value[pager.currentPage] ?: 1f,
-                onZoom = { zooms.value = zooms.value + (pager.currentPage to it) },
-            )
+        TopBar(current, pager.currentPage, attachments.size, actions.closingWith(motion::close), barsOf(backdrop))
+        Box(
+            Modifier.align(Alignment.BottomCenter).fillMaxWidth().background(barsOf(backdrop)).navigationBarsPadding(),
+        ) {
+            BottomBar(current?.description?.takeIf { it.isNotBlank() }, status, actions) {
+                if (current != null && current.type == AttachmentKind.Image) {
+                    ZoomButtons(
+                        zoom = zooms.value[pager.currentPage] ?: 1f,
+                        onZoom = { zooms.value = zooms.value + (pager.currentPage to it) },
+                    )
+                }
+            }
         }
-        current?.description?.takeIf { it.isNotBlank() }?.let { AltBadge(it) }
     }
 }
+
+/** [this], closing through [close], so the close button springs the viewer away as back and a drag do. */
+private fun MediaViewerActions.closingWith(close: () -> Unit): MediaViewerActions =
+    object : MediaViewerActions by this {
+        override fun onClose() = close()
+    }
 
 /**
  * A picture: pinch to zoom up to five times, pan while zoomed, double-tap between fit and closer. Drawn
@@ -136,7 +173,7 @@ private fun Picture(
     zoom: Float,
     onZoom: (Float) -> Unit,
     onDrag: (Float) -> Unit,
-    onDismiss: () -> Unit,
+    onDismiss: (distance: Float, velocity: Float) -> Unit,
 ) {
     var pan by remember { mutableStateOf(Offset.Zero) }
     if (zoom <= 1f && pan != Offset.Zero) pan = Offset.Zero
@@ -178,14 +215,16 @@ private class PictureGestures(
     val onZoom: (Float) -> Unit,
     val onPan: (Offset) -> Unit,
     val onDrag: (Float) -> Unit,
-    val onDismiss: () -> Unit,
+    val onDismiss: (distance: Float, velocity: Float) -> Unit,
 ) {
     private var moved = Offset.Zero
     private var dismissing = false
+    val tracker = VelocityTracker()
 
     fun start() {
         moved = Offset.Zero
         dismissing = false
+        tracker.resetTracking()
     }
 
     fun pinch(event: PointerEvent) {
@@ -202,9 +241,11 @@ private class PictureGestures(
         event.changes.forEach { it.consume() }
     }
 
+    /** Let go: far enough, or flung hard enough in the drag's direction, and the picture leaves with the fling. */
     fun end() {
-        if (dismissing && abs(moved.y) > DISMISS_DISTANCE) onDismiss()
-        onDrag(0f)
+        val velocity = tracker.calculateVelocity().y
+        val flung = abs(velocity) > FLING_VELOCITY && velocity * moved.y > 0
+        if (dismissing && (abs(moved.y) > DISMISS_DISTANCE || flung)) onDismiss(moved.y, velocity) else onDrag(0f)
     }
 }
 
@@ -214,6 +255,7 @@ private fun Modifier.zoomAndDismiss(gestures: PictureGestures): Modifier = point
         gestures.start()
         do {
             val event = awaitPointerEvent()
+            event.changes.firstOrNull()?.let { gestures.tracker.addPosition(it.uptimeMillis, it.position) }
             if (event.changes.size > 1 ||
                 gestures.zoom() > 1f
             ) {
@@ -257,9 +299,17 @@ private fun Clip(attachment: MediaAttachment, sources: List<VideoSource>, playin
 }
 
 @Composable
-private fun BoxScope.TopBar(current: MediaAttachment?, index: Int, count: Int, actions: MediaViewerActions) {
+private fun BoxScope.TopBar(
+    current: MediaAttachment?,
+    index: Int,
+    count: Int,
+    actions: MediaViewerActions,
+    bars: Color,
+) {
     Row(
-        Modifier.align(Alignment.TopCenter).fillMaxWidth().statusBarsPadding().padding(AlohaSpacing.xs),
+        Modifier.align(
+            Alignment.TopCenter,
+        ).fillMaxWidth().background(bars).statusBarsPadding().padding(AlohaSpacing.xs),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         IconButton(onClick = actions::onClose) {
@@ -314,40 +364,14 @@ private fun More(attachment: MediaAttachment, actions: MediaViewerActions) {
 
 /** Zooming in and out as buttons, for Switch Access and anyone who cannot pinch. */
 @Composable
-private fun BoxScope.ZoomButtons(zoom: Float, onZoom: (Float) -> Unit) {
-    Row(
-        Modifier.align(Alignment.BottomEnd).navigationBarsPadding().padding(AlohaSpacing.s),
-        horizontalArrangement = Arrangement.spacedBy(AlohaSpacing.xs),
-    ) {
+private fun ZoomButtons(zoom: Float, onZoom: (Float) -> Unit) {
+    Row(horizontalArrangement = Arrangement.spacedBy(AlohaSpacing.xs)) {
         IconButton(onClick = { onZoom((zoom / ZOOM_STEP).coerceAtLeast(1f)) }, enabled = zoom > 1f) {
             Icon(AlohaIcons.ZoomOut, stringResource(R.string.viewer_zoom_out), tint = onDark(zoom > 1f))
         }
         IconButton(onClick = { onZoom((zoom * ZOOM_STEP).coerceAtMost(MAXIMUM_ZOOM)) }, enabled = zoom < MAXIMUM_ZOOM) {
             Icon(AlohaIcons.ZoomIn, stringResource(R.string.viewer_zoom_in), tint = onDark(zoom < MAXIMUM_ZOOM))
         }
-    }
-}
-
-/** The badge on a described attachment; the description itself a tap away. There is never a fake one. */
-@Composable
-private fun BoxScope.AltBadge(description: String) {
-    var open by remember { mutableStateOf(false) }
-    TextButton(
-        onClick = { open = true },
-        modifier = Modifier.align(Alignment.BottomStart).navigationBarsPadding().padding(AlohaSpacing.s)
-            .background(Color.Black.copy(alpha = BADGE_SCRIM), MaterialTheme.shapes.small),
-    ) {
-        Text(stringResource(R.string.viewer_alt), color = Color.White, style = MaterialTheme.typography.labelLarge)
-    }
-    if (open) {
-        AlertDialog(
-            onDismissRequest = { open = false },
-            title = { Text(stringResource(R.string.viewer_alt_title)) },
-            text = { Text(description) },
-            confirmButton = {
-                TextButton(onClick = { open = false }) { Text(stringResource(R.string.viewer_alt_close)) }
-            },
-        )
     }
 }
 
@@ -363,4 +387,57 @@ private const val DOUBLE_TAP_ZOOM = 2.5f
 private const val ZOOM_STEP = 1.5f
 private const val DISMISS_DISTANCE = 400f
 private const val MINIMUM_BACKDROP = 0.3f
-private const val BADGE_SCRIM = 0.6f
+private const val FLING_VELOCITY = 1_500f
+private const val OPENED_FROM = 0.92f
+
+/**
+ * How the viewer comes and goes: it springs in, scaling up from a little smaller as it fades in; it
+ * springs away the same way when closed, and a fling carries the picture off at its own speed. All of
+ * it at once where motion is reduced.
+ */
+@Stable
+private class ViewerMotion(
+    private val scope: CoroutineScope,
+    private val reduced: Boolean,
+    private val height: Float,
+    private val onClosed: () -> Unit,
+    private val onDrag: (Float) -> Unit,
+) {
+    private val presence = Animatable(if (reduced) 1f else 0f)
+
+    val shown: Float get() = presence.value
+
+    fun open() {
+        if (!reduced) scope.launch { presence.animateTo(1f, spring(stiffness = Spring.StiffnessMediumLow)) }
+    }
+
+    fun close() {
+        scope.launch {
+            if (!reduced) presence.animateTo(0f, spring(stiffness = Spring.StiffnessMedium))
+            onClosed()
+        }
+    }
+
+    fun fling(distance: Float, velocity: Float) {
+        scope.launch {
+            if (!reduced) {
+                val away = if (distance < 0) -height else height
+                animate(distance, away, initialVelocity = velocity, animationSpec = spring()) { value, _ ->
+                    onDrag(value)
+                }
+            }
+            onClosed()
+        }
+    }
+}
+
+@Composable
+private fun rememberViewerMotion(onClosed: () -> Unit, onDrag: (Float) -> Unit): ViewerMotion {
+    val scope = rememberCoroutineScope()
+    val reduced = rememberReducedMotion()
+    val height = LocalWindowInfo.current.containerSize.height.toFloat()
+    val closed by rememberUpdatedState(onClosed)
+    return remember(reduced) { ViewerMotion(scope, reduced, height, { closed() }, onDrag) }.also {
+        LaunchedEffect(it) { it.open() }
+    }
+}
