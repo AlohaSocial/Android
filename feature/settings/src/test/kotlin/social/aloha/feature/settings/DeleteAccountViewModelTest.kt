@@ -36,6 +36,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import social.aloha.core.data.sync.PushSubscriptions
+import social.aloha.core.datastore.AccountSettingsStore
 import social.aloha.core.datastore.AppPreferences
 import social.aloha.core.model.ServerCapabilities
 import social.aloha.core.sync.AccountSignOut
@@ -94,7 +95,11 @@ class DeleteAccountViewModelTest {
     private val push = PushRegistrar(
         context,
         fixture.accounts,
-        PushSubscriptions(fixture.clients, AppPreferences(InMemoryDataStore(emptyPreferences()))),
+        PushSubscriptions(
+            fixture.clients,
+            AppPreferences(InMemoryDataStore(emptyPreferences())),
+            AccountSettingsStore(InMemoryDataStore(emptyMap())),
+        ),
         fixture.nextcloud,
     )
     private val signOuts =

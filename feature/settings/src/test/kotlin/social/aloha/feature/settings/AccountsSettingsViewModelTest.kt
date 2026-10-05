@@ -29,6 +29,7 @@ import org.robolectric.annotation.Config
 import social.aloha.core.data.NewAccount
 import social.aloha.core.data.ReauthRequest
 import social.aloha.core.data.sync.PushSubscriptions
+import social.aloha.core.datastore.AccountSettingsStore
 import social.aloha.core.datastore.AppPreferences
 import social.aloha.core.model.AccessToken
 import social.aloha.core.model.ServerCapabilities
@@ -53,7 +54,11 @@ class AccountsSettingsViewModelTest {
     private val push = PushRegistrar(
         context,
         fixture.accounts,
-        PushSubscriptions(fixture.clients, AppPreferences(InMemoryDataStore(emptyPreferences()))),
+        PushSubscriptions(
+            fixture.clients,
+            AppPreferences(InMemoryDataStore(emptyPreferences())),
+            AccountSettingsStore(InMemoryDataStore(emptyMap())),
+        ),
         fixture.nextcloud,
     )
     private val reauth = ReauthRequest()

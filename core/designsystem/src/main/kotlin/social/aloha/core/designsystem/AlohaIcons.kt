@@ -74,6 +74,7 @@ import androidx.compose.material.icons.outlined.Newspaper
 import androidx.compose.material.icons.outlined.NightsStay
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.NotificationsOff
+import androidx.compose.material.icons.outlined.NotificationsPaused
 import androidx.compose.material.icons.outlined.OpenInBrowser
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.People
@@ -164,6 +165,7 @@ public object AlohaIcons {
     public val NewWindow: ImageVector = Icons.AutoMirrored.Outlined.OpenInNew
     public val Translate: ImageVector = Icons.Outlined.Translate
     public val MuteConversation: ImageVector = Icons.Outlined.NotificationsOff
+    public val PauseNotifications: ImageVector = Icons.Outlined.NotificationsPaused
     public val Report: ImageVector = Icons.Outlined.Flag
     public val Delete: ImageVector = Icons.Outlined.Delete
     public val Redraft: ImageVector = Icons.Outlined.EditNote

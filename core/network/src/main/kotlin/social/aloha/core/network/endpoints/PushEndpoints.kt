@@ -28,18 +28,28 @@ public object PushEndpoints {
      * Subscribes, or replaces the token's subscription. `standard` asks for RFC 8291 encryption where
      * the server offers both; a server that only has the older one sends that, and it is never read here.
      */
-    public fun subscribe(endpoint: String, p256dh: String, auth: String): ApiRequest<Unit> = unitRequest(
+    public fun subscribe(endpoint: String, p256dh: String, auth: String, policy: String = "all"): ApiRequest<Unit> =
+        unitRequest(
+            Endpoint(
+                "api/v1/push/subscription",
+                HttpMethod.POST,
+                body = Body.Form(
+                    queryOf("subscription[endpoint]", endpoint) +
+                        queryOf("subscription[keys][p256dh]", p256dh) +
+                        queryOf("subscription[keys][auth]", auth) +
+                        queryOf("subscription[standard]", "true") +
+                        ALERTS.map { QueryItem("data[alerts][$it]", "true") } +
+                        queryOf("data[policy]", policy),
+                ),
+            ),
+        )
+
+    /** Whose notifications the server pushes from now on, the subscription otherwise as it was. */
+    public fun policy(policy: String): ApiRequest<Unit> = unitRequest(
         Endpoint(
             "api/v1/push/subscription",
-            HttpMethod.POST,
-            body = Body.Form(
-                queryOf("subscription[endpoint]", endpoint) +
-                    queryOf("subscription[keys][p256dh]", p256dh) +
-                    queryOf("subscription[keys][auth]", auth) +
-                    queryOf("subscription[standard]", "true") +
-                    ALERTS.map { QueryItem("data[alerts][$it]", "true") } +
-                    queryOf("data[policy]", "all"),
-            ),
+            HttpMethod.PUT,
+            body = Body.Form(ALERTS.map { QueryItem("data[alerts][$it]", "true") } + queryOf("data[policy]", policy)),
         ),
     )
 

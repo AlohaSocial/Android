@@ -114,6 +114,13 @@ internal fun NotificationsScreen(
     val bar = TopAppBarDefaults.pinnedScrollBehavior()
     val listState = rememberLazyListState()
     val scrollToTop = rememberTopScroll(listState)
+    var pausing by remember { mutableStateOf(false) }
+    if (pausing) {
+        PauseDialog(onPause = {
+            pausing = false
+            actions.onPause(it)
+        }, onDismiss = { pausing = false })
+    }
     BoxWithConstraints(modifier) {
         val roomy = maxWidth >= ROOMY
         Scaffold(
@@ -124,12 +131,13 @@ internal fun NotificationsScreen(
                     title = { TopBarTitle(title, scrollToTop) },
                     scrollBehavior = bar,
                     navigationIcon = navigationIcon,
-                    actions = { BarActions(state, actions, roomy) },
+                    actions = { BarActions(state, actions, roomy) { pausing = true } },
                 )
             },
         ) { padding ->
             Column(Modifier.padding(padding).fillMaxSize()) {
                 Chips(state.kinds, actions)
+                state.pausedUntil?.takeIf { it.isAfter(state.now) }?.let { PausedBanner(it) { actions.onPause(null) } }
                 PermissionBanner(state.askedForPermission, actions::onAskedForPermission)
                 state.trouble?.let { TroubleStrip(stringResource(it.message)) }
                 RefreshBox(

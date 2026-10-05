@@ -3,6 +3,7 @@
 
 package social.aloha.core.data.sync
 
+import java.time.Instant
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -11,6 +12,7 @@ import social.aloha.core.datastore.AccountSettingsStore
 import social.aloha.core.datastore.AppPreferences
 import social.aloha.core.datastore.NotificationPreferences
 import social.aloha.core.model.Digest
+import social.aloha.core.model.NotificationsFrom
 import social.aloha.core.model.PollFrequency
 import social.aloha.core.model.QuietHours
 
@@ -23,6 +25,21 @@ public class SyncSettings @Inject constructor(
     private val app: AppPreferences,
     private val notifications: NotificationPreferences,
 ) {
+    /** Whose notifications [accountId] gets. */
+    public fun from(accountId: String): Flow<NotificationsFrom> =
+        accounts.settings(accountId).map { it.notificationsFrom }.distinctUntilChanged()
+
+    public suspend fun setFrom(accountId: String, from: NotificationsFrom) {
+        accounts.update(accountId) { it.copy(notificationsFrom = from) }
+    }
+
+    /** Until when every notification waits; null while none is paused. */
+    public val pausedUntil: Flow<Instant?> = notifications.pausedUntil
+
+    public suspend fun pause(until: Instant?) {
+        notifications.setPausedUntil(until)
+    }
+
     public fun pollFrequency(accountId: String): Flow<PollFrequency> =
         accounts.settings(accountId).map { it.pollFrequency }.distinctUntilChanged()
 

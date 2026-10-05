@@ -18,6 +18,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import social.aloha.core.datastore.AccountSettingsStore
 import social.aloha.core.datastore.AppPreferences
 import social.aloha.core.testing.InMemoryDataStore
 import social.aloha.core.testing.SignedInFixture
@@ -27,7 +28,11 @@ class PushSubscriptionsTest {
     private val context = ApplicationProvider.getApplicationContext<Context>()
     private val fixture = SignedInFixture(context)
     private val server = MockWebServer().apply { start() }
-    private val push = PushSubscriptions(fixture.clients, AppPreferences(InMemoryDataStore(emptyPreferences())))
+    private val push = PushSubscriptions(
+        fixture.clients,
+        AppPreferences(InMemoryDataStore(emptyPreferences())),
+        AccountSettingsStore(InMemoryDataStore(emptyMap())),
+    )
 
     @After
     fun close() {

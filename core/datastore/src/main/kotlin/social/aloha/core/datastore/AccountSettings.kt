@@ -17,6 +17,7 @@ import kotlinx.serialization.SerializationException
 import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
+import social.aloha.core.model.NotificationsFrom
 import social.aloha.core.model.PollFrequency
 import social.aloha.core.model.TimelineSource
 
@@ -58,6 +59,8 @@ public data class AccountSettings(
     val pinnedFeeds: List<PinnedFeedRecord>? = null,
     /** The kinds of feed whose first-visit explanation the reader put away, by their stored name. */
     val explainedFeeds: Set<String> = emptySet(),
+    /** Whose notifications this account gets, on the device and in what its server pushes. */
+    val notificationsFrom: NotificationsFrom = NotificationsFrom.Anyone,
 )
 
 /**

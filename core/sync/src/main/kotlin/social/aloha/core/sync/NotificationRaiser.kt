@@ -15,6 +15,7 @@ import social.aloha.core.data.sync.SyncSettings
 import social.aloha.core.model.Digest
 import social.aloha.core.model.NotificationItem
 import social.aloha.core.model.NotificationKind
+import social.aloha.core.model.NotificationsFrom
 import social.aloha.core.model.SignedInAccount
 import social.aloha.core.model.Visibility
 
@@ -39,7 +40,7 @@ internal class NotificationRaiser @Inject constructor(
 ) : PollListener {
     override suspend fun onUnreadChanged(account: SignedInAccount, count: Int): Boolean {
         if (count == 0) return true
-        if (!device.allowed || quiet()) return false
+        if (!device.allowed || quiet() || paused()) return false
         val fresh = fresh(account) ?: return false
         val digest = settings.digest.first()
         val now = when {
@@ -56,7 +57,7 @@ internal class NotificationRaiser @Inject constructor(
 
     /** Raises, as one summary per account, what the digest held back; nothing during quiet hours. */
     suspend fun digest() {
-        if (!device.allowed || quiet()) return
+        if (!device.allowed || quiet() || paused()) return
         val all = accounts.all()
         all.filterNot { it.needsReauth }.forEach { account ->
             val fresh = fresh(account).orEmpty()
@@ -74,15 +75,38 @@ internal class NotificationRaiser @Inject constructor(
         val marker = notifications.readMarker(account) as? Answer.Got
         if (page == null || marker == null) return null
         val unread = page.items.filter { NotificationItem.isNewer(it.newestId, marker.value) }.take(MAXIMUM)
-        return raised.fresh(account.id, unread)
+        return from(account, raised.fresh(account.id, unread))
     }
+
+    /**
+     * Of [items], those from whom the account gets notifications, as its server is asked to push them; null
+     * when who is followed could not be asked, so nothing is marked and the next poll asks again.
+     */
+    private suspend fun from(account: SignedInAccount, items: List<NotificationItem>): List<NotificationItem>? {
+        val from = settings.from(account.id).first()
+        if (from == NotificationsFrom.Anyone || items.isEmpty()) return items
+        val kept = if (from == NotificationsFrom.NoOne) {
+            emptySet()
+        } else {
+            val people = items.mapNotNull { it.newest?.id }.distinct()
+            notifications.followed(account, people, followers = from == NotificationsFrom.Followers)
+        }
+        return kept?.let { following ->
+            val (shown, dropped) = items.partition { it.newest?.id in following }
+            // what is not to be raised is done with, not asked about again on every poll
+            raised.mark(account.id, dropped)
+            shown
+        }
+    }
+
+    private suspend fun paused(): Boolean = settings.pausedUntil.first()?.isAfter(clock.instant()) == true
 
     /** The mentions that do not wait for the digest: private ones, and those from people followed. */
     private suspend fun personal(account: SignedInAccount, items: List<NotificationItem>): List<NotificationItem> {
         val mentions = items.filter { it.kind == NotificationKind.Mention }
         val (private, public) = mentions.partition { it.status?.visibility == Visibility.Direct }
         val authors = public.mapNotNull { it.newest?.id }.distinct()
-        val followed = if (authors.isEmpty()) emptySet() else notifications.followed(account, authors)
+        val followed = if (authors.isEmpty()) emptySet() else notifications.followed(account, authors).orEmpty()
         return private + public.filter { it.newest?.id in followed }
     }
 

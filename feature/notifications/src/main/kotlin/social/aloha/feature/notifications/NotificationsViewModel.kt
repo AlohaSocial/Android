@@ -89,6 +89,8 @@ internal data class NotificationsUiState(
      * null on Nextcloud Social, which has no such pages.
      */
     val origin: String? = null,
+    /** Until when no notification is raised; null, or a time gone by, while they come as they arrive. */
+    val pausedUntil: Instant? = null,
 )
 
 /**

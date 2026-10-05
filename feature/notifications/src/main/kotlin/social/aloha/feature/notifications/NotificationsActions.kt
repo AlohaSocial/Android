@@ -3,6 +3,7 @@
 
 package social.aloha.feature.notifications
 
+import java.time.Duration
 import social.aloha.core.model.NotificationKind
 
 /** What a notification's row asks for. */
@@ -40,4 +41,7 @@ internal interface NotificationsActions : NotificationRowActions {
     fun onAskedForPermission()
 
     fun onMarkAllRead()
+
+    /** Holds every notification back for [length]; null has them raised again at once. */
+    fun onPause(length: Duration?)
 }

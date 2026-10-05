@@ -16,6 +16,7 @@ import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.test.core.app.ApplicationProvider
 import java.time.Clock
+import java.time.Duration
 import java.time.Instant
 import java.time.ZoneId
 import kotlinx.coroutines.runBlocking
@@ -36,6 +37,7 @@ import social.aloha.core.datastore.AccountSettingsStore
 import social.aloha.core.datastore.AppPreferences
 import social.aloha.core.datastore.NotificationPreferences
 import social.aloha.core.model.Digest
+import social.aloha.core.model.NotificationsFrom
 import social.aloha.core.model.QuietHours
 import social.aloha.core.model.ServerCapabilities
 import social.aloha.core.testing.InMemoryDataStore
@@ -47,6 +49,7 @@ private class Page : Dispatcher() {
     var favouritesNewest = 120
     var markerFails = false
     var visibility = "public"
+    var relationshipsFail = false
 
     override fun dispatch(request: RecordedRequest): MockResponse {
         val path = request.url.encodedPath
@@ -73,7 +76,8 @@ private class Page : Dispatcher() {
             )
 
             // nobody followed: a relationship list with no one in it
-            path.endsWith("/relationships") -> json("[]")
+            path.endsWith("/relationships") ->
+                if (relationshipsFail) MockResponse.Builder().code(500).body("{}").build() else json("[]")
 
             else -> json("{}")
         }
@@ -208,6 +212,36 @@ class NotificationRaiserTest {
         assertFalse(raiser().onUnreadChanged(account, count = 2))
         assertEquals(0, raised().size)
         settings.setQuietHours(null)
+        raiser().onUnreadChanged(account, count = 2)
+        assertEquals(2, raised().size)
+    }
+
+    @Test
+    fun `nothing is raised while paused, and it is raised once the pause ends`() = runBlocking {
+        val account = signIn()
+        settings.pause(noon.instant().plusSeconds(60))
+        assertFalse(raiser().onUnreadChanged(account, count = 2))
+        assertEquals(0, raised().size)
+        raiser(Clock.offset(noon, Duration.ofMinutes(2))).onUnreadChanged(account, count = 2)
+        assertEquals(2, raised().size)
+    }
+
+    @Test
+    fun `with notifications from people followed only, someone not followed raises nothing`() = runBlocking {
+        val account = signIn()
+        settings.setFrom(account.id, NotificationsFrom.Following)
+        assertTrue(raiser().onUnreadChanged(account, count = 2))
+        assertEquals(0, raised().size)
+    }
+
+    @Test
+    fun `when who is followed cannot be asked, nothing is dropped and the next poll asks again`() = runBlocking {
+        val account = signIn()
+        settings.setFrom(account.id, NotificationsFrom.Following)
+        page.relationshipsFail = true
+        assertFalse(raiser().onUnreadChanged(account, count = 2))
+        page.relationshipsFail = false
+        settings.setFrom(account.id, NotificationsFrom.Anyone)
         raiser().onUnreadChanged(account, count = 2)
         assertEquals(2, raised().size)
     }

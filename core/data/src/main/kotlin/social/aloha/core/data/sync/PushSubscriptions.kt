@@ -10,7 +10,9 @@ import kotlinx.coroutines.flow.first
 import social.aloha.core.data.Answer
 import social.aloha.core.data.ClientFactory
 import social.aloha.core.data.answer
+import social.aloha.core.datastore.AccountSettingsStore
 import social.aloha.core.datastore.AppPreferences
+import social.aloha.core.model.NotificationsFrom
 import social.aloha.core.model.SignedInAccount
 import social.aloha.core.network.ApiError
 import social.aloha.core.network.endpoints.PushEndpoints
@@ -23,6 +25,7 @@ import social.aloha.core.network.endpoints.PushEndpoints
 public class PushSubscriptions @Inject constructor(
     private val clients: ClientFactory,
     private val app: AppPreferences,
+    private val settings: AccountSettingsStore,
 ) {
     /** The ids of the accounts pushed to. */
     public val active: Flow<Set<String>> = app.pushAccounts
@@ -30,8 +33,9 @@ public class PushSubscriptions @Inject constructor(
     public suspend fun isActive(accountId: String): Boolean = accountId in app.pushAccounts.first()
 
     /** Asks [account]'s server to push to [endpoint], encrypted for [p256dh] and [auth]. */
-    public suspend fun subscribe(account: SignedInAccount, endpoint: String, p256dh: String, auth: String): ApiError? =
-        when (val answer = clients.answer(account, PushEndpoints.subscribe(endpoint, p256dh, auth))) {
+    public suspend fun subscribe(account: SignedInAccount, endpoint: String, p256dh: String, auth: String): ApiError? {
+        val policy = settings.settings(account.id).first().notificationsFrom.wire
+        return when (val answer = clients.answer(account, PushEndpoints.subscribe(endpoint, p256dh, auth, policy))) {
             is Answer.Got -> {
                 app.setPush(account.id, active = true)
                 null
@@ -39,6 +43,12 @@ public class PushSubscriptions @Inject constructor(
 
             is Answer.Missed -> answer.error
         }
+    }
+
+    /** Whose notifications [account]'s server pushes from now on, where it pushes to this device at all. */
+    public suspend fun setPolicy(account: SignedInAccount, from: NotificationsFrom) {
+        if (isActive(account.id)) clients.answer(account, PushEndpoints.policy(from.wire))
+    }
 
     /** Tells [account]'s server to stop, and stops counting on it; an unreachable server just stays unused. */
     public suspend fun unsubscribe(account: SignedInAccount) {
