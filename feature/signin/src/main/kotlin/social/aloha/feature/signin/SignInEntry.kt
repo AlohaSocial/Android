@@ -27,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
 import androidx.core.net.toUri
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -85,6 +86,9 @@ private fun SignInRoute(modifier: Modifier, onCancel: (() -> Unit)?) {
         stringResource(R.string.signin_admin_instructions, state.server.trim(), WEB_SERVER_RULES),
     )
 
+    // the clipboard answers only a window with focus
+    val focused = LocalWindowInfo.current.isWindowFocused
+    LaunchedEffect(focused) { if (focused) inviteOnClipboard(context)?.let(viewModel::onInviteFound) }
     LaunchedEffect(browserUrl) {
         browserUrl?.let {
             openInBrowser(context, it)

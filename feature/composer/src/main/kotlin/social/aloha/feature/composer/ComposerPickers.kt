@@ -40,6 +40,7 @@ import java.util.Locale
 import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.model.CustomEmoji
+import social.aloha.core.ui.languageName
 
 /** The server's custom emoji by category, each a 48 dp target named by its shortcode. */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -138,13 +139,6 @@ private fun LanguageRow(name: String, selected: Boolean, onClick: () -> Unit) {
         trailingContent = { if (selected) Icon(AlohaIcons.Check, contentDescription = null) },
         modifier = Modifier.selectable(selected, role = Role.RadioButton, onClick = onClick),
     )
-}
-
-/** [code]'s name in the reader's language, capitalised as a list item; null for no code. */
-internal fun languageName(code: String?): String? = code?.let {
-    Locale.forLanguageTag(it).getDisplayLanguage(Locale.getDefault())
-        .replaceFirstChar { first -> first.titlecase(Locale.getDefault()) }
-        .ifEmpty { null }
 }
 
 private val TARGET = 48.dp

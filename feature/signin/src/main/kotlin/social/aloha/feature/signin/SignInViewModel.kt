@@ -9,12 +9,14 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import social.aloha.core.data.Authorization
 import social.aloha.core.data.DiscoveredServer
 import social.aloha.core.data.OAuthCallbackInbox
@@ -43,6 +45,7 @@ internal class SignInViewModel @Inject constructor(
     private var discovered: DiscoveredServer? = null
     private var untrusted: ServerCertificate? = null
     private var work: Job? = null
+    private var previewing: Job? = null
 
     init {
         viewModelScope.launch {
@@ -69,9 +72,49 @@ internal class SignInViewModel @Inject constructor(
     override fun onServerChange(text: String) {
         savedState[SERVER] = text
         state.update { it.copy(server = text, step = SignInStep.EnterServer, copied = false, clientCertificate = null) }
+        preview(text)
     }
 
-    override fun onContinue() = look { finder.find(state.value.server) }
+    override fun onContinue() {
+        val typed = state.value.server
+        // a handle names its server: the field keeps the server alone
+        if ('@' in typed && "://" !in typed) {
+            finder.hostOf(typed)?.let { host ->
+                savedState[SERVER] = host
+                state.update { it.copy(server = host) }
+            }
+        }
+        look { finder.find(state.value.server) }
+    }
+
+    /** An invite link found on the clipboard, offered while no server is typed yet. */
+    fun onInviteFound(url: String) {
+        // offered once: put away, it stays away, a turned screen too
+        if (savedState.get<Boolean>(INVITE_OFFERED) == true || state.value.server.isNotBlank()) return
+        savedState[INVITE_OFFERED] = true
+        state.update { it.copy(invite = url) }
+    }
+
+    override fun onInvite(use: Boolean) {
+        val invite = state.value.invite ?: return
+        state.update { it.copy(invite = null) }
+        if (!use) return
+        onServerChange(invite.toHttpUrl().host)
+        browser.value = invite
+    }
+
+    /** A card for the server being typed: loading at once for anything that can be an address, then what it says. */
+    private fun preview(text: String) {
+        previewing?.cancel()
+        val host = finder.hostOf(text)
+        state.update { it.copy(preview = host?.let(ServerPreview::Loading)) }
+        if (host == null) return
+        previewing = viewModelScope.launch {
+            delay(PREVIEW_MILLIS)
+            val found = finder.preview(text)
+            state.update { it.copy(preview = found?.let { described -> ServerPreview.Shown(described.toCard()) }) }
+        }
+    }
 
     override fun onManualApiAddressChange(text: String) {
         state.update { it.copy(manualApiAddress = text) }
@@ -196,6 +239,8 @@ internal class SignInViewModel @Inject constructor(
     }
 
     private companion object {
+        const val PREVIEW_MILLIS = 500L
         const val SERVER = "server"
+        const val INVITE_OFFERED = "invite_offered"
     }
 }

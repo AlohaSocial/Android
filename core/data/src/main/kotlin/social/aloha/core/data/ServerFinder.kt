@@ -8,6 +8,7 @@ import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
+import social.aloha.core.model.InstanceDescription
 import social.aloha.core.network.ApiError
 import social.aloha.core.network.di.IoDispatcher
 import social.aloha.core.network.probe.CandidateKind
@@ -54,6 +55,10 @@ public class ServerFinder @Inject constructor(
             else -> probe.discover(url).toLookup()
         }
     }
+
+    /** What the server a person is typing says about itself; null while it cannot be an address, or nothing answers. */
+    public suspend fun preview(typed: String): InstanceDescription? =
+        ServerAddress.parse(typed, cleartextAllowed)?.let { probe.preview(it) }
 
     /** The host a person named, for the TLS decisions made about it; null when it cannot be an address. */
     public fun hostOf(typed: String): String? = ServerAddress.parse(typed, cleartextAllowed)?.origin?.host

@@ -35,6 +35,7 @@ import social.aloha.core.model.Writing
 import social.aloha.core.ui.ChoiceRows
 import social.aloha.core.ui.SettingsSection
 import social.aloha.core.ui.SwitchRow
+import social.aloha.core.ui.languageName
 
 /**
  * The writing settings, kept on the device: the warning about pictures without a description, asking

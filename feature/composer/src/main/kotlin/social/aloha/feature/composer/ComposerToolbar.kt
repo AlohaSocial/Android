@@ -34,6 +34,7 @@ import androidx.compose.ui.text.style.TextAlign
 import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.model.Visibility
+import social.aloha.core.ui.languageName
 
 @Composable
 internal fun Toolbar(
