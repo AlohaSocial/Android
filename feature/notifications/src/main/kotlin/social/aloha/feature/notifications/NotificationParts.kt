@@ -5,6 +5,7 @@ package social.aloha.feature.notifications
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -25,7 +26,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
@@ -42,20 +45,31 @@ import social.aloha.core.model.NotificationKind
 import social.aloha.core.ui.Avatar
 import social.aloha.core.ui.MediaImage
 
-/** Up to six faces of who did it, each a way to their profile. */
+/**
+ * Up to six faces of who did it, as many as the width holds, each a way to their profile. A screen
+ * reader finds those ways among the row's actions (see [profileActions]) rather than one stop per face.
+ */
 @Composable
-internal fun Faces(people: List<NotificationRowUi.Person>, onProfile: (String) -> Unit) {
-    Row {
-        people.take(FACES).forEach { person ->
-            val label = stringResource(R.string.notifications_profile_of, person.name)
-            IconButton(onClick = {
-                onProfile(person.id)
-            }, modifier = Modifier.semantics { contentDescription = label }) {
-                Avatar(person.avatarUrl, FACE)
+internal fun Faces(people: List<NotificationRowUi.Person>, onProfile: (String) -> Unit, modifier: Modifier = Modifier) {
+    BoxWithConstraints(modifier.clearAndSetSemantics {}) {
+        val fit = (maxWidth / FACE_TARGET).toInt().coerceAtLeast(1)
+        Row {
+            people.take(minOf(FACES, fit)).forEach { person ->
+                IconButton(onClick = { onProfile(person.id) }) { Avatar(person.avatarUrl, FACE) }
             }
         }
     }
 }
+
+/** Opening each face's profile, as a row's custom actions for a screen reader. */
+@Composable
+internal fun profileActions(people: List<NotificationRowUi.Person>, onProfile: (String) -> Unit) =
+    people.take(FACES).map { person ->
+        CustomAccessibilityAction(stringResource(R.string.notifications_profile_of, person.name)) {
+            onProfile(person.id)
+            true
+        }
+    }
 
 /** The summary, with the newest name set in medium weight and a tap on it opening their profile. */
 internal fun summaryWithName(
@@ -158,6 +172,7 @@ internal fun RequestsRow(pending: Int, onRequests: () -> Unit) {
 /** The kinds whose post shows as a compact card rather than a preview line. */
 internal val CARD_KINDS = setOf(NotificationKind.Mention, NotificationKind.Update)
 
+private val FACE_TARGET = 48.dp
 private const val FACES = 6
 private const val CARD_LINES = 6
 private val FACE = 28.dp

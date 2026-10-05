@@ -234,6 +234,7 @@ internal fun NotificationRow(
     val background = if (row.unread) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surface
     val mutable = row.kind == NotificationKind.Mention && row.statusId != null
     val mute = stringResource(R.string.notifications_mute_conversation)
+    val profiles = profileActions(row.people, actions::onProfile)
     var menu by remember { mutableStateOf(false) }
     Box {
         Row(
@@ -247,14 +248,17 @@ internal fun NotificationRow(
                 )
                 .semantics {
                     contentDescription = description
-                    if (mutable) {
-                        customActions = listOf(
+                    val muting = if (mutable) {
+                        listOf(
                             CustomAccessibilityAction(mute) {
                                 actions.onMuteConversation(row)
                                 true
                             },
                         )
+                    } else {
+                        emptyList()
                     }
+                    if (muting.isNotEmpty() || profiles.isNotEmpty()) customActions = muting + profiles
                 }
                 .padding(horizontal = AlohaSpacing.m, vertical = AlohaSpacing.s),
             horizontalArrangement = Arrangement.spacedBy(AlohaSpacing.m),
@@ -288,8 +292,7 @@ private fun RowScope.RowContent(
     )
     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(AlohaSpacing.xs)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            if (row.people.isNotEmpty()) Faces(row.people, actions::onProfile)
-            Box(Modifier.weight(1f))
+            Faces(row.people, actions::onProfile, Modifier.weight(1f))
             PostTime(row.at, now, MaterialTheme.typography.labelMedium, MaterialTheme.colorScheme.onSurfaceVariant)
         }
         Text(
