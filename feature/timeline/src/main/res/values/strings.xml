@@ -268,5 +268,38 @@
     <string name="timeline_settings_pill">Hold new posts behind a button</string>
     <!-- Summary of the setting above -->
     <string name="timeline_settings_pill_summary">Off, new posts join the timeline as they arrive, without moving what you read</string>
+    <!-- Title of the page with what arrived on Home since it was last read, and the Home menu item opening it -->
+    <string name="catch_up_title">Catch up</string>
+    <!-- On that page, when nothing arrived -->
+    <string name="catch_up_nothing">You’re all caught up</string>
+    <!-- On that page, when what arrived holds nothing of the kind or person chosen -->
+    <string name="catch_up_none_chosen">Nothing like that arrived</string>
+    <!-- At the end of that page: moves the read marker to the newest post -->
+    <string name="catch_up_done">Caught up</string>
+    <!-- Chip choosing whose posts show: all of them -->
+    <string name="catch_up_everyone">Everyone</string>
+    <!-- A person in that chip’s menu; %1$s is the name, %2$d how many posts they put on Home -->
+    <string name="catch_up_person">%1$s (%2$d)</string>
+    <!-- Order chip: newest first -->
+    <string name="catch_up_sort_time">Newest</string>
+    <!-- Order chip: most replied to first -->
+    <string name="catch_up_sort_replies">Most replies</string>
+    <!-- Order chip: most boosted first -->
+    <string name="catch_up_sort_boosts">Most boosts</string>
+    <!-- Kind chip: everything -->
+    <string name="catch_up_kind_all">All</string>
+    <!-- Kind chip: posts of their own, neither boosts nor replies -->
+    <string name="catch_up_kind_posts">Posts</string>
+    <!-- Kind chip -->
+    <string name="catch_up_kind_boosts">Boosts</string>
+    <!-- Kind chip -->
+    <string name="catch_up_kind_replies">Replies</string>
+    <!-- Kind chip: posts with pictures or video -->
+    <string name="catch_up_kind_media">Media</string>
+    <!-- Over the posts of the catch-up page; %d is how many arrived since Home was last read -->
+    <plurals name="catch_up_arrived">
+        <item quantity="one">%d post arrived since you last read</item>
+        <item quantity="other">%d posts arrived since you last read</item>
+    </plurals>
 </resources>
 

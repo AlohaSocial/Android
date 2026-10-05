@@ -140,6 +140,7 @@ internal fun ShowOptions(
     showReplies: Boolean,
     onShowBoosts: (Boolean) -> Unit,
     onShowReplies: (Boolean) -> Unit,
+    onCatchUp: (() -> Unit)? = null,
 ) {
     var open by remember { mutableStateOf(false) }
     Box {
@@ -155,6 +156,15 @@ internal fun ShowOptions(
                 leadingIcon = { Checkbox(showReplies, onCheckedChange = null) },
                 onClick = { onShowReplies(!showReplies) },
             )
+            onCatchUp?.let { catchUp ->
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.catch_up_title)) },
+                    onClick = {
+                        open = false
+                        catchUp()
+                    },
+                )
+            }
         }
     }
 }

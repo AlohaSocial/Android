@@ -61,6 +61,7 @@ import social.aloha.core.model.PinnedFeed
 import social.aloha.core.model.SignedInAccount
 import social.aloha.core.model.SwipeAction
 import social.aloha.core.model.TimelineKey
+import social.aloha.core.model.TimelineSource
 import social.aloha.core.ui.StatusNavigation
 import social.aloha.core.ui.rememberReducedMotion
 
@@ -165,16 +166,31 @@ public fun HomeRoute(
     onSearch: (() -> Unit)? = null,
     onEditFeeds: (() -> Unit)? = null,
     onComposeAs: ((accountId: String) -> Unit)? = null,
+    onCatchUp: (() -> Unit)? = null,
 ) {
     val viewModel: HomeFeedsViewModel = hiltViewModel()
     val state by viewModel.state.collectAsStateWithLifecycle()
     HomeScreen(
         state,
         viewModel,
-        HomeChrome(navigationIcon, header, onSearch, onEditFeeds, { navigation.openComposer(null) }, onComposeAs),
+        HomeChrome(
+            navigationIcon,
+            header,
+            onSearch,
+            onEditFeeds,
+            { navigation.openComposer(null) },
+            onComposeAs,
+            onCatchUp,
+        ),
         modifier,
     ) { feed, list, banner ->
-        TimelineRoute(navigation, feed = TimelineFeed.Pinned(feed.source), listState = list, header = banner)
+        TimelineRoute(
+            navigation,
+            feed = TimelineFeed.Pinned(feed.source),
+            listState = list,
+            header = banner,
+            onCatchUp = onCatchUp.takeIf { feed.source == TimelineSource.Home },
+        )
     }
 }
 
@@ -186,6 +202,7 @@ internal class HomeChrome(
     val onEditFeeds: (() -> Unit)? = null,
     val onCompose: () -> Unit = {},
     val onComposeAs: ((accountId: String) -> Unit)? = null,
+    val onCatchUp: (() -> Unit)? = null,
 )
 
 /**
@@ -241,7 +258,13 @@ internal fun HomeScreen(
                     chrome.onSearch?.let {
                         IconButton(onClick = it) { Icon(AlohaIcons.Search, stringResource(R.string.timeline_search)) }
                     }
-                    ShowOptions(state.showBoosts, state.showReplies, actions::onShowBoosts, actions::onShowReplies)
+                    ShowOptions(
+                        state.showBoosts,
+                        state.showReplies,
+                        actions::onShowBoosts,
+                        actions::onShowReplies,
+                        chrome.onCatchUp,
+                    )
                 },
             )
         },

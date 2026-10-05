@@ -92,6 +92,10 @@ public data class SearchKey(val readerId: String, val query: String = "") : NavK
 @Serializable
 public data class ListsKey(val readerId: String) : NavKey
 
+/** What arrived on [readerId]'s Home since it was last read, on one page. */
+@Serializable
+public data class CatchUpKey(val readerId: String) : NavKey
+
 /** The feeds [readerId] pins to Home, to reorder, rename, remove and add to. */
 @Serializable
 public data class FeedsKey(val readerId: String) : NavKey

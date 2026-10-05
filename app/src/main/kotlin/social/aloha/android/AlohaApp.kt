@@ -73,6 +73,7 @@ import social.aloha.core.navigation.AlbumsKey
 import social.aloha.core.navigation.AnnouncementsKey
 import social.aloha.core.navigation.AudioKey
 import social.aloha.core.navigation.BlockedKey
+import social.aloha.core.navigation.CatchUpKey
 import social.aloha.core.navigation.ComposerKey
 import social.aloha.core.navigation.ConversationsKey
 import social.aloha.core.navigation.DraftsKey
@@ -171,6 +172,7 @@ import social.aloha.feature.stories.StoriesRail
 import social.aloha.feature.thread.StatusListRoute
 import social.aloha.feature.thread.ThreadNavigation
 import social.aloha.feature.thread.ThreadRoute
+import social.aloha.feature.timeline.CatchUpRoute
 import social.aloha.feature.timeline.EditFeedsRoute
 import social.aloha.feature.timeline.HomeRoute
 import social.aloha.feature.timeline.ModesOffer
@@ -455,6 +457,7 @@ fun AlohaApp(
                                     onAnnouncements = { backStack.push(AnnouncementsKey(readerId)) },
                                     onEditFeeds = { backStack.push(FeedsKey(readerId)) },
                                     onComposeAs = { backStack.push(composerFor(it)) },
+                                    onCatchUp = { backStack.push(CatchUpKey(readerId)) },
                                 )
                                 timeline(feed, statusNavigation, links) { accountButton(accountLinks) }
                             }
@@ -486,6 +489,9 @@ fun AlohaApp(
                                 )
                             }
                             entry<FeedsKey> { key -> EditFeedsRoute(onBack = { backStack.remove(key) }) }
+                            entry<CatchUpKey> { key ->
+                                CatchUpRoute(key, statusNavigation, onBack = { backStack.remove(key) })
+                            }
                             entry<ListsKey> { key ->
                                 ListsRoute(
                                     key,
@@ -756,6 +762,7 @@ private fun ModeTimeline(
             onSearch = links.onSearch,
             onEditFeeds = links.onEditFeeds,
             onComposeAs = links.onComposeAs,
+            onCatchUp = links.onCatchUp,
         )
         // the optional modes are offered once, on the timeline every reader opens first
         return ModesOffer()
@@ -810,6 +817,7 @@ data class HomeLinks(
     val onAnnouncements: () -> Unit = {},
     val onEditFeeds: () -> Unit = {},
     val onComposeAs: (accountId: String) -> Unit = {},
+    val onCatchUp: () -> Unit = {},
 )
 
 /** Where the account button's sheet leads, one [AccountPlace] at a time. */

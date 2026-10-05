@@ -47,6 +47,7 @@ public fun TimelineRoute(
     onSearch: (() -> Unit)? = null,
     toolbar: @Composable () -> Unit = {},
     listState: LazyListState = rememberLazyListState(),
+    onCatchUp: (() -> Unit)? = null,
 ) {
     val viewModel =
         hiltViewModel<TimelineViewModel, TimelineViewModel.Factory>(key = feed.toString()) { it.create(feed) }
@@ -109,9 +110,10 @@ public fun TimelineRoute(
             rowActions
         }
     }
+    val timelineActions = rememberCaughtUp(viewModel, onCatchUp)
     TimelineScreen(
         state,
-        viewModel,
+        timelineActions,
         shown,
         modifier,
         snackbars,
@@ -149,6 +151,23 @@ public fun TimelineRoute(
             onRedraft = { nav.editPost(it, redraft = true) },
             onDismiss = { deleting = null },
         )
+    }
+}
+
+/** [viewModel]'s actions, the caught-up line opening what arrived since where [onCatchUp] is given. */
+@Composable
+private fun rememberCaughtUp(viewModel: TimelineViewModel, onCatchUp: (() -> Unit)?): TimelineScreenActions {
+    val catchUp by rememberUpdatedState(onCatchUp)
+    return remember(viewModel, onCatchUp != null) {
+        if (onCatchUp == null) {
+            viewModel
+        } else {
+            object : TimelineScreenActions by viewModel {
+                override fun onCaughtUp() {
+                    catchUp?.invoke()
+                }
+            }
+        }
     }
 }
 

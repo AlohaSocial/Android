@@ -9,6 +9,7 @@ import javax.inject.Singleton
 import social.aloha.core.data.ClientFactory
 import social.aloha.core.database.PositionDao
 import social.aloha.core.database.TimelinePositionEntity
+import social.aloha.core.model.ServerIds
 import social.aloha.core.model.SignedInAccount
 import social.aloha.core.model.TimelineKey
 import social.aloha.core.network.ApiResult
@@ -32,6 +33,10 @@ public class TimelinePositions @Inject constructor(private val dao: PositionDao,
     public suspend fun save(account: SignedInAccount, key: TimelineKey, position: TimelinePosition) {
         dao.set(TimelinePositionEntity(account.id, key.storageKey, position.statusId, position.offset))
     }
+
+    /** The newest home post read, on this device or another; null where neither says. */
+    public suspend fun lastRead(account: SignedInAccount): String? =
+        ServerIds.newest(listOfNotNull(saved(account, TimelineKey.home())?.statusId, homeMarker(account)))
 
     /** The newest home post read on any device, or null where the server keeps no marker. */
     public suspend fun homeMarker(account: SignedInAccount): String? =
