@@ -75,6 +75,15 @@ public fun NotificationsRoute(
             override fun onRequests() = onRequests()
 
             override fun onAskedForPermission() = viewModel.onAskedForPermission()
+
+            override fun onProfile(accountId: String) = navigation.openProfile(accountId, null)
+
+            override fun onFollowRequest(row: NotificationRowUi, accept: Boolean) =
+                viewModel.onFollowRequest(row.key, accept)
+
+            override fun onMarkAllRead() = viewModel.onMarkAllRead()
+
+            override fun onLearnMore(url: String) = navigation.openWeb(url)
         }
     }
     NotificationsScreen(state, actions, navigationIcon, modifier)

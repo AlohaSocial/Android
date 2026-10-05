@@ -10,7 +10,9 @@ import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import social.aloha.core.model.AttachmentKind
+import social.aloha.core.model.ModerationWarning
 import social.aloha.core.model.NotificationKind
+import social.aloha.core.model.SeveranceEvent
 import social.aloha.core.model.Status
 import social.aloha.core.model.TimelineSource
 import social.aloha.core.model.Visibility
@@ -201,6 +203,18 @@ class DtoDecodingTest {
         assertEquals(listOf("1790000000000000001"), groups[0].sampleAccountIds)
         assertEquals(NotificationKind.Unknown, groups[1].type)
         assertNotNull(decoded.value.account("1790000000000000001"))
+    }
+
+    @Test
+    fun `a group says why follows were cut, and what a moderator warned about`() {
+        val severed = """{"group_key": "s", "type": "severed_relationships", "most_recent_notification_id": "9",
+            "event": {"id": "1", "type": "domain_block", "target_name": "spam.example"}}"""
+        val warned = """{"group_key": "w", "type": "moderation_warning", "most_recent_notification_id": "10",
+            "moderation_warning": {"id": "4", "action": "silence", "text": "Use content warnings."}}"""
+        val body = """{"accounts": [], "statuses": [], "notification_groups": [$severed, $warned]}"""
+        val groups = NotificationEndpoints.grouped().decode(body).value.notificationGroups
+        assertEquals(SeveranceEvent("domain_block", "spam.example"), groups[0].severance)
+        assertEquals(ModerationWarning("4", "silence", "Use content warnings."), groups[1].warning)
     }
 
     @Test

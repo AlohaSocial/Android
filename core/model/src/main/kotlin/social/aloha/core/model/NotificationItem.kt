@@ -23,6 +23,8 @@ public data class NotificationItem(
     val latestAt: Instant,
     val newestId: String,
     val groupKey: String?,
+    val severance: SeveranceEvent? = null,
+    val warning: ModerationWarning? = null,
 ) {
     /** The newest to do it, whom the row names. */
     val newest: Account? get() = accounts.firstOrNull()
@@ -44,6 +46,8 @@ public data class NotificationItem(
                     latestAt = group.latestPageNotificationAt ?: Instant.EPOCH,
                     newestId = group.mostRecentNotificationId,
                     groupKey = group.groupKey.takeIf { group.notificationsCount > 1 },
+                    severance = group.severance,
+                    warning = group.warning,
                 )
             }
 
@@ -51,7 +55,18 @@ public data class NotificationItem(
         public fun from(notifications: List<Notification>): List<NotificationItem> = notifications
             .filterNot { it.type.isUnknown }
             .map {
-                NotificationItem(it.id, it.type, listOf(it.account), 1, it.status, it.createdAt, it.id, groupKey = null)
+                NotificationItem(
+                    it.id,
+                    it.type,
+                    listOf(it.account),
+                    1,
+                    it.status,
+                    it.createdAt,
+                    it.id,
+                    groupKey = null,
+                    severance = it.severance,
+                    warning = it.warning,
+                )
             }
 
         /**

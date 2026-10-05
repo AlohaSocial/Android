@@ -8,9 +8,11 @@ import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import social.aloha.core.model.GroupedNotifications
+import social.aloha.core.model.ModerationWarning
 import social.aloha.core.model.Notification
 import social.aloha.core.model.NotificationGroup
 import social.aloha.core.model.NotificationKind
+import social.aloha.core.model.SeveranceEvent
 import social.aloha.core.network.decoding.FlexibleIdSerializer
 import social.aloha.core.network.decoding.LenientInstantSerializer
 import social.aloha.core.network.decoding.LenientIntSerializer
@@ -24,6 +26,21 @@ internal data class NotificationDto(
     @SerialName("created_at") @Serializable(with = LenientInstantSerializer::class) val createdAt: Instant? = null,
     val account: AccountDto,
     @Serializable(with = StatusOrNull::class) val status: StatusDto? = null,
+    @SerialName("relationship_severance_event") val severance: SeveranceEventDto? = null,
+    @SerialName("moderation_warning") val warning: ModerationWarningDto? = null,
+)
+
+@Serializable
+internal data class SeveranceEventDto(
+    val type: String? = null,
+    @SerialName("target_name") val targetName: String? = null,
+)
+
+@Serializable
+internal data class ModerationWarningDto(
+    @Serializable(with = OptionalIdSerializer::class) val id: String? = null,
+    val action: String? = null,
+    val text: String? = null,
 )
 
 @Serializable
@@ -49,6 +66,8 @@ internal data class NotificationGroupDto(
     @SerialName("sample_account_ids") @Serializable(with = FlexibleIdListSerializer::class)
     val sampleAccountIds: List<String> = emptyList(),
     @SerialName("status_id") @Serializable(with = OptionalIdSerializer::class) val statusId: String? = null,
+    val event: SeveranceEventDto? = null,
+    @SerialName("moderation_warning") val warning: ModerationWarningDto? = null,
 )
 
 /** A list of ids that may arrive as numbers or strings; a malformed one is dropped. */
@@ -60,7 +79,14 @@ internal fun NotificationDto.toDomain(): Notification = Notification(
     account = account.toDomain(),
     createdAt = createdAt ?: Instant.EPOCH,
     status = status?.toDomain(),
+    severance = severance?.toDomain(),
+    warning = warning?.toDomain(),
 )
+
+private fun SeveranceEventDto.toDomain(): SeveranceEvent? = type?.let { SeveranceEvent(it, targetName.orEmpty()) }
+
+private fun ModerationWarningDto.toDomain(): ModerationWarning? =
+    id?.let { ModerationWarning(it, action.orEmpty(), text.orEmpty()) }
 
 internal fun GroupedNotificationsDto.toDomain(): GroupedNotifications = GroupedNotifications(
     accounts = accounts.map { it.toDomain() },
@@ -78,4 +104,6 @@ internal fun NotificationGroupDto.toDomain(): NotificationGroup = NotificationGr
     latestPageNotificationAt = latestPageNotificationAt,
     sampleAccountIds = sampleAccountIds,
     statusId = statusId,
+    severance = event?.toDomain(),
+    warning = warning?.toDomain(),
 )

@@ -46,6 +46,7 @@ import androidx.compose.material.icons.outlined.Cloud
 import androidx.compose.material.icons.outlined.ContentCut
 import androidx.compose.material.icons.outlined.Create
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.DoneAll
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.EditNote
 import androidx.compose.material.icons.outlined.EmojiEmotions
@@ -209,6 +210,7 @@ public object AlohaIcons {
     public val Rules: ImageVector = Icons.AutoMirrored.Outlined.Rule
     public val NewPosts: ImageVector = Icons.Filled.ArrowUpward
     public val ArrowUpward: ImageVector = Icons.Filled.ArrowUpward
+    public val MarkAllRead: ImageVector = Icons.Outlined.DoneAll
     public val ArrowDownward: ImageVector = Icons.Filled.ArrowDownward
     public val Timeline: ImageVector = Icons.Outlined.ViewAgenda
     public val AddAccount: ImageVector = Icons.Outlined.PersonAdd

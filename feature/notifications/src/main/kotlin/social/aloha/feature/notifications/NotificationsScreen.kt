@@ -9,6 +9,7 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -118,56 +119,37 @@ internal fun NotificationsScreen(
     val bar = TopAppBarDefaults.pinnedScrollBehavior()
     val listState = rememberLazyListState()
     val scrollToTop = rememberTopScroll(listState)
-    Scaffold(
-        modifier = modifier.nestedScroll(bar.nestedScrollConnection).semantics { paneTitle = title },
-        snackbarHost = { SnackbarHost(snackbars) },
-        topBar = {
-            TopAppBar(
-                title = { TopBarTitle(title, scrollToTop) },
-                scrollBehavior = bar,
-                navigationIcon = navigationIcon,
-                actions = {
-                    IconButton(onClick = actions::onRefresh) {
-                        Icon(AlohaIcons.Retry, contentDescription = stringResource(R.string.notifications_refresh))
+    BoxWithConstraints(modifier) {
+        val roomy = maxWidth >= ROOMY
+        Scaffold(
+            modifier = Modifier.nestedScroll(bar.nestedScrollConnection).semantics { paneTitle = title },
+            snackbarHost = { SnackbarHost(snackbars) },
+            topBar = {
+                TopAppBar(
+                    title = { TopBarTitle(title, scrollToTop) },
+                    scrollBehavior = bar,
+                    navigationIcon = navigationIcon,
+                    actions = { BarActions(state, actions, roomy) },
+                )
+            },
+        ) { padding ->
+            Column(Modifier.padding(padding).fillMaxSize()) {
+                Chips(state.kinds, actions)
+                PermissionBanner(state.askedForPermission, actions::onAskedForPermission)
+                state.trouble?.let { TroubleStrip(stringResource(it.message)) }
+                RefreshBox(
+                    refreshing = state.refreshing,
+                    onRefresh = actions::onRefresh,
+                    modifier = Modifier.fillMaxSize(),
+                ) {
+                    when {
+                        state.rows.isNotEmpty() -> Rows(state, actions, listState)
+                        state.loadedOnce -> Empty(state.kinds.isNotEmpty())
+                        else -> ListProgress()
                     }
-                    if (state.filtering) FilteringActions(state.pendingRequests, actions)
-                },
-            )
-        },
-    ) { padding ->
-        Column(Modifier.padding(padding).fillMaxSize()) {
-            Chips(state.kinds, actions)
-            PermissionBanner(state.askedForPermission, actions::onAskedForPermission)
-            state.trouble?.let { TroubleStrip(stringResource(it.message)) }
-            RefreshBox(
-                refreshing = state.refreshing,
-                onRefresh = actions::onRefresh,
-                modifier = Modifier.fillMaxSize(),
-            ) {
-                when {
-                    state.rows.isNotEmpty() -> Rows(state, actions, listState)
-                    state.loadedOnce -> Empty(state.kinds.isNotEmpty())
-                    else -> ListProgress()
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun FilteringActions(pending: Int, actions: NotificationsActions) {
-    val requests = if (pending > 0) {
-        pluralStringResource(R.plurals.notifications_requests_action, pending, pending)
-    } else {
-        stringResource(R.string.notifications_requests_open)
-    }
-    IconButton(onClick = actions::onRequests) {
-        BadgedBox(badge = { if (pending > 0) Badge { Text(badgeCount(pending)) } }) {
-            Icon(AlohaIcons.Filtered, contentDescription = requests)
-        }
-    }
-    IconButton(onClick = actions::onPolicy) {
-        Icon(AlohaIcons.Rules, contentDescription = stringResource(R.string.notifications_policy_action))
     }
 }
 
@@ -204,26 +186,35 @@ private fun Rows(state: NotificationsUiState, actions: NotificationsActions, lis
         modifier = Modifier.readingColumn(),
         contentPadding = PaddingValues(bottom = AlohaSpacing.xl),
     ) {
+        if (state.pendingRequests > 0) item(key = REQUESTS) { RequestsRow(state.pendingRequests, actions::onRequests) }
         state.rows.forEachIndexed { index, row ->
             if (index > 0 && state.rows[index - 1].unread && !row.unread) {
                 item(key = CAUGHT_UP) {
                     CaughtUpDivider(onClick = { scope.launch { listState.scrollToTop(tail, reduced) } })
                 }
             }
-            item(key = row.key) { Box(Modifier.itemMotion(this)) { NotificationRow(row, state.now, actions) } }
+            item(key = row.key) {
+                Box(Modifier.itemMotion(this)) { NotificationRow(row, state.now, actions, state.origin) }
+            }
         }
         if (state.loadingOlder) item { ListProgress() }
     }
 }
 
 private const val CAUGHT_UP = "caught-up"
+private const val REQUESTS = "requests"
 
 /**
  * One notification. A mention or reply can mute its conversation: a long press offers it, and a screen
  * reader finds it among the row's actions.
  */
 @Composable
-internal fun NotificationRow(row: NotificationRowUi, now: Instant, actions: NotificationsActions) {
+internal fun NotificationRow(
+    row: NotificationRowUi,
+    now: Instant,
+    actions: NotificationsActions,
+    origin: String? = null,
+) {
     val summary = summary(row)
     val age = PostAge.of(row.at, now)
     val spokenAge = age.spoken(stringResource(UiR.string.status_age_now))
@@ -256,7 +247,7 @@ internal fun NotificationRow(row: NotificationRowUi, now: Instant, actions: Noti
                 }
                 .padding(horizontal = AlohaSpacing.m, vertical = AlohaSpacing.s),
             horizontalArrangement = Arrangement.spacedBy(AlohaSpacing.m),
-        ) { RowContent(row, summary, age, actions) }
+        ) { RowContent(row, summary, age, actions, origin) }
         DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
             DropdownMenuItem(
                 text = { Text(mute) },
@@ -271,7 +262,13 @@ internal fun NotificationRow(row: NotificationRowUi, now: Instant, actions: Noti
 }
 
 @Composable
-private fun RowScope.RowContent(row: NotificationRowUi, summary: String, age: PostAge, actions: NotificationsActions) {
+private fun RowScope.RowContent(
+    row: NotificationRowUi,
+    summary: String,
+    age: PostAge,
+    actions: NotificationsActions,
+    origin: String?,
+) {
     Icon(
         row.kind.icon,
         contentDescription = null,
@@ -280,7 +277,7 @@ private fun RowScope.RowContent(row: NotificationRowUi, summary: String, age: Po
     )
     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(AlohaSpacing.xs)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            if (row.avatars.isNotEmpty()) StackedAvatars(row.avatars, AVATAR)
+            if (row.people.isNotEmpty()) Faces(row.people, actions::onProfile)
             Box(Modifier.weight(1f))
             Text(
                 age.short(stringResource(UiR.string.status_age_now)),
@@ -289,19 +286,11 @@ private fun RowScope.RowContent(row: NotificationRowUi, summary: String, age: Po
             )
         }
         Text(
-            summary,
+            summaryWithName(summary, row.name, row.accountId, actions::onProfile),
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = if (row.unread) FontWeight.SemiBold else null,
         )
-        row.preview?.let {
-            Text(
-                it,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = PREVIEW_LINES,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
+        Details(row, actions, origin)
         if (row.groupKey != null && row.others > 0) {
             TextButton(onClick = { actions.onOthers(row.groupKey) }) {
                 Text(
@@ -312,6 +301,28 @@ private fun RowScope.RowContent(row: NotificationRowUi, summary: String, age: Po
                     },
                 )
             }
+        }
+    }
+}
+
+/** What follows the summary: the post as a card or a preview, a notice, or a follow request's answers. */
+@Composable
+private fun Details(row: NotificationRowUi, actions: NotificationsActions, origin: String?) {
+    when {
+        row.kind in CARD_KINDS && (row.preview != null || row.media != null) -> CompactPost(row)
+
+        row.severance != null || row.warning != null -> NoticeCard(row, origin, actions::onLearnMore)
+
+        row.kind == NotificationKind.FollowRequest -> RequestButtons { actions.onFollowRequest(row, it) }
+
+        else -> row.preview?.let {
+            Text(
+                it,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = PREVIEW_LINES,
+                overflow = TextOverflow.Ellipsis,
+            )
         }
     }
 }
@@ -364,4 +375,3 @@ private val Trouble.message: Int
 /** How many lines of a post a notification row shows. */
 internal const val PREVIEW_LINES = 2
 private val KIND_ICON = 20.dp
-private val AVATAR = 32.dp

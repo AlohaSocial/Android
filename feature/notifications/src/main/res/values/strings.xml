@@ -60,6 +60,36 @@
     <string name="notifications_group_error">They could not be loaded.</string>
     <!-- Top bar action that loads the newest notifications, for anyone who cannot pull the list down -->
     <string name="notifications_refresh">Refresh</string>
+    <!-- Top bar button on a phone: opens the menu holding mark all as read, refresh, requests and the policy -->
+    <string name="notifications_more">More options</string>
+    <!-- Toolbar button on Notifications: everything shown counts as read -->
+    <string name="notifications_mark_all_read">Mark all as read</string>
+    <!-- Description of a face in a notification; %s is the person's name -->
+    <string name="notifications_profile_of">Profile of %s</string>
+    <!-- First row of Notifications while notifications from people the reader may not know wait to be reviewed -->
+    <string name="notifications_filtered_row">Filtered notifications</string>
+    <!-- On a notice card: opens the server's page about it -->
+    <string name="notifications_learn_more">Learn more</string>
+    <!-- A moderator's warning to the reader, before the moderator's own words if any -->
+    <string name="notifications_warning">A moderator took action on your account.</string>
+    <!-- Follows cut because the reader's server blocked another server; %s is that server -->
+    <string name="notifications_severed_domain">Your server blocked %s, so some of your followers and follows there are gone.</string>
+    <!-- Follows cut because the reader blocked a server; %s is that server -->
+    <string name="notifications_severed_user_domain">You blocked %s, so your followers and follows there are gone.</string>
+    <!-- Follows cut because a moderator suspended an account; %s is the account -->
+    <string name="notifications_severed_suspension">A moderator suspended %s, so you no longer follow each other.</string>
+    <!-- Follows cut for a reason the app does not know; %s names what it was about -->
+    <string name="notifications_severed_other">Some of your follows were cut because of %s.</string>
+    <!-- Button on a follow request's row -->
+    <string name="notifications_request_accept">Accept</string>
+    <!-- Button on a follow request's row -->
+    <string name="notifications_request_decline">Decline</string>
+    <!-- Brief notice after accepting a follow request -->
+    <string name="notifications_request_accepted">Follow request accepted</string>
+    <!-- Brief notice after declining a follow request -->
+    <string name="notifications_request_declined">Follow request declined</string>
+    <!-- Brief notice when the server did not take the answer to a follow request -->
+    <string name="notifications_request_failed">That didn’t go through. Try again.</string>
     <!-- Button letting one sender's notifications through, as read aloud: %s is the sender -->
     <string name="requests_accept_from">Let notifications from %s through</string>
     <!-- Button dropping one sender's held notifications, as read aloud: %s is the sender -->
@@ -178,4 +208,9 @@
     <string name="settings_push_none">Install a UnifiedPush app, such as ntfy, to get notifications the moment they happen. Until then, Aloha Social checks for them regularly.</string>
     <!-- Row that opens the list of UnifiedPush apps in the browser -->
     <string name="settings_push_find">Find a UnifiedPush app</string>
+    <!-- Under "Filtered notifications"; %d is how many people they come from -->
+    <plurals name="notifications_filtered_people">
+        <item quantity="one">%d person you may know</item>
+        <item quantity="other">%d people you may know</item>
+    </plurals>
 </resources>

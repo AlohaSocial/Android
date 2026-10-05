@@ -24,6 +24,7 @@ import social.aloha.core.model.NotificationItem
 import social.aloha.core.model.NotificationKind
 import social.aloha.core.model.SignedInAccount
 import social.aloha.core.network.endpoints.AccountEndpoints
+import social.aloha.core.network.endpoints.FollowRequestEndpoints
 import social.aloha.core.network.endpoints.MarkerEndpoints
 import social.aloha.core.network.endpoints.NotificationEndpoints
 import social.aloha.core.network.endpoints.PageAnchor
@@ -145,6 +146,18 @@ public class NotificationsRepository @Inject constructor(
         if (!NotificationItem.isNewer(newestId, written[account.id])) return
         val answer = clients.answer(account, MarkerEndpoints.write(home = null, notifications = newestId))
         if (answer is Answer.Got) remember(account.id, newestId)
+    }
+
+    /** Accepts or declines [accountId]'s request to follow [account]; true when the server took it. */
+    public suspend fun answerFollowRequest(account: SignedInAccount, accountId: String, accept: Boolean): Boolean {
+        val request = if (accept) {
+            FollowRequestEndpoints.authorise(
+                accountId,
+            )
+        } else {
+            FollowRequestEndpoints.reject(accountId)
+        }
+        return clients.answer(account, request) is Answer.Got
     }
 
     private fun remember(accountId: String, id: String) {

@@ -3,6 +3,7 @@
 
 package social.aloha.feature.notifications
 
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -34,8 +35,11 @@ import social.aloha.core.data.timeline.StatusInteractions
 import social.aloha.core.data.timeline.Toggle
 import social.aloha.core.data.trouble
 import social.aloha.core.model.Account
+import social.aloha.core.model.MediaAttachment
+import social.aloha.core.model.ModerationWarning
 import social.aloha.core.model.NotificationItem
 import social.aloha.core.model.NotificationKind
+import social.aloha.core.model.SeveranceEvent
 import social.aloha.core.model.SignedInAccount
 import social.aloha.core.ui.minuteTicks
 
@@ -45,14 +49,22 @@ internal data class NotificationRowUi(
     val kind: NotificationKind,
     val name: String?,
     val others: Int,
-    val avatars: List<String?>,
+    /** Who did it, newest first, as many as the server sent: each face opens its profile. */
+    val people: List<Person>,
     val preview: String?,
     val statusId: String?,
     val accountId: String?,
     val groupKey: String?,
     val unread: Boolean,
     val at: Instant,
-)
+    /** The post's first picture or video, for a mention shown as a compact card. */
+    val media: MediaAttachment? = null,
+    val severance: SeveranceEvent? = null,
+    val warning: ModerationWarning? = null,
+) {
+    @Immutable
+    data class Person(val id: String, val name: String, val avatarUrl: String?)
+}
 
 /** Everyone in a group, once asked for: null while loading, [failed] when it could not be. */
 internal data class GroupSheet(val accounts: List<Account>? = null, val failed: Boolean = false)
@@ -72,6 +84,8 @@ internal data class NotificationsUiState(
     val askedForPermission: Boolean = false,
     /** What a brief notice says after an action, as a string resource; null for none. */
     val notice: Int? = null,
+    /** The reader's server's address, where "Learn more" leads. */
+    val origin: String? = null,
 )
 
 /**
@@ -101,7 +115,20 @@ internal class NotificationsViewModel @Inject constructor(
         val pendingRequests: Int = 0,
         val group: GroupSheet? = null,
         val notice: Int? = null,
-    )
+    ) {
+        fun loaded(answer: Answer<NotificationPage>, marker: String?): Control = when (answer) {
+            is Answer.Got -> copy(
+                items = answer.value.items,
+                marker = marker,
+                olderThan = answer.value.olderThan,
+                refreshing = false,
+                loadedOnce = true,
+                trouble = null,
+            )
+
+            is Answer.Missed -> copy(refreshing = false, loadedOnce = true, trouble = answer.error.trouble)
+        }
+    }
 
     private val account: StateFlow<SignedInAccount?> = accounts.activeAccount
     private val control = MutableStateFlow(Control())
@@ -134,6 +161,7 @@ internal class NotificationsViewModel @Inject constructor(
                 now = now,
                 askedForPermission = asked,
                 notice = control.notice,
+                origin = account?.let { "https://${it.host}" },
             )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_MILLIS), NotificationsUiState())
 
@@ -218,6 +246,32 @@ internal class NotificationsViewModel @Inject constructor(
         }
     }
 
+    /** Everything shown counts as read, on the server too. */
+    fun onMarkAllRead() {
+        val newest = control.value.items.map { it.newestId }
+            .reduceOrNull { a, b -> if (NotificationItem.isNewer(b, a)) b else a } ?: return
+        control.update { it.copy(marker = newest) }
+        account.value?.let { viewModelScope.launch { repository.markRead(it, newest) } }
+    }
+
+    /** Accepts or declines the follow request of row [key]; the row goes once the server took the answer. */
+    fun onFollowRequest(key: String, accept: Boolean) {
+        val item = control.value.items.firstOrNull { it.key == key } ?: return
+        val requester = item.newest?.id ?: return
+        val reader = account.value ?: return
+        viewModelScope.launch {
+            val done = repository.answerFollowRequest(reader, requester, accept)
+            control.update {
+                val notice = when {
+                    !done -> R.string.notifications_request_failed
+                    accept -> R.string.notifications_request_accepted
+                    else -> R.string.notifications_request_declined
+                }
+                it.copy(items = if (done) it.items - item else it.items, notice = notice)
+            }
+        }
+    }
+
     fun onNoticeShown() {
         control.update { it.copy(notice = null) }
     }
@@ -262,19 +316,6 @@ internal class NotificationsViewModel @Inject constructor(
         }
     }
 
-    private fun Control.loaded(answer: Answer<NotificationPage>, marker: String?): Control = when (answer) {
-        is Answer.Got -> copy(
-            items = answer.value.items,
-            marker = marker,
-            olderThan = answer.value.olderThan,
-            refreshing = false,
-            loadedOnce = true,
-            trouble = null,
-        )
-
-        is Answer.Missed -> copy(refreshing = false, loadedOnce = true, trouble = answer.error.trouble)
-    }
-
     private companion object {
         const val STOP_MILLIS = 5_000L
     }
@@ -285,13 +326,16 @@ private fun NotificationItem.toRow(marker: String?) = NotificationRowUi(
     kind = kind,
     name = newest?.bestDisplayName,
     others = others,
-    avatars = accounts.map { it.avatar },
+    people = accounts.map { NotificationRowUi.Person(it.id, it.bestDisplayName, it.avatar) },
     preview = preview(),
     statusId = status?.id,
     accountId = newest?.id,
     groupKey = groupKey,
     unread = marker != null && NotificationItem.isNewer(newestId, marker),
     at = latestAt,
+    media = status?.displayed?.mediaAttachments?.firstOrNull(),
+    severance = severance,
+    warning = warning,
 )
 
 private fun Set<NotificationKind>.expanded(): Set<NotificationKind> =
