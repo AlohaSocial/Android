@@ -18,6 +18,20 @@ internal data class Author(val id: String, val handle: String, val name: String,
 @Immutable
 internal data class ReplyContext(val author: String, val excerpt: String)
 
+/** The post a new one quotes: who wrote it, how it begins, who may see it, and where it lives. */
+@Immutable
+internal data class QuoteUi(
+    val statusId: String,
+    val author: String,
+    val excerpt: String,
+    val url: String,
+    val visibility: Visibility,
+    val own: Boolean,
+)
+
+/** What the composer says once about a quote: what quoting a quiet public post does, or why it is a link. */
+internal enum class QuoteNotice { Unlisted, Linked }
+
 /** A completion offered for the word at the cursor. */
 @Immutable
 internal data class Suggestion(val replacement: String, val label: String, val imageUrl: String?)
@@ -80,6 +94,12 @@ internal data class ComposerUiState(
     val spoilerShown: Boolean = false,
     val quotePolicies: List<QuotePolicy> = emptyList(),
     val quotePolicy: QuotePolicy = QuotePolicy.Anyone,
+    val quote: QuoteUi? = null,
+    val quoteNotice: QuoteNotice? = null,
+    /** Posting waits on the writer: someone else's followers-only post is about to be quoted. */
+    val confirmQuote: Boolean = false,
+    /** The writer said yes to that once, for this post. */
+    val quoteConfirmed: Boolean = false,
     /** Characters left in each segment of the thread, negative when over. */
     val remaining: List<Int> = listOf(0),
     val games: List<ComposerGames.Kind> = emptyList(),

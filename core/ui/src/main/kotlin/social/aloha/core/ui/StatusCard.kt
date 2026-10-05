@@ -76,6 +76,12 @@ public interface StatusActions {
 
     public fun onMenu(row: StatusRowUi, item: StatusMenuItem)
 
+    /** A quote of [row], or the request for one, in the composer; offered only where [quotes]. */
+    public fun onQuote(row: StatusRowUi) {}
+
+    /** Whether this screen quotes: then a tap on boost asks whether to boost or to quote. */
+    public val quotes: Boolean get() = false
+
     /** The edits of [row], from its "edited" mark; without a screen of its own for them, the post. */
     public fun onHistory(row: StatusRowUi): Unit = onOpen(row.statusId)
 
@@ -325,13 +331,22 @@ private fun Actions(row: StatusRowUi, actions: StatusActions) {
     val tick = rememberTick()
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     ActionButton(AlohaIcons.Reply, row.counts.replies, muted) { actions.onReply(row) }
-    ActionButton(
-        if (row.state.boosted) AlohaIcons.Boosted else AlohaIcons.Boost,
-        row.counts.boosts,
-        if (row.state.boosted) semantic.boost else muted,
-    ) {
-        tick(!row.state.boosted)
-        actions.onBoost(row)
+    // where the screen quotes, the tick waits for the menu's choice
+    val boosting = remember(row, actions) {
+        object : StatusActions by actions {
+            override fun onBoost(row: StatusRowUi) {
+                tick(!row.state.boosted)
+                actions.onBoost(row)
+            }
+        }
+    }
+    BoostButton(row, boosting) { onClick ->
+        ActionButton(
+            if (row.state.boosted) AlohaIcons.Boosted else AlohaIcons.Boost,
+            row.counts.boosts,
+            if (row.state.boosted) semantic.boost else muted,
+            onClick,
+        )
     }
     ActionButton(
         if (row.state.favourited) AlohaIcons.Favourited else AlohaIcons.Favourite,

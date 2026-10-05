@@ -44,6 +44,13 @@ class DtoDecodingTest {
     }
 
     @Test
+    fun `what quoting a post comes to for the reader is read from quote_approval, and a stray shape is ignored`() {
+        val approval = """, "quote_approval": {"automatic": [], "manual": ["public"], "current_user": "manual"}"""
+        assertEquals("manual", decodeStatus(status(approval)).quoteApproval)
+        assertEquals(null, decodeStatus(status(""", "quote_approval": "public"""")).quoteApproval)
+    }
+
+    @Test
     fun `an account without acct falls back to its username`() {
         val s = decodeStatus("""{"id": "1", "account": {"id": "2", "username": "bob", "avatar": null}}""")
         assertEquals("bob", s.account.acct)

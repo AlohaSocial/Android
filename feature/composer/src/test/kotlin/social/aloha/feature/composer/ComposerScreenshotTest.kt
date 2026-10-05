@@ -192,6 +192,13 @@ class ComposerScreenshotTest {
     fun posting() = capture("composer-posting") { NewPost(fresh.copy(posting = true)) }
 
     @Test
+    fun quote() = capture("composer-quote") {
+        val excerpt = "Surf report: waist high and glassy, going out at seven."
+        val quote = QuoteUi("q", "Bob", excerpt, "https://example.test/q", Visibility.Unlisted, own = false)
+        NewPost(fresh.copy(quote = quote, quoteNotice = QuoteNotice.Unlisted))
+    }
+
+    @Test
     fun story() = capture("composer-story") {
         val picture = Attachment("beach", File("beach.jpg"), "beach.jpg", "image/jpeg", UploadState.Done("1", null))
         NewPost(fresh.copy(attachments = listOf(listOf(picture)), storyFits = true, asStory = true, storySeconds = 10))

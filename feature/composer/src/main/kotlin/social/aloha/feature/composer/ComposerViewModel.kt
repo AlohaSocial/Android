@@ -124,6 +124,9 @@ internal class ComposerViewModel @AssistedInject constructor(
     val library = Library(compose, attachments, viewModelScope) { focused.takeIf { room > 0 } }
 
     private val control = MutableStateFlow(ComposerUiState())
+
+    /** The post quoted, and what quoting it asks of the writer. */
+    val quoting = Quoting(compose, preferences, control, viewModelScope) { onPost() }
     private val completions = Completions(compose, viewModelScope)
     private val poster = ThreadPoster(sender, interactions, gameWords(context))
 
@@ -280,7 +283,9 @@ internal class ComposerViewModel @AssistedInject constructor(
     }
 
     fun onVisibility(visibility: Visibility) {
-        control.update { if (visibility in it.visibilities) it.copy(visibility = visibility) else it }
+        if (visibility !in control.value.visibilities) return
+        control.update { it.copy(visibility = visibility) }
+        quoting.onVisibility(visibility, segments)
     }
 
     fun onLanguage(language: String?) = control.update { it.copy(language = language) }
@@ -367,6 +372,7 @@ internal class ComposerViewModel @AssistedInject constructor(
         val account = reader?.takeIf { uiState.value.canPost } ?: return
         control.update { it.copy(posting = true, failure = null) }
         viewModelScope.launch {
+            if (quoting.holds()) return@launch
             val state = uiState.value
             if (state.sharesStory) {
                 val failure = story.share(account, state, segments.first().text, onShared = drafts::posted)
@@ -378,10 +384,7 @@ internal class ComposerViewModel @AssistedInject constructor(
                 return@launch
             }
             // the card is attached for the server alone, so the post takes every attachment there is
-            val texts = segments.mapIndexed { index, value ->
-                val number = numbering(state.numberThreads, index, segments.size)
-                if (number.isEmpty()) value.text else value.text.trimEnd() + number
-            }
+            val texts = numbered(segments, state.numberThreads)
             val post = state.draft(texts, spoiler, parent?.id, attachments.byPost.value)
             // what was described since uploading goes first: a post must not go out without it
             val failure = if (attachments.sync(account)) {
@@ -448,6 +451,7 @@ internal class ComposerViewModel @AssistedInject constructor(
             key.sharedText?.let { text -> segments[0] = TextFieldValue(text, TextRange(text.length)) }
             onPicked(key.sharedMedia.map { it.toUri() })
         }
+        quoting.start(account, draft, key.quoteId, segments)
         control.update { it.copy(ready = true) }
     }
 
@@ -508,6 +512,12 @@ private fun ComposerUiState.withDefaults(preferences: Preferences?, writing: Wri
 
 /** The number a part of a thread ends in, where the writer numbers threads. */
 private fun numbering(on: Boolean, index: Int, size: Int): String = if (on) Writing.numbering(index, size) else ""
+
+/** Each segment's text as it goes out, its number after it where the thread is numbered. */
+private fun numbered(segments: List<TextFieldValue>, on: Boolean): List<String> = segments.mapIndexed { index, value ->
+    val number = numbering(on, index, segments.size)
+    if (number.isEmpty()) value.text else value.text.trimEnd() + number
+}
 
 private fun SignedInAccount.toAuthor() = Author(id, qualifiedHandle, displayName.ifBlank { handle }, avatarUrl)
 

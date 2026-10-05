@@ -133,7 +133,7 @@ private fun rememberActions(
     val camera = rememberCamera(viewModel, state, dialogs)
     val context = LocalContext.current
     return remember(viewModel, dialogs) {
-        object : ComposerActions {
+        object : ComposerActions, QuoteActions by viewModel.quoting {
             override fun onClose() {
                 if (viewModel.hasWriting && current.posted == 0) dialogs.discarding.value = true else done()
             }
@@ -313,6 +313,7 @@ private fun ComposerDialogs(state: ComposerUiState, viewModel: ComposerViewModel
         }
     }
     LibraryDialogs(viewModel, dialogs)
+    if (state.confirmQuote) QuoteConfirmDialog(viewModel.quoting::onConfirmQuote, viewModel.quoting::onCancelQuote)
     if (dialogs.picker.value == Picker.Schedule) {
         ScheduleDialog(
             state.scheduledAt,

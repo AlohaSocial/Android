@@ -265,12 +265,13 @@ internal abstract class ComposerTestSetup {
     protected suspend fun open(
         writing: Writing = Writing(),
         key: (String) -> ComposerKey = { ComposerKey(it) },
+        software: String = "nextcloud-social",
     ): ComposerViewModel {
         Dispatchers.setMain(Dispatchers.Unconfined)
         WorkManagerTestInitHelper.initializeTestWorkManager(context)
         val apiBase = server.url("/")
         val capabilities = ServerCapabilities.minimal(apiBase.toString()).copy(
-            softwareName = "nextcloud-social",
+            softwareName = software,
             limits = ServerLimits.MastodonDefaults.copy(maxStatusCharacters = 5000),
             stories = true,
         )

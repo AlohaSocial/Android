@@ -459,4 +459,24 @@
     <string name="composer_settings_language_server">As my server says</string>
     <!-- A file size in megabytes; %1$s is the number, already written as the reader's language writes numbers -->
     <string name="composer_size_mb">%1$s MB</string>
+    <!-- The text field's hint while a post is being quoted -->
+    <string name="composer_placeholder_quote">Add something to the conversation</string>
+    <!-- Button on the quoted post in the composer: the new post no longer quotes it -->
+    <string name="composer_quote_remove">Remove the quote</string>
+    <!-- Said once when quoting a quiet public post -->
+    <string name="composer_quote_unlisted">This post is quiet public: your quote shows it to your followers.</string>
+    <!-- Said when the post is set to the people mentioned only, which cannot quote -->
+    <string name="composer_quote_linked">A post for the people mentioned only cannot quote, so the quoted post is linked instead.</string>
+    <!-- Puts the note above away -->
+    <string name="composer_quote_got_it">Got it</string>
+    <!-- Asked before quoting someone else's followers-only post -->
+    <string name="composer_quote_confirm_title">Quote a followers-only post?</string>
+    <!-- The question above, explained -->
+    <string name="composer_quote_confirm_body">Only its author’s followers may see it. Your quote can show it to people who are not.</string>
+    <!-- Checkbox in the question above -->
+    <string name="composer_quote_dont_ask">Don’t ask again</string>
+    <!-- Answers yes to the question above -->
+    <string name="composer_quote_confirm">Quote</string>
+    <!-- Answers no to the question above -->
+    <string name="composer_quote_cancel">Cancel</string>
 </resources>

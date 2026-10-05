@@ -128,6 +128,12 @@
     <string name="status_action_reply">Reply</string>
     <!-- Action: boost a post, sharing it with one's followers -->
     <string name="status_action_boost">Boost</string>
+    <!-- Post action: writes a post of one's own with this one quoted under it -->
+    <string name="status_action_quote">Quote</string>
+    <!-- Post action where the author approves each quote: asks them to allow it -->
+    <string name="status_action_request_quote">Request to quote</string>
+    <!-- Under the disabled Quote item: why it cannot be chosen -->
+    <string name="status_quote_denied">The author allows no quotes of this post</string>
     <!-- Action: undo a boost -->
     <string name="status_action_unboost">Undo boost</string>
     <!-- Action: favourite a post -->

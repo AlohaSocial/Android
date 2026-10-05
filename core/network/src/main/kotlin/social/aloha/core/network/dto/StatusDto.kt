@@ -64,6 +64,8 @@ internal data class StatusDto(
     @Serializable(with = QuoteSerializer::class) val quote: QuotedStatusDto? = null,
     @SerialName("quote_approval_policy") @Serializable(with = LenientTextSerializer::class)
     val quoteApprovalPolicy: String? = null,
+    @SerialName("quote_approval") @Serializable(with = QuoteApprovalOrNull::class)
+    val quoteApproval: QuoteApprovalDto? = null,
     @SerialName("dislikes_count") @Serializable(with = LenientIntSerializer::class) val dislikesCount: Int = 0,
     @Serializable(with = LenientBoolSerializer::class) val disliked: Boolean = false,
     @Serializable(with = OptionalBoolSerializer::class) val archived: Boolean? = null,
@@ -111,6 +113,7 @@ internal fun StatusDto.toDomain(): Status = Status(
     quoteId = quoteId,
     quote = quote?.toDomain(),
     quoteApprovalPolicy = quoteApprovalPolicy,
+    quoteApproval = quoteApproval?.currentUser,
     dislikesCount = dislikesCount,
     disliked = disliked,
     archived = archived,

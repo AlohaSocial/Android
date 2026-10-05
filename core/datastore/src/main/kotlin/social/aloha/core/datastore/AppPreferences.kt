@@ -119,6 +119,8 @@ public class AppPreferences(private val store: DataStore<Preferences>) {
             numberThreads = it[NUMBER_THREADS] ?: false,
             visibility = Visibility.entries.firstOrNull { v -> v.name == it[DEFAULT_VISIBILITY] },
             language = it[DEFAULT_LANGUAGE]?.takeIf { language -> language.isNotBlank() },
+            quoteUnlistedNoted = it[QUOTE_UNLISTED_NOTED] ?: false,
+            askBeforeFollowersQuote = it[ASK_FOLLOWERS_QUOTE] ?: true,
         )
     }
 
@@ -129,6 +131,8 @@ public class AppPreferences(private val store: DataStore<Preferences>) {
             it[NUMBER_THREADS] = writing.numberThreads
             it[DEFAULT_VISIBILITY] = writing.visibility?.name.orEmpty()
             it[DEFAULT_LANGUAGE] = writing.language.orEmpty()
+            it[QUOTE_UNLISTED_NOTED] = writing.quoteUnlistedNoted
+            it[ASK_FOLLOWERS_QUOTE] = writing.askBeforeFollowersQuote
         }
     }
 
@@ -164,6 +168,8 @@ public class AppPreferences(private val store: DataStore<Preferences>) {
         val WIFI_ONLY_SYNC = booleanPreferencesKey("wifi_only_sync")
         val ASKED_NOTIFICATIONS = booleanPreferencesKey("asked_for_notifications")
         val SILENCED_NUDGES = stringSetPreferencesKey("silenced_nudges")
+        val QUOTE_UNLISTED_NOTED = booleanPreferencesKey("quote_unlisted_noted")
+        val ASK_FOLLOWERS_QUOTE = booleanPreferencesKey("ask_before_followers_quote")
         val PUSH_ACCOUNTS = stringSetPreferencesKey("push_accounts")
         val CONFIRM_POST = booleanPreferencesKey("confirm_before_posting")
         val ALWAYS_WARNING = booleanPreferencesKey("always_show_warning")

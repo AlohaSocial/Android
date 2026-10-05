@@ -116,6 +116,7 @@ import social.aloha.core.navigation.TopLevelKey
 import social.aloha.core.navigation.VideoKey
 import social.aloha.core.navigation.WatchKey
 import social.aloha.core.navigation.YearKey
+import social.aloha.core.ui.ComposerStart
 import social.aloha.core.ui.LocalReadingStyle
 import social.aloha.core.ui.LocalReselections
 import social.aloha.core.ui.StatusNavigation
@@ -325,8 +326,14 @@ fun AlohaApp(
                 backStack.push(ComposerKey(readerId, replyToId, draftId = UUID.randomUUID().toString()))
             }
 
-            override fun openStoryComposer() {
-                backStack.push(ComposerKey(readerId, draftId = UUID.randomUUID().toString(), story = true))
+            override fun openComposerFor(start: ComposerStart) {
+                val draftId = UUID.randomUUID().toString()
+                backStack.push(
+                    when (start) {
+                        ComposerStart.Story -> ComposerKey(readerId, draftId = draftId, story = true)
+                        is ComposerStart.Quote -> ComposerKey(readerId, quoteId = start.statusId, draftId = draftId)
+                    },
+                )
             }
 
             override fun report(accountId: String, handle: String, statusId: String?) {
@@ -752,7 +759,7 @@ private fun ModeTimeline(
             when (feed.mode) {
                 FeedMode.Photos -> StoriesRail(
                     onProfile = { navigation.openProfile(it, null) },
-                    onNewStory = navigation::openStoryComposer,
+                    onNewStory = { navigation.openComposerFor(ComposerStart.Story) },
                 )
 
                 FeedMode.Video -> ContinueWatching(onOpen = navigation::openVideo)

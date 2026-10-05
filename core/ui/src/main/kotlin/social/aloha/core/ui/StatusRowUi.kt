@@ -54,6 +54,8 @@ public data class StatusRowUi(
     val language: String?,
     /** What the server knows about the post's video beyond the file: its title, length, views. */
     val video: VideoDetails? = null,
+    /** What a quote of this post comes to: one, a request, nothing, or a link where quotes are unknown. */
+    val quoteAccess: QuoteAccess = QuoteAccess.Link,
     /** The words a filter matched, painted once the reader shows the filtered post anyway. */
     val filterMatches: List<String> = emptyList(),
 ) {
@@ -149,18 +151,14 @@ public class StatusRowMapper(private val cache: RichTextCache, private val color
             place = shown.place,
             archived = shown.archived == true,
             reactions = shown.reactions.orEmpty(),
-            counts = StatusRowUi.Counts(
-                shown.repliesCount,
-                shown.reblogsCount,
-                shown.favouritesCount,
-                shown.dislikesCount,
-            ),
+            counts = countsOf(shown),
             state = StatusRowUi.State(shown.reblogged, shown.favourited, shown.bookmarked, shown.pinned, shown.muted),
             filterWarning = filterWarning,
             isOwn = viewerAccountId != null && shown.account.id == viewerAccountId,
             language = shown.language,
             video = shown.video,
             filterMatches = filterMatches,
+            quoteAccess = quoteAccess(shown, viewerAccountId != null && shown.account.id == viewerAccountId),
         )
     }
 
@@ -210,3 +208,35 @@ public class StatusRowMapper(private val cache: RichTextCache, private val color
         val WITHDRAWN = setOf("revoked", "rejected")
     }
 }
+
+/** What quoting a post comes to for the reader. */
+public enum class QuoteAccess {
+    /** The quote is made at once. */
+    Quote,
+
+    /** The author approves each quote, so it goes as a request. */
+    Request,
+
+    /** The author allows no quote, or none from the reader. */
+    Denied,
+
+    /** The server says nothing of quotes: a link to the post stands in. */
+    Link,
+}
+
+/**
+ * What quoting [shown] comes to: the server's answer for the reader where it gives one, else the post's
+ * policy; a direct post is never quoted, and the reader may always quote their own.
+ */
+internal fun quoteAccess(shown: Status, own: Boolean): QuoteAccess = when {
+    shown.visibility == Visibility.Direct -> QuoteAccess.Denied
+    own -> QuoteAccess.Quote
+    shown.quoteApproval == "automatic" -> QuoteAccess.Quote
+    shown.quoteApproval == "manual" -> QuoteAccess.Request
+    shown.quoteApproval == "denied" || shown.quoteApprovalPolicy == "nobody" -> QuoteAccess.Denied
+    shown.quoteApproval != null || shown.quoteApprovalPolicy != null -> QuoteAccess.Quote
+    else -> QuoteAccess.Link
+}
+
+private fun countsOf(shown: Status) =
+    StatusRowUi.Counts(shown.repliesCount, shown.reblogsCount, shown.favouritesCount, shown.dislikesCount)

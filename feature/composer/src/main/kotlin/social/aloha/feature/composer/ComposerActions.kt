@@ -11,7 +11,8 @@ import social.aloha.core.model.Visibility
 /** What the composer's controls do; the screen itself decides nothing. */
 internal interface ComposerActions :
     MediaActions,
-    LaterActions {
+    LaterActions,
+    QuoteActions {
     fun onClose()
 
     fun onPost()

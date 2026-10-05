@@ -112,6 +112,7 @@ internal fun ComposerUiState.draft(
     visibility = visibility,
     language = language,
     quotePolicy = quotePolicy.wire,
+    quotedId = quote?.statusId,
     mediaSensitive = mediaSensitive,
     poll = poll?.let { DraftPoll(it.choices, it.seconds, it.multiple, it.hideTotals) },
     scheduledAt = scheduledAt,

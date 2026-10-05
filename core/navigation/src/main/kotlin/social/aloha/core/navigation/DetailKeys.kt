@@ -64,6 +64,7 @@ public data class ComposerKey(
     val sharedMedia: List<String> = emptyList(),
     val story: Boolean = false,
     val direct: Boolean = false,
+    val quoteId: String? = null,
 ) : NavKey
 
 /**

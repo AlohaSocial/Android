@@ -215,7 +215,7 @@ private fun countLabel(action: String, count: Int): String = if (count >
 @Composable
 private fun toggleActions(row: StatusRowUi, actions: StatusActions): List<CustomAccessibilityAction> {
     fun action(label: String, block: () -> Unit) = CustomAccessibilityAction(label) { block().let { true } }
-    return listOf(
+    return listOfNotNull(
         action(countLabel(stringResource(R.string.status_action_reply), row.counts.replies)) { actions.onReply(row) },
         action(
             countLabel(
@@ -225,6 +225,8 @@ private fun toggleActions(row: StatusRowUi, actions: StatusActions): List<Custom
         ) {
             actions.onBoost(row)
         },
+        action(stringResource(quoteLabel(row.quoteAccess))) { actions.onQuote(row) }
+            .takeIf { actions.quotes && row.quoteAccess != QuoteAccess.Denied },
         action(
             countLabel(
                 stringResource(

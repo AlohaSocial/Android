@@ -23,6 +23,13 @@ import androidx.core.content.getSystemService
 import androidx.core.net.toUri
 import social.aloha.core.model.Card
 
+/** A composer opened for more than a post or a reply. */
+public sealed interface ComposerStart {
+    public data object Story : ComposerStart
+
+    public data class Quote(val statusId: String) : ComposerStart
+}
+
 /** Where a post sends the person: its thread, a profile by id or handle, a hashtag, or a reply to it. */
 public interface StatusNavigation {
     /** The thread of [statusId]; with [history], the post's edits open over it. */
@@ -38,8 +45,8 @@ public interface StatusNavigation {
     /** The composer: a new post, or a reply to [replyToId] when given. */
     public fun openComposer(replyToId: String?)
 
-    /** The composer, for a story; only a server with stories offers it. */
-    public fun openStoryComposer() {}
+    /** The composer, for a story (only a server with stories offers it) or a quote. */
+    public fun openComposerFor(start: ComposerStart) {}
 
     /** The composer on the reader's own post [statusId]: edited, or deleted and written again when [redraft]. */
     public fun editPost(statusId: String, redraft: Boolean)
@@ -131,6 +138,10 @@ public abstract class RoutedStatusActions(
     private val albums: () -> Boolean = { false },
     private val archive: () -> Boolean = { false },
 ) : StatusActions {
+    override val quotes: Boolean get() = true
+
+    override fun onQuote(row: StatusRowUi): Unit = navigation().openComposerFor(ComposerStart.Quote(row.statusId))
+
     override val menu: Set<StatusMenuItem>
         get() = buildSet {
             addAll(SHARED)

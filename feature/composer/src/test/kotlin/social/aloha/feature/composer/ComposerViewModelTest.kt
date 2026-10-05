@@ -93,6 +93,55 @@ internal class ComposerViewModelTest : ComposerTestSetup() {
         }
 
     @Test
+    fun `a quote shows the post under the text and goes out quoting it`() = runBlocking {
+        posts.parent = posts.status("p")
+        val viewModel = open(key = { ComposerKey(it, quoteId = "p") })
+        assertEquals("p", viewModel.await { it.ready && it.quote != null }.quote?.statusId)
+        viewModel.type(0, "So true")
+        viewModel.await { it.canPost }
+        viewModel.onPost()
+        viewModel.await { it.done }
+        assertEquals("p", posts.sent.single().second["quoted_id"])
+    }
+
+    @Test
+    fun `where the server knows no quotes, a mention and a link stand in, the cursor above them`() = runBlocking {
+        // a post that says nothing of who may quote it, on a server that has no quotes
+        posts.parent = JsonObject(posts.status("p") - "quote_approval_policy" - "quote_approval")
+        val viewModel = open(key = { ComposerKey(it, quoteId = "p") }, software = "mastodon")
+        assertEquals(null, viewModel.await { it.ready }.quote)
+        val text = viewModel.segments[0]
+        assertTrue(text.text, text.text.startsWith("\n\n@") && " http" in text.text)
+        assertEquals(0, text.selection.start)
+    }
+
+    @Test
+    fun `someone else's followers-only post is quoted only once the writer says yes`() = runBlocking {
+        posts.parent = posts.status("p", visibility = "private")
+        val viewModel = open(key = { ComposerKey(it, quoteId = "p") })
+        viewModel.await { it.ready && it.quote != null }
+        viewModel.type(0, "Look")
+        viewModel.await { it.canPost }
+        viewModel.onPost()
+        viewModel.await { it.confirmQuote }
+        assertTrue(posts.sent.isEmpty())
+        viewModel.quoting.onConfirmQuote(dontAsk = false)
+        viewModel.await { it.done }
+        assertEquals("p", posts.sent.single().second["quoted_id"])
+    }
+
+    @Test
+    fun `set to the people mentioned only, the quote becomes a link`() = runBlocking {
+        posts.parent = posts.status("p")
+        val viewModel = open(key = { ComposerKey(it, quoteId = "p") })
+        viewModel.await { it.ready && it.quote != null }
+        viewModel.onVisibility(Visibility.Direct)
+        val state = viewModel.await { it.quote == null }
+        assertEquals(QuoteNotice.Linked, state.quoteNotice)
+        assertTrue(viewModel.segments[0].text.contains("http"))
+    }
+
+    @Test
     fun `a thread that fails part way resumes without posting anything twice`() = runBlocking {
         val viewModel = open()
         viewModel.await { it.ready }

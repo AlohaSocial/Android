@@ -131,19 +131,25 @@ internal fun SegmentField(
     // a thread's posts are told apart by a label; a single post's field speaks its hint, and what is written
     val label = if (count > 1) stringResource(R.string.composer_segment_label, index + 1) else null
     Column {
-        SegmentText(value, label, index == 0, readOnly = posted || state.posting) { actions.onText(index, it) }
+        val hint = when {
+            index > 0 -> R.string.composer_placeholder_more
+            state.quote != null -> R.string.composer_placeholder_quote
+            else -> R.string.composer_placeholder
+        }
+        SegmentText(value, label, hint, readOnly = posted || state.posting) { actions.onText(index, it) }
+        if (index == 0) QuoteParts(state, actions)
         state.attachments.getOrNull(index)?.takeIf { it.isNotEmpty() }?.let { MediaStrip(it, actions) }
         if (index == 0) OpeningExtras(state, actions)
         if (count > 1) SegmentFooter(index, posted, state, actions)
     }
 }
 
-/** A post's text, coloured as it is typed; [label] names it within a thread, [first] picks its hint. */
+/** A post's text, coloured as it is typed; [label] names it within a thread, [hint] shows while it is empty. */
 @Composable
 private fun SegmentText(
     value: TextFieldValue,
     label: String?,
-    first: Boolean,
+    hint: Int,
     readOnly: Boolean,
     onText: (TextFieldValue) -> Unit,
 ) {
@@ -154,9 +160,7 @@ private fun SegmentText(
         onValueChange = onText,
         readOnly = readOnly,
         label = label?.let { { Text(it) } },
-        placeholder = {
-            Text(stringResource(if (first) R.string.composer_placeholder else R.string.composer_placeholder_more))
-        },
+        placeholder = { Text(stringResource(hint)) },
         visualTransformation = highlight,
         colors = TextFieldDefaults.colors(
             focusedContainerColor = Color.Transparent,
