@@ -41,6 +41,7 @@ import androidx.compose.material.icons.outlined.AddPhotoAlternate
 import androidx.compose.material.icons.outlined.AddReaction
 import androidx.compose.material.icons.outlined.AmpStories
 import androidx.compose.material.icons.outlined.AttachFile
+import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.Bedtime
 import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material.icons.outlined.Close
@@ -167,6 +168,7 @@ public object AlohaIcons {
     public val OpenInBrowser: ImageVector = Icons.Outlined.OpenInBrowser
     public val NewWindow: ImageVector = Icons.AutoMirrored.Outlined.OpenInNew
     public val Translate: ImageVector = Icons.Outlined.Translate
+    public val Intelligence: ImageVector = Icons.Outlined.AutoAwesome
     public val MuteConversation: ImageVector = Icons.Outlined.NotificationsOff
     public val PauseNotifications: ImageVector = Icons.Outlined.NotificationsPaused
     public val Report: ImageVector = Icons.Outlined.Flag

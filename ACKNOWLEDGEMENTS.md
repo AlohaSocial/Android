@@ -6,6 +6,7 @@
 |---|---|---|---|
 | `DynamicScheme.toColorScheme()` and the tonal-spot seeding approach | `core/designsystem/.../SchemeConversion.kt`, `AlohaColorSchemes.kt` | MIT | [nextcloud/android-common](https://github.com/nextcloud/android-common) (`MaterialSchemes`, `SchemeExtensions.kt`) |
 | Gradle wrapper | `gradlew`, `gradlew.bat`, `gradle/wrapper/` | Apache-2.0 | [Gradle](https://gradle.org) |
+| EfficientNet-Lite0 image classifier (int8) and its ImageNet labels, drafting alt text | `core/intelligence/src/main/assets/` | Apache-2.0 | [TensorFlow](https://storage.googleapis.com/download.tensorflow.org/models/tflite/task_library/image_classification/android/efficientnet_lite0_int8_2.tflite), SHA-256 `aa03e4017f54fd5c743bd397b0a3e136fab0942f9c7cd715064a31ca3e4fc996` |
 
 ## Libraries
 

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ SPDX-FileCopyrightText: 2026 Aloha Social contributors
+  ~ SPDX-License-Identifier: MIT
+-->
+<resources>
+    <!-- Ends alt text drafted on the device, in brackets after a space, for as long as the writer leaves the draft as it is: the description says it was made by AI -->
+    <string name="intelligence_generated">(AI generated)</string>
+    <!-- Alt text drafted on the device: the one person found in a picture, never described further -->
+    <string name="intelligence_one_person">One person</string>
+    <!-- Alt text drafted on the device: how many people a picture shows, never described further -->
+    <plurals name="intelligence_people">
+        <item quantity="one">%d person</item>
+        <item quantity="other">%d people</item>
+    </plurals>
+    <!-- Alt text drafted on the device: the people found (%1$s, e.g. "2 people") with the things found (%2$s, e.g. "beach, sky") -->
+    <string name="intelligence_with">%1$s with %2$s</string>
+    <!-- Alt text drafted on the device when nothing in the picture was recognised -->
+    <string name="intelligence_picture">A picture</string>
+    <!-- Rewrite action: fix spelling, grammar and punctuation only -->
+    <string name="intelligence_proofread">Proofread</string>
+    <!-- Rewrite action: make the draft fit the characters left -->
+    <string name="intelligence_shorten">Shorten</string>
+    <!-- Rewrite action: the same meaning in other words -->
+    <string name="intelligence_rephrase">Rephrase</string>
+    <!-- Rewrite action: a warmer tone -->
+    <string name="intelligence_friendlier">Make friendlier</string>
+    <!-- Rewrite action: a more formal tone -->
+    <string name="intelligence_formal">Make more formal</string>
+    <!-- Rewrite action: fewer words, nothing left out -->
+    <string name="intelligence_concise">Make more concise</string>
+</resources>

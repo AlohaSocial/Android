@@ -18,10 +18,12 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import social.aloha.core.data.server.ServerAbout
+import social.aloha.core.datastore.IntelligenceChoices
 import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaTheme
 import social.aloha.core.designsystem.ThemeMode
 import social.aloha.core.designsystem.ThemeSettings
+import social.aloha.core.intelligence.ModelAvailability
 import social.aloha.core.model.AccentSource
 import social.aloha.core.model.AnnualArchetype
 import social.aloha.core.model.AnnualHashtag
@@ -124,6 +126,18 @@ class SettingsScreenshotTest {
     fun sound() = capture("settings-sound") { SoundContent(ReadingStyle(), onChange = {}, onNotificationSounds = {}) }
 
     @Test
+    fun intelligence() = capture("settings-intelligence") {
+        val choices = IntelligenceChoices(altText = true, rewrite = true)
+        val waiting = IntelligenceUi(choices, true, ModelAvailability.NotReady, hasModel = true, modelName = "nano-v3")
+        IntelligenceContent(waiting, onChange = {})
+    }
+
+    @Test
+    fun privacyWithIntelligence() = capture("settings-privacy-intelligence") {
+        TextPage("Privacy", onClose = {}) { PrivacyStatement(NOTICE) }
+    }
+
+    @Test
     fun year() = capture("settings-year") {
         val report = AnnualReport(
             2026,
@@ -178,7 +192,9 @@ class SettingsScreenshotTest {
     }
 
     @Test
-    fun privacy() = capture("settings-privacy") { TextPage("Privacy", onClose = {}) { PrivacyStatement() } }
+    fun privacy() = capture("settings-privacy") {
+        TextPage("Privacy", onClose = {}) { PrivacyStatement(intelligence = null) }
+    }
 
     @Test
     fun nextcloud() = capture("settings-nextcloud") {
@@ -225,4 +241,10 @@ class SettingsScreenshotTest {
     @Test
     @Config(qualifiers = RobolectricDeviceQualifiers.MediumTablet)
     fun aboutWide() = capture("settings-about-wide") { SectionScreen(AboutSection, onBack = {}) }
+
+    private companion object {
+        // a build's own paragraph, as the generic build words it
+        const val NOTICE = "Drafting alt text runs on this device with open software, only once you turn it on " +
+            "and tap it: your pictures are not sent anywhere, and the software reports to no one."
+    }
 }

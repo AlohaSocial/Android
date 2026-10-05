@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ SPDX-FileCopyrightText: 2026 Aloha Social contributors
+  ~ SPDX-License-Identifier: MIT
+-->
+<resources>
+    <!-- Privacy statement in the Google Play build: what the on-device features do with what they read, what Google's parts of them could report, and what the app does about it -->
+    <string name="intelligence_privacy">Drafting alt text, rewriting and summaries run on this device, each only once you turn it on and tap it: your pictures, drafts and threads are not sent anywhere for them. Pictures are read by open software that reports to no one. Rewriting and summaries use Gemini Nano, reached through Google’s ML Kit: ML Kit would send Google diagnostics about its own use, and this app removes the part that sends them, so they go nowhere. Gemini Nano itself runs in Android’s AICore service, which is part of Android rather than of this app: what it reports to Google is up to Android and its settings.</string>
+</resources>

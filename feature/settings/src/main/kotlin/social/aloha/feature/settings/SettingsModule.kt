@@ -7,8 +7,10 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import dagger.multibindings.ElementsIntoSet
 import dagger.multibindings.IntoSet
 import dagger.multibindings.Multibinds
+import social.aloha.core.intelligence.Intelligence
 import social.aloha.core.ui.SettingsSection
 
 /** Collects every feature's [SettingsSection]; the settings screen needs none to exist to build. */
@@ -62,5 +64,10 @@ internal abstract class SettingsModule {
         @Provides
         @IntoSet
         fun deleteAccount(): SettingsSection = DeleteAccountSection
+
+        @Provides
+        @ElementsIntoSet
+        fun intelligence(intelligence: Intelligence): Set<SettingsSection> =
+            if (intelligence.offered) setOf(IntelligenceSection) else emptySet()
     }
 }

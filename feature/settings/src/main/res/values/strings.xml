@@ -398,4 +398,32 @@
     <string name="reading_trends">Trends</string>
     <!-- Explains that setting -->
     <string name="reading_trends_summary">Trending posts, hashtags and news in Explore</string>
+    <!-- Settings section for the on-device features: alt text drafts, rewriting, summaries -->
+    <string name="settings_intelligence_title">Intelligence</string>
+    <!-- Intelligence settings: the line above the switches -->
+    <string name="settings_intelligence_about">These run on this device, each only once you turn it on and only on what you tap. What they read is not sent anywhere.</string>
+    <!-- Intelligence settings: switch for alt text drafted on the device -->
+    <string name="settings_intelligence_alt_text">Draft alt text</string>
+    <!-- Intelligence settings: what drafting alt text does -->
+    <string name="settings_intelligence_alt_text_summary">From what this device recognises in a picture, marked as AI generated, for you to check before posting</string>
+    <!-- Intelligence settings: switch for rewriting and proofreading a draft on the device -->
+    <string name="settings_intelligence_rewrite">Rewrite and proofread</string>
+    <!-- Intelligence settings: what rewriting does -->
+    <string name="settings_intelligence_rewrite_summary">Another wording of your draft, which you take or leave</string>
+    <!-- Intelligence settings: switch for summarising a thread on the device -->
+    <string name="settings_intelligence_summary">Summarise threads</string>
+    <!-- Intelligence settings: what summarising does -->
+    <string name="settings_intelligence_summary_summary">A few sentences on a thread, shown in a sheet and never kept</string>
+    <!-- Intelligence settings: under a switch's summary while the device fetches its language model -->
+    <string name="settings_intelligence_downloading">This device is still getting its language model. Turned on, this works once it has it.</string>
+    <!-- Intelligence settings: under a switch's summary when this device cannot run the language model those features need -->
+    <string name="settings_intelligence_not_eligible">This device can’t run the on-device language model, so this stays unavailable here.</string>
+    <!-- Intelligence settings: heading of the line naming the models the features use -->
+    <string name="settings_intelligence_models">Models</string>
+    <!-- Intelligence settings, under Models: what reads pictures for alt-text drafts, in every build -->
+    <string name="settings_intelligence_model_pictures">Pictures: EfficientNet-Lite0 on LiteRT, open source, and Android’s face detector</string>
+    <!-- Intelligence settings, under Models: the language model for rewriting and summaries, before the device was asked which one it runs -->
+    <string name="settings_intelligence_model">Rewriting and summaries: Gemini Nano, run by Android’s AICore</string>
+    <!-- Intelligence settings, under Models: the language model for rewriting and summaries, with the name the device gives it (%1$s) -->
+    <string name="settings_intelligence_model_named">Rewriting and summaries: Gemini Nano (%1$s), run by Android’s AICore</string>
 </resources>
