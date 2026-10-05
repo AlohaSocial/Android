@@ -93,6 +93,9 @@ internal interface MediaActions {
 
     fun onRemoveMedia(id: String)
 
+    /** The attachments of one post, in the order they go out in. */
+    fun onOrderMedia(ids: List<String>)
+
     fun onRetryMedia(id: String)
 
     fun onSensitive(sensitive: Boolean)

@@ -8,7 +8,6 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -26,20 +25,16 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RangeSlider
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -56,164 +51,17 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CustomAccessibilityAction
-import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import java.util.concurrent.TimeUnit
-import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaSpacing
-import social.aloha.core.sync.UploadState
-
-/** The attachments of one post, each a tile that opens its description and focal point. */
-@Composable
-internal fun MediaStrip(attachments: List<Attachment>, actions: ComposerActions) {
-    LazyRow(horizontalArrangement = Arrangement.spacedBy(AlohaSpacing.s)) {
-        items(attachments, key = { it.id }) { MediaTile(it, actions) }
-    }
-}
-
-@Composable
-private fun MediaTile(attachment: Attachment, actions: ComposerActions) {
-    val status = uploadLabel(attachment)
-    val edit = stringResource(R.string.composer_media_edit)
-    val described = attachment.description.isNotBlank()
-    val summary = listOfNotNull(
-        attachment.fileName,
-        status,
-        stringResource(if (described) R.string.composer_media_described else R.string.composer_media_undescribed),
-    ).joinToString(", ")
-    Box(Modifier.size(TILE)) {
-        Box(
-            Modifier
-                .fillMaxSize()
-                .clip(MaterialTheme.shapes.medium)
-                .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                .clickable(onClickLabel = edit, role = Role.Button) { actions.onEditMedia(attachment.id) }
-                .semantics(mergeDescendants = true) { contentDescription = summary },
-            contentAlignment = Alignment.Center,
-        ) {
-            if (attachment.isPicture) {
-                AsyncImage(
-                    attachment.file ?: attachment.previewUrl,
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize(),
-                )
-            } else {
-                Text(
-                    attachment.fileName,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.padding(AlohaSpacing.xs),
-                )
-            }
-            if (attachment.preparing) {
-                CircularProgressIndicator(Modifier.size(PROGRESS))
-            } else if (attachment.oversizedLimit == null) {
-                UploadOverlay(attachment.upload)
-            } else {
-                Icon(AlohaIcons.Trim, contentDescription = null)
-            }
-            AltBadge(described, Modifier.align(Alignment.BottomStart).padding(AlohaSpacing.xs))
-        }
-        val failed = attachment.upload is UploadState.Failed || attachment.upload is UploadState.Refused
-        if (failed) {
-            FilledTonalIconButton(onClick = {
-                actions.onRetryMedia(attachment.id)
-            }, modifier = Modifier.align(Alignment.Center)) {
-                Icon(AlohaIcons.Retry, stringResource(R.string.composer_media_retry))
-            }
-        }
-        IconButton(onClick = { actions.onRemoveMedia(attachment.id) }, modifier = Modifier.align(Alignment.TopEnd)) {
-            Surface(shape = MaterialTheme.shapes.small, color = MaterialTheme.colorScheme.surface.copy(alpha = SCRIM)) {
-                Icon(AlohaIcons.Close, stringResource(R.string.composer_media_remove, attachment.fileName))
-            }
-        }
-    }
-}
-
-@Composable
-private fun UploadOverlay(upload: UploadState) {
-    val label = uploadLabel(upload) ?: return
-    val fraction = (upload as? UploadState.Sending)?.fraction
-    // only a change of state is said aloud; the percentage is there to ask for, not announced at every step
-    val stage = stringResource(stageLabel(upload))
-    val modifier = Modifier.size(PROGRESS).semantics {
-        contentDescription = stage
-        stateDescription = label
-    }
-    when (upload) {
-        is UploadState.Sending, UploadState.Queued, UploadState.Processing -> if (fraction != null) {
-            CircularProgressIndicator(progress = { fraction }, modifier = modifier)
-        } else {
-            CircularProgressIndicator(modifier)
-        }
-
-        else -> Unit
-    }
-}
-
-/** ALT, filled when the attachment has a description and outlined when it has none. */
-@Composable
-private fun AltBadge(described: Boolean, modifier: Modifier = Modifier) {
-    val colors = MaterialTheme.colorScheme
-    Text(
-        stringResource(R.string.composer_media_alt),
-        style = MaterialTheme.typography.labelSmall,
-        color = if (described) colors.onPrimary else colors.onSurface,
-        modifier = modifier
-            .clip(MaterialTheme.shapes.extraSmall)
-            .then(if (described) Modifier.background(colors.primary) else Modifier.background(colors.surface))
-            .border(1.dp, if (described) colors.primary else colors.outline, MaterialTheme.shapes.extraSmall)
-            .padding(horizontal = AlohaSpacing.xs),
-    )
-}
-
-@Composable
-private fun uploadLabel(attachment: Attachment): String? = when {
-    attachment.preparing -> stringResource(R.string.composer_media_preparing)
-
-    attachment.oversizedLimit != null ->
-        stringResource(
-            R.string.composer_media_oversized,
-            stringResource(R.string.composer_size_mb, Attachments.megabytes(attachment.oversizedLimit)),
-        )
-
-    else -> uploadLabel(attachment.upload)
-}
-
-@Composable
-private fun uploadLabel(upload: UploadState): String? = when (upload) {
-    UploadState.Queued -> stringResource(R.string.composer_media_waiting)
-
-    is UploadState.Sending -> upload.fraction?.let {
-        stringResource(R.string.composer_media_sending, (it * PERCENT).toInt())
-    }
-        ?: stringResource(R.string.composer_media_waiting)
-
-    UploadState.Processing -> stringResource(R.string.composer_media_processing)
-
-    is UploadState.Done -> null
-
-    is UploadState.Refused -> upload.message?.let { stringResource(R.string.composer_media_refused, it) }
-        ?: stringResource(R.string.composer_media_failed)
-
-    UploadState.Failed -> stringResource(R.string.composer_media_failed)
-}
-
-/** What the editor asks to change beyond the words: a picture's filter, or a video's trim and size. */
-internal sealed interface MediaChange {
-    data class Filter(val filter: PhotoFilter) : MediaChange
-
-    data class Video(val edit: VideoEdit) : MediaChange
-}
+import social.aloha.core.ui.moves
 
 /**
  * The description of one attachment and, for a picture, where its crop keeps in frame: a tap on the
@@ -275,6 +123,13 @@ internal fun MediaEditor(attachment: Attachment, video: VideoInfo?, onDone: (Str
             }
         }
     }
+}
+
+/** What the editor asks to change beyond the words: a picture's filter, or a video's trim and size. */
+internal sealed interface MediaChange {
+    data class Filter(val filter: PhotoFilter) : MediaChange
+
+    data class Video(val edit: VideoEdit) : MediaChange
 }
 
 @Composable
@@ -485,20 +340,9 @@ private val PhotoFilter.label: Int
 private val FILTER_TILE = 64.dp
 private val SWATCH = 32.dp
 private val SWATCH_TARGET = 48.dp
-private val TILE = 96.dp
-private val PROGRESS = 36.dp
 private val PREVIEW = 320.dp
 private val RING = 14.dp
 private val STROKE = 3.dp
-private const val PERCENT = 100
-private const val SCRIM = 0.8f
-
-/** What stage an upload is at, which is all a screen reader hears of it unasked. */
-private fun stageLabel(upload: UploadState): Int = when (upload) {
-    UploadState.Queued -> R.string.composer_media_stage_waiting
-    UploadState.Processing -> R.string.composer_media_stage_processing
-    else -> R.string.composer_media_stage_uploading
-}
 
 /** How far a focal point chosen by action sits from the middle. */
 private const val EDGE = 0.8f

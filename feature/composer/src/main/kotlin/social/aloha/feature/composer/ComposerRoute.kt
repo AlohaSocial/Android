@@ -214,6 +214,8 @@ private fun rememberActions(
 
             override fun onRemoveMedia(id: String) = viewModel.attachments.remove(id)
 
+            override fun onOrderMedia(ids: List<String>) = viewModel.attachments.order(ids)
+
             override fun onRetryMedia(id: String) = viewModel.attachments.retry(id)
 
             override fun onSensitive(sensitive: Boolean) {

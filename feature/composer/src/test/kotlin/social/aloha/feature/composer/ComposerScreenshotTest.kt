@@ -99,6 +99,7 @@ class ComposerScreenshotTest {
 
         override fun onDrafts() = Unit
         override fun onEditMedia(id: String) = Unit
+        override fun onOrderMedia(ids: List<String>) = Unit
         override fun onRemoveMedia(id: String) = Unit
         override fun onRetryMedia(id: String) = Unit
         override fun onSensitive(sensitive: Boolean) = Unit

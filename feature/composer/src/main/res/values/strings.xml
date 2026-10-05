@@ -78,6 +78,10 @@
     <string name="composer_browse_emoji">Browse emoji</string>
     <!-- Said by a screen reader while completions for the word being typed load -->
     <string name="composer_completions_loading">Looking for matches</string>
+    <!-- Title line of an attachment card without a description, in the error colour -->
+    <string name="composer_media_add_alt">Add alt text</string>
+    <!-- Takes the place of "Add a choice" while a choice is dragged: dropping it there removes it -->
+    <string name="composer_poll_drop_remove">Drop here to remove</string>
     <!-- Title of the language list -->
     <string name="composer_language_title">Language of the post</string>
     <!-- Toolbar button that opens the custom emoji of the server -->
