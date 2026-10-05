@@ -129,10 +129,17 @@ class ExploreScreenTest {
         assertEquals(listOf("dismiss:2", "follow:surfers"), asked)
     }
 
+    // one bucket, as Nextcloud Social keeps, a week, as Mastodon does, and none
+    private val trending = listOf(
+        Tag("surf", history = listOf(TagHistory("1", "12", "0"))),
+        Tag("waves", history = listOf(30, 22, 25, 9, 14, 4, 6).map { TagHistory("$it", "$it", "3") }),
+        Tag("reef"),
+    )
+
     @Test
     fun hashtags() {
         compose.enableAccessibilityChecks()
-        val tags = listOf(Tag("surf", history = listOf(TagHistory("1", "12", "0"))), Tag("reef"))
+        val tags = trending
         show(ExploreUiState(tab = ExploreTab.Hashtags, hashtags = Load.Loaded(tags), periods = true))
         compose.onRoot().tryPerformAccessibilityChecks()
         compose.onNodeWithText("Used 12 times").assertExists()
@@ -145,7 +152,7 @@ class ExploreScreenTest {
     @Config(fontScale = 2f)
     fun hashtagsLargeFont() {
         compose.enableAccessibilityChecks()
-        val tags = listOf(Tag("surf", history = listOf(TagHistory("1", "12", "0"))), Tag("reef"))
+        val tags = trending
         show(ExploreUiState(tab = ExploreTab.Hashtags, hashtags = Load.Loaded(tags), periods = true))
         compose.onRoot().tryPerformAccessibilityChecks()
         compose.onNodeWithText("Used 12 times").assertExists()
