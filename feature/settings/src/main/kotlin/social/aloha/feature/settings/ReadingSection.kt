@@ -91,6 +91,9 @@ internal fun ReadingContent(style: ReadingStyle, onChange: ((ReadingStyle) -> Re
         SwitchRow(stringResource(R.string.reading_absolute_times), style.absoluteTimes, { on ->
             onChange { it.copy(absoluteTimes = on) }
         }, stringResource(R.string.reading_absolute_times_summary))
+        SwitchRow(stringResource(R.string.reading_trends), style.showTrends, { on ->
+            onChange { it.copy(showTrends = on) }
+        }, stringResource(R.string.reading_trends_summary))
         SwitchRow(stringResource(R.string.reading_boost_carousel), style.boostCarousel, { on ->
             onChange { it.copy(boostCarousel = on) }
         }, stringResource(R.string.reading_boost_carousel_summary))

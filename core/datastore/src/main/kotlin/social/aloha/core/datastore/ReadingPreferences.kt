@@ -58,6 +58,7 @@ public class ReadingPreferences(private val store: DataStore<Preferences>) {
             textScale = (it[TEXT_SCALE] ?: 1f).coerceIn(ReadingStyle.MIN_TEXT_SCALE, ReadingStyle.MAX_TEXT_SCALE),
             absoluteTimes = it[ABSOLUTE_TIMES] ?: false,
             boostCarousel = it[BOOST_CAROUSEL] ?: false,
+            showTrends = it[SHOW_TRENDS] ?: true,
         )
     }
 
@@ -80,6 +81,7 @@ public class ReadingPreferences(private val store: DataStore<Preferences>) {
             it[TEXT_SCALE] = style.textScale
             it[ABSOLUTE_TIMES] = style.absoluteTimes
             it[BOOST_CAROUSEL] = style.boostCarousel
+            it[SHOW_TRENDS] = style.showTrends
         }
     }
 
@@ -104,5 +106,6 @@ public class ReadingPreferences(private val store: DataStore<Preferences>) {
         val TEXT_SCALE = floatPreferencesKey("reading_text_scale")
         val ABSOLUTE_TIMES = booleanPreferencesKey("reading_absolute_times")
         val BOOST_CAROUSEL = booleanPreferencesKey("reading_boost_carousel")
+        val SHOW_TRENDS = booleanPreferencesKey("reading_show_trends")
     }
 }

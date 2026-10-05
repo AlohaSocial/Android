@@ -74,6 +74,10 @@ internal object DataStoreModule {
 
     @Provides
     @Singleton
+    fun focusPreferences(@AppStore store: DataStore<Preferences>): FocusPreferences = FocusPreferences(store)
+
+    @Provides
+    @Singleton
     fun notificationPreferences(@AppStore store: DataStore<Preferences>): NotificationPreferences =
         NotificationPreferences(store)
 

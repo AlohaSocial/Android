@@ -41,6 +41,7 @@ import androidx.compose.material.icons.outlined.AddPhotoAlternate
 import androidx.compose.material.icons.outlined.AddReaction
 import androidx.compose.material.icons.outlined.AmpStories
 import androidx.compose.material.icons.outlined.AttachFile
+import androidx.compose.material.icons.outlined.Bedtime
 import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Cloud
@@ -87,6 +88,7 @@ import androidx.compose.material.icons.outlined.Place
 import androidx.compose.material.icons.outlined.Poll
 import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material.icons.outlined.PushPin
+import androidx.compose.material.icons.outlined.QrCode2
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.RemoveCircleOutline
 import androidx.compose.material.icons.outlined.Repeat
@@ -107,7 +109,6 @@ import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material.icons.outlined.ZoomIn
 import androidx.compose.material.icons.outlined.ZoomOut
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.material.icons.outlined.QrCode2
 
 /**
  * The only way features reach an icon. Outlined for the resting state, filled
@@ -172,6 +173,7 @@ public object AlohaIcons {
     public val Delete: ImageVector = Icons.Outlined.Delete
     public val Help: ImageVector = Icons.AutoMirrored.Outlined.HelpOutline
     public val QrCode: ImageVector = Icons.Outlined.QrCode2
+    public val Focus: ImageVector = Icons.Outlined.Bedtime
     public val Redraft: ImageVector = Icons.Outlined.EditNote
     public val Add: ImageVector = Icons.Outlined.Add
 

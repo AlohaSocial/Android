@@ -4,6 +4,7 @@
 package social.aloha.feature.explore
 
 import android.content.Context
+import androidx.datastore.preferences.core.emptyPreferences
 import androidx.test.core.app.ApplicationProvider
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -25,7 +26,9 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import social.aloha.core.data.explore.Explore
+import social.aloha.core.datastore.ReadingPreferences
 import social.aloha.core.html.RichTextCache
+import social.aloha.core.testing.InMemoryDataStore
 import social.aloha.core.testing.SignedInFixture
 
 /** Suggests account 7, and refuses to forget it once [release] lets the refusal go. */
@@ -73,7 +76,13 @@ class ExploreViewModelTest {
         Dispatchers.setMain(Dispatchers.Unconfined)
         val reader = fixture.signIn(server.url("/"))
         val explore =
-            ExploreViewModel(reader.id, fixture.accounts, Explore(fixture.clients, fixture.statuses), RichTextCache())
+            ExploreViewModel(
+                reader.id,
+                fixture.accounts,
+                Explore(fixture.clients, fixture.statuses),
+                RichTextCache(),
+                ReadingPreferences(InMemoryDataStore(emptyPreferences())),
+            )
         // the account is looked up off the test's thread; picking the tab meanwhile loads People twice, and
         // the second answer could bring the dismissed suggestion back before the server refused
         withTimeout(10.seconds) { explore.uiState.first { it.viewer.isNotEmpty() } }

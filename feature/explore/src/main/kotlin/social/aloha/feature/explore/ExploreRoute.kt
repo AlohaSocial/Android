@@ -97,7 +97,7 @@ internal fun ExploreScreen(
     modifier: Modifier = Modifier,
 ) {
     TabPager(
-        ExploreTab.entries,
+        ExploreTab.entries.filter { state.trends || !it.trending },
         state.tab,
         actions::onTab,
         { stringResource(tabName(it)) },

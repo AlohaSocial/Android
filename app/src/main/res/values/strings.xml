@@ -112,4 +112,8 @@
     <string name="act_failed">That didn’t go through. The account’s server may not know the post yet.</string>
     <!-- Title of the sheet asking which signed-in account writes what another app shared -->
     <string name="accounts_choose">Choose account</string>
+    <!-- Account sheet switch and Quick Settings tile: the calm set of settings, on or off together -->
+    <string name="focus_title">Focus mode</string>
+    <!-- Under that switch: what it changes -->
+    <string name="focus_summary">Hides numbers and trends, folds boosts and gathers notifications into a digest. Off, each goes back to what it was, unless you changed it meanwhile.</string>
 </resources>

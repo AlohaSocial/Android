@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Badge
@@ -22,6 +23,7 @@ import androidx.compose.material3.ListItemColors
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.minimumInteractiveComponentSize
@@ -45,6 +47,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaSpacing
@@ -59,6 +62,8 @@ import social.aloha.core.ui.rememberHaptics
 @Composable
 internal fun AccountSwitcher(viewModel: AppViewModel, links: AccountLinks) {
     val accounts by viewModel.switcher.collectAsStateWithLifecycle()
+    val focusing: FocusViewModel = hiltViewModel()
+    val focusOn by focusing.on.collectAsStateWithLifecycle()
     var open by remember { mutableStateOf(false) }
     val active = accounts.firstOrNull { it.active } ?: return
     val label = stringResource(R.string.accounts_button, active.handle)
@@ -106,6 +111,8 @@ internal fun AccountSwitcher(viewModel: AppViewModel, links: AccountLinks) {
                 viewModel.signOut()
             },
             onDismiss = { open = false },
+            focus = focusOn,
+            onFocus = focusing::onFocus,
         )
     }
 }
@@ -119,6 +126,8 @@ internal fun AccountSheet(
     onAdd: () -> Unit,
     onSignOut: () -> Unit,
     onDismiss: () -> Unit,
+    focus: Boolean = false,
+    onFocus: ((Boolean) -> Unit)? = null,
 ) {
     val active = accounts.firstOrNull { it.active } ?: return
     var confirming by remember { mutableStateOf(false) }
@@ -139,6 +148,7 @@ internal fun AccountSheet(
                 val (icon, text) = place.look
                 Action(icon, stringResource(text)) { links.open(place) }
             }
+            onFocus?.let { item { FocusRow(focus, it) } }
             item { Action(AlohaIcons.AddAccount, stringResource(R.string.accounts_add), onAdd) }
             item {
                 Action(AlohaIcons.SignOut, stringResource(R.string.accounts_sign_out, active.handle)) {
@@ -164,6 +174,18 @@ internal fun AccountSheet(
             },
         )
     }
+}
+
+/** Focus mode, saying what it changes. */
+@Composable
+private fun FocusRow(on: Boolean, onFocus: (Boolean) -> Unit) {
+    ListItem(
+        modifier = Modifier.toggleable(on, role = Role.Switch, onValueChange = onFocus),
+        leadingContent = { Icon(AlohaIcons.Focus, contentDescription = null) },
+        headlineContent = { Text(stringResource(R.string.focus_title)) },
+        supportingContent = { Text(stringResource(R.string.focus_summary)) },
+        trailingContent = { Switch(checked = on, onCheckedChange = null) },
+    )
 }
 
 /** An account to switch to; the one in use says so in words as well as with its check. */
