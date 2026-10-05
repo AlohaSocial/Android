@@ -128,6 +128,34 @@
     <string name="status_action_reply">Reply</string>
     <!-- Action: boost a post, sharing it with one's followers -->
     <string name="status_action_boost">Boost</string>
+    <!-- Title of the account sheet a long press on reply opens: replies from another of the reader's accounts -->
+    <string name="status_reply_as">Reply as</string>
+    <!-- Title of the account sheet a long press on favourite opens -->
+    <string name="status_favourite_as">Favourite as</string>
+    <!-- Title of the account sheet a long press on bookmark opens -->
+    <string name="status_bookmark_as">Bookmark as</string>
+    <!-- Heading of a boost's long-press menu: whom the boost is seen by -->
+    <string name="status_boost_with">Boost for</string>
+    <!-- In a boost's long-press menu: everyone, in public timelines too -->
+    <string name="status_boost_public">Public</string>
+    <!-- In a boost's long-press menu: everyone, kept out of public timelines -->
+    <string name="status_boost_unlisted">Quiet public</string>
+    <!-- In a boost's long-press menu: the reader's followers only -->
+    <string name="status_boost_private">Followers</string>
+    <!-- In a boost's long-press menu, and the title of its account sheet: boosts from another account -->
+    <string name="status_boost_as">Boost as another account</string>
+    <!-- Screen reader action on a post: boosts it for everyone, kept out of public timelines -->
+    <string name="status_boost_for_unlisted">Boost for quiet public</string>
+    <!-- Screen reader action on a post: boosts it for the reader’s followers only -->
+    <string name="status_boost_for_followers">Boost for followers only</string>
+    <!-- Screen reader action on a post: opens the accounts to reply as -->
+    <string name="status_reply_as_other">Reply as another account</string>
+    <!-- Screen reader action on a post: opens the accounts to favourite it as -->
+    <string name="status_favourite_as_other">Favourite as another account</string>
+    <!-- Screen reader action on a post: opens the accounts to bookmark it as -->
+    <string name="status_bookmark_as_other">Bookmark as another account</string>
+    <!-- Read aloud for an account with unread notifications in an account sheet -->
+    <string name="accounts_unread">Unread notifications</string>
     <!-- Post action: writes a post of one's own with this one quoted under it -->
     <string name="status_action_quote">Quote</string>
     <!-- Post action where the author approves each quote: asks them to allow it -->

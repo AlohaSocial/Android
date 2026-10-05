@@ -11,6 +11,7 @@ import social.aloha.core.data.answer
 import social.aloha.core.model.SignedInAccount
 import social.aloha.core.model.Status
 import social.aloha.core.model.StatusSource
+import social.aloha.core.model.Visibility
 import social.aloha.core.network.ApiError
 import social.aloha.core.network.ApiResult
 import social.aloha.core.network.endpoints.ComposeEndpoints
@@ -34,14 +35,21 @@ public class StatusInteractions @Inject constructor(
 ) {
     /**
      * Flips [toggle] on [shown], the post shown (a boost's target), from its stored copy where there is
-     * one, which a toggle just before may already have changed; null when the server agreed.
+     * one, which a toggle just before may already have changed; null when the server agreed. A boost
+     * goes out seen by [visibility] where one is given.
      */
-    public suspend fun toggle(account: SignedInAccount, shown: Status, toggle: Toggle): ApiError? {
+    public suspend fun toggle(
+        account: SignedInAccount,
+        shown: Status,
+        toggle: Toggle,
+        visibility: Visibility? = null,
+    ): ApiError? {
         val client = clients.forAccount(account) ?: return ApiError.NotFound
         val status = statuses.get(account.id, shown.id) ?: shown
         val (guess, action) = flipped(status, toggle)
         statuses.saveToggled(account.id, guess)
-        return when (val answer = client.execute(StatusEndpoints.action(status.id, action))) {
+        val seenBy = visibility?.takeIf { toggle == Toggle.Boost }?.wire
+        return when (val answer = client.execute(StatusEndpoints.action(status.id, action, seenBy))) {
             // boosting answers with the new boost, which carries the post as the server now has it
             is ApiResult.Success -> null.also { statuses.saveToggled(account.id, answer.value.reblog ?: answer.value) }
 

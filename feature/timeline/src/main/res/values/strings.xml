@@ -163,6 +163,8 @@
     <string name="feeds_icon_audio">Headphones</string>
     <!-- Feed dialog: read aloud for one of the icons a feed can take -->
     <string name="feeds_icon_recent">A clock</string>
+    <!-- Title of the account sheet a long press on the compose button opens, and the long press's label -->
+    <string name="timeline_compose_as">Write as</string>
     <!-- Strip over the timeline when the server cannot be reached; the cached posts stay -->
     <string name="timeline_offline">You\'re offline. These are the posts saved on this device.</string>
     <!-- Strip over the timeline when the server answered with an error -->

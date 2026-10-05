@@ -117,6 +117,7 @@ import social.aloha.core.navigation.VideoKey
 import social.aloha.core.navigation.WatchKey
 import social.aloha.core.navigation.YearKey
 import social.aloha.core.ui.ComposerStart
+import social.aloha.core.ui.LocalActAs
 import social.aloha.core.ui.LocalReadingStyle
 import social.aloha.core.ui.LocalReselections
 import social.aloha.core.ui.StatusNavigation
@@ -429,7 +430,8 @@ fun AlohaApp(
         ) {
             // the navigation already pads its side for the system bars; the screens must not pad it again
             Column(Modifier.consumeWindowInsets(suiteInsets(suiteType))) {
-                CompositionLocalProvider(LocalReselections provides reselections) {
+                val actAs = rememberShellActAs { backStack.push(it) }
+                CompositionLocalProvider(LocalReselections provides reselections, LocalActAs provides actAs) {
                     val transitions = rememberScreenTransitions()
                     NavDisplay(
                         modifier = Modifier.weight(1f),
@@ -452,6 +454,7 @@ fun AlohaApp(
                                     onSearch = { backStack.push(SearchKey(readerId)) },
                                     onAnnouncements = { backStack.push(AnnouncementsKey(readerId)) },
                                     onEditFeeds = { backStack.push(FeedsKey(readerId)) },
+                                    onComposeAs = { backStack.push(composerFor(it)) },
                                 )
                                 timeline(feed, statusNavigation, links) { accountButton(accountLinks) }
                             }
@@ -747,6 +750,7 @@ private fun ModeTimeline(
             header = { AnnouncementsBanner(onOpen = links.onAnnouncements) },
             onSearch = links.onSearch,
             onEditFeeds = links.onEditFeeds,
+            onComposeAs = links.onComposeAs,
         )
         // the optional modes are offered once, on the timeline every reader opens first
         return ModesOffer()
@@ -800,6 +804,7 @@ data class HomeLinks(
     val onSearch: () -> Unit = {},
     val onAnnouncements: () -> Unit = {},
     val onEditFeeds: () -> Unit = {},
+    val onComposeAs: (accountId: String) -> Unit = {},
 )
 
 /** Where the account button's sheet leads, one [AccountPlace] at a time. */

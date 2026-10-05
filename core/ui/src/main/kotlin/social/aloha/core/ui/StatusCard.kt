@@ -160,7 +160,9 @@ public fun StatusCard(
         hiding.collapse,
         hiding.rehide(row),
     )
-    val customActions = customActions(row, actions, controls)
+    var askedAs by remember { mutableStateOf<AskedAs?>(null) }
+    val customActions = customActions(row, actions, controls) + actAsActions(row) { askedAs = it }
+    askedAs?.let { ActAsPicker(row, it) { askedAs = null } }
     val compact = LocalReadingStyle.current.compact
     ProvideLinkRouting(onLink = actions::onLink) {
         Column(
@@ -330,7 +332,9 @@ private fun Actions(row: StatusRowUi, actions: StatusActions) {
     val semantic = LocalAlohaSemanticColors.current
     val tick = rememberTick()
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
-    ActionButton(AlohaIcons.Reply, row.counts.replies, muted) { actions.onReply(row) }
+    ActAsAction(row, PostAct.Reply, R.string.status_reply_as) { long ->
+        ActionButton(AlohaIcons.Reply, row.counts.replies, muted, long) { actions.onReply(row) }
+    }
     // where the screen quotes, the tick waits for the menu's choice
     val boosting = remember(row, actions) {
         object : StatusActions by actions {
@@ -340,29 +344,41 @@ private fun Actions(row: StatusRowUi, actions: StatusActions) {
             }
         }
     }
-    BoostButton(row, boosting) { onClick ->
+    var boostingWith by remember { mutableStateOf(false) }
+    val boostWith = { boostingWith = true }.takeIf { LocalActAs.current != null && row.url != null }
+    Box {
+        BoostButton(row, boosting) { onClick ->
+            ActionButton(
+                if (row.state.boosted) AlohaIcons.Boosted else AlohaIcons.Boost,
+                row.counts.boosts,
+                if (row.state.boosted) semantic.boost else muted,
+                boostWith,
+                onClick,
+            )
+        }
+        BoostWithMenu(row, actions, boostingWith) { boostingWith = false }
+    }
+    ActAsAction(row, PostAct.Favourite, R.string.status_favourite_as) { long ->
         ActionButton(
-            if (row.state.boosted) AlohaIcons.Boosted else AlohaIcons.Boost,
-            row.counts.boosts,
-            if (row.state.boosted) semantic.boost else muted,
-            onClick,
-        )
+            if (row.state.favourited) AlohaIcons.Favourited else AlohaIcons.Favourite,
+            row.counts.favourites,
+            if (row.state.favourited) semantic.favourite else muted,
+            long,
+        ) {
+            tick(!row.state.favourited)
+            actions.onFavourite(row)
+        }
     }
-    ActionButton(
-        if (row.state.favourited) AlohaIcons.Favourited else AlohaIcons.Favourite,
-        row.counts.favourites,
-        if (row.state.favourited) semantic.favourite else muted,
-    ) {
-        tick(!row.state.favourited)
-        actions.onFavourite(row)
-    }
-    ActionButton(
-        if (row.state.bookmarked) AlohaIcons.Bookmarked else AlohaIcons.Bookmark,
-        null,
-        if (row.state.bookmarked) semantic.bookmark else muted,
-    ) {
-        tick(!row.state.bookmarked)
-        actions.onBookmark(row)
+    ActAsAction(row, PostAct.Bookmark, R.string.status_bookmark_as) { long ->
+        ActionButton(
+            if (row.state.bookmarked) AlohaIcons.Bookmarked else AlohaIcons.Bookmark,
+            null,
+            if (row.state.bookmarked) semantic.bookmark else muted,
+            long,
+        ) {
+            tick(!row.state.bookmarked)
+            actions.onBookmark(row)
+        }
     }
     DislikeCount(row, muted)
 }
@@ -391,11 +407,21 @@ private fun rememberTick(): (Boolean) -> Unit {
 }
 
 @Composable
-private fun ActionButton(icon: ImageVector, count: Int?, tint: Color, onClick: () -> Unit) {
+private fun ActionButton(
+    icon: ImageVector,
+    count: Int?,
+    tint: Color,
+    onLongClick: (() -> Unit)? = null,
+    onClick: () -> Unit,
+) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        val interactions = remember { MutableInteractionSource() }
-        IconButton(onClick = onClick, interactionSource = interactions, modifier = Modifier.squish(interactions)) {
-            Icon(icon, contentDescription = null, tint = tint)
+        if (onLongClick != null) {
+            PressableIcon(icon, tint, onClick, onLongClick)
+        } else {
+            val interactions = remember { MutableInteractionSource() }
+            IconButton(onClick = onClick, interactionSource = interactions, modifier = Modifier.squish(interactions)) {
+                Icon(icon, contentDescription = null, tint = tint)
+            }
         }
         Text(
             count?.takeIf { it > 0 && LocalReadingStyle.current.showCounts }?.toString().orEmpty(),

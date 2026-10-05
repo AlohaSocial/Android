@@ -80,10 +80,15 @@ public object StatusEndpoints {
             it.toDomain()
         }
 
-    public fun action(id: String, action: StatusAction): ApiRequest<Status> =
-        request(Endpoint("api/v1/statuses/$id/${action.wire}", HttpMethod.POST), StatusDto.serializer()) {
-            it.toDomain()
-        }
+    /** [action] on post [id]; a boost seen by [visibility] where one is given, else the account's default. */
+    public fun action(id: String, action: StatusAction, visibility: String? = null): ApiRequest<Status> = request(
+        Endpoint(
+            "api/v1/statuses/$id/${action.wire}",
+            HttpMethod.POST,
+            body = visibility?.let { Body.Form(listOf(QueryItem("visibility", it))) } ?: Body.None,
+        ),
+        StatusDto.serializer(),
+    ) { it.toDomain() }
 
     /** Deletes a status; the answer carries its source text, for "delete and redraft". */
     public fun delete(id: String): ApiRequest<Status> =

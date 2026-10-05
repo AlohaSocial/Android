@@ -20,9 +20,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import kotlinx.coroutines.withTimeout
@@ -36,12 +34,6 @@ import mockwebserver3.MockWebServer
 import mockwebserver3.RecordedRequest
 import okhttp3.OkHttpClient
 import org.junit.After
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
-import org.junit.Test
-import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
 import social.aloha.core.data.AccountRepository
 import social.aloha.core.data.ClientFactory
 import social.aloha.core.data.NewAccount
@@ -62,10 +54,8 @@ import social.aloha.core.datastore.AccountSettingsStore
 import social.aloha.core.datastore.AppPreferences
 import social.aloha.core.datastore.TokenVault
 import social.aloha.core.model.AccessToken
-import social.aloha.core.model.OutboxState
 import social.aloha.core.model.ServerCapabilities
 import social.aloha.core.model.ServerLimits
-import social.aloha.core.model.Visibility
 import social.aloha.core.model.Writing
 import social.aloha.core.navigation.ComposerKey
 import social.aloha.core.network.RateLimiter
@@ -124,6 +114,8 @@ internal class Posts(private val script: MutableList<Int>) : Dispatcher() {
             request.method == "POST" && path.endsWith("/statuses") -> post(request)
 
             path.endsWith("/statuses/p") -> json(parent.toString())
+
+            path.endsWith("/search") -> json("""{"accounts":[],"hashtags":[],"statuses":[$parent]}""")
 
             path.endsWith("/statuses/mine/source") || path.endsWith("/statuses/gone/source") ->
                 json("""{"id":"x","text":"As I wrote it","spoiler_text":""}""")

@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Badge
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -48,6 +49,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.ui.Avatar
+import social.aloha.core.ui.R as UiR
 import social.aloha.core.ui.rememberHaptics
 
 /**
@@ -169,12 +171,16 @@ internal fun AccountSheet(
 private fun AccountLine(account: SwitcherAccount, onSwitch: () -> Unit) {
     val inUse = stringResource(R.string.accounts_active)
     val needsReauth = stringResource(R.string.accounts_needs_reauth)
+    val unread = stringResource(UiR.string.accounts_unread)
     ListItem(
         modifier = Modifier
             .then(if (account.active) Modifier else Modifier.clickable(role = Role.Button, onClick = onSwitch))
             .semantics {
                 selected = account.active
-                if (account.active) stateDescription = inUse
+                when {
+                    account.active -> stateDescription = inUse
+                    account.unread > 0 -> stateDescription = unread
+                }
             },
         leadingContent = { Avatar(account.avatarUrl, LINE_AVATAR) },
         headlineContent = { Text(account.displayName, maxLines = 1, overflow = TextOverflow.Ellipsis) },
@@ -185,7 +191,12 @@ private fun AccountLine(account: SwitcherAccount, onSwitch: () -> Unit) {
             }
         },
         colors = SheetRow,
-        trailingContent = { if (account.active) Icon(AlohaIcons.Check, contentDescription = null) },
+        trailingContent = {
+            when {
+                account.active -> Icon(AlohaIcons.Check, contentDescription = null)
+                account.unread > 0 -> Badge()
+            }
+        },
     )
 }
 

@@ -11,11 +11,9 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -158,13 +156,14 @@ public fun HomeRoute(
     header: @Composable () -> Unit = {},
     onSearch: (() -> Unit)? = null,
     onEditFeeds: (() -> Unit)? = null,
+    onComposeAs: ((accountId: String) -> Unit)? = null,
 ) {
     val viewModel: HomeFeedsViewModel = hiltViewModel()
     val state by viewModel.state.collectAsStateWithLifecycle()
     HomeScreen(
         state,
         viewModel,
-        HomeChrome(navigationIcon, header, onSearch, onEditFeeds, onCompose = { navigation.openComposer(null) }),
+        HomeChrome(navigationIcon, header, onSearch, onEditFeeds, { navigation.openComposer(null) }, onComposeAs),
         modifier,
     ) { feed, list, banner ->
         TimelineRoute(navigation, feed = TimelineFeed.Pinned(feed.source), listState = list, header = banner)
@@ -178,6 +177,7 @@ internal class HomeChrome(
     val onSearch: (() -> Unit)? = null,
     val onEditFeeds: (() -> Unit)? = null,
     val onCompose: () -> Unit = {},
+    val onComposeAs: ((accountId: String) -> Unit)? = null,
 )
 
 /**
@@ -237,14 +237,7 @@ internal fun HomeScreen(
                 },
             )
         },
-        floatingActionButton = {
-            ExtendedFloatingActionButton(
-                onClick = chrome.onCompose,
-                expanded = !lists.getValue(current.id).canScrollBackward,
-                icon = { Icon(AlohaIcons.Compose, contentDescription = null) },
-                text = { Text(stringResource(R.string.timeline_compose)) },
-            )
-        },
+        floatingActionButton = { ComposeButton(chrome, expanded = !lists.getValue(current.id).canScrollBackward) },
     ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize()) {
             chrome.header()

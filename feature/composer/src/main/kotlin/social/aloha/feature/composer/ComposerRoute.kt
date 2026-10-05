@@ -4,9 +4,7 @@
 package social.aloha.feature.composer
 
 import android.Manifest
-import android.content.Context
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Build
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
@@ -45,7 +43,6 @@ import social.aloha.core.model.CustomEmoji
 import social.aloha.core.model.LogArea
 import social.aloha.core.model.Visibility
 import social.aloha.core.navigation.ComposerKey
-import social.aloha.core.ui.isForeignContent
 import timber.log.Timber
 
 /** Which of the composer's dialogs is open; saved, so turning the phone keeps it open. */

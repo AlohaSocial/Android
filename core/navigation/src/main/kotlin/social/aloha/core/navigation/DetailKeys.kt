@@ -65,6 +65,8 @@ public data class ComposerKey(
     val story: Boolean = false,
     val direct: Boolean = false,
     val quoteId: String? = null,
+    /** The post a reply answers, by its address, for an account whose server knows it by another id. */
+    val replyToUrl: String? = null,
 ) : NavKey
 
 /**

@@ -427,7 +427,7 @@ internal class ComposerViewModel @AssistedInject constructor(
         }
         editing = opened.editing
         val draft = opened.post
-        (draft?.replyToId ?: key.replyToId)?.let { id -> parent = (compose.status(account, id) as? Answer.Got)?.value }
+        replyId(draft, key, account, lookup)?.let { id -> parent = (compose.status(account, id) as? Answer.Got)?.value }
         use(account)
         val preferences = compose.preferences(account)
         val writing = this.preferences.writing.first()
@@ -458,6 +458,8 @@ internal class ComposerViewModel @AssistedInject constructor(
     /** Makes [account] the one written as: its limits, its emoji, what its server allows. */
     private suspend fun use(account: SignedInAccount) {
         reader = account
+        // a reply by address, as another account, that its server cannot find is no post of its own
+        if (key.replyToUrl != null && parent == null) control.update { it.copy(failure = PostFailure.ReplyNotFound) }
         attachments.account = account
         completions.forget()
         val answering = parent?.displayed
@@ -512,6 +514,14 @@ private fun ComposerUiState.withDefaults(preferences: Preferences?, writing: Wri
 
 /** The number a part of a thread ends in, where the writer numbers threads. */
 private fun numbering(on: Boolean, index: Int, size: Int): String = if (on) Writing.numbering(index, size) else ""
+
+/** The post a reply answers: the draft's, the key's, or the one found by the key's address on [account]'s server. */
+private suspend fun replyId(
+    draft: DraftPost?,
+    key: ComposerKey,
+    account: SignedInAccount,
+    lookup: RemoteLookup,
+): String? = draft?.replyToId ?: key.replyToId ?: key.replyToUrl?.let { lookup.post(account, it) }
 
 /** Each segment's text as it goes out, its number after it where the thread is numbered. */
 private fun numbered(segments: List<TextFieldValue>, on: Boolean): List<String> = segments.mapIndexed { index, value ->

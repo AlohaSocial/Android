@@ -106,4 +106,10 @@
     <string name="lock_unlock">Unlock</string>
     <!-- Title of the system prompt that unlocks the app -->
     <string name="lock_prompt">Unlock Aloha Social</string>
+    <!-- A toast once a post was boosted, favourited or bookmarked as another account; %1$s is that account -->
+    <string name="acted">Done as %1$s</string>
+    <!-- Said when it did not: the post was not found on that account's server, or the server refused -->
+    <string name="act_failed">That didn’t go through. The account’s server may not know the post yet.</string>
+    <!-- Title of the sheet asking which signed-in account writes what another app shared -->
+    <string name="accounts_choose">Choose account</string>
 </resources>
