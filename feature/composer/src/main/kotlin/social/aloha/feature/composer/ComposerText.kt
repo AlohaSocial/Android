@@ -51,6 +51,27 @@ internal object ComposerText {
         spans(text).sortedByDescending { it.first }.fold(text) { left, range -> left.removeRange(range) }
             .replace(whitespace, " ").trim()
 
+    /** The handles [text] mentions, each once, in the order they come. */
+    fun mentions(text: String): List<String> = mention.findAll(text).map { it.value }.distinct().toList()
+
+    /** [value] without its first mention of [handle] and the space after it, the cursor kept where it was. */
+    fun without(value: TextFieldValue, handle: String): TextFieldValue {
+        val found = Regex("""(?<![\w/@])""" + Regex.escape(handle) + """(?![\w@.-]) ?""").find(value.text)
+            ?: return value
+        val range = found.range
+        val moved = { at: Int ->
+            when {
+                at <= range.first -> at
+                at > range.last -> at - found.value.length
+                else -> range.first
+            }
+        }
+        return TextFieldValue(
+            value.text.removeRange(range),
+            TextRange(moved(value.selection.start), moved(value.selection.end)),
+        )
+    }
+
     /** The hashtags in [text], without their `#`, as the server will read them. */
     fun hashtags(text: String): List<String> = hashtag.findAll(text).map { it.value.drop(1) }.toList()
 

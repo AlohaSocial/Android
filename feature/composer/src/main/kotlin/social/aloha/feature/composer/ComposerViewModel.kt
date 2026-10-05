@@ -102,6 +102,9 @@ internal class ComposerViewModel @AssistedInject constructor(
     /** What a reply or a direct message started with (whom it is for), which leaving would not lose. */
     private var prefill = key.sharedText.takeIf { key.direct }.orEmpty()
 
+    /** Whom the post started addressed to, read once from [prefill]. */
+    private var addressed = ComposerText.mentions(prefill)
+
     /** Whether leaving would lose something the writer wrote. */
     val hasWriting: Boolean
         get() = spoiler.isNotBlank() || attachments.byPost.value.flatten().isNotEmpty() ||
@@ -226,6 +229,12 @@ internal class ComposerViewModel @AssistedInject constructor(
             },
             games = text.segments.flatMap(ComposerGames::kinds).distinct(),
             completions = found,
+            mentioned = if (addressed.size > 1 && state.posted == 0) {
+                val present = ComposerText.mentions(text.segments.first()).toSet()
+                addressed.filter { it in present }
+            } else {
+                emptyList()
+            },
             attachments = attached,
             card = card,
             cardFits = cardFits,
@@ -461,6 +470,7 @@ internal class ComposerViewModel @AssistedInject constructor(
             parent?.let { status ->
                 segments[0] = prefilled(status, account)
                 prefill = segments[0].text
+                addressed = ComposerText.mentions(prefill)
                 spoiler = inheritedWarning(status.displayed, writing.replyPrefix, own = account.serverAccountId)
                 control.update { it.answering(status.displayed, writing, spoiler) }
             }

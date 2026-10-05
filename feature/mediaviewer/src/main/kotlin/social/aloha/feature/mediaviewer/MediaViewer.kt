@@ -77,6 +77,7 @@ import social.aloha.core.model.Status
 import social.aloha.core.model.VideoSource
 import social.aloha.core.ui.LocalOnMobileData
 import social.aloha.core.ui.LocalReadingStyle
+import social.aloha.core.ui.PressableIcon
 import social.aloha.core.ui.rememberBlurHashPainter
 import social.aloha.core.ui.rememberReducedMotion
 
@@ -328,9 +329,14 @@ private fun BoxScope.TopBar(
             Box(Modifier.weight(1f))
         }
         current?.let { attachment ->
-            IconButton(onClick = { actions.onShare(attachment) }) {
-                Icon(AlohaIcons.Share, stringResource(R.string.viewer_share), tint = Color.White)
-            }
+            PressableIcon(
+                AlohaIcons.Share,
+                Color.White,
+                onClick = { actions.onShare(attachment) },
+                onLongClick = { actions.onCopy(attachment) },
+                description = stringResource(R.string.viewer_share),
+                longClickLabel = stringResource(R.string.viewer_copy),
+            )
             More(attachment, actions)
         }
     }

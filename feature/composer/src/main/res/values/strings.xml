@@ -82,6 +82,12 @@
     <string name="composer_media_add_alt">Add alt text</string>
     <!-- Takes the place of "Add a choice" while a choice is dragged: dropping it there removes it -->
     <string name="composer_poll_drop_remove">Drop here to remove</string>
+    <!-- Button on the description page, opening what alt text is -->
+    <string name="composer_media_alt_help">What is alt text?</string>
+    <!-- Shown under that button -->
+    <string name="composer_media_alt_help_body">Alt text describes a picture for people who can’t see it: a screen reader reads it aloud, and some apps show it in place of the picture. Say what matters in it, as you would to a friend on the phone: who is there, what happens, and any words it shows.</string>
+    <!-- Said by a screen reader on a chip above a reply’s text; %1$s is a handle, and tapping leaves them out -->
+    <string name="composer_mention_leave_out">Leave out %1$s</string>
     <!-- Title of the language list -->
     <string name="composer_language_title">Language of the post</string>
     <!-- Toolbar button that opens the custom emoji of the server -->
@@ -172,8 +178,8 @@
     <string name="composer_media_refused">Not accepted: %1$s</string>
     <!-- An attachment could not be uploaded -->
     <string name="composer_media_failed">Couldn\'t upload</string>
-    <!-- Title of the sheet for describing an attachment -->
-    <string name="composer_media_editor_title">Describe this for people who can\'t see it</string>
+    <!-- Title of the full-screen page describing an attachment for people who cannot see it -->
+    <string name="composer_media_editor_title">Alt text</string>
     <!-- Label of the description field of an attachment -->
     <string name="composer_media_description">Description</string>
     <!-- Button that closes the attachment's description sheet -->

@@ -5,6 +5,7 @@ package social.aloha.core.designsystem
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material.icons.automirrored.outlined.List
 import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.automirrored.outlined.OpenInNew
@@ -168,6 +169,7 @@ public object AlohaIcons {
     public val PauseNotifications: ImageVector = Icons.Outlined.NotificationsPaused
     public val Report: ImageVector = Icons.Outlined.Flag
     public val Delete: ImageVector = Icons.Outlined.Delete
+    public val Help: ImageVector = Icons.AutoMirrored.Outlined.HelpOutline
     public val Redraft: ImageVector = Icons.Outlined.EditNote
     public val Add: ImageVector = Icons.Outlined.Add
 

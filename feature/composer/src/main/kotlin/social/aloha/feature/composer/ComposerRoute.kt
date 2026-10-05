@@ -168,6 +168,9 @@ private fun rememberActions(
 
             override fun onAuthor(id: String) = viewModel.onAuthor(id)
 
+            override fun onLeaveOut(handle: String) =
+                viewModel.onText(0, ComposerText.without(viewModel.segments.first(), handle))
+
             override fun onPickSchedule() {
                 dialogs.picker.value = Picker.Schedule
             }

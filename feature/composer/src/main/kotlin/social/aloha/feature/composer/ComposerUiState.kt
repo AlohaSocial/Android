@@ -121,6 +121,8 @@ internal data class ComposerUiState(
     val remaining: List<Int> = listOf(0),
     /** Where each segment's text goes past the limit; null for one within it. */
     val overFrom: List<Int?> = listOf(null),
+    /** The people a reply to several is addressed to, still in its text, each to be left out; else empty. */
+    val mentioned: List<String> = emptyList(),
     /** The language the opening post reads as, where the device is sure enough of it. */
     val detected: String? = null,
     val games: List<ComposerGames.Kind> = emptyList(),

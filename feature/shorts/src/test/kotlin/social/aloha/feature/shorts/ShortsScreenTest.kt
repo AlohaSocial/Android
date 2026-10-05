@@ -9,10 +9,12 @@ import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.accessibility.enableAccessibilityChecks
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.tryPerformAccessibilityChecks
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.captureRoboImage
@@ -57,6 +59,10 @@ class ShortsScreenTest {
 
         override fun onShare(short: ShortUi) {
             asked += "share"
+        }
+
+        override fun onCopyLink(short: ShortUi) {
+            asked += "copy"
         }
 
         override fun onProfile(short: ShortUi) {
@@ -114,6 +120,14 @@ class ShortsScreenTest {
             .fetchSemanticsNode().config[SemanticsActions.CustomActions].map { it.label }.toSet()
         assertEquals(setOf("Favourite", "Pause", "View Alice Example's profile"), labels)
         assertEquals(listOf("favourite", "profile"), asked)
+    }
+
+    @Test
+    fun `a tap on share shares the link, a long press copies it`() {
+        show()
+        compose.onNodeWithContentDescription("Share").performClick()
+        compose.onNodeWithContentDescription("Share").performTouchInput { longClick() }
+        assertEquals(listOf("share", "copy"), asked)
     }
 
     @Test

@@ -176,10 +176,10 @@ public abstract class RoutedStatusActions(
     override fun onMenu(row: StatusRowUi, item: StatusMenuItem) {
         val url = row.url
         when (item) {
-            StatusMenuItem.Share -> url?.let { share(context, it) }
+            StatusMenuItem.Share -> url?.let { shareLink(context, it) }
 
             StatusMenuItem.CopyLink -> url?.let {
-                copy(context, it)
+                copyLink(context, it)
                 onCopied()
             }
 
@@ -261,13 +261,15 @@ private fun openInApp(context: Context, url: String) {
 
 private fun isWeb(url: String): Boolean = url.toUri().scheme?.lowercase() in setOf("http", "https")
 
-private fun share(context: Context, url: String) {
+/** Offers [url] to the apps that take a link; nothing for one that is not a web address. */
+public fun shareLink(context: Context, url: String) {
     if (!isWeb(url)) return
     val send = Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, url)
     context.startActivity(Intent.createChooser(send, null))
 }
 
-private fun copy(context: Context, url: String) {
+/** Puts [url] on the clipboard; nothing for one that is not a web address. */
+public fun copyLink(context: Context, url: String) {
     if (!isWeb(url)) return
     context.getSystemService<ClipboardManager>()?.setPrimaryClip(ClipData.newPlainText(url, url))
 }

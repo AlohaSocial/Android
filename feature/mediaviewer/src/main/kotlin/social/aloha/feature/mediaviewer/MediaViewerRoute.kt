@@ -5,10 +5,7 @@ package social.aloha.feature.mediaviewer
 
 import android.Manifest
 import android.app.DownloadManager
-import android.content.ClipData
-import android.content.ClipboardManager
 import android.content.Context
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
@@ -59,7 +56,9 @@ import social.aloha.core.model.VideoSource
 import social.aloha.core.model.VideoSources
 import social.aloha.core.navigation.MediaViewerKey
 import social.aloha.core.ui.StatusNavigation
+import social.aloha.core.ui.copyLink
 import social.aloha.core.ui.openInBrowser
+import social.aloha.core.ui.shareLink
 
 /**
  * The post whose attachments the viewer shows, as the reader's server sees it; null until known.
@@ -151,14 +150,12 @@ public fun MediaViewerRoute(
             }
 
             override fun onShare(attachment: MediaAttachment) {
-                val url = attachment.url ?: return
-                val send = Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, url)
-                context.startActivity(Intent.createChooser(send, null))
+                attachment.url?.let { shareLink(context, it) }
             }
 
             override fun onCopy(attachment: MediaAttachment) {
                 val url = attachment.url ?: return
-                context.getSystemService<ClipboardManager>()?.setPrimaryClip(ClipData.newPlainText(url, url))
+                copyLink(context, url)
                 scope.launch { snackbars.showSnackbar(copied) }
             }
 

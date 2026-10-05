@@ -66,6 +66,17 @@ class ComposerTextTest {
     }
 
     @Test
+    fun `a mention left out takes its space with it, and the cursor stays where it was`() {
+        val value = at("@ann@x.test @bob @annie hello", cursor = 29)
+        val left = ComposerText.without(value, "@bob")
+        assertEquals("@ann@x.test @annie hello", left.text)
+        assertEquals(TextRange(24), left.selection)
+        // a handle is matched whole, never as the start of a longer one
+        assertEquals("@ann@x.test @annie hello", ComposerText.without(at("@ann@x.test @annie hello"), "@ann").text)
+        assertEquals(listOf("@ann@x.test", "@annie"), ComposerText.mentions(left.text))
+    }
+
+    @Test
     fun `the hashtags a post uses are found without their hash`() {
         assertEquals(listOf("Surf", "café"), ComposerText.hashtags("#Surf and #café, not #1 or a#b"))
     }

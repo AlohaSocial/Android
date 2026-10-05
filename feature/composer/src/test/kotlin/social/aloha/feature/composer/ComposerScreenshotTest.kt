@@ -79,6 +79,7 @@ class ComposerScreenshotTest {
         override fun onAddSegment() = Unit
         override fun onRemoveSegment(index: Int) = Unit
         override fun onAuthor(id: String) = Unit
+        override fun onLeaveOut(handle: String) = Unit
         override fun onPickMedia() = Unit
         override fun onPickFiles() = Unit
         override fun onCapture(capture: Capture) = Unit
@@ -242,6 +243,32 @@ class ComposerScreenshotTest {
     fun story() = capture("composer-story") {
         val picture = Attachment("beach", File("beach.jpg"), "beach.jpg", "image/jpeg", UploadState.Done("1", null))
         NewPost(fresh.copy(attachments = listOf(listOf(picture)), storyFits = true, asStory = true, storySeconds = 10))
+    }
+
+    @Test
+    fun altText() = captureScreen("composer-alt-text") {
+        val picture = Attachment(
+            "beach",
+            File("beach.jpg"),
+            "beach.jpg",
+            "image/jpeg",
+            UploadState.Done("1", null),
+            description = "Surfers at sunrise",
+        )
+        MediaEditor(picture, video = null) { _, _, _ -> }
+    }
+
+    @Test
+    fun replyToSeveral() = capture("composer-reply-mentions") {
+        ComposerScreen(
+            fresh.copy(
+                reply = ReplyContext("@bob@remote.example", "Who is up for a swim at sunrise?"),
+                mentioned = listOf("@bob@remote.example", "@kai", "@leilani@surf.example"),
+            ),
+            listOf(value("@bob@remote.example @kai @leilani@surf.example Count me in")),
+            spoiler = "",
+            actions = NoActions,
+        )
     }
 
     @Test

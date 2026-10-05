@@ -34,6 +34,9 @@ internal interface ComposerActions :
 
     fun onAuthor(id: String)
 
+    /** Takes [handle] out of the people a reply is addressed to. */
+    fun onLeaveOut(handle: String)
+
     /** Shares the post as a story instead, or back as a post. */
     fun onStory(on: Boolean)
 

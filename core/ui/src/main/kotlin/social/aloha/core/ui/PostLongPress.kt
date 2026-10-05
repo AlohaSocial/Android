@@ -30,6 +30,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -37,9 +38,19 @@ import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.model.Visibility
 
-/** An action's icon that also answers a long press, the size of an icon button. */
+/**
+ * An action's icon that also answers a long press, the size of an icon button; [description] names it to a
+ * screen reader where nothing around it does, [longClickLabel] what its long press does.
+ */
 @Composable
-internal fun PressableIcon(icon: ImageVector, tint: Color, onClick: () -> Unit, onLongClick: () -> Unit) {
+public fun PressableIcon(
+    icon: ImageVector,
+    tint: Color,
+    onClick: () -> Unit,
+    onLongClick: () -> Unit,
+    description: String? = null,
+    longClickLabel: String? = null,
+) {
     val interactions = remember { MutableInteractionSource() }
     Box(
         Modifier
@@ -49,9 +60,11 @@ internal fun PressableIcon(icon: ImageVector, tint: Color, onClick: () -> Unit, 
                 interactionSource = interactions,
                 indication = ripple(),
                 role = Role.Button,
+                onLongClickLabel = longClickLabel,
                 onLongClick = onLongClick,
                 onClick = onClick,
             )
+            .then(if (description == null) Modifier else Modifier.semantics { contentDescription = description })
             .squish(interactions),
         contentAlignment = Alignment.Center,
     ) { Icon(icon, contentDescription = null, tint = tint) }
