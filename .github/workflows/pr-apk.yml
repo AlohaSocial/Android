@@ -2,10 +2,10 @@
 # SPDX-License-Identifier: MIT
 #
 # A debug-signed generic APK per pull request as a GitHub Actions artifact (kept
-# five days) and a comment linking it. The artifact is the APK itself, not a zip, so
-# the link downloads a file a phone installs. Each new build replaces the pull
-# request's earlier APK and comment, so only the latest is kept. No upload server
-# and no keystore.
+# five days), a QR code for its download and a comment linking both. The artifacts
+# are the files themselves, not zips, so the link downloads a file a phone installs.
+# Each new build replaces the pull request's earlier artifacts and comment, so only
+# the latest is kept. No upload server and no keystore.
 name: pr-apk
 
 on:
@@ -42,9 +42,13 @@ jobs:
         run: ./gradlew assembleGenericDebug
       # an unzipped artifact is named after its file, so the file carries the pull request number
       - name: Name the APK after the pull request
+        id: apk
         env:
           APK: aloha-generic-debug-pr${{ github.event.pull_request.number }}.apk
-        run: cp app/build/outputs/apk/generic/debug/*.apk "$APK"
+        run: |
+          cp app/build/outputs/apk/generic/debug/*.apk "$APK"
+          "$ANDROID_HOME/build-tools/37.0.0/aapt2" dump badging "$APK" |
+            sed -n "1s/.* versionCode='\([^']*\)' versionName='\([^']*\)'.*/version=\2 (\1)/p" >> "$GITHUB_OUTPUT"
       - name: Upload
         id: upload
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -52,8 +56,23 @@ jobs:
           path: aloha-generic-debug-pr${{ github.event.pull_request.number }}.apk
           archive: false
           retention-days: 5
-      # a fork's token cannot delete or comment, so its pull request keeps the artifact alone
-      - name: Replace the earlier APK and comment
+      - name: QR code for the download
+        env:
+          QR: aloha-generic-debug-pr${{ github.event.pull_request.number }}-qr.png
+          URL: ${{ steps.upload.outputs.artifact-url }}
+        run: |
+          sudo apt-get install -y -qq qrencode > /dev/null
+          qrencode -s 8 -o "$QR" "$URL"
+      - name: Upload the QR code
+        id: upload-qr
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          path: aloha-generic-debug-pr${{ github.event.pull_request.number }}-qr.png
+          if-no-files-found: error
+          archive: false
+          retention-days: 5
+      # a fork's token cannot delete or comment, so its pull request keeps the artifacts alone
+      - name: Replace the earlier artifacts and comment
         if: github.event.pull_request.head.repo.full_name == github.repository
         env:
           GH_TOKEN: ${{ github.token }}
@@ -61,14 +80,35 @@ jobs:
           # the pushed commit, not the merge commit GitHub builds a pull request on
           SHA: ${{ github.event.pull_request.head.sha }}
           NAME: aloha-generic-debug-pr${{ github.event.pull_request.number }}.apk
+          QR_NAME: aloha-generic-debug-pr${{ github.event.pull_request.number }}-qr.png
           ID: ${{ steps.upload.outputs.artifact-id }}
+          QR_ID: ${{ steps.upload-qr.outputs.artifact-id }}
           URL: ${{ steps.upload.outputs.artifact-url }}
+          QR_URL: ${{ steps.upload-qr.outputs.artifact-url }}
+          VERSION: ${{ steps.apk.outputs.version }}
         run: |
-          gh api --paginate "repos/$GITHUB_REPOSITORY/actions/artifacts?name=$NAME&per_page=100" \
-            --jq ".artifacts[] | select(.id != $ID) | .id" |
-            while read -r id; do gh api -X DELETE "repos/$GITHUB_REPOSITORY/actions/artifacts/$id"; done
+          for name in "$NAME" "$QR_NAME"; do
+            gh api --paginate "repos/$GITHUB_REPOSITORY/actions/artifacts?name=$name&per_page=100" \
+              --jq ".artifacts[] | select(.id != $ID and .id != $QR_ID) | .id" |
+              while read -r id; do gh api -X DELETE "repos/$GITHUB_REPOSITORY/actions/artifacts/$id"; done
+          done
           gh api --paginate "repos/$GITHUB_REPOSITORY/issues/$PR/comments?per_page=100" \
-            --jq '.[] | select(.user.login == "github-actions[bot]" and (.body | startswith("Debug APK"))) | .id' |
+            --jq '.[] | select(.user.login == "github-actions[bot]" and (.body | contains("<!-- pr-apk -->"))) | .id' |
             while read -r id; do gh api -X DELETE "repos/$GITHUB_REPOSITORY/issues/comments/$id"; done
-          gh pr comment "$PR" --repo "$GITHUB_REPOSITORY" \
-            --body "Debug APK (generic flavor) for ${SHA::8}: $URL - kept for 5 days."
+          cat > "$RUNNER_TEMP/comment.md" <<EOF
+          ### :iphone: QA build
+
+          | | |
+          |---|---|
+          | **Download** | [$NAME]($URL) |
+          | **QR code** | [Open the QR code for this download]($QR_URL) |
+          | **Commit** | $SHA |
+          | **Version** | \`$VERSION\` |
+          | **Available until** | 5 days after this build |
+
+          Each QA build is signed with a debug key made for its CI run, so it cannot update any other Aloha install, an earlier QA build included: uninstall that one first.
+
+          Downloading the file requires a GitHub account, so open this link on the device you want to test on, or transfer the APK to it.
+          <!-- pr-apk -->
+          EOF
+          gh pr comment "$PR" --repo "$GITHUB_REPOSITORY" --body-file "$RUNNER_TEMP/comment.md"
