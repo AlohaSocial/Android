@@ -89,8 +89,7 @@ private fun BodyText(row: StatusRowUi, animateEmoji: Boolean, focused: Boolean, 
         )
     }
     if (!collapse.collapsible) return text()
-    Collapsible(collapsed = !collapse.expanded, onTall = collapse.onTall, content = text)
-    if (collapse.tall) {
+    Collapsible(collapsed = !collapse.expanded, tall = collapse.tall, onTall = collapse.onTall, content = text) {
         TextButton(onClick = collapse.onExpand) {
             Text(stringResource(if (collapse.expanded) R.string.status_collapse else R.string.status_expand))
         }

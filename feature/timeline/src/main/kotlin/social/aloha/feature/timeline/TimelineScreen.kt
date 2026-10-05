@@ -303,7 +303,7 @@ private fun TimelineRow(
 
         is TimelineItem.Boosts -> BoostCarousel(item, state.now, rowActions) { actions.onExpandBoosts(item.key) }
 
-        is TimelineItem.Gap -> GapRow(item, gaps.fromBelow) { gaps.fill(item) }
+        is TimelineItem.Gap -> GapRow(item, gaps.fromBelow()) { gaps.fill(item) }
 
         TimelineItem.CaughtUp -> CaughtUpDivider(onClick = actions::onCaughtUp)
     }
@@ -356,8 +356,11 @@ private fun Modifier.tornEdges(color: Color): Modifier = drawBehind {
     }
 }
 
-/** Where the list's gaps fill from, and how the rows under a gap keep their place while it fills from below. */
-internal class GapFilling(val fromBelow: Boolean, val fill: (TimelineItem.Gap) -> Unit)
+/**
+ * Where the list's gaps fill from, and how the rows under a gap keep their place while it fills from below.
+ * [fromBelow] is read by the gap rows alone, so a change of scroll direction redraws only them.
+ */
+internal class GapFilling(val fromBelow: () -> Boolean, val fill: (TimelineItem.Gap) -> Unit)
 
 /**
  * A reader scrolling up towards a gap came from below it: it fills from the post under it, and that
@@ -378,14 +381,17 @@ private fun rememberGapFilling(
         listState.scrollToItem(index)
         listState.scrollBy(-offset.toFloat())
     }
-    val fromBelow = listState.lastScrolledBackward
-    return GapFilling(fromBelow) { gap ->
-        if (fromBelow) {
-            val below = state.items.getOrNull(state.items.indexOf(gap) + 1)?.key
-            val visible = listState.layoutInfo.visibleItemsInfo.firstOrNull { it.key == below }
-            anchor = if (below != null && visible != null) below to visible.offset else null
+    val items by rememberUpdatedState(state.items)
+    return remember(listState, actions) {
+        GapFilling({ listState.lastScrolledBackward }) { gap ->
+            val fromBelow = listState.lastScrolledBackward
+            if (fromBelow) {
+                val below = items.getOrNull(items.indexOf(gap) + 1)?.key
+                val visible = listState.layoutInfo.visibleItemsInfo.firstOrNull { it.key == below }
+                anchor = if (below != null && visible != null) below to visible.offset else null
+            }
+            actions.onFillGap(gap.id, fromBelow)
         }
-        actions.onFillGap(gap.id, fromBelow)
     }
 }
 

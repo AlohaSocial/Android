@@ -9,7 +9,6 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.spring
-import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.calculatePan
@@ -48,6 +47,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
@@ -106,11 +106,15 @@ internal fun MediaViewer(
     val title = stringResource(R.string.viewer_title)
     val motion = rememberViewerMotion(actions::onClose) { drag = it }
     BackHandler(onBack = motion::close)
-    val backdrop = backdropWhilePaging(pager, attachments)
+    // read while drawing, so a swipe or a drag repaints the colours without composing the viewer anew
+    val backdrop = { backdropWhilePaging(pager, attachments) }
+    val bars = { barsOf(backdrop()) }
     Box(
         modifier.fillMaxSize()
             .graphicsLayer { alpha = motion.shown }
-            .background(backdrop.copy(alpha = (1f - abs(drag) / DISMISS_DISTANCE).coerceIn(MINIMUM_BACKDROP, 1f)))
+            .drawBehind {
+                drawRect(backdrop().copy(alpha = (1f - abs(drag) / DISMISS_DISTANCE).coerceIn(MINIMUM_BACKDROP, 1f)))
+            }
             .semantics { paneTitle = title },
     ) {
         HorizontalPager(
@@ -141,9 +145,11 @@ internal fun MediaViewer(
             }
         }
         val current = attachments.getOrNull(pager.currentPage)
-        TopBar(current, pager.currentPage, attachments.size, actions.closingWith(motion::close), barsOf(backdrop))
+        TopBar(current, pager.currentPage, attachments.size, actions.closingWith(motion::close), bars)
         Box(
-            Modifier.align(Alignment.BottomCenter).fillMaxWidth().background(barsOf(backdrop)).navigationBarsPadding(),
+            Modifier.align(Alignment.BottomCenter).fillMaxWidth().drawBehind {
+                drawRect(bars())
+            }.navigationBarsPadding(),
         ) {
             BottomBar(current?.description?.takeIf { it.isNotBlank() }, status, actions) {
                 if (current != null && current.type == AttachmentKind.Image) {
@@ -304,12 +310,11 @@ private fun BoxScope.TopBar(
     index: Int,
     count: Int,
     actions: MediaViewerActions,
-    bars: Color,
+    bars: () -> Color,
 ) {
+    val top = Modifier.align(Alignment.TopCenter).fillMaxWidth()
     Row(
-        Modifier.align(
-            Alignment.TopCenter,
-        ).fillMaxWidth().background(bars).statusBarsPadding().padding(AlohaSpacing.xs),
+        top.drawBehind { drawRect(bars()) }.statusBarsPadding().padding(AlohaSpacing.xs),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         IconButton(onClick = actions::onClose) {
