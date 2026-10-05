@@ -135,9 +135,11 @@ public fun ThreadRoute(key: ThreadKey, navigation: ThreadNavigation, modifier: M
     val summaries = hiltViewModel<SummaryViewModel>(key = "summary-$key")
     val summarising by summaries.offered.collectAsStateWithLifecycle()
     val summary by summaries.summary.collectAsStateWithLifecycle()
+    val translating = rememberThreadTranslation(state.items)
     ThreadScreen(state, screenActions, rowActions, modifier, snackbars, shake = shakes) {
         ThreadMenu(
             listOfNotNull(
+                translating,
                 (R.string.thread_summarise to { summaries.summarise(state.items) }).takeIf { summarising },
             ),
         )

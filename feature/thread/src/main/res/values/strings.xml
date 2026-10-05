@@ -121,4 +121,8 @@
     <string name="thread_summary_read">Read the full thread</string>
     <!-- Summary sheet: stops the summary under way -->
     <string name="thread_summary_cancel">Cancel</string>
+    <!-- Thread menu: translates every post in the thread in a language the reader does not read -->
+    <string name="thread_translate">Translate thread</string>
+    <!-- Thread menu: shows every post translated by Translate thread in its own language again -->
+    <string name="thread_show_originals">Show originals</string>
 </resources>
