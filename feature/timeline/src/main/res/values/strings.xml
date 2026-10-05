@@ -59,6 +59,36 @@
     <string name="timeline_boosts_spoken">Boosted by %1$s</string>
     <!-- Button beside folded boosts: puts them back in the list as posts -->
     <string name="timeline_boosts_expand">Show as posts</string>
+    <!-- Name of the pinned feed of posts by people whose bell the reader rang on their profile -->
+    <string name="timeline_feed_notified">Notified posts</string>
+    <!-- Name of the pinned feed of the reader's bookmarks -->
+    <string name="timeline_feed_bookmarks">Bookmarks</string>
+    <!-- Name of the pinned feed of the reader's favourites -->
+    <string name="timeline_feed_favourites">Favourites</string>
+    <!-- Action label of Home's feed name: lists the pinned feeds to switch to -->
+    <string name="timeline_feeds_choose">Choose a feed</string>
+    <!-- Action label of Home's feed name where a tap moves to the next pinned feed -->
+    <string name="timeline_feeds_next">Next feed</string>
+    <!-- Item at the end of the list of pinned feeds: opens the screen to change them -->
+    <string name="timeline_feeds_edit">Edit feeds</string>
+    <!-- Read aloud for a pinned feed with posts above where the reader left it -->
+    <string name="timeline_feed_new">New posts</string>
+    <!-- First visit of the This server feed: what it holds -->
+    <string name="timeline_feed_about_local">Everyone on your server posts here, not only the people you follow.</string>
+    <!-- First visit of the Everywhere feed: what it holds -->
+    <string name="timeline_feed_about_federated">Public posts from every server yours knows of.</string>
+    <!-- First visit of the Notified posts feed: what it holds -->
+    <string name="timeline_feed_about_notified">Posts by the people whose bell you rang on their profile, as they arrive.</string>
+    <!-- First visit of the Bookmarks feed: what it holds -->
+    <string name="timeline_feed_about_bookmarks">The posts you bookmarked, the latest first.</string>
+    <!-- First visit of the Favourites feed: what it holds -->
+    <string name="timeline_feed_about_favourites">The posts you favourited, the latest first.</string>
+    <!-- First visit of a list's feed: what it holds -->
+    <string name="timeline_feed_about_list">The posts of the people in this list, and only theirs.</string>
+    <!-- First visit of a hashtag's feed: what it holds -->
+    <string name="timeline_feed_about_hashtag">Posts with this hashtag, from everyone your server knows of.</string>
+    <!-- Button on a feed's first-visit explanation: puts it away for good -->
+    <string name="timeline_feed_about_dismiss">Got it</string>
     <!-- Strip over the timeline when the server cannot be reached; the cached posts stay -->
     <string name="timeline_offline">You\'re offline. These are the posts saved on this device.</string>
     <!-- Strip over the timeline when the server answered with an error -->
@@ -140,8 +170,10 @@
     <string name="tag_retry">Couldn’t load this hashtag. Try again</string>
     <!-- Under a hashtag's follow button when following or unfollowing failed -->
     <string name="tag_follow_failed">That didn’t work. Nothing was changed.</string>
-    <!-- Timeline setting: heading over which of Home's timelines the app opens on, for the account in use -->
-    <string name="timeline_settings_home_opens">Home opens on</string>
+    <!-- Timeline setting: what a tap on Home's feed name does -->
+    <string name="timeline_settings_title_next">Tap the feed name for the next feed</string>
+    <!-- Summary of the setting above -->
+    <string name="timeline_settings_title_next_summary">Off, a tap lists your feeds. On, it moves to the next one, and a long press lists them.</string>
     <!-- Timeline setting: a timeline opens where it was left -->
     <string name="timeline_settings_restore">Open where I left off</string>
     <!-- Summary of the setting above -->

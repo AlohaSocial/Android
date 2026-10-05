@@ -168,6 +168,7 @@ import social.aloha.feature.stories.StoriesRail
 import social.aloha.feature.thread.StatusListRoute
 import social.aloha.feature.thread.ThreadNavigation
 import social.aloha.feature.thread.ThreadRoute
+import social.aloha.feature.timeline.HomeRoute
 import social.aloha.feature.timeline.ModesOffer
 import social.aloha.feature.timeline.TagRoute
 import social.aloha.feature.timeline.TimelineFeed
@@ -727,12 +728,21 @@ private fun ModeTimeline(
     if (feed.mode == FeedMode.Shorts) return ShortsRoute(navigation, accountButton)
     // and Audio a list to play from
     if (feed.mode == FeedMode.Audio) return AudioRoute(navigation, accountButton)
+    // Home is the reader's pinned feeds, a page each
+    if (feed == TimelineFeed.Home) {
+        HomeRoute(
+            navigation,
+            navigationIcon = accountButton,
+            header = { AnnouncementsBanner(onOpen = links.onAnnouncements) },
+            onSearch = links.onSearch,
+        )
+        // the optional modes are offered once, on the timeline every reader opens first
+        return ModesOffer()
+    }
     TimelineRoute(
         navigation,
         feed = feed,
         navigationIcon = accountButton,
-        // search is reached from Home
-        onSearch = links.onSearch.takeIf { feed == TimelineFeed.Home },
         header = {
             when (feed.mode) {
                 FeedMode.Photos -> StoriesRail(
@@ -742,13 +752,10 @@ private fun ModeTimeline(
 
                 FeedMode.Video -> ContinueWatching(onOpen = navigation::openVideo)
 
-                // what the server announces is said on Home, the timeline every reader opens
-                else -> if (feed == TimelineFeed.Home) AnnouncementsBanner(onOpen = links.onAnnouncements)
+                else -> Unit
             }
         },
     )
-    // the optional modes are offered once, on the timeline every reader opens first
-    if (feed == TimelineFeed.Home) ModesOffer()
 }
 
 @Composable

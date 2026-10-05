@@ -3,6 +3,8 @@
 
 package social.aloha.feature.timeline
 
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.SnackbarHostState
@@ -37,11 +39,12 @@ import social.aloha.core.ui.StatusRowUi
 public fun TimelineRoute(
     navigation: StatusNavigation,
     modifier: Modifier = Modifier,
-    feed: TimelineFeed = TimelineFeed.Home,
+    feed: TimelineFeed,
     navigationIcon: @Composable () -> Unit = {},
     header: @Composable () -> Unit = {},
     onSearch: (() -> Unit)? = null,
     toolbar: @Composable () -> Unit = {},
+    listState: LazyListState = rememberLazyListState(),
 ) {
     val viewModel =
         hiltViewModel<TimelineViewModel, TimelineViewModel.Factory>(key = feed.toString()) { it.create(feed) }
@@ -97,15 +100,24 @@ public fun TimelineRoute(
         rowActions,
         modifier,
         snackbars,
+        listState,
         title = when (feed) {
             TimelineFeed.Home -> stringResource(R.string.timeline_title)
+
             is TimelineFeed.Mode -> stringResource(modeTitle(feed.mode))
+
             is TimelineFeed.Tag -> "#${feed.name}"
+
             is TimelineFeed.List -> feed.title
+
+            // Home's own bar names a pinned feed; its page has none
+            is TimelineFeed.Pinned -> ""
         },
         navigationIcon = navigationIcon,
-        showOptions = feed == TimelineFeed.Home,
-        onCompose = if (feed == TimelineFeed.Home) ({ nav.openComposer(null) }) else null,
+        showOptions = false,
+        bar = feed !is TimelineFeed.Pinned,
+        // on Home's pages the button is Home's own; the keyboard's new post is the page's
+        onCompose = if (feed is TimelineFeed.Pinned) ({ nav.openComposer(null) }) else null,
         onAlbums = if (feed.mode == FeedMode.Photos && state.albums) ({ nav.openAlbums() }) else null,
         onExplore = if (feed.mode == FeedMode.Photos) ({ nav.openPhotoExplore() }) else null,
         onSearch = onSearch,

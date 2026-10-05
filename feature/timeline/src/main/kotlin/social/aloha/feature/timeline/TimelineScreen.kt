@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -28,9 +29,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectableGroup
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FilterChip
@@ -40,11 +38,13 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -122,37 +122,31 @@ internal fun TimelineScreen(
     header: @Composable () -> Unit = {},
     onVideo: (String) -> Unit = {},
     shake: Int = 0,
+    bar: Boolean = true,
 ) {
-    val bar = TopAppBarDefaults.pinnedScrollBehavior()
+    val behaviour = TopAppBarDefaults.pinnedScrollBehavior()
     val scrollToTop = rememberTopScroll(listState)
+    val (screen, insets) = if (bar) {
+        modifier.ownBar(behaviour, title) to ScaffoldDefaults.contentWindowInsets
+    } else {
+        modifier to WindowInsets(0)
+    }
     Scaffold(
-        modifier = modifier.nestedScroll(bar.nestedScrollConnection).semantics { paneTitle = title },
+        // a page of Home's pager leaves the bar, the insets and its name to Home
+        modifier = screen,
+        contentWindowInsets = insets,
         topBar = {
-            TopAppBar(
-                title = { TopBarTitle(title, scrollToTop) },
-                scrollBehavior = bar,
-                navigationIcon = navigationIcon,
-                actions = {
-                    onSearch?.let {
-                        IconButton(onClick = it) { Icon(AlohaIcons.Search, stringResource(R.string.timeline_search)) }
-                    }
-                    toolbar()
-                    PhotosButtons(state.grid, actions::onGrid, onAlbums, onExplore)
-                    if (showOptions) Options(state, actions)
-                },
-            )
-        },
-        snackbarHost = { SnackbarHost(snackbars) },
-        floatingActionButton = {
-            onCompose?.let {
-                ExtendedFloatingActionButton(
-                    onClick = it,
-                    expanded = !listState.canScrollBackward,
-                    icon = { Icon(AlohaIcons.Compose, contentDescription = null) },
-                    text = { Text(stringResource(R.string.timeline_compose)) },
+            if (bar) {
+                TopAppBar(
+                    title = { TopBarTitle(title, scrollToTop) },
+                    scrollBehavior = behaviour,
+                    navigationIcon = navigationIcon,
+                    actions = { BarButtons(state, actions, onSearch, toolbar, onAlbums, onExplore, showOptions) },
                 )
             }
         },
+        snackbarHost = { SnackbarHost(snackbars) },
+        floatingActionButton = { if (bar) ComposeButton(onCompose, listState) },
     ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize()) {
             // what another feature puts atop this timeline, such as Photos' stories
@@ -178,6 +172,40 @@ internal fun TimelineScreen(
     }
     // a grid keeps its own position and paging; the list's effects follow the list alone
     if (state.grid != true && state.watched == null) ListEffects(state, actions, listState)
+}
+
+/** The bar's buttons: search, what the feature adds, the photo grid's, and Home's ⋮. */
+@Composable
+private fun BarButtons(
+    state: TimelineUiState,
+    actions: TimelineScreenActions,
+    onSearch: (() -> Unit)?,
+    toolbar: @Composable () -> Unit,
+    onAlbums: (() -> Unit)?,
+    onExplore: (() -> Unit)?,
+    showOptions: Boolean,
+) {
+    onSearch?.let { IconButton(onClick = it) { Icon(AlohaIcons.Search, stringResource(R.string.timeline_search)) } }
+    toolbar()
+    PhotosButtons(state.grid, actions::onGrid, onAlbums, onExplore)
+    if (showOptions) ShowOptions(state.showBoosts, state.showReplies, actions::onShowBoosts, actions::onShowReplies)
+}
+
+/** A timeline with a bar of its own scrolls under it and is named by [title] for a screen reader. */
+@OptIn(ExperimentalMaterial3Api::class)
+private fun Modifier.ownBar(behaviour: TopAppBarScrollBehavior, title: String): Modifier =
+    nestedScroll(behaviour.nestedScrollConnection).semantics { paneTitle = title }
+
+/** Writing a post, from Home: the button shrinks to its icon once the list is scrolled. */
+@Composable
+private fun ComposeButton(onCompose: (() -> Unit)?, listState: LazyListState) {
+    if (onCompose == null) return
+    ExtendedFloatingActionButton(
+        onClick = onCompose,
+        expanded = !listState.canScrollBackward,
+        icon = { Icon(AlohaIcons.Compose, contentDescription = null) },
+        text = { Text(stringResource(R.string.timeline_compose)) },
+    )
 }
 
 /** The posts as a list or a grid, what an empty timeline says, or their shapes while the first page loads. */
@@ -395,26 +423,6 @@ private fun SourceRow(source: TimelineSource, sources: List<TimelineSource>, onS
                     null
                 },
                 modifier = Modifier.semantics { role = Role.RadioButton },
-            )
-        }
-    }
-}
-
-@Composable
-private fun Options(state: TimelineUiState, actions: TimelineScreenActions) {
-    var open by remember { mutableStateOf(false) }
-    Box {
-        IconButton(onClick = { open = true }) { Icon(AlohaIcons.More, stringResource(R.string.timeline_options)) }
-        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
-            DropdownMenuItem(
-                text = { Text(stringResource(R.string.timeline_show_boosts)) },
-                leadingIcon = { Checkbox(state.showBoosts, onCheckedChange = null) },
-                onClick = { actions.onShowBoosts(!state.showBoosts) },
-            )
-            DropdownMenuItem(
-                text = { Text(stringResource(R.string.timeline_show_replies)) },
-                leadingIcon = { Checkbox(state.showReplies, onCheckedChange = null) },
-                onClick = { actions.onShowReplies(!state.showReplies) },
             )
         }
     }

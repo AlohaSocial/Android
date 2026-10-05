@@ -56,6 +56,8 @@ public data class AccountSettings(
     val accent: Int? = null,
     /** The feeds this account keeps on Home, in order; null until the reader changes the defaults. */
     val pinnedFeeds: List<PinnedFeedRecord>? = null,
+    /** The kinds of feed whose first-visit explanation the reader put away, by their stored name. */
+    val explainedFeeds: Set<String> = emptySet(),
 )
 
 /**

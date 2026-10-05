@@ -26,6 +26,9 @@ public sealed interface TimelineFeed {
 
     /** One of the reader's lists, by its [id], called [title]. */
     public data class List(val id: String, val title: String) : TimelineFeed
+
+    /** One of the feeds the reader pinned to Home, a page of Home's pager. */
+    public data class Pinned(val source: TimelineSource) : TimelineFeed
 }
 
 /**
