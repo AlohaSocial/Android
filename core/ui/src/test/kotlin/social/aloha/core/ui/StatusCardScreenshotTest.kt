@@ -212,6 +212,13 @@ class StatusCardScreenshotTest {
     }
 
     @Test
+    fun textSize() = capture("status-text-size-150") {
+        CompositionLocalProvider(LocalReadingStyle provides ReadingStyle(textScale = ReadingStyle.MAX_TEXT_SCALE)) {
+            Rows(everyday)
+        }
+    }
+
+    @Test
     fun attachments() = capture("status-attachments") {
         Rows(listOf(StatusSamples.poll, StatusSamples.pollResults, StatusSamples.linked, StatusSamples.quoting))
     }

@@ -23,6 +23,10 @@ package social.aloha.core.model
  * @param missingAltBadge a "no ALT" badge on media posted without a description.
  * @param previewless media listed as rows (kind, description, sensitive) instead of drawn, to save data and calm.
  * @param reduceMotion no animation anywhere in the app, whatever the system's animation scale.
+ * @param textScale a post's text, names and times at this share of their size, from [MIN_TEXT_SCALE] to
+ *   [MAX_TEXT_SCALE], on top of the system's font size.
+ * @param absoluteTimes a post's time as a clock or a date, "14:32" or "3 Oct", instead of its age, "5m".
+ * @param boostCarousel three or more boosts in a row on Home fold into one row of cards, a swipe apart.
  */
 public data class ReadingStyle(
     val compact: Boolean = false,
@@ -39,7 +43,15 @@ public data class ReadingStyle(
     val missingAltBadge: Boolean = false,
     val previewless: Boolean = false,
     val reduceMotion: Boolean = false,
-)
+    val textScale: Float = 1f,
+    val absoluteTimes: Boolean = false,
+    val boostCarousel: Boolean = false,
+) {
+    public companion object {
+        public const val MIN_TEXT_SCALE: Float = 0.8f
+        public const val MAX_TEXT_SCALE: Float = 1.5f
+    }
+}
 
 /** Which other posts in a thread open with a content warning the reader opened: those with the same warning. */
 public enum class WarningReveal { Never, SameAuthor, Everyone }

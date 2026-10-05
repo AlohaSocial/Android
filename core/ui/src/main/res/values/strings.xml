@@ -6,6 +6,8 @@
 <resources>
     <!-- Age of a post less than a minute old, in the timeline and read aloud -->
     <string name="status_age_now">now</string>
+    <!-- Accessibility action on a post's age or time: shows its full date and time in a tooltip -->
+    <string name="status_age_show_date">Show the date</string>
     <!-- Line above a boosted post; %s is the name of the person who boosted it -->
     <string name="status_context_boosted">Boosted by %s</string>
     <!-- Line above a post pinned to a profile -->

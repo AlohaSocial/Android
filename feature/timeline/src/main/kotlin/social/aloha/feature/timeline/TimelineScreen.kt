@@ -298,6 +298,8 @@ private fun TimelineRow(
             )
         }
 
+        is TimelineItem.Boosts -> BoostCarousel(item, state.now, rowActions) { actions.onExpandBoosts(item.key) }
+
         is TimelineItem.Gap -> GapRow(item, gaps.fromBelow) { gaps.fill(item) }
 
         TimelineItem.CaughtUp -> CaughtUpDivider(onClick = actions::onCaughtUp)
@@ -528,7 +530,9 @@ private fun ListEffects(state: TimelineUiState, actions: TimelineScreenActions, 
         snapshotFlow { listState.firstVisibleItemIndex to listState.firstVisibleItemScrollOffset }
             .distinctUntilChanged()
             .collect { (index, offset) ->
-                (items.getOrNull(index) as? TimelineItem.Post)?.let { actions.onScrolled(it.key, offset) }
+                items.getOrNull(index)
+                    ?.takeIf { it is TimelineItem.Post || it is TimelineItem.Boosts }
+                    ?.let { actions.onScrolled(it.key, offset) }
             }
     }
     NearEndEffect(listState, items.size, actions::onNearEnd)

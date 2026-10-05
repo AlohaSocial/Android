@@ -3,17 +3,26 @@
 
 package social.aloha.feature.settings
 
+import android.icu.text.NumberFormat
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.Slider
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlin.math.roundToInt
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
@@ -62,6 +71,7 @@ internal fun ReadingContent(style: ReadingStyle, onChange: ((ReadingStyle) -> Re
         SwitchRow(stringResource(R.string.reading_compact), style.compact, { on ->
             onChange { it.copy(compact = on) }
         }, stringResource(R.string.reading_compact_summary))
+        TextSizeRow(style.textScale) { scale -> onChange { it.copy(textScale = scale) } }
         SwitchRow(stringResource(R.string.reading_serif), style.serif, { on -> onChange { it.copy(serif = on) } })
         SwitchRow(stringResource(R.string.reading_relaxed), style.relaxed, { on ->
             onChange { it.copy(relaxed = on) }
@@ -75,6 +85,12 @@ internal fun ReadingContent(style: ReadingStyle, onChange: ((ReadingStyle) -> Re
         SwitchRow(stringResource(R.string.reading_counts), style.showCounts, { on ->
             onChange { it.copy(showCounts = on) }
         }, stringResource(R.string.reading_counts_summary))
+        SwitchRow(stringResource(R.string.reading_absolute_times), style.absoluteTimes, { on ->
+            onChange { it.copy(absoluteTimes = on) }
+        }, stringResource(R.string.reading_absolute_times_summary))
+        SwitchRow(stringResource(R.string.reading_boost_carousel), style.boostCarousel, { on ->
+            onChange { it.copy(boostCarousel = on) }
+        }, stringResource(R.string.reading_boost_carousel_summary))
         SwitchRow(stringResource(R.string.reading_badge), style.unreadBadge, { on ->
             onChange { it.copy(unreadBadge = on) }
         })
@@ -101,3 +117,29 @@ internal fun ReadingContent(style: ReadingStyle, onChange: ((ReadingStyle) -> Re
         ) { reveal -> onChange { it.copy(revealWarnings = reveal) } }
     }
 }
+
+/** How large a post's text reads, in tenths from four fifths to half again, on top of the system's size. */
+@Composable
+private fun TextSizeRow(scale: Float, onScale: (Float) -> Unit) {
+    val percent = NumberFormat.getPercentInstance().format(scale.toDouble())
+    ListItem(
+        headlineContent = {
+            Row {
+                Text(stringResource(R.string.reading_text_size), Modifier.weight(1f))
+                Text(percent)
+            }
+        },
+        supportingContent = {
+            Slider(
+                value = scale,
+                onValueChange = { onScale((it * TENTHS).roundToInt() / TENTHS) },
+                valueRange = ReadingStyle.MIN_TEXT_SCALE..ReadingStyle.MAX_TEXT_SCALE,
+                steps = TEXT_SIZE_STEPS,
+                modifier = Modifier.semantics { stateDescription = percent },
+            )
+        },
+    )
+}
+
+private const val TENTHS = 10f
+private const val TEXT_SIZE_STEPS = 6

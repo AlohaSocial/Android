@@ -97,6 +97,8 @@ internal class TimelineViewModel @AssistedInject constructor(
         val actionFailed: Boolean = false,
         /** The newest post read before this visit, above which the caught-up line goes; fixed for the visit. */
         val caughtUpAt: String? = null,
+        /** The folded boosts the reader put back into the list, by a post of each. */
+        val expandedBoosts: Set<String> = emptySet(),
     )
 
     private val colors = MutableStateFlow<RichTextColors?>(null)
@@ -126,6 +128,13 @@ internal class TimelineViewModel @AssistedInject constructor(
         TimelineKey(feed.mode, sourceOf(account, settings))
     }.distinctUntilChanged()
 
+    /** Whether boosts in a row fold into one row of cards: Home's, where the reader chose it. */
+    private val carousel: Flow<Boolean> = if (feed == TimelineFeed.Home) {
+        reading.style.map { it.boostCarousel }.distinctUntilChanged()
+    } else {
+        flowOf(false)
+    }
+
     /** What a swipe does each way, as the settings chose for the device. */
     private val swipes: Flow<Pair<SwipeAction, SwipeAction>> =
         combine(preferences.swipeTowardsEnd, preferences.swipeTowardsStart) { end, start -> end to start }
@@ -136,6 +145,7 @@ internal class TimelineViewModel @AssistedInject constructor(
         val loadingGaps: Set<String>,
         val scrollToTop: Boolean,
         val caughtUpAt: String?,
+        val expandedBoosts: Set<String>,
     )
 
     /**
@@ -156,15 +166,21 @@ internal class TimelineViewModel @AssistedInject constructor(
                 pager.observe(account, key),
                 combine(rows.filters(account.id), rows.follows(account.id), ::Pair),
                 colors.filterNotNull(),
-                accountSettings,
+                combine(accountSettings, carousel, ::Pair),
                 combine(pager.states, control) { paging, control ->
-                    Shaping(paging.held, paging.loadingGaps, control.scrollToTop, control.caughtUpAt)
+                    Shaping(
+                        paging.held,
+                        paging.loadingGaps,
+                        control.scrollToTop,
+                        control.caughtUpAt,
+                        control.expandedBoosts,
+                    )
                 }.distinctUntilChanged(),
             ) {
                     stored,
                     (filters, follows),
                     colors,
-                    settings,
+                    (settings, carousel),
                     shaping,
                 ->
                 val shape =
@@ -179,6 +195,7 @@ internal class TimelineViewModel @AssistedInject constructor(
                     .take(PILL_AVATARS)
                     .map { it.avatar }
                 val built = caughtUp(rows.build(account, key.source, stored, shape), shaping.caughtUpAt)
+                    .let { if (carousel) foldBoosts(it, shaping.expandedBoosts) else it }
                 Shown(built, held.size, avatars, shaping.scrollToTop)
             }
         }
@@ -351,6 +368,10 @@ internal class TimelineViewModel @AssistedInject constructor(
 
     override fun onFillGap(gapId: String, fromBelow: Boolean) = pager.fillGap(gapId, fromBelow)
 
+    override fun onExpandBoosts(key: String) {
+        control.update { it.copy(expandedBoosts = it.expandedBoosts + key) }
+    }
+
     override fun onSwipe(row: StatusRowUi, action: SwipeAction) {
         when (action) {
             SwipeAction.Favourite -> onToggle(row.statusId, Toggle.Favourite)
@@ -406,7 +427,7 @@ internal class TimelineViewModel @AssistedInject constructor(
             if (!reading.restorePosition.first()) return@launch
             val restore = saved ?: marker?.let { TimelinePosition(it, 0) } ?: return@launch
             val shown = items.first { it.items.isNotEmpty() }.items
-            val index = shown.indexOfFirst { it.key == restore.statusId }
+            val index = shown.indexOfFirst { it.shows(restore.statusId) }
             if (index > 0) control.update { it.copy(restoreTo = TimelineUiState.Restore(index, restore.offset)) }
         }
     }
@@ -448,6 +469,10 @@ internal class TimelineViewModel @AssistedInject constructor(
 }
 
 private fun imagesOf(item: TimelineItem): List<String> = when (item) {
-    is TimelineItem.Post -> listOfNotNull(item.row.author.avatarUrl) + item.row.media.mapNotNull { it.previewUrl }
+    is TimelineItem.Post -> imagesOf(item.row)
+    is TimelineItem.Boosts -> item.rows.flatMap(::imagesOf)
     is TimelineItem.Gap, TimelineItem.CaughtUp -> emptyList()
 }
+
+private fun imagesOf(row: StatusRowUi): List<String> =
+    listOfNotNull(row.author.avatarUrl) + row.media.mapNotNull { it.previewUrl }

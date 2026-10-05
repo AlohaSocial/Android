@@ -51,6 +51,9 @@ internal fun VideoGrid(
                 is TimelineItem.Gap -> GapRow(item, fromBelow = null) { actions.onFillGap(item.id) }
 
                 TimelineItem.CaughtUp -> CaughtUpDivider(onClick = actions::onCaughtUp)
+
+                // only Home folds boosts
+                is TimelineItem.Boosts -> Unit
             }
         }
         if (state.loadingOlder) {

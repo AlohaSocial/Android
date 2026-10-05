@@ -238,6 +238,8 @@
     <string name="reading_compact">Compact</string>
     <!-- Summary of the Compact switch -->
     <string name="reading_compact_summary">Posts closer together, so more fit on the screen</string>
+    <!-- Reading slider: how large a post's text, names and times read, on top of the system's font size -->
+    <string name="reading_text_size">Text size</string>
     <!-- Reading switch: a post's text in a serif face -->
     <string name="reading_serif">Serif text</string>
     <!-- Reading switch: more room between a post's lines -->
@@ -254,6 +256,14 @@
     <string name="reading_reduce_motion">Reduce motion</string>
     <!-- Summary of the switch above -->
     <string name="reading_reduce_motion_summary">Nothing slides, springs or fades: lists jump, buttons stay still, screens change at once.</string>
+    <!-- Reading switch: a post's time as a clock or date instead of how long ago it was -->
+    <string name="reading_absolute_times">Times instead of ages</string>
+    <!-- Summary of the switch above; the quoted values are examples of each form -->
+    <string name="reading_absolute_times_summary">“14:32” or “3 Oct” instead of “5m” or “2d”. A tap on either shows the full date.</string>
+    <!-- Reading switch: consecutive boosts on Home fold into one horizontal row -->
+    <string name="reading_boost_carousel">Fold boosts in a row</string>
+    <!-- Summary of the switch above -->
+    <string name="reading_boost_carousel_summary">Three or more boosts in a row on Home become one row of posts to swipe through.</string>
     <!-- Reading switch: a long post shows its first lines and an Expand button -->
     <string name="reading_collapse">Shorten long posts</string>
     <!-- Reading switch: media posted without a description carries a "no ALT" badge -->

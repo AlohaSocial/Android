@@ -75,6 +75,7 @@ import social.aloha.core.ui.ListProgress
 import social.aloha.core.ui.LocalReadingStyle
 import social.aloha.core.ui.NearEndEffect
 import social.aloha.core.ui.PostAge
+import social.aloha.core.ui.PostTime
 import social.aloha.core.ui.R as UiR
 import social.aloha.core.ui.RefreshBox
 import social.aloha.core.ui.StackedAvatars
@@ -247,7 +248,7 @@ internal fun NotificationRow(
                 }
                 .padding(horizontal = AlohaSpacing.m, vertical = AlohaSpacing.s),
             horizontalArrangement = Arrangement.spacedBy(AlohaSpacing.m),
-        ) { RowContent(row, summary, age, actions, origin) }
+        ) { RowContent(row, summary, now, actions, origin) }
         DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
             DropdownMenuItem(
                 text = { Text(mute) },
@@ -265,7 +266,7 @@ internal fun NotificationRow(
 private fun RowScope.RowContent(
     row: NotificationRowUi,
     summary: String,
-    age: PostAge,
+    now: Instant,
     actions: NotificationsActions,
     origin: String?,
 ) {
@@ -279,11 +280,7 @@ private fun RowScope.RowContent(
         Row(verticalAlignment = Alignment.CenterVertically) {
             if (row.people.isNotEmpty()) Faces(row.people, actions::onProfile)
             Box(Modifier.weight(1f))
-            Text(
-                age.short(stringResource(UiR.string.status_age_now)),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            PostTime(row.at, now, MaterialTheme.typography.labelMedium, MaterialTheme.colorScheme.onSurfaceVariant)
         }
         Text(
             summaryWithName(summary, row.name, row.accountId, actions::onProfile),

@@ -67,6 +67,7 @@ class TimelineScreenshotTest {
         override fun onScrolled(rowId: String, offset: Int) = Unit
         override fun onNearEnd() = Unit
         override fun onFillGap(gapId: String, fromBelow: Boolean) = Unit
+        override fun onExpandBoosts(key: String) = Unit
         override fun onSwipe(row: StatusRowUi, action: SwipeAction) = Unit
     }
 
@@ -132,6 +133,16 @@ class TimelineScreenshotTest {
     fun caughtUpLargeFont() = capture("timeline-caught-up-font200") {
         val posts = posts()
         loaded(listOf(posts[0], TimelineItem.CaughtUp, posts[1]))
+    }
+
+    @Test
+    fun boostCarousel() = capture("timeline-boosts") {
+        val mapper = StatusRowMapper(cache, RichTextColors.fromTheme())
+        val boosts = listOf(StatusSamples.bob, StatusSamples.alice, StatusSamples.bob).mapIndexed { index, booster ->
+            mapper.map(StatusSamples.boost.copy(id = "boost$index", account = booster), "1", null)
+        }
+        val posts = posts()
+        loaded(listOf(posts[0], TimelineItem.Boosts(boosts), posts[2]))
     }
 
     @Test

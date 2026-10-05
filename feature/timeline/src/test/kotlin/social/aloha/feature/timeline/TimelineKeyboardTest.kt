@@ -83,6 +83,7 @@ class TimelineKeyboardTest {
         override fun onScrolled(rowId: String, offset: Int) = Unit
         override fun onNearEnd() = Unit
         override fun onFillGap(gapId: String, fromBelow: Boolean) = Unit
+        override fun onExpandBoosts(key: String) = Unit
         override fun onSwipe(row: StatusRowUi, action: SwipeAction) = Unit
     }
 

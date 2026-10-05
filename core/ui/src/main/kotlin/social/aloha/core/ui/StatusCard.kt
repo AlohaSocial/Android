@@ -173,8 +173,10 @@ public fun StatusCard(
                 .padding(horizontal = AlohaSpacing.m, vertical = if (compact) AlohaSpacing.xs else AlohaSpacing.s),
             verticalArrangement = Arrangement.spacedBy(AlohaSpacing.xxs),
         ) {
-            row.context?.let { ContextLineRow(it, now) }
-            CardLayout(row, now, policy, actions, Flags(showActions, canReact, animateEmoji, focused), controls)
+            ReadingTextSize {
+                row.context?.let { ContextLineRow(it, now) }
+                CardLayout(row, now, policy, actions, Flags(showActions, canReact, animateEmoji, focused), controls)
+            }
         }
     }
 }

@@ -53,6 +53,7 @@ class TimelineSwipeTest {
     }
 
     private val actions = object : StatusActions, TimelineScreenActions {
+        override fun onExpandBoosts(key: String) = Unit
         override fun onSwipe(row: StatusRowUi, action: SwipeAction) {
             done += "${action.name.lowercase()} ${row.statusId}"
         }

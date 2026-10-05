@@ -7,6 +7,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -47,6 +48,9 @@ public class ReadingPreferences(private val store: DataStore<Preferences>) {
             missingAltBadge = it[MISSING_ALT] ?: false,
             previewless = it[PREVIEWLESS] ?: false,
             reduceMotion = it[REDUCE_MOTION] ?: false,
+            textScale = (it[TEXT_SCALE] ?: 1f).coerceIn(ReadingStyle.MIN_TEXT_SCALE, ReadingStyle.MAX_TEXT_SCALE),
+            absoluteTimes = it[ABSOLUTE_TIMES] ?: false,
+            boostCarousel = it[BOOST_CAROUSEL] ?: false,
         )
     }
 
@@ -66,6 +70,9 @@ public class ReadingPreferences(private val store: DataStore<Preferences>) {
             it[MISSING_ALT] = style.missingAltBadge
             it[PREVIEWLESS] = style.previewless
             it[REDUCE_MOTION] = style.reduceMotion
+            it[TEXT_SCALE] = style.textScale
+            it[ABSOLUTE_TIMES] = style.absoluteTimes
+            it[BOOST_CAROUSEL] = style.boostCarousel
         }
     }
 
@@ -86,5 +93,8 @@ public class ReadingPreferences(private val store: DataStore<Preferences>) {
         val MISSING_ALT = booleanPreferencesKey("reading_missing_alt_badge")
         val PREVIEWLESS = booleanPreferencesKey("reading_previewless")
         val REDUCE_MOTION = booleanPreferencesKey("reading_reduce_motion")
+        val TEXT_SCALE = floatPreferencesKey("reading_text_scale")
+        val ABSOLUTE_TIMES = booleanPreferencesKey("reading_absolute_times")
+        val BOOST_CAROUSEL = booleanPreferencesKey("reading_boost_carousel")
     }
 }

@@ -113,12 +113,8 @@ internal fun StatusHeader(
         Row {
             val meta = MaterialTheme.typography.bodySmall
             val outline = MaterialTheme.colorScheme.outline
-            Text(
-                PostAge.of(row.createdAt, now).short(stringResource(R.string.status_age_now)) + " · ",
-                style = meta,
-                color = outline,
-                maxLines = 1,
-            )
+            PostTime(row.createdAt, now, meta, outline)
+            Text(" · ", style = meta, color = outline, maxLines = 1)
             // a handle reads left to right in a right-to-left interface too, its @ in front
             Text(
                 row.author.handle,

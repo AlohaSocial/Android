@@ -8,10 +8,29 @@ import android.icu.text.MeasureFormat
 import android.icu.text.RelativeDateTimeFormatter
 import android.icu.util.Measure
 import android.icu.util.MeasureUnit
+import android.icu.util.TimeZone
 import android.icu.util.ULocale
+import android.text.format.DateFormat as DateFormat24
+import androidx.compose.foundation.clickable
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.PlainTooltip
+import androidx.compose.material3.Text
+import androidx.compose.material3.TooltipAnchorPosition
+import androidx.compose.material3.TooltipBox
+import androidx.compose.material3.TooltipDefaults
+import androidx.compose.material3.rememberTooltipState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import java.time.Duration
 import java.time.Instant
+import java.time.ZoneId
 import java.util.Date
+import kotlinx.coroutines.launch
 
 /**
  * How old a post is. Anything under a minute old, and anything dated ahead of the phone, is "now": a
@@ -75,6 +94,62 @@ private val PostAge.Unit.relative: RelativeDateTimeFormatter.RelativeUnit get() 
     PostAge.Unit.Minutes -> RelativeDateTimeFormatter.RelativeUnit.MINUTES
     PostAge.Unit.Hours -> RelativeDateTimeFormatter.RelativeUnit.HOURS
     PostAge.Unit.Days -> RelativeDateTimeFormatter.RelativeUnit.DAYS
+}
+
+/**
+ * When a post was made, as a reader who chose times over ages reads it: the time for today's, "14:32"
+ * (or "2:32 PM" without [hours24]), the day for this year's, "3 Oct", and the date before that.
+ */
+public fun absoluteTime(
+    instant: Instant,
+    now: Instant,
+    hours24: Boolean,
+    zone: ZoneId = ZoneId.systemDefault(),
+    locale: ULocale = ULocale.getDefault(),
+): String {
+    val day = instant.atZone(zone).toLocalDate()
+    val today = now.atZone(zone).toLocalDate()
+    val skeleton = when {
+        day == today -> if (hours24) "Hm" else "hm"
+        day.year == today.year -> "MMMd"
+        else -> "yMMMd"
+    }
+    val format = DateFormat.getInstanceForSkeleton(skeleton, locale)
+    format.timeZone = TimeZone.getTimeZone(zone.id)
+    return format.format(Date.from(instant))
+}
+
+/**
+ * A post's age, or its time where the reader chose times; a tap shows the full date and time above it.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+public fun PostTime(at: Instant, now: Instant, style: TextStyle, color: Color, modifier: Modifier = Modifier) {
+    val tooltip = rememberTooltipState()
+    val scope = rememberCoroutineScope()
+    val hours24 = DateFormat24.is24HourFormat(LocalContext.current)
+    val text = if (LocalReadingStyle.current.absoluteTimes) {
+        absoluteTime(at, now, hours24)
+    } else {
+        PostAge.of(at, now).short(stringResource(R.string.status_age_now))
+    }
+    TooltipBox(
+        TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Above),
+        { PlainTooltip { Text(fullDate(at)) } },
+        tooltip,
+        modifier,
+        enableUserInput = false,
+    ) {
+        Text(
+            text,
+            style = style,
+            color = color,
+            maxLines = 1,
+            modifier = Modifier.clickable(onClickLabel = stringResource(R.string.status_age_show_date)) {
+                scope.launch { tooltip.show() }
+            },
+        )
+    }
 }
 
 /** The date and time a post was made, in full, for the post a thread is about; to the second [withSeconds]. */
