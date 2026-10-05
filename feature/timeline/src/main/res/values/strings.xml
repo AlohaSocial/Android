@@ -165,6 +165,14 @@
     <string name="feeds_icon_recent">A clock</string>
     <!-- Title of the account sheet a long press on the compose button opens, and the long press's label -->
     <string name="timeline_compose_as">Write as</string>
+    <!-- Edit feeds, Add menu: another server's own public posts, and the title of the dialog asking for it -->
+    <string name="feeds_add_server">Another server</string>
+    <!-- The field for that server's address -->
+    <string name="feeds_server">Server</string>
+    <!-- Under the field above -->
+    <string name="feeds_server_hint">Its address, such as mastodon.social</string>
+    <!-- First visit of another server's feed: what it holds, and that acting on a post finds it on the reader's own server -->
+    <string name="timeline_feed_about_remote">Public posts by the people on this server, read from it directly. Replying, boosting or favouriting finds the post on your own server first.</string>
     <!-- Strip over the timeline when the server cannot be reached; the cached posts stay -->
     <string name="timeline_offline">You\'re offline. These are the posts saved on this device.</string>
     <!-- Strip over the timeline when the server answered with an error -->

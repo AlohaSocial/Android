@@ -207,7 +207,12 @@ private fun IconPicker(icon: String?, onIcon: (String?) -> Unit) {
 
 /** The bar's +: the feeds that could still be pinned, by group, and a hashtag not followed. */
 @Composable
-internal fun AddMenu(addable: List<Pair<Int, List<PinnedFeed>>>, onAdd: (PinnedFeed) -> Unit, onOtherTag: () -> Unit) {
+internal fun AddMenu(
+    addable: List<Pair<Int, List<PinnedFeed>>>,
+    onAdd: (PinnedFeed) -> Unit,
+    onOtherTag: () -> Unit,
+    onServer: () -> Unit,
+) {
     var open by remember { mutableStateOf(false) }
     Box {
         IconButton(onClick = { open = true }) { Icon(AlohaIcons.Add, stringResource(R.string.feeds_add)) }
@@ -237,6 +242,14 @@ internal fun AddMenu(addable: List<Pair<Int, List<PinnedFeed>>>, onAdd: (PinnedF
                 onClick = {
                     open = false
                     onOtherTag()
+                },
+            )
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.feeds_add_server)) },
+                leadingIcon = { Icon(AlohaIcons.Language, contentDescription = null) },
+                onClick = {
+                    open = false
+                    onServer()
                 },
             )
         }
@@ -307,5 +320,40 @@ private fun TagFields(query: TagQuery, editableName: Boolean, onChange: (TagQuer
     }
     SwitchRow(stringResource(R.string.feeds_local_only), query.localOnly, { onChange(query.copy(localOnly = it)) })
 }
+
+/** Another server's own public posts as a feed, asked for by its address. */
+@Composable
+internal fun ServerDialog(onDismiss: () -> Unit, onAdd: (PinnedFeed) -> Unit) {
+    var address by rememberSaveable { mutableStateOf("") }
+    val domain = domainOf(address)
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.feeds_add_server)) },
+        text = {
+            OutlinedTextField(
+                address,
+                { address = it },
+                Modifier.fillMaxWidth(),
+                label = { Text(stringResource(R.string.feeds_server)) },
+                supportingText = { Text(stringResource(R.string.feeds_server_hint)) },
+                singleLine = true,
+            )
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { domain?.let { onAdd(PinnedFeed(PinnedFeed.Kind.Remote(it))) } },
+                enabled =
+                    domain != null,
+            ) {
+                Text(stringResource(R.string.feeds_save))
+            }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.feeds_cancel)) } },
+    )
+}
+
+/** The domain in what was typed: an address or a bare name, without its scheme, path or an @ handle. */
+internal fun domainOf(typed: String): String? = typed.trim().substringAfter("://").substringBefore('/')
+    .substringAfterLast('@').lowercase().takeIf { it.contains('.') && ' ' !in it }
 
 private const val DIM = 0.5f

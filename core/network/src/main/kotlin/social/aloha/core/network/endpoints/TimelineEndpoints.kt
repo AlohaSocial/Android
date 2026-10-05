@@ -45,7 +45,8 @@ public object TimelineEndpoints {
 
             is TimelineSource.Hashtag -> page + tagItems(source) + filterItems(filters)
 
-            else -> page + flagQuery("local", source == TimelineSource.Local) + filterItems(filters)
+            else -> page + flagQuery("local", source == TimelineSource.Local || source is TimelineSource.Remote) +
+                filterItems(filters)
         }
         return listRequest(Endpoint(path(source), query = items), StatusDto.serializer()) { it.toDomain() }
     }
@@ -71,6 +72,7 @@ public object TimelineEndpoints {
         is TimelineSource.List -> "api/v1/timelines/list/${source.id}"
         is TimelineSource.Hashtag -> "api/v1/timelines/tag/${Tag.normalise(source.name) ?: source.name}"
         is TimelineSource.Account -> "api/v1/accounts/${source.id}/statuses"
+        is TimelineSource.Remote -> "api/v1/timelines/public/"
         else -> ownRoutes[source] ?: "api/v1/timelines/${source.pathSegment}/"
     }
 

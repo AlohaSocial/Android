@@ -48,6 +48,11 @@ public data class PinnedFeed(val kind: Kind, val name: String? = null, val icon:
         public data class Hashtag(val tags: TimelineSource.Hashtag) : Kind {
             override val source: TimelineSource get() = tags
         }
+
+        /** Another server's own public posts, by its [domain]. */
+        public data class Remote(val domain: String) : Kind {
+            override val source: TimelineSource get() = TimelineSource.Remote(domain)
+        }
     }
 
     public companion object {

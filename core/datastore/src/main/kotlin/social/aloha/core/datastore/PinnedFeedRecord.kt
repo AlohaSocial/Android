@@ -37,6 +37,7 @@ public fun PinnedFeedRecord.toFeed(): PinnedFeed? {
         FAVOURITES -> PinnedFeed.Kind.Favourites
         LIST -> if (id != null) PinnedFeed.Kind.List(id, title.orEmpty()) else null
         HASHTAG -> tag?.let { PinnedFeed.Kind.Hashtag(TimelineSource.Hashtag(it, any, all, none, localOnly)) }
+        REMOTE -> id?.let(PinnedFeed.Kind::Remote)
         else -> null
     } ?: return null
     return PinnedFeed(kind, name, icon)
@@ -57,6 +58,8 @@ public fun PinnedFeed.toRecord(): PinnedFeedRecord = when (val kind = kind) {
 
     is PinnedFeed.Kind.List -> PinnedFeedRecord(LIST, id = kind.id, title = kind.title)
 
+    is PinnedFeed.Kind.Remote -> PinnedFeedRecord(REMOTE, id = kind.domain)
+
     is PinnedFeed.Kind.Hashtag -> with(kind.tags) {
         PinnedFeedRecord(HASHTAG, tag = name, any = any, all = all, none = none, localOnly = localOnly)
     }
@@ -70,3 +73,4 @@ private const val BOOKMARKS = "bookmarks"
 private const val FAVOURITES = "favourites"
 private const val LIST = "list"
 private const val HASHTAG = "hashtag"
+private const val REMOTE = "remote"

@@ -27,8 +27,10 @@ import kotlinx.coroutines.launch
 import social.aloha.core.data.timeline.Toggle
 import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.model.FeedMode
+import social.aloha.core.model.TimelineSource
 import social.aloha.core.ui.DeleteRequest
 import social.aloha.core.ui.DeleteStatusDialog
+import social.aloha.core.ui.LocalActAs
 import social.aloha.core.ui.R as UiR
 import social.aloha.core.ui.RichTextColors
 import social.aloha.core.ui.RoutedStatusActions
@@ -94,10 +96,23 @@ public fun TimelineRoute(
         }
     }
 
+    val actAs = LocalActAs.current
+    val items by rememberUpdatedState(state.items)
+    val shown = remember(rowActions, actAs, feed) {
+        if ((feed as? TimelineFeed.Pinned)?.source is TimelineSource.Remote) {
+            Elsewhere(rowActions, actAs, { nav }) { id ->
+                items.firstNotNullOfOrNull {
+                    (it as? TimelineItem.Post)?.row?.takeIf { row -> row.statusId == id }?.url
+                }
+            }
+        } else {
+            rowActions
+        }
+    }
     TimelineScreen(
         state,
         viewModel,
-        rowActions,
+        shown,
         modifier,
         snackbars,
         listState,

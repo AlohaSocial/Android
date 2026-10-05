@@ -66,6 +66,23 @@ public sealed interface TimelineSource {
         override val keptOrder: Boolean get() = true
     }
 
+    /**
+     * Another server's own public posts, read from it directly without signing in there. Its posts are
+     * kept under ids of their own (see [Remote.ID_PREFIX]), apart from the reader's server's, and paged
+     * by that server's cursor.
+     */
+    @Serializable
+    public data class Remote(val domain: String) : TimelineSource {
+        override val storageKey: String get() = "remote:${domain.lowercase()}"
+        override val requiresViewer: Boolean get() = false
+        override val keptOrder: Boolean get() = true
+
+        public companion object {
+            /** What every id read from another server starts with, the server's domain after it. */
+            public const val ID_PREFIX: String = "remote:"
+        }
+    }
+
     /** The posts of the people the reader asked to be notified about, from those notifications. */
     @Serializable
     public data object Notified : TimelineSource {

@@ -158,6 +158,13 @@ class EndpointsTest {
     }
 
     @Test
+    fun `another server's feed is its own public posts`() {
+        val endpoint = TimelineEndpoints.timeline(TimelineSource.Remote("other.example")).endpoint
+        assertEquals("api/v1/timelines/public/", endpoint.path)
+        assertEquals("true", endpoint.queryValue("local"))
+    }
+
+    @Test
     fun `the notified feed reads the notifications of posts`() {
         val endpoint = TimelineEndpoints.timeline(TimelineSource.Notified).endpoint
         assertEquals("api/v1/notifications", endpoint.path)

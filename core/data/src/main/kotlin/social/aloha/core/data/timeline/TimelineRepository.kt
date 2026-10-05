@@ -14,10 +14,12 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.withContext
 import okhttp3.HttpUrl
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import social.aloha.core.data.AccountRepository
 import social.aloha.core.data.ClientFactory
 import social.aloha.core.database.TimelineDao
 import social.aloha.core.database.TimelineEntryEntity
+import social.aloha.core.model.Account
 import social.aloha.core.model.FeedMode
 import social.aloha.core.model.OverFetch
 import social.aloha.core.model.SignedInAccount
@@ -29,6 +31,7 @@ import social.aloha.core.network.ApiClient
 import social.aloha.core.network.ApiError
 import social.aloha.core.network.ApiRequest
 import social.aloha.core.network.ApiResult
+import social.aloha.core.network.Credentials
 import social.aloha.core.network.di.IoDispatcher
 import social.aloha.core.network.endpoints.PageAnchor
 import social.aloha.core.network.endpoints.Paging
@@ -163,14 +166,20 @@ public class TimelineRepository @Inject constructor(
         }
     }
 
-    private suspend fun fetchLocked(fetch: Fetch): PageOutcome = when (
-        val harvest = clients.forAccount(fetch.account)?.let {
-            harvest(it, fetch)
+    private suspend fun fetchLocked(fetch: Fetch): PageOutcome {
+        val remote = fetch.key.source as? TimelineSource.Remote
+        return when (val harvest = client(fetch.account, remote)?.let { harvest(it, fetch) }) {
+            null -> PageOutcome.Failed(ApiError.NotFound)
+            is ApiResult.Failure -> PageOutcome.Failed(harvest.error)
+            is ApiResult.Success -> merge(fetch, remote?.let { harvest.value.from(it.domain) } ?: harvest.value)
         }
-    ) {
-        null -> PageOutcome.Failed(ApiError.NotFound)
-        is ApiResult.Failure -> PageOutcome.Failed(harvest.error)
-        is ApiResult.Success -> merge(fetch, harvest.value)
+    }
+
+    /** The reader's own server, or [remote] read without signing in, as anyone may read its public posts. */
+    private fun client(account: SignedInAccount, remote: TimelineSource.Remote?): ApiClient? = if (remote == null) {
+        clients.forAccount(account)
+    } else {
+        "https://${remote.domain}/".toHttpUrlOrNull()?.let { base -> clients.create(base) { Credentials(null) } }
     }
 
     private suspend fun merge(fetch: Fetch, harvest: Harvest): PageOutcome {
@@ -192,7 +201,8 @@ public class TimelineRepository @Inject constructor(
             statuses.entities(account.id, harvest.statuses),
             kept.map { TimelineEntryEntity(account.id, key.storageKey, it.statusId, it.position, it.isGap, now) },
         )
-        latchCapabilities(account, harvest.statuses)
+        // what another server serves says nothing of what the reader's own does
+        if (key.source !is TimelineSource.Remote) latchCapabilities(account, harvest.statuses)
         fetchedAt[lockKey(account, key)] = clock.millis()
         // a page that landed wholly below the cap was dropped: paging on would only fetch more to drop
         val keptIds = kept.mapTo(HashSet()) { it.statusId }
@@ -210,6 +220,9 @@ public class TimelineRepository @Inject constructor(
     private data class Harvest(val statuses: List<Status>, val pageWasFull: Boolean, val nextCursor: HttpUrl?) {
         /** A short page, or one without a way further down: the server has nothing more to over-fetch. */
         val isLastUpstream: Boolean get() = !pageWasFull || nextCursor == null
+
+        /** The page as read from [domain]: its ids kept apart from the reader's server's, its handles in full. */
+        fun from(domain: String): Harvest = copy(statuses = statuses.map { it.elsewhere(domain) })
     }
 
     /**
@@ -255,4 +268,28 @@ public class TimelineRepository @Inject constructor(
             Harvest(it.items, pageWasFull = it.rawCount >= Paging.DEFAULT_LIMIT, nextCursor = further)
         }
     }
+}
+
+/**
+ * [this] post, read from another server, [domain]: its ids, and its authors' and boosters', under
+ * [TimelineSource.Remote.ID_PREFIX] so nothing of it is ever mistaken for a post or a person on the
+ * reader's server, and every handle in full with its domain.
+ */
+internal fun Status.elsewhere(domain: String): Status {
+    val prefix = TimelineSource.Remote.ID_PREFIX + domain + ":"
+    fun Account.there(): Account {
+        val full = if ('@' in acct) acct else "$acct@$domain"
+        return copy(id = TimelineSource.Remote.ID_PREFIX + full, acct = full)
+    }
+    // every id it carries is that server's: none may be taken for one on the reader's own
+    return copy(
+        id = prefix + id,
+        account = account.there(),
+        reblog = reblog?.elsewhere(domain),
+        poll = poll?.let { it.copy(id = prefix + it.id) },
+        inReplyToId = inReplyToId?.let { prefix + it },
+        inReplyToAccountId = null,
+        quoteId = null,
+        quote = null,
+    )
 }

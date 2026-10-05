@@ -166,6 +166,7 @@ internal fun EditFeedsScreen(
     val remove = removeWithUndo(state.feeds, actions, snackbars)
     var editing by remember { mutableStateOf<PinnedFeed?>(null) }
     var newTag by remember { mutableStateOf(false) }
+    var newServer by remember { mutableStateOf(false) }
     val title = stringResource(R.string.timeline_feeds_edit)
     Scaffold(
         modifier = modifier.semantics { paneTitle = title },
@@ -176,7 +177,7 @@ internal fun EditFeedsScreen(
                 navigationIcon = {
                     IconButton(onClick = onBack) { Icon(AlohaIcons.Back, stringResource(R.string.feeds_back)) }
                 },
-                actions = { AddMenu(state.addable, actions::onAdd) { newTag = true } },
+                actions = { AddMenu(state.addable, actions::onAdd, { newTag = true }) { newServer = true } },
             )
         },
     ) { padding ->
@@ -192,6 +193,12 @@ internal fun EditFeedsScreen(
         FeedDialog(feed, onDismiss = { editing = null }) {
             actions.onChange(feed, it)
             editing = null
+        }
+    }
+    if (newServer) {
+        ServerDialog(onDismiss = { newServer = false }) {
+            actions.onAdd(it)
+            newServer = false
         }
     }
     if (newTag) {

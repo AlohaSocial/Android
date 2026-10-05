@@ -69,6 +69,7 @@ internal fun feedIcon(feed: PinnedFeed): ImageVector = feed.icon?.let(FeedIcons:
     PinnedFeed.Kind.Favourites -> AlohaIcons.Favourite
     is PinnedFeed.Kind.List -> AlohaIcons.Lists
     is PinnedFeed.Kind.Hashtag -> AlohaIcons.Hashtag
+    is PinnedFeed.Kind.Remote -> AlohaIcons.Language
 }
 
 /** The name a feed goes by: the reader's, or its kind's. */
@@ -85,6 +86,7 @@ internal fun kindName(kind: PinnedFeed.Kind): String = when (kind) {
     PinnedFeed.Kind.Favourites -> stringResource(R.string.timeline_feed_favourites)
     is PinnedFeed.Kind.List -> kind.title
     is PinnedFeed.Kind.Hashtag -> "#${kind.tags.name}"
+    is PinnedFeed.Kind.Remote -> kind.domain
 }
 
 /** What a kind of feed holds, said once on its first visit; nothing for Following, which every reader knows. */
@@ -97,6 +99,7 @@ private fun about(kind: PinnedFeed.Kind): Int? = when (kind) {
     PinnedFeed.Kind.Favourites -> R.string.timeline_feed_about_favourites
     is PinnedFeed.Kind.List -> R.string.timeline_feed_about_list
     is PinnedFeed.Kind.Hashtag -> R.string.timeline_feed_about_hashtag
+    is PinnedFeed.Kind.Remote -> R.string.timeline_feed_about_remote
 }
 
 /** The name a kind of feed is remembered as explained under. */

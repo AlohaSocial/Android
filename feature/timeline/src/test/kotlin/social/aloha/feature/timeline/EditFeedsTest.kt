@@ -118,6 +118,15 @@ class EditFeedsTest {
     }
 
     @Test
+    fun `a server is taken from an address, a bare name or a handle, and nothing else`() {
+        assertEquals("mastodon.social", domainOf("https://Mastodon.social/explore"))
+        assertEquals("mastodon.social", domainOf(" mastodon.social "))
+        assertEquals("mastodon.social", domainOf("@alice@mastodon.social"))
+        assertNull(domainOf("not a server"))
+        assertNull(domainOf("localhost"))
+    }
+
+    @Test
     fun `typed tags split on spaces and commas, with a leading hash dropped`() {
         assertEquals(listOf("waves", "hawaii", "oahu"), TagQuery.words("#waves, hawaii  oahu"))
         assertEquals(
