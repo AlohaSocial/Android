@@ -56,7 +56,7 @@ Every workflow starts with no permissions and grants each job what it needs, pin
 | `build.yml` | Push to `main`, pull requests | Assembles debug and release of both flavours and the benchmark module, then `scripts/check-apk-size.sh` | Yes |
 | `reuse.yml` | Push to `main`, pull requests | REUSE compliance | Yes |
 | `ai-trailer.yml` | Pull requests | Labels the pull request "AI assisted" when a commit carries `Assisted-by:`, and fails when a `Signed-off-by:` names a bot or an AI tool: only a person certifies the DCO | Yes |
-| `pr-apk.yml` | Pull requests | A generic debug APK, linked in a comment, kept five days | No |
+| `pr-apk.yml` | Pull requests from this repository | A QA build that installs alongside any other build and updates the last QA build, linked in a comment with a QR code; needs the QA secrets, see [QA builds](#qa-builds) | No |
 | `ui.yml` | Mondays, or by hand | Release builds and the Maestro smoke flow on an emulator, the benchmarks as a smoke test, and `scripts/ui-flows.sh` on a foldable emulator | No |
 | `osv.yml` | Mondays, or by hand | OSV-Scanner over the dependencies | No |
 | `supply-chain.yml` | Push to `main` | Submits the Gradle dependency graph, so dependency alerts cover it | No |
@@ -64,6 +64,23 @@ Every workflow starts with no permissions and grants each job what it needs, pin
 | `release-mapping.yml` | A release is published | Builds both release flavours from its tag, without the Gradle cache, and attaches their R8 mappings to the release | No |
 
 Every artifact is kept five days.
+
+### QA builds
+
+`pr-apk.yml` needs two repository secrets, and fails without them, naming them:
+
+- `QA_KEYSTORE`: the QA keystore, a PKCS12 file holding the key `qa`, base64-encoded.
+- `QA_KEYSTORE_PASSWORD`: the password of both the keystore and the key.
+
+Every QA build is signed with that one key, so a tester's QA install updates from one pull request's build to the next. A fork's pull request gets no QA build: it has no access to the secrets, and the job is skipped, not failed. GitHub never shows a secret again, so the keystore and its password are kept in the maintainers' password manager as well. A new key, after a loss or a leak, makes every tester uninstall the QA build once:
+
+```sh
+keytool -genkeypair -keystore qa.p12 -storetype PKCS12 -alias qa -keyalg RSA -keysize 4096 -validity 10000 -dname "CN=Aloha Social QA, O=Aloha Social"
+base64 -w0 qa.p12 | gh secret set QA_KEYSTORE
+gh secret set QA_KEYSTORE_PASSWORD
+```
+
+The QA build is the generic debug build with `-Paloha.qa=true`: application ID `social.aloha.android.qa`, the name "Aloha Social QA" and its own sign-in callback, `alohasocial-qa://oauth-callback`, which the app registers with the server like any other redirect URI, so no server needs to know about it. Without the property, every build is unchanged.
 
 ### Static analysis
 

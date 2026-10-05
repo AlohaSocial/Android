@@ -1,11 +1,13 @@
 # SPDX-FileCopyrightText: 2026 Aloha Social contributors
 # SPDX-License-Identifier: MIT
 #
-# A debug-signed generic APK per pull request as a GitHub Actions artifact (kept
-# five days), a QR code for its download and a comment linking both. The artifacts
-# are the files themselves, not zips, so the link downloads a file a phone installs.
-# Each new build replaces the pull request's earlier artifacts and comment, so only
-# the latest is kept. No upload server and no keystore.
+# A QA build per pull request: the generic debug APK under its own application ID,
+# signed with the QA key, as a GitHub Actions artifact (kept five days), with a QR
+# code for its download and a comment linking both. The artifacts are the files
+# themselves, not zips, so the link downloads a file a phone installs. Each new build
+# replaces the pull request's earlier artifacts and comment, so only the latest is
+# kept. A fork's pull request has neither the QA key nor a token that can comment, so
+# the job is skipped there.
 name: pr-apk
 
 on:
@@ -19,7 +21,8 @@ concurrency:
 
 jobs:
   apk:
-    name: Debug APK
+    name: QA APK
+    if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     permissions:
       contents: read # check out the repository
@@ -39,26 +42,36 @@ jobs:
       - name: Android platform 37
         run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-37.0" "build-tools;37.0.0" > /dev/null
       - name: Assemble
-        run: ./gradlew assembleGenericDebug
+        run: ./gradlew assembleGenericDebug -Paloha.qa=true
       # an unzipped artifact is named after its file, so the file carries the pull request number
-      - name: Name the APK after the pull request
+      - name: Name the APK after the pull request and sign it with the QA key
         id: apk
         env:
-          APK: aloha-generic-debug-pr${{ github.event.pull_request.number }}.apk
+          APK: aloha-qa-pr${{ github.event.pull_request.number }}.apk
+          QA_KEYSTORE: ${{ secrets.QA_KEYSTORE }}
+          QA_KEYSTORE_PASSWORD: ${{ secrets.QA_KEYSTORE_PASSWORD }}
         run: |
+          if [ -z "$QA_KEYSTORE" ] || [ -z "$QA_KEYSTORE_PASSWORD" ]; then
+            echo "::error::set the QA_KEYSTORE and QA_KEYSTORE_PASSWORD secrets, see docs/12-conventions-quality.md"
+            exit 1
+          fi
           cp app/build/outputs/apk/generic/debug/*.apk "$APK"
+          printf '%s' "$QA_KEYSTORE" | base64 -d > "$RUNNER_TEMP/qa.p12"
+          "$ANDROID_HOME/build-tools/37.0.0/apksigner" sign --ks "$RUNNER_TEMP/qa.p12" \
+            --ks-pass env:QA_KEYSTORE_PASSWORD --ks-key-alias qa "$APK"
+          rm "$RUNNER_TEMP/qa.p12"
           "$ANDROID_HOME/build-tools/37.0.0/aapt2" dump badging "$APK" |
             sed -n "1s/.* versionCode='\([^']*\)' versionName='\([^']*\)'.*/version=\2 (\1)/p" >> "$GITHUB_OUTPUT"
       - name: Upload
         id: upload
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          path: aloha-generic-debug-pr${{ github.event.pull_request.number }}.apk
+          path: aloha-qa-pr${{ github.event.pull_request.number }}.apk
           archive: false
           retention-days: 5
       - name: QR code for the download
         env:
-          QR: aloha-generic-debug-pr${{ github.event.pull_request.number }}-qr.png
+          QR: aloha-qa-pr${{ github.event.pull_request.number }}-qr.png
           URL: ${{ steps.upload.outputs.artifact-url }}
         run: |
           sudo apt-get install -y -qq qrencode > /dev/null
@@ -67,20 +80,18 @@ jobs:
         id: upload-qr
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          path: aloha-generic-debug-pr${{ github.event.pull_request.number }}-qr.png
+          path: aloha-qa-pr${{ github.event.pull_request.number }}-qr.png
           if-no-files-found: error
           archive: false
           retention-days: 5
-      # a fork's token cannot delete or comment, so its pull request keeps the artifacts alone
       - name: Replace the earlier artifacts and comment
-        if: github.event.pull_request.head.repo.full_name == github.repository
         env:
           GH_TOKEN: ${{ github.token }}
           PR: ${{ github.event.pull_request.number }}
           # the pushed commit, not the merge commit GitHub builds a pull request on
           SHA: ${{ github.event.pull_request.head.sha }}
-          NAME: aloha-generic-debug-pr${{ github.event.pull_request.number }}.apk
-          QR_NAME: aloha-generic-debug-pr${{ github.event.pull_request.number }}-qr.png
+          NAME: aloha-qa-pr${{ github.event.pull_request.number }}.apk
+          QR_NAME: aloha-qa-pr${{ github.event.pull_request.number }}-qr.png
           ID: ${{ steps.upload.outputs.artifact-id }}
           QR_ID: ${{ steps.upload-qr.outputs.artifact-id }}
           URL: ${{ steps.upload.outputs.artifact-url }}
@@ -106,7 +117,7 @@ jobs:
           | **Version** | \`$VERSION\` |
           | **Available until** | 5 days after this build |
 
-          Each QA build is signed with a debug key made for its CI run, so it cannot update any other Aloha install, an earlier QA build included: uninstall that one first.
+          The QA build installs alongside any other Aloha build, so you can keep using your existing install while testing, and it updates an earlier QA build in place.
 
           Downloading the file requires a GitHub account, so open this link on the device you want to test on, or transfer the APK to it.
           <!-- pr-apk -->
