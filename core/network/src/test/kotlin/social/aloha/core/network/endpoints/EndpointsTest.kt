@@ -158,6 +158,14 @@ class EndpointsTest {
     }
 
     @Test
+    fun `one account's posts are searched by its id`() {
+        val endpoint = SearchEndpoints.search("waves", type = "statuses", accountId = "7").endpoint
+        assertEquals("7", endpoint.queryValue("account_id"))
+        assertEquals("statuses", endpoint.queryValue("type"))
+        assertEquals(null, SearchEndpoints.search("waves").endpoint.queryValue("account_id"))
+    }
+
+    @Test
     fun `another server's feed is its own public posts`() {
         val endpoint = TimelineEndpoints.timeline(TimelineSource.Remote("other.example")).endpoint
         assertEquals("api/v1/timelines/public/", endpoint.path)

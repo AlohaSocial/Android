@@ -49,12 +49,13 @@ public object SearchEndpoints {
         type: String? = null,
         resolve: Boolean = false,
         limit: Int = Paging.DEFAULT_LIMIT,
+        accountId: String? = null,
     ): ApiRequest<SearchResults> = request(
         Endpoint(
             "api/v2/search",
             query =
                 listOf(QueryItem("q", query), Paging.limitItem(limit)) + queryOf("type", type) +
-                    flagQuery("resolve", resolve),
+                    flagQuery("resolve", resolve) + queryOf("account_id", accountId),
         ),
         SearchResultsDto.serializer(),
     ) { it.toDomain() }

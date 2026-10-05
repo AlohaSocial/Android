@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -78,6 +79,7 @@ internal fun ProfileScreen(
     modifier: Modifier = Modifier,
     snackbars: SnackbarHostState = remember { SnackbarHostState() },
     listState: LazyListState = rememberLazyListState(),
+    search: PostSearch? = null,
 ) {
     val title = state.header?.author?.plainName.orEmpty()
     var asking by rememberSaveable { mutableStateOf<Asking?>(null) }
@@ -115,7 +117,7 @@ internal fun ProfileScreen(
                 when {
                     state.gone -> EmptyState(stringResource(R.string.profile_gone))
                     state.header == null -> ProfileSkeleton(state.knownHandle)
-                    else -> Content(state, state.header, actions, rowActions, listState)
+                    else -> Content(state, state.header, actions, rowActions, listState, search)
                 }
             }
         }
@@ -135,6 +137,7 @@ private fun Content(
     actions: ProfileScreenActions,
     rowActions: StatusActions,
     listState: LazyListState,
+    search: PostSearch?,
 ) {
     // on a wide window the profile keeps a reading width, centred, rather than stretching banner and text
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
@@ -157,7 +160,7 @@ private fun Content(
         }
         LazyColumn(
             state = listState,
-            modifier = Modifier.readingWidth().fillMaxSize().swipeTabs(
+            modifier = Modifier.readingWidth().fillMaxSize().imePadding().swipeTabs(
                 next = { swipeTo(shown.getOrNull(at + 1)) },
                 previous = { swipeTo(shown.getOrNull(at - 1)) },
             ),
@@ -182,12 +185,20 @@ private fun Content(
                 item(key = "highlights", contentType = "highlights") { Highlights(highlights) }
             }
             stickyHeader(key = "tabs", contentType = "tabs") { Tabs(state, pinned, timeline, choose) }
-            tabContent(state, actions, rowActions)
+            tabContent(state, actions, rowActions, search.takeIf { state.postSearch })
         }
     }
 }
 
-private fun LazyListScope.tabContent(state: ProfileUiState, actions: ProfileScreenActions, rowActions: StatusActions) {
+/** A search through the account's posts, as it stands, and what typing in it does. */
+internal data class PostSearch(val state: PostSearchUi, val onQuery: (String) -> Unit)
+
+private fun LazyListScope.tabContent(
+    state: ProfileUiState,
+    actions: ProfileScreenActions,
+    rowActions: StatusActions,
+    search: PostSearch?,
+) {
     when (state.tab) {
         ProfileTab.Collections -> listed(state.collections, MediaCollection::id) { CollectionRow(it, actions) }
 
@@ -196,34 +207,42 @@ private fun LazyListScope.tabContent(state: ProfileUiState, actions: ProfileScre
         ProfileTab.Featured -> state.featured?.let { featured(it, state.now, rowActions) }
 
         else -> {
-            if (state.items.isEmpty()) {
-                item(key = "empty") { Empty(loading = state.loading, Modifier.fillParentMaxHeight()) }
-            }
-            items(state.items, key = { it.key }, contentType = { it::class }) { item ->
-                when (item) {
-                    is ProfileItem.Post -> StatusCard(
-                        item.row,
-                        state.now,
-                        LocalSensitiveMediaPolicy.current,
-                        rowActions,
-                    )
+            val handle = state.header?.author?.handle.orEmpty()
+            val searched = state.tab == ProfileTab.Posts && search != null &&
+                postSearch(search, handle, state.now, rowActions)
+            if (!searched) timeline(state, actions, rowActions)
+        }
+    }
+}
 
-                    is ProfileItem.Gap -> if (item.loading) {
-                        ListProgress(size = PROGRESS)
-                    } else {
-                        Box(Modifier.fillMaxWidth().padding(AlohaSpacing.s), contentAlignment = Alignment.Center) {
-                            OutlinedButton(onClick = { actions.onFillGap(item.id) }) {
-                                Text(stringResource(R.string.profile_gap))
-                            }
-                        }
+/** A timeline tab's posts, with the gaps in them, and more coming at the end. */
+private fun LazyListScope.timeline(state: ProfileUiState, actions: ProfileScreenActions, rowActions: StatusActions) {
+    if (state.items.isEmpty()) {
+        item(key = "empty") { Empty(loading = state.loading, Modifier.fillParentMaxHeight()) }
+    }
+    items(state.items, key = { it.key }, contentType = { it::class }) { item ->
+        when (item) {
+            is ProfileItem.Post -> StatusCard(
+                item.row,
+                state.now,
+                LocalSensitiveMediaPolicy.current,
+                rowActions,
+            )
+
+            is ProfileItem.Gap -> if (item.loading) {
+                ListProgress(size = PROGRESS)
+            } else {
+                Box(Modifier.fillMaxWidth().padding(AlohaSpacing.s), contentAlignment = Alignment.Center) {
+                    OutlinedButton(onClick = { actions.onFillGap(item.id) }) {
+                        Text(stringResource(R.string.profile_gap))
                     }
                 }
-                PostDivider()
-            }
-            if (state.loadingOlder) {
-                item(key = "older") { ListProgress() }
             }
         }
+        PostDivider()
+    }
+    if (state.loadingOlder) {
+        item(key = "older") { ListProgress() }
     }
 }
 

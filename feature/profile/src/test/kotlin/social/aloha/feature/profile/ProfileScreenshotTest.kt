@@ -165,6 +165,20 @@ class ProfileScreenshotTest {
     fun tablet() = capture("profile-tablet") { ProfileScreen(profile(), NoActions, NoActions) }
 
     @Test
+    fun searched() = capture("profile-search") {
+        val mapper = StatusRowMapper(RichTextCache(), RichTextColors.fromTheme())
+        val found =
+            PostSearchUi("waves", rows = listOf(mapper.map(StatusSamples.post("<p>Waves at the point</p>"), "9")))
+        ProfileScreen(
+            profile().copy(postSearch = true),
+            NoActions,
+            NoActions,
+            listState = LazyListState(firstVisibleItemIndex = 2),
+            search = PostSearch(found) {},
+        )
+    }
+
+    @Test
     fun notices() = capture("profile-notices") {
         val colors = RichTextColors.fromTheme()
         val moved = StatusSamples.bob.copy(

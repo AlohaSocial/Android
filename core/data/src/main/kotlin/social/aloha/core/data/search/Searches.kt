@@ -28,8 +28,18 @@ public class Searches @Inject constructor(
     private val statuses: StatusRepository,
     private val settings: AccountSettingsStore,
 ) {
-    public suspend fun search(reader: SignedInAccount, query: String): Answer<SearchResults> {
-        val answer = clients.answer(reader, SearchEndpoints.search(query.trim(), resolve = resolvable(query)))
+    /** What [query] finds; with [accountId], only that account's posts, where the server searches by account. */
+    public suspend fun search(
+        reader: SignedInAccount,
+        query: String,
+        accountId: String? = null,
+    ): Answer<SearchResults> {
+        val request = if (accountId == null) {
+            SearchEndpoints.search(query.trim(), resolve = resolvable(query))
+        } else {
+            SearchEndpoints.search(query.trim(), type = "statuses", accountId = accountId)
+        }
+        val answer = clients.answer(reader, request)
         (answer as? Answer.Got)?.value?.statuses?.let { statuses.saveAll(reader.id, it) }
         return answer
     }

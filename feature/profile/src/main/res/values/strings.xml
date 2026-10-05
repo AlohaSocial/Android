@@ -286,4 +286,12 @@
     <string name="profile_qr_share">Share link</string>
     <!-- Button closing that dialog -->
     <string name="profile_qr_close">Close</string>
+    <!-- Field over a profile’s posts that searches them; %1$s is the handle -->
+    <string name="profile_search">Search %1$s’s posts</string>
+    <!-- Clears that field -->
+    <string name="profile_search_clear">Clear search</string>
+    <!-- Nothing found by that search; %1$s is what was typed -->
+    <string name="profile_search_none">No posts match “%1$s”.</string>
+    <!-- That search did not work -->
+    <string name="profile_search_failed">The search did not work. Try again in a moment.</string>
 </resources>
