@@ -33,6 +33,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaSpacing
+import social.aloha.core.intelligence.RewriteStyle
 import social.aloha.core.model.Visibility
 import social.aloha.core.ui.languageName
 
@@ -43,6 +44,7 @@ internal fun Toolbar(
     actions: ComposerActions,
     modifier: Modifier = Modifier,
     showCounter: Boolean = true,
+    onRewrite: ((RewriteStyle) -> Unit)? = null,
     trailing: @Composable () -> Unit = {},
 ) {
     var emojis by remember { mutableStateOf(false) }
@@ -72,6 +74,7 @@ internal fun Toolbar(
                 }) { Icon(AlohaIcons.Emoji, stringResource(R.string.composer_emoji)) }
             }
             if (state.quotePolicies.isNotEmpty()) QuoteMenu(state, actions::onQuotePolicy)
+            onRewrite?.let { RewriteMenu(it) }
         }
         // in a thread each post shows its own count instead
         if (showCounter) {

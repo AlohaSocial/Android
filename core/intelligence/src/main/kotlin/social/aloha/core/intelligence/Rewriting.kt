@@ -52,11 +52,15 @@ internal object Rewriting {
     }
 
     /** The passages joined, as many from the start as the model is given. */
-    fun within(passages: List<String>): String {
+    fun within(passages: List<String>): String =
+        passages.take(reach(passages)).joinToString("\n\n").take(SUMMARY_CHARACTERS)
+
+    /** How many passages from the start fit what the model is given; the first always does, cut short. */
+    fun reach(passages: List<String>): Int {
         var length = 0
         return passages.takeWhile { passage ->
             length += passage.length + 2
             length <= SUMMARY_CHARACTERS
-        }.ifEmpty { passages.take(1) }.joinToString("\n\n").take(SUMMARY_CHARACTERS)
+        }.size.coerceAtLeast(minOf(1, passages.size))
     }
 }

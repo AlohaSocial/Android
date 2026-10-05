@@ -446,6 +446,14 @@ class ComposerScreenshotTest {
         )
     }
 
+    @Test
+    fun rewrite() = captureScreen("composer-rewrite") {
+        val draft = "See teh waves at Waimea, @bob"
+        val proposal = "Look at the waves at Waimea, @bob"
+        val proposed = Rewrite.Proposed(0, draft, proposal, wordDiff(draft, proposal))
+        RewriteSheet(proposed, onReplace = {}, onDismiss = {})
+    }
+
     // a sheet is a window of its own, so the whole screen is captured
     @OptIn(ExperimentalRoborazziApi::class)
     private fun captureScreen(name: String, content: @Composable () -> Unit) {

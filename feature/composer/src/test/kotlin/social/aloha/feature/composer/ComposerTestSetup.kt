@@ -267,7 +267,7 @@ internal abstract class ComposerTestSetup {
     ): ComposerViewModel {
         Dispatchers.setMain(Dispatchers.Unconfined)
         val choices = IntelligencePreferences(InMemoryDataStore(emptyPreferences()))
-        choices.update { it.copy(altText = true) }
+        choices.update { it.copy(altText = true, rewrite = true, summary = true) }
         WorkManagerTestInitHelper.initializeTestWorkManager(context)
         val apiBase = server.url("/")
         val capabilities = ServerCapabilities.minimal(apiBase.toString()).copy(

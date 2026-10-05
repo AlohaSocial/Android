@@ -132,6 +132,9 @@ public class Intelligence @Inject constructor(
         return with(Rewriting) { model.rewrite(text, style, limit, fits) }
     }
 
+    /** How many of [passages], from the first, a summary reads; the rest do not fit what the model is given. */
+    public fun summaryReach(passages: List<String>): Int = Rewriting.reach(passages)
+
     /** A few neutral sentences on [passages], each a post with its author, in order. */
     public suspend fun summarise(passages: List<String>): Drafted {
         val model = model.getOrNull() ?: return Drafted.Failed

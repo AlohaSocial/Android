@@ -544,4 +544,34 @@
     <string name="composer_alt_unchecked_body">They were drafted on this device and go out as they are, marked as AI generated, unless you look at them first.</string>
     <!-- Warning before posting unchecked drafted descriptions: opens the first of them -->
     <string name="composer_alt_check">Check them</string>
+    <!-- Composer toolbar: opens the ways to rewrite the draft on the device -->
+    <string name="composer_rewrite">Rewrite</string>
+    <!-- Rewrite sheet while the device rewrites the draft -->
+    <string name="composer_rewriting">Rewriting on this device…</string>
+    <!-- Rewrite sheet: the heading over the writer's own draft -->
+    <string name="composer_rewrite_yours">Your draft</string>
+    <!-- Rewrite sheet: the heading over the device's proposal -->
+    <string name="composer_rewrite_proposal">Rewritten</string>
+    <!-- Rewrite sheet: over the device’s proposal, which a model wrote -->
+    <string name="composer_rewrite_generated">Generated on this device, please check</string>
+    <!-- Rewrite sheet, read to a screen reader after the proposal: words of the draft (%1$s) that the proposal replaced with others (%2$s) -->
+    <string name="composer_rewrite_changed">Changed “%1$s” to “%2$s”.</string>
+    <!-- Rewrite sheet, read to a screen reader after the proposal: words of the draft (%1$s) the proposal leaves out -->
+    <string name="composer_rewrite_cut">Took out “%1$s”.</string>
+    <!-- Rewrite sheet, read to a screen reader after the proposal: words (%1$s) the proposal adds -->
+    <string name="composer_rewrite_added">Added “%1$s”.</string>
+    <!-- Rewrite sheet: puts the proposal in place of the draft -->
+    <string name="composer_rewrite_replace">Replace</string>
+    <!-- Rewrite sheet: copies the proposal, leaving the draft as it is -->
+    <string name="composer_rewrite_copy">Copy</string>
+    <!-- Rewrite sheet: leaves the draft as it is -->
+    <string name="composer_rewrite_cancel">Cancel</string>
+    <!-- Rewrite sheet: closes it after a rewrite came to nothing -->
+    <string name="composer_rewrite_close">Close</string>
+    <!-- Rewrite sheet: the device’s model declined to rewrite the draft -->
+    <string name="composer_rewrite_refused">The on-device model didn’t want to rewrite that.</string>
+    <!-- Rewrite sheet: the rewrite would not fit the characters the post has -->
+    <string name="composer_rewrite_too_long">That didn’t fit.</string>
+    <!-- Rewrite sheet: the rewrite failed, or lost a mention, hashtag or link and was turned down -->
+    <string name="composer_rewrite_failed">This device couldn’t rewrite that and keep every mention, hashtag and link.</string>
 </resources>

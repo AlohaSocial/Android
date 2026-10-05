@@ -108,6 +108,7 @@ public fun ComposerRoute(
     LaunchedEffect(state.done) { if (state.done) done() }
     FailureSnackbar(state, snackbars, viewModel::onFailureShown)
     val drop = rememberMediaDrop(viewModel::onPicked)
+    val rewriting by viewModel.rewrites.offered.collectAsStateWithLifecycle()
     ComposerScreen(
         state,
         viewModel.segments,
@@ -115,7 +116,10 @@ public fun ComposerRoute(
         actions,
         modifier.dragAndDropTarget({ carriesMedia(it.toAndroidDragEvent().clipDescription) }, drop),
         snackbars,
+        onRewrite = viewModel.rewrites::start.takeIf { rewriting },
     )
+    val rewrite by viewModel.rewrites.state.collectAsStateWithLifecycle()
+    rewrite?.let { RewriteSheet(it, viewModel.rewrites::replace, viewModel.rewrites::dismiss) }
     ComposerDialogs(state, viewModel, dialogs) { done() }
 }
 

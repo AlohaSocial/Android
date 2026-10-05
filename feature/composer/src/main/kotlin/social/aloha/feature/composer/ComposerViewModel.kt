@@ -126,6 +126,17 @@ internal class ComposerViewModel @AssistedInject constructor(
     /** The pictures, videos and files of each post; the screen describes and removes them here. */
     val attachments = Attachments(uploads, mediaRepository, preparation, viewModelScope)
     val altText = AltTextDrafts(intelligence, intelligenceChoices.choices, attachments, viewModelScope)
+    val rewrites =
+        Rewrites(intelligence, intelligenceChoices.choices, segments, viewModelScope, { focused }) { index, text ->
+            val state = uiState.value
+            val capabilities = reader?.capabilities
+            CharacterCount.remaining(
+                text + numbering(state.numberThreads, index, segments.size),
+                if (state.spoilerShown) spoiler else "",
+                capabilities?.limits ?: ServerLimits.MastodonDefaults,
+                capabilities?.lengthRule ?: LengthRule.Mastodon,
+            )
+        }
 
     /** Filters, trims and smaller sizes, each uploaded in place of what it changed. */
     val edits = MediaEdits(attachments, preparation, videos, viewModelScope)

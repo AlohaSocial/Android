@@ -49,6 +49,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaSpacing
+import social.aloha.core.intelligence.RewriteStyle
 import social.aloha.core.ui.ConfirmDialog
 import social.aloha.core.ui.readingWidth
 
@@ -66,6 +67,7 @@ internal fun ComposerScreen(
     actions: ComposerActions,
     modifier: Modifier = Modifier,
     snackbars: SnackbarHostState = remember { SnackbarHostState() },
+    onRewrite: ((RewriteStyle) -> Unit)? = null,
 ) {
     val title = stringResource(if (state.reply != null) R.string.composer_title_reply else R.string.composer_title)
     var previewing by rememberSaveable { mutableStateOf(false) }
@@ -104,7 +106,14 @@ internal fun ComposerScreen(
             ) { Writing(state, segments, spoiler, actions) }
             CompletionStrip(state.completions, state.emojis, actions, Modifier.readingWidth())
             HorizontalDivider()
-            Toolbar(state, spoiler, actions, Modifier.readingWidth(), showCounter = segments.size == 1) {
+            Toolbar(
+                state,
+                spoiler,
+                actions,
+                Modifier.readingWidth(),
+                showCounter = segments.size == 1,
+                onRewrite = onRewrite.takeIf { segments.any { it.text.isNotBlank() } },
+            ) {
                 if (state.postAtBottom) PostButton(state, actions)
             }
         }
