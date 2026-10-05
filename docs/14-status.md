@@ -21,12 +21,13 @@ Each phase was one pull request into `main`.
 | 11 | [#22](https://github.com/AlohaSocial/Android/pull/22) | 2026-10-04 | A swipe on a post that ticks once where it counts, tabs that swipe, tab and chip rows that stay pinned |
 | 12 | [#27](https://github.com/AlohaSocial/Android/pull/27) | 2026-10-04 | Logging with area tags, a redacted in-memory log in release builds, Share diagnostics, the R8 mappings on each release |
 | 13 | [#28](https://github.com/AlohaSocial/Android/pull/28) | 2026-10-05 | A post card with a two-line header, hidden content that says what it hides, motion that Reduce motion stills, a thread with connectors and a reply bar, the profile header and tabs, notification cards, Black without tints and a colour per account, a viewer tinted by its picture, text size, times instead of ages, folded boosts, screens that slide, one skeleton and one empty state |
+| 14 | [#30](https://github.com/AlohaSocial/Android/pull/30) | 2026-10-05 | Home as the reader's pinned feeds with a switcher and Edit feeds, another server's own posts as a feed, quoting, boosting for a chosen audience and acting as another account, pausing notifications and choosing whose arrive, a richer composer (completion strip, detected language, attachment cards, alt-text page, draft resume and preview), search intents, hashtag curves, a profile's QR code and post search, the sign-in server preview, the catch-up page, focus mode, the picture-in-picture window's buttons |
 
 Between the phases: CI artifact retention ([#3](https://github.com/AlohaSocial/Android/pull/3)), the device benchmark and baseline profiles ([#4](https://github.com/AlohaSocial/Android/pull/4)), looking an account up by its id ([#10](https://github.com/AlohaSocial/Android/pull/10)) and who favourited and boosted a post ([#13](https://github.com/AlohaSocial/Android/pull/13)).
 
 ## In progress
 
-Phase 14, feeds and everyday tools: Home as the reader's pinned feeds with a switcher and Edit feeds, another server's own posts as a feed, quoting, boosting for a chosen audience and acting as another account, pausing notifications and choosing whose arrive, the composer's completion strip, overflow, detected language, attachment cards, poll reordering, reply defaults, alt-text page, mention chips, draft resume and preview, search intents, hashtag curves, a profile's QR code and post search, the sign-in server preview and host-meta, the catch-up page, focus mode and its Quick Settings tile, and the picture-in-picture window's buttons. Not merged yet.
+Nothing at the moment.
 
 ## Not built
 
