@@ -96,6 +96,7 @@ public fun SearchRoute(
         when (val found = state.found) {
             is Found.Post -> nav.openThread(found.statusId)
             is Found.Person -> nav.openProfile(found.accountId, null)
+            is Found.Web -> nav.openWeb(found.url)
             null -> return@LaunchedEffect
         }
         viewModel.onFoundShown()
@@ -104,19 +105,31 @@ public fun SearchRoute(
     val rowActions = rememberThreadRoutedActions(navigation)
     SearchScreen(
         state,
-        SearchActions(viewModel::onQuery, viewModel::onSubmit, viewModel::onClearRecent, onBack),
+        SearchActions(
+            viewModel::onQuery,
+            viewModel::onSubmit,
+            viewModel::onClearRecent,
+            onBack,
+            onTag = { nav.openTag(it) },
+            onPerson = viewModel::onPerson,
+        ),
         rowActions,
         modifier,
         explore = explore,
     )
 }
 
-/** What the search screen asks for: typing, a submit, clearing the recent searches, and leaving. */
+/**
+ * What the search screen asks for: typing, a submit, clearing the recent searches, leaving, and what an
+ * intent opens, a hashtag's posts or a person.
+ */
 internal class SearchActions(
     val onQuery: (String) -> Unit,
     val onSubmit: (String) -> Unit,
     val onClearRecent: () -> Unit,
     val onBack: () -> Unit,
+    val onTag: (String) -> Unit = {},
+    val onPerson: (String) -> Unit = {},
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -133,9 +146,29 @@ internal fun SearchScreen(
     val title = stringResource(R.string.search_title)
     // typing, the bar is the field; once searched, the query sits in a pill above the results, a tap edits it
     var editing by rememberSaveable { mutableStateOf(initiallyEditing) }
+    var part by rememberSaveable { mutableStateOf(Part.All) }
     val submit: (String) -> Unit = { query ->
         actions.onSubmit(query)
         if (query.isNotBlank()) editing = false
+    }
+    val onIntent: (SearchIntent) -> Unit = { intent ->
+        when (intent) {
+            is SearchIntent.OpenUrl -> submit(intent.url)
+
+            is SearchIntent.Tag -> actions.onTag(intent.name)
+
+            is SearchIntent.Person -> actions.onPerson(intent.handle)
+
+            is SearchIntent.Posts -> {
+                part = Part.Posts
+                submit(intent.query)
+            }
+
+            is SearchIntent.Accounts -> {
+                part = Part.Accounts
+                submit(intent.query)
+            }
+        }
     }
     // a page with the field on top, not Material's expanding search bar: this screen never collapses into a
     // bar, and that one answers a back swipe by shrinking itself, which could leave it half shrunk, a
@@ -150,7 +183,13 @@ internal fun SearchScreen(
             }
         },
     ) { padding ->
-        Box(Modifier.padding(padding).fillMaxSize()) { Found(state, actions, submit, rowActions, now, explore) }
+        Column(Modifier.padding(padding).fillMaxSize()) {
+            val intents = remember(state.query) { intentsFor(state.query) }
+            if (editing) Intents(intents, onIntent)
+            Box(Modifier.weight(1f)) {
+                Found(state, actions, submit, rowActions, now, explore, part) { part = it }
+            }
+        }
     }
 }
 
@@ -237,6 +276,8 @@ private fun Found(
     rowActions: StatusActions,
     now: Instant,
     explore: @Composable () -> Unit,
+    part: Part,
+    onPart: (Part) -> Unit,
 ) {
     val trouble = state.trouble
     when {
@@ -248,7 +289,7 @@ private fun Found(
 
         state.searched && state.empty -> EmptyState(stringResource(R.string.search_nothing, state.query.trim()))
 
-        state.searched -> Results(state, rowActions, now)
+        state.searched -> Results(state, rowActions, now, part, onPart)
 
         trouble != null -> Trouble(trouble)
 
@@ -285,19 +326,26 @@ private fun Recent(recent: List<String>, onClear: () -> Unit, onSubmit: (String)
 }
 
 /** Which of the answer's parts show; all of them unless one is picked. */
-private enum class Part(val title: Int) {
+internal enum class Part(val title: Int) {
     All(R.string.search_all),
     Accounts(R.string.search_accounts),
     Hashtags(R.string.search_hashtags),
     Posts(R.string.search_posts),
 }
 
+/** The answer, the part picked alone, or all of it while the part picked found nothing. */
 @Composable
-private fun Results(state: SearchUiState, rowActions: StatusActions, now: Instant) {
-    var part by rememberSaveable { mutableStateOf(Part.All) }
+private fun Results(
+    state: SearchUiState,
+    rowActions: StatusActions,
+    now: Instant,
+    picked: Part,
+    onPart: (Part) -> Unit,
+) {
+    val part = picked.takeIf { state.has(it) } ?: Part.All
     val shown = { which: Part, has: Boolean -> has && (part == Part.All || part == which) }
     LazyColumn(Modifier.fillMaxSize()) {
-        stickyHeader(key = "parts") { Parts(state, part) { part = it } }
+        stickyHeader(key = "parts") { Parts(state, part, onPart) }
         section(R.string.search_accounts, shown(Part.Accounts, state.accounts.isNotEmpty())) {
             itemsIndexed(state.accounts, key = { _, person -> "a:${person.author.id}" }) { index, person ->
                 Grouped(index, state.accounts.size, Modifier.padding(horizontal = AlohaSpacing.s)) {
@@ -329,14 +377,7 @@ private fun Results(state: SearchUiState, rowActions: StatusActions, now: Instan
 /** The parts the answer has, as filter chips above it, as Gmail puts its filters above the mail it found. */
 @Composable
 private fun Parts(state: SearchUiState, part: Part, onPart: (Part) -> Unit) {
-    val present = Part.entries.filter {
-        when (it) {
-            Part.All -> true
-            Part.Accounts -> state.accounts.isNotEmpty()
-            Part.Hashtags -> state.hashtags.isNotEmpty()
-            Part.Posts -> state.posts.isNotEmpty()
-        }
-    }
+    val present = Part.entries.filter(state::has)
     // one part found leaves nothing to choose between
     if (present.size <= 2) return
     Surface(color = MaterialTheme.colorScheme.surface) {
@@ -361,7 +402,7 @@ private fun Parts(state: SearchUiState, part: Part, onPart: (Part) -> Unit) {
  * with small corners and a sliver of space, and the rows sit on a tone of their own.
  */
 @Composable
-private fun Grouped(index: Int, count: Int, modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+internal fun Grouped(index: Int, count: Int, modifier: Modifier = Modifier, content: @Composable () -> Unit) {
     val large = GROUP_CORNER
     val small = ROW_CORNER
     val shape = RoundedCornerShape(
@@ -375,6 +416,14 @@ private fun Grouped(index: Int, count: Int, modifier: Modifier = Modifier, conte
         // a list row paints the surface colour; within the group, that is the group's tone
         MaterialTheme(colorScheme = MaterialTheme.colorScheme.copy(surface = tone), content = content)
     }
+}
+
+/** Whether the answer has anything in [part]; all of it always counts. */
+private fun SearchUiState.has(part: Part): Boolean = when (part) {
+    Part.All -> true
+    Part.Accounts -> accounts.isNotEmpty()
+    Part.Hashtags -> hashtags.isNotEmpty()
+    Part.Posts -> posts.isNotEmpty()
 }
 
 /** A heading and what is under it, where there is anything. */

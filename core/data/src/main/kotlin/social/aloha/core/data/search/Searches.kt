@@ -60,6 +60,12 @@ public class Searches @Inject constructor(
          * Whether the server should fetch what [query] names from where it lives: a web address, or a
          * handle with its server. A word, or a bare name, is searched for as it is.
          */
-        public fun resolvable(query: String): Boolean = query.trim().let { ADDRESS.matches(it) || HANDLE.matches(it) }
+        public fun resolvable(query: String): Boolean = isAddress(query) || isHandle(query)
+
+        /** Whether [query] is a web address. */
+        public fun isAddress(query: String): Boolean = ADDRESS.matches(query.trim())
+
+        /** Whether [query] is a handle with its server, `@name@server` or `name@server`. */
+        public fun isHandle(query: String): Boolean = HANDLE.matches(query.trim())
     }
 }

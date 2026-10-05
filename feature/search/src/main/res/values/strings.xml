@@ -30,4 +30,14 @@
     <string name="search_offline">You are offline. Search needs a connection.</string>
     <!-- The server could not search -->
     <string name="search_error">The search did not work. Try again in a moment.</string>
+    <!-- Row above the results while typing an address; %1$s is the address -->
+    <string name="search_intent_open">Open %1$s</string>
+    <!-- Row above the results while typing a hashtag or a word; %1$s is the tag without its # -->
+    <string name="search_intent_tag">Posts tagged #%1$s</string>
+    <!-- Row above the results while typing a handle; %1$s is the handle -->
+    <string name="search_intent_person">Go to %1$s</string>
+    <!-- Row above the results: only the posts found; %1$s is what was typed -->
+    <string name="search_intent_posts">Posts matching “%1$s”</string>
+    <!-- Row above the results: only the accounts found; %1$s is what was typed -->
+    <string name="search_intent_accounts">Accounts matching “%1$s”</string>
 </resources>

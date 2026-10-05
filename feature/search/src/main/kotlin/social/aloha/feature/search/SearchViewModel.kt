@@ -33,6 +33,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import social.aloha.core.data.AccountRepository
 import social.aloha.core.data.Answer
+import social.aloha.core.data.RemoteLookup
 import social.aloha.core.data.Trouble
 import social.aloha.core.data.search.Searches
 import social.aloha.core.data.trouble
@@ -51,6 +52,9 @@ internal sealed interface Found {
     data class Post(val statusId: String) : Found
 
     data class Person(val accountId: String) : Found
+
+    /** An address that names neither: it opens in the browser. */
+    data class Web(val url: String) : Found
 }
 
 /** An account found, as its row shows it. */
@@ -95,6 +99,7 @@ internal class SearchViewModel @AssistedInject constructor(
     @Assisted private val key: SearchKey,
     accounts: AccountRepository,
     private val searches: Searches,
+    private val lookup: RemoteLookup,
     private val cache: RichTextCache,
 ) : ViewModel() {
     @AssistedFactory
@@ -187,7 +192,17 @@ internal class SearchViewModel @AssistedInject constructor(
         val wanted = opening ?: return
         if (asked.trim() != wanted || answer == null) return
         opening = null
-        control.update { it.copy(found = (answer as? Answer.Got)?.value?.let(::only)) }
+        val found = (answer as? Answer.Got)?.value?.let(::only)
+        control.update { it.copy(found = found ?: Found.Web(wanted).takeIf { Searches.isAddress(wanted) }) }
+    }
+
+    /** Opens the person [handle] names, looked up directly; searched for as typed when it is not found. */
+    fun onPerson(handle: String) {
+        val account = reader.value ?: return
+        viewModelScope.launch {
+            val id = lookup.person(account, handle)
+            if (id == null) onSubmit(handle) else control.update { it.copy(found = Found.Person(id)) }
+        }
     }
 
     fun onFoundShown() {

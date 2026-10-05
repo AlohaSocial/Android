@@ -45,6 +45,8 @@ class SearchScreenTest {
         onSubmit = { asked += "submit:$it" },
         onClearRecent = { asked += "clear" },
         onBack = { asked += "back" },
+        onTag = { asked += "tag:$it" },
+        onPerson = { asked += "person:$it" },
     )
 
     private val rows = object : StatusActions {
@@ -79,6 +81,15 @@ class SearchScreenTest {
         posts = listOf(mapper.map(StatusSamples.post(), viewerAccountId = "2")),
         searched = true,
     )
+
+    @Test
+    fun `while typing, what the query reads as is offered above the results`() {
+        compose.setContent { AlohaTheme { SearchScreen(SearchUiState(query = "surf"), actions, rows) } }
+        compose.onRoot().captureRoboImage("src/test/screenshots/search-intents.png")
+        compose.onNodeWithText("Posts tagged #surf").performClick()
+        compose.onNodeWithText("Posts matching “surf”").performClick()
+        assertEquals(listOf("tag:surf", "submit:surf"), asked)
+    }
 
     @Test
     fun `the recent searches search again on a tap, and clear`() {
