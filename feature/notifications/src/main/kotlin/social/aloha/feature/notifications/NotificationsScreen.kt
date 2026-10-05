@@ -320,7 +320,9 @@ private fun Details(row: NotificationRowUi, actions: NotificationsActions, origi
 
         row.severance != null || row.warning != null -> NoticeCard(row, origin, actions::onLearnMore)
 
-        row.kind == NotificationKind.FollowRequest -> RequestButtons { actions.onFollowRequest(row, it) }
+        // a group answers in one go only where it names everyone in it
+        row.kind == NotificationKind.FollowRequest && row.people.size == row.others + 1 ->
+            RequestButtons { actions.onFollowRequest(row, it) }
 
         else -> row.preview?.let {
             Text(

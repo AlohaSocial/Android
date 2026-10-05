@@ -84,7 +84,10 @@ internal data class NotificationsUiState(
     val askedForPermission: Boolean = false,
     /** What a brief notice says after an action, as a string resource; null for none. */
     val notice: Int? = null,
-    /** The reader's server's address, where "Learn more" leads. */
+    /**
+     * Where "Learn more" leads: the reader's server, whose web pages explain cut follows and warnings;
+     * null on Nextcloud Social, which has no such pages.
+     */
     val origin: String? = null,
 )
 
@@ -161,7 +164,7 @@ internal class NotificationsViewModel @Inject constructor(
                 now = now,
                 askedForPermission = asked,
                 notice = control.notice,
-                origin = account?.let { "https://${it.host}" },
+                origin = account?.takeUnless { it.capabilities.isNextcloudSocial }?.let { "https://${it.host}" },
             )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_MILLIS), NotificationsUiState())
 
@@ -254,13 +257,16 @@ internal class NotificationsViewModel @Inject constructor(
         account.value?.let { viewModelScope.launch { repository.markRead(it, newest) } }
     }
 
-    /** Accepts or declines the follow request of row [key]; the row goes once the server took the answer. */
+    /**
+     * Accepts or declines every follow request of row [key], which may group several; the row goes once
+     * the server took each answer.
+     */
     fun onFollowRequest(key: String, accept: Boolean) {
         val item = control.value.items.firstOrNull { it.key == key } ?: return
-        val requester = item.newest?.id ?: return
         val reader = account.value ?: return
         viewModelScope.launch {
-            val done = repository.answerFollowRequest(reader, requester, accept)
+            val done = item.accounts.isNotEmpty() &&
+                item.accounts.map { repository.answerFollowRequest(reader, it.id, accept) }.all { it }
             control.update {
                 val notice = when {
                     !done -> R.string.notifications_request_failed

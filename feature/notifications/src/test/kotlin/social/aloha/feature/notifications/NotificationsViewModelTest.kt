@@ -57,6 +57,8 @@ private class Notifications : Dispatcher() {
 
             path.endsWith("/statuses/s1/mute") -> json(POST.replace("\"account\"", "\"muted\":true,\"account\""))
 
+            "/follow_requests/" in path -> json("""{"id":"${path.split('/').dropLast(1).last()}"}""")
+
             path.endsWith("/api/v2/notifications/policy") ->
                 json("""{"for_not_following":"accept","summary":{"pending_requests_count":4}}""")
 
@@ -76,7 +78,9 @@ private class Notifications : Dispatcher() {
             """{"group_key":"favourite-s1","notifications_count":3,"type":"favourite",""" +
             """"most_recent_notification_id":"120","sample_account_ids":["2","1"],"status_id":"s1"},""" +
             """{"group_key":"ungrouped-90","notifications_count":1,"type":"mention",""" +
-            """"most_recent_notification_id":"90","sample_account_ids":["1"],"status_id":"s1"}]}"""
+            """"most_recent_notification_id":"90","sample_account_ids":["1"],"status_id":"s1"},""" +
+            """{"group_key":"follow_request","notifications_count":2,"type":"follow_request",""" +
+            """"most_recent_notification_id":"80","sample_account_ids":["2","1"]}]}"""
     }
 }
 
@@ -172,6 +176,17 @@ class NotificationsViewModelTest {
             notifications.asked.last { "types%5B%5D=follow" in it }
         }
         assertTrue(asked, asked.startsWith("GET /api/v2/notifications?") && "types%5B%5D=follow_request" in asked)
+    }
+
+    @Test
+    fun `a follow request row that groups two people answers both`() = runBlocking {
+        viewModel.onShown(isShown = true)
+        await { state -> state.rows.any { it.kind == NotificationKind.FollowRequest } }
+        viewModel.onFollowRequest("follow_request", accept = true)
+        await { state -> state.rows.none { it.kind == NotificationKind.FollowRequest } }
+        val answered = notifications.asked.filter { "/follow_requests/" in it }
+        assertTrue(answered.toString(), answered.any { "/follow_requests/1/authorize" in it })
+        assertTrue(answered.toString(), answered.any { "/follow_requests/2/authorize" in it })
     }
 
     private companion object {

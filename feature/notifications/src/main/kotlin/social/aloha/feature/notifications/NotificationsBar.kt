@@ -35,7 +35,9 @@ private class BarAction(val label: String, val icon: ImageVector, val onClick: (
 internal fun BarActions(state: NotificationsUiState, actions: NotificationsActions, roomy: Boolean) {
     val pending = state.pendingRequests
     val all = listOfNotNull(
-        BarAction(stringResource(R.string.notifications_mark_all_read), AlohaIcons.MarkAllRead, actions::onMarkAllRead),
+        // with a kind chosen, "all" would mark read what the reader never saw
+        BarAction(stringResource(R.string.notifications_mark_all_read), AlohaIcons.MarkAllRead, actions::onMarkAllRead)
+            .takeIf { state.kinds.isEmpty() },
         BarAction(stringResource(R.string.notifications_refresh), AlohaIcons.Retry, actions::onRefresh),
         BarAction(
             if (pending > 0) {
