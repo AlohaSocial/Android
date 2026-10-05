@@ -8,6 +8,7 @@ import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
+import social.aloha.core.datastore.AccountSettings
 import social.aloha.core.datastore.AccountSettingsStore
 import social.aloha.core.datastore.toFeed
 import social.aloha.core.datastore.toRecord
@@ -21,10 +22,20 @@ import social.aloha.core.model.SignedInAccount
  */
 @Singleton
 public class PinnedFeeds @Inject constructor(private val settings: AccountSettingsStore) {
-    public fun feeds(account: SignedInAccount): Flow<List<PinnedFeed>> = settings.settings(account.id).map { stored ->
+    public fun feeds(account: SignedInAccount): Flow<List<PinnedFeed>> =
+        settings.settings(account.id).map { shown(it, account) }.distinctUntilChanged()
+
+    /** Changes [account]'s feeds by [change], from what is stored as it runs: two changes in a row both hold. */
+    public suspend fun update(account: SignedInAccount, change: (List<PinnedFeed>) -> List<PinnedFeed>) {
+        settings.update(account.id) { stored ->
+            stored.copy(pinnedFeeds = change(shown(stored, account)).distinctBy(PinnedFeed::id).map { it.toRecord() })
+        }
+    }
+
+    private fun shown(stored: AccountSettings, account: SignedInAccount): List<PinnedFeed> {
         val pinned = stored.pinnedFeeds?.mapNotNull { it.toFeed() }?.filter { served(it, account.capabilities) }
-        pinned?.takeIf { it.isNotEmpty() } ?: PinnedFeed.defaults(account.capabilities, stored.homeSource)
-    }.distinctUntilChanged()
+        return pinned?.takeIf { it.isNotEmpty() } ?: PinnedFeed.defaults(account.capabilities, stored.homeSource)
+    }
 
     /** Keeps [feeds] as [account]'s, in their order, each once. */
     public suspend fun save(account: SignedInAccount, feeds: List<PinnedFeed>) {

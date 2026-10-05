@@ -10,6 +10,10 @@
     <string name="status_context_boosted">Boosted by %s</string>
     <!-- Line above a post pinned to a profile -->
     <string name="status_context_pinned">Pinned</string>
+    <!-- Screen reader action on an item of a list put in order by dragging: one place up -->
+    <string name="reorder_move_up">Move up</string>
+    <!-- Screen reader action on an item of a list put in order by dragging: one place down -->
+    <string name="reorder_move_down">Move down</string>
     <!-- Line above a reply someone wrote to their own post -->
     <string name="status_context_thread">Continued thread</string>
     <!-- Line above a reply; %s is the handle it replies to, e.g. @alice@example.social -->

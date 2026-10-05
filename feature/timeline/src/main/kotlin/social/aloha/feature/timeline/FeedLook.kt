@@ -39,6 +39,26 @@ internal val FeedIcons: Map<String, ImageVector> = linkedMapOf(
     "recent" to AlohaIcons.Recent,
 )
 
+/** What a screen reader calls each of [FeedIcons]. */
+internal fun iconLabel(key: String): Int = when (key) {
+    "home" -> R.string.feeds_icon_home
+    "place" -> R.string.feeds_icon_place
+    "public" -> R.string.feeds_icon_public
+    "language" -> R.string.feeds_icon_language
+    "notifications" -> R.string.feeds_icon_notifications
+    "bookmark" -> R.string.feeds_icon_bookmark
+    "favourite" -> R.string.feeds_icon_favourite
+    "lists" -> R.string.feeds_icon_lists
+    "group" -> R.string.feeds_icon_group
+    "hashtag" -> R.string.feeds_icon_hashtag
+    "explore" -> R.string.feeds_icon_explore
+    "news" -> R.string.feeds_icon_news
+    "photos" -> R.string.feeds_icon_photos
+    "video" -> R.string.feeds_icon_video
+    "audio" -> R.string.feeds_icon_audio
+    else -> R.string.feeds_icon_recent
+}
+
 /** The icon a feed shows: the one the reader picked, or its kind's. */
 internal fun feedIcon(feed: PinnedFeed): ImageVector = feed.icon?.let(FeedIcons::get) ?: when (feed.kind) {
     PinnedFeed.Kind.Following -> AlohaIcons.Home

@@ -89,6 +89,80 @@
     <string name="timeline_feed_about_hashtag">Posts with this hashtag, from everyone your server knows of.</string>
     <!-- Button on a feed's first-visit explanation: puts it away for good -->
     <string name="timeline_feed_about_dismiss">Got it</string>
+    <!-- Edit feeds: back to Home -->
+    <string name="feeds_back">Back</string>
+    <!-- Edit feeds: the bar's + that lists what could be pinned -->
+    <string name="feeds_add">Add a feed</string>
+    <!-- Edit feeds, Add menu group: the server's live timelines -->
+    <string name="feeds_add_live">Timelines</string>
+    <!-- Edit feeds, Add menu group: the reader's own collections -->
+    <string name="feeds_add_yours">Yours</string>
+    <!-- Edit feeds, Add menu group: the reader's lists -->
+    <string name="feeds_add_lists">Lists</string>
+    <!-- Edit feeds, Add menu group: the hashtags the reader follows -->
+    <string name="feeds_add_hashtags">Hashtags you follow</string>
+    <!-- Edit feeds: adds a feed for a hashtag typed in, and the title of that dialog -->
+    <string name="feeds_add_tag">Another hashtag</string>
+    <!-- Edit feeds: the label of a tap on a feed, and the title of its dialog -->
+    <string name="feeds_change">Change feed</string>
+    <!-- Edit feeds: the screen reader's action removing a feed, as a swipe does -->
+    <string name="feeds_remove">Remove</string>
+    <!-- Edit feeds: the note shown for a moment after a feed was removed -->
+    <string name="feeds_removed">Feed removed</string>
+    <!-- Edit feeds: the note’s action putting the removed feed back where it was -->
+    <string name="feeds_undo">Undo</string>
+    <!-- Feed dialog: the field for the reader's own name of the feed -->
+    <string name="feeds_name">Name</string>
+    <!-- Feed dialog: the field for the hashtag a feed reads -->
+    <string name="feeds_tag">Hashtag</string>
+    <!-- Feed dialog: shows the fields for more tags -->
+    <string name="feeds_advanced">Advanced</string>
+    <!-- Feed dialog, Advanced: posts with any of these tags join the feed -->
+    <string name="feeds_tags_any">Or any of these</string>
+    <!-- Feed dialog, Advanced: only posts that also carry all of these tags -->
+    <string name="feeds_tags_all">And all of these</string>
+    <!-- Feed dialog, Advanced: posts with any of these tags are left out -->
+    <string name="feeds_tags_none">But none of these</string>
+    <!-- Feed dialog, Advanced: under each tag field -->
+    <string name="feeds_tags_hint">Tags separated by spaces</string>
+    <!-- Feed dialog, Advanced: the feed reads this server's posts alone -->
+    <string name="feeds_local_only">This server only</string>
+    <!-- Feed dialog: keeps the changes -->
+    <string name="feeds_save">Save</string>
+    <!-- Feed dialog: leaves the feed as it was -->
+    <string name="feeds_cancel">Cancel</string>
+    <!-- Feed dialog: read aloud for one of the icons a feed can take -->
+    <string name="feeds_icon_home">A house</string>
+    <!-- Feed dialog: read aloud for one of the icons a feed can take -->
+    <string name="feeds_icon_place">A map pin</string>
+    <!-- Feed dialog: read aloud for one of the icons a feed can take -->
+    <string name="feeds_icon_public">A globe</string>
+    <!-- Feed dialog: read aloud for one of the icons a feed can take -->
+    <string name="feeds_icon_language">A world map</string>
+    <!-- Feed dialog: read aloud for one of the icons a feed can take -->
+    <string name="feeds_icon_notifications">A bell</string>
+    <!-- Feed dialog: read aloud for one of the icons a feed can take -->
+    <string name="feeds_icon_bookmark">A bookmark</string>
+    <!-- Feed dialog: read aloud for one of the icons a feed can take -->
+    <string name="feeds_icon_favourite">A star</string>
+    <!-- Feed dialog: read aloud for one of the icons a feed can take -->
+    <string name="feeds_icon_lists">A list</string>
+    <!-- Feed dialog: read aloud for one of the icons a feed can take -->
+    <string name="feeds_icon_group">People</string>
+    <!-- Feed dialog: read aloud for one of the icons a feed can take -->
+    <string name="feeds_icon_hashtag">A hashtag</string>
+    <!-- Feed dialog: read aloud for one of the icons a feed can take -->
+    <string name="feeds_icon_explore">A compass</string>
+    <!-- Feed dialog: read aloud for one of the icons a feed can take -->
+    <string name="feeds_icon_news">A newspaper</string>
+    <!-- Feed dialog: read aloud for one of the icons a feed can take -->
+    <string name="feeds_icon_photos">A photo</string>
+    <!-- Feed dialog: read aloud for one of the icons a feed can take -->
+    <string name="feeds_icon_video">A film</string>
+    <!-- Feed dialog: read aloud for one of the icons a feed can take -->
+    <string name="feeds_icon_audio">Headphones</string>
+    <!-- Feed dialog: read aloud for one of the icons a feed can take -->
+    <string name="feeds_icon_recent">A clock</string>
     <!-- Strip over the timeline when the server cannot be reached; the cached posts stay -->
     <string name="timeline_offline">You\'re offline. These are the posts saved on this device.</string>
     <!-- Strip over the timeline when the server answered with an error -->

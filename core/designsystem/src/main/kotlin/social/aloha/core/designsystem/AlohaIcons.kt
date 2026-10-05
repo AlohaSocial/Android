@@ -47,6 +47,7 @@ import androidx.compose.material.icons.outlined.ContentCut
 import androidx.compose.material.icons.outlined.Create
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.DoneAll
+import androidx.compose.material.icons.outlined.DragHandle
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.EditNote
 import androidx.compose.material.icons.outlined.EmojiEmotions
@@ -141,6 +142,7 @@ public object AlohaIcons {
     public val Bookmark: ImageVector = Icons.Outlined.BookmarkBorder
     public val Bookmarked: ImageVector = Icons.Filled.Bookmark
     public val More: ImageVector = Icons.Outlined.MoreVert
+    public val Reorder: ImageVector = Icons.Outlined.DragHandle
     public val Pinned: ImageVector = Icons.Outlined.PushPin
     public val VisibilityPrivate: ImageVector = Icons.Outlined.Lock
     public val VisibilityDirect: ImageVector = Icons.Outlined.Mail

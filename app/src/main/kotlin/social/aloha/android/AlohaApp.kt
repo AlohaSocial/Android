@@ -77,6 +77,7 @@ import social.aloha.core.navigation.ComposerKey
 import social.aloha.core.navigation.ConversationsKey
 import social.aloha.core.navigation.DraftsKey
 import social.aloha.core.navigation.EditProfileKey
+import social.aloha.core.navigation.FeedsKey
 import social.aloha.core.navigation.FilterEditKey
 import social.aloha.core.navigation.FiltersKey
 import social.aloha.core.navigation.HashtagsKey
@@ -168,6 +169,7 @@ import social.aloha.feature.stories.StoriesRail
 import social.aloha.feature.thread.StatusListRoute
 import social.aloha.feature.thread.ThreadNavigation
 import social.aloha.feature.thread.ThreadRoute
+import social.aloha.feature.timeline.EditFeedsRoute
 import social.aloha.feature.timeline.HomeRoute
 import social.aloha.feature.timeline.ModesOffer
 import social.aloha.feature.timeline.TagRoute
@@ -442,6 +444,7 @@ fun AlohaApp(
                                 val links = HomeLinks(
                                     onSearch = { backStack.push(SearchKey(readerId)) },
                                     onAnnouncements = { backStack.push(AnnouncementsKey(readerId)) },
+                                    onEditFeeds = { backStack.push(FeedsKey(readerId)) },
                                 )
                                 timeline(feed, statusNavigation, links) { accountButton(accountLinks) }
                             }
@@ -472,6 +475,7 @@ fun AlohaApp(
                                     onBack = { backStack.remove(it) },
                                 )
                             }
+                            entry<FeedsKey> { key -> EditFeedsRoute(onBack = { backStack.remove(key) }) }
                             entry<ListsKey> { key ->
                                 ListsRoute(
                                     key,
@@ -735,6 +739,7 @@ private fun ModeTimeline(
             navigationIcon = accountButton,
             header = { AnnouncementsBanner(onOpen = links.onAnnouncements) },
             onSearch = links.onSearch,
+            onEditFeeds = links.onEditFeeds,
         )
         // the optional modes are offered once, on the timeline every reader opens first
         return ModesOffer()
@@ -784,7 +789,11 @@ private fun AlohaAppPreview() {
 }
 
 /** Where Home leads beyond its timeline: search, from its toolbar, and the server's announcements. */
-data class HomeLinks(val onSearch: () -> Unit = {}, val onAnnouncements: () -> Unit = {})
+data class HomeLinks(
+    val onSearch: () -> Unit = {},
+    val onAnnouncements: () -> Unit = {},
+    val onEditFeeds: () -> Unit = {},
+)
 
 /** Where the account button's sheet leads, one [AccountPlace] at a time. */
 data class AccountLinks(val open: (AccountPlace) -> Unit = {})

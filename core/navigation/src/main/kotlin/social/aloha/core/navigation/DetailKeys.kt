@@ -89,6 +89,10 @@ public data class SearchKey(val readerId: String) : NavKey
 @Serializable
 public data class ListsKey(val readerId: String) : NavKey
 
+/** The feeds [readerId] pins to Home, to reorder, rename, remove and add to. */
+@Serializable
+public data class FeedsKey(val readerId: String) : NavKey
+
 /** The timeline of [readerId]'s list [listId], called [title]. */
 @Serializable
 public data class ListKey(val readerId: String, val listId: String, val title: String) : NavKey
