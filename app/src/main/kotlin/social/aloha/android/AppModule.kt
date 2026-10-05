@@ -49,12 +49,17 @@ object AppModule {
      * hijacked code useless.
      */
     @Provides
-    fun redirectUriProvider(@ApplicationContext context: Context): RedirectUriProvider = RedirectUriProvider {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && appLinkVerified(context)) {
-            OAuthIdentity.APP_LINK_REDIRECT
-        } else {
-            OAuthIdentity.SCHEME_REDIRECT
-        }
+    fun redirectUriProvider(@ApplicationContext context: Context): RedirectUriProvider = object : RedirectUriProvider {
+        private val scheme = "${BuildConfig.OAUTH_SCHEME}://oauth-callback"
+
+        override fun redirectUri(): String =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && appLinkVerified(context)) {
+                OAuthIdentity.APP_LINK_REDIRECT
+            } else {
+                scheme
+            }
+
+        override fun registeredRedirects(): String = "${OAuthIdentity.APP_LINK_REDIRECT}\n$scheme"
     }
 
     @androidx.annotation.RequiresApi(Build.VERSION_CODES.S)

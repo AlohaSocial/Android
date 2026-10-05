@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ SPDX-FileCopyrightText: 2026 Aloha Social contributors
+  ~ SPDX-License-Identifier: MIT
+-->
+<resources>
+    <!-- The name of the QA build under the launcher icon and in system settings. A brand name, not translated. -->
+    <string name="app_name" translatable="false">Aloha Social QA</string>
+</resources>

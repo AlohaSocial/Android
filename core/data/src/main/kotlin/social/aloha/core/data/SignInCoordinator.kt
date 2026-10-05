@@ -53,7 +53,9 @@ public class SignInCoordinator @Inject constructor(
     public suspend fun beginAuthorization(server: DiscoveredServer): Authorization {
         val outcome = server.outcome
         val base = outcome.apiBase
-        val registration = accounts.registration(base.host) ?: when (val registered = oauth.register(base)) {
+        val registration = accounts.registration(base.host) ?: when (
+            val registered = oauth.register(base, redirectUris = redirects.registeredRedirects())
+        ) {
             is ApiResult.Success -> registered.value.also { accounts.saveRegistration(base.host, it) }
             is ApiResult.Failure -> return Authorization.Failed(registered.error.toProblem())
         }
@@ -76,7 +78,9 @@ public class SignInCoordinator @Inject constructor(
         val kept = accounts.registration(base.host)?.takeIf { registration ->
             OAuthIdentity.MODERATOR_SCOPES.split(' ').all { it in registration.scopes.split(' ') }
         }
-        val registration = kept ?: when (val registered = oauth.register(base, OAuthIdentity.MODERATOR_SCOPES)) {
+        val registration = kept ?: when (
+            val registered = oauth.register(base, OAuthIdentity.MODERATOR_SCOPES, redirects.registeredRedirects())
+        ) {
             is ApiResult.Success -> registered.value.also { accounts.saveRegistration(base.host, it) }
             is ApiResult.Failure -> return Authorization.Failed(registered.error.toProblem())
         }
