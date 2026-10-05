@@ -43,12 +43,14 @@ import social.aloha.core.data.profile.FollowedAuthors
 import social.aloha.core.data.profile.ProfileFeatured
 import social.aloha.core.data.profile.ProfileRepository
 import social.aloha.core.data.profile.RelationshipChange
+import social.aloha.core.data.search.Searches
 import social.aloha.core.data.timeline.FilterRepository
 import social.aloha.core.data.timeline.StatusInteractions
 import social.aloha.core.data.timeline.StatusRepository
 import social.aloha.core.data.timeline.TimelineRepository
 import social.aloha.core.database.AccountsDatabase
 import social.aloha.core.database.CacheDatabase
+import social.aloha.core.datastore.AccountSettingsStore
 import social.aloha.core.datastore.AppPreferences
 import social.aloha.core.datastore.TokenVault
 import social.aloha.core.html.RichTextCache
@@ -186,6 +188,7 @@ class ProfileViewModelTest {
             RichTextCache(),
             clock,
             ProfileFeatured(clients),
+            Searches(clients, statuses, AccountSettingsStore(InMemoryDataStore(emptyMap()))),
         ).apply {
             onColors(RichTextColors(Color.Blue, Color.Gray, Color.LightGray))
             store.put("profile-${'$'}id-${'$'}acct", this)

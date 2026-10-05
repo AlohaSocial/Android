@@ -108,7 +108,15 @@ public fun ProfileRoute(key: AccountKey, navigation: ProfileNavigation, modifier
         onPauseOrDispose {}
     }
 
-    ProfileScreen(state, screenActions, rowActions, modifier, snackbars)
+    val searching by viewModel.searched.collectAsStateWithLifecycle()
+    ProfileScreen(
+        state,
+        screenActions,
+        rowActions,
+        modifier,
+        snackbars,
+        search = PostSearch(searching, viewModel::onSearchPosts),
+    )
 
     deleting?.let { request ->
         DeleteStatusDialog(

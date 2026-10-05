@@ -129,4 +129,14 @@
     <string name="welcome_find_server">No account yet? Find a server</string>
     <!-- Welcome screen footnote: the servers the app works with -->
     <string name="welcome_footnote">Works with Nextcloud Social, Mastodon, and anything else that speaks the Mastodon API.</string>
+    <!-- Card under the server field while the server typed is looked up; %1$s is its address -->
+    <string name="signin_preview_loading">Looking up %1$s…</string>
+    <!-- On a server’s card: the languages it says it speaks; %1$s is their names, joined -->
+    <string name="signin_languages">Languages: %1$s</string>
+    <!-- Card over the server field when an invite link was copied; %1$s is the server it invites to -->
+    <string name="signin_invite">You copied an invite to %1$s.</string>
+    <!-- Button on that card: opens the invite in the browser and fills in its server -->
+    <string name="signin_invite_use">Open the invite</string>
+    <!-- Button on that card: leaves the invite alone -->
+    <string name="signin_invite_dismiss">Not now</string>
 </resources>

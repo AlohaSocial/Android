@@ -21,14 +21,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.BlendMode
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.CompositingStrategy
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -40,6 +33,7 @@ import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.media.BlurHash
 import social.aloha.core.model.MediaAttachment
 import social.aloha.core.model.Status
+import social.aloha.core.ui.fadingBottom
 
 /**
  * The backdrop for [attachment]: its blurhash's average colour, darkened to a lightness of at most
@@ -77,7 +71,7 @@ internal fun Caption(description: String, modifier: Modifier = Modifier) {
             style = MaterialTheme.typography.bodyMedium,
             maxLines = if (open) Int.MAX_VALUE else CAPTION_LINES,
             onTextLayout = { if (!open) overflows = it.hasVisualOverflow },
-            modifier = if (overflows && !open) Modifier.fadingBottom() else Modifier,
+            modifier = if (overflows && !open) Modifier.fadingBottom(FADE) else Modifier,
         )
         if (overflows || open) {
             TextButton(onClick = { open = !open }) {
@@ -86,22 +80,6 @@ internal fun Caption(description: String, modifier: Modifier = Modifier) {
         }
     }
 }
-
-private fun Modifier.fadingBottom(): Modifier = graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)
-    .drawWithContent {
-        drawContent()
-        val fade = FADE.toPx()
-        drawRect(
-            Brush.verticalGradient(
-                listOf(Color.Black, Color.Transparent),
-                startY = size.height - fade,
-                endY = size.height,
-            ),
-            topLeft = Offset(0f, size.height - fade),
-            size = Size(size.width, fade),
-            blendMode = BlendMode.DstIn,
-        )
-    }
 
 /** Reply, boost, favourite and bookmark, for the post the pictures belong to; each toggle shows its state. */
 @Composable

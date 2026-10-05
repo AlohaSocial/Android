@@ -53,7 +53,7 @@ internal fun menuItems(
 /** Who, when and what was said; the content warning instead of the body while it is closed. */
 @Composable
 internal fun accessibilityLabel(row: StatusRowUi, now: Instant, bodyShown: Boolean): String {
-    val age = PostAge.of(row.createdAt, now).spoken(stringResource(R.string.status_age_now))
+    val age = rememberPostTime(row.createdAt, now).second
     val spoiler = row.spoiler
     if (spoiler != null &&
         !bodyShown
@@ -148,6 +148,7 @@ internal fun customActions(
     val spoiler = spoilerActions(row, controls)
     val history = listOfNotNull(
         if (row.edited) action(stringResource(R.string.status_action_history)) { actions.onHistory(row) } else null,
+        controls.onRehide?.let { action(stringResource(R.string.status_rehide), it) },
     )
     // behind a closed content warning, only opening it is offered: the rest is not on screen
     if (row.spoiler != null && !controls.spoilerRevealed) return spoiler + base + history + menu
@@ -214,7 +215,7 @@ private fun countLabel(action: String, count: Int): String = if (count >
 @Composable
 private fun toggleActions(row: StatusRowUi, actions: StatusActions): List<CustomAccessibilityAction> {
     fun action(label: String, block: () -> Unit) = CustomAccessibilityAction(label) { block().let { true } }
-    return listOf(
+    return listOfNotNull(
         action(countLabel(stringResource(R.string.status_action_reply), row.counts.replies)) { actions.onReply(row) },
         action(
             countLabel(
@@ -224,6 +225,8 @@ private fun toggleActions(row: StatusRowUi, actions: StatusActions): List<Custom
         ) {
             actions.onBoost(row)
         },
+        action(stringResource(quoteLabel(row.quoteAccess))) { actions.onQuote(row) }
+            .takeIf { actions.quotes && row.quoteAccess != QuoteAccess.Denied },
         action(
             countLabel(
                 stringResource(

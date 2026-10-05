@@ -18,7 +18,19 @@ internal data class SignInUiState(
     val copied: Boolean = false,
     /** The KeyChain alias chosen as the client certificate for this server, if any. */
     val clientCertificate: String? = null,
+    /** What the server being typed says about itself; null while the text cannot be an address. */
+    val preview: ServerPreview? = null,
+    /** An invite link found on the clipboard, offered once. */
+    val invite: String? = null,
 )
+
+/** The server being typed, looked up as it is typed. */
+@Immutable
+internal sealed interface ServerPreview {
+    data class Loading(val host: String) : ServerPreview
+
+    data class Shown(val card: InstanceCard) : ServerPreview
+}
 
 @Immutable
 internal sealed interface SignInStep {
@@ -61,6 +73,8 @@ internal data class InstanceCard(
     val userCount: Int?,
     val rules: List<String>,
     val isNextcloudSocial: Boolean,
+    /** The languages the server says it speaks, as codes. */
+    val languages: List<String> = emptyList(),
 )
 
 @Immutable

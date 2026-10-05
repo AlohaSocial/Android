@@ -50,6 +50,7 @@ public class DiscoveredServer internal constructor(internal val outcome: ProbeOu
         get() = outcome.instance.shortDescription.trim().ifBlank { outcome.instance.description.trim() }
     public val userCount: Int? get() = outcome.instance.userCount
     public val rules: List<String> get() = outcome.instance.rules.map { it.text.trim() }
+    public val languages: List<String> get() = outcome.instance.languages
     public val isNextcloudSocial: Boolean get() = outcome.nodeInfo?.isNextcloudSocial == true
 }
 

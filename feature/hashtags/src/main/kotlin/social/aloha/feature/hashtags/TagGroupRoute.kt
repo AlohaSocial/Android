@@ -4,17 +4,14 @@
 package social.aloha.feature.hashtags
 
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -22,7 +19,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.paneTitle
@@ -32,11 +28,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import java.time.Instant
 import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaSpacing
-import social.aloha.core.model.SensitiveMediaPolicy
 import social.aloha.core.navigation.TagGroupKey
+import social.aloha.core.ui.EmptyAction
+import social.aloha.core.ui.EmptyState
 import social.aloha.core.ui.LocalSensitiveMediaPolicy
 import social.aloha.core.ui.PostDivider
 import social.aloha.core.ui.RichTextColors
+import social.aloha.core.ui.Skeleton
 import social.aloha.core.ui.StatusActions
 import social.aloha.core.ui.StatusCard
 import social.aloha.core.ui.StatusNavigation
@@ -86,19 +84,13 @@ internal fun TagGroupScreen(
     ) { padding ->
         Box(Modifier.padding(padding).fillMaxSize()) {
             when {
-                rows.isEmpty() && state.loading -> CircularProgressIndicator(Modifier.align(Alignment.Center))
+                rows.isEmpty() && state.loading -> Skeleton()
 
-                rows.isEmpty() -> Column(
-                    Modifier.align(Alignment.Center).padding(AlohaSpacing.l),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Text(
-                        stringResource(if (state.failed) R.string.hashtags_failed else R.string.hashtags_group_empty),
-                        style = MaterialTheme.typography.bodyLarge,
-                    )
-                    // what failed is the next page, which is what asking for more asks again
-                    if (state.failed) TextButton(onClick = onMore) { Text(stringResource(R.string.hashtags_retry)) }
-                }
+                // what failed is the next page, which is what asking for more asks again
+                rows.isEmpty() -> EmptyState(
+                    stringResource(if (state.failed) R.string.hashtags_failed else R.string.hashtags_group_empty),
+                    action = if (state.failed) EmptyAction(stringResource(R.string.hashtags_retry), onMore) else null,
+                )
 
                 else -> LazyColumn(Modifier.fillMaxSize()) {
                     items(rows, key = { it.rowId }) { row ->

@@ -4,21 +4,12 @@
 package social.aloha.feature.profile
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -26,26 +17,18 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -54,33 +37,23 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.LiveRegionMode
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.heading
-import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.paneTitle
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import coil3.compose.AsyncImage
 import java.text.NumberFormat
 import social.aloha.core.data.Trouble
 import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.model.MediaCollection
-import social.aloha.core.model.ProfileHighlights
-import social.aloha.core.model.SensitiveMediaPolicy
 import social.aloha.core.model.Story
-import social.aloha.core.ui.Avatar
 import social.aloha.core.ui.EmptyState
 import social.aloha.core.ui.ListProgress
 import social.aloha.core.ui.LocalReadingStyle
@@ -93,10 +66,7 @@ import social.aloha.core.ui.Skeleton
 import social.aloha.core.ui.StatusActions
 import social.aloha.core.ui.StatusCard
 import social.aloha.core.ui.TroubleStrip
-import social.aloha.core.ui.contentDirection
-import social.aloha.core.ui.fullDate
 import social.aloha.core.ui.readingWidth
-import social.aloha.core.ui.rememberEmojiContent
 import social.aloha.core.ui.rememberReducedMotion
 import social.aloha.core.ui.swipeTabs
 
@@ -109,10 +79,12 @@ internal fun ProfileScreen(
     modifier: Modifier = Modifier,
     snackbars: SnackbarHostState = remember { SnackbarHostState() },
     listState: LazyListState = rememberLazyListState(),
+    search: PostSearch? = null,
 ) {
     val title = state.header?.author?.plainName.orEmpty()
     var asking by rememberSaveable { mutableStateOf<Asking?>(null) }
     val bar = TopAppBarDefaults.pinnedScrollBehavior()
+    var showingQr by rememberSaveable { mutableStateOf(false) }
     Scaffold(
         modifier = modifier.nestedScroll(bar.nestedScrollConnection).semantics { paneTitle = title },
         topBar = {
@@ -124,7 +96,17 @@ internal fun ProfileScreen(
                         Icon(AlohaIcons.Back, stringResource(R.string.profile_back))
                     }
                 },
-                actions = { Menu(state, actions, ask = { asking = it }) },
+                actions = {
+                    val header = state.header
+                    val url = header?.url
+                    if (header?.isSelf == true && url != null) {
+                        IconButton(onClick = { showingQr = true }) {
+                            Icon(AlohaIcons.QrCode, stringResource(R.string.profile_qr_title))
+                        }
+                        if (showingQr) ProfileQrDialog(url, header.author.handle) { showingQr = false }
+                    }
+                    Menu(state, actions, ask = { asking = it })
+                },
             )
         },
         snackbarHost = { SnackbarHost(snackbars) },
@@ -133,9 +115,9 @@ internal fun ProfileScreen(
             state.trouble?.takeIf { !state.gone }?.let { TroubleStrip(it) }
             RefreshBox(refreshing = state.loading && state.header != null, onRefresh = actions::onRefresh) {
                 when {
-                    state.gone -> Message(stringResource(R.string.profile_gone))
+                    state.gone -> EmptyState(stringResource(R.string.profile_gone))
                     state.header == null -> ProfileSkeleton(state.knownHandle)
-                    else -> Content(state, state.header, actions, rowActions, listState)
+                    else -> Content(state, state.header, actions, rowActions, listState, search)
                 }
             }
         }
@@ -155,6 +137,7 @@ private fun Content(
     actions: ProfileScreenActions,
     rowActions: StatusActions,
     listState: LazyListState,
+    search: PostSearch?,
 ) {
     // on a wide window the profile keeps a reading width, centred, rather than stretching banner and text
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
@@ -177,7 +160,7 @@ private fun Content(
         }
         LazyColumn(
             state = listState,
-            modifier = Modifier.readingWidth().fillMaxSize().swipeTabs(
+            modifier = Modifier.readingWidth().fillMaxSize().imePadding().swipeTabs(
                 next = { swipeTo(shown.getOrNull(at + 1)) },
                 previous = { swipeTo(shown.getOrNull(at - 1)) },
             ),
@@ -202,12 +185,20 @@ private fun Content(
                 item(key = "highlights", contentType = "highlights") { Highlights(highlights) }
             }
             stickyHeader(key = "tabs", contentType = "tabs") { Tabs(state, pinned, timeline, choose) }
-            tabContent(state, actions, rowActions)
+            tabContent(state, actions, rowActions, search.takeIf { state.postSearch })
         }
     }
 }
 
-private fun LazyListScope.tabContent(state: ProfileUiState, actions: ProfileScreenActions, rowActions: StatusActions) {
+/** A search through the account's posts, as it stands, and what typing in it does. */
+internal data class PostSearch(val state: PostSearchUi, val onQuery: (String) -> Unit)
+
+private fun LazyListScope.tabContent(
+    state: ProfileUiState,
+    actions: ProfileScreenActions,
+    rowActions: StatusActions,
+    search: PostSearch?,
+) {
     when (state.tab) {
         ProfileTab.Collections -> listed(state.collections, MediaCollection::id) { CollectionRow(it, actions) }
 
@@ -216,34 +207,42 @@ private fun LazyListScope.tabContent(state: ProfileUiState, actions: ProfileScre
         ProfileTab.Featured -> state.featured?.let { featured(it, state.now, rowActions) }
 
         else -> {
-            if (state.items.isEmpty()) {
-                item(key = "empty") { Empty(loading = state.loading, Modifier.fillParentMaxHeight()) }
-            }
-            items(state.items, key = { it.key }, contentType = { it::class }) { item ->
-                when (item) {
-                    is ProfileItem.Post -> StatusCard(
-                        item.row,
-                        state.now,
-                        LocalSensitiveMediaPolicy.current,
-                        rowActions,
-                    )
+            val handle = state.header?.author?.handle.orEmpty()
+            val searched = state.tab == ProfileTab.Posts && search != null &&
+                postSearch(search, handle, state.now, rowActions)
+            if (!searched) timeline(state, actions, rowActions)
+        }
+    }
+}
 
-                    is ProfileItem.Gap -> if (item.loading) {
-                        ListProgress(size = PROGRESS)
-                    } else {
-                        Box(Modifier.fillMaxWidth().padding(AlohaSpacing.s), contentAlignment = Alignment.Center) {
-                            OutlinedButton(onClick = { actions.onFillGap(item.id) }) {
-                                Text(stringResource(R.string.profile_gap))
-                            }
-                        }
+/** A timeline tab's posts, with the gaps in them, and more coming at the end. */
+private fun LazyListScope.timeline(state: ProfileUiState, actions: ProfileScreenActions, rowActions: StatusActions) {
+    if (state.items.isEmpty()) {
+        item(key = "empty") { Empty(loading = state.loading, Modifier.fillParentMaxHeight()) }
+    }
+    items(state.items, key = { it.key }, contentType = { it::class }) { item ->
+        when (item) {
+            is ProfileItem.Post -> StatusCard(
+                item.row,
+                state.now,
+                LocalSensitiveMediaPolicy.current,
+                rowActions,
+            )
+
+            is ProfileItem.Gap -> if (item.loading) {
+                ListProgress(size = PROGRESS)
+            } else {
+                Box(Modifier.fillMaxWidth().padding(AlohaSpacing.s), contentAlignment = Alignment.Center) {
+                    OutlinedButton(onClick = { actions.onFillGap(item.id) }) {
+                        Text(stringResource(R.string.profile_gap))
                     }
                 }
-                PostDivider()
-            }
-            if (state.loadingOlder) {
-                item(key = "older") { ListProgress() }
             }
         }
+        PostDivider()
+    }
+    if (state.loadingOlder) {
+        item(key = "older") { ListProgress() }
     }
 }
 
@@ -314,13 +313,6 @@ private fun TroubleStrip(trouble: Trouble) {
 @Composable
 private fun Empty(loading: Boolean, modifier: Modifier = Modifier) {
     if (loading) Skeleton(modifier) else EmptyState(stringResource(R.string.profile_empty), modifier)
-}
-
-@Composable
-private fun Message(text: String) {
-    Box(Modifier.fillMaxSize().padding(AlohaSpacing.l), contentAlignment = Alignment.Center) {
-        Text(text, style = MaterialTheme.typography.bodyLarge)
-    }
 }
 
 /** The name, and once the header has scrolled away, how many posts under it. */

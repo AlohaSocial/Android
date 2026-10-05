@@ -51,7 +51,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CustomAccessibilityAction
@@ -61,7 +60,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.core.content.getSystemService
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.currentStateAsState
@@ -75,6 +73,8 @@ import kotlinx.coroutines.delay
 import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.ui.LocalSensitiveMediaPolicy
+import social.aloha.core.ui.PressableIcon
+import social.aloha.core.ui.R as UiR
 import social.aloha.core.ui.rememberBlurHashPainter
 import social.aloha.core.ui.rememberReducedMotion
 
@@ -353,7 +353,15 @@ private fun Rail(short: ShortUi, paused: Boolean, onPause: () -> Unit, actions: 
             pluralStringResource(R.plurals.shorts_comments, row.counts.replies, row.counts.replies),
             row.counts.replies,
         ) { actions.onComments(short) }
-        RailButton(AlohaIcons.Share, stringResource(R.string.shorts_share), count = null) { actions.onShare(short) }
+        // a long press copies the link instead
+        PressableIcon(
+            AlohaIcons.Share,
+            Color.White,
+            onClick = { actions.onShare(short) },
+            onLongClick = { actions.onCopyLink(short) },
+            description = stringResource(R.string.shorts_share),
+            longClickLabel = stringResource(UiR.string.status_menu_copy_link),
+        )
         Menu(short, paused, onPause, actions)
     }
 }

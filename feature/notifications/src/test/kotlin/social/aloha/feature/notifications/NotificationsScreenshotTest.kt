@@ -18,7 +18,10 @@ import androidx.compose.ui.test.tryPerformAccessibilityChecks
 import androidx.test.core.app.ApplicationProvider
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.captureRoboImage
+import java.time.Duration
 import java.time.Instant
+import java.util.TimeZone
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -59,6 +62,8 @@ class NotificationsScreenshotTest {
         // the card asking for notifications has its own image; the others show the list as it is once allowed
         shadowOf(ApplicationProvider.getApplicationContext<Application>())
             .grantPermissions(Manifest.permission.POST_NOTIFICATIONS)
+        // the pause shows when it ends, which would otherwise follow the machine's zone
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
     }
 
     private fun capture(
@@ -127,6 +132,7 @@ class NotificationsScreenshotTest {
         override fun onFollowRequest(row: NotificationRowUi, accept: Boolean) = Unit
         override fun onMarkAllRead() = Unit
         override fun onLearnMore(url: String) = Unit
+        override fun onPause(length: Duration?) = Unit
     }
 
     @Test
@@ -151,6 +157,26 @@ class NotificationsScreenshotTest {
         compose.onNodeWithContentDescription("More options").performClick()
         compose.onNodeWithText("Mark all as read").performClick()
         assertTrue(marked)
+    }
+
+    @Test
+    fun pausedForAnHourFromTheOverflow() {
+        var paused: Duration? = null
+        val pausing = object : NotificationsActions by actions {
+            override fun onPause(length: Duration?) {
+                paused = length
+            }
+        }
+        compose.setContent { AlohaTheme { NotificationsScreen(list, pausing, navigationIcon = {}) } }
+        compose.onNodeWithContentDescription("More options").performClick()
+        compose.onNodeWithText("Pause notifications").performClick()
+        compose.onNodeWithText("1 hour").performClick()
+        assertEquals(Duration.ofHours(1), paused)
+    }
+
+    @Test
+    fun paused() = capture("notifications-paused") {
+        NotificationsScreen(list.copy(pausedUntil = now.plus(Duration.ofHours(2))), actions, navigationIcon = {})
     }
 
     @Test
@@ -257,6 +283,7 @@ class NotificationsScreenshotTest {
                 wifiOnly = true,
                 quiet = QuietHours(fromHour = 22, untilHour = 7),
             ),
+            onFrom = {},
             onFrequency = {},
             onWifiOnly = {},
             onQuietHours = {},
@@ -270,6 +297,7 @@ class NotificationsScreenshotTest {
     fun syncSettingsDigestLargeFont() = capture("notifications-settings-digest-font200") {
         SyncRows(
             SyncSettingsUi(digest = Digest(hours = listOf(8, 18))),
+            onFrom = {},
             onFrequency = {},
             onWifiOnly = {},
             onQuietHours = {},
@@ -282,6 +310,7 @@ class NotificationsScreenshotTest {
     fun syncSettingsDigest() = capture("notifications-settings-digest") {
         SyncRows(
             SyncSettingsUi(digest = Digest(hours = listOf(8, 18))),
+            onFrom = {},
             onFrequency = {},
             onWifiOnly = {},
             onQuietHours = {},

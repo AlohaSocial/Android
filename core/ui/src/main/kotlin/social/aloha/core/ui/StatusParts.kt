@@ -4,8 +4,6 @@
 package social.aloha.core.ui
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,8 +20,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -40,9 +36,7 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaSpacing
-import social.aloha.core.model.AttachmentKind
 import social.aloha.core.model.Card
-import social.aloha.core.model.MediaAttachment
 import social.aloha.core.model.SensitiveMediaPolicy
 
 @Composable
@@ -89,8 +83,7 @@ private fun BodyText(row: StatusRowUi, animateEmoji: Boolean, focused: Boolean, 
         )
     }
     if (!collapse.collapsible) return text()
-    Collapsible(collapsed = !collapse.expanded, onTall = collapse.onTall, content = text)
-    if (collapse.tall) {
+    Collapsible(collapsed = !collapse.expanded, tall = collapse.tall, onTall = collapse.onTall, content = text) {
         TextButton(onClick = collapse.onExpand) {
             Text(stringResource(if (collapse.expanded) R.string.status_collapse else R.string.status_expand))
         }

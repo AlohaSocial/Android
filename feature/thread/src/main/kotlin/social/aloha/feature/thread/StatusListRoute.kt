@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -41,13 +40,13 @@ import coil3.compose.AsyncImage
 import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.model.Reaction
-import social.aloha.core.model.SensitiveMediaPolicy
 import social.aloha.core.navigation.StatusListKey
 import social.aloha.core.navigation.StatusListKind
 import social.aloha.core.ui.AccountRow
 import social.aloha.core.ui.LocalSensitiveMediaPolicy
 import social.aloha.core.ui.PostDivider
 import social.aloha.core.ui.RichTextColors
+import social.aloha.core.ui.Skeleton
 import social.aloha.core.ui.StatusActions
 import social.aloha.core.ui.StatusCard
 import social.aloha.core.ui.rememberThreadRoutedActions
@@ -96,7 +95,7 @@ internal fun StatusListScreen(
     ) { padding ->
         Box(Modifier.padding(padding).fillMaxSize()) {
             when (state) {
-                StatusListState.Loading -> CircularProgressIndicator(Modifier.align(Alignment.Center))
+                StatusListState.Loading -> Skeleton()
 
                 is StatusListState.Failed -> Failed(onRetry)
 

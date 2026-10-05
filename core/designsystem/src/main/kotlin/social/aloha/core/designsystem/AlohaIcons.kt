@@ -5,6 +5,7 @@ package social.aloha.core.designsystem
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material.icons.automirrored.outlined.List
 import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.automirrored.outlined.OpenInNew
@@ -40,6 +41,7 @@ import androidx.compose.material.icons.outlined.AddPhotoAlternate
 import androidx.compose.material.icons.outlined.AddReaction
 import androidx.compose.material.icons.outlined.AmpStories
 import androidx.compose.material.icons.outlined.AttachFile
+import androidx.compose.material.icons.outlined.Bedtime
 import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Cloud
@@ -47,6 +49,7 @@ import androidx.compose.material.icons.outlined.ContentCut
 import androidx.compose.material.icons.outlined.Create
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.DoneAll
+import androidx.compose.material.icons.outlined.DragHandle
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.EditNote
 import androidx.compose.material.icons.outlined.EmojiEmotions
@@ -73,6 +76,7 @@ import androidx.compose.material.icons.outlined.Newspaper
 import androidx.compose.material.icons.outlined.NightsStay
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.NotificationsOff
+import androidx.compose.material.icons.outlined.NotificationsPaused
 import androidx.compose.material.icons.outlined.OpenInBrowser
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.People
@@ -84,6 +88,7 @@ import androidx.compose.material.icons.outlined.Place
 import androidx.compose.material.icons.outlined.Poll
 import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material.icons.outlined.PushPin
+import androidx.compose.material.icons.outlined.QrCode2
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.RemoveCircleOutline
 import androidx.compose.material.icons.outlined.Repeat
@@ -141,6 +146,7 @@ public object AlohaIcons {
     public val Bookmark: ImageVector = Icons.Outlined.BookmarkBorder
     public val Bookmarked: ImageVector = Icons.Filled.Bookmark
     public val More: ImageVector = Icons.Outlined.MoreVert
+    public val Reorder: ImageVector = Icons.Outlined.DragHandle
     public val Pinned: ImageVector = Icons.Outlined.PushPin
     public val VisibilityPrivate: ImageVector = Icons.Outlined.Lock
     public val VisibilityDirect: ImageVector = Icons.Outlined.Mail
@@ -162,8 +168,12 @@ public object AlohaIcons {
     public val NewWindow: ImageVector = Icons.AutoMirrored.Outlined.OpenInNew
     public val Translate: ImageVector = Icons.Outlined.Translate
     public val MuteConversation: ImageVector = Icons.Outlined.NotificationsOff
+    public val PauseNotifications: ImageVector = Icons.Outlined.NotificationsPaused
     public val Report: ImageVector = Icons.Outlined.Flag
     public val Delete: ImageVector = Icons.Outlined.Delete
+    public val Help: ImageVector = Icons.AutoMirrored.Outlined.HelpOutline
+    public val QrCode: ImageVector = Icons.Outlined.QrCode2
+    public val Focus: ImageVector = Icons.Outlined.Bedtime
     public val Redraft: ImageVector = Icons.Outlined.EditNote
     public val Add: ImageVector = Icons.Outlined.Add
 

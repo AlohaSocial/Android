@@ -49,7 +49,6 @@ import kotlinx.coroutines.launch
 import social.aloha.core.data.timeline.Toggle
 import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaSpacing
-import social.aloha.core.model.SensitiveMediaPolicy
 import social.aloha.core.model.VideoChapter
 import social.aloha.core.model.VideoChapters
 import social.aloha.core.navigation.WatchKey

@@ -44,8 +44,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import social.aloha.core.data.AccountRepository
@@ -80,8 +78,7 @@ internal class AppearanceViewModel @Inject constructor(
     private val reader = accounts.activeAccount
 
     val state: StateFlow<AppearanceState> = reader.flatMapLatest { account ->
-        val accent = account?.let { settings.settings(it.id).map { own -> own.accent } } ?: flowOf(null)
-        combine(preferences.appearance, accent) { look, own ->
+        combine(preferences.appearance, settings.accent(account?.id)) { look, own ->
             AppearanceState(look, account?.capabilities?.theme?.hasColour == true, own)
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_MILLIS), AppearanceState())

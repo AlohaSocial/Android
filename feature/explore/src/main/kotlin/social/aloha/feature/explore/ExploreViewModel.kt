@@ -13,6 +13,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import social.aloha.core.data.AccountRepository
@@ -21,6 +23,7 @@ import social.aloha.core.data.Trouble
 import social.aloha.core.data.explore.Explore
 import social.aloha.core.data.explore.People
 import social.aloha.core.data.trouble
+import social.aloha.core.datastore.ReadingPreferences
 import social.aloha.core.html.RichTextCache
 import social.aloha.core.model.Account
 import social.aloha.core.model.Card
@@ -32,7 +35,17 @@ import social.aloha.core.ui.RichTextColors
 import social.aloha.core.ui.StatusRowMapper
 
 /** The parts of Explore, one tab each. */
-internal enum class ExploreTab { Posts, Hashtags, News, People, Directory }
+internal enum class ExploreTab {
+    Posts,
+    Hashtags,
+    News,
+    People,
+    Directory,
+    ;
+
+    /** Whether the tab shows what is trending, which the reader may keep out of sight. */
+    val trending: Boolean get() = this == Posts || this == Hashtags || this == News
+}
 
 /** Something Explore loads: on its way, loaded, or not, and why. */
 internal sealed interface Load<out T> {
@@ -69,6 +82,8 @@ internal data class ExploreUiState(
     val followed: Set<String> = emptySet(),
     val directory: Directory = Directory(),
     val viewer: String = "",
+    /** Whether what is trending shows; off, Explore is its people and directory. */
+    val trends: Boolean = true,
 )
 
 /**
@@ -81,6 +96,7 @@ internal class ExploreViewModel @AssistedInject constructor(
     private val accounts: AccountRepository,
     private val explore: Explore,
     private val cache: RichTextCache,
+    reading: ReadingPreferences,
 ) : ViewModel() {
     @AssistedFactory
     interface Factory {
@@ -99,6 +115,17 @@ internal class ExploreViewModel @AssistedInject constructor(
             state.update { it.copy(periods = account.capabilities.isNextcloudSocial, viewer = account.serverAccountId) }
             // the tab shown by now, which may have been picked before the account was known
             load(state.value.tab)
+        }
+        viewModelScope.launch {
+            reading.style.map { it.showTrends }.distinctUntilChanged().collect { trends ->
+                state.update {
+                    it.copy(
+                        trends = trends,
+                        tab = it.tab.takeUnless { tab -> !trends && tab.trending } ?: ExploreTab.People,
+                    )
+                }
+                if (reader != null && waiting(state.value.tab)) load(state.value.tab)
+            }
         }
     }
 

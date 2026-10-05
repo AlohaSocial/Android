@@ -16,3 +16,11 @@ public interface WireValue {
  */
 internal fun <E> EnumEntries<E>.fromWire(raw: String?, unknown: E): E where E : Enum<E>, E : WireValue =
     firstOrNull { it != unknown && it.wire == raw } ?: unknown
+
+/** Whose notifications an account gets: as the push subscription's `policy` names each. */
+public enum class NotificationsFrom(override val wire: String) : WireValue {
+    Anyone("all"),
+    Following("followed"),
+    Followers("follower"),
+    NoOne("none"),
+}

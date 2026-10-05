@@ -54,8 +54,9 @@ public object TimelineMerge {
      *   survived filtering: counting filtered rows out would make a filtered page look like the end.
      */
     public fun plan(existing: List<Slot>, page: List<String>, direction: Direction, pageWasFull: Boolean): Plan = when {
-        // an empty page while filling a gap proves nothing lies between the two ranges
-        page.isEmpty() && direction is Direction.FillingGap ->
+        // an empty page while filling a gap proves nothing lies between the two ranges, unless the server
+        // sent a full one and the device left all of it out
+        page.isEmpty() && direction is Direction.FillingGap && !pageWasFull ->
             Plan(existing.filterNot { it.statusId == direction.id }, closedGaps = listOf(direction.id))
 
         page.isEmpty() -> Plan(existing)

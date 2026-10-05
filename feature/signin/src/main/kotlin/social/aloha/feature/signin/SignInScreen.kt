@@ -97,6 +97,7 @@ private fun SignInStepContent(state: SignInUiState, actions: SignInActions) {
 
 @Composable
 private fun ServerEntry(state: SignInUiState, problem: AddressProblem?, actions: SignInActions) {
+    state.invite?.let { InviteCard(it, actions) }
     val invalid = problem != null
     val invalidText = when (problem) {
         AddressProblem.NotSecure -> stringResource(R.string.signin_server_not_secure)
@@ -124,6 +125,7 @@ private fun ServerEntry(state: SignInUiState, problem: AddressProblem?, actions:
         ),
         keyboardActions = KeyboardActions(onGo = { actions.onContinue() }),
     )
+    state.preview?.let { PreviewCard(it) }
     Button(onClick = actions::onContinue, enabled = state.server.isNotBlank(), modifier = Modifier.fillMaxWidth()) {
         Text(stringResource(R.string.signin_continue))
     }

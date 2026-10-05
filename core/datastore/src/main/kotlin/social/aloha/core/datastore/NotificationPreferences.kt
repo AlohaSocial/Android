@@ -8,7 +8,9 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
+import java.time.Instant
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import social.aloha.core.model.Digest
@@ -35,6 +37,15 @@ public class NotificationPreferences(private val store: DataStore<Preferences>) 
         }
     }
 
+    /** Until when no notification is raised at all, on any account; null while none is paused. */
+    public val pausedUntil: Flow<Instant?> = store.data.map { stored ->
+        stored[PAUSED_UNTIL]?.let(Instant::ofEpochMilli)
+    }
+
+    public suspend fun setPausedUntil(until: Instant?) {
+        store.edit { if (until == null) it.remove(PAUSED_UNTIL) else it[PAUSED_UNTIL] = until.toEpochMilli() }
+    }
+
     /** Notifications held for a summary at chosen hours; null while each is raised as it arrives. */
     public val digest: Flow<Digest?> = store.data.map { stored ->
         stored[DIGEST_HOURS]?.mapNotNull { it.toIntOrNull() }?.sorted()?.let { hours ->
@@ -56,6 +67,7 @@ public class NotificationPreferences(private val store: DataStore<Preferences>) 
 
     private companion object {
         val QUIET_FROM = intPreferencesKey("quiet_from_hour")
+        val PAUSED_UNTIL = longPreferencesKey("notifications_paused_until")
         val QUIET_UNTIL = intPreferencesKey("quiet_until_hour")
         val DIGEST_HOURS = stringSetPreferencesKey("digest_hours")
         val DIGEST_PERSONAL_NOW = booleanPreferencesKey("digest_personal_now")

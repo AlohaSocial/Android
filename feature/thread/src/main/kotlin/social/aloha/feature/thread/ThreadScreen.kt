@@ -6,7 +6,6 @@ package social.aloha.feature.thread
 import androidx.annotation.PluralsRes
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -21,7 +20,6 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -31,7 +29,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -49,10 +46,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.LiveRegionMode
-import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
-import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.paneTitle
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
@@ -60,8 +54,8 @@ import androidx.compose.ui.unit.dp
 import social.aloha.core.data.Trouble
 import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaSpacing
-import social.aloha.core.model.SensitiveMediaPolicy
 import social.aloha.core.navigation.StatusListKind
+import social.aloha.core.ui.EmptyState
 import social.aloha.core.ui.LocalReadingStyle
 import social.aloha.core.ui.LocalSensitiveMediaPolicy
 import social.aloha.core.ui.LocalWarningReveals
@@ -108,11 +102,8 @@ internal fun ThreadScreen(
         snackbarHost = { SnackbarHost(snackbars) },
         bottomBar = {
             val focused = state.items.firstNotNullOfOrNull { (it as? ThreadItem.Post)?.takeIf { post -> post.focused } }
-            if (focused != null &&
-                !state.gone
-            ) {
-                ReplyBar(focused.row, state.readerAvatar) { rowActions.onReply(focused.row) }
-            }
+            val replyTo = focused?.takeUnless { state.gone }
+            if (replyTo != null) ReplyBar(replyTo.row, state.readerAvatar) { rowActions.onReply(replyTo.row) }
         },
     ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize()) {
@@ -123,7 +114,7 @@ internal fun ThreadScreen(
                 modifier = Modifier.fillMaxSize().shake(shake),
             ) {
                 when {
-                    state.gone -> Message(stringResource(R.string.thread_gone))
+                    state.gone -> EmptyState(stringResource(R.string.thread_gone))
                     state.items.isEmpty() -> Skeleton(Modifier.fillMaxSize(), stringResource(R.string.thread_loading))
                     else -> Posts(state, actions, rowActions, listState)
                 }
@@ -176,13 +167,7 @@ private fun Posts(
                                 .connector(
                                     link,
                                     item.depth,
-                                    parentDepth = if (item.depth ==
-                                        0
-                                    ) {
-                                        0
-                                    } else {
-                                        item.depth - 1
-                                    },
+                                    parentDepth = (item.depth - 1).coerceAtLeast(0),
                                     ::indent,
                                 )
                                 .padding(start = indent(item.depth))
@@ -311,13 +296,6 @@ private fun History(versions: List<EditVersion>, onDismiss: () -> Unit) {
 @Composable
 private fun TroubleStrip(trouble: Trouble) {
     TroubleStrip(stringResource(if (trouble == Trouble.Offline) R.string.thread_offline else R.string.thread_error))
-}
-
-@Composable
-private fun Message(text: String) {
-    Box(Modifier.fillMaxSize().padding(AlohaSpacing.l), contentAlignment = Alignment.Center) {
-        Text(text, style = MaterialTheme.typography.bodyLarge)
-    }
 }
 
 /** Once the posts above arrive, the focused post moves to the top rather than the first ancestor. */

@@ -39,11 +39,13 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.model.WarningReveal
@@ -178,40 +180,55 @@ internal fun highlighted(body: AnnotatedString, words: List<String>, style: Span
 
 /**
  * [content] at its full height, or, while [collapsed] and taller than [COLLAPSE_ABOVE], clipped to
- * [COLLAPSED_HEIGHT] with its last [FADE] fading out. [onTall] says whether it is that tall.
+ * [COLLAPSED_HEIGHT] with its last [FADE] fading out, and [toggle] under it once it is that tall: both
+ * settled in one layout pass, so the row never grows a frame after it appears. [onTall] says whether it
+ * is that tall, and [tall] is what it said last; only a tall, collapsed text pays for the fade.
  */
 @Composable
-internal fun Collapsible(collapsed: Boolean, onTall: (Boolean) -> Unit, content: @Composable () -> Unit) {
-    var tall = false
-    Box(
-        Modifier
-            .clipToBounds()
-            .graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)
-            .drawWithContent {
-                drawContent()
-                if (tall && collapsed) {
-                    val fade = FADE.toPx()
-                    drawRect(
-                        Brush.verticalGradient(
-                            listOf(Color.Black, Color.Transparent),
-                            startY = size.height - fade,
-                            endY = size.height,
-                        ),
-                        topLeft = Offset(0f, size.height - fade),
-                        size = Size(size.width, fade),
-                        blendMode = BlendMode.DstIn,
-                    )
-                }
-            }
-            .layout { measurable, constraints ->
-                val placeable = measurable.measure(constraints.copy(maxHeight = Constraints.Infinity))
-                tall = placeable.height > COLLAPSE_ABOVE.roundToPx()
-                onTall(tall)
-                val height = if (tall && collapsed) COLLAPSED_HEIGHT.roundToPx() else placeable.height
-                layout(placeable.width, height) { placeable.place(0, 0) }
-            },
-    ) { content() }
+internal fun Collapsible(
+    collapsed: Boolean,
+    tall: Boolean,
+    onTall: (Boolean) -> Unit,
+    content: @Composable () -> Unit,
+    toggle: @Composable () -> Unit,
+) {
+    val fading = if (tall && collapsed) Modifier.fadingBottom() else Modifier
+    // the text's own measure tells, within the same pass, whether it is tall
+    var isTall = false
+    val clipped = Modifier.clipToBounds().then(fading).layout { measurable, constraints ->
+        val placeable = measurable.measure(constraints.copy(maxHeight = Constraints.Infinity))
+        isTall = placeable.height > COLLAPSE_ABOVE.roundToPx()
+        val height = if (isTall && collapsed) COLLAPSED_HEIGHT.roundToPx() else placeable.height
+        layout(placeable.width, height) { placeable.place(0, 0) }
+    }
+    Layout(contents = listOf({ Box(clipped) { content() } }, toggle)) { (text, button), constraints ->
+        val loose = constraints.copy(minHeight = 0)
+        val shown = text.first().measure(loose)
+        if (isTall != tall) onTall(isTall)
+        val under = if (isTall) button.first().measure(loose) else null
+        layout(maxOf(shown.width, under?.width ?: 0), shown.height + (under?.height ?: 0)) {
+            shown.place(0, 0)
+            under?.place(0, shown.height)
+        }
+    }
 }
+
+/** The last [height] of what is drawn fading out, where a text is cut short. */
+public fun Modifier.fadingBottom(height: Dp = FADE): Modifier =
+    graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen).drawWithContent {
+        drawContent()
+        val fade = height.toPx()
+        drawRect(
+            Brush.verticalGradient(
+                listOf(Color.Black, Color.Transparent),
+                startY = size.height - fade,
+                endY = size.height,
+            ),
+            topLeft = Offset(0f, size.height - fade),
+            size = Size(size.width, fade),
+            blendMode = BlendMode.DstIn,
+        )
+    }
 
 /** A long post's text: whether it may collapse, whether it is tall enough to, and whether it is open. */
 internal data class Collapse(
@@ -259,15 +276,10 @@ internal fun rememberHiding(row: StatusRowUi, focused: Boolean): Hiding {
         spoilerRevealed = spoilerRevealed,
         onSpoiler = {
             ownSpoiler = !spoilerRevealed
-            if (warning != null) {
-                if (spoilerRevealed) {
-                    reveals?.closed(
-                        row.author.id,
-                        warning,
-                    )
-                } else {
-                    reveals?.opened(row.author.id, warning)
-                }
+            when {
+                warning == null -> Unit
+                spoilerRevealed -> reveals?.closed(row.author.id, warning)
+                else -> reveals?.opened(row.author.id, warning)
             }
         },
         collapse = Collapse(

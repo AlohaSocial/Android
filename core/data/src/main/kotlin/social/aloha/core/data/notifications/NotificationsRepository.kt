@@ -114,10 +114,13 @@ public class NotificationsRepository @Inject constructor(
             }
         }.take(WIDGET_MENTIONS)
 
-    /** Of [ids], the accounts [account] follows; none when the server could not say. */
-    public suspend fun followed(account: SignedInAccount, ids: List<String>): Set<String> =
+    /**
+     * Of [ids], the accounts [account] follows, or with [followers] those following it; null when the server
+     * could not say.
+     */
+    public suspend fun followed(account: SignedInAccount, ids: List<String>, followers: Boolean = false): Set<String>? =
         (clients.answer(account, AccountEndpoints.relationships(ids)) as? Answer.Got)?.value
-            ?.filter { it.following }?.map { it.id }?.toSet().orEmpty()
+            ?.filter { if (followers) it.followedBy else it.following }?.map { it.id }?.toSet()
 
     /** Everyone in the group [groupKey], beyond the sample its row shows. */
     public suspend fun groupAccounts(account: SignedInAccount, groupKey: String): Answer<List<Account>> =

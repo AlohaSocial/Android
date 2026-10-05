@@ -9,7 +9,6 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.spring
-import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.calculatePan
@@ -26,7 +25,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -34,7 +32,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -48,6 +45,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
@@ -60,7 +58,6 @@ import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.paneTitle
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
@@ -80,6 +77,7 @@ import social.aloha.core.model.Status
 import social.aloha.core.model.VideoSource
 import social.aloha.core.ui.LocalOnMobileData
 import social.aloha.core.ui.LocalReadingStyle
+import social.aloha.core.ui.PressableIcon
 import social.aloha.core.ui.rememberBlurHashPainter
 import social.aloha.core.ui.rememberReducedMotion
 
@@ -106,11 +104,15 @@ internal fun MediaViewer(
     val title = stringResource(R.string.viewer_title)
     val motion = rememberViewerMotion(actions::onClose) { drag = it }
     BackHandler(onBack = motion::close)
-    val backdrop = backdropWhilePaging(pager, attachments)
+    // read while drawing, so a swipe or a drag repaints the colours without composing the viewer anew
+    val backdrop = { backdropWhilePaging(pager, attachments) }
+    val bars = { barsOf(backdrop()) }
     Box(
         modifier.fillMaxSize()
             .graphicsLayer { alpha = motion.shown }
-            .background(backdrop.copy(alpha = (1f - abs(drag) / DISMISS_DISTANCE).coerceIn(MINIMUM_BACKDROP, 1f)))
+            .drawBehind {
+                drawRect(backdrop().copy(alpha = (1f - abs(drag) / DISMISS_DISTANCE).coerceIn(MINIMUM_BACKDROP, 1f)))
+            }
             .semantics { paneTitle = title },
     ) {
         HorizontalPager(
@@ -141,9 +143,11 @@ internal fun MediaViewer(
             }
         }
         val current = attachments.getOrNull(pager.currentPage)
-        TopBar(current, pager.currentPage, attachments.size, actions.closingWith(motion::close), barsOf(backdrop))
+        TopBar(current, pager.currentPage, attachments.size, actions.closingWith(motion::close), bars)
         Box(
-            Modifier.align(Alignment.BottomCenter).fillMaxWidth().background(barsOf(backdrop)).navigationBarsPadding(),
+            Modifier.align(Alignment.BottomCenter).fillMaxWidth().drawBehind {
+                drawRect(bars())
+            }.navigationBarsPadding(),
         ) {
             BottomBar(current?.description?.takeIf { it.isNotBlank() }, status, actions) {
                 if (current != null && current.type == AttachmentKind.Image) {
@@ -304,12 +308,11 @@ private fun BoxScope.TopBar(
     index: Int,
     count: Int,
     actions: MediaViewerActions,
-    bars: Color,
+    bars: () -> Color,
 ) {
+    val top = Modifier.align(Alignment.TopCenter).fillMaxWidth()
     Row(
-        Modifier.align(
-            Alignment.TopCenter,
-        ).fillMaxWidth().background(bars).statusBarsPadding().padding(AlohaSpacing.xs),
+        top.drawBehind { drawRect(bars()) }.statusBarsPadding().padding(AlohaSpacing.xs),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         IconButton(onClick = actions::onClose) {
@@ -326,9 +329,14 @@ private fun BoxScope.TopBar(
             Box(Modifier.weight(1f))
         }
         current?.let { attachment ->
-            IconButton(onClick = { actions.onShare(attachment) }) {
-                Icon(AlohaIcons.Share, stringResource(R.string.viewer_share), tint = Color.White)
-            }
+            PressableIcon(
+                AlohaIcons.Share,
+                Color.White,
+                onClick = { actions.onShare(attachment) },
+                onLongClick = { actions.onCopy(attachment) },
+                description = stringResource(R.string.viewer_share),
+                longClickLabel = stringResource(R.string.viewer_copy),
+            )
             More(attachment, actions)
         }
     }

@@ -7,7 +7,6 @@ import android.net.Uri
 import androidx.compose.runtime.Immutable
 import java.io.File
 import java.text.NumberFormat
-import java.util.Locale
 import java.util.UUID
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -181,8 +180,15 @@ internal class Attachments(
         all.update { lists -> lists.map { list -> list.filterNot { it.id == id } } }
     }
 
-    fun describe(id: String, description: String, focus: Focus?) = change(id) {
-        it.copy(description = description.take(DESCRIPTION_LIMIT), focus = focus)
+    /** Puts the attachments of the post that holds [ids] in that order; what [ids] leaves out goes last. */
+    fun order(ids: List<String>) = all.update { lists ->
+        lists.map { list ->
+            if (ids.all { id -> list.any { it.id == id } }) {
+                ids.mapNotNull { id -> list.firstOrNull { it.id == id } } + list.filterNot { it.id in ids }
+            } else {
+                list
+            }
+        }
     }
 
     /**
@@ -313,6 +319,10 @@ internal class Attachments(
 
         private const val MEGABYTE = 1024.0 * 1024.0
     }
+}
+
+internal fun Attachments.describe(id: String, description: String, focus: Focus?) = change(id) {
+    it.copy(description = description.take(Attachments.DESCRIPTION_LIMIT), focus = focus)
 }
 
 /** Whether [attachment] has a description or focal point the server does not have yet. */

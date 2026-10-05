@@ -37,6 +37,7 @@ import social.aloha.core.data.profile.ListChoice
 import social.aloha.core.data.profile.ProfileFeatured
 import social.aloha.core.data.profile.ProfileRepository
 import social.aloha.core.data.profile.RelationshipChange
+import social.aloha.core.data.search.Searches
 import social.aloha.core.data.timeline.FilterRepository
 import social.aloha.core.data.timeline.PageOutcome
 import social.aloha.core.data.timeline.RefreshPlan
@@ -79,6 +80,7 @@ internal class ProfileViewModel @AssistedInject constructor(
     private val cache: RichTextCache,
     private val clock: Clock,
     private val featured: ProfileFeatured,
+    searches: Searches,
 ) : ViewModel(),
     ProfileActions {
     @AssistedFactory
@@ -158,6 +160,20 @@ internal class ProfileViewModel @AssistedInject constructor(
     init {
         viewModelScope.launch { load(reader.filterNotNull().first()) }
     }
+
+    /** The account's posts searched, where the reader's server searches one account's posts. */
+    private val search = ProfileSearch(searches, viewModelScope)
+
+    /**
+     * What the search found, its rows from the profile's own row cache: each found post is acted on as the
+     * posts on the tab are.
+     */
+    val searched: StateFlow<PostSearchUi> = combine(search.found, colors.filterNotNull()) { found, palette ->
+        rows.use(palette)
+        PostSearchUi(found.query, found.posts?.map { rows.rowFor(it, found.viewer, null) }, found.failed)
+    }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_MILLIS), PostSearchUi())
+
+    fun onSearchPosts(query: String) = search.onQuery(reader.value, target.value?.id, query)
 
     /** Rows and the header are rendered with the theme's colours, which only the screen knows. */
     fun onColors(value: RichTextColors) {
@@ -400,6 +416,8 @@ internal class ProfileViewModel @AssistedInject constructor(
             lists = control.lists,
             familiar = control.familiar.map { Familiar(it.id, it.bestDisplayName, it.avatar) },
             knownHandle = key.acct?.let { if (it.startsWith('@')) it else "@$it" },
+            // Nextcloud Social reads no account_id, and would answer with everyone's posts
+            postSearch = !reader.capabilities.isNextcloudSocial,
             featured = ProfilePresentation.featured(control.pinned, control.featuredTags) {
                 rows.rowFor(it, reader.serverAccountId, null)
             },

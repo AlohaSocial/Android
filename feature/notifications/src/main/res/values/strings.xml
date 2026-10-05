@@ -168,6 +168,26 @@
     <string name="notifications_permission_rationale">Get told about mentions, replies and follows while Aloha Social is closed.</string>
     <!-- Button that asks to show notifications, or opens the system settings once asked -->
     <string name="notifications_permission_turn_on">Turn on notifications</string>
+    <!-- Notifications bar action, and the title of the dialog choosing for how long -->
+    <string name="notifications_pause">Pause notifications</string>
+    <!-- In that dialog, above the lengths to choose from -->
+    <string name="notifications_pause_body">None are shown until then, on any account. What arrives meanwhile is shown when they resume.</string>
+    <!-- Closes that dialog without pausing -->
+    <string name="notifications_pause_cancel">Cancel</string>
+    <!-- Strip over the notifications while paused; %1$s is when they resume, such as 15:30 or Tue 09:00 -->
+    <string name="notifications_paused">Notifications resume at %1$s</string>
+    <!-- Button in that strip, ending the pause -->
+    <string name="notifications_resume">Resume now</string>
+    <!-- Heading of the rows choosing whose notifications the account gets -->
+    <string name="settings_from">Get notifications from</string>
+    <!-- Choice under that heading -->
+    <string name="settings_from_anyone">Anyone</string>
+    <!-- Choice under that heading -->
+    <string name="settings_from_following">People you follow</string>
+    <!-- Choice under that heading -->
+    <string name="settings_from_followers">Your followers</string>
+    <!-- Choice under that heading -->
+    <string name="settings_from_none">No one</string>
     <!-- Heading of the rows choosing whether notifications are raised as they arrive or held for a digest -->
     <string name="settings_delivery">Delivery</string>
     <!-- Choice: every notification is raised the moment it arrives -->

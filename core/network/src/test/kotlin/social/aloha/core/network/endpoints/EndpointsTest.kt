@@ -140,6 +140,46 @@ class EndpointsTest {
     }
 
     @Test
+    fun `a hashtag feed asks for its other tags and this server alone where it says so`() {
+        val tag = TimelineSource.Hashtag(
+            "surf",
+            any = listOf("waves"),
+            all = listOf("hawaii"),
+            none = listOf("ads"),
+            localOnly = true,
+        )
+        val endpoint = TimelineEndpoints.timeline(tag).endpoint
+        assertEquals("api/v1/timelines/tag/surf", endpoint.path)
+        assertEquals("waves", endpoint.queryValue("any[]"))
+        assertEquals("hawaii", endpoint.queryValue("all[]"))
+        assertEquals("ads", endpoint.queryValue("none[]"))
+        assertEquals("true", endpoint.queryValue("local"))
+        assertFalse("local" in TimelineEndpoints.timeline(TimelineSource.Hashtag("surf")).endpoint.queryNames())
+    }
+
+    @Test
+    fun `one account's posts are searched by its id`() {
+        val endpoint = SearchEndpoints.search("waves", type = "statuses", accountId = "7").endpoint
+        assertEquals("7", endpoint.queryValue("account_id"))
+        assertEquals("statuses", endpoint.queryValue("type"))
+        assertEquals(null, SearchEndpoints.search("waves").endpoint.queryValue("account_id"))
+    }
+
+    @Test
+    fun `another server's feed is its own public posts`() {
+        val endpoint = TimelineEndpoints.timeline(TimelineSource.Remote("other.example")).endpoint
+        assertEquals("api/v1/timelines/public/", endpoint.path)
+        assertEquals("true", endpoint.queryValue("local"))
+    }
+
+    @Test
+    fun `the notified feed reads the notifications of posts`() {
+        val endpoint = TimelineEndpoints.timeline(TimelineSource.Notified).endpoint
+        assertEquals("api/v1/notifications", endpoint.path)
+        assertEquals("status", endpoint.queryValue("types[]"))
+    }
+
+    @Test
     fun `a false flag is omitted rather than sent as false`() {
         val names = TimelineEndpoints.timeline(TimelineSource.Home).endpoint.queryNames()
         assertFalse("only_media" in names)

@@ -120,8 +120,13 @@ internal class TimelineViewModel @AssistedInject constructor(
      */
     private val accountSettings: Flow<AccountSettings> = when (feed) {
         TimelineFeed.Home -> storedSettings
+
         is TimelineFeed.Mode -> storedSettings.map { it.copy(showBoosts = true, showReplies = true) }
+
         is TimelineFeed.Tag, is TimelineFeed.List -> flowOf(AccountSettings())
+
+        // what home hid from its chips, its pinned live feeds still hide
+        is TimelineFeed.Pinned -> if (feed.source in LIVE) storedSettings else flowOf(AccountSettings())
     }
 
     private val key: Flow<TimelineKey> = combine(account.filterNotNull(), accountSettings) { account, settings ->
@@ -129,7 +134,9 @@ internal class TimelineViewModel @AssistedInject constructor(
     }.distinctUntilChanged()
 
     /** Whether boosts in a row fold into one row of cards: Home's, where the reader chose it. */
-    private val carousel: Flow<Boolean> = if (feed == TimelineFeed.Home) {
+    private val carousel: Flow<Boolean> = if (feed == TimelineFeed.Home ||
+        feed == TimelineFeed.Pinned(TimelineSource.Home)
+    ) {
         reading.style.map { it.boostCarousel }.distinctUntilChanged()
     } else {
         flowOf(false)
@@ -226,7 +233,7 @@ internal class TimelineViewModel @AssistedInject constructor(
         ->
         TimelineUiState(
             source = sourceOf(account, settings),
-            sources = if (feed is TimelineFeed.Tag || feed is TimelineFeed.List) {
+            sources = if (feed is TimelineFeed.Tag || feed is TimelineFeed.List || feed is TimelineFeed.Pinned) {
                 emptyList()
             } else {
                 homeSources(account.capabilities)
@@ -337,7 +344,7 @@ internal class TimelineViewModel @AssistedInject constructor(
     override fun onSource(source: TimelineSource) = when (feed) {
         TimelineFeed.Home -> updateSettings { it.copy(homeSource = source) }
         is TimelineFeed.Mode -> updateSettings { it.copy(modeSources = it.modeSources + (feed.mode.key to source)) }
-        is TimelineFeed.Tag, is TimelineFeed.List -> Unit
+        is TimelineFeed.Tag, is TimelineFeed.List, is TimelineFeed.Pinned -> Unit
     }
 
     override fun onShowBoosts(show: Boolean) = updateSettings { it.copy(showBoosts = show) }
@@ -454,12 +461,14 @@ internal class TimelineViewModel @AssistedInject constructor(
         is TimelineFeed.List -> TimelineSource.List(feed.id)
         TimelineFeed.Home -> settings.homeSource.served(account)
         is TimelineFeed.Mode -> settings.modeSources[feed.mode.key].served(account)
+        is TimelineFeed.Pinned -> feed.source
     }
 
     private fun TimelineSource?.served(account: SignedInAccount): TimelineSource =
         this?.takeIf { it in homeSources(account.capabilities) } ?: TimelineSource.Home
 
     private companion object {
+        val LIVE = setOf(TimelineSource.Home, TimelineSource.Local, TimelineSource.Federated)
         const val PILL_AVATARS = 3
         val PREFETCH_SIZE = Size(PREFETCH_PIXELS, PREFETCH_PIXELS)
         const val PREFETCH_PIXELS = 480

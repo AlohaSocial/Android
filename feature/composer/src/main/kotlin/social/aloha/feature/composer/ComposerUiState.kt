@@ -18,9 +18,44 @@ internal data class Author(val id: String, val handle: String, val name: String,
 @Immutable
 internal data class ReplyContext(val author: String, val excerpt: String)
 
+/** The post a new one quotes: who wrote it, how it begins, who may see it, and where it lives. */
+@Immutable
+internal data class QuoteUi(
+    val statusId: String,
+    val author: String,
+    val excerpt: String,
+    val url: String,
+    val visibility: Visibility,
+    val own: Boolean,
+)
+
+/** What the composer says once about a quote: what quoting a quiet public post does, or why it is a link. */
+internal enum class QuoteNotice { Unlisted, Linked }
+
 /** A completion offered for the word at the cursor. */
 @Immutable
 internal data class Suggestion(val replacement: String, val label: String, val imageUrl: String?)
+
+/** What is offered for the word at the cursor: nothing while [kind] is null, [loading] while the server is asked. */
+@Immutable
+internal data class CompletionsUi(
+    val kind: CompletionKind? = null,
+    val query: String = "",
+    val items: List<Suggestion> = emptyList(),
+    val loading: Boolean = false,
+) {
+    /** Whether the strip shows: something offered, being looked for, or a way on from there. */
+    fun shown(hasEmojis: Boolean): Boolean = when (kind) {
+        null -> false
+        CompletionKind.Account -> true
+        CompletionKind.Emoji -> loading || items.isNotEmpty() || hasEmojis
+        CompletionKind.Hashtag -> loading || items.isNotEmpty()
+    }
+}
+
+/** The draft a new, empty composer offers to go back to: its id, and how it begins. */
+@Immutable
+internal data class ResumeUi(val draftId: String, val excerpt: String)
 
 /** Who may quote the post, where the server lets its writer choose. */
 internal enum class QuotePolicy(val wire: String?) { Anyone(null), Followers("followers"), Nobody("nobody") }
@@ -80,10 +115,24 @@ internal data class ComposerUiState(
     val spoilerShown: Boolean = false,
     val quotePolicies: List<QuotePolicy> = emptyList(),
     val quotePolicy: QuotePolicy = QuotePolicy.Anyone,
+    val quote: QuoteUi? = null,
+    val quoteNotice: QuoteNotice? = null,
+    /** Posting waits on the writer: someone else's followers-only post is about to be quoted. */
+    val confirmQuote: Boolean = false,
+    /** The writer said yes to that once, for this post. */
+    val quoteConfirmed: Boolean = false,
     /** Characters left in each segment of the thread, negative when over. */
     val remaining: List<Int> = listOf(0),
+    /** Where each segment's text goes past the limit; null for one within it. */
+    val overFrom: List<Int?> = listOf(null),
+    /** The people a reply to several is addressed to, still in its text, each to be left out; else empty. */
+    val mentioned: List<String> = emptyList(),
+    /** The latest draft, offered while a new post is still empty. */
+    val resume: ResumeUi? = null,
+    /** The language the opening post reads as, where the device is sure enough of it. */
+    val detected: String? = null,
     val games: List<ComposerGames.Kind> = emptyList(),
-    val suggestions: List<Suggestion> = emptyList(),
+    val completions: CompletionsUi = CompletionsUi(),
     val emojis: List<CustomEmoji> = emptyList(),
     /** The attachments of each segment of the thread. */
     val attachments: List<List<Attachment>> = listOf(emptyList()),
@@ -119,6 +168,8 @@ internal data class ComposerUiState(
     val confirmBeforePosting: Boolean = false,
     /** Each part of a thread ends in its number, counted in its length. */
     val numberThreads: Boolean = false,
+    /** The Post button sits beside the count above the keyboard, within thumb reach. */
+    val postAtBottom: Boolean = false,
     /** Whether a short gets `#shorts`; null until the writer is asked, once. */
     val tagShorts: Boolean? = null,
     /** How many segments of the thread are already posted; a retry starts after them. */
@@ -138,6 +189,9 @@ internal data class ComposerUiState(
     val canPost: Boolean
         get() = ready && author != null && !posting && !empty && remaining.all { it >= 0 } && (uploaded || canWait) &&
             poll?.ready(maxPollOptionCharacters) != false
+
+    /** Another post can join the thread: an edit changes one post, and a scheduled one cannot be answered yet. */
+    val threadable: Boolean get() = !posting && scheduledAt == null && !editing
 
     /** A post of its own, not a reply to one or one written again: what a story can be. */
     val fresh: Boolean get() = !editing && reply == null && replaces == null

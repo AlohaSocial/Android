@@ -41,4 +41,12 @@
     <string name="watch_failed">The video could not be loaded.</string>
     <!-- Tries loading the video again -->
     <string name="watch_retry">Try again</string>
+    <!-- Button of the picture-in-picture window: back 10 seconds -->
+    <string name="watch_window_back">Back 10 seconds</string>
+    <!-- Button of the picture-in-picture window -->
+    <string name="watch_window_play">Play</string>
+    <!-- Button of the picture-in-picture window -->
+    <string name="watch_window_pause">Pause</string>
+    <!-- Button of the picture-in-picture window: forward 10 seconds -->
+    <string name="watch_window_forward">Forward 10 seconds</string>
 </resources>

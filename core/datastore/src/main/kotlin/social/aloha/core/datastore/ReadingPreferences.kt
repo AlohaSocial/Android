@@ -30,6 +30,13 @@ public class ReadingPreferences(private val store: DataStore<Preferences>) {
         store.edit { it[NEW_POSTS_PILL] = pill }
     }
 
+    /** Whether a tap on Home's feed switcher moves to the next pinned feed; off, it lists them. */
+    public val titleNextFeed: Flow<Boolean> = store.data.map { it[TITLE_NEXT_FEED] ?: false }
+
+    public suspend fun setTitleNextFeed(next: Boolean) {
+        store.edit { it[TITLE_NEXT_FEED] = next }
+    }
+
     /** How posts read: density, face, line spacing, avatar shape, counts, the unread badge. */
     public val style: Flow<ReadingStyle> = store.data.map {
         ReadingStyle(
@@ -51,6 +58,7 @@ public class ReadingPreferences(private val store: DataStore<Preferences>) {
             textScale = (it[TEXT_SCALE] ?: 1f).coerceIn(ReadingStyle.MIN_TEXT_SCALE, ReadingStyle.MAX_TEXT_SCALE),
             absoluteTimes = it[ABSOLUTE_TIMES] ?: false,
             boostCarousel = it[BOOST_CAROUSEL] ?: false,
+            showTrends = it[SHOW_TRENDS] ?: true,
         )
     }
 
@@ -73,12 +81,14 @@ public class ReadingPreferences(private val store: DataStore<Preferences>) {
             it[TEXT_SCALE] = style.textScale
             it[ABSOLUTE_TIMES] = style.absoluteTimes
             it[BOOST_CAROUSEL] = style.boostCarousel
+            it[SHOW_TRENDS] = style.showTrends
         }
     }
 
     private companion object {
         val RESTORE_POSITION = booleanPreferencesKey("restore_position")
         val NEW_POSTS_PILL = booleanPreferencesKey("new_posts_pill")
+        val TITLE_NEXT_FEED = booleanPreferencesKey("title_next_feed")
         val COMPACT = booleanPreferencesKey("reading_compact")
         val SERIF = booleanPreferencesKey("reading_serif")
         val RELAXED = booleanPreferencesKey("reading_relaxed")
@@ -96,5 +106,6 @@ public class ReadingPreferences(private val store: DataStore<Preferences>) {
         val TEXT_SCALE = floatPreferencesKey("reading_text_scale")
         val ABSOLUTE_TIMES = booleanPreferencesKey("reading_absolute_times")
         val BOOST_CAROUSEL = booleanPreferencesKey("reading_boost_carousel")
+        val SHOW_TRENDS = booleanPreferencesKey("reading_show_trends")
     }
 }

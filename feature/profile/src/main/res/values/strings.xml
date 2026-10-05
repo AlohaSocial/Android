@@ -132,8 +132,6 @@
     <string name="profile_lists">Add to lists</string>
     <!-- Shown when the reader has no lists -->
     <string name="profile_lists_none">You have no lists yet.</string>
-    <!-- Menu item that opens the reader's private note about the account, and that dialog's title -->
-    <string name="profile_note">Personal note</string>
     <!-- Label of the note field -->
     <string name="profile_note_label">Your note about them</string>
     <!-- Toast after a long press copied a profile's handle, on Android versions that do not confirm a copy themselves -->
@@ -280,4 +278,20 @@
         <item quantity="one">%d post</item>
         <item quantity="other">%d posts</item>
     </plurals>
+    <!-- Toolbar button on one’s own profile, and the title of the dialog showing it as a QR code -->
+    <string name="profile_qr_title">Profile QR code</string>
+    <!-- Said by a screen reader on the QR code; %1$s is the handle -->
+    <string name="profile_qr_described">QR code that opens %1$s</string>
+    <!-- Button in that dialog: share the profile’s link instead -->
+    <string name="profile_qr_share">Share link</string>
+    <!-- Button closing that dialog -->
+    <string name="profile_qr_close">Close</string>
+    <!-- Field over a profile’s posts that searches them; %1$s is the handle -->
+    <string name="profile_search">Search %1$s’s posts</string>
+    <!-- Clears that field -->
+    <string name="profile_search_clear">Clear search</string>
+    <!-- Nothing found by that search; %1$s is what was typed -->
+    <string name="profile_search_none">No posts match “%1$s”.</string>
+    <!-- That search did not work -->
+    <string name="profile_search_failed">The search did not work. Try again in a moment.</string>
 </resources>

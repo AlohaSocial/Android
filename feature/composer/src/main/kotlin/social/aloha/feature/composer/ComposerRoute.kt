@@ -4,9 +4,7 @@
 package social.aloha.feature.composer
 
 import android.Manifest
-import android.content.Context
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Build
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
@@ -45,7 +43,6 @@ import social.aloha.core.model.CustomEmoji
 import social.aloha.core.model.LogArea
 import social.aloha.core.model.Visibility
 import social.aloha.core.navigation.ComposerKey
-import social.aloha.core.ui.isForeignContent
 import timber.log.Timber
 
 /** Which of the composer's dialogs is open; saved, so turning the phone keeps it open. */
@@ -64,7 +61,8 @@ private enum class Picker { Gifs, NextcloudFile, Schedule }
 
 /**
  * The composer for [key]; [onDone] leaves it, once posted, discarded or kept as a draft;
- * [onScheduledPosts] and [onDrafts] open those lists.
+ * [onScheduledPosts] and [onDrafts] open those lists, [onSearch] search for who a mention could not find,
+ * [onDraft] a draft in place of an empty post.
  */
 @Composable
 public fun ComposerRoute(
@@ -73,6 +71,8 @@ public fun ComposerRoute(
     onScheduledPosts: () -> Unit,
     onDrafts: () -> Unit,
     modifier: Modifier = Modifier,
+    onSearch: (String) -> Unit = {},
+    onDraft: (String) -> Unit = {},
 ) {
     val viewModel = hiltViewModel<ComposerViewModel, ComposerViewModel.Factory>(key = key.toString()) { it.create(key) }
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -87,7 +87,10 @@ public fun ComposerRoute(
     )
     val scheduled by rememberUpdatedState(onScheduledPosts)
     val drafts by rememberUpdatedState(onDrafts)
-    val actions = rememberActions(viewModel, state, dialogs, Elsewhere({ scheduled() }, { drafts() })) { done() }
+    val search by rememberUpdatedState(onSearch)
+    val draft by rememberUpdatedState(onDraft)
+    val elsewhere = Elsewhere({ scheduled() }, { drafts() }, { search(it) }) { draft(it) }
+    val actions = rememberActions(viewModel, state, dialogs, elsewhere) { done() }
     val hue = MaterialTheme.colorScheme.primary.toArgb()
     LaunchedEffect(hue) { viewModel.cards.onHue(hue) }
 
@@ -107,8 +110,13 @@ public fun ComposerRoute(
     ComposerDialogs(state, viewModel, dialogs) { done() }
 }
 
-/** The lists the composer opens. */
-private class Elsewhere(val scheduledPosts: () -> Unit, val drafts: () -> Unit)
+/** The lists the composer opens, search, and a draft in its place. */
+private class Elsewhere(
+    val scheduledPosts: () -> Unit,
+    val drafts: () -> Unit,
+    val search: (String) -> Unit,
+    val draft: (String) -> Unit,
+)
 
 /**
  * The composer's actions, made once; what they decide on (the state, what the pickers accept) is
@@ -133,7 +141,7 @@ private fun rememberActions(
     val camera = rememberCamera(viewModel, state, dialogs)
     val context = LocalContext.current
     return remember(viewModel, dialogs) {
-        object : ComposerActions {
+        object : ComposerActions, QuoteActions by viewModel.quoting {
             override fun onClose() {
                 if (viewModel.hasWriting && current.posted == 0) dialogs.discarding.value = true else done()
             }
@@ -158,6 +166,8 @@ private fun rememberActions(
 
             override fun onSuggestion(suggestion: Suggestion) = viewModel.onSuggestion(suggestion)
 
+            override fun onFindPeople(query: String) = elsewhere.search(query)
+
             override fun onEmoji(emoji: CustomEmoji) = viewModel.onEmoji(emoji)
 
             override fun onAddSegment() = viewModel.onSegments()
@@ -165,6 +175,11 @@ private fun rememberActions(
             override fun onRemoveSegment(index: Int) = viewModel.onSegments(index)
 
             override fun onAuthor(id: String) = viewModel.onAuthor(id)
+
+            override fun onResume(id: String) = elsewhere.draft(id)
+
+            override fun onLeaveOut(handle: String) =
+                viewModel.onText(0, ComposerText.without(viewModel.segments.first(), handle))
 
             override fun onPickSchedule() {
                 dialogs.picker.value = Picker.Schedule
@@ -211,6 +226,8 @@ private fun rememberActions(
             }
 
             override fun onRemoveMedia(id: String) = viewModel.attachments.remove(id)
+
+            override fun onOrderMedia(ids: List<String>) = viewModel.attachments.order(ids)
 
             override fun onRetryMedia(id: String) = viewModel.attachments.retry(id)
 
@@ -313,6 +330,7 @@ private fun ComposerDialogs(state: ComposerUiState, viewModel: ComposerViewModel
         }
     }
     LibraryDialogs(viewModel, dialogs)
+    if (state.confirmQuote) QuoteConfirmDialog(viewModel.quoting::onConfirmQuote, viewModel.quoting::onCancelQuote)
     if (dialogs.picker.value == Picker.Schedule) {
         ScheduleDialog(
             state.scheduledAt,

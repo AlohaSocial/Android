@@ -21,6 +21,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import java.time.Duration
 import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.html.RichTextCache
 import social.aloha.core.model.Account
@@ -46,11 +47,13 @@ public fun NotificationsRoute(
 ) {
     val viewModel: NotificationsViewModel = hiltViewModel()
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val pausing: NotificationsSettingsViewModel = hiltViewModel()
+    val paused by pausing.pausedUntil.collectAsStateWithLifecycle()
     LifecycleResumeEffect(viewModel) {
         viewModel.onShown(isShown = true)
         onPauseOrDispose { viewModel.onShown(isShown = false) }
     }
-    val actions = remember(viewModel, navigation) {
+    val actions = remember(viewModel, pausing, navigation) {
         object : NotificationsActions {
             override fun onRefresh() = viewModel.onRefresh()
 
@@ -84,9 +87,11 @@ public fun NotificationsRoute(
             override fun onMarkAllRead() = viewModel.onMarkAllRead()
 
             override fun onLearnMore(url: String) = navigation.openWeb(url)
+
+            override fun onPause(length: Duration?) = pausing.onPause(length)
         }
     }
-    NotificationsScreen(state, actions, navigationIcon, modifier)
+    NotificationsScreen(state.copy(pausedUntil = paused), actions, navigationIcon, modifier)
     state.group?.let { group ->
         GroupAccountsSheet(group, onOpen = { navigation.openProfile(it, null) }, onClose = viewModel::onGroupClosed)
     }

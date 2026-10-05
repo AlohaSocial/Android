@@ -58,6 +58,32 @@ class SignInScreenshotTest {
     )
 
     @Test
+    fun previewWithInvite() = capture(
+        "signin-preview",
+        SignInUiState(
+            server = "mastodon.social",
+            invite = "https://mastodon.social/invite/AbC123",
+            preview = ServerPreview.Shown(
+                InstanceCard(
+                    title = "Mastodon",
+                    domain = "mastodon.social",
+                    description = "The original server operated by the Mastodon gGmbH non-profit",
+                    userCount = 2_900_000,
+                    rules = emptyList(),
+                    isNextcloudSocial = false,
+                    languages = listOf("en", "de"),
+                ),
+            ),
+        ),
+    )
+
+    @Test
+    fun previewLoading() = capture(
+        "signin-preview-loading",
+        SignInUiState(server = "cloud.example", preview = ServerPreview.Loading("cloud.example")),
+    )
+
+    @Test
     fun probing() = capture("signin-probing", SignInUiState(server = "cloud.example", step = SignInStep.Probing))
 
     @Test
@@ -159,6 +185,8 @@ class SignInScreenshotTest {
 
     private object NoActions : SignInActions {
         override fun onServerChange(text: String) = Unit
+
+        override fun onInvite(use: Boolean) = Unit
 
         override fun onContinue() = Unit
 

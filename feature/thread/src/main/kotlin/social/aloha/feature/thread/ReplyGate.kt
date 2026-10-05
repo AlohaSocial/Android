@@ -37,9 +37,10 @@ internal class ReplyGate(
         val post = status(statusId)
         val reader = account()
         if (post == null || reader == null || statusId in nudged) return replies.update { it.copy(replyTo = statusId) }
+        // a second tap while the first is still asking the server opens nothing twice
+        nudged += statusId
         scope.launch {
             val nudge = nudges.before(reader, post)
-            nudged += statusId
             if (nudge == null) {
                 replies.update { it.copy(replyTo = statusId) }
             } else {

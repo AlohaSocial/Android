@@ -272,6 +272,31 @@ class TimelineRepositoryTest {
         }
 
     @Test
+    fun `a gap filled from below in a mode filtered on the device pages on upwards, never back down`() = runBlocking {
+        val server = numbered {
+            newest = 200
+            media = { if (it > 160) listOf(NumberedTimeline.image(it)) else emptyList() }
+        }
+        val account = signedInAt(server.url("/"))
+        val photos = TimelineKey(FeedMode.Photos, TimelineSource.Home)
+        timelines.fillGap(account, photos, gapId = "gap", aboveId = null, belowId = "99")
+        val requests = List(server.requestCount) { server.takeRequest().url }
+            .filter { it.encodedPath.contains("timelines") }
+        assertTrue(requests.size > 1)
+        assertTrue(requests.all { it.queryParameter("max_id") == null && it.queryParameter("min_id") != null })
+        assertEquals(listOf("99", "119", "139"), requests.take(3).map { it.queryParameter("min_id") })
+    }
+
+    @Test
+    fun `bookmarks go further down only by the server's cursor, never by a post's id`() = runBlocking {
+        val server = numbered { newest = 30 }
+        val account = signedInAt(server.url("/"))
+        val bookmarks = TimelineKey.home(TimelineSource.Bookmarks)
+        assertEquals(PageOutcome.Busy, timelines.older(account, bookmarks, cursor = null, oldestId = "11"))
+        assertEquals(0, server.requestCount)
+    }
+
+    @Test
     fun `a server that narrows to video still leaves the device to pick out the shorts`() = runBlocking {
         val server = numbered {
             newest = 40

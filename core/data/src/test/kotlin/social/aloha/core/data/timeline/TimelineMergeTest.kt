@@ -143,6 +143,22 @@ class TimelineMergeTest {
     }
 
     @Test
+    fun `a timeline in kept order always takes its head afresh`() {
+        assertEquals(
+            RefreshPlan(PageAnchor.Cold, Direction.Cold),
+            RefreshPlan.of(hasFetchedBefore = true, newestRowId = "42", keptOrder = true),
+        )
+    }
+
+    @Test
+    fun `a full page the device filtered down to nothing leaves the gap open`() {
+        val existing = slots("9", "8") + Slot.gap("8", 970) + Slot("7", 960)
+        val plan = TimelineMerge.plan(existing, emptyList(), Direction.FillingGap("gap:8"), pageWasFull = true)
+        assertEquals(existing, plan.slots)
+        assertTrue(plan.closedGaps.isEmpty())
+    }
+
+    @Test
     fun `re-fetching the same page changes nothing`() {
         val plan = TimelineMerge.plan(slots("3", "2", "1"), listOf("3", "2", "1"), Direction.Newer, pageWasFull = false)
         assertTrue(plan.inserted.isEmpty())

@@ -70,6 +70,28 @@
     <string name="composer_language">Language: %1$s</string>
     <!-- The post's language is not set -->
     <string name="composer_language_none">Not set</string>
+    <!-- First row of the language list: the language the post reads as, found on the device; %1$s is its name -->
+    <string name="composer_language_detected">Detected: %1$s</string>
+    <!-- Chip over the keyboard when no account matches the mention being typed; opens search -->
+    <string name="composer_find_people">Find who you’re looking for</string>
+    <!-- Chip over the keyboard when no custom emoji matches what is typed; opens the emoji picker -->
+    <string name="composer_browse_emoji">Browse emoji</string>
+    <!-- Said by a screen reader while completions for the word being typed load -->
+    <string name="composer_completions_loading">Looking for matches</string>
+    <!-- Title line of an attachment card without a description, in the error colour -->
+    <string name="composer_media_add_alt">Add alt text</string>
+    <!-- Takes the place of "Add a choice" while a choice is dragged: dropping it there removes it -->
+    <string name="composer_poll_drop_remove">Drop here to remove</string>
+    <!-- Button on the description page, opening what alt text is -->
+    <string name="composer_media_alt_help">What is alt text?</string>
+    <!-- Shown under that button -->
+    <string name="composer_media_alt_help_body">Alt text describes a picture for people who can’t see it: a screen reader reads it aloud, and some apps show it in place of the picture. Say what matters in it, as you would to a friend on the phone: who is there, what happens, and any words it shows.</string>
+    <!-- Said by a screen reader on a chip above a reply’s text; %1$s is a handle, and tapping leaves them out -->
+    <string name="composer_mention_leave_out">Leave out %1$s</string>
+    <!-- Card at the top of an empty new post, opening the draft put aside last -->
+    <string name="composer_resume">Continue where you left off</string>
+    <!-- Composer menu item, and the title of the sheet showing the post as its readers will see it -->
+    <string name="composer_preview">Preview</string>
     <!-- Title of the language list -->
     <string name="composer_language_title">Language of the post</string>
     <!-- Toolbar button that opens the custom emoji of the server -->
@@ -160,8 +182,8 @@
     <string name="composer_media_refused">Not accepted: %1$s</string>
     <!-- An attachment could not be uploaded -->
     <string name="composer_media_failed">Couldn\'t upload</string>
-    <!-- Title of the sheet for describing an attachment -->
-    <string name="composer_media_editor_title">Describe this for people who can\'t see it</string>
+    <!-- Title of the full-screen page describing an attachment for people who cannot see it -->
+    <string name="composer_media_editor_title">Alt text</string>
     <!-- Label of the description field of an attachment -->
     <string name="composer_media_description">Description</string>
     <!-- Button that closes the attachment's description sheet -->
@@ -449,6 +471,22 @@
     <string name="composer_settings_number">Number the parts of a thread</string>
     <!-- Summary of the setting above -->
     <string name="composer_settings_number_summary">Each part ends in 1/3, 2/3, 3/3, counted in its length</string>
+    <!-- Writing setting: where the Post button sits -->
+    <string name="composer_settings_post_bottom">Post button at the bottom</string>
+    <!-- Explains that setting -->
+    <string name="composer_settings_post_bottom_summary">Beside the character count, within reach of your thumb</string>
+    <!-- Writing setting: replies to public posts start out quiet public -->
+    <string name="composer_settings_quiet_replies">Quiet public replies to public posts</string>
+    <!-- Explains that setting -->
+    <string name="composer_settings_quiet_replies_summary">Anyone can still see them, but they stay out of public timelines and trends</string>
+    <!-- Writing setting: heading over when a reply’s content warning, taken from the post it answers, starts with “re:” -->
+    <string name="composer_settings_reply_prefix">“re:” before a reply’s content warning</string>
+    <!-- Choice under that heading -->
+    <string name="composer_settings_reply_prefix_always">Always</string>
+    <!-- Choice under that heading: only when answering someone else’s post -->
+    <string name="composer_settings_reply_prefix_others">When replying to others</string>
+    <!-- Choice under that heading -->
+    <string name="composer_settings_reply_prefix_never">Never</string>
     <!-- Writing setting: heading over the default visibility of new posts -->
     <string name="composer_settings_visibility">New posts are seen by</string>
     <!-- Default visibility choice: as the reader's server says -->
@@ -459,4 +497,24 @@
     <string name="composer_settings_language_server">As my server says</string>
     <!-- A file size in megabytes; %1$s is the number, already written as the reader's language writes numbers -->
     <string name="composer_size_mb">%1$s MB</string>
+    <!-- The text field's hint while a post is being quoted -->
+    <string name="composer_placeholder_quote">Add something to the conversation</string>
+    <!-- Button on the quoted post in the composer: the new post no longer quotes it -->
+    <string name="composer_quote_remove">Remove the quote</string>
+    <!-- Said once when quoting a quiet public post -->
+    <string name="composer_quote_unlisted">This post is quiet public: your quote shows it to your followers.</string>
+    <!-- Said when the post is set to the people mentioned only, which cannot quote -->
+    <string name="composer_quote_linked">A post for the people mentioned only cannot quote, so the quoted post is linked instead.</string>
+    <!-- Puts the note above away -->
+    <string name="composer_quote_got_it">Got it</string>
+    <!-- Asked before quoting someone else's followers-only post -->
+    <string name="composer_quote_confirm_title">Quote a followers-only post?</string>
+    <!-- The question above, explained -->
+    <string name="composer_quote_confirm_body">Only its author’s followers may see it. Your quote can show it to people who are not.</string>
+    <!-- Checkbox in the question above -->
+    <string name="composer_quote_dont_ask">Don’t ask again</string>
+    <!-- Answers yes to the question above -->
+    <string name="composer_quote_confirm">Quote</string>
+    <!-- Answers no to the question above -->
+    <string name="composer_quote_cancel">Cancel</string>
 </resources>

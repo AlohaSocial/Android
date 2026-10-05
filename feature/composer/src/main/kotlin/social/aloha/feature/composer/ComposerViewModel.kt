@@ -55,7 +55,9 @@ import social.aloha.core.html.StatusHtmlParser
 import social.aloha.core.model.CharacterCount
 import social.aloha.core.model.CustomEmoji
 import social.aloha.core.model.LengthRule
+import social.aloha.core.model.OutboxState
 import social.aloha.core.model.Preferences
+import social.aloha.core.model.ReplyPrefix
 import social.aloha.core.model.ServerLimits
 import social.aloha.core.model.SignedInAccount
 import social.aloha.core.model.Status
@@ -77,7 +79,7 @@ internal class ComposerViewModel @AssistedInject constructor(
     private val accounts: AccountRepository,
     private val compose: ComposeRepository,
     sender: PostSender,
-    outbox: Outbox,
+    private val outbox: Outbox,
     queue: PostQueue,
     interactions: StatusInteractions,
     @ApplicationScope appScope: CoroutineScope,
@@ -100,6 +102,9 @@ internal class ComposerViewModel @AssistedInject constructor(
 
     /** What a reply or a direct message started with (whom it is for), which leaving would not lose. */
     private var prefill = key.sharedText.takeIf { key.direct }.orEmpty()
+
+    /** Whom the post started addressed to, read once from [prefill]. */
+    private var addressed = ComposerText.mentions(prefill)
 
     /** Whether leaving would lose something the writer wrote. */
     val hasWriting: Boolean
@@ -124,7 +129,11 @@ internal class ComposerViewModel @AssistedInject constructor(
     val library = Library(compose, attachments, viewModelScope) { focused.takeIf { room > 0 } }
 
     private val control = MutableStateFlow(ComposerUiState())
+
+    /** The post quoted, and what quoting it asks of the writer. */
+    val quoting = Quoting(compose, preferences, control, viewModelScope) { onPost() }
     private val completions = Completions(compose, viewModelScope)
+    private val languages = LanguageDetection(context)
     private val poster = ThreadPoster(sender, interactions, gameWords(context))
 
     /** The post kept as a draft while it is written, and when the composer closes. */
@@ -192,7 +201,7 @@ internal class ComposerViewModel @AssistedInject constructor(
     val uiState: StateFlow<ComposerUiState> = combine(
         control,
         snapshotFlow { Written(segments.map { it.text }, spoiler) },
-        completions.suggestions,
+        completions.offered,
         media,
         extras,
     ) { state, text, found, media, extras ->
@@ -205,17 +214,28 @@ internal class ComposerViewModel @AssistedInject constructor(
         // the card is an attachment only to the server; the strip shows what the writer attached
         val attached = media.attachments.map { list -> list.filterNot { it.id == cards.attachmentId } }
         val cardFits = poll == null && TextCards.fits(text.segments.first(), text.segments.size, attached.first().size)
+        val numbers = text.segments.indices.map { numbering(media.writing.numberThreads, it, text.segments.size) }
+        val fits = { index: Int, segment: String ->
+            CharacterCount.remaining(segment + numbers[index], cw, limits, rule)
+        }
+        val remaining = text.segments.mapIndexed(fits)
         state.copy(
-            remaining = text.segments.mapIndexed { index, segment ->
-                val number = numbering(media.writing.numberThreads, index, text.segments.size)
-                CharacterCount.remaining(segment + number, cw, limits, rule)
+            remaining = remaining,
+            overFrom = text.segments.mapIndexed { index, segment ->
+                if (remaining[index] < 0) ComposerText.overFrom(segment) { fits(index, it) >= 0 } else null
             },
             empty = text.segments.withIndex().any { (index, segment) ->
                 segment.isBlank() && media.attachments.getOrElse(index) { emptyList() }.isEmpty() &&
                     !(index == 0 && poll != null)
             },
             games = text.segments.flatMap(ComposerGames::kinds).distinct(),
-            suggestions = found,
+            completions = found,
+            mentioned = if (addressed.size > 1 && state.posted == 0) {
+                val present = ComposerText.mentions(text.segments.first()).toSet()
+                addressed.filter { it in present }
+            } else {
+                emptyList()
+            },
             attachments = attached,
             card = card,
             cardFits = cardFits,
@@ -241,11 +261,20 @@ internal class ComposerViewModel @AssistedInject constructor(
             warnMissingDescription = media.warn,
             confirmBeforePosting = media.writing.confirmBeforePosting,
             numberThreads = media.writing.numberThreads,
+            postAtBottom = media.writing.postAtBottom,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_MILLIS), ComposerUiState())
 
     init {
         viewModelScope.launch { start() }
+        viewModelScope.launch {
+            // a post begun from nothing offers the one put aside last
+            // a new post is named a draft at once; one stored under that name is being reopened
+            if (!key.blank || key.draftId?.let { outbox.get(it) } != null) return@launch
+            val latest = outbox.observe(key.readerId).first()
+                .filter { it.state == OutboxState.Draft && it.id != key.draftId }.maxByOrNull { it.updatedAt }
+            control.update { it.copy(resume = latest?.let { draft -> ResumeUi(draft.id, excerpt(draft.post)) }) }
+        }
         viewModelScope.launch {
             snapshotFlow { segments.first().text }.collect { if (cards.state.value.on) cards.onText(it) }
         }
@@ -259,6 +288,13 @@ internal class ComposerViewModel @AssistedInject constructor(
                     delay(AUTOSAVE_MILLIS)
                     drafts.save(reader?.id, it)
                 }
+        }
+        viewModelScope.launch {
+            snapshotFlow { segments.first().text }.distinctUntilChanged().collectLatest {
+                delay(DETECT_MILLIS)
+                val detected = languages.detect(ComposerText.prose(it))
+                control.update { state -> state.copy(detected = detected) }
+            }
         }
         viewModelScope.launch {
             snapshotFlow { segments.getOrNull(focused)?.let(ComposerText::completing) }.collect { completing ->
@@ -280,7 +316,9 @@ internal class ComposerViewModel @AssistedInject constructor(
     }
 
     fun onVisibility(visibility: Visibility) {
-        control.update { if (visibility in it.visibilities) it.copy(visibility = visibility) else it }
+        if (visibility !in control.value.visibilities) return
+        control.update { it.copy(visibility = visibility) }
+        quoting.onVisibility(visibility, segments)
     }
 
     fun onLanguage(language: String?) = control.update { it.copy(language = language) }
@@ -367,6 +405,7 @@ internal class ComposerViewModel @AssistedInject constructor(
         val account = reader?.takeIf { uiState.value.canPost } ?: return
         control.update { it.copy(posting = true, failure = null) }
         viewModelScope.launch {
+            if (quoting.holds()) return@launch
             val state = uiState.value
             if (state.sharesStory) {
                 val failure = story.share(account, state, segments.first().text, onShared = drafts::posted)
@@ -378,10 +417,7 @@ internal class ComposerViewModel @AssistedInject constructor(
                 return@launch
             }
             // the card is attached for the server alone, so the post takes every attachment there is
-            val texts = segments.mapIndexed { index, value ->
-                val number = numbering(state.numberThreads, index, segments.size)
-                if (number.isEmpty()) value.text else value.text.trimEnd() + number
-            }
+            val texts = numbered(segments, state.numberThreads)
             val post = state.draft(texts, spoiler, parent?.id, attachments.byPost.value)
             // what was described since uploading goes first: a post must not go out without it
             val failure = if (attachments.sync(account)) {
@@ -424,7 +460,7 @@ internal class ComposerViewModel @AssistedInject constructor(
         }
         editing = opened.editing
         val draft = opened.post
-        (draft?.replyToId ?: key.replyToId)?.let { id -> parent = (compose.status(account, id) as? Answer.Got)?.value }
+        replyId(draft, key, account, lookup)?.let { id -> parent = (compose.status(account, id) as? Answer.Got)?.value }
         use(account)
         val preferences = compose.preferences(account)
         val writing = this.preferences.writing.first()
@@ -443,17 +479,23 @@ internal class ComposerViewModel @AssistedInject constructor(
             parent?.let { status ->
                 segments[0] = prefilled(status, account)
                 prefill = segments[0].text
+                addressed = ComposerText.mentions(prefill)
+                spoiler = inheritedWarning(status.displayed, writing.replyPrefix, own = account.serverAccountId)
+                control.update { it.answering(status.displayed, writing, spoiler) }
             }
             // what another app shared starts the post: its text, and the media there is room for
             key.sharedText?.let { text -> segments[0] = TextFieldValue(text, TextRange(text.length)) }
             onPicked(key.sharedMedia.map { it.toUri() })
         }
+        quoting.start(account, draft, key.quoteId, segments)
         control.update { it.copy(ready = true) }
     }
 
     /** Makes [account] the one written as: its limits, its emoji, what its server allows. */
     private suspend fun use(account: SignedInAccount) {
         reader = account
+        // a reply by address, as another account, that its server cannot find is no post of its own
+        if (key.replyToUrl != null && parent == null) control.update { it.copy(failure = PostFailure.ReplyNotFound) }
         attachments.account = account
         completions.forget()
         val answering = parent?.displayed
@@ -482,6 +524,7 @@ internal class ComposerViewModel @AssistedInject constructor(
     private companion object {
         const val STOP_MILLIS = 5_000L
         const val AUTOSAVE_MILLIS = 2_000L
+        const val DETECT_MILLIS = 600L
     }
 }
 
@@ -506,8 +549,52 @@ private fun ComposerUiState.withDefaults(preferences: Preferences?, writing: Wri
     spoilerShown = spoilerShown || writing.alwaysShowWarning,
 )
 
+/**
+ * A reply's start: in the language of the post it answers, its [warning] open, and quiet public in answer to a
+ * public post where the writer chose so and nothing narrower was chosen already.
+ */
+internal fun ComposerUiState.answering(status: Status, writing: Writing, warning: String = ""): ComposerUiState = copy(
+    language = status.language?.takeIf(String::isNotBlank) ?: language,
+    spoilerShown = spoilerShown || warning.isNotEmpty(),
+    visibility = Visibility.Unlisted.takeIf {
+        writing.quietReplies && status.visibility == Visibility.Public && visibility == Visibility.Public &&
+            it in visibilities
+    } ?: visibility,
+)
+
+/**
+ * The content warning a reply to [status] starts with: the post's own, after `re: ` where [prefix] asks for it,
+ * [own] being the writer's account id on the server; never `re: re: `.
+ */
+internal fun inheritedWarning(status: Status, prefix: ReplyPrefix, own: String): String {
+    val bare = status.spoilerText.trim()
+    val toOthers = status.account.id != own
+    val prefixed = prefix == ReplyPrefix.Always || (prefix == ReplyPrefix.ToOthers && toOthers)
+    return when {
+        bare.isEmpty() -> ""
+        prefixed && !bare.startsWith(RE, ignoreCase = true) -> RE + bare
+        else -> bare
+    }
+}
+
+private const val RE = "re: "
+
 /** The number a part of a thread ends in, where the writer numbers threads. */
 private fun numbering(on: Boolean, index: Int, size: Int): String = if (on) Writing.numbering(index, size) else ""
+
+/** The post a reply answers: the draft's, the key's, or the one found by the key's address on [account]'s server. */
+private suspend fun replyId(
+    draft: DraftPost?,
+    key: ComposerKey,
+    account: SignedInAccount,
+    lookup: RemoteLookup,
+): String? = draft?.replyToId ?: key.replyToId ?: key.replyToUrl?.let { lookup.post(account, it) }
+
+/** Each segment's text as it goes out, its number after it where the thread is numbered. */
+private fun numbered(segments: List<TextFieldValue>, on: Boolean): List<String> = segments.mapIndexed { index, value ->
+    val number = numbering(on, index, segments.size)
+    if (number.isEmpty()) value.text else value.text.trimEnd() + number
+}
 
 private fun SignedInAccount.toAuthor() = Author(id, qualifiedHandle, displayName.ifBlank { handle }, avatarUrl)
 
@@ -521,6 +608,18 @@ private fun prefilled(status: Status, account: SignedInAccount): TextFieldValue 
     val text = if (handles.isEmpty()) "" else handles.joinToString(" ", postfix = " ")
     return TextFieldValue(text, TextRange(text.length))
 }
+
+/** A key that opens a new post with nothing in it yet. */
+private val ComposerKey.blank: Boolean
+    get() = replyToId == null && replyToUrl == null && editId == null && redraftId == null &&
+        sharedText == null && sharedMedia.isEmpty() && !story && !direct && quoteId == null
+
+private fun excerpt(post: DraftPost): String = CharacterCount.prefix(
+    post.segments.firstOrNull()?.text?.trim().orEmpty().ifEmpty {
+        post.spoiler.orEmpty()
+    },
+    EXCERPT,
+)
 
 private fun excerpt(status: Status): String =
     CharacterCount.prefix(StatusHtmlParser.plainText(status.content).trim(), EXCERPT)

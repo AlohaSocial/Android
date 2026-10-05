@@ -24,7 +24,6 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -82,6 +81,8 @@ data class SwitcherAccount(
     val needsReauth: Boolean,
     /** Whether its server is Nextcloud Social, whose archived posts and interests the sheet then offers. */
     val nextcloudSocial: Boolean = false,
+    /** Its unread notifications, which a dot beside it tells of. */
+    val unread: Int = 0,
 )
 
 @HiltViewModel
@@ -112,8 +113,9 @@ class AppViewModel @Inject constructor(
     /** The theme every window wears: the reader's choice, coloured by their server where they chose it. */
     @OptIn(ExperimentalCoroutinesApi::class)
     val theme: StateFlow<ThemeSettings?> = accounts.activeAccount.flatMapLatest { reader ->
-        val accent = reader?.let { accountSettings.settings(it.id).map { settings -> settings.accent } } ?: flowOf(null)
-        combine(appPreferences.appearance, accent) { look, own -> themeOf(look, reader?.capabilities?.theme, own) }
+        combine(appPreferences.appearance, accountSettings.accent(reader?.id)) { look, own ->
+            themeOf(look, reader?.capabilities?.theme, own)
+        }
     }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     private val external = MutableStateFlow<String?>(null)
@@ -177,7 +179,7 @@ class AppViewModel @Inject constructor(
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), 0)
 
     val switcher: StateFlow<List<SwitcherAccount>> =
-        combine(accounts.accounts, accounts.activeAccount) { all, active ->
+        combine(accounts.accounts, accounts.activeAccount, unread.all) { all, active, counts ->
             all.map { account ->
                 SwitcherAccount(
                     id = account.id,
@@ -187,6 +189,7 @@ class AppViewModel @Inject constructor(
                     active = account.id == active?.id,
                     needsReauth = account.needsReauth,
                     nextcloudSocial = account.capabilities.isNextcloudSocial,
+                    unread = counts[account.id] ?: 0,
                 )
             }
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), emptyList())
@@ -242,18 +245,34 @@ class AppViewModel @Inject constructor(
         }
     }
 
+    private val sharing = MutableStateFlow<SharedContent?>(null)
+
+    /** What another app shared while several accounts are signed in, until the reader says which writes it. */
+    val pendingShare: StateFlow<SharedContent?> = sharing.asStateFlow()
+
     /**
-     * Opens the composer on what another app shared, as [accountId] when a Direct Share shortcut named
-     * one that is still signed in, else as the active account; one shared before any account is signed in
-     * waits for the sign-in.
+     * Opens the composer on what another app shared, as [accountId] when a Direct Share shortcut or the
+     * reader named one that is still signed in; with several and none named, the reader is asked first
+     * ([pendingShare], answered here again, or with null to let it go). One shared before any account is
+     * signed in waits for the sign-in.
      */
-    fun share(content: SharedContent, accountId: String? = null) = openAs(accountId, shared = true) { id ->
-        ComposerKey(
-            id,
-            draftId = UUID.randomUUID().toString(),
-            sharedText = content.text,
-            sharedMedia = content.media.map { it.toString() },
-        )
+    fun share(content: SharedContent?, accountId: String? = null) {
+        sharing.value = null
+        content ?: return
+        viewModelScope.launch {
+            if (accountId == null && accounts.accounts.first().size > 1) {
+                sharing.value = content
+                return@launch
+            }
+            openAs(accountId, shared = true) { id ->
+                ComposerKey(
+                    id,
+                    draftId = UUID.randomUUID().toString(),
+                    sharedText = content.text,
+                    sharedMedia = content.media.map { it.toString() },
+                )
+            }
+        }
     }
 
     fun destinationHandled() {

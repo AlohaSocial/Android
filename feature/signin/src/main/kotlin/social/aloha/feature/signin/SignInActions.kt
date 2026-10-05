@@ -10,6 +10,9 @@ import androidx.compose.runtime.Immutable
 internal interface SignInActions {
     fun onServerChange(text: String)
 
+    /** Opens the invite found on the clipboard, filling in its server for afterwards, or leaves it. */
+    fun onInvite(use: Boolean)
+
     fun onContinue()
 
     fun onSignIn()

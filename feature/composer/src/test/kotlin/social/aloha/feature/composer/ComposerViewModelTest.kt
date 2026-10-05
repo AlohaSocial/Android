@@ -4,77 +4,22 @@
 package social.aloha.feature.composer
 
 import androidx.compose.runtime.snapshots.Snapshot
-import androidx.compose.ui.text.TextRange
-import androidx.compose.ui.text.input.TextFieldValue
-import androidx.datastore.preferences.core.emptyPreferences
-import androidx.lifecycle.viewModelScope
-import androidx.room.Room
-import androidx.test.core.app.ApplicationProvider
-import androidx.work.testing.WorkManagerTestInitHelper
-import java.net.URLDecoder
-import java.time.Clock
-import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.time.Duration.Companion.seconds
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.setMain
 import kotlinx.coroutines.withTimeout
-import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
-import mockwebserver3.Dispatcher
-import mockwebserver3.MockResponse
-import mockwebserver3.MockWebServer
-import mockwebserver3.RecordedRequest
-import okhttp3.OkHttpClient
-import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import social.aloha.core.data.AccountRepository
-import social.aloha.core.data.ClientFactory
-import social.aloha.core.data.NewAccount
-import social.aloha.core.data.RemoteLookup
-import social.aloha.core.data.compose.ComposeRepository
-import social.aloha.core.data.compose.MediaRepository
-import social.aloha.core.data.compose.Outbox
-import social.aloha.core.data.compose.PostSender
-import social.aloha.core.data.compose.ScheduledPosts
-import social.aloha.core.data.stories.Stories
-import social.aloha.core.data.timeline.StatusInteractions
-import social.aloha.core.data.timeline.StatusRepository
-import social.aloha.core.data.timeline.TimelineRepository
-import social.aloha.core.database.AccountsDatabase
-import social.aloha.core.database.CacheDatabase
-import social.aloha.core.database.OutboxDatabase
-import social.aloha.core.datastore.AccountSettingsStore
-import social.aloha.core.datastore.AppPreferences
-import social.aloha.core.datastore.TokenVault
-import social.aloha.core.model.AccessToken
 import social.aloha.core.model.OutboxState
-import social.aloha.core.model.ServerCapabilities
-import social.aloha.core.model.ServerLimits
 import social.aloha.core.model.Visibility
-import social.aloha.core.model.Writing
 import social.aloha.core.navigation.ComposerKey
-import social.aloha.core.network.RateLimiter
-import social.aloha.core.sync.MediaUploads
-import social.aloha.core.sync.PostQueue
-import social.aloha.core.testing.FakeSecretCipher
-import social.aloha.core.testing.InMemoryDataStore
-import social.aloha.core.testing.MockCredentials
-import social.aloha.core.testing.NumberedTimeline
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
@@ -91,6 +36,63 @@ internal class ComposerViewModelTest : ComposerTestSetup() {
             assertTrue(viewModel.segments[0].text.endsWith("@carol "))
             assertTrue("@alice" !in viewModel.segments[0].text)
         }
+
+    @Test
+    fun `a reply written as another account answers the post its server finds by the address`() = runBlocking {
+        posts.parent = posts.status("p", mentions = listOf("8" to "carol"))
+        val viewModel = open(key = { ComposerKey(it, replyToUrl = "https://elsewhere.example/@bob/1") })
+        assertTrue(viewModel.await { it.ready }.reply != null)
+        assertTrue(viewModel.segments[0].text.endsWith("@carol "))
+    }
+
+    @Test
+    fun `a quote shows the post under the text and goes out quoting it`() = runBlocking {
+        posts.parent = posts.status("p")
+        val viewModel = open(key = { ComposerKey(it, quoteId = "p") })
+        assertEquals("p", viewModel.await { it.ready && it.quote != null }.quote?.statusId)
+        viewModel.type(0, "So true")
+        viewModel.await { it.canPost }
+        viewModel.onPost()
+        viewModel.await { it.done }
+        assertEquals("p", posts.sent.single().second["quoted_id"])
+    }
+
+    @Test
+    fun `where the server knows no quotes, a mention and a link stand in, the cursor above them`() = runBlocking {
+        // a post that says nothing of who may quote it, on a server that has no quotes
+        posts.parent = JsonObject(posts.status("p") - "quote_approval_policy" - "quote_approval")
+        val viewModel = open(key = { ComposerKey(it, quoteId = "p") }, software = "mastodon")
+        assertEquals(null, viewModel.await { it.ready }.quote)
+        val text = viewModel.segments[0]
+        assertTrue(text.text, text.text.startsWith("\n\n@") && " http" in text.text)
+        assertEquals(0, text.selection.start)
+    }
+
+    @Test
+    fun `someone else's followers-only post is quoted only once the writer says yes`() = runBlocking {
+        posts.parent = posts.status("p", visibility = "private")
+        val viewModel = open(key = { ComposerKey(it, quoteId = "p") })
+        viewModel.await { it.ready && it.quote != null }
+        viewModel.type(0, "Look")
+        viewModel.await { it.canPost }
+        viewModel.onPost()
+        viewModel.await { it.confirmQuote }
+        assertTrue(posts.sent.isEmpty())
+        viewModel.quoting.onConfirmQuote(dontAsk = false)
+        viewModel.await { it.done }
+        assertEquals("p", posts.sent.single().second["quoted_id"])
+    }
+
+    @Test
+    fun `set to the people mentioned only, the quote becomes a link`() = runBlocking {
+        posts.parent = posts.status("p")
+        val viewModel = open(key = { ComposerKey(it, quoteId = "p") })
+        viewModel.await { it.ready && it.quote != null }
+        viewModel.onVisibility(Visibility.Direct)
+        val state = viewModel.await { it.quote == null }
+        assertEquals(QuoteNotice.Linked, state.quoteNotice)
+        assertTrue(viewModel.segments[0].text.contains("http"))
+    }
 
     @Test
     fun `a thread that fails part way resumes without posting anything twice`() = runBlocking {

@@ -10,12 +10,14 @@ import java.io.InputStream
 import java.io.OutputStream
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
+import social.aloha.core.model.NotificationsFrom
 import social.aloha.core.model.PollFrequency
 import social.aloha.core.model.TimelineSource
 
@@ -53,6 +55,12 @@ public data class AccountSettings(
     val nudgedAuthors: Set<String> = emptySet(),
     /** This account's own accent, where Appearance gives each account one, as `0xAARRGGBB`. */
     val accent: Int? = null,
+    /** The feeds this account keeps on Home, in order; null until the reader changes the defaults. */
+    val pinnedFeeds: List<PinnedFeedRecord>? = null,
+    /** The kinds of feed whose first-visit explanation the reader put away, by their stored name. */
+    val explainedFeeds: Set<String> = emptySet(),
+    /** Whose notifications this account gets, on the device and in what its server pushes. */
+    val notificationsFrom: NotificationsFrom = NotificationsFrom.Anyone,
 )
 
 /**
@@ -63,6 +71,10 @@ public data class AccountSettings(
 public class AccountSettingsStore(private val store: DataStore<Map<String, AccountSettings>>) {
     public fun settings(accountId: String): Flow<AccountSettings> =
         store.data.map { it[accountId] ?: AccountSettings() }.distinctUntilChanged()
+
+    /** [accountId]'s own accent as it changes; null without an account, or where it chose none. */
+    public fun accent(accountId: String?): Flow<Int?> =
+        accountId?.let { id -> settings(id).map { it.accent }.distinctUntilChanged() } ?: flowOf(null)
 
     public suspend fun update(accountId: String, change: (AccountSettings) -> AccountSettings) {
         store.updateData { all -> all + (accountId to change(all[accountId] ?: AccountSettings())) }

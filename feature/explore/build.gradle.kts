@@ -8,6 +8,7 @@ plugins {
 
 dependencies {
     implementation(project(":core:data"))
+    implementation(project(":core:datastore"))
     testImplementation(project(":core:testing"))
     testImplementation(project(":core:database"))
     testImplementation(libs.kotlinx.coroutines.test)

@@ -3,6 +3,8 @@
 
 package social.aloha.feature.timeline
 
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.SnackbarHostState
@@ -25,8 +27,10 @@ import kotlinx.coroutines.launch
 import social.aloha.core.data.timeline.Toggle
 import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.model.FeedMode
+import social.aloha.core.model.TimelineSource
 import social.aloha.core.ui.DeleteRequest
 import social.aloha.core.ui.DeleteStatusDialog
+import social.aloha.core.ui.LocalActAs
 import social.aloha.core.ui.R as UiR
 import social.aloha.core.ui.RichTextColors
 import social.aloha.core.ui.RoutedStatusActions
@@ -37,11 +41,13 @@ import social.aloha.core.ui.StatusRowUi
 public fun TimelineRoute(
     navigation: StatusNavigation,
     modifier: Modifier = Modifier,
-    feed: TimelineFeed = TimelineFeed.Home,
+    feed: TimelineFeed,
     navigationIcon: @Composable () -> Unit = {},
     header: @Composable () -> Unit = {},
     onSearch: (() -> Unit)? = null,
     toolbar: @Composable () -> Unit = {},
+    listState: LazyListState = rememberLazyListState(),
+    onCatchUp: (() -> Unit)? = null,
 ) {
     val viewModel =
         hiltViewModel<TimelineViewModel, TimelineViewModel.Factory>(key = feed.toString()) { it.create(feed) }
@@ -91,21 +97,44 @@ public fun TimelineRoute(
         }
     }
 
+    val actAs = LocalActAs.current
+    val items by rememberUpdatedState(state.items)
+    val shown = remember(rowActions, actAs, feed) {
+        if ((feed as? TimelineFeed.Pinned)?.source is TimelineSource.Remote) {
+            Elsewhere(rowActions, actAs, { nav }) { id ->
+                items.firstNotNullOfOrNull {
+                    (it as? TimelineItem.Post)?.row?.takeIf { row -> row.statusId == id }?.url
+                }
+            }
+        } else {
+            rowActions
+        }
+    }
+    val timelineActions = rememberCaughtUp(viewModel, onCatchUp)
     TimelineScreen(
         state,
-        viewModel,
-        rowActions,
+        timelineActions,
+        shown,
         modifier,
         snackbars,
+        listState,
         title = when (feed) {
             TimelineFeed.Home -> stringResource(R.string.timeline_title)
+
             is TimelineFeed.Mode -> stringResource(modeTitle(feed.mode))
+
             is TimelineFeed.Tag -> "#${feed.name}"
+
             is TimelineFeed.List -> feed.title
+
+            // Home's own bar names a pinned feed; its page has none
+            is TimelineFeed.Pinned -> ""
         },
         navigationIcon = navigationIcon,
-        showOptions = feed == TimelineFeed.Home,
-        onCompose = if (feed == TimelineFeed.Home) ({ nav.openComposer(null) }) else null,
+        showOptions = false,
+        bar = feed !is TimelineFeed.Pinned,
+        // on Home's pages the button is Home's own; the keyboard's new post is the page's
+        onCompose = if (feed is TimelineFeed.Pinned) ({ nav.openComposer(null) }) else null,
         onAlbums = if (feed.mode == FeedMode.Photos && state.albums) ({ nav.openAlbums() }) else null,
         onExplore = if (feed.mode == FeedMode.Photos) ({ nav.openPhotoExplore() }) else null,
         onSearch = onSearch,
@@ -122,6 +151,23 @@ public fun TimelineRoute(
             onRedraft = { nav.editPost(it, redraft = true) },
             onDismiss = { deleting = null },
         )
+    }
+}
+
+/** [viewModel]'s actions, the caught-up line opening what arrived since where [onCatchUp] is given. */
+@Composable
+private fun rememberCaughtUp(viewModel: TimelineViewModel, onCatchUp: (() -> Unit)?): TimelineScreenActions {
+    val catchUp by rememberUpdatedState(onCatchUp)
+    return remember(viewModel, onCatchUp != null) {
+        if (onCatchUp == null) {
+            viewModel
+        } else {
+            object : TimelineScreenActions by viewModel {
+                override fun onCaughtUp() {
+                    catchUp?.invoke()
+                }
+            }
+        }
     }
 }
 

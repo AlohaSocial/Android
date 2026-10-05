@@ -14,7 +14,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.test.junit4.accessibility.enableAccessibilityChecks
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.tryPerformAccessibilityChecks
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
@@ -25,6 +27,7 @@ import com.github.takahirom.roborazzi.captureScreenRoboImage
 import java.io.File
 import java.time.Instant
 import java.util.TimeZone
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -74,10 +77,13 @@ class ComposerScreenshotTest {
         override fun onLanguage(language: String?) = Unit
         override fun onQuotePolicy(policy: QuotePolicy) = Unit
         override fun onSuggestion(suggestion: Suggestion) = Unit
+        override fun onFindPeople(query: String) = Unit
         override fun onEmoji(emoji: CustomEmoji) = Unit
         override fun onAddSegment() = Unit
         override fun onRemoveSegment(index: Int) = Unit
         override fun onAuthor(id: String) = Unit
+        override fun onLeaveOut(handle: String) = Unit
+        override fun onResume(id: String) = Unit
         override fun onPickMedia() = Unit
         override fun onPickFiles() = Unit
         override fun onCapture(capture: Capture) = Unit
@@ -98,6 +104,7 @@ class ComposerScreenshotTest {
 
         override fun onDrafts() = Unit
         override fun onEditMedia(id: String) = Unit
+        override fun onOrderMedia(ids: List<String>) = Unit
         override fun onRemoveMedia(id: String) = Unit
         override fun onRetryMedia(id: String) = Unit
         override fun onSensitive(sensitive: Boolean) = Unit
@@ -164,7 +171,11 @@ class ComposerScreenshotTest {
             spoilerShown = true,
             remaining = listOf(120, -12),
             games = listOf(ComposerGames.Kind.Dice),
-            suggestions = listOf(Suggestion("@bob@remote.example", "Bob · @bob@remote.example", null)),
+            completions = CompletionsUi(
+                CompletionKind.Account,
+                "bo",
+                listOf(Suggestion("@bob@remote.example", "Bob · @bob@remote.example", null)),
+            ),
         ),
         listOf(value("@bob@remote.example I'm in, /dice decides the time"), value("And bring a board @bo")),
         spoiler = "Early mornings",
@@ -181,6 +192,59 @@ class ComposerScreenshotTest {
     fun replyThread() = capture("composer-reply-thread") { ReplyInThread() }
 
     @Test
+    fun overLimitWhileLooking() = capture("composer-over-limit") {
+        ComposerScreen(
+            fresh.copy(
+                remaining = listOf(-6),
+                overFrom = listOf(30),
+                completions = CompletionsUi(CompletionKind.Account, "kai", loading = true),
+            ),
+            listOf(value("Paddling out at dawn, who’s in? @kai")),
+            spoiler = "",
+            actions = NoActions,
+        )
+    }
+
+    @Test
+    fun resume() = capture("composer-resume") {
+        ComposerScreen(
+            fresh.copy(resume = ResumeUi("d1", "Paddling out at dawn, who’s in? The swell looks")),
+            listOf(value("")),
+            spoiler = "",
+            actions = NoActions,
+        )
+    }
+
+    @Test
+    fun preview() = captureScreen("composer-preview") {
+        PreviewSheet(
+            fresh.copy(spoilerShown = true),
+            listOf("Paddling out at dawn.\n\nWho’s in?"),
+            spoiler = "Early mornings",
+        ) {}
+    }
+
+    @Test
+    fun postAtTheBottom() = capture("composer-post-bottom") {
+        ComposerScreen(
+            fresh.copy(postAtBottom = true),
+            listOf(value("Paddling out at dawn")),
+            spoiler = "",
+            actions = NoActions,
+        )
+    }
+
+    @Test
+    fun nobodyFound() = capture("composer-find-people") {
+        ComposerScreen(
+            fresh.copy(completions = CompletionsUi(CompletionKind.Account, "kai")),
+            listOf(value("Paddling out at dawn @kai")),
+            spoiler = "",
+            actions = NoActions,
+        )
+    }
+
+    @Test
     @Config(fontScale = 2f)
     fun replyLargeFont() = capture("composer-reply-font200") { ReplyInThread() }
 
@@ -192,9 +256,64 @@ class ComposerScreenshotTest {
     fun posting() = capture("composer-posting") { NewPost(fresh.copy(posting = true)) }
 
     @Test
+    fun quote() = capture("composer-quote") {
+        val excerpt = "Surf report: waist high and glassy, going out at seven."
+        val quote = QuoteUi("q", "Bob", excerpt, "https://example.test/q", Visibility.Unlisted, own = false)
+        NewPost(fresh.copy(quote = quote, quoteNotice = QuoteNotice.Unlisted))
+    }
+
+    @Test
     fun story() = capture("composer-story") {
         val picture = Attachment("beach", File("beach.jpg"), "beach.jpg", "image/jpeg", UploadState.Done("1", null))
         NewPost(fresh.copy(attachments = listOf(listOf(picture)), storyFits = true, asStory = true, storySeconds = 10))
+    }
+
+    @Test
+    fun altText() = captureScreen("composer-alt-text") {
+        val picture = Attachment(
+            "beach",
+            File("beach.jpg"),
+            "beach.jpg",
+            "image/jpeg",
+            UploadState.Done("1", null),
+            description = "Surfers at sunrise",
+        )
+        MediaEditor(picture, video = null) { _, _, _ -> }
+    }
+
+    @Test
+    fun `a mention chip leaves that person out`() {
+        var left: String? = null
+        val leaving = object : ComposerActions by NoActions {
+            override fun onLeaveOut(handle: String) {
+                left = handle
+            }
+        }
+        compose.setContent {
+            AlohaTheme {
+                ComposerScreen(
+                    fresh.copy(mentioned = listOf("@bob@remote.example", "@kai")),
+                    listOf(value("@bob@remote.example @kai Count me in")),
+                    spoiler = "",
+                    actions = leaving,
+                )
+            }
+        }
+        compose.onNodeWithContentDescription("Leave out @kai").performClick()
+        assertEquals("@kai", left)
+    }
+
+    @Test
+    fun replyToSeveral() = capture("composer-reply-mentions") {
+        ComposerScreen(
+            fresh.copy(
+                reply = ReplyContext("@bob@remote.example", "Who is up for a swim at sunrise?"),
+                mentioned = listOf("@bob@remote.example", "@kai", "@leilani@surf.example"),
+            ),
+            listOf(value("@bob@remote.example @kai @leilani@surf.example Count me in")),
+            spoiler = "",
+            actions = NoActions,
+        )
     }
 
     @Test

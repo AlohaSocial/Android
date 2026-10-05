@@ -73,10 +73,12 @@ import social.aloha.core.navigation.AlbumsKey
 import social.aloha.core.navigation.AnnouncementsKey
 import social.aloha.core.navigation.AudioKey
 import social.aloha.core.navigation.BlockedKey
+import social.aloha.core.navigation.CatchUpKey
 import social.aloha.core.navigation.ComposerKey
 import social.aloha.core.navigation.ConversationsKey
 import social.aloha.core.navigation.DraftsKey
 import social.aloha.core.navigation.EditProfileKey
+import social.aloha.core.navigation.FeedsKey
 import social.aloha.core.navigation.FilterEditKey
 import social.aloha.core.navigation.FiltersKey
 import social.aloha.core.navigation.HashtagsKey
@@ -115,6 +117,8 @@ import social.aloha.core.navigation.TopLevelKey
 import social.aloha.core.navigation.VideoKey
 import social.aloha.core.navigation.WatchKey
 import social.aloha.core.navigation.YearKey
+import social.aloha.core.ui.ComposerStart
+import social.aloha.core.ui.LocalActAs
 import social.aloha.core.ui.LocalReadingStyle
 import social.aloha.core.ui.LocalReselections
 import social.aloha.core.ui.StatusNavigation
@@ -168,6 +172,9 @@ import social.aloha.feature.stories.StoriesRail
 import social.aloha.feature.thread.StatusListRoute
 import social.aloha.feature.thread.ThreadNavigation
 import social.aloha.feature.thread.ThreadRoute
+import social.aloha.feature.timeline.CatchUpRoute
+import social.aloha.feature.timeline.EditFeedsRoute
+import social.aloha.feature.timeline.HomeRoute
 import social.aloha.feature.timeline.ModesOffer
 import social.aloha.feature.timeline.TagRoute
 import social.aloha.feature.timeline.TimelineFeed
@@ -322,8 +329,14 @@ fun AlohaApp(
                 backStack.push(ComposerKey(readerId, replyToId, draftId = UUID.randomUUID().toString()))
             }
 
-            override fun openStoryComposer() {
-                backStack.push(ComposerKey(readerId, draftId = UUID.randomUUID().toString(), story = true))
+            override fun openComposerFor(start: ComposerStart) {
+                val draftId = UUID.randomUUID().toString()
+                backStack.push(
+                    when (start) {
+                        ComposerStart.Story -> ComposerKey(readerId, draftId = draftId, story = true)
+                        is ComposerStart.Quote -> ComposerKey(readerId, quoteId = start.statusId, draftId = draftId)
+                    },
+                )
             }
 
             override fun report(accountId: String, handle: String, statusId: String?) {
@@ -419,7 +432,8 @@ fun AlohaApp(
         ) {
             // the navigation already pads its side for the system bars; the screens must not pad it again
             Column(Modifier.consumeWindowInsets(suiteInsets(suiteType))) {
-                CompositionLocalProvider(LocalReselections provides reselections) {
+                val actAs = rememberShellActAs { backStack.push(it) }
+                CompositionLocalProvider(LocalReselections provides reselections, LocalActAs provides actAs) {
                     val transitions = rememberScreenTransitions()
                     NavDisplay(
                         modifier = Modifier.weight(1f),
@@ -441,6 +455,9 @@ fun AlohaApp(
                                 val links = HomeLinks(
                                     onSearch = { backStack.push(SearchKey(readerId)) },
                                     onAnnouncements = { backStack.push(AnnouncementsKey(readerId)) },
+                                    onEditFeeds = { backStack.push(FeedsKey(readerId)) },
+                                    onComposeAs = { backStack.push(composerFor(it)) },
+                                    onCatchUp = { backStack.push(CatchUpKey(readerId)) },
                                 )
                                 timeline(feed, statusNavigation, links) { accountButton(accountLinks) }
                             }
@@ -470,6 +487,10 @@ fun AlohaApp(
                                     onOpenProfile = { id -> statusNavigation.openProfile(id, null) },
                                     onBack = { backStack.remove(it) },
                                 )
+                            }
+                            entry<FeedsKey> { key -> EditFeedsRoute(onBack = { backStack.remove(key) }) }
+                            entry<CatchUpKey> { key ->
+                                CatchUpRoute(key, statusNavigation, onBack = { backStack.remove(key) })
                             }
                             entry<ListsKey> { key ->
                                 ListsRoute(
@@ -628,6 +649,11 @@ fun AlohaApp(
                                     onDone = { backStack.remove(it) },
                                     onScheduledPosts = { backStack.push(ScheduledPostsKey(it.readerId)) },
                                     onDrafts = { backStack.push(DraftsKey(it.readerId)) },
+                                    onSearch = { query -> backStack.push(SearchKey(it.readerId, query)) },
+                                    onDraft = { id ->
+                                        backStack.remove(it)
+                                        backStack.push(ComposerKey(it.readerId, draftId = id))
+                                    },
                                 )
                             }
                             entry<DraftsKey> { drafts ->
@@ -727,28 +753,37 @@ private fun ModeTimeline(
     if (feed.mode == FeedMode.Shorts) return ShortsRoute(navigation, accountButton)
     // and Audio a list to play from
     if (feed.mode == FeedMode.Audio) return AudioRoute(navigation, accountButton)
+    // Home is the reader's pinned feeds, a page each
+    if (feed == TimelineFeed.Home) {
+        HomeRoute(
+            navigation,
+            navigationIcon = accountButton,
+            header = { AnnouncementsBanner(onOpen = links.onAnnouncements) },
+            onSearch = links.onSearch,
+            onEditFeeds = links.onEditFeeds,
+            onComposeAs = links.onComposeAs,
+            onCatchUp = links.onCatchUp,
+        )
+        // the optional modes are offered once, on the timeline every reader opens first
+        return ModesOffer()
+    }
     TimelineRoute(
         navigation,
         feed = feed,
         navigationIcon = accountButton,
-        // search is reached from Home
-        onSearch = links.onSearch.takeIf { feed == TimelineFeed.Home },
         header = {
             when (feed.mode) {
                 FeedMode.Photos -> StoriesRail(
                     onProfile = { navigation.openProfile(it, null) },
-                    onNewStory = navigation::openStoryComposer,
+                    onNewStory = { navigation.openComposerFor(ComposerStart.Story) },
                 )
 
                 FeedMode.Video -> ContinueWatching(onOpen = navigation::openVideo)
 
-                // what the server announces is said on Home, the timeline every reader opens
-                else -> if (feed == TimelineFeed.Home) AnnouncementsBanner(onOpen = links.onAnnouncements)
+                else -> Unit
             }
         },
     )
-    // the optional modes are offered once, on the timeline every reader opens first
-    if (feed == TimelineFeed.Home) ModesOffer()
 }
 
 @Composable
@@ -777,7 +812,13 @@ private fun AlohaAppPreview() {
 }
 
 /** Where Home leads beyond its timeline: search, from its toolbar, and the server's announcements. */
-data class HomeLinks(val onSearch: () -> Unit = {}, val onAnnouncements: () -> Unit = {})
+data class HomeLinks(
+    val onSearch: () -> Unit = {},
+    val onAnnouncements: () -> Unit = {},
+    val onEditFeeds: () -> Unit = {},
+    val onComposeAs: (accountId: String) -> Unit = {},
+    val onCatchUp: () -> Unit = {},
+)
 
 /** Where the account button's sheet leads, one [AccountPlace] at a time. */
 data class AccountLinks(val open: (AccountPlace) -> Unit = {})

@@ -64,6 +64,9 @@ public data class ComposerKey(
     val sharedMedia: List<String> = emptyList(),
     val story: Boolean = false,
     val direct: Boolean = false,
+    val quoteId: String? = null,
+    /** The post a reply answers, by its address, for an account whose server knows it by another id. */
+    val replyToUrl: String? = null,
 ) : NavKey
 
 /**
@@ -81,13 +84,21 @@ public data class ReportKey(
     val remote: Boolean get() = handle.removePrefix("@").contains('@')
 }
 
-/** Search, as [readerId]: accounts, hashtags and posts, from anywhere by their address. */
+/** Search, as [readerId]: accounts, hashtags and posts, from anywhere by their address; [query] typed already. */
 @Serializable
-public data class SearchKey(val readerId: String) : NavKey
+public data class SearchKey(val readerId: String, val query: String = "") : NavKey
 
 /** [readerId]'s lists. */
 @Serializable
 public data class ListsKey(val readerId: String) : NavKey
+
+/** What arrived on [readerId]'s Home since it was last read, on one page. */
+@Serializable
+public data class CatchUpKey(val readerId: String) : NavKey
+
+/** The feeds [readerId] pins to Home, to reorder, rename, remove and add to. */
+@Serializable
+public data class FeedsKey(val readerId: String) : NavKey
 
 /** The timeline of [readerId]'s list [listId], called [title]. */
 @Serializable

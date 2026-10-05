@@ -1,0 +1,15 @@
+# SPDX-FileCopyrightText: 2026 Aloha Social contributors
+# SPDX-License-Identifier: MIT
+#
+# Signed in: Home's title lists the pinned feeds and leads to Edit feeds, which offers to add one, and
+# Back returns to Home.
+appId: social.aloha.android
+---
+- tapOn: "Following"
+- assertVisible: "Edit feeds"
+- tapOn: "Edit feeds"
+- assertVisible: "Add a feed"
+- back
+- extendedWaitUntil:
+    visible: "Following"
+    timeout: 10000

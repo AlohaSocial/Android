@@ -81,6 +81,12 @@ internal data class StatusPlaceDto(
     @SerialName("long") @Serializable(with = OptionalDoubleSerializer::class) val long: Double? = null,
 )
 
+/** Who may quote a post, and what quoting it comes to for the reader. */
+@Serializable
+internal data class QuoteApprovalDto(@SerialName("current_user") val currentUser: String? = null)
+
+internal object QuoteApprovalOrNull : KSerializer<QuoteApprovalDto?> by OrNullSerializer(QuoteApprovalDto.serializer())
+
 internal object CardOrNull : KSerializer<CardDto?> by OrNullSerializer(CardDto.serializer())
 
 internal object PollOrNull : KSerializer<PollDto?> by OrNullSerializer(PollDto.serializer())

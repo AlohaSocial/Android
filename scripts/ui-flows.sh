@@ -45,6 +45,9 @@ step "sign in"
 "${adb[@]}" install -r app/build/outputs/apk/generic/debug/*.apk
 flow sign-in.yaml -e SERVER="http://localhost:$port"
 
+step "Home's feeds: the switcher and Edit feeds"
+flow feeds.yaml
+
 step "share sheet: text to the app"
 shell am start -a android.intent.action.SEND -t text/plain \
 	--es android.intent.extra.TEXT "'Shared from another app'" -n "$app/.MainActivity"

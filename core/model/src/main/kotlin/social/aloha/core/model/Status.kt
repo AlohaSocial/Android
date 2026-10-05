@@ -18,6 +18,8 @@ import kotlinx.serialization.Serializable
  *   an empty list here and serves the real reactions only from `/statuses/{id}/reactions`.
  * @property quoteApprovalPolicy who may quote this post (`public`, `followers`, `nobody`), where the
  *   server says.
+ * @property quoteApproval what quoting this post comes to for the reader (`automatic`, `manual`, `denied`,
+ *   `unknown`), where the server answers for them, as Mastodon's `quote_approval.current_user`.
  * @property archived off the profile, not deleted; null when the server does not say.
  * @property video the PeerTube-shaped facts Nextcloud Social carries on a video post.
  */
@@ -58,6 +60,7 @@ public data class Status(
     val quoteId: String? = null,
     val quote: QuotedStatus? = null,
     val quoteApprovalPolicy: String? = null,
+    val quoteApproval: String? = null,
     val dislikesCount: Int = 0,
     val disliked: Boolean = false,
     val archived: Boolean? = null,

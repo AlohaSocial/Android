@@ -134,7 +134,7 @@ public class TimelinePager(
         val hadRows = own.isNotEmpty()
         state.update { it.copy(refreshing = true) }
         val newest = own.firstOrNull { it is TimelineRow.Post }?.id
-        val plan = RefreshPlan.of(timelines.lastFetched(account, key) != null, newest)
+        val plan = RefreshPlan.of(timelines.lastFetched(account, key) != null, newest, key.source.keptOrder)
         val outcome = timelines.refresh(account, key, plan)
         // a reader who switched timeline or account meanwhile gets nothing of this one's paging
         if (!current().shows(account, key)) return

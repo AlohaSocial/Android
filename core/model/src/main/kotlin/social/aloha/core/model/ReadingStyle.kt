@@ -27,6 +27,7 @@ package social.aloha.core.model
  *   [MAX_TEXT_SCALE], on top of the system's font size.
  * @param absoluteTimes a post's time as a clock or a date, "14:32" or "3 Oct", instead of its age, "5m".
  * @param boostCarousel three or more boosts in a row on Home fold into one row of cards, a swipe apart.
+ * @param showTrends what is trending, posts, hashtags and news, in Explore.
  */
 public data class ReadingStyle(
     val compact: Boolean = false,
@@ -46,6 +47,7 @@ public data class ReadingStyle(
     val textScale: Float = 1f,
     val absoluteTimes: Boolean = false,
     val boostCarousel: Boolean = false,
+    val showTrends: Boolean = true,
 ) {
     public companion object {
         public const val MIN_TEXT_SCALE: Float = 0.8f

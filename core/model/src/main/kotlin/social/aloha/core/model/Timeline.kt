@@ -20,6 +20,12 @@ public sealed interface TimelineSource {
     /** Whether reading it needs a signed-in viewer. */
     public val requiresViewer: Boolean get() = true
 
+    /**
+     * Whether its order is when each post was kept or arrived rather than the posts' own ids, so it pages
+     * only through the server's cursor and refreshes from its head.
+     */
+    public val keptOrder: Boolean get() = false
+
     @Serializable
     public data object Home : TimelineSource {
         override val storageKey: String get() = "home"
@@ -51,11 +57,37 @@ public sealed interface TimelineSource {
     public data object Favourites : TimelineSource {
         override val storageKey: String get() = "favourites"
         override val pathSegment: String get() = "favourites"
+        override val keptOrder: Boolean get() = true
     }
 
     @Serializable
     public data object Bookmarks : TimelineSource {
         override val storageKey: String get() = "bookmarks"
+        override val keptOrder: Boolean get() = true
+    }
+
+    /**
+     * Another server's own public posts, read from it directly without signing in there. Its posts are
+     * kept under ids of their own (see [Remote.ID_PREFIX]), apart from the reader's server's, and paged
+     * by that server's cursor.
+     */
+    @Serializable
+    public data class Remote(val domain: String) : TimelineSource {
+        override val storageKey: String get() = "remote:${domain.lowercase()}"
+        override val requiresViewer: Boolean get() = false
+        override val keptOrder: Boolean get() = true
+
+        public companion object {
+            /** What every id read from another server starts with, the server's domain after it. */
+            public const val ID_PREFIX: String = "remote:"
+        }
+    }
+
+    /** The posts of the people the reader asked to be notified about, from those notifications. */
+    @Serializable
+    public data object Notified : TimelineSource {
+        override val storageKey: String get() = "notified"
+        override val keptOrder: Boolean get() = true
     }
 
     @Serializable
@@ -69,9 +101,26 @@ public sealed interface TimelineSource {
         override val storageKey: String get() = "list:$id"
     }
 
+    /**
+     * A hashtag's posts, with [any] of more tags, [all] of others and [none] of the rest, from this server
+     * alone where [localOnly].
+     */
     @Serializable
-    public data class Hashtag(val name: String) : TimelineSource {
-        override val storageKey: String get() = "tag:${name.lowercase()}"
+    public data class Hashtag(
+        val name: String,
+        val any: kotlin.collections.List<String> = emptyList(),
+        val all: kotlin.collections.List<String> = emptyList(),
+        val none: kotlin.collections.List<String> = emptyList(),
+        val localOnly: Boolean = false,
+    ) : TimelineSource {
+        override val storageKey: String get() = buildString {
+            append("tag:").append(name.lowercase())
+            for ((part, tags) in listOf("any" to any, "all" to all, "none" to none)) {
+                if (tags.isEmpty()) continue
+                append('|').append(part).append('=').append(tags.joinToString(",") { it.lowercase() })
+            }
+            if (localOnly) append("|local")
+        }
         override val requiresViewer: Boolean get() = false
     }
 

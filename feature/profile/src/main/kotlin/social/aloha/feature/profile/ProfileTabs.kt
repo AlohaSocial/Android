@@ -73,17 +73,8 @@ internal fun Tabs(state: ProfileUiState, pinned: Boolean, timeline: ProfileTab, 
                         selected = tab == shownTab(state.tab),
                         onClick = { onTab(if (tab == ProfileTab.Posts) timeline else tab) },
                         text = {
-                            Text(
-                                stringResource(
-                                    if (tab ==
-                                        ProfileTab.Posts
-                                    ) {
-                                        R.string.profile_tab_timeline
-                                    } else {
-                                        tab.label
-                                    },
-                                ),
-                            )
+                            val label = if (tab == ProfileTab.Posts) R.string.profile_tab_timeline else tab.label
+                            Text(stringResource(label))
                         },
                     )
                 }

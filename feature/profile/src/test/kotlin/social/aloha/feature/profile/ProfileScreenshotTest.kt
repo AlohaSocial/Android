@@ -11,8 +11,10 @@ import androidx.compose.ui.test.junit4.accessibility.enableAccessibilityChecks
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.tryPerformAccessibilityChecks
+import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.captureRoboImage
+import com.github.takahirom.roborazzi.captureScreenRoboImage
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -163,6 +165,20 @@ class ProfileScreenshotTest {
     fun tablet() = capture("profile-tablet") { ProfileScreen(profile(), NoActions, NoActions) }
 
     @Test
+    fun searched() = capture("profile-search") {
+        val mapper = StatusRowMapper(RichTextCache(), RichTextColors.fromTheme())
+        val found =
+            PostSearchUi("waves", rows = listOf(mapper.map(StatusSamples.post("<p>Waves at the point</p>"), "9")))
+        ProfileScreen(
+            profile().copy(postSearch = true),
+            NoActions,
+            NoActions,
+            listState = LazyListState(firstVisibleItemIndex = 2),
+            search = PostSearch(found) {},
+        )
+    }
+
+    @Test
     fun notices() = capture("profile-notices") {
         val colors = RichTextColors.fromTheme()
         val moved = StatusSamples.bob.copy(
@@ -253,5 +269,18 @@ class ProfileScreenshotTest {
 
     private companion object {
         const val PINNED_POSTS = 10
+    }
+
+    // a dialog is a window of its own, so the whole screen is captured
+    @OptIn(ExperimentalRoborazziApi::class)
+    @Test
+    fun ownQrCode() {
+        compose.setContent {
+            AlohaTheme(ThemeSettings(mode = ThemeMode.Dark)) {
+                ProfileQrDialog("https://cloud.example/apps/social/@alice", "@alice@cloud.example") {}
+            }
+        }
+        compose.waitForIdle()
+        captureScreenRoboImage("src/test/screenshots/profile-qr.png")
     }
 }

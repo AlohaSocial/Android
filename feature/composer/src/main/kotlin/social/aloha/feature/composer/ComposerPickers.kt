@@ -40,6 +40,7 @@ import java.util.Locale
 import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.model.CustomEmoji
+import social.aloha.core.ui.languageName
 
 /** The server's custom emoji by category, each a 48 dp target named by its shortcode. */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -89,7 +90,7 @@ internal fun EmojiSheet(emojis: List<CustomEmoji>, onPick: (CustomEmoji) -> Unit
  * the device's first, and "not set" for a post that should not claim one.
  */
 @Composable
-internal fun LanguageDialog(current: String?, onPick: (String?) -> Unit, onDismiss: () -> Unit) {
+internal fun LanguageDialog(current: String?, detected: String?, onPick: (String?) -> Unit, onDismiss: () -> Unit) {
     val languages = remember(current) {
         val device = Locale.getDefault().language
         // each name looked up once, not at every comparison of the sort
@@ -103,6 +104,15 @@ internal fun LanguageDialog(current: String?, onPick: (String?) -> Unit, onDismi
         title = { Text(stringResource(R.string.composer_language_title)) },
         text = {
             LazyColumn(Modifier.heightIn(max = SHEET_HEIGHT).selectableGroup()) {
+                if (detected != null) {
+                    item(key = "detected") {
+                        val name = languageName(detected) ?: detected
+                        LanguageRow(stringResource(R.string.composer_language_detected, name), selected = false) {
+                            onPick(detected)
+                            onDismiss()
+                        }
+                    }
+                }
                 item(key = "none") {
                     LanguageRow(stringResource(R.string.composer_language_none), current == null) {
                         onPick(null)
@@ -129,13 +139,6 @@ private fun LanguageRow(name: String, selected: Boolean, onClick: () -> Unit) {
         trailingContent = { if (selected) Icon(AlohaIcons.Check, contentDescription = null) },
         modifier = Modifier.selectable(selected, role = Role.RadioButton, onClick = onClick),
     )
-}
-
-/** [code]'s name in the reader's language, capitalised as a list item; null for no code. */
-internal fun languageName(code: String?): String? = code?.let {
-    Locale.forLanguageTag(it).getDisplayLanguage(Locale.getDefault())
-        .replaceFirstChar { first -> first.titlecase(Locale.getDefault()) }
-        .ifEmpty { null }
 }
 
 private val TARGET = 48.dp

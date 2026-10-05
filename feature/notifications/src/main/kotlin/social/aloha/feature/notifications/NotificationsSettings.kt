@@ -36,6 +36,9 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoSet
+import java.time.Clock
+import java.time.Duration
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
@@ -52,9 +55,11 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import social.aloha.core.data.AccountRepository
+import social.aloha.core.data.sync.PushSubscriptions
 import social.aloha.core.data.sync.SyncSettings
 import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.model.Digest
+import social.aloha.core.model.NotificationsFrom
 import social.aloha.core.model.PollFrequency
 import social.aloha.core.model.QuietHours
 import social.aloha.core.sync.Distributor
@@ -70,6 +75,7 @@ internal data class SyncSettingsUi(
     val wifiOnly: Boolean = false,
     val quiet: QuietHours? = null,
     val digest: Digest? = null,
+    val from: NotificationsFrom = NotificationsFrom.Anyone,
 )
 
 /** The push distributors installed, and the one chosen; null for none. */
@@ -84,6 +90,8 @@ internal class NotificationsSettingsViewModel @Inject constructor(
     private val accounts: AccountRepository,
     private val settings: SyncSettings,
     private val registrar: PushRegistrar,
+    private val subscriptions: PushSubscriptions,
+    private val clock: Clock,
 ) : ViewModel() {
     private val pushState = MutableStateFlow(PushUi(registrar.distributors(), registrar.current()))
     val push: StateFlow<PushUi> = pushState
@@ -100,9 +108,26 @@ internal class NotificationsSettingsViewModel @Inject constructor(
             settings.wifiOnly,
             settings.quietHours,
             settings.digest,
+            settings.from(account.id),
             ::SyncSettingsUi,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_MILLIS), SyncSettingsUi())
+
+    val pausedUntil: StateFlow<Instant?> =
+        settings.pausedUntil.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_MILLIS), null)
+
+    fun onPause(length: Duration?) {
+        viewModelScope.launch { settings.pause(length?.let { clock.instant().plus(it) }) }
+    }
+
+    /** Kept for the account, and told its server, so what it pushes is chosen the same way. */
+    fun onFrom(from: NotificationsFrom) {
+        val account = accounts.activeAccount.value ?: return
+        viewModelScope.launch {
+            settings.setFrom(account.id, from)
+            subscriptions.setPolicy(account, from)
+        }
+    }
 
     fun onFrequency(frequency: PollFrequency) {
         val account = accounts.activeAccount.value ?: return
@@ -142,6 +167,7 @@ internal object NotificationsSettings : SettingsSection {
             PushRows(push, viewModel::onDistributor) { openInBrowser(context, DISTRIBUTORS) }
             SyncRows(
                 state,
+                viewModel::onFrom,
                 viewModel::onFrequency,
                 viewModel::onWifiOnly,
                 viewModel::onQuietHours,
@@ -154,6 +180,7 @@ internal object NotificationsSettings : SettingsSection {
 @Composable
 internal fun SyncRows(
     state: SyncSettingsUi,
+    onFrom: (NotificationsFrom) -> Unit,
     onFrequency: (PollFrequency) -> Unit,
     onWifiOnly: (Boolean) -> Unit,
     onQuietHours: (QuietHours?) -> Unit,
@@ -161,6 +188,17 @@ internal fun SyncRows(
     onKinds: () -> Unit,
 ) {
     Column {
+        ChoiceRows(
+            stringResource(R.string.settings_from),
+            listOf(
+                NotificationsFrom.Anyone to stringResource(R.string.settings_from_anyone),
+                NotificationsFrom.Following to stringResource(R.string.settings_from_following),
+                NotificationsFrom.Followers to stringResource(R.string.settings_from_followers),
+                NotificationsFrom.NoOne to stringResource(R.string.settings_from_none),
+            ),
+            state.from,
+            onFrom,
+        )
         ChoiceRows(
             stringResource(R.string.settings_poll_frequency),
             listOf(

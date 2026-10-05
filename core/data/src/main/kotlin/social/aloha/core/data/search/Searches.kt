@@ -28,8 +28,18 @@ public class Searches @Inject constructor(
     private val statuses: StatusRepository,
     private val settings: AccountSettingsStore,
 ) {
-    public suspend fun search(reader: SignedInAccount, query: String): Answer<SearchResults> {
-        val answer = clients.answer(reader, SearchEndpoints.search(query.trim(), resolve = resolvable(query)))
+    /** What [query] finds; with [accountId], only that account's posts, where the server searches by account. */
+    public suspend fun search(
+        reader: SignedInAccount,
+        query: String,
+        accountId: String? = null,
+    ): Answer<SearchResults> {
+        val request = if (accountId == null) {
+            SearchEndpoints.search(query.trim(), resolve = resolvable(query))
+        } else {
+            SearchEndpoints.search(query.trim(), type = "statuses", accountId = accountId)
+        }
+        val answer = clients.answer(reader, request)
         (answer as? Answer.Got)?.value?.statuses?.let { statuses.saveAll(reader.id, it) }
         return answer
     }
@@ -60,6 +70,12 @@ public class Searches @Inject constructor(
          * Whether the server should fetch what [query] names from where it lives: a web address, or a
          * handle with its server. A word, or a bare name, is searched for as it is.
          */
-        public fun resolvable(query: String): Boolean = query.trim().let { ADDRESS.matches(it) || HANDLE.matches(it) }
+        public fun resolvable(query: String): Boolean = isAddress(query) || isHandle(query)
+
+        /** Whether [query] is a web address. */
+        public fun isAddress(query: String): Boolean = ADDRESS.matches(query.trim())
+
+        /** Whether [query] is a handle with its server, `@name@server` or `name@server`. */
+        public fun isHandle(query: String): Boolean = HANDLE.matches(query.trim())
     }
 }

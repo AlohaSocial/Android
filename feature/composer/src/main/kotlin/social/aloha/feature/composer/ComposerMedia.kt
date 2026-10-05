@@ -8,7 +8,6 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,208 +17,74 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RangeSlider
-import androidx.compose.material3.Surface
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CustomAccessibilityAction
-import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
-import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import coil3.compose.AsyncImage
 import java.util.concurrent.TimeUnit
 import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaSpacing
-import social.aloha.core.sync.UploadState
-
-/** The attachments of one post, each a tile that opens its description and focal point. */
-@Composable
-internal fun MediaStrip(attachments: List<Attachment>, actions: ComposerActions) {
-    LazyRow(horizontalArrangement = Arrangement.spacedBy(AlohaSpacing.s)) {
-        items(attachments, key = { it.id }) { MediaTile(it, actions) }
-    }
-}
-
-@Composable
-private fun MediaTile(attachment: Attachment, actions: ComposerActions) {
-    val status = uploadLabel(attachment)
-    val edit = stringResource(R.string.composer_media_edit)
-    val described = attachment.description.isNotBlank()
-    val summary = listOfNotNull(
-        attachment.fileName,
-        status,
-        stringResource(if (described) R.string.composer_media_described else R.string.composer_media_undescribed),
-    ).joinToString(", ")
-    Box(Modifier.size(TILE)) {
-        Box(
-            Modifier
-                .fillMaxSize()
-                .clip(MaterialTheme.shapes.medium)
-                .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                .clickable(onClickLabel = edit, role = Role.Button) { actions.onEditMedia(attachment.id) }
-                .semantics(mergeDescendants = true) { contentDescription = summary },
-            contentAlignment = Alignment.Center,
-        ) {
-            if (attachment.isPicture) {
-                AsyncImage(
-                    attachment.file ?: attachment.previewUrl,
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize(),
-                )
-            } else {
-                Text(
-                    attachment.fileName,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.padding(AlohaSpacing.xs),
-                )
-            }
-            if (attachment.preparing) {
-                CircularProgressIndicator(Modifier.size(PROGRESS))
-            } else if (attachment.oversizedLimit == null) {
-                UploadOverlay(attachment.upload)
-            } else {
-                Icon(AlohaIcons.Trim, contentDescription = null)
-            }
-            AltBadge(described, Modifier.align(Alignment.BottomStart).padding(AlohaSpacing.xs))
-        }
-        val failed = attachment.upload is UploadState.Failed || attachment.upload is UploadState.Refused
-        if (failed) {
-            FilledTonalIconButton(onClick = {
-                actions.onRetryMedia(attachment.id)
-            }, modifier = Modifier.align(Alignment.Center)) {
-                Icon(AlohaIcons.Retry, stringResource(R.string.composer_media_retry))
-            }
-        }
-        IconButton(onClick = { actions.onRemoveMedia(attachment.id) }, modifier = Modifier.align(Alignment.TopEnd)) {
-            Surface(shape = MaterialTheme.shapes.small, color = MaterialTheme.colorScheme.surface.copy(alpha = SCRIM)) {
-                Icon(AlohaIcons.Close, stringResource(R.string.composer_media_remove, attachment.fileName))
-            }
-        }
-    }
-}
-
-@Composable
-private fun UploadOverlay(upload: UploadState) {
-    val label = uploadLabel(upload) ?: return
-    val fraction = (upload as? UploadState.Sending)?.fraction
-    // only a change of state is said aloud; the percentage is there to ask for, not announced at every step
-    val stage = stringResource(stageLabel(upload))
-    val modifier = Modifier.size(PROGRESS).semantics {
-        contentDescription = stage
-        stateDescription = label
-    }
-    when (upload) {
-        is UploadState.Sending, UploadState.Queued, UploadState.Processing -> if (fraction != null) {
-            CircularProgressIndicator(progress = { fraction }, modifier = modifier)
-        } else {
-            CircularProgressIndicator(modifier)
-        }
-
-        else -> Unit
-    }
-}
-
-/** ALT, filled when the attachment has a description and outlined when it has none. */
-@Composable
-private fun AltBadge(described: Boolean, modifier: Modifier = Modifier) {
-    val colors = MaterialTheme.colorScheme
-    Text(
-        stringResource(R.string.composer_media_alt),
-        style = MaterialTheme.typography.labelSmall,
-        color = if (described) colors.onPrimary else colors.onSurface,
-        modifier = modifier
-            .clip(MaterialTheme.shapes.extraSmall)
-            .then(if (described) Modifier.background(colors.primary) else Modifier.background(colors.surface))
-            .border(1.dp, if (described) colors.primary else colors.outline, MaterialTheme.shapes.extraSmall)
-            .padding(horizontal = AlohaSpacing.xs),
-    )
-}
-
-@Composable
-private fun uploadLabel(attachment: Attachment): String? = when {
-    attachment.preparing -> stringResource(R.string.composer_media_preparing)
-
-    attachment.oversizedLimit != null ->
-        stringResource(
-            R.string.composer_media_oversized,
-            stringResource(R.string.composer_size_mb, Attachments.megabytes(attachment.oversizedLimit)),
-        )
-
-    else -> uploadLabel(attachment.upload)
-}
-
-@Composable
-private fun uploadLabel(upload: UploadState): String? = when (upload) {
-    UploadState.Queued -> stringResource(R.string.composer_media_waiting)
-
-    is UploadState.Sending -> upload.fraction?.let {
-        stringResource(R.string.composer_media_sending, (it * PERCENT).toInt())
-    }
-        ?: stringResource(R.string.composer_media_waiting)
-
-    UploadState.Processing -> stringResource(R.string.composer_media_processing)
-
-    is UploadState.Done -> null
-
-    is UploadState.Refused -> upload.message?.let { stringResource(R.string.composer_media_refused, it) }
-        ?: stringResource(R.string.composer_media_failed)
-
-    UploadState.Failed -> stringResource(R.string.composer_media_failed)
-}
-
-/** What the editor asks to change beyond the words: a picture's filter, or a video's trim and size. */
-internal sealed interface MediaChange {
-    data class Filter(val filter: PhotoFilter) : MediaChange
-
-    data class Video(val edit: VideoEdit) : MediaChange
-}
+import social.aloha.core.designsystem.ContrastLevel
+import social.aloha.core.designsystem.black
+import social.aloha.core.designsystem.seededColorScheme
+import social.aloha.core.ui.moves
 
 /**
  * The description of one attachment and, for a picture, where its crop keeps in frame: a tap on the
- * picture moves the focal point there. A description is what a screen reader says, and what a remote
- * reader's app shows, in place of the picture. Closing the sheet keeps what was written, as Done
- * does: a description is never thrown away.
+ * picture moves the focal point there. A full-screen dark page, the picture over the field, which has
+ * the keyboard at once. A description is what a screen reader says, and what a remote reader's app
+ * shows, in place of the picture. Closing the page keeps what was written, as Done does: a
+ * description is never thrown away.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -240,41 +105,96 @@ internal fun MediaEditor(attachment: Attachment, video: VideoInfo?, onDone: (Str
         }
         onDone(description, focus, change)
     }
-    ModalBottomSheet(onDismissRequest = finish) {
-        Column(
-            Modifier.padding(horizontal = AlohaSpacing.m).padding(bottom = AlohaSpacing.l),
-            verticalArrangement = Arrangement.spacedBy(AlohaSpacing.s),
-        ) {
-            Text(
-                stringResource(R.string.composer_media_editor_title),
-                style = MaterialTheme.typography.titleLarge,
-                modifier = Modifier.semantics { heading() },
-            )
-            if (attachment.isPicture) FocusPicker(attachment, focus, filter) { focus = it }
-            if (attachment.filterable) FilterRow(attachment, filter) { filter = it }
-            if (video != null) cut?.let { VideoTrim(attachment, video, it) { changed -> cut = changed } }
-            OutlinedTextField(
-                value = description,
-                onValueChange = { description = it.take(Attachments.DESCRIPTION_LIMIT) },
-                label = { Text(stringResource(R.string.composer_media_description)) },
-                supportingText = {
-                    Text(
-                        pluralStringResource(
-                            R.plurals.composer_media_description_count,
-                            Attachments.DESCRIPTION_LIMIT,
-                            description.length,
-                            Attachments.DESCRIPTION_LIMIT,
-                        ),
+    Dialog(
+        onDismissRequest = finish,
+        properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
+    ) {
+        DarkPage {
+            Scaffold(
+                topBar = {
+                    TopAppBar(
+                        // Done keeps what is written, as Back does: a close button too would read as throwing it away
+                        title = { Text(stringResource(R.string.composer_media_editor_title)) },
+                        actions = {
+                            Button(onClick = finish, Modifier.padding(end = AlohaSpacing.s)) {
+                                Text(stringResource(R.string.composer_media_done))
+                            }
+                        },
                     )
                 },
-                minLines = 3,
-                modifier = Modifier.fillMaxWidth(),
-            )
-            Button(onClick = finish, modifier = Modifier.align(Alignment.End)) {
-                Text(stringResource(R.string.composer_media_done))
+            ) { padding ->
+                Column(
+                    Modifier.padding(padding).fillMaxSize().imePadding().verticalScroll(rememberScrollState())
+                        .padding(horizontal = AlohaSpacing.m),
+                    verticalArrangement = Arrangement.spacedBy(AlohaSpacing.s),
+                ) {
+                    if (attachment.isPicture) FocusPicker(attachment, focus, filter) { focus = it }
+                    if (attachment.filterable) FilterRow(attachment, filter) { filter = it }
+                    if (video != null) cut?.let { VideoTrim(attachment, video, it) { changed -> cut = changed } }
+                    DescriptionField(description) { description = it }
+                    AltTextHelp()
+                }
             }
         }
     }
+}
+
+/** The description, with the keyboard up as soon as the page opens. */
+@Composable
+private fun DescriptionField(description: String, onDescription: (String) -> Unit) {
+    val focus = remember { FocusRequester() }
+    LaunchedEffect(focus) { focus.requestFocus() }
+    OutlinedTextField(
+        value = description,
+        onValueChange = { onDescription(it.take(Attachments.DESCRIPTION_LIMIT)) },
+        label = { Text(stringResource(R.string.composer_media_description)) },
+        supportingText = {
+            Text(
+                pluralStringResource(
+                    R.plurals.composer_media_description_count,
+                    Attachments.DESCRIPTION_LIMIT,
+                    description.length,
+                    Attachments.DESCRIPTION_LIMIT,
+                ),
+            )
+        },
+        minLines = 3,
+        modifier = Modifier.fillMaxWidth().focusRequester(focus),
+    )
+}
+
+/** What alt text is and what makes it good, behind a button for whoever asks. */
+@Composable
+private fun AltTextHelp() {
+    var open by rememberSaveable { mutableStateOf(false) }
+    TextButton(onClick = { open = !open }) {
+        Icon(AlohaIcons.Help, contentDescription = null)
+        Text(stringResource(R.string.composer_media_alt_help), Modifier.padding(start = AlohaSpacing.xs))
+    }
+    if (open) {
+        Text(
+            stringResource(R.string.composer_media_alt_help_body),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+/** [content] on a dark page whatever the app's theme, as a picture is best looked at. */
+@Composable
+private fun DarkPage(content: @Composable () -> Unit) {
+    val seed = MaterialTheme.colorScheme.primary.toArgb()
+    val dark = remember(seed) { seededColorScheme(seed, dark = true, ContrastLevel.Standard).black() }
+    MaterialTheme(colorScheme = dark, typography = MaterialTheme.typography, shapes = MaterialTheme.shapes) {
+        content()
+    }
+}
+
+/** What the editor asks to change beyond the words: a picture's filter, or a video's trim and size. */
+internal sealed interface MediaChange {
+    data class Filter(val filter: PhotoFilter) : MediaChange
+
+    data class Video(val edit: VideoEdit) : MediaChange
 }
 
 @Composable
@@ -485,20 +405,9 @@ private val PhotoFilter.label: Int
 private val FILTER_TILE = 64.dp
 private val SWATCH = 32.dp
 private val SWATCH_TARGET = 48.dp
-private val TILE = 96.dp
-private val PROGRESS = 36.dp
 private val PREVIEW = 320.dp
 private val RING = 14.dp
 private val STROKE = 3.dp
-private const val PERCENT = 100
-private const val SCRIM = 0.8f
-
-/** What stage an upload is at, which is all a screen reader hears of it unasked. */
-private fun stageLabel(upload: UploadState): Int = when (upload) {
-    UploadState.Queued -> R.string.composer_media_stage_waiting
-    UploadState.Processing -> R.string.composer_media_stage_processing
-    else -> R.string.composer_media_stage_uploading
-}
 
 /** How far a focal point chosen by action sits from the middle. */
 private const val EDGE = 0.8f

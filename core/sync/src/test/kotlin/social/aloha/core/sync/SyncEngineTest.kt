@@ -35,7 +35,6 @@ import org.robolectric.RobolectricTestRunner
 import social.aloha.core.data.sync.PushSubscriptions
 import social.aloha.core.data.sync.SyncSettings
 import social.aloha.core.data.sync.TimelineSignals
-import social.aloha.core.data.sync.UnreadCounts
 import social.aloha.core.datastore.AccountSettingsStore
 import social.aloha.core.datastore.AppPreferences
 import social.aloha.core.datastore.NotificationPreferences
@@ -80,14 +79,15 @@ class SyncEngineTest {
     }
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val preferences = AppPreferences(InMemoryDataStore(emptyPreferences()))
+    private val accountSettings = AccountSettingsStore(InMemoryDataStore(emptyMap()))
     private val settings = SyncSettings(
-        AccountSettingsStore(InMemoryDataStore(emptyMap())),
+        accountSettings,
         preferences,
         NotificationPreferences(InMemoryDataStore(emptyPreferences())),
     )
     private val signals = TimelineSignals()
     private val unread = fixture.unread
-    private val push = PushSubscriptions(fixture.clients, preferences)
+    private val push = PushSubscriptions(fixture.clients, preferences, accountSettings)
     private val heard = CopyOnWriteArrayList<Int>()
 
     // what the listener answers: false for one that could not finish

@@ -23,6 +23,13 @@ import androidx.core.content.getSystemService
 import androidx.core.net.toUri
 import social.aloha.core.model.Card
 
+/** A composer opened for more than a post or a reply. */
+public sealed interface ComposerStart {
+    public data object Story : ComposerStart
+
+    public data class Quote(val statusId: String) : ComposerStart
+}
+
 /** Where a post sends the person: its thread, a profile by id or handle, a hashtag, or a reply to it. */
 public interface StatusNavigation {
     /** The thread of [statusId]; with [history], the post's edits open over it. */
@@ -38,8 +45,8 @@ public interface StatusNavigation {
     /** The composer: a new post, or a reply to [replyToId] when given. */
     public fun openComposer(replyToId: String?)
 
-    /** The composer, for a story; only a server with stories offers it. */
-    public fun openStoryComposer() {}
+    /** The composer, for a story (only a server with stories offers it) or a quote. */
+    public fun openComposerFor(start: ComposerStart) {}
 
     /** The composer on the reader's own post [statusId]: edited, or deleted and written again when [redraft]. */
     public fun editPost(statusId: String, redraft: Boolean)
@@ -131,6 +138,10 @@ public abstract class RoutedStatusActions(
     private val albums: () -> Boolean = { false },
     private val archive: () -> Boolean = { false },
 ) : StatusActions {
+    override val quotes: Boolean get() = true
+
+    override fun onQuote(row: StatusRowUi): Unit = navigation().openComposerFor(ComposerStart.Quote(row.statusId))
+
     override val menu: Set<StatusMenuItem>
         get() = buildSet {
             addAll(SHARED)
@@ -165,10 +176,10 @@ public abstract class RoutedStatusActions(
     override fun onMenu(row: StatusRowUi, item: StatusMenuItem) {
         val url = row.url
         when (item) {
-            StatusMenuItem.Share -> url?.let { share(context, it) }
+            StatusMenuItem.Share -> url?.let { shareLink(context, it) }
 
             StatusMenuItem.CopyLink -> url?.let {
-                copy(context, it)
+                copyLink(context, it)
                 onCopied()
             }
 
@@ -250,13 +261,15 @@ private fun openInApp(context: Context, url: String) {
 
 private fun isWeb(url: String): Boolean = url.toUri().scheme?.lowercase() in setOf("http", "https")
 
-private fun share(context: Context, url: String) {
+/** Offers [url] to the apps that take a link; nothing for one that is not a web address. */
+public fun shareLink(context: Context, url: String) {
     if (!isWeb(url)) return
     val send = Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, url)
     context.startActivity(Intent.createChooser(send, null))
 }
 
-private fun copy(context: Context, url: String) {
+/** Puts [url] on the clipboard; nothing for one that is not a web address. */
+public fun copyLink(context: Context, url: String) {
     if (!isWeb(url)) return
     context.getSystemService<ClipboardManager>()?.setPrimaryClip(ClipData.newPlainText(url, url))
 }

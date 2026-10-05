@@ -10,7 +10,6 @@ import androidx.compose.animation.core.Easing
 public object AlohaMotion {
     public const val SHORT: Int = 150
     public const val MEDIUM: Int = 300
-    public const val LONG: Int = 500
 
     /** Something on screen moving to a new place. */
     public val Emphasized: Easing = CubicBezierEasing(0.2f, 0f, 0f, 1f)

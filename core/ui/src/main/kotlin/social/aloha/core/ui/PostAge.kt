@@ -11,7 +11,7 @@ import android.icu.util.MeasureUnit
 import android.icu.util.TimeZone
 import android.icu.util.ULocale
 import android.text.format.DateFormat as DateFormat24
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Text
@@ -20,11 +20,15 @@ import androidx.compose.material3.TooltipBox
 import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import java.time.Duration
 import java.time.Instant
@@ -127,12 +131,7 @@ public fun absoluteTime(
 public fun PostTime(at: Instant, now: Instant, style: TextStyle, color: Color, modifier: Modifier = Modifier) {
     val tooltip = rememberTooltipState()
     val scope = rememberCoroutineScope()
-    val hours24 = DateFormat24.is24HourFormat(LocalContext.current)
-    val text = if (LocalReadingStyle.current.absoluteTimes) {
-        absoluteTime(at, now, hours24)
-    } else {
-        PostAge.of(at, now).short(stringResource(R.string.status_age_now))
-    }
+    val (text, spoken) = rememberPostTime(at, now)
     TooltipBox(
         TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Above),
         { PlainTooltip { Text(fullDate(at)) } },
@@ -145,10 +144,30 @@ public fun PostTime(at: Instant, now: Instant, style: TextStyle, color: Color, m
             style = style,
             color = color,
             maxLines = 1,
-            modifier = Modifier.clickable(onClickLabel = stringResource(R.string.status_age_show_date)) {
-                scope.launch { tooltip.show() }
-            },
+            // a tap rather than a click, so the row it sits in stays one stop for a screen reader, which
+            // reads the time with the rest of it
+            modifier = Modifier
+                .semantics { contentDescription = spoken }
+                .pointerInput(Unit) { detectTapGestures { scope.launch { tooltip.show() } } },
         )
+    }
+}
+
+/**
+ * A post's time as shown and as read aloud: its age, "5m" and "5 minutes ago", or, where the reader
+ * chose absolute times, the time itself both ways.
+ */
+@Composable
+internal fun rememberPostTime(at: Instant, now: Instant): Pair<String, String> {
+    val hours24 = DateFormat24.is24HourFormat(LocalContext.current)
+    val absolute = LocalReadingStyle.current.absoluteTimes
+    val word = stringResource(R.string.status_age_now)
+    return remember(at, now, absolute, hours24, word) {
+        if (absolute) {
+            absoluteTime(at, now, hours24).let { it to it }
+        } else {
+            PostAge.of(at, now).let { it.short(word) to it.spoken(word) }
+        }
     }
 }
 

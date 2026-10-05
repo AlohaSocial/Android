@@ -11,11 +11,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -23,9 +21,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -38,9 +34,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalUriHandler
-import androidx.compose.ui.platform.UriHandler
-import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -48,7 +41,6 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
@@ -57,7 +49,6 @@ import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.designsystem.LocalAlohaSemanticColors
 import social.aloha.core.model.SensitiveMediaPolicy
-import social.aloha.core.model.Visibility
 
 /** What a row asks for; the screen that shows it decides what each does. */
 @Immutable
@@ -84,6 +75,12 @@ public interface StatusActions {
     public fun onReact(row: StatusRowUi, name: String, add: Boolean)
 
     public fun onMenu(row: StatusRowUi, item: StatusMenuItem)
+
+    /** A quote of [row], or the request for one, in the composer; offered only where [quotes]. */
+    public fun onQuote(row: StatusRowUi) {}
+
+    /** Whether this screen quotes: then a tap on boost asks whether to boost or to quote. */
+    public val quotes: Boolean get() = false
 
     /** The edits of [row], from its "edited" mark; without a screen of its own for them, the post. */
     public fun onHistory(row: StatusRowUi): Unit = onOpen(row.statusId)
@@ -163,7 +160,9 @@ public fun StatusCard(
         hiding.collapse,
         hiding.rehide(row),
     )
-    val customActions = customActions(row, actions, controls)
+    var askedAs by remember { mutableStateOf<AskedAs?>(null) }
+    val customActions = customActions(row, actions, controls) + actAsActions(row) { askedAs = it }
+    askedAs?.let { ActAsPicker(row, it) { askedAs = null } }
     val compact = LocalReadingStyle.current.compact
     ProvideLinkRouting(onLink = actions::onLink) {
         Column(
@@ -333,30 +332,53 @@ private fun Actions(row: StatusRowUi, actions: StatusActions) {
     val semantic = LocalAlohaSemanticColors.current
     val tick = rememberTick()
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
-    ActionButton(AlohaIcons.Reply, row.counts.replies, muted) { actions.onReply(row) }
-    ActionButton(
-        if (row.state.boosted) AlohaIcons.Boosted else AlohaIcons.Boost,
-        row.counts.boosts,
-        if (row.state.boosted) semantic.boost else muted,
-    ) {
-        tick(!row.state.boosted)
-        actions.onBoost(row)
+    ActAsAction(row, PostAct.Reply, R.string.status_reply_as) { long ->
+        ActionButton(AlohaIcons.Reply, row.counts.replies, muted, long) { actions.onReply(row) }
     }
-    ActionButton(
-        if (row.state.favourited) AlohaIcons.Favourited else AlohaIcons.Favourite,
-        row.counts.favourites,
-        if (row.state.favourited) semantic.favourite else muted,
-    ) {
-        tick(!row.state.favourited)
-        actions.onFavourite(row)
+    // where the screen quotes, the tick waits for the menu's choice
+    val boosting = remember(row, actions) {
+        object : StatusActions by actions {
+            override fun onBoost(row: StatusRowUi) {
+                tick(!row.state.boosted)
+                actions.onBoost(row)
+            }
+        }
     }
-    ActionButton(
-        if (row.state.bookmarked) AlohaIcons.Bookmarked else AlohaIcons.Bookmark,
-        null,
-        if (row.state.bookmarked) semantic.bookmark else muted,
-    ) {
-        tick(!row.state.bookmarked)
-        actions.onBookmark(row)
+    var boostingWith by remember { mutableStateOf(false) }
+    val boostWith = { boostingWith = true }.takeIf { LocalActAs.current != null && row.url != null }
+    Box {
+        BoostButton(row, boosting) { onClick ->
+            ActionButton(
+                if (row.state.boosted) AlohaIcons.Boosted else AlohaIcons.Boost,
+                row.counts.boosts,
+                if (row.state.boosted) semantic.boost else muted,
+                boostWith,
+                onClick,
+            )
+        }
+        BoostWithMenu(row, actions, boostingWith) { boostingWith = false }
+    }
+    ActAsAction(row, PostAct.Favourite, R.string.status_favourite_as) { long ->
+        ActionButton(
+            if (row.state.favourited) AlohaIcons.Favourited else AlohaIcons.Favourite,
+            row.counts.favourites,
+            if (row.state.favourited) semantic.favourite else muted,
+            long,
+        ) {
+            tick(!row.state.favourited)
+            actions.onFavourite(row)
+        }
+    }
+    ActAsAction(row, PostAct.Bookmark, R.string.status_bookmark_as) { long ->
+        ActionButton(
+            if (row.state.bookmarked) AlohaIcons.Bookmarked else AlohaIcons.Bookmark,
+            null,
+            if (row.state.bookmarked) semantic.bookmark else muted,
+            long,
+        ) {
+            tick(!row.state.bookmarked)
+            actions.onBookmark(row)
+        }
     }
     DislikeCount(row, muted)
 }
@@ -385,11 +407,21 @@ private fun rememberTick(): (Boolean) -> Unit {
 }
 
 @Composable
-private fun ActionButton(icon: ImageVector, count: Int?, tint: Color, onClick: () -> Unit) {
+private fun ActionButton(
+    icon: ImageVector,
+    count: Int?,
+    tint: Color,
+    onLongClick: (() -> Unit)? = null,
+    onClick: () -> Unit,
+) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        val interactions = remember { MutableInteractionSource() }
-        IconButton(onClick = onClick, interactionSource = interactions, modifier = Modifier.squish(interactions)) {
-            Icon(icon, contentDescription = null, tint = tint)
+        if (onLongClick != null) {
+            PressableIcon(icon, tint, onClick, onLongClick)
+        } else {
+            val interactions = remember { MutableInteractionSource() }
+            IconButton(onClick = onClick, interactionSource = interactions, modifier = Modifier.squish(interactions)) {
+                Icon(icon, contentDescription = null, tint = tint)
+            }
         }
         Text(
             count?.takeIf { it > 0 && LocalReadingStyle.current.showCounts }?.toString().orEmpty(),

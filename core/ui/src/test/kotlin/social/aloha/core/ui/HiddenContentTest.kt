@@ -58,20 +58,31 @@ class HiddenContentTest {
 
     @Test
     fun `a tall text is clipped while collapsed, shown whole when open, and a short one is left alone`() {
-        var tall = false
+        var tall by mutableStateOf(false)
         var collapsed by mutableStateOf(true)
         var height by mutableStateOf(400.dp)
         compose.setContent {
-            Collapsible(collapsed = collapsed, onTall = { tall = it }) { Box(Modifier.size(100.dp, height)) }
+            Collapsible(
+                collapsed = collapsed,
+                tall = tall,
+                onTall = { tall = it },
+                content = { Box(Modifier.size(100.dp, height)) },
+                toggle = { Box(Modifier.size(100.dp, TOGGLE)) },
+            )
         }
-        compose.onRoot().assertHeightIsEqualTo(145.dp)
+        // the toggle sits under the clipped text from the first layout on
+        compose.onRoot().assertHeightIsEqualTo(145.dp + TOGGLE)
         assertTrue(tall)
 
         collapsed = false
-        compose.onRoot().assertHeightIsEqualTo(400.dp)
+        compose.onRoot().assertHeightIsEqualTo(400.dp + TOGGLE)
 
         height = 100.dp
         compose.onRoot().assertHeightIsEqualTo(100.dp)
         assertFalse(tall)
+    }
+
+    private companion object {
+        val TOGGLE = 20.dp
     }
 }

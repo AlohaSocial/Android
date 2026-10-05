@@ -9,6 +9,8 @@ internal interface ShortsActions {
     fun onBoost(short: ShortUi)
     fun onComments(short: ShortUi)
     fun onShare(short: ShortUi)
+
+    fun onCopyLink(short: ShortUi)
     fun onProfile(short: ShortUi)
     fun onMuted(muted: Boolean)
     fun onReport(short: ShortUi)

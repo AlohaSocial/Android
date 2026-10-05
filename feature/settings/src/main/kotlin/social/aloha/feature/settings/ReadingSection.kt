@@ -11,6 +11,9 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
@@ -88,6 +91,9 @@ internal fun ReadingContent(style: ReadingStyle, onChange: ((ReadingStyle) -> Re
         SwitchRow(stringResource(R.string.reading_absolute_times), style.absoluteTimes, { on ->
             onChange { it.copy(absoluteTimes = on) }
         }, stringResource(R.string.reading_absolute_times_summary))
+        SwitchRow(stringResource(R.string.reading_trends), style.showTrends, { on ->
+            onChange { it.copy(showTrends = on) }
+        }, stringResource(R.string.reading_trends_summary))
         SwitchRow(stringResource(R.string.reading_boost_carousel), style.boostCarousel, { on ->
             onChange { it.copy(boostCarousel = on) }
         }, stringResource(R.string.reading_boost_carousel_summary))
@@ -121,7 +127,9 @@ internal fun ReadingContent(style: ReadingStyle, onChange: ((ReadingStyle) -> Re
 /** How large a post's text reads, in tenths from four fifths to half again, on top of the system's size. */
 @Composable
 private fun TextSizeRow(scale: Float, onScale: (Float) -> Unit) {
-    val percent = NumberFormat.getPercentInstance().format(scale.toDouble())
+    // kept here while the thumb moves and saved once it is let go: every step saved would redraw the app
+    var shown by remember(scale) { mutableFloatStateOf(scale) }
+    val percent = NumberFormat.getPercentInstance().format(shown.toDouble())
     ListItem(
         headlineContent = {
             Row {
@@ -131,8 +139,9 @@ private fun TextSizeRow(scale: Float, onScale: (Float) -> Unit) {
         },
         supportingContent = {
             Slider(
-                value = scale,
-                onValueChange = { onScale((it * TENTHS).roundToInt() / TENTHS) },
+                value = shown,
+                onValueChange = { shown = (it * TENTHS).roundToInt() / TENTHS },
+                onValueChangeFinished = { onScale(shown) },
                 valueRange = ReadingStyle.MIN_TEXT_SCALE..ReadingStyle.MAX_TEXT_SCALE,
                 steps = TEXT_SIZE_STEPS,
                 modifier = Modifier.semantics { stateDescription = percent },

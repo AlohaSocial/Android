@@ -11,7 +11,9 @@ import social.aloha.core.model.Visibility
 /** What the composer's controls do; the screen itself decides nothing. */
 internal interface ComposerActions :
     MediaActions,
-    LaterActions {
+    LaterActions,
+    QuoteActions,
+    TypingActions {
     fun onClose()
 
     fun onPost()
@@ -26,21 +28,33 @@ internal interface ComposerActions :
 
     fun onQuotePolicy(policy: QuotePolicy)
 
-    fun onSuggestion(suggestion: Suggestion)
-
-    fun onEmoji(emoji: CustomEmoji)
-
     fun onAddSegment()
 
     fun onRemoveSegment(index: Int)
 
     fun onAuthor(id: String)
 
+    /** Opens draft [id] in place of the empty post. */
+    fun onResume(id: String)
+
+    /** Takes [handle] out of the people a reply is addressed to. */
+    fun onLeaveOut(handle: String)
+
     /** Shares the post as a story instead, or back as a post. */
     fun onStory(on: Boolean)
 
     /** How long the story's picture or card shows for. */
     fun onStorySeconds(seconds: Int)
+}
+
+/** What helps with the words: completing the one at the cursor, and putting in emoji. */
+internal interface TypingActions {
+    fun onSuggestion(suggestion: Suggestion)
+
+    /** Opens search for [query], where no account the server knows matches it. */
+    fun onFindPeople(query: String)
+
+    fun onEmoji(emoji: CustomEmoji)
 }
 
 /** What the controls for later do: scheduling, and the posts kept for later. */
@@ -84,6 +98,9 @@ internal interface MediaActions {
     fun onEditMedia(id: String)
 
     fun onRemoveMedia(id: String)
+
+    /** The attachments of one post, in the order they go out in. */
+    fun onOrderMedia(ids: List<String>)
 
     fun onRetryMedia(id: String)
 

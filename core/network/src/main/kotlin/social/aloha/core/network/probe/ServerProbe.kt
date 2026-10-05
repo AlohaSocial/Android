@@ -18,6 +18,7 @@ import social.aloha.core.network.ApiError
 import social.aloha.core.network.ApiRequest
 import social.aloha.core.network.ApiResult
 import social.aloha.core.network.Authentication
+import social.aloha.core.network.Decoded
 import social.aloha.core.network.Endpoint
 import social.aloha.core.network.RateLimiter
 import social.aloha.core.network.RequestExecutor
@@ -74,11 +75,29 @@ public class ServerProbe internal constructor(
 
     private val executor = executor.withCallTimeout(PER_REQUEST_SECONDS)
 
+    /**
+     * Where [address]'s API is. A domain that only names accounts, its server elsewhere, answers nothing
+     * itself; its host-meta then says which server WebFinger asks, and that server is probed instead.
+     */
     public suspend fun discover(address: ServerAddress): ProbeResult {
-        val candidates = listOf(ProbeCandidate(0, address.origin, CandidateKind.AuthorizationServerIssuer)) +
-            candidatesFor(address)
-        return race(address.origin, candidates)
+        val found = race(address.origin, candidates(address))
+        val server = if (found is ProbeResult.NothingAnswered) delegatedTo(address.origin) else null
+        return server?.let { race(it, candidates(ServerAddress(it, pathHint = null))) }
+            ?.takeIf { it is ProbeResult.Found } ?: found
     }
+
+    /** The other server [origin]'s host-meta sends WebFinger to; null for none, or itself. */
+    private suspend fun delegatedTo(origin: HttpUrl): HttpUrl? = withContext(ioDispatcher) {
+        fetch(hostMetaRequest(), origin.newBuilder().encodedPath(WELL_KNOWN_HOST_META).build(), Tally())
+    }?.takeIf { it.host != origin.host }
+
+    /** What the first address that answers says about the server, for a preview while it is typed. */
+    public suspend fun preview(address: ServerAddress): InstanceDescription? = withContext(ioDispatcher) {
+        candidatesFor(address).firstNotNullOfOrNull { instanceAt(it.base) }
+    }
+
+    private fun candidates(address: ServerAddress): List<ProbeCandidate> =
+        listOf(ProbeCandidate(0, address.origin, CandidateKind.AuthorizationServerIssuer)) + candidatesFor(address)
 
     /** Probes one API base a person typed by hand. */
     public suspend fun discover(manualBase: HttpUrl): ProbeResult {
@@ -184,6 +203,19 @@ public class ServerProbe internal constructor(
         val TOTAL_BUDGET = 10.seconds
         const val WELL_KNOWN_OAUTH = "/.well-known/oauth-authorization-server"
         const val WELL_KNOWN_NODEINFO = "/.well-known/nodeinfo"
+        const val WELL_KNOWN_HOST_META = "/.well-known/host-meta"
+
+        fun hostMetaRequest() =
+            ApiRequest(Endpoint(WELL_KNOWN_HOST_META.drop(1), authentication = Authentication.None)) {
+                    _,
+                    body,
+                ->
+                Decoded(
+                    webFingerServer(body) ?: throw IllegalArgumentException("no lrdd"),
+                    rawCount = null,
+                    emptyList(),
+                )
+            }
 
         fun authorizationServerRequest() = request(
             Endpoint(WELL_KNOWN_OAUTH.drop(1), authentication = Authentication.None),
@@ -203,3 +235,21 @@ public class ServerProbe internal constructor(
             }
     }
 }
+
+/**
+ * The server a host-meta document sends WebFinger lookups to: the origin of its `lrdd` link's template;
+ * null when it has none, or names one by an address the app would not take typed: anything but https, or
+ * a host that is no name, an IP address or `localhost`, so a domain cannot send the app into a network.
+ */
+internal fun webFingerServer(hostMeta: String): HttpUrl? =
+    LINK.findAll(hostMeta).map { it.value }.firstOrNull { LRDD.containsMatchIn(it) }
+        ?.let { TEMPLATE.find(it)?.groupValues?.get(1) }
+        ?.replace("&amp;", "&")?.substringBefore('?')?.toHttpUrlOrNull()
+        ?.takeIf { it.isHttps && '.' in it.host && !IP_LITERAL.matches(it.host) }
+        ?.let { HttpUrl.Builder().scheme(it.scheme).host(it.host).port(it.port).build() }
+
+private val IP_LITERAL = Regex("""^[\d.]+$|:""")
+
+private val LINK = Regex("""<Link\b[^>]*>""", RegexOption.IGNORE_CASE)
+private val LRDD = Regex("""\brel\s*=\s*["']lrdd["']""", RegexOption.IGNORE_CASE)
+private val TEMPLATE = Regex("""\btemplate\s*=\s*["']([^"']+)["']""", RegexOption.IGNORE_CASE)

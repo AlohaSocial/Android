@@ -31,6 +31,8 @@ public data class DraftPost(
     val language: String? = null,
     /** Who may quote the opening post, as the server names it; null for anyone. */
     val quotePolicy: String? = null,
+    /** The post the opening post quotes. */
+    val quotedId: String? = null,
     val mediaSensitive: Boolean = false,
     val poll: DraftPoll? = null,
     @Serializable(with = InstantSerializer::class) val scheduledAt: Instant? = null,
@@ -62,6 +64,7 @@ public data class DraftPost(
             scheduledAt = scheduledAt.takeIf { index == 0 },
             idempotencyKey = requireNotNull(segment.key) { "a segment is keyed before it is sent" },
             quotePolicy = quotePolicy.takeIf { index == 0 },
+            quotedId = quotedId.takeIf { index == 0 },
             mediaAttributes = if (editing) segment.media.mapNotNull(DraftMedia::attribute) else emptyList(),
         )
     }

@@ -16,6 +16,7 @@ import social.aloha.core.model.AccentSource
 import social.aloha.core.model.Appearance
 import social.aloha.core.model.AppearanceContrast
 import social.aloha.core.model.AppearanceMode
+import social.aloha.core.model.ReplyPrefix
 import social.aloha.core.model.SwipeAction
 import social.aloha.core.model.Visibility
 import social.aloha.core.model.Writing
@@ -119,6 +120,11 @@ public class AppPreferences(private val store: DataStore<Preferences>) {
             numberThreads = it[NUMBER_THREADS] ?: false,
             visibility = Visibility.entries.firstOrNull { v -> v.name == it[DEFAULT_VISIBILITY] },
             language = it[DEFAULT_LANGUAGE]?.takeIf { language -> language.isNotBlank() },
+            quoteUnlistedNoted = it[QUOTE_UNLISTED_NOTED] ?: false,
+            askBeforeFollowersQuote = it[ASK_FOLLOWERS_QUOTE] ?: true,
+            replyPrefix = choice(it[REPLY_PREFIX], ReplyPrefix.Always),
+            quietReplies = it[QUIET_REPLIES] ?: true,
+            postAtBottom = it[POST_AT_BOTTOM] ?: false,
         )
     }
 
@@ -129,6 +135,11 @@ public class AppPreferences(private val store: DataStore<Preferences>) {
             it[NUMBER_THREADS] = writing.numberThreads
             it[DEFAULT_VISIBILITY] = writing.visibility?.name.orEmpty()
             it[DEFAULT_LANGUAGE] = writing.language.orEmpty()
+            it[QUOTE_UNLISTED_NOTED] = writing.quoteUnlistedNoted
+            it[ASK_FOLLOWERS_QUOTE] = writing.askBeforeFollowersQuote
+            it[REPLY_PREFIX] = writing.replyPrefix.name
+            it[QUIET_REPLIES] = writing.quietReplies
+            it[POST_AT_BOTTOM] = writing.postAtBottom
         }
     }
 
@@ -164,6 +175,11 @@ public class AppPreferences(private val store: DataStore<Preferences>) {
         val WIFI_ONLY_SYNC = booleanPreferencesKey("wifi_only_sync")
         val ASKED_NOTIFICATIONS = booleanPreferencesKey("asked_for_notifications")
         val SILENCED_NUDGES = stringSetPreferencesKey("silenced_nudges")
+        val QUOTE_UNLISTED_NOTED = booleanPreferencesKey("quote_unlisted_noted")
+        val ASK_FOLLOWERS_QUOTE = booleanPreferencesKey("ask_before_followers_quote")
+        val REPLY_PREFIX = stringPreferencesKey("reply_warning_prefix")
+        val QUIET_REPLIES = booleanPreferencesKey("quiet_public_replies")
+        val POST_AT_BOTTOM = booleanPreferencesKey("post_button_at_bottom")
         val PUSH_ACCOUNTS = stringSetPreferencesKey("push_accounts")
         val CONFIRM_POST = booleanPreferencesKey("confirm_before_posting")
         val ALWAYS_WARNING = booleanPreferencesKey("always_show_warning")

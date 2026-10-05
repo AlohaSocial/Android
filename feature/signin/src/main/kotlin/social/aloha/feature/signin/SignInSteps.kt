@@ -61,28 +61,7 @@ internal fun StatusMessage(text: String, detail: String? = null) {
 internal fun InstanceCardContent(card: InstanceCard, actions: SignInActions) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(AlohaSpacing.m), verticalArrangement = Arrangement.spacedBy(AlohaSpacing.xs)) {
-            Text(
-                card.title,
-                style = MaterialTheme.typography.headlineSmall,
-                modifier = Modifier.semantics {
-                    heading()
-                },
-            )
-            Text(
-                card.domain,
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            val software = stringResource(R.string.signin_nextcloud_social)
-            // the software is named only where the server's own title does not already say it
-            if (card.isNextcloudSocial && !card.title.contains(software, ignoreCase = true)) {
-                Text(software, style = MaterialTheme.typography.labelMedium)
-            }
-            card.userCount?.let {
-                Text(
-                    pluralStringResource(R.plurals.signin_user_count, it, NumberFormat.getIntegerInstance().format(it)),
-                )
-            }
+            InstanceFacts(card)
             if (card.description.isNotBlank()) Text(card.description, style = MaterialTheme.typography.bodyMedium)
             if (card.rules.isNotEmpty()) {
                 HorizontalDivider(Modifier.padding(vertical = AlohaSpacing.xs))
@@ -103,6 +82,30 @@ internal fun InstanceCardContent(card: InstanceCard, actions: SignInActions) {
     TextButton(onClick = actions::onOtherServer, modifier = Modifier.fillMaxWidth()) {
         Text(stringResource(R.string.signin_other_server))
     }
+}
+
+/** Who the server is: its name and domain, its software where its name does not say it, how many, what languages. */
+@Composable
+internal fun InstanceFacts(card: InstanceCard) {
+    Text(
+        card.title,
+        style = MaterialTheme.typography.headlineSmall,
+        modifier = Modifier.semantics { heading() },
+    )
+    Text(
+        card.domain,
+        style = MaterialTheme.typography.labelLarge,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+    val software = stringResource(R.string.signin_nextcloud_social)
+    // the software is named only where the server's own title does not already say it
+    if (card.isNextcloudSocial && !card.title.contains(software, ignoreCase = true)) {
+        Text(software, style = MaterialTheme.typography.labelMedium)
+    }
+    card.userCount?.let {
+        Text(pluralStringResource(R.plurals.signin_user_count, it, NumberFormat.getIntegerInstance().format(it)))
+    }
+    languageNames(card.languages)?.let { Text(stringResource(R.string.signin_languages, it)) }
 }
 
 @Composable

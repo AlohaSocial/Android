@@ -59,6 +59,122 @@
     <string name="timeline_boosts_spoken">Boosted by %1$s</string>
     <!-- Button beside folded boosts: puts them back in the list as posts -->
     <string name="timeline_boosts_expand">Show as posts</string>
+    <!-- Name of the pinned feed of posts by people whose bell the reader rang on their profile -->
+    <string name="timeline_feed_notified">Notified posts</string>
+    <!-- Name of the pinned feed of the reader's bookmarks -->
+    <string name="timeline_feed_bookmarks">Bookmarks</string>
+    <!-- Name of the pinned feed of the reader's favourites -->
+    <string name="timeline_feed_favourites">Favourites</string>
+    <!-- Action label of Home's feed name: lists the pinned feeds to switch to -->
+    <string name="timeline_feeds_choose">Choose a feed</string>
+    <!-- Action label of Home's feed name where a tap moves to the next pinned feed -->
+    <string name="timeline_feeds_next">Next feed</string>
+    <!-- Item at the end of the list of pinned feeds: opens the screen to change them -->
+    <string name="timeline_feeds_edit">Edit feeds</string>
+    <!-- Read aloud for a pinned feed with posts above where the reader left it -->
+    <string name="timeline_feed_new">New posts</string>
+    <!-- First visit of the This server feed: what it holds -->
+    <string name="timeline_feed_about_local">Everyone on your server posts here, not only the people you follow.</string>
+    <!-- First visit of the Everywhere feed: what it holds -->
+    <string name="timeline_feed_about_federated">Public posts from every server yours knows of.</string>
+    <!-- First visit of the Notified posts feed: what it holds -->
+    <string name="timeline_feed_about_notified">Posts by the people whose bell you rang on their profile, as they arrive.</string>
+    <!-- First visit of the Bookmarks feed: what it holds -->
+    <string name="timeline_feed_about_bookmarks">The posts you bookmarked, the latest first.</string>
+    <!-- First visit of the Favourites feed: what it holds -->
+    <string name="timeline_feed_about_favourites">The posts you favourited, the latest first.</string>
+    <!-- First visit of a list's feed: what it holds -->
+    <string name="timeline_feed_about_list">The posts of the people in this list, and only theirs.</string>
+    <!-- First visit of a hashtag's feed: what it holds -->
+    <string name="timeline_feed_about_hashtag">Posts with this hashtag, from everyone your server knows of.</string>
+    <!-- Button on a feed's first-visit explanation: puts it away for good -->
+    <string name="timeline_feed_about_dismiss">Got it</string>
+    <!-- Edit feeds: back to Home -->
+    <string name="feeds_back">Back</string>
+    <!-- Edit feeds: the bar's + that lists what could be pinned -->
+    <string name="feeds_add">Add a feed</string>
+    <!-- Edit feeds, Add menu group: the server's live timelines -->
+    <string name="feeds_add_live">Timelines</string>
+    <!-- Edit feeds, Add menu group: the reader's own collections -->
+    <string name="feeds_add_yours">Yours</string>
+    <!-- Edit feeds, Add menu group: the reader's lists -->
+    <string name="feeds_add_lists">Lists</string>
+    <!-- Edit feeds, Add menu group: the hashtags the reader follows -->
+    <string name="feeds_add_hashtags">Hashtags you follow</string>
+    <!-- Edit feeds: adds a feed for a hashtag typed in, and the title of that dialog -->
+    <string name="feeds_add_tag">Another hashtag</string>
+    <!-- Edit feeds: the label of a tap on a feed, and the title of its dialog -->
+    <string name="feeds_change">Change feed</string>
+    <!-- Edit feeds: the screen reader's action removing a feed, as a swipe does -->
+    <string name="feeds_remove">Remove</string>
+    <!-- Edit feeds: the note shown for a moment after a feed was removed -->
+    <string name="feeds_removed">Feed removed</string>
+    <!-- Edit feeds: the note’s action putting the removed feed back where it was -->
+    <string name="feeds_undo">Undo</string>
+    <!-- Feed dialog: the field for the reader's own name of the feed -->
+    <string name="feeds_name">Name</string>
+    <!-- Feed dialog: the field for the hashtag a feed reads -->
+    <string name="feeds_tag">Hashtag</string>
+    <!-- Feed dialog: shows the fields for more tags -->
+    <string name="feeds_advanced">Advanced</string>
+    <!-- Feed dialog, Advanced: posts with any of these tags join the feed -->
+    <string name="feeds_tags_any">Or any of these</string>
+    <!-- Feed dialog, Advanced: only posts that also carry all of these tags -->
+    <string name="feeds_tags_all">And all of these</string>
+    <!-- Feed dialog, Advanced: posts with any of these tags are left out -->
+    <string name="feeds_tags_none">But none of these</string>
+    <!-- Feed dialog, Advanced: under each tag field -->
+    <string name="feeds_tags_hint">Tags separated by spaces</string>
+    <!-- Feed dialog, Advanced: the feed reads this server's posts alone -->
+    <string name="feeds_local_only">This server only</string>
+    <!-- Feed dialog: keeps the changes -->
+    <string name="feeds_save">Save</string>
+    <!-- Feed dialog: leaves the feed as it was -->
+    <string name="feeds_cancel">Cancel</string>
+    <!-- Feed dialog: read aloud for one of the icons a feed can take -->
+    <string name="feeds_icon_home">A house</string>
+    <!-- Feed dialog: read aloud for one of the icons a feed can take -->
+    <string name="feeds_icon_place">A map pin</string>
+    <!-- Feed dialog: read aloud for one of the icons a feed can take -->
+    <string name="feeds_icon_public">A globe</string>
+    <!-- Feed dialog: read aloud for one of the icons a feed can take -->
+    <string name="feeds_icon_language">A world map</string>
+    <!-- Feed dialog: read aloud for one of the icons a feed can take -->
+    <string name="feeds_icon_notifications">A bell</string>
+    <!-- Feed dialog: read aloud for one of the icons a feed can take -->
+    <string name="feeds_icon_bookmark">A bookmark</string>
+    <!-- Feed dialog: read aloud for one of the icons a feed can take -->
+    <string name="feeds_icon_favourite">A star</string>
+    <!-- Feed dialog: read aloud for one of the icons a feed can take -->
+    <string name="feeds_icon_lists">A list</string>
+    <!-- Feed dialog: read aloud for one of the icons a feed can take -->
+    <string name="feeds_icon_group">People</string>
+    <!-- Feed dialog: read aloud for one of the icons a feed can take -->
+    <string name="feeds_icon_hashtag">A hashtag</string>
+    <!-- Feed dialog: read aloud for one of the icons a feed can take -->
+    <string name="feeds_icon_explore">A compass</string>
+    <!-- Feed dialog: read aloud for one of the icons a feed can take -->
+    <string name="feeds_icon_news">A newspaper</string>
+    <!-- Feed dialog: read aloud for one of the icons a feed can take -->
+    <string name="feeds_icon_photos">A photo</string>
+    <!-- Feed dialog: read aloud for one of the icons a feed can take -->
+    <string name="feeds_icon_video">A film</string>
+    <!-- Feed dialog: read aloud for one of the icons a feed can take -->
+    <string name="feeds_icon_audio">Headphones</string>
+    <!-- Feed dialog: read aloud for one of the icons a feed can take -->
+    <string name="feeds_icon_recent">A clock</string>
+    <!-- Title of the account sheet a long press on the compose button opens, and the long press's label -->
+    <string name="timeline_compose_as">Write as</string>
+    <!-- Edit feeds, Add menu: another server's own public posts, and the title of the dialog asking for it -->
+    <string name="feeds_add_server">Another server</string>
+    <!-- The field for that server's address -->
+    <string name="feeds_server">Server</string>
+    <!-- Under the field above -->
+    <string name="feeds_server_hint">Its address, such as mastodon.social</string>
+    <!-- First visit of another server's feed: what it holds, and that acting on a post finds it on the reader's own server -->
+    <string name="timeline_feed_about_remote">Public posts by the people on this server, read from it directly. Replying, boosting or favouriting finds the post on your own server first.</string>
+    <!-- Said by a screen reader on the compose button while a draft waits -->
+    <string name="timeline_compose_draft">A draft is waiting</string>
     <!-- Strip over the timeline when the server cannot be reached; the cached posts stay -->
     <string name="timeline_offline">You\'re offline. These are the posts saved on this device.</string>
     <!-- Strip over the timeline when the server answered with an error -->
@@ -140,8 +256,10 @@
     <string name="tag_retry">Couldn’t load this hashtag. Try again</string>
     <!-- Under a hashtag's follow button when following or unfollowing failed -->
     <string name="tag_follow_failed">That didn’t work. Nothing was changed.</string>
-    <!-- Timeline setting: heading over which of Home's timelines the app opens on, for the account in use -->
-    <string name="timeline_settings_home_opens">Home opens on</string>
+    <!-- Timeline setting: what a tap on Home's feed name does -->
+    <string name="timeline_settings_title_next">Tap the feed name for the next feed</string>
+    <!-- Summary of the setting above -->
+    <string name="timeline_settings_title_next_summary">Off, a tap lists your feeds. On, it moves to the next one, and a long press lists them.</string>
     <!-- Timeline setting: a timeline opens where it was left -->
     <string name="timeline_settings_restore">Open where I left off</string>
     <!-- Summary of the setting above -->
@@ -150,5 +268,38 @@
     <string name="timeline_settings_pill">Hold new posts behind a button</string>
     <!-- Summary of the setting above -->
     <string name="timeline_settings_pill_summary">Off, new posts join the timeline as they arrive, without moving what you read</string>
+    <!-- Title of the page with what arrived on Home since it was last read, and the Home menu item opening it -->
+    <string name="catch_up_title">Catch up</string>
+    <!-- On that page, when nothing arrived -->
+    <string name="catch_up_nothing">You’re all caught up</string>
+    <!-- On that page, when what arrived holds nothing of the kind or person chosen -->
+    <string name="catch_up_none_chosen">Nothing like that arrived</string>
+    <!-- At the end of that page: moves the read marker to the newest post -->
+    <string name="catch_up_done">Caught up</string>
+    <!-- Chip choosing whose posts show: all of them -->
+    <string name="catch_up_everyone">Everyone</string>
+    <!-- A person in that chip’s menu; %1$s is the name, %2$d how many posts they put on Home -->
+    <string name="catch_up_person">%1$s (%2$d)</string>
+    <!-- Order chip: newest first -->
+    <string name="catch_up_sort_time">Newest</string>
+    <!-- Order chip: most replied to first -->
+    <string name="catch_up_sort_replies">Most replies</string>
+    <!-- Order chip: most boosted first -->
+    <string name="catch_up_sort_boosts">Most boosts</string>
+    <!-- Kind chip: everything -->
+    <string name="catch_up_kind_all">All</string>
+    <!-- Kind chip: posts of their own, neither boosts nor replies -->
+    <string name="catch_up_kind_posts">Posts</string>
+    <!-- Kind chip -->
+    <string name="catch_up_kind_boosts">Boosts</string>
+    <!-- Kind chip -->
+    <string name="catch_up_kind_replies">Replies</string>
+    <!-- Kind chip: posts with pictures or video -->
+    <string name="catch_up_kind_media">Media</string>
+    <!-- Over the posts of the catch-up page; %d is how many arrived since Home was last read -->
+    <plurals name="catch_up_arrived">
+        <item quantity="one">%d post arrived since you last read</item>
+        <item quantity="other">%d posts arrived since you last read</item>
+    </plurals>
 </resources>
 

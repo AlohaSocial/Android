@@ -50,7 +50,6 @@ import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.model.Account
 import social.aloha.core.model.Card
-import social.aloha.core.model.SensitiveMediaPolicy
 import social.aloha.core.model.StarterPack
 import social.aloha.core.model.Status
 import social.aloha.core.model.Tag
@@ -59,6 +58,7 @@ import social.aloha.core.ui.AccountRow
 import social.aloha.core.ui.LocalSensitiveMediaPolicy
 import social.aloha.core.ui.PostDivider
 import social.aloha.core.ui.RichLinkTarget
+import social.aloha.core.ui.Sparkline
 import social.aloha.core.ui.StatusActions
 import social.aloha.core.ui.StatusCard
 import social.aloha.core.ui.StatusRowMapper
@@ -77,8 +77,9 @@ internal fun PostsTab(posts: List<Status>, viewer: String, mapper: StatusRowMapp
 }
 
 /**
- * Trending hashtags, each with how much it was used. Nextcloud Social keeps one day of history and no
- * count of people, so no curve is drawn and no number of people is claimed.
+ * Trending hashtags, each with how much it was used today and its use over the days the server keeps, as a
+ * small curve. Nextcloud Social keeps one day of history and no count of people, so no curve is drawn and
+ * no number of people is claimed.
  */
 @Composable
 internal fun HashtagsTab(tags: List<Tag>, state: ExploreUiState, actions: ExploreActions, rowActions: StatusActions) {
@@ -104,6 +105,12 @@ internal fun HashtagsTab(tags: List<Tag>, state: ExploreUiState, actions: Explor
                 leadingContent = { Icon(AlohaIcons.Hashtag, contentDescription = null) },
                 headlineContent = { Text("#${tag.name}") },
                 supportingContent = uses?.let { { Text(pluralStringResource(R.plurals.explore_uses, it, it)) } },
+                // the server sends the newest day first
+                trailingContent = if (tag.hasOnlyOneBucket) {
+                    null
+                } else {
+                    { Sparkline(remember(tag) { tag.history.reversed().map { it.usesCount } }) }
+                },
                 modifier = Modifier.clickable { rowActions.onLink(RichLinkTarget.Hashtag(tag.name)) },
             )
         }

@@ -63,7 +63,9 @@ class AppShellScreenshotTest {
         )
         compose.enableAccessibilityChecks()
         compose.setContent {
-            AlohaTheme(ThemeSettings(mode = ThemeMode.Light)) { AccountSheet(accounts, {}, AccountLinks(), {}, {}, {}) }
+            AlohaTheme(ThemeSettings(mode = ThemeMode.Light)) {
+                AccountSheet(accounts, {}, AccountLinks(), {}, {}, {}, focus = false, onFocus = {})
+            }
         }
         compose.waitForIdle()
         captureScreenRoboImage("src/test/screenshots/shell-accounts.png")

@@ -4,7 +4,6 @@
 package social.aloha.feature.notifications
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -20,17 +19,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material3.Badge
-import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -67,7 +62,6 @@ import kotlinx.coroutines.launch
 import social.aloha.core.data.Trouble
 import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaSpacing
-import social.aloha.core.designsystem.badgeCount
 import social.aloha.core.model.NotificationKind
 import social.aloha.core.sync.NotificationText
 import social.aloha.core.ui.CaughtUpDivider
@@ -80,7 +74,6 @@ import social.aloha.core.ui.PostTime
 import social.aloha.core.ui.R as UiR
 import social.aloha.core.ui.RefreshBox
 import social.aloha.core.ui.Skeleton
-import social.aloha.core.ui.StackedAvatars
 import social.aloha.core.ui.TopBarTitle
 import social.aloha.core.ui.TroubleStrip
 import social.aloha.core.ui.itemMotion
@@ -88,7 +81,6 @@ import social.aloha.core.ui.readingColumn
 import social.aloha.core.ui.rememberReducedMotion
 import social.aloha.core.ui.rememberTopScroll
 import social.aloha.core.ui.scrollToTop
-import social.aloha.core.ui.short
 import social.aloha.core.ui.spoken
 import social.aloha.core.ui.topScrollTail
 
@@ -122,6 +114,13 @@ internal fun NotificationsScreen(
     val bar = TopAppBarDefaults.pinnedScrollBehavior()
     val listState = rememberLazyListState()
     val scrollToTop = rememberTopScroll(listState)
+    var pausing by remember { mutableStateOf(false) }
+    if (pausing) {
+        PauseDialog(onPause = {
+            pausing = false
+            actions.onPause(it)
+        }, onDismiss = { pausing = false })
+    }
     BoxWithConstraints(modifier) {
         val roomy = maxWidth >= ROOMY
         Scaffold(
@@ -132,12 +131,13 @@ internal fun NotificationsScreen(
                     title = { TopBarTitle(title, scrollToTop) },
                     scrollBehavior = bar,
                     navigationIcon = navigationIcon,
-                    actions = { BarActions(state, actions, roomy) },
+                    actions = { BarActions(state, actions, roomy) { pausing = true } },
                 )
             },
         ) { padding ->
             Column(Modifier.padding(padding).fillMaxSize()) {
                 Chips(state.kinds, actions)
+                state.pausedUntil?.takeIf { it.isAfter(state.now) }?.let { PausedBanner(it) { actions.onPause(null) } }
                 PermissionBanner(state.askedForPermission, actions::onAskedForPermission)
                 state.trouble?.let { TroubleStrip(stringResource(it.message)) }
                 RefreshBox(
@@ -234,6 +234,7 @@ internal fun NotificationRow(
     val background = if (row.unread) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surface
     val mutable = row.kind == NotificationKind.Mention && row.statusId != null
     val mute = stringResource(R.string.notifications_mute_conversation)
+    val profiles = profileActions(row.people, actions::onProfile)
     var menu by remember { mutableStateOf(false) }
     Box {
         Row(
@@ -247,14 +248,17 @@ internal fun NotificationRow(
                 )
                 .semantics {
                     contentDescription = description
-                    if (mutable) {
-                        customActions = listOf(
+                    val muting = if (mutable) {
+                        listOf(
                             CustomAccessibilityAction(mute) {
                                 actions.onMuteConversation(row)
                                 true
                             },
                         )
+                    } else {
+                        emptyList()
                     }
+                    if (muting.isNotEmpty() || profiles.isNotEmpty()) customActions = muting + profiles
                 }
                 .padding(horizontal = AlohaSpacing.m, vertical = AlohaSpacing.s),
             horizontalArrangement = Arrangement.spacedBy(AlohaSpacing.m),
@@ -288,8 +292,7 @@ private fun RowScope.RowContent(
     )
     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(AlohaSpacing.xs)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            if (row.people.isNotEmpty()) Faces(row.people, actions::onProfile)
-            Box(Modifier.weight(1f))
+            Faces(row.people, actions::onProfile, Modifier.weight(1f))
             PostTime(row.at, now, MaterialTheme.typography.labelMedium, MaterialTheme.colorScheme.onSurfaceVariant)
         }
         Text(
@@ -320,7 +323,9 @@ private fun Details(row: NotificationRowUi, actions: NotificationsActions, origi
 
         row.severance != null || row.warning != null -> NoticeCard(row, origin, actions::onLearnMore)
 
-        row.kind == NotificationKind.FollowRequest -> RequestButtons { actions.onFollowRequest(row, it) }
+        // a group answers in one go only where it names everyone in it
+        row.kind == NotificationKind.FollowRequest && row.people.size == row.others + 1 ->
+            RequestButtons { actions.onFollowRequest(row, it) }
 
         else -> row.preview?.let {
             Text(

@@ -25,6 +25,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import social.aloha.core.data.RemoteLookup
 import social.aloha.core.data.search.Searches
 import social.aloha.core.datastore.AccountSettingsStore
 import social.aloha.core.html.RichTextCache
@@ -75,6 +76,7 @@ class SearchViewModelTest {
             SearchKey(reader.id),
             fixture.accounts,
             Searches(fixture.clients, fixture.statuses, settings),
+            RemoteLookup(fixture.clients, fixture.statuses),
             RichTextCache(),
         )
         model.onColors(RichTextColors(Color.Blue, Color.Gray, Color.LightGray))

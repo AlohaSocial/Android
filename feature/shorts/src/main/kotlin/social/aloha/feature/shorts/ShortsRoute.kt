@@ -3,7 +3,6 @@
 
 package social.aloha.feature.shorts
 
-import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -23,6 +22,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -37,6 +37,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.launch
 import social.aloha.core.data.timeline.Toggle
 import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.model.TimelineSource
@@ -44,7 +45,9 @@ import social.aloha.core.ui.ProvideLinkRouting
 import social.aloha.core.ui.R as UiR
 import social.aloha.core.ui.RichTextColors
 import social.aloha.core.ui.StatusNavigation
+import social.aloha.core.ui.copyLink
 import social.aloha.core.ui.openLink
+import social.aloha.core.ui.shareLink
 import social.aloha.core.ui.sourceName
 
 /**
@@ -67,6 +70,8 @@ public fun ShortsRoute(
     LaunchedEffect(colors) { viewModel.onColors(colors) }
     val snackbars = remember { SnackbarHostState() }
     val failed = stringResource(UiR.string.status_action_failed)
+    val copied = stringResource(UiR.string.status_link_copied)
+    val scope = rememberCoroutineScope()
     LaunchedEffect(state.actionFailed) {
         if (state.actionFailed) {
             viewModel.onActionFailureShown()
@@ -102,9 +107,13 @@ public fun ShortsRoute(
             override fun onComments(short: ShortUi) = nav.openThread(short.row.statusId)
 
             override fun onShare(short: ShortUi) {
+                short.row.url?.let { shareLink(context, it) }
+            }
+
+            override fun onCopyLink(short: ShortUi) {
                 val url = short.row.url ?: return
-                val send = Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, url)
-                context.startActivity(Intent.createChooser(send, null))
+                copyLink(context, url)
+                scope.launch { snackbars.showSnackbar(copied) }
             }
 
             override fun onProfile(short: ShortUi) = nav.openProfile(short.row.author.id, null)
