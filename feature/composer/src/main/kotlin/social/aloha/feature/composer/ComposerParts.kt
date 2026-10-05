@@ -199,6 +199,7 @@ internal fun Toolbar(
     actions: ComposerActions,
     modifier: Modifier = Modifier,
     showCounter: Boolean = true,
+    trailing: @Composable () -> Unit = {},
 ) {
     var emojis by remember { mutableStateOf(false) }
     var languages by remember { mutableStateOf(false) }
@@ -236,6 +237,7 @@ internal fun Toolbar(
                 alignEnd = true,
             )
         }
+        trailing()
     }
     if (emojis) EmojiSheet(state.emojis, onPick = actions::onEmoji, onDismiss = { emojis = false })
     if (languages) {

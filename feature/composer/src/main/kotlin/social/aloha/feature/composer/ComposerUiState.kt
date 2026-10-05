@@ -160,6 +160,8 @@ internal data class ComposerUiState(
     val confirmBeforePosting: Boolean = false,
     /** Each part of a thread ends in its number, counted in its length. */
     val numberThreads: Boolean = false,
+    /** The Post button sits beside the count above the keyboard, within thumb reach. */
+    val postAtBottom: Boolean = false,
     /** Whether a short gets `#shorts`; null until the writer is asked, once. */
     val tagShorts: Boolean? = null,
     /** How many segments of the thread are already posted; a retry starts after them. */

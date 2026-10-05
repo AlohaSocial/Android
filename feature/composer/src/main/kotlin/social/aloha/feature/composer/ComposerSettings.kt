@@ -29,6 +29,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import social.aloha.core.datastore.AppPreferences
 import social.aloha.core.designsystem.AlohaIcons
+import social.aloha.core.model.ReplyPrefix
 import social.aloha.core.model.Visibility
 import social.aloha.core.model.Writing
 import social.aloha.core.ui.ChoiceRows
@@ -104,6 +105,14 @@ internal fun WritingContent(
             { on -> onChange { it.copy(numberThreads = on) } },
             stringResource(R.string.composer_settings_number_summary),
         )
+        SwitchRow(
+            stringResource(R.string.composer_settings_post_bottom),
+            writing.postAtBottom,
+            { on -> onChange { it.copy(postAtBottom = on) } },
+            stringResource(R.string.composer_settings_post_bottom_summary),
+        )
+        HorizontalDivider()
+        ReplyRows(writing, onChange)
         HorizontalDivider()
         ChoiceRows(
             stringResource(R.string.composer_settings_visibility),
@@ -123,6 +132,26 @@ internal fun WritingContent(
             writing.language,
         ) { language -> onChange { it.copy(language = language) } }
     }
+}
+
+/** How a reply starts: its content warning taken over, and how far it reaches. */
+@Composable
+private fun ReplyRows(writing: Writing, onChange: ((Writing) -> Writing) -> Unit) {
+    SwitchRow(
+        stringResource(R.string.composer_settings_quiet_replies),
+        writing.quietReplies,
+        { on -> onChange { it.copy(quietReplies = on) } },
+        stringResource(R.string.composer_settings_quiet_replies_summary),
+    )
+    ChoiceRows(
+        stringResource(R.string.composer_settings_reply_prefix),
+        listOf(
+            ReplyPrefix.Always to stringResource(R.string.composer_settings_reply_prefix_always),
+            ReplyPrefix.ToOthers to stringResource(R.string.composer_settings_reply_prefix_others),
+            ReplyPrefix.Never to stringResource(R.string.composer_settings_reply_prefix_never),
+        ),
+        writing.replyPrefix,
+    ) { prefix -> onChange { it.copy(replyPrefix = prefix) } }
 }
 
 /** The languages the device reads, most preferred first, as two-letter codes. */

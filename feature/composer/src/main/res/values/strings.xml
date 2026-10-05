@@ -461,6 +461,22 @@
     <string name="composer_settings_number">Number the parts of a thread</string>
     <!-- Summary of the setting above -->
     <string name="composer_settings_number_summary">Each part ends in 1/3, 2/3, 3/3, counted in its length</string>
+    <!-- Writing setting: where the Post button sits -->
+    <string name="composer_settings_post_bottom">Post button at the bottom</string>
+    <!-- Explains that setting -->
+    <string name="composer_settings_post_bottom_summary">Beside the character count, within reach of your thumb</string>
+    <!-- Writing setting: replies to public posts start out quiet public -->
+    <string name="composer_settings_quiet_replies">Quiet public replies to public posts</string>
+    <!-- Explains that setting -->
+    <string name="composer_settings_quiet_replies_summary">Anyone can still see them, but they stay out of public timelines and trends</string>
+    <!-- Writing setting: heading over when a reply’s content warning, taken from the post it answers, starts with “re:” -->
+    <string name="composer_settings_reply_prefix">“re:” before a reply’s content warning</string>
+    <!-- Choice under that heading -->
+    <string name="composer_settings_reply_prefix_always">Always</string>
+    <!-- Choice under that heading: only when answering someone else’s post -->
+    <string name="composer_settings_reply_prefix_others">When replying to others</string>
+    <!-- Choice under that heading -->
+    <string name="composer_settings_reply_prefix_never">Never</string>
     <!-- Writing setting: heading over the default visibility of new posts -->
     <string name="composer_settings_visibility">New posts are seen by</string>
     <!-- Default visibility choice: as the reader's server says -->

@@ -56,6 +56,7 @@ import social.aloha.core.model.CharacterCount
 import social.aloha.core.model.CustomEmoji
 import social.aloha.core.model.LengthRule
 import social.aloha.core.model.Preferences
+import social.aloha.core.model.ReplyPrefix
 import social.aloha.core.model.ServerLimits
 import social.aloha.core.model.SignedInAccount
 import social.aloha.core.model.Status
@@ -250,6 +251,7 @@ internal class ComposerViewModel @AssistedInject constructor(
             warnMissingDescription = media.warn,
             confirmBeforePosting = media.writing.confirmBeforePosting,
             numberThreads = media.writing.numberThreads,
+            postAtBottom = media.writing.postAtBottom,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_MILLIS), ComposerUiState())
 
@@ -459,6 +461,8 @@ internal class ComposerViewModel @AssistedInject constructor(
             parent?.let { status ->
                 segments[0] = prefilled(status, account)
                 prefill = segments[0].text
+                spoiler = inheritedWarning(status.displayed, writing.replyPrefix, own = account.serverAccountId)
+                control.update { it.answering(status.displayed, writing, spoiler) }
             }
             // what another app shared starts the post: its text, and the media there is room for
             key.sharedText?.let { text -> segments[0] = TextFieldValue(text, TextRange(text.length)) }
@@ -525,6 +529,36 @@ private fun ComposerUiState.withDefaults(preferences: Preferences?, writing: Wri
     // a warning already written, as in a draft, is open anyway
     spoilerShown = spoilerShown || writing.alwaysShowWarning,
 )
+
+/**
+ * A reply's start: in the language of the post it answers, its [warning] open, and quiet public in answer to a
+ * public post where the writer chose so and nothing narrower was chosen already.
+ */
+internal fun ComposerUiState.answering(status: Status, writing: Writing, warning: String = ""): ComposerUiState = copy(
+    language = status.language?.takeIf(String::isNotBlank) ?: language,
+    spoilerShown = spoilerShown || warning.isNotEmpty(),
+    visibility = Visibility.Unlisted.takeIf {
+        writing.quietReplies && status.visibility == Visibility.Public && visibility == Visibility.Public &&
+            it in visibilities
+    } ?: visibility,
+)
+
+/**
+ * The content warning a reply to [status] starts with: the post's own, after `re: ` where [prefix] asks for it,
+ * [own] being the writer's account id on the server; never `re: re: `.
+ */
+internal fun inheritedWarning(status: Status, prefix: ReplyPrefix, own: String): String {
+    val bare = status.spoilerText.trim()
+    val toOthers = status.account.id != own
+    val prefixed = prefix == ReplyPrefix.Always || (prefix == ReplyPrefix.ToOthers && toOthers)
+    return when {
+        bare.isEmpty() -> ""
+        prefixed && !bare.startsWith(RE, ignoreCase = true) -> RE + bare
+        else -> bare
+    }
+}
+
+private const val RE = "re: "
 
 /** The number a part of a thread ends in, where the writer numbers threads. */
 private fun numbering(on: Boolean, index: Int, size: Int): String = if (on) Writing.numbering(index, size) else ""

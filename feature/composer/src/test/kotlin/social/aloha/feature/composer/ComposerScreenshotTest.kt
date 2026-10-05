@@ -201,6 +201,16 @@ class ComposerScreenshotTest {
     }
 
     @Test
+    fun postAtTheBottom() = capture("composer-post-bottom") {
+        ComposerScreen(
+            fresh.copy(postAtBottom = true),
+            listOf(value("Paddling out at dawn")),
+            spoiler = "",
+            actions = NoActions,
+        )
+    }
+
+    @Test
     fun nobodyFound() = capture("composer-find-people") {
         ComposerScreen(
             fresh.copy(completions = CompletionsUi(CompletionKind.Account, "kai")),

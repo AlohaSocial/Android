@@ -82,7 +82,7 @@ internal fun ComposerScreen(
                 },
                 actions = {
                     ComposerMenu(actions)
-                    PostButton(state, actions)
+                    if (!state.postAtBottom) PostButton(state, actions)
                 },
             )
         },
@@ -100,7 +100,9 @@ internal fun ComposerScreen(
             ) { Writing(state, segments, spoiler, actions) }
             CompletionStrip(state.completions, state.emojis, actions, Modifier.readingWidth())
             HorizontalDivider()
-            Toolbar(state, spoiler, actions, Modifier.readingWidth(), showCounter = segments.size == 1)
+            Toolbar(state, spoiler, actions, Modifier.readingWidth(), showCounter = segments.size == 1) {
+                if (state.postAtBottom) PostButton(state, actions)
+            }
         }
     }
 }
