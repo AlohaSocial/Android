@@ -118,9 +118,10 @@ public fun ThreadRoute(key: ThreadKey, navigation: ThreadNavigation, modifier: M
 
     val found = stringResource(R.string.thread_more_replies_found)
     val show = stringResource(R.string.thread_more_replies_show)
-    LaunchedEffect(state.pendingReplies > 0) {
+    // asked again as more arrive, and not for ever: an endless one held back every other notice
+    LaunchedEffect(state.pendingReplies) {
         if (state.pendingReplies > 0) {
-            val answer = snackbars.showSnackbar(found, actionLabel = show, duration = SnackbarDuration.Indefinite)
+            val answer = snackbars.showSnackbar(found, actionLabel = show, duration = SnackbarDuration.Long)
             if (answer == SnackbarResult.ActionPerformed) viewModel.onShowReplies()
         }
     }

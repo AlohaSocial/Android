@@ -62,6 +62,7 @@ import social.aloha.core.ui.StatusRowUi
 import social.aloha.core.ui.fullDate
 import social.aloha.core.ui.motion
 import social.aloha.core.ui.openInBrowser
+import social.aloha.core.ui.rememberReducedMotion
 
 /** "Reply to {name}", always at hand above the bottom inset, with the reader's own face. */
 @Composable
@@ -101,6 +102,7 @@ internal fun BackToPost(listState: LazyListState, focusedIndex: Int, modifier: M
             }
         }
     }
+    val reduced = rememberReducedMotion()
     AnimatedVisibility(
         visible = direction != 0,
         modifier = modifier,
@@ -108,7 +110,11 @@ internal fun BackToPost(listState: LazyListState, focusedIndex: Int, modifier: M
         exit = fadeOut(motion(tween())),
     ) {
         AssistChip(
-            onClick = { scope.launch { listState.animateScrollToItem(focusedIndex) } },
+            onClick = {
+                scope.launch {
+                    if (reduced) listState.scrollToItem(focusedIndex) else listState.animateScrollToItem(focusedIndex)
+                }
+            },
             label = { Text(stringResource(R.string.thread_back_to_post)) },
             leadingIcon = {
                 Icon(

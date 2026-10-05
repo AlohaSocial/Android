@@ -59,7 +59,9 @@ public class ReplyNudges @Inject constructor(
     /** [nudge] was shown about [authorId]: a stranger is not nudged about again on this account. */
     public suspend fun shown(reader: SignedInAccount, nudge: ReplyNudge, authorId: String) {
         if (nudge != ReplyNudge.Stranger) return
-        settings.update(reader.id) { it.copy(nudgedAuthors = it.nudgedAuthors + authorId) }
+        settings.update(reader.id) {
+            it.copy(nudgedAuthors = (it.nudgedAuthors - authorId + authorId).toList().takeLast(NUDGED_KEPT).toSet())
+        }
     }
 
     /** [nudge] is not shown again: on [reader]'s account, or on every account [everywhere]. */
@@ -77,5 +79,8 @@ public class ReplyNudges @Inject constructor(
 
     public companion object {
         public val OLD: Duration = Duration.ofDays(90)
+
+        /** How many authors are remembered as nudged about, the newest kept. */
+        private const val NUDGED_KEPT = 500
     }
 }
