@@ -288,6 +288,15 @@ class TimelineRepositoryTest {
     }
 
     @Test
+    fun `bookmarks go further down only by the server's cursor, never by a post's id`() = runBlocking {
+        val server = numbered { newest = 30 }
+        val account = signedInAt(server.url("/"))
+        val bookmarks = TimelineKey.home(TimelineSource.Bookmarks)
+        assertEquals(PageOutcome.Busy, timelines.older(account, bookmarks, cursor = null, oldestId = "11"))
+        assertEquals(0, server.requestCount)
+    }
+
+    @Test
     fun `a server that narrows to video still leaves the device to pick out the shorts`() = runBlocking {
         val server = numbered {
             newest = 40

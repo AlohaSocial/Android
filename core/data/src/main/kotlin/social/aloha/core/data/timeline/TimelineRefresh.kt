@@ -23,9 +23,11 @@ public data class RefreshPlan(val anchor: PageAnchor, val direction: TimelineMer
          * anchor, so after a busy hour a refresh showed the oldest of the new posts and a full page left
          * its hole above the page, where the merge puts no gap. With `since_id` the page is the head, and
          * a full one leaves the hole between it and the cache, which is where the gap goes.
+         *
+         * A [keptOrder] timeline's ids are not where its rows sit, so it always takes its head afresh.
          */
-        public fun of(hasFetchedBefore: Boolean, newestRowId: String?): RefreshPlan = when {
-            newestRowId == null -> RefreshPlan(PageAnchor.Cold, TimelineMerge.Direction.Cold)
+        public fun of(hasFetchedBefore: Boolean, newestRowId: String?, keptOrder: Boolean = false): RefreshPlan = when {
+            newestRowId == null || keptOrder -> RefreshPlan(PageAnchor.Cold, TimelineMerge.Direction.Cold)
             hasFetchedBefore -> RefreshPlan(PageAnchor.ImmediatelyAfter(newestRowId), TimelineMerge.Direction.Newer)
             else -> RefreshPlan(PageAnchor.Cold, TimelineMerge.Direction.Newer)
         }

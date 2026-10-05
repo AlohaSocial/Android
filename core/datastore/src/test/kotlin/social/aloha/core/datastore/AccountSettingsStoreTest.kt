@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
+import social.aloha.core.model.PinnedFeed
 import social.aloha.core.model.TimelineSource
 
 class AccountSettingsStoreTest {
@@ -53,6 +54,30 @@ class AccountSettingsStoreTest {
         val written = """{"a":{"showBoosts":false,"somethingNewer":42}}"""
         val read = AccountSettingsSerializer.readFrom(ByteArrayInputStream(written.encodeToByteArray()))
         assertEquals(AccountSettings(showBoosts = false), read.getValue("a"))
+    }
+
+    @Test
+    fun `pinned feeds read back as they were kept, and a kind from a newer build is skipped, not fatal`() = runTest {
+        val feeds = listOf(
+            PinnedFeed(PinnedFeed.Kind.Following),
+            PinnedFeed(PinnedFeed.Kind.List("7", "Friends"), name = "Close friends", icon = "group"),
+            PinnedFeed(
+                PinnedFeed.Kind.Hashtag(TimelineSource.Hashtag("surf", any = listOf("waves"), localOnly = true)),
+            ),
+        )
+        val settings = mapOf("a" to AccountSettings(pinnedFeeds = feeds.map { it.toRecord() }))
+        val bytes = ByteArrayOutputStream().also { AccountSettingsSerializer.writeTo(settings, it) }.toByteArray()
+        val read = AccountSettingsSerializer.readFrom(ByteArrayInputStream(bytes))
+        assertEquals(feeds, read.getValue("a").pinnedFeeds?.mapNotNull { it.toFeed() })
+
+        val newer = """{"a":{"pinnedFeeds":[{"type":"following"},{"type":"somethingNewer","id":"x"}]}}"""
+        val kept = AccountSettingsSerializer.readFrom(ByteArrayInputStream(newer.encodeToByteArray()))
+        assertEquals(
+            listOf(PinnedFeed(PinnedFeed.Kind.Following)),
+            kept.getValue("a").pinnedFeeds?.mapNotNull {
+                it.toFeed()
+            },
+        )
     }
 
     @Test

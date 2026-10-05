@@ -54,6 +54,8 @@ public data class AccountSettings(
     val nudgedAuthors: Set<String> = emptySet(),
     /** This account's own accent, where Appearance gives each account one, as `0xAARRGGBB`. */
     val accent: Int? = null,
+    /** The feeds this account keeps on Home, in order; null until the reader changes the defaults. */
+    val pinnedFeeds: List<PinnedFeedRecord>? = null,
 )
 
 /**

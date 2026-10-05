@@ -24,6 +24,7 @@ import social.aloha.core.model.SignedInAccount
 import social.aloha.core.model.Status
 import social.aloha.core.model.TimelineFilters
 import social.aloha.core.model.TimelineKey
+import social.aloha.core.model.TimelineSource
 import social.aloha.core.network.ApiClient
 import social.aloha.core.network.ApiError
 import social.aloha.core.network.ApiRequest
@@ -107,14 +108,20 @@ public class TimelineRepository @Inject constructor(
     public suspend fun refresh(account: SignedInAccount, key: TimelineKey, plan: RefreshPlan): PageOutcome =
         fetchAndMerge(Fetch(account, key, plan.anchor, cursor = null, plan.direction))
 
-    /** Further down: the server's `next` cursor where it gave one, else older than [oldestId]. */
+    /**
+     * Further down: the server's `next` cursor where it gave one, else older than [oldestId]; a
+     * [TimelineSource.keptOrder] timeline goes down only by its cursor, which its next refresh brings.
+     */
     public suspend fun older(
         account: SignedInAccount,
         key: TimelineKey,
         cursor: HttpUrl?,
         oldestId: String,
-    ): PageOutcome =
+    ): PageOutcome = if (cursor == null && key.source.keptOrder) {
+        PageOutcome.Busy
+    } else {
         fetchAndMerge(Fetch(account, key, PageAnchor.OlderThan(oldestId), cursor, TimelineMerge.Direction.Older))
+    }
 
     /**
      * Fills [gapId] from just below [aboveId], the post over it, or, given [belowId], from just above the

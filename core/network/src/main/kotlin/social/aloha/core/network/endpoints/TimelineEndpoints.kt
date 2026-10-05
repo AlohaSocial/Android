@@ -16,11 +16,13 @@ import social.aloha.core.network.HttpMethod
 import social.aloha.core.network.QueryItem
 import social.aloha.core.network.dto.AccountDto
 import social.aloha.core.network.dto.ConversationDto
+import social.aloha.core.network.dto.NotificationDto
 import social.aloha.core.network.dto.StatusDto
 import social.aloha.core.network.dto.UnreadCountDto
 import social.aloha.core.network.dto.toDomain
 import social.aloha.core.network.flagQuery
 import social.aloha.core.network.listRequest
+import social.aloha.core.network.repeatedQuery
 import social.aloha.core.network.request
 import social.aloha.core.network.unitRequest
 
@@ -36,13 +38,27 @@ public object TimelineEndpoints {
         anchor: PageAnchor = PageAnchor.Cold,
     ): ApiRequest<List<Status>> {
         val page = Paging.pageItems(limit, anchor)
-        val items = if (source is TimelineSource.Account) {
-            page + flagQuery("exclude_replies", !source.includeReplies) + flagQuery("only_media", source.onlyMedia)
-        } else {
-            page + flagQuery("local", source == TimelineSource.Local) + filterItems(filters)
+        if (source == TimelineSource.Notified) return notified(page)
+        val items = when (source) {
+            is TimelineSource.Account ->
+                page + flagQuery("exclude_replies", !source.includeReplies) + flagQuery("only_media", source.onlyMedia)
+
+            is TimelineSource.Hashtag -> page + tagItems(source) + filterItems(filters)
+
+            else -> page + flagQuery("local", source == TimelineSource.Local) + filterItems(filters)
         }
         return listRequest(Endpoint(path(source), query = items), StatusDto.serializer()) { it.toDomain() }
     }
+
+    /** The posts that notified the reader because they asked to hear of their author's every post. */
+    private fun notified(page: List<QueryItem>): ApiRequest<List<Status>> = listRequest(
+        Endpoint("api/v1/notifications", query = page + repeatedQuery("types", listOf("status"))),
+        NotificationDto.serializer(),
+    ) { it.status?.toDomain() }
+
+    private fun tagItems(source: TimelineSource.Hashtag): List<QueryItem> =
+        repeatedQuery("any", source.any) + repeatedQuery("all", source.all) + repeatedQuery("none", source.none) +
+            flagQuery("local", source.localOnly)
 
     /** Sources with a route of their own rather than a `{timeline}` segment. */
     private val ownRoutes: Map<TimelineSource, String> = mapOf(

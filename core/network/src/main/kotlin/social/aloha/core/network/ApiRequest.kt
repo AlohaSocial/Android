@@ -50,16 +50,19 @@ internal fun <D, T> request(endpoint: Endpoint, serializer: KSerializer<D>, map:
 /**
  * A top-level array, decoded lossily: an element that fails is dropped and recorded, and
  * [Decoded.rawCount] still counts it, so "a page shorter than the limit is the last one" reflects
- * what the server sent.
+ * what the server sent. A member [map] answers null for is left out too.
  */
-internal fun <D, T> listRequest(endpoint: Endpoint, serializer: KSerializer<D>, map: (D) -> T): ApiRequest<List<T>> =
-    ApiRequest(endpoint) { json, body ->
-        val array = json.parseToJsonElement(body) as? JsonArray ?: JsonArray(emptyList())
-        val (value, failures) = DecodingFailures.collect {
-            array.mapIndexedNotNull { index, element -> json.decodeOrRecord(serializer, element, index)?.let(map) }
-        }
-        Decoded(value, rawCount = array.size, failures = failures)
+internal fun <D, T : Any> listRequest(
+    endpoint: Endpoint,
+    serializer: KSerializer<D>,
+    map: (D) -> T?,
+): ApiRequest<List<T>> = ApiRequest(endpoint) { json, body ->
+    val array = json.parseToJsonElement(body) as? JsonArray ?: JsonArray(emptyList())
+    val (value, failures) = DecodingFailures.collect {
+        array.mapIndexedNotNull { index, element -> json.decodeOrRecord(serializer, element, index)?.let(map) }
     }
+    Decoded(value, rawCount = array.size, failures = failures)
+}
 
 /**
  * An object whose page is one of its array members, e.g. grouped notifications, where
