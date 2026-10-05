@@ -137,6 +137,22 @@ about finding the app on a crowded Home Screen rather than about the server.
 
 The most-used screen. It must be fast and it must never lie about ordering.
 
+### Home's feeds
+
+Home is the reader's pinned feeds, a page each, swiped between. The bar's title
+names the feed shown and lists the others, a dot on those with news; Edit feeds
+reorders them by a handle (or a screen reader's Move up and Move down), renames
+them with an icon of their own, removes them with a swipe, and adds a list, a
+hashtag query (any, all or none of several tags, local only), the posts that
+notified the reader, or another server's own public posts, read from it
+directly. Before anything is pinned, Home holds what the server serves.
+
+From Home's menu, and from the caught-up line on its own feed, the **catch-up
+page** shows what arrived since the reader last read, here or on another
+device, on one page: sorted by time, replies or boosts, narrowed to one person
+or to posts, boosts, replies or media; "Caught up" at the end moves the read
+marker to the newest.
+
 ### The row
 
 ```
@@ -280,7 +296,11 @@ exist undocumented.
 One screen, segmented.
 
 - **Search** — `/api/v2/search` with `type` narrowing, `resolve=true` when the
-  query looks like a URL or a handle. Results in three sections: Accounts,
+  query looks like a URL or a handle. While a query is typed, rows above the
+  results say what it could be: an address to open (in the browser when it
+  names neither a post nor a person), a person to go to (looked up directly,
+  fetched from their server only when that fails), a hashtag's posts, or the
+  posts or accounts matching it. Results in three sections: Accounts,
   Hashtags, Posts. Recent searches stored locally and clearable.
   `/api/v1/accounts/search` is used for the composer's `@` autocomplete, since
   no other route substitutes for it.
@@ -289,9 +309,11 @@ One screen, segmented.
   (`/trends/statuses`), trending links (`/trends/links`), suggested accounts
   (`/api/v2/suggestions`, dismissible via `DELETE /suggestions/{id}`), and the
   directory (`/api/v1/directory`).
-  Note Nextcloud Social's `Tag.history` carries a single bucket and
-  `accounts` is always `0` — the UI must not draw a sparkline from one point or
-  claim a participant count. Show uses only.
+  Each trending hashtag with more than a day of history draws it as a
+  sparkline. Nextcloud Social's `Tag.history` carries a single bucket and
+  `accounts` is always `0` — the UI draws no sparkline from one point and
+  claims no participant count. Show uses only. Reading's Trends switch, and
+  focus mode, leave Explore its people and directory alone.
 - **Other servers' directories** (`/api/v1/directories`, `/directories/search`)
   appear as an extra section where the capability is present.
 - **The directory** — this instance's own, the accounts here that opted in,
@@ -344,6 +366,10 @@ than what it does.
 ## 9. Settings
 
 Grouped, searchable (on platforms with settings search).
+
+**Focus mode**, in the account sheet and as a Quick Settings tile, turns the
+calm set on together: the numbers off, boosts folded, trends hidden and
+notifications held for the digest. Off, each goes back to what it was before, unless the reader changed it while focus was on.
 
 - **Accounts** — list, add, reorder, sign out, per-account settings.
 - **Appearance** — theme, accent, text size offset, line spacing, serif body,
