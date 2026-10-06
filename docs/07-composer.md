@@ -8,7 +8,7 @@ This is the Apple app's specification, carried over as the product contract for 
 |---|---|
 | Pickers | Photo Picker (`PickVisualMedia`) and the Storage Access Framework; no storage permission. |
 | Processing | Media3 `Transformer` for HEIC/MOV conversion and trim; filters are `ColorMatrix` values. |
-| Uploads | A WorkManager worker in the foreground with an ongoing `NotificationCompat` progress notification (`setProgress`), on every Android version. |
+| Uploads | A WorkManager worker in the foreground with an ongoing progress notification (`ProgressStyle`, with `setProgress` beneath it), updated at most twice a second, with a Cancel action. Each file of each account is one unique upload: a draft reopened while its file is still going out joins that upload, one that finished or was cancelled meanwhile is taken as it is, and one that failed is tried again; otherwise only "Upload again" starts over. A kept draft's uploads go on after the composer closes and stop when the draft is deleted; a post handed to the outbox leaves them to the outbox. A new author uploads the files again, as a media id belongs to the account that uploaded it. Mastodon has no idempotency key and no resumable upload for media, so an upload cut off half way starts over; multipart requests have no call timeout, only the connect and read timeouts. |
 | Nextcloud files (§6) | No WebDAV browser: the picker is a path field with the recent paths, sent to `POST /api/v1/media/from-file` with the account's token. |
 | AI alt text (§5) | Not built; see [10-intelligence.md](10-intelligence.md). |
 | Server facts | `Idempotency-Key` is honoured for an hour; `scheduled_at` needs five minutes' lead; the place picker stays hidden until the server stores places. |

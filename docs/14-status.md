@@ -22,12 +22,13 @@ Each phase was one pull request into `main`.
 | 12 | [#27](https://github.com/AlohaSocial/Android/pull/27) | 2026-10-04 | Logging with area tags, a redacted in-memory log in release builds, Share diagnostics, the R8 mappings on each release |
 | 13 | [#28](https://github.com/AlohaSocial/Android/pull/28) | 2026-10-05 | A post card with a two-line header, hidden content that says what it hides, motion that Reduce motion stills, a thread with connectors and a reply bar, the profile header and tabs, notification cards, Black without tints and a colour per account, a viewer tinted by its picture, text size, times instead of ages, folded boosts, screens that slide, one skeleton and one empty state |
 | 14 | [#30](https://github.com/AlohaSocial/Android/pull/30) | 2026-10-05 | Home as the reader's pinned feeds with a switcher and Edit feeds, another server's own posts as a feed, quoting, boosting for a chosen audience and acting as another account, pausing notifications and choosing whose arrive, a richer composer (completion strip, detected language, attachment cards, alt-text page, draft resume and preview), search intents, hashtag curves, a profile's QR code and post search, the sign-in server preview, the catch-up page, focus mode, the picture-in-picture window's buttons |
+| 17 | [#32](https://github.com/AlohaSocial/Android/pull/32) | 2026-10-06 | Alt text drafted on the device, marked as AI generated until edited and checked before posting; a draft rewritten on the device with its mentions, hashtags and links kept; a thread summarised in a sheet and translated on one tap; an Intelligence section in Settings with each feature off until turned on and a privacy note per build. Alt-text drafts come in both builds, by open software; rewriting and summaries need Gemini Nano and are in the Play build only |
 
 Between the phases: CI artifact retention ([#3](https://github.com/AlohaSocial/Android/pull/3)), the device benchmark and baseline profiles ([#4](https://github.com/AlohaSocial/Android/pull/4)), looking an account up by its id ([#10](https://github.com/AlohaSocial/Android/pull/10)) and who favourited and boosted a post ([#13](https://github.com/AlohaSocial/Android/pull/13)).
 
 ## In progress
 
-Phase 17, intelligence: alt text drafted on the device, marked as AI generated and checked before posting; a draft rewritten on the device with its mentions, hashtags and links kept; a thread summarised in a sheet; and a whole thread translated on one tap. Alt-text drafts come in both builds, by open software; rewriting and summaries need Gemini Nano and are in the Play build only. Each is off until turned on. Not merged yet.
+Phase 18, sync: the active account's stream where its server has one, and uploads that are sent once per file, can be cancelled from their notification and are not cut off by a call timeout. Not merged yet.
 
 ## Not built
 
@@ -38,7 +39,6 @@ Phase 17, intelligence: alt text drafted on the device, marked as AI generated a
 | The story player from a profile | [06-media-modes.md](06-media-modes.md) | A profile's Stories tab lists the stories and opens each on the web; the player is reachable from Photos only |
 | Push through the Nextcloud push proxy (FCM) | [08-notifications-sync.md](08-notifications-sync.md) §2 | Push is UnifiedPush in both flavours. FCM would be `gplay` only and needs the push proxy to allow the app |
 | Encrypted direct messages bound to the app lock | [11-safety-privacy-appstore.md](11-safety-privacy-appstore.md) | The app lock guards the screen, not the data |
-| Streaming | [08-notifications-sync.md](08-notifications-sync.md) §6 | The streaming address is detected and unused; polling and push cover it |
 | Push from Nextcloud Social to Mastodon clients | [08-notifications-sync.md](08-notifications-sync.md) §2 | Social serves no Web Push API yet ([AlohaSocial/social#2479](https://github.com/AlohaSocial/social/issues/2479)); against it the app polls, and "Get notifications from" filters what polling finds |
 | Searching one profile's posts on Nextcloud Social | [05-core-ui.md](05-core-ui.md) §5 | Social ignores `account_id` in search ([AlohaSocial/social#2481](https://github.com/AlohaSocial/social/issues/2481)), so the field is left out there |
 | A cross-account merged timeline | [00-overview.md](00-overview.md) §6 | Deferred past 1.0 by the specification itself |
@@ -56,6 +56,6 @@ Phase 17, intelligence: alt text drafted on the device, marked as AI generated a
 | Startup budget | 400 ms to the first row on an iPhone 15 | 1.2 s to the first row, 800 ms to the first frame, on a Pixel 6a class phone ([12-conventions-quality.md](12-conventions-quality.md)) |
 | Runtime dependencies | None outside Apple's frameworks | Jetpack and a short list of libraries ([00-overview.md](00-overview.md)) |
 | Themes | Seven named themes and a custom accent | Light, dark or system, with contrast and a black option; the server's colour or dynamic colour ([05-core-ui.md](05-core-ui.md)) |
-| Settings, Intelligence and Your year | An Intelligence section; Your year under the account | No Intelligence section; Your year is a Settings section of its own |
+| Your year | Under the account | A Settings section of its own |
 | Post header | One line: name, handle with host where it differs, age | Two lines: name and marks, then age and the handle in full; open for review ([05-core-ui.md](05-core-ui.md)) |
 | Reduce motion | Slides and scales become cross-fades | Every animation jumps to its end, with Reduce motion in Reading or the system animation scale at 0 ([05-core-ui.md](05-core-ui.md)) |
