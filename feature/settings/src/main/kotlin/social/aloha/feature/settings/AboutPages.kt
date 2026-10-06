@@ -86,16 +86,17 @@ internal fun TextPage(title: String, onClose: () -> Unit, text: @Composable () -
     }
 }
 
-/** What the app does with what it learns about the reader, which is to keep it on the device. */
+/**
+ * What the app does with what it learns about the reader, which is to keep it on the device; with
+ * [intelligence], the build's own paragraph on its on-device features and who learns of them.
+ */
 @Composable
-internal fun PrivacyStatement() {
+internal fun PrivacyStatement(intelligence: String?) {
     Column(verticalArrangement = Arrangement.spacedBy(AlohaSpacing.l)) {
-        listOf(
-            R.string.privacy_nothing,
-            R.string.privacy_servers,
-            R.string.privacy_notifications,
-            R.string.privacy_posts,
-        ).forEach { Text(stringResource(it), style = MaterialTheme.typography.bodyLarge) }
+        listOf(R.string.privacy_nothing, R.string.privacy_servers, R.string.privacy_notifications)
+            .forEach { Text(stringResource(it), style = MaterialTheme.typography.bodyLarge) }
+        intelligence?.let { Text(it, style = MaterialTheme.typography.bodyLarge) }
+        Text(stringResource(R.string.privacy_posts), style = MaterialTheme.typography.bodyLarge)
     }
 }
 

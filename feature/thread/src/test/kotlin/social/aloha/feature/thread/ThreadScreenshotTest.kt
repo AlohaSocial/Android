@@ -166,6 +166,24 @@ class ThreadScreenshotTest {
         captureScreenRoboImage("src/test/screenshots/thread-history.png")
     }
 
+    @OptIn(ExperimentalRoborazziApi::class)
+    @Test
+    fun summary() {
+        val summary = Summary.Done(
+            "Alice shares a surf report from the north shore; replies ask about the tide.",
+            40,
+            52,
+        )
+        compose.setContent {
+            AlohaTheme(ThemeSettings(mode = ThemeMode.Light)) {
+                ThreadScreen(thread(), NoActions, NoActions) { ThreadMenu(listOf(R.string.thread_summarise to {})) }
+                SummarySheet(summary) {}
+            }
+        }
+        compose.waitForIdle()
+        captureScreenRoboImage("src/test/screenshots/thread-summary.png")
+    }
+
     @Test
     fun favouritedBy() = capture("thread-list-accounts") {
         val mapper = StatusRowMapper(cache, RichTextColors.fromTheme())

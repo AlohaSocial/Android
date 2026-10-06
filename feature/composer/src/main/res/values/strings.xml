@@ -517,4 +517,61 @@
     <string name="composer_quote_confirm">Quote</string>
     <!-- Answers no to the question above -->
     <string name="composer_quote_cancel">Cancel</string>
+    <!-- Media editor: drafts a description on the device from what it recognises in the picture -->
+    <string name="composer_alt_draft">Draft a description</string>
+    <!-- Attachment card: drafts a description on the device for the picture whose file name is %1$s -->
+    <string name="composer_alt_draft_for">Draft a description for %1$s</string>
+    <!-- Media editor: when the device could not draft a description for the picture -->
+    <string name="composer_alt_draft_failed">This device could not draft a description for this picture. Try again in a moment, or write one.</string>
+    <!-- Media editor: over a description drafted on the device, until the writer changes it -->
+    <string name="composer_alt_generated">Generated, please check</string>
+    <!-- Warning before posting media without descriptions: has the device draft them all -->
+    <string name="composer_alt_draft_all">Draft descriptions</string>
+    <!-- Media editor: what the draft button says to a screen reader while the device drafts the description -->
+    <string name="composer_alt_drafting_one">Drafting</string>
+    <!-- Dialog title while the device drafts descriptions for several pictures -->
+    <string name="composer_alt_drafting">Drafting descriptions</string>
+    <!-- Drafting descriptions: which picture (%1$d) of how many (%2$d) -->
+    <string name="composer_alt_drafting_count">Picture %1$d of %2$d</string>
+    <!-- Drafting descriptions: stops after the picture under way -->
+    <string name="composer_alt_drafting_stop">Stop</string>
+    <!-- Warning before posting descriptions drafted on the device that nobody looked at; %d is how many -->
+    <plurals name="composer_alt_unchecked_title">
+        <item quantity="one">%d drafted description is not checked</item>
+        <item quantity="other">%d drafted descriptions are not checked</item>
+    </plurals>
+    <!-- Warning before posting unchecked drafted descriptions: what posting now means -->
+    <string name="composer_alt_unchecked_body">They were drafted on this device and go out as they are, marked as AI generated, unless you look at them first.</string>
+    <!-- Warning before posting unchecked drafted descriptions: opens the first of them -->
+    <string name="composer_alt_check">Check them</string>
+    <!-- Composer toolbar: opens the ways to rewrite the draft on the device -->
+    <string name="composer_rewrite">Rewrite</string>
+    <!-- Rewrite sheet while the device rewrites the draft -->
+    <string name="composer_rewriting">Rewriting on this device…</string>
+    <!-- Rewrite sheet: the heading over the writer's own draft -->
+    <string name="composer_rewrite_yours">Your draft</string>
+    <!-- Rewrite sheet: the heading over the device's proposal -->
+    <string name="composer_rewrite_proposal">Rewritten</string>
+    <!-- Rewrite sheet: over the device’s proposal, which a model wrote -->
+    <string name="composer_rewrite_generated">Generated on this device, please check</string>
+    <!-- Rewrite sheet, read to a screen reader after the proposal: words of the draft (%1$s) that the proposal replaced with others (%2$s) -->
+    <string name="composer_rewrite_changed">Changed “%1$s” to “%2$s”.</string>
+    <!-- Rewrite sheet, read to a screen reader after the proposal: words of the draft (%1$s) the proposal leaves out -->
+    <string name="composer_rewrite_cut">Took out “%1$s”.</string>
+    <!-- Rewrite sheet, read to a screen reader after the proposal: words (%1$s) the proposal adds -->
+    <string name="composer_rewrite_added">Added “%1$s”.</string>
+    <!-- Rewrite sheet: puts the proposal in place of the draft -->
+    <string name="composer_rewrite_replace">Replace</string>
+    <!-- Rewrite sheet: copies the proposal, leaving the draft as it is -->
+    <string name="composer_rewrite_copy">Copy</string>
+    <!-- Rewrite sheet: leaves the draft as it is -->
+    <string name="composer_rewrite_cancel">Cancel</string>
+    <!-- Rewrite sheet: closes it after a rewrite came to nothing -->
+    <string name="composer_rewrite_close">Close</string>
+    <!-- Rewrite sheet: the device’s model declined to rewrite the draft -->
+    <string name="composer_rewrite_refused">The on-device model didn’t want to rewrite that.</string>
+    <!-- Rewrite sheet: the rewrite would not fit the characters the post has -->
+    <string name="composer_rewrite_too_long">That didn’t fit.</string>
+    <!-- Rewrite sheet: the rewrite failed, or lost a mention, hashtag or link and was turned down -->
+    <string name="composer_rewrite_failed">This device couldn’t rewrite that and keep every mention, hashtag and link.</string>
 </resources>

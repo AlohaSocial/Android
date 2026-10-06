@@ -28,3 +28,9 @@ path = [".idea/icon*.svg", ".idea/icon*.png", "app/src/test/screenshots/launcher
 precedence = "override"
 SPDX-FileCopyrightText = "2026 Aloha Social project"
 SPDX-License-Identifier = "LicenseRef-AlohaSocialTrademarks"
+
+[[annotations]]
+path = ["core/intelligence/src/main/assets/efficientnet_lite0.tflite", "core/intelligence/src/main/assets/efficientnet_lite0_labels.txt"]
+precedence = "override"
+SPDX-FileCopyrightText = "2020 The TensorFlow Authors"
+SPDX-License-Identifier = "Apache-2.0"

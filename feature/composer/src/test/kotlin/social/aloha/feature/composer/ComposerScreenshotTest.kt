@@ -278,7 +278,7 @@ class ComposerScreenshotTest {
             UploadState.Done("1", null),
             description = "Surfers at sunrise",
         )
-        MediaEditor(picture, video = null) { _, _, _ -> }
+        MediaEditor(picture, video = null, drafts = null) { _, _, _ -> }
     }
 
     @Test
@@ -348,7 +348,7 @@ class ComposerScreenshotTest {
                         tile("beach", UploadState.Done("1", null), "Surfers at sunrise on a wide beach"),
                         tile("board", UploadState.Done("2", null)),
                         tile("wave", UploadState.Sending(0.4f)),
-                        tile("sunset", UploadState.Failed),
+                        tile("sunset", UploadState.Refused("error during upload")),
                     ),
                 ),
                 mediaSensitive = true,
@@ -444,6 +444,14 @@ class ComposerScreenshotTest {
             ),
             OutboxEntry("5", "a", OutboxState.Paused, DraftPost(listOf(DraftSegment("Later"))), at, null),
         )
+    }
+
+    @Test
+    fun rewrite() = captureScreen("composer-rewrite") {
+        val draft = "See teh waves at Waimea, @bob"
+        val proposal = "Look at the waves at Waimea, @bob"
+        val proposed = Rewrite.Proposed(0, draft, proposal, wordDiff(draft, proposal))
+        RewriteSheet(proposed, onReplace = {}, onDismiss = {})
     }
 
     // a sheet is a window of its own, so the whole screen is captured

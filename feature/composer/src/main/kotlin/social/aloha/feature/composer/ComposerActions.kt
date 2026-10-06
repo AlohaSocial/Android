@@ -11,6 +11,7 @@ import social.aloha.core.model.Visibility
 /** What the composer's controls do; the screen itself decides nothing. */
 internal interface ComposerActions :
     MediaActions,
+    AssistActions,
     LaterActions,
     QuoteActions,
     TypingActions {
@@ -45,6 +46,12 @@ internal interface ComposerActions :
 
     /** How long the story's picture or card shows for. */
     fun onStorySeconds(seconds: Int)
+}
+
+/** What the composer asks of the on-device features. */
+internal interface AssistActions {
+    /** Drafts a description for picture [id] on the device, where alt-text drafts are on. */
+    fun onDraftAlt(id: String) = Unit
 }
 
 /** What helps with the words: completing the one at the cursor, and putting in emoji. */

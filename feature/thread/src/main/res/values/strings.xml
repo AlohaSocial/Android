@@ -98,4 +98,31 @@
     </plurals>
     <!-- Confirms the reader's own post was archived -->
     <string name="thread_archived">Archived. It’s off your profile, not deleted, and can be put back from Archived posts.</string>
+    <!-- Thread: the top bar's menu of what can be done with the whole thread -->
+    <string name="thread_menu">More for this thread</string>
+    <!-- Thread menu: summarises the thread on the device -->
+    <string name="thread_summarise">Summarise this thread</string>
+    <!-- Summary sheet: its heading -->
+    <string name="thread_summary_title">Summary of this thread</string>
+    <!-- Summary sheet while the device summarises the thread -->
+    <string name="thread_summarising">Summarising on this device…</string>
+    <!-- Summary sheet: over a summary of a long thread that read only its first posts: the first %1$d of all %2$d -->
+    <plurals name="thread_summary_part">
+        <item quantity="one">Covers the first %1$d of %2$d post</item>
+        <item quantity="other">Covers the first %1$d of %2$d posts</item>
+    </plurals>
+    <!-- Summary sheet: over a summary made on the device -->
+    <string name="thread_summary_generated">Generated on this device. It can miss or get things wrong.</string>
+    <!-- Summary sheet: the device’s model declined to summarise the thread -->
+    <string name="thread_summary_refused">The on-device model didn’t want to summarise this thread.</string>
+    <!-- Summary sheet: the summary could not be made -->
+    <string name="thread_summary_failed">This device couldn’t summarise this thread.</string>
+    <!-- Summary sheet: closes it, back to the thread -->
+    <string name="thread_summary_read">Read the full thread</string>
+    <!-- Summary sheet: stops the summary under way -->
+    <string name="thread_summary_cancel">Cancel</string>
+    <!-- Thread menu: translates every post in the thread in a language the reader does not read -->
+    <string name="thread_translate">Translate thread</string>
+    <!-- Thread menu: shows every post translated by Translate thread in its own language again -->
+    <string name="thread_show_originals">Show originals</string>
 </resources>

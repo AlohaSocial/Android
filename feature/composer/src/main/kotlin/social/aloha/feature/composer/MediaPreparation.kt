@@ -20,6 +20,7 @@ import java.io.File
 import java.util.UUID
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import social.aloha.core.media.decodeScaled
 import social.aloha.core.model.LogArea
 import social.aloha.core.model.ServerLimits
 import social.aloha.core.ui.copyTo
@@ -206,24 +207,8 @@ internal class MediaPreparation(
         bitmap.compress(if (png) Bitmap.CompressFormat.PNG else Bitmap.CompressFormat.JPEG, QUALITY, out)
     }
 
-    /** [file] decoded in ordinary memory (a hardware bitmap cannot be scaled), at most [MAX_EDGE] across. */
-    private fun decode(file: File): Bitmap? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-        runCatching {
-            ImageDecoder.decodeBitmap(ImageDecoder.createSource(file)) { decoder, info, _ ->
-                decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
-                val edge = maxOf(info.size.width, info.size.height)
-                if (edge > MAX_EDGE) {
-                    decoder.setTargetSize(info.size.width * MAX_EDGE / edge, info.size.height * MAX_EDGE / edge)
-                }
-            }
-        }.onFailure { Timber.tag(LogArea.Media.name).w("Photo not decoded: %s", it.javaClass.simpleName) }.getOrNull()
-    } else {
-        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-        BitmapFactory.decodeFile(file.absolutePath, bounds)
-        var sample = 1
-        while (maxOf(bounds.outWidth, bounds.outHeight) / (sample * 2) >= MAX_EDGE) sample *= 2
-        BitmapFactory.decodeFile(file.absolutePath, BitmapFactory.Options().apply { inSampleSize = sample })
-    }
+    private fun decode(file: File): Bitmap? =
+        decodeScaled(file, MAX_EDGE) ?: null.also { Timber.tag(LogArea.Media.name).w("Photo not decoded") }
 
     private fun displayName(uri: Uri): String? =
         resolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { cursor ->

@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -83,6 +84,7 @@ internal fun ThreadScreen(
     snackbars: SnackbarHostState = remember { SnackbarHostState() },
     listState: LazyListState = rememberLazyListState(),
     shake: Int = 0,
+    menu: @Composable RowScope.() -> Unit = {},
 ) {
     val title = stringResource(R.string.thread_title)
     val bar = TopAppBarDefaults.pinnedScrollBehavior()
@@ -97,6 +99,7 @@ internal fun ThreadScreen(
                         Icon(AlohaIcons.Back, stringResource(R.string.thread_back))
                     }
                 },
+                actions = menu,
             )
         },
         snackbarHost = { SnackbarHost(snackbars) },

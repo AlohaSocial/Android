@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ SPDX-FileCopyrightText: 2026 Aloha Social contributors
+  ~ SPDX-License-Identifier: MIT
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <application>
+        <!-- ML Kit starts when a feature first uses it (MlKitStart), not with every launch -->
+        <provider
+            android:name="com.google.mlkit.common.internal.MlKitInitProvider"
+            android:authorities="${applicationId}.mlkitinitprovider"
+            tools:node="remove" />
+
+        <!--
+          ML Kit, which Gemini Nano is reached through, reports its own use through Google's data transport, and this is where the transport
+          learns where to send it. Without it the uploader knows no destination and deletes what was
+          queued ("Unknown backend ... deleting event batch"), so nothing leaves the device.
+        -->
+        <service
+            android:name="com.google.android.datatransport.runtime.backends.TransportBackendDiscovery"
+            tools:node="merge">
+            <meta-data
+                android:name="backend:com.google.android.datatransport.cct.CctBackendFactory"
+                tools:node="remove" />
+        </service>
+    </application>
+</manifest>

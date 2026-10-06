@@ -9,6 +9,8 @@ plugins {
 dependencies {
     implementation(project(":core:data"))
     implementation(project(":core:datastore"))
+    implementation(project(":core:intelligence"))
+    implementation(project(":core:media"))
     implementation(project(":core:sync"))
     // trimming, shrinking and converting a video before it is uploaded
     implementation(libs.androidx.media3.transformer)

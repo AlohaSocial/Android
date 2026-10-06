@@ -25,6 +25,7 @@ object ModuleRules {
         ":core:navigation" to setOf(MODEL),
         ":core:nextcloud" to setOf(":core:network", ":core:datastore", MODEL),
         ":core:platform" to setOf(MODEL),
+        ":core:intelligence" to setOf(":core:media"),
     )
 
     private val widget = setOf(":core:data", ":core:navigation", ":core:designsystem", MODEL)

@@ -164,6 +164,8 @@ internal data class ComposerUiState(
     val storySeconds: Int = 5,
     /** Whether to warn before posting pictures without a description. */
     val warnMissingDescription: Boolean = true,
+    /** Whether a picture's description can be drafted on the device: Draft alt text is on. */
+    val draftsAltText: Boolean = false,
     /** Posting asks first, where the writer chose so. */
     val confirmBeforePosting: Boolean = false,
     /** Each part of a thread ends in its number, counted in its length. */

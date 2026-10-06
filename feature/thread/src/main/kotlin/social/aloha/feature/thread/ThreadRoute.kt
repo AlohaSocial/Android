@@ -132,7 +132,19 @@ public fun ThreadRoute(key: ThreadKey, navigation: ThreadNavigation, modifier: M
         }
     }
 
-    ThreadScreen(state, screenActions, rowActions, modifier, snackbars, shake = shakes)
+    val summaries = hiltViewModel<SummaryViewModel>(key = "summary-$key")
+    val summarising by summaries.offered.collectAsStateWithLifecycle()
+    val summary by summaries.summary.collectAsStateWithLifecycle()
+    val translating = rememberThreadTranslation(state.items)
+    ThreadScreen(state, screenActions, rowActions, modifier, snackbars, shake = shakes) {
+        ThreadMenu(
+            listOfNotNull(
+                translating,
+                (R.string.thread_summarise to { summaries.summarise(state.items) }).takeIf { summarising },
+            ),
+        )
+    }
+    summary?.let { SummarySheet(it, summaries::dismiss) }
     state.nudge?.let { NudgeSheet(it, viewModel.replies::onNudged) }
 
     deleting?.let { request ->

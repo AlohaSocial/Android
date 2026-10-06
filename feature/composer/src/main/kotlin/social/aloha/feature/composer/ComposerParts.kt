@@ -135,7 +135,9 @@ internal fun SegmentField(
             readOnly = posted || state.posting,
         ) { actions.onText(index, it) }
         if (index == 0) QuoteParts(state, actions)
-        state.attachments.getOrNull(index)?.takeIf { it.isNotEmpty() }?.let { MediaStrip(it, actions) }
+        state.attachments.getOrNull(index)?.takeIf {
+            it.isNotEmpty()
+        }?.let { MediaStrip(it, actions, drafts = state.draftsAltText) }
         if (index == 0) OpeningExtras(state, actions)
         if (count > 1) SegmentFooter(index, posted, state, actions)
     }

@@ -39,7 +39,7 @@ include(":benchmark")
 include(":widget")
 listOf(
     "model", "html", "network", "database", "datastore", "data", "sync", "media",
-    "designsystem", "ui", "navigation", "nextcloud", "platform", "testing",
+    "designsystem", "ui", "navigation", "nextcloud", "platform", "intelligence", "testing",
 ).forEach { include(":core:$it") }
 listOf(
     "signin", "timeline", "thread", "profile", "notifications", "composer", "search", "explore",

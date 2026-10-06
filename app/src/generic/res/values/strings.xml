@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ SPDX-FileCopyrightText: 2026 Aloha Social contributors
+  ~ SPDX-License-Identifier: MIT
+-->
+<resources>
+    <!-- Privacy statement in the F-Droid build: what drafting alt text on the device does with pictures, and that this build holds no Google software -->
+    <string name="intelligence_privacy">Drafting alt text runs on this device with open software, only once you turn it on and tap it: your pictures are not sent anywhere, and the software reports to no one. This build holds no Google software, and so no rewriting or summaries, which would need it.</string>
+</resources>

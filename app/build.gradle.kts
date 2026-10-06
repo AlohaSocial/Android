@@ -90,6 +90,9 @@ dependencies {
     implementation(libs.compose.material3.adaptive.navigation3)
     implementation(libs.androidx.profileinstaller)
     implementation(libs.kotlinx.serialization.json)
+    implementation(project(":core:intelligence"))
+    // Gemini Nano, Google's part of the on-device features, in the Play build alone
+    "gplayImplementation"(libs.mlkit.genai.prompt)
     testImplementation(project(":core:testing"))
     testImplementation(libs.aboutlibraries.core)
     testImplementation(project(":core:database"))

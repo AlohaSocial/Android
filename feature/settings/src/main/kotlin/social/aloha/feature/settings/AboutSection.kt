@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.ui.AppTerms
 import social.aloha.core.ui.SettingsSection
@@ -55,9 +56,16 @@ internal object AboutSection : SettingsSection {
         val close = { page = null }
         when (page) {
             Page.Terms -> TextPage(stringResource(R.string.settings_terms), close) { AppTerms() }
-            Page.Privacy -> TextPage(stringResource(R.string.settings_privacy), close) { PrivacyStatement() }
+
+            Page.Privacy -> {
+                val notice = hiltViewModel<IntelligenceViewModel>().privacy?.let { stringResource(it) }
+                TextPage(stringResource(R.string.settings_privacy), close) { PrivacyStatement(notice) }
+            }
+
             Page.Licences -> LicencesPage(close)
+
             Page.Diagnostics -> DiagnosticsPage(close)
+
             null -> Unit
         }
     }

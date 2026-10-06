@@ -50,7 +50,7 @@ internal class MediaUploadWorker @AssistedInject constructor(
             onProcessing = { setProgress(workDataOf(PROCESSING to true)) },
         )
         return when {
-            result is Answer.Missed -> failure(result.error)
+            result is Answer.Missed -> failure(result.error, file.length(), mime)
 
             (result as Answer.Got).value.url == null -> failed(refused = false, message = null)
 
@@ -72,11 +72,17 @@ internal class MediaUploadWorker @AssistedInject constructor(
         setForegroundAsync(notifications.info(id, name(), percent))
     }
 
-    private fun failure(error: ApiError): Result {
+    private fun failure(error: ApiError, size: Long, mime: String): Result {
         Timber.tag(LogArea.Media.name).i("Upload attempt %d failed: %s", runAttemptCount, error.javaClass.simpleName)
         return when (error) {
-            is ApiError.Unprocessable -> failed(refused = true, message = error.message)
+            is ApiError.Unprocessable -> {
+                // the server's own reason, and what it was given: a refusal is otherwise invisible in the log
+                Timber.tag(LogArea.Media.name).w("Upload refused (%d bytes, %s): %s", size, mime, error.message)
+                failed(refused = true, message = error.message)
+            }
+
             is ApiError.Server, is ApiError.Transport, is ApiError.RateLimited -> retry()
+
             else -> failed(refused = true, message = null)
         }
     }

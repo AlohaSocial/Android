@@ -22,6 +22,7 @@ How the Android app is put together: its modules and the rules between them, the
 | `:core:designsystem` | Theme, colours, type, `@AlohaPreviews` |
 | `:core:ui` | Shared composables: the status card, `TroubleStrip`, settings sections |
 | `:core:navigation` | Navigation 3 keys (`TopLevelKeys.kt`, `DetailKeys.kt`), link routing, app intents |
+| `:core:intelligence` | The on-device features: availability, the open picture reader (LiteRT, Android's face detector), the model as an optional binding, `EntityShield`, alt-text assembly, prompts; see [10-intelligence.md](10-intelligence.md) |
 | `:core:testing` | `MockSocialServer` and the fixture corpus, for every module's tests; see [12-conventions-quality.md](12-conventions-quality.md) |
 | `:feature:*` | One screen family each: signin, timeline, thread, profile, notifications, composer, search, explore, lists, settings, photos, video, shorts, stories, mediaviewer, audio, safety, moderation, hashtags, saved, conversations |
 
@@ -42,7 +43,7 @@ Four modules hold nothing but a `build.gradle.kts`: `:core:nextcloud`, `:core:pl
 - The Nextcloud connection is in `:core:data` (`core/data/.../nextcloud/NextcloudConnection.kt`) and its routes in `:core:network` (`NextcloudEndpoints.kt`).
 - News is a mode of `:feature:timeline` (`FeedMode.News`, mapped in `AlohaApp.kt`), and Explore's News tab is in `:feature:explore`.
 - The share target, Direct Share and "Open in Aloha" are in `:app` (`SharedContent.kt`, `OutsideRequest.kt`, `AccountShortcuts.kt`).
-- `:core:platform` is the one library module with the product flavours applied, the place flavour-specific code would go; nothing is flavour-specific yet. `:app` depends on it.
+- `:core:platform` is the one library module with the product flavours applied. The first flavour-specific code went into `:app` instead (`app/src/gplay`), because a flavoured library cannot be used by the unflavoured feature modules without each of them choosing a flavour. `:app` depends on it.
 
 `ModuleRules.kt` keeps rows for `:core:nextcloud` and `:core:platform`. Removing the four is a build change of its own.
 
@@ -66,7 +67,7 @@ The convention plugins in `build-logic/convention` keep every module's build fil
 
 ## Flavours
 
-`Flavors.kt` defines one dimension, `distribution`, with `generic` (F-Droid, no Google library) and `gplay` (Google Play). The two are the same code today: no flavour source set, no flavour-only dependency, no check of the flavour at run time. Push is UnifiedPush and device translation uses the platform API in both. A Google-only feature, such as an FCM push distributor, would live in `gplay` alone, which would change its Data safety answers ([12-store.md](12-store.md)).
+`Flavors.kt` defines one dimension, `distribution`, with `generic` (F-Droid, no Google library) and `gplay` (Google Play). They differ in the on-device features: `app/src/gplay` binds Gemini Nano (`GeminiNano.kt`), only `gplay` depends on ML Kit (`gplayImplementation`), and its manifest removes ML Kit's start-up provider and the transport backend ML Kit reports through. `:core:intelligence` declares it as an optional binding, so `generic` binds none and drafts alt text with the open reader alone. Each build's `res/values/strings.xml` holds its own privacy paragraph on them. Nothing checks the flavour at run time. Push is UnifiedPush and device translation uses the platform API in both. The ML Kit libraries change the Play build's Data safety answers ([12-store.md](12-store.md)).
 
 ## Dependency injection
 
