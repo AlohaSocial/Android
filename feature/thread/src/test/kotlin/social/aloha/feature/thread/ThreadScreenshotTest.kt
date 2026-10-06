@@ -155,7 +155,12 @@ class ThreadScreenshotTest {
     fun history() {
         val versions = listOf(
             EditVersion(StatusSamples.NOW.minusSeconds(3600), null, AnnotatedString("Aloha from the beach")),
-            EditVersion(StatusSamples.NOW, "Sunburn", AnnotatedString("Aloha from the beach! Bring sunscreen.")),
+            EditVersion(
+                StatusSamples.NOW,
+                "Sunburn",
+                AnnotatedString("Aloha from the beach! Bring sunscreen."),
+                listOf("Waves breaking at sunset", null),
+            ),
         )
         compose.setContent {
             AlohaTheme(ThemeSettings(mode = ThemeMode.Light)) {
