@@ -28,6 +28,7 @@ import social.aloha.core.data.nextcloud.NextcloudConnection
 import social.aloha.core.data.notifications.NotificationsRepository
 import social.aloha.core.data.notifications.RaisedNotifications
 import social.aloha.core.data.photos.Albums
+import social.aloha.core.data.profile.OwnProfile
 import social.aloha.core.data.sync.UnreadCounts
 import social.aloha.core.data.sync.WidgetUpdates
 import social.aloha.core.data.timeline.CacheSweeper
@@ -127,6 +128,8 @@ public class SignedInFixture(private val context: Context) : Closeable {
 
     /** The reader's albums, their posts stored in [statuses]. */
     public val albums: Albums by lazy { Albums(clients, statuses) }
+
+    public val ownProfile: OwnProfile by lazy { OwnProfile(clients, database.accountDao()) }
 
     /** What sends posts, storing what the server made in an in-memory cache. */
     public val sender: PostSender by lazy {
