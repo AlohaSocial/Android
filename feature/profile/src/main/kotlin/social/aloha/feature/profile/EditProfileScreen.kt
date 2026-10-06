@@ -180,7 +180,7 @@ private fun Pictures(form: ProfileForm, onForm: (ProfileForm) -> Unit) {
     PictureButtons(
         R.string.profile_edit_header,
         R.string.profile_edit_remove_header,
-        form.header !is Picture.Kept || form.header.shown != null,
+        form.header !is Picture.Kept || form.header.chosen,
         { pickHeader.launch(image) },
     ) { onForm(form.copy(header = Picture.Removed)) }
     Row(horizontalArrangement = Arrangement.spacedBy(AlohaSpacing.m)) {
@@ -188,7 +188,7 @@ private fun Pictures(form: ProfileForm, onForm: (ProfileForm) -> Unit) {
         PictureButtons(
             R.string.profile_edit_avatar,
             R.string.profile_edit_remove_avatar,
-            form.avatar !is Picture.Kept || form.avatar.shown != null,
+            form.avatar !is Picture.Kept || form.avatar.chosen,
             { pickAvatar.launch(image) },
         ) { onForm(form.copy(avatar = Picture.Removed)) }
     }

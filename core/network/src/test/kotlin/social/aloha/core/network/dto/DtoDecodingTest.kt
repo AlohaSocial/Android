@@ -51,6 +51,30 @@ class DtoDecodingTest {
     }
 
     @Test
+    fun `a placeholder header is no header, a picture the account set is kept`() {
+        fun account(json: String) = decodeStatus("""{"id": "1", "account": {"id": "2", "username": "alice", $json}}""")
+            .account
+        val placeholder = "https://cloud.example/apps-extra/social/img/header-missing.png"
+        assertNull(account(""""header": "$placeholder", "header_default": true""").header)
+        val chosen = "https://cloud.example/index.php/apps/social/media/02aa6a9a.png"
+        assertEquals(chosen, account(""""header": "$chosen", "header_default": false""").header)
+        assertNull(account(""""header": "https://mastodon.example/headers/original/missing.png"""").header)
+        val uploadedAsMissing = "https://pleroma.example/media/5f1c/missing.png"
+        assertEquals(uploadedAsMissing, account(""""header": "$uploadedAsMissing"""").header)
+    }
+
+    @Test
+    fun `an avatar the server stands in with is marked, and one without the flag is the account's own`() {
+        fun account(json: String) = decodeStatus("""{"id": "1", "account": {"id": "2", "username": "alice", $json}}""")
+            .account
+        val route = "https://cloud.example/index.php/avatar/alice/128"
+        val generated = account(""""avatar": "$route", "avatar_default": true""")
+        assertEquals(route, generated.avatar)
+        assertTrue(generated.avatarDefault)
+        assertFalse(account(""""avatar": "https://mastodon.example/a.png"""").avatarDefault)
+    }
+
+    @Test
     fun `an account without acct falls back to its username`() {
         val s = decodeStatus("""{"id": "1", "account": {"id": "2", "username": "bob", "avatar": null}}""")
         assertEquals("bob", s.account.acct)
