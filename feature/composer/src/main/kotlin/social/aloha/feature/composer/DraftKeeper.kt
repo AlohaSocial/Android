@@ -37,8 +37,9 @@ internal class DraftKeeper(
     /** Whether the outbox holds the draft, so that forgetting it has something to delete. */
     private var saved = false
 
-    /** Queued, the post goes out later from its files, which stay for it. */
-    private var queued = false
+    /** Queued, the post goes out later from its files, which stay for it; the outbox uploads them. */
+    var queued = false
+        private set
 
     /**
      * Takes the draft back from the outbox for editing, as it was before, with why it was refused;

@@ -467,8 +467,9 @@ internal class ComposerViewModel @AssistedInject constructor(
     }
 
     override fun onCleared() {
-        // a post that went out needs its files no more, nor one given up; a draft keeps them
-        attachments.clear(keepFiles = drafts.leave(reader?.id, written))
+        // a post that went out needs its files no more, nor one given up; a draft keeps them, and its uploads
+        val kept = drafts.leave(reader?.id, written)
+        attachments.clear(keepFiles = kept, keepUploads = kept && !drafts.queued)
     }
 
     private suspend fun start() {

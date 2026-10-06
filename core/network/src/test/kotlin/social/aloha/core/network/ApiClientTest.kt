@@ -152,6 +152,28 @@ class ApiClientTest {
     }
 
     @Test
+    fun `an upload outlasts the call timeout that ends any other request`() = runTest {
+        val impatient = ApiClient(
+            base,
+            { Credentials("secret-token", "Basic YWxpY2U6cHc=") },
+            OkHttpClient.Builder().callTimeout(SHORT_MILLIS, TimeUnit.MILLISECONDS).build(),
+            rateLimiter,
+            Dispatchers.IO,
+        )
+        repeat(2) {
+            server.enqueue(MockResponse.Builder().body("{}").headersDelay(SLOW_MILLIS, TimeUnit.MILLISECONDS).build())
+        }
+        val upload = Endpoint(
+            "api/v2/media",
+            HttpMethod.POST,
+            body = Body.Multipart(listOf(Part.Field("description", "a cat"))),
+        )
+        val plain = impatient.execute(unitRequest(Endpoint("api/v1/x")))
+        assertInstanceOf(ApiError.Transport::class.java, plain.errorOrNull())
+        assertNull(impatient.execute(unitRequest(upload)).errorOrNull())
+    }
+
+    @Test
     fun `a 429 blocks the host for Retry-After`() = runTest {
         respond("", code = 429, headers = mapOf("Retry-After" to "30"))
         val result = client().execute(emojis())
@@ -173,5 +195,10 @@ class ApiClientTest {
             assertInstanceOf(ApiError.UnsafePath::class.java, client().execute(request).errorOrNull(), id)
         }
         assertEquals(0, server.requestCount)
+    }
+
+    private companion object {
+        const val SHORT_MILLIS = 300L
+        const val SLOW_MILLIS = 1000L
     }
 }

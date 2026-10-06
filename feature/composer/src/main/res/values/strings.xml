@@ -182,6 +182,8 @@
     <string name="composer_media_refused">Not accepted: %1$s</string>
     <!-- An attachment could not be uploaded -->
     <string name="composer_media_failed">Couldn\'t upload</string>
+    <!-- An attachment's upload was cancelled from its notification -->
+    <string name="composer_media_cancelled">Upload cancelled</string>
     <!-- Title of the full-screen page describing an attachment for people who cannot see it -->
     <string name="composer_media_editor_title">Alt text</string>
     <!-- Label of the description field of an attachment -->

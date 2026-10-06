@@ -4,6 +4,7 @@
 package social.aloha.core.sync
 
 import android.content.Context
+import android.os.SystemClock
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
@@ -34,6 +35,7 @@ internal class MediaUploadWorker @AssistedInject constructor(
 ) : CoroutineWorker(context, params) {
     private val notifications = UploadNotifications(context)
     private var shownPercent = -1
+    private var shownAt = 0L
 
     override suspend fun getForegroundInfo(): ForegroundInfo = notifications.info(id, name(), percent = null)
 
@@ -47,7 +49,10 @@ internal class MediaUploadWorker @AssistedInject constructor(
             account,
             UploadFile(file, name(), mime, inputData.getString(DESCRIPTION)),
             onSent = ::onSent,
-            onProcessing = { setProgress(workDataOf(PROCESSING to true)) },
+            onProcessing = {
+                setProgress(workDataOf(PROCESSING to true))
+                setForeground(notifications.info(id, name(), percent = null))
+            },
         )
         return when {
             result is Answer.Missed -> failure(result.error, file.length(), mime)
@@ -64,10 +69,13 @@ internal class MediaUploadWorker @AssistedInject constructor(
 
     private fun onSent(sent: Long, total: Long) {
         if (total <= 0) return
-        // every few percent: each step is a progress write, a notification and a redrawn composer
-        val percent = (sent * PERCENT / total).toInt() / STEP * STEP
-        if (percent == shownPercent) return
+        // twice a second at most, and the last: each step is a progress write, a notification and a
+        // redrawn composer, and Android drops the updates of an app that posts them faster
+        val percent = (sent * PERCENT / total).toInt()
+        val now = SystemClock.elapsedRealtime()
+        if (percent == shownPercent || (now - shownAt < INTERVAL_MILLIS && sent < total)) return
         shownPercent = percent
+        shownAt = now
         setProgressAsync(workDataOf(PROGRESS to sent.toFloat() / total))
         setForegroundAsync(notifications.info(id, name(), percent))
     }
@@ -106,7 +114,7 @@ internal class MediaUploadWorker @AssistedInject constructor(
         const val MESSAGE = "message"
 
         private const val PERCENT = 100
-        private const val STEP = 5
+        private const val INTERVAL_MILLIS = 500L
         private const val MAX_ATTEMPTS = 5
     }
 }

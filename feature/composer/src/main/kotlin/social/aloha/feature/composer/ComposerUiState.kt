@@ -214,7 +214,7 @@ internal data class ComposerUiState(
     val canWait: Boolean
         get() = attachments.flatten().all {
             it.mediaId != null ||
-                (it.file != null && (it.upload is UploadState.Queued || it.upload is UploadState.Failed))
+                (it.file != null && it.upload in setOf(UploadState.Queued, UploadState.Failed, UploadState.Cancelled))
         }
 
     /** Some attachment has no description, which a screen reader then cannot describe. */
