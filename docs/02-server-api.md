@@ -11,7 +11,7 @@ This is the Apple app's specification, carried over as the product contract for 
 | Boosts | `reblog` is always `null`; a boost is not visible as a boost. |
 | Media | `POST /api/v2/media` answers 200 synchronously; `focus` is stored; `hls_url` and video `meta` are empty without ffmpeg on the server. |
 | Pagination | `Link` headers point at the app path even through the root rules; `limit=0` answers 400. `min_id` answers with the posts immediately above the anchor and `since_id` with the newest above it, as on Mastodon, so a refresh asks with `since_id` and a full page leaves a gap between it and the cache. |
-| New accounts | `verify_credentials`, `accounts/lookup` and the first post answer 500 until the avatar cache job runs. |
+| New accounts | Before 0.26.104 (seen on 0.26.97), `verify_credentials`, `accounts/lookup` and the first post answered 500 until the avatar cache job ran. On 0.26.119 an account created moments before answers `verify_credentials` and its first post with 200 (`accounts/lookup` not checked again). Sign-in still falls back to `/oauth/userinfo` on a 5xx, for older servers. A Nextcloud user without a Social account cannot authorize an app at all: the authorize page needs the account to exist. |
 | Places and reactions | `place_*` is never stored; reactions come only from `/statuses/{id}/reactions`. |
 | Web-server rules | Show the server's own `contrib/webserver` files; the snippet described here is outdated. |
 | Client | Plain OkHttp with kotlinx.serialization, one `ApiClient` per account base. Decoding is lenient (ids, URLs, booleans and dates in any of the shapes servers send) and lossy (a malformed row in a list is dropped and recorded, the rest of the page stays). |
