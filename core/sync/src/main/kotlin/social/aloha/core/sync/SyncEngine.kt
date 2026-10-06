@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
@@ -37,6 +38,7 @@ import social.aloha.core.data.sync.PushSubscriptions
 import social.aloha.core.data.sync.SyncSettings
 import social.aloha.core.data.sync.TimelineSignals
 import social.aloha.core.data.sync.UnreadCounts
+import social.aloha.core.data.sync.UserStream
 import social.aloha.core.data.sync.WidgetUpdates
 import social.aloha.core.model.LogArea
 import social.aloha.core.model.PollFrequency
@@ -71,6 +73,7 @@ public class SyncEngine @Inject internal constructor(
     private val listeners: Set<@JvmSuppressWildcards PollListener>,
     private val background: BackgroundRefresh,
     private val digests: DigestScheduler,
+    private val stream: UserStream,
     @param:ApplicationScope private val scope: CoroutineScope,
     private val clock: Clock,
 ) {
@@ -103,6 +106,14 @@ public class SyncEngine @Inject internal constructor(
                 scope.launch { background.keepScheduled() }
                 scope.launch { digests.keepScheduled() }
                 scope.launch { keepRegistered() }
+                scope.launch { stream.keepOpen(foreground, device.online) }
+                // a notification on the stream is a count to fetch now rather than at the next poll; a burst
+                // of them is one fetch
+                scope.launch {
+                    stream.notifications.conflate().collect { id ->
+                        accounts.byId(id)?.let { poll(it, PollScope.NotificationsOnly) }
+                    }
+                }
             }
         }
     }
@@ -126,17 +137,12 @@ public class SyncEngine @Inject internal constructor(
                 }
             }
         }
-        combine(foreground, device.online, paced) { inFront, online, pace ->
-            if (inFront &&
-                online
-            ) {
-                pace
-            } else {
-                emptyMap()
-            }
+        // a stream opening or closing starts the loops again, so the pace follows it at once
+        combine(foreground, device.online, paced, stream.openFor) { inFront, online, pace, streamed ->
+            if (inFront && online) pace to streamed else emptyMap<String, PollFrequency>() to null
         }
             .distinctUntilChanged()
-            .collectLatest { pace -> coroutineScope { pace.keys.forEach { launch { tick(it) } } } }
+            .collectLatest { (pace, _) -> coroutineScope { pace.keys.forEach { launch { tick(it) } } } }
     }
 
     /** Registers again for push whenever what decides it changes: an account, its key, its Nextcloud. */
@@ -167,8 +173,13 @@ public class SyncEngine @Inject internal constructor(
     /** How long until [account] is asked again; null when it is asked only by hand. */
     internal suspend fun waitBeforeNext(account: SignedInAccount): Duration? {
         val scheduled = scheduler(account).interval ?: return null
-        // a pushed account is polled only as a safety net, since a push can be lost
-        val paced = if (push.isActive(account.id)) maxOf(scheduled, PUSHED_FLOOR) else scheduled
+        // a pushed or streamed account is polled only as a safety net, since a push or a frame can be lost
+        val floor = when {
+            push.isActive(account.id) -> PUSHED_FLOOR
+            stream.openFor.value == account.id -> STREAMED_FLOOR
+            else -> Duration.ZERO
+        }
+        val paced = maxOf(scheduled, floor)
         val now = clock.millis()
         val slowed = if ((slowUntil[account.id] ?: 0) > now) paced * 2 else paced
         val backedOff = failures[account.id]?.let { maxOf(slowed, Backoff.delay(it, base = paced)) } ?: slowed
@@ -249,5 +260,6 @@ public class SyncEngine @Inject internal constructor(
     private companion object {
         val SLOWED_FOR = 1.hours
         val PUSHED_FLOOR = 10.minutes
+        val STREAMED_FLOOR = 5.minutes
     }
 }

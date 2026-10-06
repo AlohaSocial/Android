@@ -6,6 +6,7 @@ package social.aloha.core.sync
 import android.content.Context
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.test.core.app.ApplicationProvider
+import java.io.Closeable
 import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
@@ -15,6 +16,7 @@ import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -35,11 +37,16 @@ import org.robolectric.RobolectricTestRunner
 import social.aloha.core.data.sync.PushSubscriptions
 import social.aloha.core.data.sync.SyncSettings
 import social.aloha.core.data.sync.TimelineSignals
+import social.aloha.core.data.sync.UserStream
 import social.aloha.core.datastore.AccountSettingsStore
 import social.aloha.core.datastore.AppPreferences
 import social.aloha.core.datastore.NotificationPreferences
 import social.aloha.core.model.PollFrequency
+import social.aloha.core.model.ServerCapabilities
 import social.aloha.core.network.ApiError
+import social.aloha.core.network.streaming.StreamEvent
+import social.aloha.core.network.streaming.StreamListener
+import social.aloha.core.network.streaming.UserSockets
 import social.aloha.core.testing.InMemoryDataStore
 import social.aloha.core.testing.SignedInFixture
 
@@ -90,8 +97,18 @@ class SyncEngineTest {
     private val push = PushSubscriptions(fixture.clients, preferences, accountSettings)
     private val heard = CopyOnWriteArrayList<Int>()
 
+    // a server's streaming socket, opened by hand: the test says when it opens
+    @Volatile
+    private var streamListener: StreamListener? = null
+
+    private val sockets = UserSockets { _, _, listener ->
+        streamListener = listener
+        Closeable { listener.onClosed(null) }
+    }
+
     // what the listener answers: false for one that could not finish
     @Volatile private var settles = true
+    private val stream = UserStream(fixture.accounts, sockets, fixture.statuses, fixture.filters, signals)
     private val engine = SyncEngine(
         fixture.accounts,
         fixture.clients,
@@ -114,6 +131,7 @@ class SyncEngineTest {
         ),
         BackgroundRefresh(context, fixture.accounts, settings, push),
         DigestScheduler(context, settings, fixture.clock),
+        stream,
         scope,
         fixture.clock,
     )
@@ -198,6 +216,38 @@ class SyncEngineTest {
         engine.poll(account, PollScope.Full)
         val wait = engine.waitBeforeNext(account)!!
         assertTrue("$wait", wait > 9.minutes && wait <= 10.minutes)
+    }
+
+    @Test
+    fun `an open stream slows its account to a five-minute safety net, and it closes in the background`() =
+        runBlocking {
+            val streamed = ServerCapabilities.minimal(
+                server.url("/").toString(),
+            ).copy(streamingUrl = "wss://stream.test")
+            val account = fixture.signIn(server.url("/"), streamed)
+            engine.setForeground(true)
+            withTimeout(5.seconds) { while (streamListener == null) yield() }
+            streamListener!!.onOpen()
+            withTimeout(5.seconds) { while (stream.openFor.value != account.id) yield() }
+            engine.poll(account, PollScope.Full)
+            val wait = engine.waitBeforeNext(account)!!
+            assertTrue("$wait", wait > 4.minutes && wait <= 5.minutes)
+            engine.setForeground(false)
+            withTimeout(5.seconds) { while (stream.openFor.value != null) yield() }
+        }
+
+    @Test
+    fun `a notification on the stream asks for the count at once`() = runBlocking {
+        val streamed = ServerCapabilities.minimal(server.url("/").toString()).copy(streamingUrl = "wss://stream.test")
+        fixture.signIn(server.url("/"), streamed)
+        engine.setForeground(true)
+        withTimeout(5.seconds) { while (streamListener == null || server.requestCount == 0) yield() }
+        streamListener!!.onOpen()
+        // the timed polls are minutes away now: a request is the stream's doing
+        delay(QUIET)
+        val before = server.requestCount
+        streamListener!!.onEvent(StreamEvent.Notified)
+        withTimeout(5.seconds) { while (server.requestCount == before) yield() }
     }
 
     @Test
