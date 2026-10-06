@@ -28,9 +28,14 @@ internal sealed interface ThreadItem {
     }
 }
 
-/** One earlier version of an edited post, oldest first. */
+/** One earlier version of an edited post, oldest first; [media] holds each attachment's description, null for none. */
 @Immutable
-internal data class EditVersion(val createdAt: Instant, val spoiler: String?, val body: AnnotatedString)
+internal data class EditVersion(
+    val createdAt: Instant,
+    val spoiler: String?,
+    val body: AnnotatedString,
+    val media: List<String?> = emptyList(),
+)
 
 /**
  * What the thread screen shows. The focused post draws from the cache while the conversation loads;

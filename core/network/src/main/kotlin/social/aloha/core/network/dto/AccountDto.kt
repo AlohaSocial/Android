@@ -7,6 +7,7 @@ import java.time.Instant
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import social.aloha.core.model.Account
 import social.aloha.core.model.AccountField
 import social.aloha.core.model.AccountSource
@@ -17,6 +18,7 @@ import social.aloha.core.network.decoding.LenientInstantSerializer
 import social.aloha.core.network.decoding.LenientIntSerializer
 import social.aloha.core.network.decoding.LenientUrlSerializer
 import social.aloha.core.network.decoding.LossyListSerializer
+import social.aloha.core.network.decoding.OptionalBoolSerializer
 import social.aloha.core.network.decoding.OrNullSerializer
 
 @Serializable
@@ -32,6 +34,10 @@ internal data class AccountDto(
     @SerialName("avatar_static") @Serializable(with = LenientUrlSerializer::class) val avatarStatic: String? = null,
     @Serializable(with = LenientUrlSerializer::class) val header: String? = null,
     @SerialName("header_static") @Serializable(with = LenientUrlSerializer::class) val headerStatic: String? = null,
+    @SerialName("avatar_default") @Serializable(with = OptionalBoolSerializer::class)
+    val avatarDefault: Boolean? = null,
+    @SerialName("header_default") @Serializable(with = OptionalBoolSerializer::class)
+    val headerDefault: Boolean? = null,
     @Serializable(with = LenientBoolSerializer::class) val locked: Boolean = false,
     @Serializable(with = LenientBoolSerializer::class) val bot: Boolean = false,
     @Serializable(with = LenientBoolSerializer::class) val discoverable: Boolean = false,
@@ -85,8 +91,9 @@ internal fun AccountDto.toDomain(): Account {
         uri = uri,
         avatar = avatar,
         avatarStatic = avatarStatic,
-        header = header,
-        headerStatic = headerStatic,
+        avatarDefault = avatarDefault == true,
+        header = header.takeUnless(::isPlaceholderHeader),
+        headerStatic = headerStatic.takeUnless(::isPlaceholderHeader),
         locked = locked,
         bot = bot,
         discoverable = discoverable,
@@ -105,6 +112,20 @@ internal fun AccountDto.toDomain(): Account {
         memorial = memorial,
     )
 }
+
+/**
+ * Whether [header] stands in for "no header", so that the profile draws its own empty banner and the
+ * editor offers no removal of a picture nobody chose. Mastodon's API requires a URL, so servers send
+ * a placeholder rather than none: Nextcloud Social says so with `header_default`; Mastodon does not,
+ * and its `headers/{style}/missing.png` is recognised by its address.
+ */
+private fun AccountDto.isPlaceholderHeader(header: String?): Boolean {
+    if (headerDefault == true) return true
+    val last = header?.toHttpUrlOrNull()?.pathSegments?.takeLast(MASTODON_MISSING_SEGMENTS) ?: return false
+    return last.size == MASTODON_MISSING_SEGMENTS && last[0] == "headers" && last[2] == "missing.png"
+}
+
+private const val MASTODON_MISSING_SEGMENTS = 3
 
 internal fun AccountFieldDto.toDomain(): AccountField = AccountField(name, value, verifiedAt)
 

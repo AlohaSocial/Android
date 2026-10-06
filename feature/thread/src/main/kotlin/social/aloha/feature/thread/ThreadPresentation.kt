@@ -76,6 +76,7 @@ internal object ThreadPresentation {
             createdAt = edit.createdAt,
             spoiler = edit.spoilerText.takeIf { it.isNotBlank() },
             body = StatusHtmlParser.parse(edit.content).toAnnotatedString(colors),
+            media = edit.mediaAttachments.map { it.description?.takeIf(String::isNotBlank) },
         )
     }
 }

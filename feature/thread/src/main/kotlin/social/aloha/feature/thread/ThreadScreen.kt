@@ -290,6 +290,18 @@ private fun History(versions: List<EditVersion>, onDismiss: () -> Unit) {
                     )
                     version.spoiler?.let { Text(it, style = MaterialTheme.typography.titleSmall) }
                     Text(version.body, style = MaterialTheme.typography.bodyLarge)
+                    // an edit may change only what the pictures say, which is then all that tells versions apart
+                    version.media.forEachIndexed { index, description ->
+                        Text(
+                            stringResource(
+                                R.string.thread_history_media,
+                                index + 1,
+                                description ?: stringResource(R.string.thread_history_no_description),
+                            ),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                 }
             }
         }

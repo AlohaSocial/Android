@@ -416,8 +416,6 @@ internal class ProfileViewModel @AssistedInject constructor(
             lists = control.lists,
             familiar = control.familiar.map { Familiar(it.id, it.bestDisplayName, it.avatar) },
             knownHandle = key.acct?.let { if (it.startsWith('@')) it else "@$it" },
-            // Nextcloud Social reads no account_id, and would answer with everyone's posts
-            postSearch = !reader.capabilities.isNextcloudSocial,
             featured = ProfilePresentation.featured(control.pinned, control.featuredTags) {
                 rows.rowFor(it, reader.serverAccountId, null)
             },

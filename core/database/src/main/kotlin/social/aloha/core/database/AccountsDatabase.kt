@@ -20,7 +20,7 @@ import kotlinx.coroutines.flow.Flow
  *
  * @property capabilitiesJson the detected server capabilities, refreshed every 24 hours.
  * @property profilePending set while the server cannot describe a brand-new account yet (Nextcloud
- *   Social answers 500 from `verify_credentials` until its avatar cache job has run).
+ *   Social before 0.26.104 answered 500 from `verify_credentials` until its avatar cache job had run).
  */
 @Entity(tableName = "account")
 public data class AccountEntity(

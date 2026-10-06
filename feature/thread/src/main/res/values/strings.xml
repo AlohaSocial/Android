@@ -67,6 +67,10 @@
     <string name="thread_history_title">Edit history</string>
     <!-- The first version of an edited post, in its history -->
     <string name="thread_history_original">Original</string>
+    <!-- One attachment of a version in a post's edit history; %1$d is its number in the post, %2$s its description -->
+    <string name="thread_history_media">Attachment %1$d: %2$s</string>
+    <!-- Stands for the description of an attachment that has none, in a post's edit history -->
+    <string name="thread_history_no_description">no description</string>
     <!-- Strip shown when the conversation could not be loaded while offline -->
     <string name="thread_offline">You\'re offline. Showing what is saved on this device.</string>
     <!-- Strip shown when the conversation could not be loaded -->

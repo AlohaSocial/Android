@@ -85,10 +85,7 @@ public object CredentialEndpoints {
     private fun account(endpoint: Endpoint): ApiRequest<Account> =
         request(endpoint, AccountDto.serializer()) { it.toDomain() }
 
-    /**
-     * A form when no picture goes, multipart only with one: a PHP server reads a multipart body for
-     * `POST` alone, so Nextcloud Social answers a multipart `PATCH` with 200 and changes nothing.
-     */
+    /** A form when no picture goes, multipart with one: the pictures, names and fields in one request. */
     public fun update(changes: CredentialsUpdate): ApiRequest<Account> {
         val parts = changes.parts()
         val body = if (parts.any { it is Part.FileContent }) {

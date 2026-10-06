@@ -55,7 +55,7 @@ internal object ProfilePresentation {
         return ProfileHeader(
             author = mapper.author(account),
             emojis = account.emojis,
-            headerUrl = account.header?.takeUnless { it.endsWith("/missing.png") },
+            headerUrl = account.header,
             note = StatusHtmlParser.parse(account.note, emojis = account.emojis).toAnnotatedString(colors),
             fields = account.fields.map { field ->
                 ProfileHeader.Field(

@@ -12,6 +12,9 @@ import kotlinx.serialization.Serializable
  * @property acct `alice` for a local account, `alice@example.social` for a remote one.
  * @property avatar none when the server sends `""` or `null`, which Nextcloud Social does for an
  *   account whose avatar it has not cached yet.
+ * @property avatarDefault the avatar is the server's stand-in, not a picture the account chose
+ *   (Nextcloud Social says so; other servers do not, and it stays false there).
+ * @property header none as well when it is only the server's stand-in for "no header".
  * @property source present only on the credentials routes, which answer for the account itself.
  */
 @Serializable
@@ -25,6 +28,7 @@ public data class Account(
     val uri: String? = null,
     val avatar: String? = null,
     val avatarStatic: String? = null,
+    val avatarDefault: Boolean = false,
     val header: String? = null,
     val headerStatic: String? = null,
     val locked: Boolean = false,

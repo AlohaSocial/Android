@@ -6,11 +6,21 @@ package social.aloha.feature.profile
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import social.aloha.core.model.Account
 import social.aloha.core.model.AccountField
 import social.aloha.core.network.ApiError
 
 class EditProfileTest {
     private val original = ProfileForm(displayName = "Alice", note = "Surfs", avatar = Picture.Kept("https://x/a.png"))
+
+    @Test
+    fun `a stand-in avatar is shown but not offered for removal, a chosen one is`() {
+        val generated = Account("1", "alice", "alice", avatar = "https://x/avatar/alice/128", avatarDefault = true)
+        assertEquals(Picture.Kept("https://x/avatar/alice/128", chosen = false), ProfileForm.of(generated).avatar)
+        val own = generated.copy(avatar = "https://x/a.png", avatarDefault = false)
+        assertEquals(Picture.Kept("https://x/a.png", chosen = true), ProfileForm.of(own).avatar)
+        assertEquals(Picture.Kept(null, chosen = false), ProfileForm.of(own).header)
+    }
 
     @Test
     fun `nothing changed sends nothing`() {

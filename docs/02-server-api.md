@@ -2,16 +2,18 @@
 
 ## On Android
 
-This is the Apple app's specification, carried over as the product contract for Android. Where it names an Apple mechanism, read its Android counterpart from the table below; where it states a server fact, the facts below, verified against a live Nextcloud Social 0.26.97 instance, win.
+This is the Apple app's specification, carried over as the product contract for Android. Where it names an Apple mechanism, read its Android counterpart from the table below; where it states a server fact, the facts below, verified against a live Nextcloud Social 0.26.97 instance, and where a row names a later version against 0.26.126 (AlohaSocial/social `cdd847797`, on 2026-10-06), win.
 
 | Topic | Android |
 |---|---|
 | Credentials | A Social OAuth token, or a Nextcloud app password over HTTP Basic with `OCS-APIRequest: true`; the second also reaches memories, statistics, channels and migration. |
 | Caching | Nextcloud Social 0.26.97 sends no `ETag` on the polling routes (`Cache-Control: no-store`). |
 | Boosts | `reblog` is always `null`; a boost is not visible as a boost. |
-| Media | `POST /api/v2/media` answers 200 synchronously; `focus` is stored; `hls_url` and video `meta` are empty without ffmpeg on the server. |
+| Media | `POST /api/v2/media` answers 200 synchronously; `focus` is stored; `hls_url` and video `meta` are empty without ffmpeg on the server. Since 0.26.123 `image_size_limit` and `video_size_limit` are capped at what PHP accepts, which the composer's pre-flight checks against, and a refused upload says why: a `422` for a file too large (naming the limit) or an interrupted upload, which the attachment card shows; a `500` naming a server problem, retried like any server error. |
 | Pagination | `Link` headers point at the app path even through the root rules; `limit=0` answers 400. `min_id` answers with the posts immediately above the anchor and `since_id` with the newest above it, as on Mastodon, so a refresh asks with `since_id` and a full page leaves a gap between it and the cache. |
-| New accounts | `verify_credentials`, `accounts/lookup` and the first post answer 500 until the avatar cache job runs. |
+| New accounts | Before 0.26.104 (seen on 0.26.97), `verify_credentials`, `accounts/lookup` and the first post answered 500 until the avatar cache job ran. On 0.26.119 an account created moments before answers `verify_credentials` and its first post with 200 (`accounts/lookup` not checked again). Sign-in still falls back to `/oauth/userinfo` on a 5xx, for older servers. A Nextcloud user without a Social account cannot authorize an app at all: the authorize page needs the account to exist. |
+| Pictures | Before 0.26.119 a local account had `avatar: ""` and its Nextcloud avatar as `header`; 0.26.119 stopped that fallback without repairing what it had stored. Since 0.26.125 a repair step clears those headers, the avatar is the same on every route, the header placeholder is `img/header-missing.png`, and every Account carries `avatar_default` and `header_default` ([AlohaSocial/social#2487](https://github.com/AlohaSocial/social/issues/2487)). The app reads a banner the Account marks with `header_default: true`, and Mastodon's `headers/…/missing.png` (Mastodon has no such field), as no header, and Edit profile offers no removal of an `avatar_default` avatar. |
+| Search and edits | Since 0.26.122 `api/v2/search` honours `account_id` and `offset`, so a profile's posts are searchable on Nextcloud Social as elsewhere; `/api/v2/instance` announces `api_versions.aloha_social: 1`. Since 0.26.121 each version in `statuses/{id}/history` carries its media, which the history sheet lists by description. |
 | Places and reactions | `place_*` is never stored; reactions come only from `/statuses/{id}/reactions`. |
 | Web-server rules | Show the server's own `contrib/webserver` files; the snippet described here is outdated. |
 | Client | Plain OkHttp with kotlinx.serialization, one `ApiClient` per account base. Decoding is lenient (ids, URLs, booleans and dates in any of the shapes servers send) and lossy (a malformed row in a list is dropped and recorded, the rest of the page stays). |

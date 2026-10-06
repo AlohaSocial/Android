@@ -37,7 +37,8 @@ import social.aloha.core.ui.extensionFor
 /** A picture of the profile: as it is on the server, one picked on the phone, or none. */
 @Immutable
 internal sealed interface Picture {
-    data class Kept(val url: String?) : Picture
+    /** What the account has; [chosen] when it is a picture of its own, not the server's stand-in. */
+    data class Kept(val url: String?, val chosen: Boolean = url != null) : Picture
 
     data class Picked(val uri: String) : Picture
 
@@ -77,7 +78,7 @@ internal data class ProfileForm(
                 indexable = account.indexable,
                 privacy = source?.privacy ?: Visibility.Public,
                 sensitive = source?.sensitive == true,
-                avatar = Picture.Kept(account.avatar),
+                avatar = Picture.Kept(account.avatar, chosen = !account.avatarDefault),
                 header = Picture.Kept(account.header),
             )
         }
