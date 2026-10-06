@@ -11,6 +11,7 @@ import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.TimeSource
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
@@ -201,10 +202,12 @@ class SyncEngineTest {
     @Test
     fun `an active account is asked again after thirty seconds, and a manual one never on a timer`() = runBlocking {
         val account = fixture.signIn(server.url("/"))
+        val started = TimeSource.Monotonic.markNow()
         engine.poll(account, PollScope.Full)
         val wait = engine.waitBeforeNext(account)!!
-        // a loaded test run takes seconds between the poll and this question; 30 s is told from 60 s and 10 min
-        assertTrue("$wait", wait > 20.seconds && wait <= 30.seconds)
+        // what is left of 30 s after however long a loaded run took to get here, never 60 s or 10 min
+        val taken = started.elapsedNow()
+        assertTrue("$wait after $taken", wait <= 30.seconds && wait >= 30.seconds - taken - 1.seconds)
         settings.setPollFrequency(account.id, PollFrequency.Manual)
         assertNull(engine.waitBeforeNext(account))
     }
