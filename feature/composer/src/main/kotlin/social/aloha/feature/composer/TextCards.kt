@@ -171,7 +171,10 @@ internal class TextCards(
     /** How [id]'s upload ended, once it has: done, refused or failed. */
     private suspend fun settled(id: String): UploadState? = attachments.byPost
         .map { lists -> lists.flatten().firstOrNull { it.id == id }?.upload }
-        .first { it == null || it is UploadState.Done || it is UploadState.Failed || it is UploadState.Refused }
+        .first {
+            it == null || it is UploadState.Done || it is UploadState.Refused ||
+                it == UploadState.Failed || it == UploadState.Cancelled
+        }
 
     private fun current(): Int = card.value.let { it.backgrounds.getOrElse(it.background) { FIXED.first() } }
 

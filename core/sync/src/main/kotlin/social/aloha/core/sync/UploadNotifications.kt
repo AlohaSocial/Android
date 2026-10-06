@@ -7,11 +7,12 @@ import android.app.NotificationManager
 import android.content.Context
 import androidx.core.app.NotificationCompat
 import androidx.work.ForegroundInfo
+import androidx.work.WorkManager
 import java.util.UUID
 
 /**
- * The notification an upload runs under: the file's name and how far it has got. Android asks for
- * one while work runs in the foreground; it is silent and goes when the upload ends.
+ * The notification an upload runs under: the file's name, how far it has got, and a way to cancel it.
+ * Android asks for one while work runs in the foreground; it is silent and goes when the upload ends.
  */
 internal class UploadNotifications(private val context: Context) {
     fun info(work: UUID, fileName: String, percent: Int?): ForegroundInfo {
@@ -24,6 +25,17 @@ internal class UploadNotifications(private val context: Context) {
             .setOnlyAlertOnce(true)
             .setSilent(true)
             .setProgress(PERCENT, percent ?: 0, percent == null)
+            .setStyle(
+                NotificationCompat.ProgressStyle()
+                    .addProgressSegment(NotificationCompat.ProgressStyle.Segment(PERCENT))
+                    .setProgress(percent ?: 0)
+                    .setProgressIndeterminate(percent == null),
+            )
+            .addAction(
+                0,
+                context.getString(R.string.upload_cancel),
+                WorkManager.getInstance(context).createCancelPendingIntent(work),
+            )
             .build()
         // one notification per upload, so two at once each show their own progress
         return foregroundInfo(work.hashCode(), notification)

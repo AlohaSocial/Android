@@ -89,7 +89,8 @@ private fun MediaCard(
     modifier: Modifier,
 ) {
     val colors = MaterialTheme.colorScheme
-    val failed = attachment.upload is UploadState.Failed || attachment.upload is UploadState.Refused
+    val failed = attachment.upload is UploadState.Refused ||
+        attachment.upload == UploadState.Failed || attachment.upload == UploadState.Cancelled
     val container by animateColorAsState(
         if (failed) colors.errorContainer else colors.surfaceContainerHigh,
         motion(tween()),
@@ -103,7 +104,8 @@ private fun MediaCard(
         status,
         stringResource(if (described) R.string.composer_media_described else R.string.composer_media_undescribed),
     ).joinToString(", ")
-    val couldNot = stringResource(R.string.composer_media_failed)
+    val couldNot = status.takeIf { attachment.upload == UploadState.Cancelled }
+        ?: stringResource(R.string.composer_media_failed)
     Surface(color = container, contentColor = content, shape = MaterialTheme.shapes.medium, modifier = modifier) {
         Column(
             Modifier
@@ -260,6 +262,8 @@ private fun uploadLabel(upload: UploadState): String? = when (upload) {
         ?: stringResource(R.string.composer_media_failed)
 
     UploadState.Failed -> stringResource(R.string.composer_media_failed)
+
+    UploadState.Cancelled -> stringResource(R.string.composer_media_cancelled)
 }
 
 /** What stage an upload is at, which is all a screen reader hears of it unasked. */

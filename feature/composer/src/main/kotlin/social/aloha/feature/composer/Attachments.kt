@@ -108,11 +108,21 @@ internal class Attachments(
     /** Whether the media carry a warning of their own, whatever the text says. */
     val sensitive = MutableStateFlow(false)
 
-    /** Who the attachments upload as; the composer's current author. */
+    /**
+     * Who the attachments upload as; the composer's current author. A media id belongs to the account
+     * that uploaded it, so a new author uploads every file here again.
+     */
     var account: SignedInAccount? = null
+        set(value) {
+            val before = field
+            field = value
+            if (before != null && value != null && before.id != value.id) {
+                all.value.flatten().filter { it.file != null }.forEach { retry(it.id) }
+            }
+        }
 
     private val watching = HashMap<String, Job>()
-    private val works = HashMap<String, UUID>()
+    private val works = HashMap<String, String>()
 
     /** Attaches [uris] to post [segment] of the thread, up to [room] of them. */
     fun add(segment: Int, uris: List<Uri>, room: Int) {
@@ -162,7 +172,8 @@ internal class Attachments(
         if (attachment.mediaId != null) {
             all.update { it.appended(segment, attachment) }
         } else if (account != null && file != null && file.exists()) {
-            start(account, segment, Picked(file, attachment.fileName, attachment.mimeType), attachment, isNew = true)
+            val picked = Picked(file, attachment.fileName, attachment.mimeType)
+            start(account, segment, picked, attachment, isNew = true, join = true)
         }
     }
 
@@ -256,16 +267,21 @@ internal class Attachments(
             sent
         }
 
-    /** Lets go of everything: the uploads still running and, unless a draft [keepFiles], the files. */
-    fun clear(keepFiles: Boolean = false) {
-        all.value.flatten().forEach { release(it, keepFile = keepFiles, forGood = !keepFiles) }
+    /**
+     * Lets go of everything: unless a draft [keepFiles], the files; unless it [keepUploads], the uploads
+     * still running, which the draft joins again when it is reopened.
+     */
+    fun clear(keepFiles: Boolean = false, keepUploads: Boolean = false) {
+        all.value.flatten().forEach {
+            release(it, keepFile = keepFiles, forGood = !keepFiles, keepUpload = keepUploads)
+        }
         all.value = listOf(emptyList())
     }
 
     /**
      * Uploads [picked] as [before] (a new attachment when null), in its place when it is being
      * uploaded again, at the end of post [segment] when [isNew]; a description it already has goes
-     * with the upload.
+     * with the upload. A restored one [join]s its upload still going, or done already.
      */
     private fun start(
         account: SignedInAccount,
@@ -273,11 +289,13 @@ internal class Attachments(
         picked: Picked,
         before: Attachment? = null,
         isNew: Boolean = before == null,
+        join: Boolean = false,
     ) {
         val attachment = before?.copy(upload = UploadState.Queued, sentFocus = null)
             ?: Attachment(UUID.randomUUID().toString(), picked.file, picked.fileName, picked.mimeType)
         val description = attachment.sentDescription.takeIf { isNew && it.isNotEmpty() }
-        val work = uploads.enqueue(account, LocalMedia(picked.file, picked.fileName, picked.mimeType, description))
+        val media = LocalMedia(picked.file, picked.fileName, picked.mimeType, description)
+        val work = uploads.name(account.id, media.file)
         works[attachment.id] = work
         // one uploaded again keeps its place in the strip; a new one goes at the end
         if (isNew) {
@@ -286,17 +304,23 @@ internal class Attachments(
             all.update { lists -> lists.map { list -> list.map { if (it.id == attachment.id) attachment else it } } }
         }
         watching[attachment.id] = scope.launch {
+            uploads.enqueue(account, media, join)
             uploads.observe(work).collect { state -> change(attachment.id) { it.copy(upload = state) } }
         }
     }
 
     /**
-     * Lets go of [attachment]: its upload while unfinished and, unless [keepFile], its file; [forGood]
-     * also deletes the original a filter started from.
+     * Lets go of [attachment]: unless [keepUpload], its upload while unfinished and, unless [keepFile],
+     * its file; [forGood] also deletes the original a filter started from.
      */
-    private fun release(attachment: Attachment, keepFile: Boolean = false, forGood: Boolean = false) {
+    private fun release(
+        attachment: Attachment,
+        keepFile: Boolean = false,
+        forGood: Boolean = false,
+        keepUpload: Boolean = false,
+    ) {
         watching.remove(attachment.id)?.cancel()
-        works.remove(attachment.id)?.let { if (attachment.mediaId == null) uploads.cancel(it) }
+        works.remove(attachment.id)?.let { if (attachment.mediaId == null && !keepUpload) uploads.cancel(it) }
         if (!keepFile) attachment.file?.delete()
         if (forGood) attachment.original?.takeIf { it != attachment.file }?.delete()
     }

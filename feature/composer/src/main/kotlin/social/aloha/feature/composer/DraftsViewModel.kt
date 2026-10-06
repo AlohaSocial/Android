@@ -54,6 +54,7 @@ import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.model.OutboxState
 import social.aloha.core.navigation.DraftsKey
+import social.aloha.core.sync.MediaUploads
 import social.aloha.core.sync.PostQueue
 import social.aloha.core.ui.ConfirmDialog
 import social.aloha.core.ui.fullDate
@@ -67,6 +68,7 @@ internal class DraftsViewModel @AssistedInject constructor(
     @Assisted private val key: DraftsKey,
     private val outbox: Outbox,
     private val queue: PostQueue,
+    private val uploads: MediaUploads,
 ) : ViewModel() {
     @AssistedFactory
     interface Factory {
@@ -82,9 +84,14 @@ internal class DraftsViewModel @AssistedInject constructor(
         viewModelScope.launch { queue.resume(key.readerId) }
     }
 
-    /** Deletes draft [id] and the files it kept. */
+    /** Deletes draft [id], the files it kept and their uploads still going. */
     fun onDelete(id: String) {
-        viewModelScope.launch { outbox.delete(id, files = true) }
+        viewModelScope.launch {
+            outbox.get(id)?.let { entry ->
+                entry.post.files.forEach { uploads.cancel(uploads.name(entry.accountId, it)) }
+            }
+            outbox.delete(id, files = true)
+        }
     }
 
     private companion object {

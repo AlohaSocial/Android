@@ -6,6 +6,8 @@
 <resources>
     <!-- Title of the notification shown while a picture or video is being uploaded -->
     <string name="upload_title">Uploading</string>
+    <!-- Action on the notification of an upload that stops it -->
+    <string name="upload_cancel">Cancel</string>
     <!-- Name of the notification channel for uploads, shown in the system's notification settings -->
     <string name="upload_channel">Uploads</string>
     <!-- Description of the uploads notification channel in the system's notification settings -->

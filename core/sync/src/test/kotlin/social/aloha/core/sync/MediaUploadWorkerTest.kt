@@ -9,6 +9,7 @@ import androidx.work.ListenableWorker
 import androidx.work.WorkerFactory
 import androidx.work.WorkerParameters
 import androidx.work.testing.TestListenableWorkerBuilder
+import androidx.work.testing.WorkManagerTestInitHelper
 import androidx.work.workDataOf
 import java.io.File
 import java.util.concurrent.CopyOnWriteArrayList
@@ -46,6 +47,11 @@ class MediaUploadWorkerTest {
     private val server = MockWebServer().apply {
         dispatcher = media
         start()
+    }
+
+    init {
+        // the notification's cancel action asks WorkManager for its intent
+        WorkManagerTestInitHelper.initializeTestWorkManager(context)
     }
 
     @After

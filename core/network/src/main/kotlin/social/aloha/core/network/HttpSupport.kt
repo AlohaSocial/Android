@@ -26,9 +26,14 @@ import okio.ForwardingSink
 import okio.buffer
 import social.aloha.core.network.tls.UntrustedServerCertificateException
 
-/** Sends [request], suspending until the answer arrives; cancelling the coroutine cancels the call. */
+/**
+ * Sends [request], suspending until the answer arrives; cancelling the coroutine cancels the call. A
+ * multipart body, which carries files, has no call timeout: a large video over a slow line takes as
+ * long as it takes, and the connect and read timeouts still catch a line that stopped moving.
+ */
 internal suspend fun OkHttpClient.send(request: Request): HttpOutcome = suspendCancellableCoroutine { continuation ->
     val call = newCall(request)
+    if (request.body is MultipartBody) call.timeout().clearTimeout()
     continuation.invokeOnCancellation { call.cancel() }
     call.enqueue(
         object : Callback {
