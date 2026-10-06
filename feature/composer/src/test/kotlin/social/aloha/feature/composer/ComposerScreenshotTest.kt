@@ -348,7 +348,7 @@ class ComposerScreenshotTest {
                         tile("beach", UploadState.Done("1", null), "Surfers at sunrise on a wide beach"),
                         tile("board", UploadState.Done("2", null)),
                         tile("wave", UploadState.Sending(0.4f)),
-                        tile("sunset", UploadState.Failed),
+                        tile("sunset", UploadState.Refused("error during upload")),
                     ),
                 ),
                 mediaSensitive = true,

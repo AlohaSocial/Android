@@ -77,7 +77,8 @@ internal fun MediaStrip(attachments: List<Attachment>, actions: ComposerActions,
 
 /**
  * One attachment: its picture, and in its title line how it stands, uploading, processing, its description,
- * or a call for one in the error colour. A failed upload turns the card to the error colours, with a retry.
+ * or a call for one in the error colour. A failed upload turns the card to the error colours, says why in
+ * full on lines of its own under the picture, and offers a retry there.
  */
 @Composable
 private fun MediaCard(
@@ -102,8 +103,9 @@ private fun MediaCard(
         status,
         stringResource(if (described) R.string.composer_media_described else R.string.composer_media_undescribed),
     ).joinToString(", ")
+    val couldNot = stringResource(R.string.composer_media_failed)
     Surface(color = container, contentColor = content, shape = MaterialTheme.shapes.medium, modifier = modifier) {
-        Row(
+        Column(
             Modifier
                 .fillMaxWidth()
                 .clickable(onClickLabel = stringResource(R.string.composer_media_edit), role = Role.Button) {
@@ -114,25 +116,45 @@ private fun MediaCard(
                     customActions = moves
                 }
                 .padding(AlohaSpacing.s),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(AlohaSpacing.s),
         ) {
-            MediaThumb(attachment)
-            CardText(attachment, status, failed, Modifier.weight(1f))
-            if (failed) {
-                TextButton(onClick = { actions.onRetryMedia(attachment.id) }) {
-                    Text(stringResource(R.string.composer_media_retry))
-                }
+            CardRow(attachment, if (failed) couldNot else status, failed, draftable, actions, described)
+            if (failed) Failure(status.takeIf { it != couldNot }) { actions.onRetryMedia(attachment.id) }
+        }
+    }
+}
+
+/** The card's line: the picture, how it stands, and what can be done with it from here. */
+@Composable
+private fun CardRow(
+    attachment: Attachment,
+    status: String?,
+    failed: Boolean,
+    draftable: Boolean,
+    actions: ComposerActions,
+    described: Boolean,
+) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(AlohaSpacing.s)) {
+        MediaThumb(attachment)
+        CardText(attachment, status, failed, Modifier.weight(1f))
+        // where the call for a description is, a way to have one drafted
+        if (draftable && !described && !failed) {
+            IconButton(onClick = { actions.onDraftAlt(attachment.id) }) {
+                Icon(AlohaIcons.Intelligence, stringResource(R.string.composer_alt_draft_for, attachment.fileName))
             }
-            // where the call for a description is, a way to have one drafted
-            if (draftable && !described && !failed) {
-                IconButton(onClick = { actions.onDraftAlt(attachment.id) }) {
-                    Icon(AlohaIcons.Intelligence, stringResource(R.string.composer_alt_draft_for, attachment.fileName))
-                }
-            }
-            IconButton(onClick = { actions.onRemoveMedia(attachment.id) }) {
-                Icon(AlohaIcons.Close, stringResource(R.string.composer_media_remove, attachment.fileName))
-            }
+        }
+        IconButton(onClick = { actions.onRemoveMedia(attachment.id) }) {
+            Icon(AlohaIcons.Close, stringResource(R.string.composer_media_remove, attachment.fileName))
+        }
+    }
+}
+
+/** Why an upload failed, whole, where it has room: a server's sentence cut to a few letters says nothing. */
+@Composable
+private fun Failure(reason: String?, onRetry: () -> Unit) {
+    Column(Modifier.fillMaxWidth().padding(top = AlohaSpacing.xs)) {
+        reason?.let { Text(it, style = MaterialTheme.typography.bodyMedium) }
+        TextButton(onClick = onRetry, modifier = Modifier.align(Alignment.End)) {
+            Text(stringResource(R.string.composer_media_retry))
         }
     }
 }
