@@ -170,7 +170,7 @@ class ProfileScreenshotTest {
         val found =
             PostSearchUi("waves", rows = listOf(mapper.map(StatusSamples.post("<p>Waves at the point</p>"), "9")))
         ProfileScreen(
-            profile().copy(postSearch = true),
+            profile(),
             NoActions,
             NoActions,
             listState = LazyListState(firstVisibleItemIndex = 2),

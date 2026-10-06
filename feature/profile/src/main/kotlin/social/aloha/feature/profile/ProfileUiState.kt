@@ -106,8 +106,6 @@ internal data class ProfileUiState(
     val actionFailed: Boolean = false,
     /** The reader's lists, once asked for, each saying whether the account is on it. */
     val lists: List<ListChoice>? = null,
-    /** The account's posts can be searched: the reader's server searches by account. */
-    val postSearch: Boolean = false,
     /** The people the reader follows who follow this account too. */
     val familiar: List<Familiar> = emptyList(),
     /** The handle the profile was opened by, shown while the account loads. */

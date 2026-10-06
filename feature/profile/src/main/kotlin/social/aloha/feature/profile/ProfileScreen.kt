@@ -185,7 +185,7 @@ private fun Content(
                 item(key = "highlights", contentType = "highlights") { Highlights(highlights) }
             }
             stickyHeader(key = "tabs", contentType = "tabs") { Tabs(state, pinned, timeline, choose) }
-            tabContent(state, actions, rowActions, search.takeIf { state.postSearch })
+            tabContent(state, actions, rowActions, search)
         }
     }
 }
