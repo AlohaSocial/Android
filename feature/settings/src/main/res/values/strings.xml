@@ -426,4 +426,36 @@
     <string name="settings_intelligence_model">Rewriting and summaries: Gemini Nano, run by Android’s AICore</string>
     <!-- Intelligence settings, under Models: the language model for rewriting and summaries, with the name the device gives it (%1$s) -->
     <string name="settings_intelligence_model_named">Rewriting and summaries: Gemini Nano (%1$s), run by Android’s AICore</string>
+    <!-- Shown on a page only the Nextcloud connection opens, while the account has none -->
+    <string name="nextcloud_page_needs_connection">This needs your Nextcloud connected to this account.</string>
+    <!-- Button that opens the Nextcloud settings to connect it -->
+    <string name="nextcloud_page_connect">Connect your Nextcloud</string>
+    <!-- Shown when a page of the Nextcloud connection could not be loaded -->
+    <string name="nextcloud_page_failed">Couldn’t load this. Check your connection and try again.</string>
+    <!-- Button that loads a page of the Nextcloud connection again -->
+    <string name="nextcloud_page_retry">Try again</string>
+    <!-- Title of the page listing the apps signed in to the account -->
+    <string name="apps_title">Authorized apps</string>
+    <!-- Shown when no app but this one is signed in to the account -->
+    <string name="apps_empty">Nothing but this app has been let into your account.</string>
+    <!-- Name shown for a signed-in app that has none -->
+    <string name="apps_unnamed">Unnamed app</string>
+    <!-- When an app was signed in; %1$s is a date -->
+    <string name="apps_signed_in">Signed in %1$s</string>
+    <!-- When an app last used the account; %1$s is a date -->
+    <string name="apps_last_used">Last used %1$s</string>
+    <!-- Button that signs an app out of the account -->
+    <string name="apps_revoke">Revoke</string>
+    <!-- Spoken label of the button that signs an app out; %1$s is the app's name -->
+    <string name="apps_revoke_for">Revoke %1$s</string>
+    <!-- Title of the dialog confirming an app is signed out; %1$s is the app's name -->
+    <string name="apps_revoke_title">Sign %1$s out?</string>
+    <!-- Text of the dialog confirming an app is signed out -->
+    <string name="apps_revoke_body">The app loses its key at once and has to be signed in again to get another. If it’s this app, you’ll be asked to sign in again here too.</string>
+    <!-- Confirms signing an app out -->
+    <string name="apps_revoke_confirm">Revoke access</string>
+    <!-- Closes the dialog without signing the app out -->
+    <string name="apps_cancel">Cancel</string>
+    <!-- Shown when signing an app out did not work -->
+    <string name="apps_revoke_failed">Couldn’t revoke this app.</string>
 </resources>

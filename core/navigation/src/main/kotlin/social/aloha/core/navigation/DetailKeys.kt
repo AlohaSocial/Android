@@ -191,6 +191,26 @@ public data class ModerationKey(val readerId: String) : NavKey
 @Serializable
 public data class YearKey(val readerId: String) : NavKey
 
+/** The apps signed in to [readerId]'s account, which the Nextcloud session lists and signs out. */
+@Serializable
+public data class AuthorizedAppsKey(val readerId: String) : NavKey
+
+/** [readerId]'s own posts from this day in other years, and the weekly recap. */
+@Serializable
+public data class LookingBackKey(val readerId: String) : NavKey
+
+/** [readerId]'s statistics, counted by the server over a chosen window. */
+@Serializable
+public data class StatisticsKey(val readerId: String) : NavKey
+
+/** [readerId]'s video channels, what a video belongs to on PeerTube. */
+@Serializable
+public data class ChannelsKey(val readerId: String) : NavKey
+
+/** [readerId]'s account as an archive to keep or take elsewhere. */
+@Serializable
+public data class AccountExportKey(val readerId: String) : NavKey
+
 /** [readerId]'s filter [filterId] being changed, or a new one without. */
 @Serializable
 public data class FilterEditKey(val readerId: String, val filterId: String? = null) : NavKey

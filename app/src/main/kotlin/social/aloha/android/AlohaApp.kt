@@ -72,6 +72,7 @@ import social.aloha.core.navigation.AlbumKey
 import social.aloha.core.navigation.AlbumsKey
 import social.aloha.core.navigation.AnnouncementsKey
 import social.aloha.core.navigation.AudioKey
+import social.aloha.core.navigation.AuthorizedAppsKey
 import social.aloha.core.navigation.BlockedKey
 import social.aloha.core.navigation.CatchUpKey
 import social.aloha.core.navigation.ComposerKey
@@ -161,6 +162,7 @@ import social.aloha.feature.safety.InterestsRoute
 import social.aloha.feature.safety.R as SafetyR
 import social.aloha.feature.saved.SavedPostsRoute
 import social.aloha.feature.search.SearchRoute
+import social.aloha.feature.settings.AuthorizedAppsRoute
 import social.aloha.feature.settings.R as SettingsR
 import social.aloha.feature.settings.SettingsDestination
 import social.aloha.feature.settings.SettingsPlaceholder
@@ -256,6 +258,7 @@ private val NOTIFICATIONS = TopLevelDestination(
 fun AlohaApp(
     readerId: String,
     serverAccountId: String,
+    nextcloudSocial: Boolean = false,
     pendingLink: String? = null,
     onPendingLinkTaken: () -> Unit = {},
     pendingDestination: NavKey? = null,
@@ -540,6 +543,13 @@ fun AlohaApp(
                             }
                             entry<BlockedKey> { key -> BlockedRoute(key, onBack = { backStack.remove(key) }) }
                             entry<ModerationKey> { key -> ModerationRoute(key, onBack = { backStack.remove(key) }) }
+                            entry<AuthorizedAppsKey> { key ->
+                                AuthorizedAppsRoute(
+                                    key,
+                                    onConnect = { backStack.push(SettingsSectionKey(NEXTCLOUD_SECTION)) },
+                                    onBack = { backStack.remove(key) },
+                                )
+                            }
                             entry<YearKey> { key ->
                                 YearRoute(onOpenPost = statusNavigation::openThread, onBack = { backStack.remove(key) })
                             }
@@ -623,16 +633,19 @@ fun AlohaApp(
                                         ) {
                                             backStack.push(YearKey(readerId))
                                         },
-                                    ) + listOfNotNull(
-                                        SettingsDestination(
-                                            "moderation",
-                                            MODERATION_ORDER,
-                                            ModerationR.string.moderation_title,
-                                            AlohaIcons.Report,
-                                        ) {
-                                            backStack.push(ModerationKey(readerId))
-                                        }.takeIf { moderator },
-                                    ),
+                                    ) + nextcloudDestinations(readerId, backStack).takeIf {
+                                        nextcloudSocial
+                                    }.orEmpty() +
+                                        listOfNotNull(
+                                            SettingsDestination(
+                                                "moderation",
+                                                MODERATION_ORDER,
+                                                ModerationR.string.moderation_title,
+                                                AlohaIcons.Report,
+                                            ) {
+                                                backStack.push(ModerationKey(readerId))
+                                            }.takeIf { moderator },
+                                        ),
                                 )
                             }
                             entry<SettingsSectionKey>(metadata = ListDetailSceneStrategy.detailPane()) {
