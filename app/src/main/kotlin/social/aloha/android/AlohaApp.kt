@@ -88,6 +88,7 @@ import social.aloha.core.navigation.InterestsKey
 import social.aloha.core.navigation.ListKey
 import social.aloha.core.navigation.ListMembersKey
 import social.aloha.core.navigation.ListsKey
+import social.aloha.core.navigation.LookingBackKey
 import social.aloha.core.navigation.MediaViewerKey
 import social.aloha.core.navigation.ModerationKey
 import social.aloha.core.navigation.NewMessageKey
@@ -163,6 +164,7 @@ import social.aloha.feature.safety.R as SafetyR
 import social.aloha.feature.saved.SavedPostsRoute
 import social.aloha.feature.search.SearchRoute
 import social.aloha.feature.settings.AuthorizedAppsRoute
+import social.aloha.feature.settings.LookingBackRoute
 import social.aloha.feature.settings.R as SettingsR
 import social.aloha.feature.settings.SettingsDestination
 import social.aloha.feature.settings.SettingsPlaceholder
@@ -543,6 +545,14 @@ fun AlohaApp(
                             }
                             entry<BlockedKey> { key -> BlockedRoute(key, onBack = { backStack.remove(key) }) }
                             entry<ModerationKey> { key -> ModerationRoute(key, onBack = { backStack.remove(key) }) }
+                            entry<LookingBackKey> { key ->
+                                LookingBackRoute(
+                                    key,
+                                    onOpenPost = statusNavigation::openThread,
+                                    onConnect = { backStack.push(SettingsSectionKey(NEXTCLOUD_SECTION)) },
+                                    onBack = { backStack.remove(key) },
+                                )
+                            }
                             entry<AuthorizedAppsKey> { key ->
                                 AuthorizedAppsRoute(
                                     key,

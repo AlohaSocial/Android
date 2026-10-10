@@ -458,4 +458,51 @@
     <string name="apps_cancel">Cancel</string>
     <!-- Shown when signing an app out did not work -->
     <string name="apps_revoke_failed">Couldn’t revoke this app.</string>
+    <!-- Title of the page with the reader's posts from this day in other years and the weekly recap -->
+    <string name="looking_back_title">Looking back</string>
+    <!-- Heading of the weekly recap on the looking-back page -->
+    <string name="looking_back_week">This week</string>
+    <!-- Switch that turns the weekly recap on -->
+    <string name="looking_back_recap">Weekly recap</string>
+    <!-- Explains the weekly recap switch -->
+    <string name="looking_back_recap_about">While it’s on, your server counts your posts this week against last week. Counted on your server, shown to you alone.</string>
+    <!-- Weekly recap when nothing was posted this week -->
+    <string name="looking_back_week_none">Nothing posted this week yet.</string>
+    <!-- Weekly recap: posts this week. %d: how many -->
+    <plurals name="looking_back_week_posts">
+        <item quantity="one">%d post this week.</item>
+        <item quantity="other">%d posts this week.</item>
+    </plurals>
+    <!-- Weekly recap: more than last week. %d: last week's posts -->
+    <plurals name="looking_back_week_up">
+        <item quantity="one">Up from %d post last week.</item>
+        <item quantity="other">Up from %d posts last week.</item>
+    </plurals>
+    <!-- Weekly recap: fewer than last week. %d: last week's posts -->
+    <plurals name="looking_back_week_down">
+        <item quantity="one">Down from %d post last week.</item>
+        <item quantity="other">Down from %d posts last week.</item>
+    </plurals>
+    <!-- Weekly recap when both weeks had no posts -->
+    <string name="looking_back_week_quiet">Last week was quiet too.</string>
+    <!-- Weekly recap when both weeks had as many posts -->
+    <string name="looking_back_week_same">The same as last week.</string>
+    <!-- Heading of the posts from this day in earlier years -->
+    <string name="looking_back_day">On this day</string>
+    <!-- Shown when nothing was posted on this day in earlier years -->
+    <string name="looking_back_day_none">Nothing from this day in earlier years.</string>
+    <!-- How long ago a post from this day was written. %d: years -->
+    <plurals name="looking_back_years_ago">
+        <item quantity="one">%d year ago</item>
+        <item quantity="other">%d years ago</item>
+    </plurals>
+    <!-- Stands for a post from this day that has no text, only attachments. %d: how many -->
+    <plurals name="looking_back_attachments">
+        <item quantity="one">%d attachment</item>
+        <item quantity="other">%d attachments</item>
+    </plurals>
+    <!-- What tapping a post from this day does, read out by a screen reader -->
+    <string name="looking_back_open">Open the post</string>
+    <!-- Shown when turning the weekly recap on or off did not work -->
+    <string name="looking_back_change_failed">Couldn’t change the weekly recap.</string>
 </resources>

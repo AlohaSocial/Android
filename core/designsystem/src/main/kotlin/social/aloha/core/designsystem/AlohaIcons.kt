@@ -103,6 +103,7 @@ import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material.icons.outlined.Tag
 import androidx.compose.material.icons.outlined.TextFields
 import androidx.compose.material.icons.outlined.ThumbDown
+import androidx.compose.material.icons.outlined.Today
 import androidx.compose.material.icons.outlined.Translate
 import androidx.compose.material.icons.outlined.VideoLibrary
 import androidx.compose.material.icons.outlined.ViewAgenda
@@ -221,6 +222,7 @@ public object AlohaIcons {
     public val About: ImageVector = Icons.Outlined.Info
     public val Nextcloud: ImageVector = Icons.Outlined.Cloud
     public val Apps: ImageVector = Icons.Outlined.Apps
+    public val OnThisDay: ImageVector = Icons.Outlined.Today
     public val Rules: ImageVector = Icons.AutoMirrored.Outlined.Rule
     public val NewPosts: ImageVector = Icons.Filled.ArrowUpward
     public val ArrowUpward: ImageVector = Icons.Filled.ArrowUpward

@@ -38,6 +38,7 @@ import social.aloha.core.model.InstanceRule
 import social.aloha.core.model.PublicDomainBlock
 import social.aloha.core.model.ReadingStyle
 import social.aloha.core.model.SensitiveMediaPolicy
+import social.aloha.core.model.WeeklyRecap
 
 /** The settings list and a section at each width, each also run through the Accessibility Test Framework checks. */
 @RunWith(RobolectricTestRunner::class)
@@ -158,6 +159,24 @@ class SettingsScreenshotTest {
                 ),
             ),
             NoAppActions,
+            onConnect = {},
+            onBack = {},
+        )
+    }
+
+    @Test
+    fun lookingBack() = capture("settings-looking-back") {
+        LookingBackScreen(
+            LookingBackUiState(
+                PageStatus.Ready,
+                WeeklyRecap(enabled = true, thisWeek = 3, lastWeek = 1),
+                listOf(
+                    Memory("2", 1, "Sunrise paddle before work", 0),
+                    Memory("1", 3, "", 2),
+                ),
+            ),
+            NoLookingBackActions,
+            onOpenPost = {},
             onConnect = {},
             onBack = {},
         )
@@ -291,4 +310,12 @@ private object NoAppActions : AuthorizedAppsActions {
     override fun onRetry() = Unit
 
     override fun onRevokeFailureShown() = Unit
+}
+
+private object NoLookingBackActions : LookingBackActions {
+    override fun onRecap(enabled: Boolean) = Unit
+
+    override fun onRetry() = Unit
+
+    override fun onChangeFailureShown() = Unit
 }
