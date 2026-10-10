@@ -41,6 +41,7 @@ import social.aloha.core.model.MigrationListKind
 import social.aloha.core.model.PublicDomainBlock
 import social.aloha.core.model.ReadingStyle
 import social.aloha.core.model.SensitiveMediaPolicy
+import social.aloha.core.model.VideoChannel
 import social.aloha.core.model.WeeklyRecap
 
 /** The settings list and a section at each width, each also run through the Accessibility Test Framework checks. */
@@ -210,6 +211,28 @@ class SettingsScreenshotTest {
     )
 
     @Test
+    fun channels() = capture("settings-channels") {
+        ChannelsScreen(
+            ChannelsUiState(
+                PageStatus.Ready,
+                listOf(
+                    VideoChannel(
+                        "1",
+                        "alice_channel",
+                        "Alice\u2019s videos",
+                        "Waves, boards and the odd sunset.",
+                        videosCount = 12,
+                    ),
+                    VideoChannel("2", "surf_lessons", "Surf lessons", videosCount = 0),
+                ),
+            ),
+            NoChannelActions,
+            onConnect = {},
+            onBack = {},
+        )
+    }
+
+    @Test
     fun nextcloudPageNeedsConnection() = capture("settings-nextcloud-page-connect") {
         AuthorizedAppsScreen(
             AuthorizedAppsUiState(PageStatus.NeedsConnection),
@@ -353,4 +376,18 @@ private object NoExportActions : AccountExportActions {
     override fun onRetry() = Unit
 
     override fun onResultShown() = Unit
+}
+
+private object NoChannelActions : ChannelsActions {
+    override fun onNew() = Unit
+
+    override fun onEdit(channel: VideoChannel) = Unit
+
+    override fun onDraft(draft: ChannelDraft) = Unit
+
+    override fun onSave() = Unit
+
+    override fun onCancel() = Unit
+
+    override fun onRetry() = Unit
 }

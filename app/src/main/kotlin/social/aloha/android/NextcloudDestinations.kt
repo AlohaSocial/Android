@@ -3,10 +3,22 @@
 
 package social.aloha.android
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.navigation3.runtime.NavKey
 import social.aloha.core.designsystem.AlohaIcons
+import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.navigation.AccountExportKey
 import social.aloha.core.navigation.AuthorizedAppsKey
+import social.aloha.core.navigation.ChannelsKey
 import social.aloha.core.navigation.LookingBackKey
 import social.aloha.feature.settings.NEXTCLOUD_SECTION_KEY
 import social.aloha.feature.settings.NEXTCLOUD_SECTION_ORDER
@@ -18,6 +30,7 @@ internal const val NEXTCLOUD_SECTION = NEXTCLOUD_SECTION_KEY
 
 // right after the Nextcloud section, which connects what these pages need
 private const val LOOKING_BACK_ORDER = NEXTCLOUD_SECTION_ORDER + 1
+private const val CHANNELS_ORDER = NEXTCLOUD_SECTION_ORDER + 3
 private const val AUTHORIZED_APPS_ORDER = NEXTCLOUD_SECTION_ORDER + 4
 private const val EXPORT_ORDER = NEXTCLOUD_SECTION_ORDER + 5
 
@@ -29,6 +42,9 @@ internal fun nextcloudDestinations(readerId: String, backStack: MutableList<NavK
     SettingsDestination("looking-back", LOOKING_BACK_ORDER, SettingsR.string.looking_back_title, AlohaIcons.OnThisDay) {
         backStack.push(LookingBackKey(readerId))
     },
+    SettingsDestination("channels", CHANNELS_ORDER, SettingsR.string.channels_title, AlohaIcons.Video) {
+        backStack.push(ChannelsKey(readerId))
+    },
     SettingsDestination("authorized-apps", AUTHORIZED_APPS_ORDER, SettingsR.string.apps_title, AlohaIcons.Apps) {
         backStack.push(AuthorizedAppsKey(readerId))
     },
@@ -36,3 +52,14 @@ internal fun nextcloudDestinations(readerId: String, backStack: MutableList<NavK
         backStack.push(AccountExportKey(readerId))
     },
 )
+
+/** Video mode's way to the reader's own channels, where the server has them. */
+@Composable
+internal fun ChannelsLink(onOpen: () -> Unit) {
+    Row(Modifier.fillMaxWidth().padding(horizontal = AlohaSpacing.s), horizontalArrangement = Arrangement.End) {
+        TextButton(onClick = onOpen) {
+            Icon(AlohaIcons.Video, contentDescription = null, Modifier.padding(end = AlohaSpacing.xs))
+            Text(stringResource(R.string.video_your_channels))
+        }
+    }
+}

@@ -34,6 +34,8 @@
     <string name="destination_photos">Photos</string>
     <!-- Navigation item: the video mode, long videos. -->
     <string name="destination_video">Video</string>
+    <!-- Button in the video mode that opens the reader’s own video channels -->
+    <string name="video_your_channels">Your channels</string>
     <!-- Navigation item: the shorts mode, short vertical videos. Keep it short, it sits under an icon. -->
     <string name="destination_shorts">Shorts</string>
     <!-- Navigation item: the news mode, posts that share an article, once turned on. Keep it short. -->
