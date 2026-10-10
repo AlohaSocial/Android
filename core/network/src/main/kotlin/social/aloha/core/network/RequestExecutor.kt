@@ -3,8 +3,12 @@
 
 package social.aloha.core.network
 
+import java.io.IOException
+import java.io.OutputStream
+import java.util.concurrent.TimeUnit
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.runInterruptible
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerializationException
 import okhttp3.HttpUrl
@@ -67,9 +71,43 @@ internal class RequestExecutor(
         }
     }
 
+    /** The client for downloads: no call timeout, and long enough for a server to build an export first. */
+    private val downloads by lazy {
+        http.newBuilder().callTimeout(0, TimeUnit.SECONDS).readTimeout(DOWNLOAD_READ_MINUTES, TimeUnit.MINUTES).build()
+    }
+
+    /**
+     * Sends [endpoint] and writes a successful answer's body [into] as it arrives, never holding it whole:
+     * an export can be large, and takes as long as it takes. A refusal is the [ApiError] any other request
+     * would get; cancelling the caller stops the copy.
+     */
+    suspend fun download(endpoint: Endpoint, url: HttpUrl, authorization: String, into: OutputStream): ApiResult<Unit> {
+        if (endpoint.hasDotSegment()) return ApiResult.Failure(ApiError.UnsafePath(endpoint.path))
+        rateLimiter.acquire(url.host)
+        val sent = downloads.send(Request.Builder().url(url).applyEndpoint(endpoint, authorization).build())
+        sent.log(endpoint, 0)
+        val response = when (sent) {
+            is HttpOutcome.Failed -> return ApiResult.Failure(sent.error)
+            is HttpOutcome.Answered -> sent.response
+        }
+        return response.use { if (it.isSuccessful) write(it, into) else failure(it, url) }
+    }
+
+    private suspend fun write(response: Response, into: OutputStream): ApiResult<Unit> = try {
+        runInterruptible(ioDispatcher) { response.body.byteStream().use { it.copyTo(into) } }
+        ApiResult.Success(Unit)
+    } catch (e: IOException) {
+        ApiResult.Failure(e.toApiError())
+    }
+
     private suspend fun <T> answer(request: ApiRequest<T>, response: Response, url: HttpUrl): ApiResult<Answer<T>> {
+        if (!response.isSuccessful) return failure(response, url)
         val body = withContext(ioDispatcher) { response.body.string() }
-        if (response.isSuccessful) return decode(request, body, LinkHeader.parse(response.header("Link")))
+        return decode(request, body, LinkHeader.parse(response.header("Link")))
+    }
+
+    private suspend fun failure(response: Response, url: HttpUrl): ApiResult.Failure {
+        val body = withContext(ioDispatcher) { response.body.string() }
         val error =
             ApiError.from(response.code, errorMessage(body), body, response::header)
                 ?: ApiError.Server(response.code, body)
@@ -94,6 +132,7 @@ internal class RequestExecutor(
 
     private companion object {
         val MAX_RETRY_WAIT = 5.seconds
+        const val DOWNLOAD_READ_MINUTES = 5L
         const val NANOS_PER_MILLI = 1_000_000
         val DOT_SEGMENTS = setOf(".", "..", "%2e", "%2e.", ".%2e", "%2e%2e")
 
