@@ -5,6 +5,7 @@ package social.aloha.android
 
 import androidx.navigation3.runtime.NavKey
 import social.aloha.core.designsystem.AlohaIcons
+import social.aloha.core.navigation.AccountExportKey
 import social.aloha.core.navigation.AuthorizedAppsKey
 import social.aloha.core.navigation.LookingBackKey
 import social.aloha.feature.settings.R as SettingsR
@@ -16,6 +17,7 @@ internal const val NEXTCLOUD_SECTION = "nextcloud"
 // right after the Nextcloud section, which connects what these pages need
 private const val LOOKING_BACK_ORDER = 901
 private const val AUTHORIZED_APPS_ORDER = 904
+private const val EXPORT_ORDER = 905
 
 /**
  * What only the Nextcloud session reaches on Nextcloud Social, listed for every account there: a page
@@ -27,5 +29,8 @@ internal fun nextcloudDestinations(readerId: String, backStack: MutableList<NavK
     },
     SettingsDestination("authorized-apps", AUTHORIZED_APPS_ORDER, SettingsR.string.apps_title, AlohaIcons.Apps) {
         backStack.push(AuthorizedAppsKey(readerId))
+    },
+    SettingsDestination("export", EXPORT_ORDER, SettingsR.string.export_title, AlohaIcons.Download) {
+        backStack.push(AccountExportKey(readerId))
     },
 )

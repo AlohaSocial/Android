@@ -183,6 +183,17 @@ class SettingsScreenshotTest {
     }
 
     @Test
+    fun accountExport() = capture("settings-account-export") {
+        AccountExportScreen(
+            AccountExportUiState(PageStatus.Ready, handle = "alice"),
+            NoExportActions,
+            onSave = {},
+            onConnect = {},
+            onBack = {},
+        )
+    }
+
+    @Test
     fun nextcloudPageNeedsConnection() = capture("settings-nextcloud-page-connect") {
         AuthorizedAppsScreen(
             AuthorizedAppsUiState(PageStatus.NeedsConnection),
@@ -318,4 +329,12 @@ private object NoLookingBackActions : LookingBackActions {
     override fun onRetry() = Unit
 
     override fun onChangeFailureShown() = Unit
+}
+
+private object NoExportActions : AccountExportActions {
+    override fun onExport(item: ExportItem, uri: String) = Unit
+
+    override fun onRetry() = Unit
+
+    override fun onResultShown() = Unit
 }

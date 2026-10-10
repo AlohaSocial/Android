@@ -505,4 +505,32 @@
     <string name="looking_back_open">Open the post</string>
     <!-- Shown when turning the weekly recap on or off did not work -->
     <string name="looking_back_change_failed">Couldn’t change the weekly recap.</string>
+    <!-- Title of the page that saves a copy of the account -->
+    <string name="export_title">Export your account</string>
+    <!-- Explains the export page -->
+    <string name="export_about">Take a copy to keep, or to move to another server. Each part is saved where you choose.</string>
+    <!-- The whole account as one file -->
+    <string name="export_archive">Everything, as an archive</string>
+    <!-- What the account archive holds -->
+    <string name="export_archive_about">Your profile, posts, pictures and videos, and the lists below. Never your private key.</string>
+    <!-- What a list export is -->
+    <string name="export_list_about">A CSV file, as Mastodon and others import it</string>
+    <!-- The accounts the reader follows, as a file -->
+    <string name="export_following">Accounts you follow</string>
+    <!-- The reader's followers, as a file -->
+    <string name="export_followers">Your followers</string>
+    <!-- The accounts the reader blocked, as a file -->
+    <string name="export_blocks">Accounts you blocked</string>
+    <!-- The accounts the reader muted, as a file -->
+    <string name="export_mutes">Accounts you muted</string>
+    <!-- The reader's lists, as a file -->
+    <string name="export_lists">Your lists</string>
+    <!-- Button that saves one part of the export -->
+    <string name="export_save">Save</string>
+    <!-- Spoken label of the button that saves one part; %1$s is what it saves -->
+    <string name="export_save_for">Save %1$s</string>
+    <!-- Shown once a part of the export was saved -->
+    <string name="export_saved">Saved.</string>
+    <!-- Shown when a part of the export could not be saved -->
+    <string name="export_failed">Couldn’t save the export. Try again.</string>
 </resources>
