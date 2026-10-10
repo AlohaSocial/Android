@@ -51,6 +51,7 @@ import androidx.compose.material.icons.outlined.ContentCut
 import androidx.compose.material.icons.outlined.Create
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.DoneAll
+import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.DragHandle
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.EditNote
@@ -223,6 +224,7 @@ public object AlohaIcons {
     public val Nextcloud: ImageVector = Icons.Outlined.Cloud
     public val Apps: ImageVector = Icons.Outlined.Apps
     public val OnThisDay: ImageVector = Icons.Outlined.Today
+    public val Download: ImageVector = Icons.Outlined.Download
     public val Rules: ImageVector = Icons.AutoMirrored.Outlined.Rule
     public val NewPosts: ImageVector = Icons.Filled.ArrowUpward
     public val ArrowUpward: ImageVector = Icons.Filled.ArrowUpward

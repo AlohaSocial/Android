@@ -37,6 +37,7 @@ import social.aloha.core.model.Appearance
 import social.aloha.core.model.AuthorizedApp
 import social.aloha.core.model.InstanceDocument
 import social.aloha.core.model.InstanceRule
+import social.aloha.core.model.MigrationListKind
 import social.aloha.core.model.PublicDomainBlock
 import social.aloha.core.model.ReadingStyle
 import social.aloha.core.model.SensitiveMediaPolicy
@@ -191,6 +192,24 @@ class SettingsScreenshotTest {
     }
 
     @Test
+    fun accountExport() = capture("settings-account-export") { AccountExport() }
+
+    @Test
+    @Config(fontScale = 2f)
+    fun accountExportLargeFont() = capture("settings-account-export-font200") {
+        AccountExport(working = ExportItem(MigrationListKind.Following))
+    }
+
+    @Composable
+    private fun AccountExport(working: ExportItem? = null) = AccountExportScreen(
+        AccountExportUiState(PageStatus.Ready, handle = "alice", working = working),
+        NoExportActions,
+        onSave = {},
+        onConnect = {},
+        onBack = {},
+    )
+
+    @Test
     fun nextcloudPageNeedsConnection() = capture("settings-nextcloud-page-connect") {
         AuthorizedAppsScreen(
             AuthorizedAppsUiState(PageStatus.NeedsConnection),
@@ -326,4 +345,12 @@ private object NoLookingBackActions : LookingBackActions {
     override fun onRetry() = Unit
 
     override fun onChangeFailureShown() = Unit
+}
+
+private object NoExportActions : AccountExportActions {
+    override fun onExport(item: ExportItem, uri: String) = Unit
+
+    override fun onRetry() = Unit
+
+    override fun onResultShown() = Unit
 }

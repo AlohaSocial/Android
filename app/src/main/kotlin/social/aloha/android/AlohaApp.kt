@@ -66,6 +66,7 @@ import social.aloha.core.designsystem.AlohaTheme
 import social.aloha.core.designsystem.badgeCount
 import social.aloha.core.model.FeedMode
 import social.aloha.core.model.ModeChoices
+import social.aloha.core.navigation.AccountExportKey
 import social.aloha.core.navigation.AccountKey
 import social.aloha.core.navigation.AddToAlbumKey
 import social.aloha.core.navigation.AlbumKey
@@ -163,6 +164,7 @@ import social.aloha.feature.safety.InterestsRoute
 import social.aloha.feature.safety.R as SafetyR
 import social.aloha.feature.saved.SavedPostsRoute
 import social.aloha.feature.search.SearchRoute
+import social.aloha.feature.settings.AccountExportRoute
 import social.aloha.feature.settings.AuthorizedAppsRoute
 import social.aloha.feature.settings.LookingBackRoute
 import social.aloha.feature.settings.R as SettingsR
@@ -549,6 +551,13 @@ fun AlohaApp(
                                 LookingBackRoute(
                                     key,
                                     onOpenPost = statusNavigation::openThread,
+                                    onConnect = { backStack.push(SettingsSectionKey(NEXTCLOUD_SECTION)) },
+                                    onBack = { backStack.remove(key) },
+                                )
+                            }
+                            entry<AccountExportKey> { key ->
+                                AccountExportRoute(
+                                    key,
                                     onConnect = { backStack.push(SettingsSectionKey(NEXTCLOUD_SECTION)) },
                                     onBack = { backStack.remove(key) },
                                 )
