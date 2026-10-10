@@ -426,4 +426,239 @@
     <string name="settings_intelligence_model">Rewriting and summaries: Gemini Nano, run by Android’s AICore</string>
     <!-- Intelligence settings, under Models: the language model for rewriting and summaries, with the name the device gives it (%1$s) -->
     <string name="settings_intelligence_model_named">Rewriting and summaries: Gemini Nano (%1$s), run by Android’s AICore</string>
+    <!-- Shown on a page only the Nextcloud connection opens, while the account has none -->
+    <string name="nextcloud_page_needs_connection">This needs your Nextcloud connected to this account.</string>
+    <!-- Button that opens the Nextcloud settings to connect it -->
+    <string name="nextcloud_page_connect">Connect your Nextcloud</string>
+    <!-- Shown when a page of the Nextcloud connection could not be loaded -->
+    <string name="nextcloud_page_failed">Couldn’t load this. Check your connection and try again.</string>
+    <!-- Button that loads a page of the Nextcloud connection again -->
+    <string name="nextcloud_page_retry">Try again</string>
+    <!-- Title of the page listing the apps signed in to the account -->
+    <string name="apps_title">Authorized apps</string>
+    <!-- Shown when no app but this one is signed in to the account -->
+    <string name="apps_empty">Nothing but this app has been let into your account.</string>
+    <!-- Name shown for a signed-in app that has none -->
+    <string name="apps_unnamed">Unnamed app</string>
+    <!-- When an app was signed in; %1$s is a date -->
+    <string name="apps_signed_in">Signed in %1$s</string>
+    <!-- When an app last used the account; %1$s is a date -->
+    <string name="apps_last_used">Last used %1$s</string>
+    <!-- Button that signs an app out of the account -->
+    <string name="apps_revoke">Revoke</string>
+    <!-- Spoken label of the button that signs an app out; %1$s is the app's name -->
+    <string name="apps_revoke_for">Revoke %1$s</string>
+    <!-- Title of the dialog confirming an app is signed out; %1$s is the app's name -->
+    <string name="apps_revoke_title">Sign %1$s out?</string>
+    <!-- Text of the dialog confirming an app is signed out -->
+    <string name="apps_revoke_body">The app loses its key at once and has to be signed in again to get another. If it’s this app, you’ll be asked to sign in again here too.</string>
+    <!-- Confirms signing an app out -->
+    <string name="apps_revoke_confirm">Revoke access</string>
+    <!-- Closes the dialog without signing the app out -->
+    <string name="apps_cancel">Cancel</string>
+    <!-- Shown when signing an app out did not work -->
+    <string name="apps_revoke_failed">Couldn’t revoke this app.</string>
+    <!-- Title of the page with the reader's posts from this day in other years and the weekly recap -->
+    <string name="looking_back_title">Looking back</string>
+    <!-- Heading of the weekly recap on the looking-back page -->
+    <string name="looking_back_week">This week</string>
+    <!-- Switch that turns the weekly recap on -->
+    <string name="looking_back_recap">Weekly recap</string>
+    <!-- Explains the weekly recap switch -->
+    <string name="looking_back_recap_about">While it’s on, your server counts your posts this week against last week. Counted on your server, shown to you alone.</string>
+    <!-- Weekly recap when nothing was posted this week -->
+    <string name="looking_back_week_none">Nothing posted this week yet.</string>
+    <!-- Weekly recap: posts this week. %d: how many -->
+    <plurals name="looking_back_week_posts">
+        <item quantity="one">%d post this week.</item>
+        <item quantity="other">%d posts this week.</item>
+    </plurals>
+    <!-- Weekly recap: more than last week. %d: last week's posts -->
+    <plurals name="looking_back_week_up">
+        <item quantity="one">Up from %d post last week.</item>
+        <item quantity="other">Up from %d posts last week.</item>
+    </plurals>
+    <!-- Weekly recap: fewer than last week. %d: last week's posts -->
+    <plurals name="looking_back_week_down">
+        <item quantity="one">Down from %d post last week.</item>
+        <item quantity="other">Down from %d posts last week.</item>
+    </plurals>
+    <!-- Weekly recap when both weeks had no posts -->
+    <string name="looking_back_week_quiet">Last week was quiet too.</string>
+    <!-- Weekly recap when both weeks had as many posts -->
+    <string name="looking_back_week_same">The same as last week.</string>
+    <!-- Heading of the posts from this day in earlier years -->
+    <string name="looking_back_day">On this day</string>
+    <!-- Shown when nothing was posted on this day in earlier years -->
+    <string name="looking_back_day_none">Nothing from this day in earlier years.</string>
+    <!-- How long ago a post from this day was written. %d: years -->
+    <plurals name="looking_back_years_ago">
+        <item quantity="one">%d year ago</item>
+        <item quantity="other">%d years ago</item>
+    </plurals>
+    <!-- Stands for a post from this day that has no text, only attachments. %d: how many -->
+    <plurals name="looking_back_attachments">
+        <item quantity="one">%d attachment</item>
+        <item quantity="other">%d attachments</item>
+    </plurals>
+    <!-- What tapping a post from this day does, read out by a screen reader -->
+    <string name="looking_back_open">Open the post</string>
+    <!-- Shown when turning the weekly recap on or off did not work -->
+    <string name="looking_back_change_failed">Couldn’t change the weekly recap.</string>
+    <!-- Title of the page that saves a copy of the account -->
+    <string name="export_title">Export your account</string>
+    <!-- Explains the export page -->
+    <string name="export_about">Take a copy to keep, or to move to another server. Each part is saved where you choose.</string>
+    <!-- The whole account as one file -->
+    <string name="export_archive">Everything, as an archive</string>
+    <!-- What the account archive holds -->
+    <string name="export_archive_about">Your profile, posts, pictures and videos, and the lists below. Never your private key.</string>
+    <!-- What a list export is -->
+    <string name="export_list_about">A CSV file, as Mastodon and others import it</string>
+    <!-- The accounts the reader follows, as a file -->
+    <string name="export_following">Accounts you follow</string>
+    <!-- The reader's followers, as a file -->
+    <string name="export_followers">Your followers</string>
+    <!-- The accounts the reader blocked, as a file -->
+    <string name="export_blocks">Accounts you blocked</string>
+    <!-- The accounts the reader muted, as a file -->
+    <string name="export_mutes">Accounts you muted</string>
+    <!-- The reader's lists, as a file -->
+    <string name="export_lists">Your lists</string>
+    <!-- Button that saves one part of the export -->
+    <string name="export_save">Save</string>
+    <!-- Spoken label of the button that saves one part; %1$s is what it saves -->
+    <string name="export_save_for">Save %1$s</string>
+    <!-- Shown once a part of the export was saved -->
+    <string name="export_saved">Saved.</string>
+    <!-- Shown when a part of the export could not be saved -->
+    <string name="export_failed">Couldn’t save the export. Try again.</string>
+    <!-- Title of the page listing the reader's video channels -->
+    <string name="channels_title">Video channels</string>
+    <!-- Button and dialog title that make a new video channel -->
+    <string name="channels_new">New channel</string>
+    <!-- Title of the dialog that renames a video channel -->
+    <string name="channels_edit">Edit channel</string>
+    <!-- What tapping a video channel does, read out by a screen reader -->
+    <string name="channels_edit_action">Edit the channel</string>
+    <!-- Shown when the reader has no video channel -->
+    <string name="channels_none">No channels yet</string>
+    <!-- Explains how a video channel comes about -->
+    <string name="channels_none_about">Your first video makes one. Or make one now and post into it.</string>
+    <!-- How many videos a channel holds. %d: how many -->
+    <plurals name="channels_videos">
+        <item quantity="one">%d video</item>
+        <item quantity="other">%d videos</item>
+    </plurals>
+    <!-- Field for a new channel's handle, its address -->
+    <string name="channels_handle">Handle</string>
+    <!-- Explains a new channel's handle -->
+    <string name="channels_handle_about">The channel’s address, which can’t change later. Letters, numbers and underscores.</string>
+    <!-- Field for a channel's name -->
+    <string name="channels_name">Name</string>
+    <!-- Field for a channel's description -->
+    <string name="channels_description">Description</string>
+    <!-- Saves a video channel -->
+    <string name="channels_save">Save</string>
+    <!-- Closes the channel dialog without saving -->
+    <string name="channels_cancel">Cancel</string>
+    <!-- Shown when a channel could not be saved and the server said nothing more -->
+    <string name="channels_save_failed">Couldn’t save the channel.</string>
+    <!-- Title of the page with the reader's statistics -->
+    <string name="statistics_title">Statistics</string>
+    <!-- Button that has the server count the statistics again -->
+    <string name="statistics_count_again">Count again</string>
+    <!-- Button that saves the statistics as a CSV file -->
+    <string name="statistics_export">Export as CSV</string>
+    <!-- Shown once the statistics were saved as a file -->
+    <string name="statistics_exported">Saved.</string>
+    <!-- Shown when the statistics could not be counted again or saved -->
+    <string name="statistics_failed">Couldn’t do that. Try again.</string>
+    <!-- Statistics window: the last days. %d: how many days -->
+    <plurals name="statistics_window_days">
+        <item quantity="one">%d day</item>
+        <item quantity="other">%d days</item>
+    </plurals>
+    <!-- Statistics window: the last year -->
+    <string name="statistics_window_year">A year</string>
+    <!-- Statistics window: everything -->
+    <string name="statistics_window_all">All time</string>
+    <!-- Shown when there is nothing to count in the window -->
+    <string name="statistics_empty">Nothing to count yet</string>
+    <!-- Explains an empty statistics window -->
+    <string name="statistics_empty_about">Post something and come back.</string>
+    <!-- Statistics number: posts -->
+    <string name="statistics_posts">Posts</string>
+    <!-- Statistics number: followers -->
+    <string name="statistics_followers">Followers</string>
+    <!-- Statistics number: accounts followed -->
+    <string name="statistics_following">Following</string>
+    <!-- Shown when the server counted only the newest posts. %d: how many it counted -->
+    <plurals name="statistics_capped">
+        <item quantity="one">Counted the most recent post; older ones are left out.</item>
+        <item quantity="other">Counted the most recent %d posts; older ones are left out.</item>
+    </plurals>
+    <!-- Statistics section: how people responded -->
+    <string name="statistics_engagement">Engagement</string>
+    <!-- Statistics number: favourites received -->
+    <string name="statistics_favourites">Favourites</string>
+    <!-- Statistics number: boosts received -->
+    <string name="statistics_boosts">Boosts</string>
+    <!-- Statistics number: replies received -->
+    <string name="statistics_replies">Replies</string>
+    <!-- Statistics number: responses per post -->
+    <string name="statistics_per_post">Per post</string>
+    <!-- Statistics number: the responses a post gets, against the number of followers, as a percentage -->
+    <string name="statistics_per_follower">Per follower</string>
+    <!-- Statistics number: posts nobody answered -->
+    <string name="statistics_silent">Posts with no reply</string>
+    <!-- Statistics chart: posts each month -->
+    <string name="statistics_posts_by_month">Posts by month</string>
+    <!-- Statistics chart: responses each month -->
+    <string name="statistics_engagement_by_month">Engagement by month</string>
+    <!-- Statistics chart: posts, replies and boosts each month -->
+    <string name="statistics_activity">Posts, replies and boosts</string>
+    <!-- Chart series: the reader's own posts -->
+    <string name="statistics_series_posts">Posts</string>
+    <!-- Chart series: the reader's replies -->
+    <string name="statistics_series_replies">Replies</string>
+    <!-- Chart series: the reader's boosts -->
+    <string name="statistics_series_boosts">Boosts</string>
+    <!-- Statistics section: who could see the posts -->
+    <string name="statistics_visibility">Who could see them</string>
+    <!-- Visibility: anyone -->
+    <string name="statistics_visibility_public">Public</string>
+    <!-- Statistics section: how regularly the reader posts -->
+    <string name="statistics_rhythm">Rhythm</string>
+    <!-- Statistics number: days with at least one post -->
+    <string name="statistics_active_days">Days with a post</string>
+    <!-- Statistics number: most days in a row with a post -->
+    <string name="statistics_streak">Longest streak</string>
+    <!-- Statistics number: most days in a row without a post -->
+    <string name="statistics_gap">Longest quiet spell</string>
+    <!-- Statistics section: hashtags used -->
+    <string name="statistics_hashtags">Hashtags</string>
+    <!-- Statistics section: languages written in -->
+    <string name="statistics_languages">Languages</string>
+    <!-- Statistics section: websites linked to -->
+    <string name="statistics_domains">Sites you link to</string>
+    <!-- Statistics section: who the reader talks with -->
+    <string name="statistics_conversations">Conversations</string>
+    <!-- Statistics list: the accounts that reply to the reader -->
+    <string name="statistics_replies_to_you">Who replies to you</string>
+    <!-- Statistics list: the accounts the reader replies to -->
+    <string name="statistics_you_reply_to">Who you reply to</string>
+    <!-- How many replies in a conversation. %d: how many -->
+    <plurals name="statistics_partner_replies">
+        <item quantity="one">%d reply</item>
+        <item quantity="other">%d replies</item>
+    </plurals>
+    <!-- Statistics section: pictures posted -->
+    <string name="statistics_pictures">Pictures</string>
+    <!-- Statistics number: posts with pictures -->
+    <string name="statistics_with_pictures">Posts with pictures</string>
+    <!-- Statistics number: pictures with a description -->
+    <string name="statistics_described">With a description</string>
+    <!-- Statistics number: the share of pictures with a description -->
+    <string name="statistics_described_share">Described</string>
 </resources>

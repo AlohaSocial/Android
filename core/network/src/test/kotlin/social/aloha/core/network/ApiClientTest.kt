@@ -3,6 +3,7 @@
 
 package social.aloha.core.network
 
+import java.io.ByteArrayOutputStream
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.runTest
@@ -172,6 +173,24 @@ class ApiClientTest {
         assertInstanceOf(ApiError.Transport::class.java, plain.errorOrNull())
         assertNull(impatient.execute(unitRequest(upload)).errorOrNull())
     }
+
+    @Test
+    fun `a download streams the answer with the app password, and a refusal is an error with nothing written`() =
+        runTest {
+            respond("acct,posts\nalice,19\n")
+            val export = Endpoint("api/v1/statistics/export", authentication = Authentication.NextcloudSession)
+            val written = ByteArrayOutputStream()
+            assertNull(client().download(export, written).errorOrNull())
+            assertEquals("acct,posts\nalice,19\n", written.toString(Charsets.UTF_8))
+            val recorded = server.takeRequest()
+            assertEquals("Basic YWxpY2U6cHc=", recorded.headers["Authorization"])
+            assertEquals("true", recorded.headers["OCS-APIRequest"])
+
+            respond("""{"error":"Not allowed"}""", code = 403)
+            val refused = ByteArrayOutputStream()
+            assertInstanceOf(ApiError.Forbidden::class.java, client().download(export, refused).errorOrNull())
+            assertEquals(0, refused.size())
+        }
 
     @Test
     fun `a 429 blocks the host for Retry-After`() = runTest {

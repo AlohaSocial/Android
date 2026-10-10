@@ -35,9 +35,20 @@ private const val ZIP = "application/zip"
 private const val CSV = "text/csv"
 
 /**
- * Taking the account somewhere else, or bringing one here. The exports are downloads (a zip or a
- * CSV) rather than JSON, so they are not built here.
+ * The account to keep or take to another server. Nextcloud-session routes, and downloads rather than
+ * JSON, so they are for `ApiClient.download`.
  */
+public object ExportEndpoints {
+    /** The whole account as a Mastodon-style archive: a zip of the actor, its posts and its media. */
+    public fun archive(): Endpoint =
+        Endpoint("api/v1/migration/export", authentication = Authentication.NextcloudSession)
+
+    /** One of the account's lists as the CSV other servers import, without the whole archive. */
+    public fun list(kind: MigrationListKind): Endpoint =
+        Endpoint("api/v1/migration/export/${kind.wire}", authentication = Authentication.NextcloudSession)
+}
+
+/** Taking the account somewhere else, or bringing one here. */
 public object MigrationEndpoints {
     private fun report(endpoint: Endpoint): ApiRequest<MigrationReport> =
         request(endpoint, MigrationReportSerializer) { it }
@@ -105,11 +116,15 @@ public object MigrationEndpoints {
         aliases(Endpoint("api/v1/migration/aliases", HttpMethod.DELETE, query = listOf(QueryItem("alias", alias))))
 }
 
-/**
- * The reader's own numbers. A Nextcloud-session route: a bearer token answers 401. The CSV export is
- * a download and is not built here.
- */
+/** The reader's own numbers. A Nextcloud-session route: a bearer token answers 401. */
 public object StatisticsEndpoints {
+    /** The same numbers over [days] (0 for everything) as a CSV; a download, so `ApiClient.download`. */
+    public fun export(days: Int): Endpoint = Endpoint(
+        "api/v1/statistics/export",
+        query = listOf(QueryItem("days", days.toString())),
+        authentication = Authentication.NextcloudSession,
+    )
+
     /** [days] 0 means everything; [fresh] bypasses the server's cache. */
     public fun overview(days: Int, fresh: Boolean = false): ApiRequest<AccountStatistics> = request(
         Endpoint(

@@ -11,6 +11,7 @@ import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.tryPerformAccessibilityChecks
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.captureRoboImage
+import java.time.Instant
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -25,17 +26,26 @@ import social.aloha.core.designsystem.ThemeMode
 import social.aloha.core.designsystem.ThemeSettings
 import social.aloha.core.intelligence.ModelAvailability
 import social.aloha.core.model.AccentSource
+import social.aloha.core.model.AccountStatistics
 import social.aloha.core.model.AnnualArchetype
 import social.aloha.core.model.AnnualHashtag
 import social.aloha.core.model.AnnualMonth
 import social.aloha.core.model.AnnualReport
 import social.aloha.core.model.AnnualReportData
 import social.aloha.core.model.Appearance
+import social.aloha.core.model.AuthorizedApp
 import social.aloha.core.model.InstanceDocument
 import social.aloha.core.model.InstanceRule
+import social.aloha.core.model.NamedCount
+import social.aloha.core.model.NumberMap
 import social.aloha.core.model.PublicDomainBlock
 import social.aloha.core.model.ReadingStyle
 import social.aloha.core.model.SensitiveMediaPolicy
+import social.aloha.core.model.StatisticsAccount
+import social.aloha.core.model.StatisticsActivity
+import social.aloha.core.model.StatisticsWindow
+import social.aloha.core.model.VideoChannel
+import social.aloha.core.model.WeeklyRecap
 
 /** The settings list and a section at each width, each also run through the Accessibility Test Framework checks. */
 @RunWith(RobolectricTestRunner::class)
@@ -135,6 +145,122 @@ class SettingsScreenshotTest {
     @Test
     fun privacyWithIntelligence() = capture("settings-privacy-intelligence") {
         TextPage("Privacy", onClose = {}) { PrivacyStatement(NOTICE) }
+    }
+
+    @Test
+    fun authorizedApps() = capture("settings-authorized-apps") {
+        val signedIn = Instant.parse("2026-09-29T10:00:00Z")
+        AuthorizedAppsScreen(
+            AuthorizedAppsUiState(
+                PageStatus.Ready,
+                listOf(
+                    AuthorizedApp(
+                        "37",
+                        "Aloha Social",
+                        "https://aloha.social",
+                        createdAt = signedIn,
+                        lastUsedAt = signedIn,
+                        scopes = listOf("read", "write", "follow", "push"),
+                    ),
+                    AuthorizedApp("12", "Tusky", createdAt = signedIn, scopes = listOf("read", "write")),
+                ),
+            ),
+            NoAppActions,
+            onConnect = {},
+            onBack = {},
+        )
+    }
+
+    @Test
+    fun lookingBack() = capture("settings-looking-back") {
+        LookingBackScreen(
+            LookingBackUiState(
+                PageStatus.Ready,
+                WeeklyRecap(enabled = true, thisWeek = 3, lastWeek = 1),
+                listOf(
+                    Memory("2", 1, "Sunrise paddle before work", 0),
+                    Memory("1", 3, "", 2),
+                ),
+            ),
+            NoLookingBackActions,
+            onOpenPost = {},
+            onConnect = {},
+            onBack = {},
+        )
+    }
+
+    @Test
+    fun accountExport() = capture("settings-account-export") {
+        AccountExportScreen(
+            AccountExportUiState(PageStatus.Ready, handle = "alice"),
+            NoExportActions,
+            onSave = {},
+            onConnect = {},
+            onBack = {},
+        )
+    }
+
+    @Test
+    fun channels() = capture("settings-channels") {
+        ChannelsScreen(
+            ChannelsUiState(
+                PageStatus.Ready,
+                listOf(
+                    VideoChannel(
+                        "1",
+                        "alice_channel",
+                        "Alice\u2019s videos",
+                        "Waves, boards and the odd sunset.",
+                        videosCount = 12,
+                    ),
+                    VideoChannel("2", "surf_lessons", "Surf lessons", videosCount = 0),
+                ),
+            ),
+            NoChannelActions,
+            onConnect = {},
+            onBack = {},
+        )
+    }
+
+    @Test
+    fun statistics() = capture("settings-statistics") {
+        val months = listOf("2026-05", "2026-06", "2026-07", "2026-08", "2026-09", "2026-10")
+        fun series(vararg values: Int) = NumberMap(months.zip(values.map(Int::toDouble)).toMap())
+        StatisticsScreen(
+            StatisticsUiState(
+                PageStatus.Ready,
+                statistics = AccountStatistics(
+                    account = StatisticsAccount("alice", followers = 48, following = 31),
+                    window = StatisticsWindow(days = 90, counted = 19),
+                    posts = NumberMap(mapOf("total" to 19.0)),
+                    engagement = NumberMap(mapOf("likes" to 42.0, "boosts" to 11.0, "replies" to 9.0)),
+                    rates = NumberMap(mapOf("per_post" to 3.3, "per_follower" to 10.53, "silent" to 6.0)),
+                    visibility = NumberMap(mapOf("public" to 13.0, "unlisted" to 5.0, "followers" to 1.0)),
+                    byMonth = series(2, 0, 3, 5, 6, 3),
+                    activity = StatisticsActivity(
+                        series(2, 0, 2, 4, 5, 2),
+                        series(0, 0, 1, 1, 1, 1),
+                        series(1, 0, 0, 2, 0, 1),
+                    ),
+                    hashtags = listOf(NamedCount("aloha", 6), NamedCount("surf", 4)),
+                ),
+                handle = "alice",
+            ),
+            NoStatisticsActions,
+            onSave = {},
+            onConnect = {},
+            onBack = {},
+        )
+    }
+
+    @Test
+    fun nextcloudPageNeedsConnection() = capture("settings-nextcloud-page-connect") {
+        AuthorizedAppsScreen(
+            AuthorizedAppsUiState(PageStatus.NeedsConnection),
+            NoAppActions,
+            onConnect = {},
+            onBack = {},
+        )
     }
 
     @Test
@@ -247,4 +373,54 @@ class SettingsScreenshotTest {
         const val NOTICE = "Drafting alt text runs on this device with open software, only once you turn it on " +
             "and tap it: your pictures are not sent anywhere, and the software reports to no one."
     }
+}
+
+private object NoAppActions : AuthorizedAppsActions {
+    override fun onRevoke(id: String) = Unit
+
+    override fun onRetry() = Unit
+
+    override fun onRevokeFailureShown() = Unit
+}
+
+private object NoLookingBackActions : LookingBackActions {
+    override fun onRecap(enabled: Boolean) = Unit
+
+    override fun onRetry() = Unit
+
+    override fun onChangeFailureShown() = Unit
+}
+
+private object NoExportActions : AccountExportActions {
+    override fun onExport(item: ExportItem, uri: String) = Unit
+
+    override fun onRetry() = Unit
+
+    override fun onResultShown() = Unit
+}
+
+private object NoChannelActions : ChannelsActions {
+    override fun onNew() = Unit
+
+    override fun onEdit(channel: VideoChannel) = Unit
+
+    override fun onDraft(draft: ChannelDraft) = Unit
+
+    override fun onSave() = Unit
+
+    override fun onCancel() = Unit
+
+    override fun onRetry() = Unit
+}
+
+private object NoStatisticsActions : StatisticsActions {
+    override fun onWindow(days: Int) = Unit
+
+    override fun onCountAgain() = Unit
+
+    override fun onExport(uri: String) = Unit
+
+    override fun onRetry() = Unit
+
+    override fun onResultShown() = Unit
 }

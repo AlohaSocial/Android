@@ -3,6 +3,7 @@
 
 package social.aloha.core.network
 
+import java.io.OutputStream
 import kotlinx.coroutines.CoroutineDispatcher
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
@@ -62,6 +63,13 @@ public class ApiClient internal constructor(
         if (!following.sameOrigin(apiBase)) return ApiResult.Failure(ApiError.ForeignCursor(following.host))
         val get = ApiRequest(like.endpoint.copy(method = HttpMethod.GET, body = Body.None), like.decoder)
         return perform(get, following).map { it.toPage(limit) }
+    }
+
+    /** [endpoint]'s answer written [into], for a download such as an export; nothing is decoded. */
+    public suspend fun download(endpoint: Endpoint, into: OutputStream): ApiResult<Unit> {
+        val authorization = authorization(endpoint.authentication)
+            ?: return ApiResult.Failure(ApiError.Unauthorised(message = null))
+        return executor.download(endpoint, endpoint.resolve(apiBase), authorization, into)
     }
 
     private fun <T> Answer<List<T>>.toPage(limit: Int) =

@@ -66,6 +66,13 @@ On Nextcloud Social, Settings, Nextcloud connects the Nextcloud itself (`Nextclo
 - The app password it grants is kept in the vault and sent over HTTP Basic with `OCS-APIRequest: true`.
 - It is what reaches the routes Social refuses a token for (authorised apps, memories, review, channels, migration and account deletion) and the notifications app's Web Push, which is how Nextcloud Social pushes ([08-notifications-sync.md](08-notifications-sync.md)).
 - Disconnecting revokes the app password on the server (`DELETE ocs/v2.php/core/apppassword`).
+- Its pages (`NextcloudExtras`, `core/data/.../nextcloud`; the screens in `feature/settings`) are listed in Settings right after Nextcloud for every account on Nextcloud Social, and each says when the Nextcloud is not connected yet, with a way to connect it, rather than failing:
+  - Looking back: the weekly recap, with the switch that has the server count this week against last, and the reader's posts from this day in earlier years.
+  - Statistics, also in the account sheet: over 30 days, 90 days, a year or all time, counted by the server (`fresh` counts anew), with the numbers as a CSV.
+  - Video channels, also in Video mode as Your channels: listed, made with a handle that cannot change later, and renamed.
+  - Authorized apps: every app with a key to the account, each signed out with Revoke.
+  - Export your account: the whole account as an archive, or the accounts followed, the followers, blocks, mutes and lists one at a time as CSV.
+- The two downloads, the statistics CSV and the export, are streamed into a file the reader picks with the system's save dialog, never through Android's download manager, which would keep the app password in its own database. A download that fails, or is left when the page closes, has what it wrote deleted where the file's provider allows it.
 
 Attaching a file from Nextcloud Files does not need the connection: the composer sends a path to `POST /api/v1/media/from-file` with the account's token, and there is no WebDAV browser.
 
