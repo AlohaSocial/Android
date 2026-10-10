@@ -533,4 +533,35 @@
     <string name="export_saved">Saved.</string>
     <!-- Shown when a part of the export could not be saved -->
     <string name="export_failed">Couldn’t save the export. Try again.</string>
+    <!-- Title of the page listing the reader's video channels -->
+    <string name="channels_title">Video channels</string>
+    <!-- Button and dialog title that make a new video channel -->
+    <string name="channels_new">New channel</string>
+    <!-- Title of the dialog that renames a video channel -->
+    <string name="channels_edit">Edit channel</string>
+    <!-- What tapping a video channel does, read out by a screen reader -->
+    <string name="channels_edit_action">Edit the channel</string>
+    <!-- Shown when the reader has no video channel -->
+    <string name="channels_none">No channels yet</string>
+    <!-- Explains how a video channel comes about -->
+    <string name="channels_none_about">Your first video makes one. Or make one now and post into it.</string>
+    <!-- How many videos a channel holds. %d: how many -->
+    <plurals name="channels_videos">
+        <item quantity="one">%d video</item>
+        <item quantity="other">%d videos</item>
+    </plurals>
+    <!-- Field for a new channel's handle, its address -->
+    <string name="channels_handle">Handle</string>
+    <!-- Explains a new channel's handle -->
+    <string name="channels_handle_about">The channel’s address, which can’t change later. Letters, numbers and underscores.</string>
+    <!-- Field for a channel's name -->
+    <string name="channels_name">Name</string>
+    <!-- Field for a channel's description -->
+    <string name="channels_description">Description</string>
+    <!-- Saves a video channel -->
+    <string name="channels_save">Save</string>
+    <!-- Closes the channel dialog without saving -->
+    <string name="channels_cancel">Cancel</string>
+    <!-- Shown when a channel could not be saved and the server said nothing more -->
+    <string name="channels_save_failed">Couldn’t save the channel.</string>
 </resources>

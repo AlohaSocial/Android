@@ -76,6 +76,7 @@ import social.aloha.core.navigation.AudioKey
 import social.aloha.core.navigation.AuthorizedAppsKey
 import social.aloha.core.navigation.BlockedKey
 import social.aloha.core.navigation.CatchUpKey
+import social.aloha.core.navigation.ChannelsKey
 import social.aloha.core.navigation.ComposerKey
 import social.aloha.core.navigation.ConversationsKey
 import social.aloha.core.navigation.DraftsKey
@@ -166,6 +167,7 @@ import social.aloha.feature.saved.SavedPostsRoute
 import social.aloha.feature.search.SearchRoute
 import social.aloha.feature.settings.AccountExportRoute
 import social.aloha.feature.settings.AuthorizedAppsRoute
+import social.aloha.feature.settings.ChannelsRoute
 import social.aloha.feature.settings.LookingBackRoute
 import social.aloha.feature.settings.R as SettingsR
 import social.aloha.feature.settings.SettingsDestination
@@ -465,6 +467,7 @@ fun AlohaApp(
                                     onEditFeeds = { backStack.push(FeedsKey(readerId)) },
                                     onComposeAs = { backStack.push(composerFor(it)) },
                                     onCatchUp = { backStack.push(CatchUpKey(readerId)) },
+                                    onChannels = { backStack.push(ChannelsKey(readerId)) }.takeIf { nextcloudSocial },
                                 )
                                 timeline(feed, statusNavigation, links) { accountButton(accountLinks) }
                             }
@@ -557,6 +560,13 @@ fun AlohaApp(
                             }
                             entry<AccountExportKey> { key ->
                                 AccountExportRoute(
+                                    key,
+                                    onConnect = { backStack.push(SettingsSectionKey(NEXTCLOUD_SECTION)) },
+                                    onBack = { backStack.remove(key) },
+                                )
+                            }
+                            entry<ChannelsKey> { key ->
+                                ChannelsRoute(
                                     key,
                                     onConnect = { backStack.push(SettingsSectionKey(NEXTCLOUD_SECTION)) },
                                     onBack = { backStack.remove(key) },
@@ -810,7 +820,10 @@ private fun ModeTimeline(
                     onNewStory = { navigation.openComposerFor(ComposerStart.Story) },
                 )
 
-                FeedMode.Video -> ContinueWatching(onOpen = navigation::openVideo)
+                FeedMode.Video -> Column {
+                    links.onChannels?.let { ChannelsLink(it) }
+                    ContinueWatching(onOpen = navigation::openVideo)
+                }
 
                 else -> Unit
             }
@@ -850,6 +863,8 @@ data class HomeLinks(
     val onEditFeeds: () -> Unit = {},
     val onComposeAs: (accountId: String) -> Unit = {},
     val onCatchUp: () -> Unit = {},
+    /** The reader's video channels, where the server keeps them; null where it does not. */
+    val onChannels: (() -> Unit)? = null,
 )
 
 /** Where the account button's sheet leads, one [AccountPlace] at a time. */
