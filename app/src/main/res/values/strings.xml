@@ -12,6 +12,8 @@
     <string name="accounts_favourites">Favourites</string>
     <!-- In the account sheet: opens the reader's own posts taken off their profile without deleting them -->
     <string name="accounts_archived">Archived posts</string>
+    <!-- In the account sheet: opens the reader's statistics, counted by their Nextcloud Social server -->
+    <string name="accounts_statistics">Statistics</string>
     <!-- In the account sheet: opens the reader's filters, which hide or warn about posts by keyword -->
     <string name="accounts_filters">Filters</string>
     <!-- In the account sheet: opens what the reader's server announces to everyone on it -->

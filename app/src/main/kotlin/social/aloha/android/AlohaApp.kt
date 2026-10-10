@@ -112,6 +112,7 @@ import social.aloha.core.navigation.SearchKey
 import social.aloha.core.navigation.SettingsKey
 import social.aloha.core.navigation.SettingsSectionKey
 import social.aloha.core.navigation.ShortsKey
+import social.aloha.core.navigation.StatisticsKey
 import social.aloha.core.navigation.StatusListKey
 import social.aloha.core.navigation.StatusListKind
 import social.aloha.core.navigation.TagGroupKey
@@ -174,6 +175,7 @@ import social.aloha.feature.settings.SettingsDestination
 import social.aloha.feature.settings.SettingsPlaceholder
 import social.aloha.feature.settings.SettingsRoute
 import social.aloha.feature.settings.SettingsSectionRoute
+import social.aloha.feature.settings.StatisticsRoute
 import social.aloha.feature.settings.YearRoute
 import social.aloha.feature.shorts.ShortsRoute
 import social.aloha.feature.stories.StoriesRail
@@ -572,6 +574,13 @@ fun AlohaApp(
                                     onBack = { backStack.remove(key) },
                                 )
                             }
+                            entry<StatisticsKey> { key ->
+                                StatisticsRoute(
+                                    key,
+                                    onConnect = { backStack.push(SettingsSectionKey(NEXTCLOUD_SECTION)) },
+                                    onBack = { backStack.remove(key) },
+                                )
+                            }
                             entry<AuthorizedAppsKey> { key ->
                                 AuthorizedAppsRoute(
                                     key,
@@ -877,6 +886,7 @@ enum class AccountPlace {
     Bookmarks,
     Favourites,
     Archived,
+    Statistics,
     Lists,
     Hashtags,
     Interests,
@@ -891,6 +901,7 @@ private fun AccountPlace.key(readerId: String, serverAccountId: String): NavKey 
     AccountPlace.Bookmarks -> SavedPostsKey(readerId, SavedKind.Bookmarks)
     AccountPlace.Favourites -> SavedPostsKey(readerId, SavedKind.Favourites)
     AccountPlace.Archived -> SavedPostsKey(readerId, SavedKind.Archived)
+    AccountPlace.Statistics -> StatisticsKey(readerId)
     AccountPlace.Lists -> ListsKey(readerId)
     AccountPlace.Hashtags -> HashtagsKey(readerId)
     AccountPlace.Interests -> InterestsKey(readerId)
