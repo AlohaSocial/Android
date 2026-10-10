@@ -11,6 +11,7 @@ import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.tryPerformAccessibilityChecks
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.captureRoboImage
+import java.time.Instant
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -31,6 +32,7 @@ import social.aloha.core.model.AnnualMonth
 import social.aloha.core.model.AnnualReport
 import social.aloha.core.model.AnnualReportData
 import social.aloha.core.model.Appearance
+import social.aloha.core.model.AuthorizedApp
 import social.aloha.core.model.InstanceDocument
 import social.aloha.core.model.InstanceRule
 import social.aloha.core.model.PublicDomainBlock
@@ -135,6 +137,40 @@ class SettingsScreenshotTest {
     @Test
     fun privacyWithIntelligence() = capture("settings-privacy-intelligence") {
         TextPage("Privacy", onClose = {}) { PrivacyStatement(NOTICE) }
+    }
+
+    @Test
+    fun authorizedApps() = capture("settings-authorized-apps") {
+        val signedIn = Instant.parse("2026-09-29T10:00:00Z")
+        AuthorizedAppsScreen(
+            AuthorizedAppsUiState(
+                PageStatus.Ready,
+                listOf(
+                    AuthorizedApp(
+                        "37",
+                        "Aloha Social",
+                        "https://aloha.social",
+                        createdAt = signedIn,
+                        lastUsedAt = signedIn,
+                        scopes = listOf("read", "write", "follow", "push"),
+                    ),
+                    AuthorizedApp("12", "Tusky", createdAt = signedIn, scopes = listOf("read", "write")),
+                ),
+            ),
+            NoAppActions,
+            onConnect = {},
+            onBack = {},
+        )
+    }
+
+    @Test
+    fun nextcloudPageNeedsConnection() = capture("settings-nextcloud-page-connect") {
+        AuthorizedAppsScreen(
+            AuthorizedAppsUiState(PageStatus.NeedsConnection),
+            NoAppActions,
+            onConnect = {},
+            onBack = {},
+        )
     }
 
     @Test
@@ -247,4 +283,12 @@ class SettingsScreenshotTest {
         const val NOTICE = "Drafting alt text runs on this device with open software, only once you turn it on " +
             "and tap it: your pictures are not sent anywhere, and the software reports to no one."
     }
+}
+
+private object NoAppActions : AuthorizedAppsActions {
+    override fun onRevoke(id: String) = Unit
+
+    override fun onRetry() = Unit
+
+    override fun onRevokeFailureShown() = Unit
 }

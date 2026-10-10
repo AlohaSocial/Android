@@ -40,6 +40,7 @@ import androidx.compose.material.icons.outlined.AddComment
 import androidx.compose.material.icons.outlined.AddPhotoAlternate
 import androidx.compose.material.icons.outlined.AddReaction
 import androidx.compose.material.icons.outlined.AmpStories
+import androidx.compose.material.icons.outlined.Apps
 import androidx.compose.material.icons.outlined.AttachFile
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.Bedtime
@@ -219,6 +220,7 @@ public object AlohaIcons {
     public val Appearance: ImageVector = Icons.Outlined.Palette
     public val About: ImageVector = Icons.Outlined.Info
     public val Nextcloud: ImageVector = Icons.Outlined.Cloud
+    public val Apps: ImageVector = Icons.Outlined.Apps
     public val Rules: ImageVector = Icons.AutoMirrored.Outlined.Rule
     public val NewPosts: ImageVector = Icons.Filled.ArrowUpward
     public val ArrowUpward: ImageVector = Icons.Filled.ArrowUpward
