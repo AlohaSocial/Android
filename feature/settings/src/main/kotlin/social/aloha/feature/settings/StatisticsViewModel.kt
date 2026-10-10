@@ -3,8 +3,6 @@
 
 package social.aloha.feature.settings
 
-import android.content.Context
-import android.net.Uri
 import androidx.compose.runtime.Immutable
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
@@ -13,17 +11,21 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import social.aloha.core.data.AccountRepository
 import social.aloha.core.data.Answer
 import social.aloha.core.data.nextcloud.NextcloudExtras
 import social.aloha.core.model.AccountStatistics
+import social.aloha.core.sync.ExportJob
+import social.aloha.core.sync.ExportRun
+import social.aloha.core.sync.Exports
 
 @Immutable
 internal data class StatisticsUiState(
@@ -65,9 +67,9 @@ internal interface StatisticsActions {
 @HiltViewModel(assistedFactory = StatisticsViewModel.Factory::class)
 internal class StatisticsViewModel @AssistedInject constructor(
     @Assisted private val readerId: String,
-    @param:ApplicationContext private val context: Context,
     private val accounts: AccountRepository,
     private val extras: NextcloudExtras,
+    private val exports: Exports,
 ) : ViewModel(),
     StatisticsActions {
     @AssistedFactory
@@ -79,8 +81,23 @@ internal class StatisticsViewModel @AssistedInject constructor(
     val uiState: StateFlow<StatisticsUiState> = state.asStateFlow()
     private var counting: Job? = null
 
+    /** Asked for and not with WorkManager yet, shown as exporting meanwhile. */
+    private var pending = false
+    private val follower = ExportFollower { run ->
+        if (run.job !is ExportJob.Statistics) return@ExportFollower
+        val saved = run.outcome == ExportRun.Outcome.Saved
+        state.update { it.copy(exported = saved, failed = !saved) }
+    }
+
     init {
         load(fresh = false)
+        viewModelScope.launch {
+            exports.observe(readerId).collect { runs ->
+                val running = runs.any { it.job is ExportJob.Statistics && it.outcome == ExportRun.Outcome.Running }
+                state.update { it.copy(exporting = running || pending) }
+                follower.seen(runs)
+            }
+        }
     }
 
     override fun onWindow(days: Int) {
@@ -100,17 +117,15 @@ internal class StatisticsViewModel @AssistedInject constructor(
 
     override fun onExport(uri: String) {
         if (state.value.exporting) return
+        pending = true
         state.update { it.copy(exporting = true) }
+        val job = ExportJob.Statistics(shownDays)
         viewModelScope.launch {
-            val saved = save(uri.toUri())
-            state.update { it.copy(exporting = false, exported = saved, failed = !saved) }
+            // asked for is asked for: leaving the page right away must not lose it
+            val id = withContext(NonCancellable) { exports.enqueue(readerId, job, uri.toUri()) }
+            pending = false
+            follower.asked(id)
         }
-    }
-
-    private suspend fun save(uri: Uri): Boolean {
-        val account = accounts.byId(readerId) ?: return false
-        val days = shownDays
-        return saveToDocument(context, uri) { extras.exportStatistics(account, days, it) }
     }
 
     private fun load(fresh: Boolean) {

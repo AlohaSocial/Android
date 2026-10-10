@@ -5,8 +5,11 @@ package social.aloha.feature.settings
 
 import android.app.Application
 import android.content.Context
+import android.os.Looper
 import androidx.lifecycle.ViewModelStore
 import androidx.test.core.app.ApplicationProvider
+import androidx.work.WorkManager
+import androidx.work.testing.WorkManagerTestInitHelper
 import java.util.concurrent.CopyOnWriteArrayList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -22,11 +25,14 @@ import mockwebserver3.MockWebServer
 import mockwebserver3.RecordedRequest
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import social.aloha.core.data.nextcloud.NextcloudExtras
+import social.aloha.core.sync.Exports
 import social.aloha.core.testing.SignedInFixture
 
 /** Statistics as Social 0.26.181 answers them, trimmed; a fresh count is refused when [refuseFresh]. */
@@ -62,6 +68,10 @@ class StatisticsViewModelTest {
     private val store = ViewModelStore()
     private val server = MockWebServer()
 
+    init {
+        WorkManagerTestInitHelper.initializeTestWorkManager(context)
+    }
+
     @After
     fun close() {
         // before resetMain: clearing a ViewModel cancels its work on the main dispatcher
@@ -76,7 +86,7 @@ class StatisticsViewModelTest {
         server.start()
         val reader = fixture.signIn(server.url("/"))
         fixture.connectNextcloud(reader.id, "Basic YWxpY2U6YXBw")
-        StatisticsViewModel(reader.id, context, fixture.accounts, NextcloudExtras(fixture.clients))
+        StatisticsViewModel(reader.id, fixture.accounts, NextcloudExtras(fixture.clients), Exports(context))
             .also { store.put("stats", it) }
     }
 
@@ -110,6 +120,24 @@ class StatisticsViewModelTest {
         val after = withTimeout(WAIT_MILLIS) { viewModel.uiState.first { it.failed } }
         assertEquals(90, after.days)
         assertEquals(90, after.statistics?.window?.days)
+    }
+
+    @Test
+    fun `an export goes to the background over the window shown, and the page shows it going`() = runBlocking {
+        val viewModel = open(Counts(refuseFresh = false))
+        withTimeout(WAIT_MILLIS) { viewModel.uiState.first { it.status == PageStatus.Ready } }
+        viewModel.onExport("content://documents/statistics.csv")
+        withTimeout(WAIT_MILLIS) { viewModel.uiState.first { it.exporting } }
+        val tags = withTimeout(WAIT_MILLIS) {
+            var infos = WorkManager.getInstance(context).getWorkInfosByTag("export").get()
+            while (infos.isEmpty()) {
+                shadowOf(Looper.getMainLooper()).idle()
+                kotlinx.coroutines.delay(POLL_MILLIS)
+                infos = WorkManager.getInstance(context).getWorkInfosByTag("export").get()
+            }
+            infos.single().tags
+        }
+        assertTrue(tags.toString(), "export-job:statistics:90" in tags)
     }
 
     private companion object {

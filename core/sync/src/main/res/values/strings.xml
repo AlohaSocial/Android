@@ -12,6 +12,18 @@
     <string name="upload_channel">Uploads</string>
     <!-- Description of the uploads notification channel in the system's notification settings -->
     <string name="upload_channel_description">Progress of pictures and videos being uploaded for a post</string>
+    <!-- Title of the notification shown while an export of the account is being saved to a file -->
+    <string name="export_running">Exporting from your Nextcloud</string>
+    <!-- Action on the notification of an export that stops it -->
+    <string name="export_cancel">Cancel</string>
+    <!-- Title of the notification shown once an export has been saved to the file the user picked -->
+    <string name="export_notification_saved">Export saved</string>
+    <!-- Title of the notification shown when an export could not be saved -->
+    <string name="export_notification_failed">The export couldn’t be saved</string>
+    <!-- Name of the notification channel for exports, shown in the system's notification settings -->
+    <string name="export_channel">Exports</string>
+    <!-- Description of the exports notification channel in the system's notification settings -->
+    <string name="export_channel_description">Exports of your account and statistics being saved, and how they went</string>
     <!-- Title of the notification shown while queued posts go out -->
     <string name="outbox_sending">Sending your posts</string>
     <!-- Title of the notification when the server refused a queued post -->

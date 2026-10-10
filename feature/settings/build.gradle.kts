@@ -14,4 +14,5 @@ dependencies {
     implementation(libs.aboutlibraries.core)
     testImplementation(project(":core:testing"))
     testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.androidx.work.testing)
 }
