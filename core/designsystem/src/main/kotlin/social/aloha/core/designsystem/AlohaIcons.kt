@@ -43,6 +43,7 @@ import androidx.compose.material.icons.outlined.AmpStories
 import androidx.compose.material.icons.outlined.Apps
 import androidx.compose.material.icons.outlined.AttachFile
 import androidx.compose.material.icons.outlined.AutoAwesome
+import androidx.compose.material.icons.outlined.BarChart
 import androidx.compose.material.icons.outlined.Bedtime
 import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material.icons.outlined.Close
@@ -225,6 +226,7 @@ public object AlohaIcons {
     public val Apps: ImageVector = Icons.Outlined.Apps
     public val OnThisDay: ImageVector = Icons.Outlined.Today
     public val Download: ImageVector = Icons.Outlined.Download
+    public val Statistics: ImageVector = Icons.Outlined.BarChart
     public val Rules: ImageVector = Icons.AutoMirrored.Outlined.Rule
     public val NewPosts: ImageVector = Icons.Filled.ArrowUpward
     public val ArrowUpward: ImageVector = Icons.Filled.ArrowUpward

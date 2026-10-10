@@ -564,4 +564,101 @@
     <string name="channels_cancel">Cancel</string>
     <!-- Shown when a channel could not be saved and the server said nothing more -->
     <string name="channels_save_failed">Couldn’t save the channel.</string>
+    <!-- Title of the page with the reader's statistics -->
+    <string name="statistics_title">Statistics</string>
+    <!-- Button that has the server count the statistics again -->
+    <string name="statistics_count_again">Count again</string>
+    <!-- Button that saves the statistics as a CSV file -->
+    <string name="statistics_export">Export as CSV</string>
+    <!-- Shown once the statistics were saved as a file -->
+    <string name="statistics_exported">Saved.</string>
+    <!-- Shown when the statistics could not be counted again or saved -->
+    <string name="statistics_failed">Couldn’t do that. Try again.</string>
+    <!-- Statistics window: the last days. %d: how many days -->
+    <plurals name="statistics_window_days">
+        <item quantity="one">%d day</item>
+        <item quantity="other">%d days</item>
+    </plurals>
+    <!-- Statistics window: the last year -->
+    <string name="statistics_window_year">A year</string>
+    <!-- Statistics window: everything -->
+    <string name="statistics_window_all">All time</string>
+    <!-- Shown when there is nothing to count in the window -->
+    <string name="statistics_empty">Nothing to count yet</string>
+    <!-- Explains an empty statistics window -->
+    <string name="statistics_empty_about">Post something and come back.</string>
+    <!-- Statistics number: posts -->
+    <string name="statistics_posts">Posts</string>
+    <!-- Statistics number: followers -->
+    <string name="statistics_followers">Followers</string>
+    <!-- Statistics number: accounts followed -->
+    <string name="statistics_following">Following</string>
+    <!-- Shown when the server counted only the newest posts. %d: how many it counted -->
+    <plurals name="statistics_capped">
+        <item quantity="one">Counted the most recent post; older ones are left out.</item>
+        <item quantity="other">Counted the most recent %d posts; older ones are left out.</item>
+    </plurals>
+    <!-- Statistics section: how people responded -->
+    <string name="statistics_engagement">Engagement</string>
+    <!-- Statistics number: favourites received -->
+    <string name="statistics_favourites">Favourites</string>
+    <!-- Statistics number: boosts received -->
+    <string name="statistics_boosts">Boosts</string>
+    <!-- Statistics number: replies received -->
+    <string name="statistics_replies">Replies</string>
+    <!-- Statistics number: responses per post -->
+    <string name="statistics_per_post">Per post</string>
+    <!-- Statistics number: the responses a post gets, against the number of followers, as a percentage -->
+    <string name="statistics_per_follower">Per follower</string>
+    <!-- Statistics number: posts nobody answered -->
+    <string name="statistics_silent">Posts with no reply</string>
+    <!-- Statistics chart: posts each month -->
+    <string name="statistics_posts_by_month">Posts by month</string>
+    <!-- Statistics chart: responses each month -->
+    <string name="statistics_engagement_by_month">Engagement by month</string>
+    <!-- Statistics chart: posts, replies and boosts each month -->
+    <string name="statistics_activity">Posts, replies and boosts</string>
+    <!-- Chart series: the reader's own posts -->
+    <string name="statistics_series_posts">Posts</string>
+    <!-- Chart series: the reader's replies -->
+    <string name="statistics_series_replies">Replies</string>
+    <!-- Chart series: the reader's boosts -->
+    <string name="statistics_series_boosts">Boosts</string>
+    <!-- Statistics section: who could see the posts -->
+    <string name="statistics_visibility">Who could see them</string>
+    <!-- Visibility: anyone -->
+    <string name="statistics_visibility_public">Public</string>
+    <!-- Statistics section: how regularly the reader posts -->
+    <string name="statistics_rhythm">Rhythm</string>
+    <!-- Statistics number: days with at least one post -->
+    <string name="statistics_active_days">Days with a post</string>
+    <!-- Statistics number: most days in a row with a post -->
+    <string name="statistics_streak">Longest streak</string>
+    <!-- Statistics number: most days in a row without a post -->
+    <string name="statistics_gap">Longest quiet spell</string>
+    <!-- Statistics section: hashtags used -->
+    <string name="statistics_hashtags">Hashtags</string>
+    <!-- Statistics section: languages written in -->
+    <string name="statistics_languages">Languages</string>
+    <!-- Statistics section: websites linked to -->
+    <string name="statistics_domains">Sites you link to</string>
+    <!-- Statistics section: who the reader talks with -->
+    <string name="statistics_conversations">Conversations</string>
+    <!-- Statistics list: the accounts that reply to the reader -->
+    <string name="statistics_replies_to_you">Who replies to you</string>
+    <!-- Statistics list: the accounts the reader replies to -->
+    <string name="statistics_you_reply_to">Who you reply to</string>
+    <!-- How many replies in a conversation. %d: how many -->
+    <plurals name="statistics_partner_replies">
+        <item quantity="one">%d reply</item>
+        <item quantity="other">%d replies</item>
+    </plurals>
+    <!-- Statistics section: pictures posted -->
+    <string name="statistics_pictures">Pictures</string>
+    <!-- Statistics number: posts with pictures -->
+    <string name="statistics_with_pictures">Posts with pictures</string>
+    <!-- Statistics number: pictures with a description -->
+    <string name="statistics_described">With a description</string>
+    <!-- Statistics number: the share of pictures with a description -->
+    <string name="statistics_described_share">Described</string>
 </resources>

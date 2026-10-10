@@ -20,6 +20,7 @@ import social.aloha.core.navigation.AccountExportKey
 import social.aloha.core.navigation.AuthorizedAppsKey
 import social.aloha.core.navigation.ChannelsKey
 import social.aloha.core.navigation.LookingBackKey
+import social.aloha.core.navigation.StatisticsKey
 import social.aloha.feature.settings.R as SettingsR
 import social.aloha.feature.settings.SettingsDestination
 
@@ -28,6 +29,7 @@ internal const val NEXTCLOUD_SECTION = "nextcloud"
 
 // right after the Nextcloud section, which connects what these pages need
 private const val LOOKING_BACK_ORDER = 901
+private const val STATISTICS_ORDER = 902
 private const val CHANNELS_ORDER = 903
 private const val AUTHORIZED_APPS_ORDER = 904
 private const val EXPORT_ORDER = 905
@@ -39,6 +41,9 @@ private const val EXPORT_ORDER = 905
 internal fun nextcloudDestinations(readerId: String, backStack: MutableList<NavKey>) = listOf(
     SettingsDestination("looking-back", LOOKING_BACK_ORDER, SettingsR.string.looking_back_title, AlohaIcons.OnThisDay) {
         backStack.push(LookingBackKey(readerId))
+    },
+    SettingsDestination("statistics", STATISTICS_ORDER, SettingsR.string.statistics_title, AlohaIcons.Statistics) {
+        backStack.push(StatisticsKey(readerId))
     },
     SettingsDestination("channels", CHANNELS_ORDER, SettingsR.string.channels_title, AlohaIcons.Video) {
         backStack.push(ChannelsKey(readerId))
