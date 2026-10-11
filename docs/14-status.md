@@ -32,7 +32,9 @@ Between the phases: CI artifact retention ([#3](https://github.com/AlohaSocial/A
 
 ## In progress
 
-Nothing at the moment.
+| What | Notes |
+|---|---|
+| A merged timeline of every account, the default view | Like a mail client's unified inbox, with each account still selectable on its own; this was a non-goal for 1.0 in [00-overview.md](00-overview.md) §6 until 2026-10-11. The data layer is built ([04-data-model.md](04-data-model.md)); the account switcher's "All accounts", the default account, the theme, and merged Notifications and modes are next |
 
 ## Not built
 
@@ -44,7 +46,6 @@ Nothing at the moment.
 | Push through the Nextcloud push proxy (FCM) | [08-notifications-sync.md](08-notifications-sync.md) §2 | Push is UnifiedPush in both flavours. FCM would be `gplay` only and needs the push proxy to allow the app |
 | Encrypted direct messages bound to the app lock | [11-safety-privacy-appstore.md](11-safety-privacy-appstore.md) | The app lock guards the screen, not the data |
 | Push from Nextcloud Social to Mastodon clients | [08-notifications-sync.md](08-notifications-sync.md) §2 | Social serves no Web Push API yet ([AlohaSocial/social#2479](https://github.com/AlohaSocial/social/issues/2479)); against it the app polls, and "Get notifications from" filters what polling finds |
-| A cross-account merged timeline | [00-overview.md](00-overview.md) §6 | Deferred past 1.0 by the specification itself |
 | Handoff and Spotlight counterparts | [00-overview.md](00-overview.md) §5 | No Android equivalent is planned yet |
 | The reproducible-build check | [12-store.md](12-store.md) | Two clean builds of the first release tag, compared, when it is cut; nothing in CI checks it today |
 | Translations of the app | [12-conventions-quality.md](12-conventions-quality.md) | English only; every string is ready for translators |
