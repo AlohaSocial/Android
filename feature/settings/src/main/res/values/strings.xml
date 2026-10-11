@@ -663,4 +663,10 @@
     <string name="statistics_described">With a description</string>
     <!-- Statistics number: the share of pictures with a description -->
     <string name="statistics_described_share">Described</string>
+    <!-- Switch in Settings, Privacy, that lets the phone's own search find what the app has -->
+    <string name="privacy_device_search">Show in your phone’s search</string>
+    <!-- Under the switch that lets the phone's own search find what the app has: what it finds, and what it never does -->
+    <string name="privacy_device_search_summary">Your accounts, the people you follow, your public bookmarks and recent searches. Never your timelines, or posts only some people can see.</string>
+    <!-- Under the switch that lets the phone's own search find what the app has, while the app lock is on and keeps it off -->
+    <string name="privacy_device_search_locked">Off while the app lock is on, so what it hides can’t be found from your phone’s search.</string>
 </resources>

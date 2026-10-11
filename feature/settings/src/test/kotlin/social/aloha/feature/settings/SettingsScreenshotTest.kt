@@ -318,7 +318,13 @@ class SettingsScreenshotTest {
 
     @Test
     fun appLock() = capture("settings-privacy-lock") {
-        PrivacyContent(LockState(enabled = true, timeoutSeconds = 300), secure = true, onEnabled = {}, onTimeout = {})
+        PrivacyContent(
+            LockState(enabled = true, timeoutSeconds = 300),
+            secure = true,
+            onEnabled = {},
+            onTimeout = {},
+            deviceSearch = true,
+        )
     }
 
     @Test

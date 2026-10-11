@@ -4,6 +4,7 @@
 package social.aloha.feature.settings
 
 import android.app.KeyguardManager
+import android.os.Build
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.HorizontalDivider
@@ -31,6 +32,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import social.aloha.core.data.AppLockSettings
+import social.aloha.core.data.DeviceSearchSettings
 import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.ui.ChoiceRows
@@ -42,9 +44,20 @@ import social.aloha.core.ui.SwitchRow
 internal data class LockState(val enabled: Boolean = false, val timeoutSeconds: Int = 0)
 
 @HiltViewModel
-internal class PrivacyViewModel @Inject constructor(private val lock: AppLockSettings) : ViewModel() {
+internal class PrivacyViewModel @Inject constructor(
+    private val lock: AppLockSettings,
+    private val search: DeviceSearchSettings,
+) : ViewModel() {
     val state: StateFlow<LockState> = combine(lock.enabled, lock.timeoutSeconds, ::LockState)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_MILLIS), LockState())
+
+    /** Whether the phone's own search finds the app's accounts, follows, public bookmarks and searches. */
+    val deviceSearch: StateFlow<Boolean> = search.chosen
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_MILLIS), true)
+
+    fun onDeviceSearch(shown: Boolean) {
+        viewModelScope.launch { search.setShown(shown) }
+    }
 
     fun onEnabled(enabled: Boolean) {
         viewModelScope.launch { lock.setEnabled(enabled) }
@@ -69,10 +82,19 @@ internal object PrivacySection : SettingsSection {
     override fun Content() {
         val viewModel: PrivacyViewModel = hiltViewModel()
         val state by viewModel.state.collectAsStateWithLifecycle()
+        val deviceSearch by viewModel.deviceSearch.collectAsStateWithLifecycle()
         val context = LocalContext.current
         // a lock needs something to unlock it with: a screen lock, which a fingerprint or face may stand in for
         val secure = remember(context) { context.getSystemService<KeyguardManager>()?.isDeviceSecure == true }
-        PrivacyContent(state, secure, viewModel::onEnabled, viewModel::onTimeout)
+        PrivacyContent(
+            state,
+            secure,
+            viewModel::onEnabled,
+            viewModel::onTimeout,
+            // the phone's own search reads the system's index, which Android has from 12 on
+            deviceSearch.takeIf { Build.VERSION.SDK_INT >= Build.VERSION_CODES.S },
+            viewModel::onDeviceSearch,
+        )
     }
 }
 
@@ -82,6 +104,8 @@ internal fun PrivacyContent(
     secure: Boolean,
     onEnabled: (Boolean) -> Unit,
     onTimeout: (Int) -> Unit,
+    deviceSearch: Boolean? = null,
+    onDeviceSearch: (Boolean) -> Unit = {},
 ) {
     Column {
         if (secure) {
@@ -105,6 +129,18 @@ internal fun PrivacyContent(
                 TIMEOUTS.map { seconds -> seconds to timeoutLabel(seconds) },
                 state.timeoutSeconds,
                 onTimeout,
+            )
+        }
+        if (deviceSearch != null) {
+            HorizontalDivider()
+            // the app lock keeps it off whatever was chosen: what the lock hides is not for the launcher
+            val summary =
+                if (state.enabled) R.string.privacy_device_search_locked else R.string.privacy_device_search_summary
+            SwitchRow(
+                stringResource(R.string.privacy_device_search),
+                deviceSearch,
+                onDeviceSearch,
+                stringResource(summary),
             )
         }
     }
