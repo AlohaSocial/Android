@@ -1,0 +1,11 @@
+{
+  "request": {
+    "method": "PUT",
+    "path": "/remote.php/dav/files/alice/Aloha%20fixtures/notes.txt"
+  },
+  "status": 412,
+  "headers": {
+    "Content-Type": "application/xml; charset=utf-8"
+  },
+  "body": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<d:error xmlns:d=\"DAV:\" xmlns:s=\"http://sabredav.org/ns\">\n  <s:exception>Sabre\\DAV\\Exception\\PreconditionFailed</s:exception>\n  <s:message>An If-None-Match header was specified, but the ETag matched (or * was specified).</s:message>\n  <s:header>If-None-Match</s:header>\n</d:error>\n"
+}

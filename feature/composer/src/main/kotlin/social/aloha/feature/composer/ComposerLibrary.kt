@@ -127,10 +127,16 @@ internal fun GifSheet(
 
 /**
  * A file from the writer's own Nextcloud, by its path from their files' root: the server copies it
- * in, so nothing travels to the phone and back. The paths attached before are offered.
+ * in, so nothing travels to the phone and back. The paths attached before are offered, and, while the
+ * Nextcloud is not connected, [onConnect] to browse the files instead.
  */
 @Composable
-internal fun NextcloudFileDialog(recent: List<String>, onAttach: (String) -> Unit, onDismiss: () -> Unit) {
+internal fun NextcloudFileDialog(
+    recent: List<String>,
+    onAttach: (String) -> Unit,
+    onDismiss: () -> Unit,
+    onConnect: (() -> Unit)? = null,
+) {
     var path by rememberSaveable { mutableStateOf("") }
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -152,6 +158,14 @@ internal fun NextcloudFileDialog(recent: List<String>, onAttach: (String) -> Uni
                     ) {
                         recent.forEach { AssistChip(onClick = { path = it }, label = { Text(it, maxLines = 1) }) }
                     }
+                }
+                if (onConnect != null) {
+                    Text(
+                        stringResource(R.string.composer_file_connect_about),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    TextButton(onClick = onConnect) { Text(stringResource(R.string.composer_file_connect)) }
                 }
             }
         },

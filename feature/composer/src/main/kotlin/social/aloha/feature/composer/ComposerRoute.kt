@@ -65,7 +65,7 @@ private class Dialogs(
 }
 
 /** The pickers that open over the composer, one at a time. */
-private enum class Picker { Gifs, NextcloudFile, Schedule }
+private enum class Picker { Gifs, NextcloudFile, NextcloudPath, Schedule }
 
 /**
  * The composer for [key]; [onDone] leaves it, once posted, discarded or kept as a draft;
@@ -81,6 +81,7 @@ public fun ComposerRoute(
     modifier: Modifier = Modifier,
     onSearch: (String) -> Unit = {},
     onDraft: (String) -> Unit = {},
+    onConnectNextcloud: () -> Unit = {},
 ) {
     val viewModel = hiltViewModel<ComposerViewModel, ComposerViewModel.Factory>(key = key.toString()) { it.create(key) }
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -120,7 +121,7 @@ public fun ComposerRoute(
     )
     val rewrite by viewModel.rewrites.state.collectAsStateWithLifecycle()
     rewrite?.let { RewriteSheet(it, viewModel.rewrites::replace, viewModel.rewrites::dismiss) }
-    ComposerDialogs(state, viewModel, dialogs) { done() }
+    ComposerDialogs(state, viewModel, dialogs, onConnectNextcloud) { done() }
 }
 
 /** The lists the composer opens, search, and a draft in its place. */
@@ -304,7 +305,13 @@ private fun rememberCamera(viewModel: ComposerViewModel, state: ComposerUiState,
 }
 
 @Composable
-private fun ComposerDialogs(state: ComposerUiState, viewModel: ComposerViewModel, dialogs: Dialogs, done: () -> Unit) {
+private fun ComposerDialogs(
+    state: ComposerUiState,
+    viewModel: ComposerViewModel,
+    dialogs: Dialogs,
+    onConnectNextcloud: () -> Unit,
+    done: () -> Unit,
+) {
     var editing by dialogs.editing
     var discarding by dialogs.discarding
     editing?.let { id ->
@@ -335,7 +342,7 @@ private fun ComposerDialogs(state: ComposerUiState, viewModel: ComposerViewModel
             viewModel.onPicked(listOf(recorded.toUri()), tagShort = tag, remember = true)
         }
     }
-    LibraryDialogs(viewModel, dialogs)
+    LibraryDialogs(state, viewModel, dialogs, onConnectNextcloud)
     if (state.confirmQuote) QuoteConfirmDialog(viewModel.quoting::onConfirmQuote, viewModel.quoting::onCancelQuote)
     if (dialogs.picker.value == Picker.Schedule) {
         ScheduleDialog(
@@ -384,7 +391,12 @@ private fun QueuedEffect(queued: Boolean) {
 }
 
 @Composable
-private fun LibraryDialogs(viewModel: ComposerViewModel, dialogs: Dialogs) {
+private fun LibraryDialogs(
+    state: ComposerUiState,
+    viewModel: ComposerViewModel,
+    dialogs: Dialogs,
+    onConnectNextcloud: () -> Unit,
+) {
     var picker by dialogs.picker
     if (picker == Picker.Gifs) {
         val library by viewModel.library.gifs.collectAsStateWithLifecycle()
@@ -399,7 +411,18 @@ private fun LibraryDialogs(viewModel: ComposerViewModel, dialogs: Dialogs) {
             onDismiss = { picker = null },
         )
     }
-    if (picker == Picker.NextcloudFile) {
+    val readerId = viewModel.readerId
+    val browsing = picker == Picker.NextcloudFile && state.nextcloudConnected && readerId != null
+    if (browsing) {
+        FilesPicker(
+            viewModel,
+            readerId,
+            onTypePath = { picker = Picker.NextcloudPath },
+            onConnect = onConnectNextcloud,
+            onClose = { picker = null },
+        )
+    }
+    if (picker == Picker.NextcloudPath || (picker == Picker.NextcloudFile && !browsing)) {
         val recent by produceState(emptyList<String>()) { value = viewModel.library.recentPaths() }
         NextcloudFileDialog(
             recent,
@@ -408,6 +431,7 @@ private fun LibraryDialogs(viewModel: ComposerViewModel, dialogs: Dialogs) {
                 viewModel.library.onNextcloudFile(path)
             },
             onDismiss = { picker = null },
+            onConnect = onConnectNextcloud.takeUnless { state.nextcloudConnected },
         )
     }
 }

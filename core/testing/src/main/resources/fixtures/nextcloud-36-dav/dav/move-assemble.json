@@ -1,0 +1,13 @@
+{
+  "request": {
+    "method": "MOVE",
+    "path": "/remote.php/dav/uploads/alice/aloha-fixture-upload/.file"
+  },
+  "status": 201,
+  "headers": {
+    "Content-Type": "text/html; charset=UTF-8",
+    "OC-ETag": "\"81f26c4a45547a019f0a500b65f57b9f\"",
+    "OC-FileId": "00005845oc505462499s"
+  },
+  "body": ""
+}

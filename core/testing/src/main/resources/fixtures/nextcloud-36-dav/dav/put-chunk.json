@@ -1,0 +1,11 @@
+{
+  "request": {
+    "method": "PUT",
+    "path": "/remote.php/dav/uploads/alice/aloha-fixture-upload/1"
+  },
+  "status": 201,
+  "headers": {
+    "Content-Type": "text/html; charset=UTF-8"
+  },
+  "body": ""
+}

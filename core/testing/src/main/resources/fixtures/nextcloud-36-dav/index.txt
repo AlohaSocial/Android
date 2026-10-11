@@ -1,0 +1,11 @@
+dav/propfind-folder.json
+dav/propfind-encoded-folder.json
+dav/propfind-missing.json
+dav/propfind-unauthorised.json
+dav/put-exists.json
+dav/mkcol-upload.json
+dav/put-chunk.json
+dav/move-assemble.json
+dav/move-exists.json
+ocs/cloud-user.json
+dav/propfind-upload.json

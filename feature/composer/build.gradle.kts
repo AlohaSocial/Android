@@ -11,7 +11,10 @@ dependencies {
     implementation(project(":core:datastore"))
     implementation(project(":core:intelligence"))
     implementation(project(":core:media"))
+    implementation(project(":core:nextcloud"))
     implementation(project(":core:sync"))
+    // the Authorization header on a Nextcloud preview, which only the Nextcloud's own origin is sent
+    implementation(libs.coil.network.okhttp)
     // trimming, shrinking and converting a video before it is uploaded
     implementation(libs.androidx.media3.transformer)
     implementation(libs.androidx.media3.effect)

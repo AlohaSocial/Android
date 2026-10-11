@@ -18,7 +18,7 @@ object ModuleRules {
         ":core:database" to setOf(MODEL),
         ":core:datastore" to setOf(MODEL),
         ":core:data" to setOf(":core:network", ":core:database", ":core:datastore", MODEL, ":core:html"),
-        ":core:sync" to setOf(":core:data", ":core:navigation", MODEL),
+        ":core:sync" to setOf(":core:data", ":core:navigation", ":core:nextcloud", MODEL),
         ":core:media" to setOf(MODEL, ":core:network"),
         ":core:designsystem" to emptySet(),
         ":core:ui" to setOf(":core:designsystem", MODEL, ":core:html", ":core:media"),

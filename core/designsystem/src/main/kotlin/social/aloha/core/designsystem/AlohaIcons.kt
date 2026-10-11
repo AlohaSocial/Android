@@ -6,6 +6,7 @@ package social.aloha.core.designsystem
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.HelpOutline
+import androidx.compose.material.icons.automirrored.outlined.InsertDriveFile
 import androidx.compose.material.icons.automirrored.outlined.List
 import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.automirrored.outlined.OpenInNew
@@ -62,6 +63,7 @@ import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material.icons.outlined.Explore
 import androidx.compose.material.icons.outlined.FilterAlt
 import androidx.compose.material.icons.outlined.Flag
+import androidx.compose.material.icons.outlined.Folder
 import androidx.compose.material.icons.outlined.FormatQuote
 import androidx.compose.material.icons.outlined.GridView
 import androidx.compose.material.icons.outlined.Groups
@@ -107,6 +109,7 @@ import androidx.compose.material.icons.outlined.TextFields
 import androidx.compose.material.icons.outlined.ThumbDown
 import androidx.compose.material.icons.outlined.Today
 import androidx.compose.material.icons.outlined.Translate
+import androidx.compose.material.icons.outlined.Upload
 import androidx.compose.material.icons.outlined.VideoLibrary
 import androidx.compose.material.icons.outlined.ViewAgenda
 import androidx.compose.material.icons.outlined.VisibilityOff
@@ -246,6 +249,9 @@ public object AlohaIcons {
     public val Remove: ImageVector = Icons.Outlined.RemoveCircleOutline
     public val AddMedia: ImageVector = Icons.Outlined.AddPhotoAlternate
     public val AttachFile: ImageVector = Icons.Outlined.AttachFile
+    public val Folder: ImageVector = Icons.Outlined.Folder
+    public val File: ImageVector = Icons.AutoMirrored.Outlined.InsertDriveFile
+    public val Upload: ImageVector = Icons.Outlined.Upload
     public val Retry: ImageVector = Icons.Outlined.Refresh
     public val TextCard: ImageVector = Icons.Outlined.TextFields
     public val Trim: ImageVector = Icons.Outlined.ContentCut

@@ -27,13 +27,17 @@ import okio.buffer
 import social.aloha.core.network.tls.UntrustedServerCertificateException
 
 /**
- * Sends [request], suspending until the answer arrives; cancelling the coroutine cancels the call. A
- * multipart body, which carries files, has no call timeout: a large video over a slow line takes as
- * long as it takes, and the connect and read timeouts still catch a line that stopped moving.
+ * Sends [request], suspending until the answer arrives; cancelling the coroutine cancels the call. An
+ * [untimed] call, by default one with a multipart body, which carries files, has no call timeout: a large
+ * video over a slow line takes as long as it takes, and the connect and read timeouts still catch a line
+ * that stopped moving.
  */
-internal suspend fun OkHttpClient.send(request: Request): HttpOutcome = suspendCancellableCoroutine { continuation ->
+internal suspend fun OkHttpClient.send(
+    request: Request,
+    untimed: Boolean = request.body is MultipartBody,
+): HttpOutcome = suspendCancellableCoroutine { continuation ->
     val call = newCall(request)
-    if (request.body is MultipartBody) call.timeout().clearTimeout()
+    if (untimed) call.timeout().clearTimeout()
     continuation.invokeOnCancellation { call.cancel() }
     call.enqueue(
         object : Callback {
@@ -114,12 +118,15 @@ private fun MultipartBody.Builder.addPart(part: Part) {
 
         is Part.FileContent -> {
             val body = part.file.asRequestBody(part.mimeType.toMediaType())
-            addFormDataPart(part.name, part.fileName, part.onProgress?.let { ProgressBody(body, it) } ?: body)
+            addFormDataPart(part.name, part.fileName, part.onProgress?.let(body::reportingProgress) ?: body)
         }
     }
 }
 
-/** [body], telling [onProgress] how much of it has been written as it goes out. */
+/** This body, telling [onProgress] how much of it has been written, and of how much, as it goes out. */
+public fun RequestBody.reportingProgress(onProgress: (sent: Long, total: Long) -> Unit): RequestBody =
+    ProgressBody(this, onProgress)
+
 private class ProgressBody(private val body: RequestBody, private val onProgress: (Long, Long) -> Unit) :
     RequestBody() {
     override fun contentType() = body.contentType()

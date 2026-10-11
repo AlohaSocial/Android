@@ -100,14 +100,9 @@ internal class MediaPreparation(
     /** The app's own camera captures, which are let go of once copied. */
     private val captures: String,
 ) {
-    fun copy(uri: Uri): Picked? {
-        val mime = resolver.getType(uri) ?: return null
-        val name = displayName(uri) ?: "attachment"
-        val target = newFile(extensionFor(mime))
-        if (!resolver.copyTo(uri, target)) return null
+    fun copy(uri: Uri): Picked? = resolver.copyPicked(uri, directory)?.also {
         // a photo or video just taken is kept once, here, not twice
         if (uri.authority == captures) runCatching { resolver.delete(uri, null, null) }
-        return Picked(target, name, mime)
     }
 
     /**
@@ -198,10 +193,7 @@ internal class MediaPreparation(
         }
     }
 
-    private fun newFile(extension: String): File {
-        directory.mkdirs()
-        return File(directory, UUID.randomUUID().toString() + extension)
-    }
+    private fun newFile(extension: String): File = directory.newFile(extension)
 
     private fun write(bitmap: Bitmap, png: Boolean, target: File) = target.outputStream().use { out ->
         bitmap.compress(if (png) Bitmap.CompressFormat.PNG else Bitmap.CompressFormat.JPEG, QUALITY, out)
@@ -209,11 +201,6 @@ internal class MediaPreparation(
 
     private fun decode(file: File): Bitmap? =
         decodeScaled(file, MAX_EDGE) ?: null.also { Timber.tag(LogArea.Media.name).w("Photo not decoded") }
-
-    private fun displayName(uri: Uri): String? =
-        resolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { cursor ->
-            if (cursor.moveToFirst()) cursor.getString(0) else null
-        }
 
     private fun rename(name: String, mime: String): String = name.substringBeforeLast('.') + extensionFor(mime)
 
@@ -225,4 +212,18 @@ internal class MediaPreparation(
         private const val STEP = 0.75
         private const val ATTEMPTS = 6
     }
+}
+
+/** What [uri] holds, copied into a new file in [directory] under the name the picker shows; null if unreadable. */
+internal fun ContentResolver.copyPicked(uri: Uri, directory: File): Picked? {
+    val mime = getType(uri) ?: return null
+    val name = query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)
+        ?.use { cursor -> if (cursor.moveToFirst()) cursor.getString(0) else null }
+    val target = directory.newFile(extensionFor(mime))
+    return Picked(target, name ?: "attachment", mime).takeIf { copyTo(uri, target) }
+}
+
+private fun File.newFile(extension: String): File {
+    mkdirs()
+    return File(this, UUID.randomUUID().toString() + extension)
 }

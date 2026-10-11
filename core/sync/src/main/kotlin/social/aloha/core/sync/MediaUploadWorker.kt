@@ -4,7 +4,6 @@
 package social.aloha.core.sync
 
 import android.content.Context
-import android.os.SystemClock
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
@@ -34,8 +33,10 @@ internal class MediaUploadWorker @AssistedInject constructor(
     private val media: MediaRepository,
 ) : CoroutineWorker(context, params) {
     private val notifications = UploadNotifications(context)
-    private var shownPercent = -1
-    private var shownAt = 0L
+    private val progress = ProgressThrottle { percent, fraction ->
+        setProgressAsync(workDataOf(PROGRESS to fraction))
+        setForegroundAsync(notifications.info(id, name(), percent))
+    }
 
     override suspend fun getForegroundInfo(): ForegroundInfo = notifications.info(id, name(), percent = null)
 
@@ -48,7 +49,7 @@ internal class MediaUploadWorker @AssistedInject constructor(
         val result = media.upload(
             account,
             UploadFile(file, name(), mime, inputData.getString(DESCRIPTION)),
-            onSent = ::onSent,
+            onSent = progress::onSent,
             onProcessing = {
                 setProgress(workDataOf(PROCESSING to true))
                 setForeground(notifications.info(id, name(), percent = null))
@@ -66,19 +67,6 @@ internal class MediaUploadWorker @AssistedInject constructor(
     }
 
     private fun name() = inputData.getString(NAME) ?: "upload"
-
-    private fun onSent(sent: Long, total: Long) {
-        if (total <= 0) return
-        // twice a second at most, and the last: each step is a progress write, a notification and a
-        // redrawn composer, and Android drops the updates of an app that posts them faster
-        val percent = (sent * PERCENT / total).toInt()
-        val now = SystemClock.elapsedRealtime()
-        if (percent == shownPercent || (now - shownAt < INTERVAL_MILLIS && sent < total)) return
-        shownPercent = percent
-        shownAt = now
-        setProgressAsync(workDataOf(PROGRESS to sent.toFloat() / total))
-        setForegroundAsync(notifications.info(id, name(), percent))
-    }
 
     private fun failure(error: ApiError, size: Long, mime: String): Result {
         Timber.tag(LogArea.Media.name).i("Upload attempt %d failed: %s", runAttemptCount, error.javaClass.simpleName)
@@ -113,8 +101,6 @@ internal class MediaUploadWorker @AssistedInject constructor(
         const val REFUSED = "refused"
         const val MESSAGE = "message"
 
-        private const val PERCENT = 100
-        private const val INTERVAL_MILLIS = 500L
         private const val MAX_ATTEMPTS = 5
     }
 }

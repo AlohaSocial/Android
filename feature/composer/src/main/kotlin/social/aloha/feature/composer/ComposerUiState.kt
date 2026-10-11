@@ -151,6 +151,8 @@ internal data class ComposerUiState(
     val gifLibrary: Boolean = false,
     /** Whether the server attaches files from the writer's own Nextcloud by path. */
     val nextcloudFiles: Boolean = false,
+    /** Whether the writer's Nextcloud is connected, so its Files can be browsed rather than typed a path into. */
+    val nextcloudConnected: Boolean = false,
     val attachFailure: AttachFailure? = null,
     val editFailure: EditFailure? = null,
     val card: CardUi = CardUi(),

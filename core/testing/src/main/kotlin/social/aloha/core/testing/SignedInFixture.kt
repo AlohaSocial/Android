@@ -62,7 +62,7 @@ public class SignedInFixture(private val context: Context) : Closeable {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val database = Room.inMemoryDatabaseBuilder(context, AccountsDatabase::class.java).build()
 
-    private val vault = TokenVault(InMemoryDataStore(ByteArray(0)), FakeSecretCipher(), Dispatchers.IO)
+    public val vault: TokenVault = TokenVault(InMemoryDataStore(ByteArray(0)), FakeSecretCipher(), Dispatchers.IO)
 
     public val accounts: AccountRepository = AccountRepository(
         database.accountDao(),
