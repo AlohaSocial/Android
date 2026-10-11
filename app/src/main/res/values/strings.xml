@@ -58,6 +58,12 @@
     <string name="accounts_title">Accounts</string>
     <!-- Read aloud for the account in use, in the list of accounts -->
     <string name="accounts_active">In use</string>
+    <!-- Button in the top bar while every account shows together; %s is the handle of the account posts are written as -->
+    <string name="accounts_button_all">Accounts, all shown together, writing as %s</string>
+    <!-- First line of the accounts sheet: every account's timeline shown together, like a mail client's unified inbox -->
+    <string name="accounts_all">All accounts</string>
+    <!-- Under "All accounts" in the accounts sheet; %s is the handle of the first account, which posts are written as -->
+    <string name="accounts_all_summary">Writing, searching and settings as %s</string>
     <!-- Marks an account whose server refused its sign-in -->
     <string name="accounts_needs_reauth">Needs a new sign-in</string>
     <!-- Opens the profile of the account in use -->

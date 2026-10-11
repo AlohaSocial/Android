@@ -26,10 +26,12 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import social.aloha.core.data.AllAccounts
 import social.aloha.core.data.NewAccount
 import social.aloha.core.data.ReauthRequest
 import social.aloha.core.data.sync.PushSubscriptions
 import social.aloha.core.datastore.AccountSettingsStore
+import social.aloha.core.datastore.AccountViewPreferences
 import social.aloha.core.datastore.AppPreferences
 import social.aloha.core.model.AccessToken
 import social.aloha.core.model.ServerCapabilities
@@ -65,6 +67,7 @@ class AccountsSettingsViewModelTest {
     private val store = ViewModelStore()
     private val viewModel = AccountsSettingsViewModel(
         fixture.accounts,
+        AllAccounts(fixture.accounts, AccountViewPreferences(InMemoryDataStore(emptyPreferences()))),
         fixture.order,
         AccountSignOut(push, fixture.removal, LocalNotifications(context, avatars = AvatarSource { null }), scope),
         reauth,

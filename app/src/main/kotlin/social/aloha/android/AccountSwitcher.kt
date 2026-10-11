@@ -3,12 +3,14 @@
 
 package social.aloha.android
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.toggleable
@@ -62,11 +64,12 @@ import social.aloha.core.ui.rememberHaptics
 @Composable
 internal fun AccountSwitcher(viewModel: AppViewModel, links: AccountLinks) {
     val accounts by viewModel.switcher.collectAsStateWithLifecycle()
+    val all by viewModel.showingAll.collectAsStateWithLifecycle()
     val focusing: FocusViewModel = hiltViewModel()
     val focusOn by focusing.on.collectAsStateWithLifecycle()
     var open by remember { mutableStateOf(false) }
     val active = accounts.firstOrNull { it.active } ?: return
-    val label = stringResource(R.string.accounts_button, active.handle)
+    val label = stringResource(if (all) R.string.accounts_button_all else R.string.accounts_button, active.handle)
     val next = accounts.getOrNull((accounts.indexOf(active) + 1) % accounts.size)?.takeIf { it != active }
     val haptics = rememberHaptics()
     val switchLabel = next?.let { stringResource(R.string.accounts_switch_to, it.handle) }
@@ -89,6 +92,7 @@ internal fun AccountSwitcher(viewModel: AppViewModel, links: AccountLinks) {
         contentAlignment = Alignment.Center,
     ) {
         Avatar(active.avatarUrl, BUTTON_AVATAR)
+        if (all) AllBadge(Modifier.align(Alignment.BottomEnd))
     }
     if (open) {
         AccountSheet(
@@ -96,6 +100,11 @@ internal fun AccountSwitcher(viewModel: AppViewModel, links: AccountLinks) {
             onSwitch = {
                 open = false
                 viewModel.switchTo(it)
+            },
+            all = all,
+            onAll = {
+                open = false
+                viewModel.switchTo(null)
             },
             // each place closes the sheet as it opens
             links = AccountLinks {
@@ -128,6 +137,8 @@ internal fun AccountSheet(
     onDismiss: () -> Unit,
     focus: Boolean = false,
     onFocus: ((Boolean) -> Unit)? = null,
+    all: Boolean = false,
+    onAll: (() -> Unit)? = null,
 ) {
     val active = accounts.firstOrNull { it.active } ?: return
     var confirming by remember { mutableStateOf(false) }
@@ -142,7 +153,12 @@ internal fun AccountSheet(
                     },
                 )
             }
-            items(accounts, key = { it.id }) { account -> AccountLine(account) { onSwitch(account.id) } }
+            if (onAll != null && accounts.size > 1) {
+                item { AllLine(all, accounts.first().handle, onAll) }
+            }
+            items(accounts, key = { it.id }) { account ->
+                AccountLine(account, inUse = account.active && !all) { onSwitch(account.id) }
+            }
             item { HorizontalDivider(Modifier.padding(vertical = AlohaSpacing.xs)) }
             items(AccountPlace.entries.filter { it !in NEXTCLOUD_ONLY || active.nextcloudSocial }) { place ->
                 val (icon, text) = place.look
@@ -188,19 +204,67 @@ private fun FocusRow(on: Boolean, onFocus: (Boolean) -> Unit) {
     )
 }
 
+/** Every account together, the first in use; while shown, it says so as an account in use does. */
+@Composable
+private fun AllLine(shown: Boolean, firstHandle: String, onAll: () -> Unit) {
+    val inUse = stringResource(R.string.accounts_active)
+    ListItem(
+        modifier = Modifier
+            .then(if (shown) Modifier else Modifier.clickable(role = Role.Button, onClick = onAll))
+            .semantics {
+                selected = shown
+                if (shown) stateDescription = inUse
+            },
+        leadingContent = {
+            Box(Modifier.size(LINE_AVATAR), contentAlignment = Alignment.Center) {
+                Icon(AlohaIcons.Members, contentDescription = null)
+            }
+        },
+        headlineContent = { Text(stringResource(R.string.accounts_all)) },
+        supportingContent = {
+            Text(
+                stringResource(R.string.accounts_all_summary, firstHandle),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        },
+        colors = SheetRow,
+        trailingContent = { if (shown) Icon(AlohaIcons.Check, contentDescription = null) },
+    )
+}
+
+/** The small mark on the account button while every account shows together. */
+@Composable
+private fun AllBadge(modifier: Modifier) {
+    Box(
+        modifier
+            .size(ALL_BADGE)
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.primaryContainer),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            AlohaIcons.Members,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+            modifier = Modifier.size(ALL_ICON),
+        )
+    }
+}
+
 /** An account to switch to; the one in use says so in words as well as with its check. */
 @Composable
-private fun AccountLine(account: SwitcherAccount, onSwitch: () -> Unit) {
-    val inUse = stringResource(R.string.accounts_active)
+private fun AccountLine(account: SwitcherAccount, inUse: Boolean, onSwitch: () -> Unit) {
+    val inUseWords = stringResource(R.string.accounts_active)
     val needsReauth = stringResource(R.string.accounts_needs_reauth)
     val unread = stringResource(UiR.string.accounts_unread)
     ListItem(
         modifier = Modifier
-            .then(if (account.active) Modifier else Modifier.clickable(role = Role.Button, onClick = onSwitch))
+            .then(if (inUse) Modifier else Modifier.clickable(role = Role.Button, onClick = onSwitch))
             .semantics {
-                selected = account.active
+                selected = inUse
                 when {
-                    account.active -> stateDescription = inUse
+                    inUse -> stateDescription = inUseWords
                     account.unread > 0 -> stateDescription = unread
                 }
             },
@@ -215,7 +279,7 @@ private fun AccountLine(account: SwitcherAccount, onSwitch: () -> Unit) {
         colors = SheetRow,
         trailingContent = {
             when {
-                account.active -> Icon(AlohaIcons.Check, contentDescription = null)
+                inUse -> Icon(AlohaIcons.Check, contentDescription = null)
                 account.unread > 0 -> Badge()
             }
         },
@@ -258,3 +322,5 @@ private val NEXTCLOUD_ONLY = setOf(AccountPlace.Archived, AccountPlace.Statistic
 
 private val BUTTON_AVATAR = 32.dp
 private val LINE_AVATAR = 40.dp
+private val ALL_BADGE = 14.dp
+private val ALL_ICON = 10.dp

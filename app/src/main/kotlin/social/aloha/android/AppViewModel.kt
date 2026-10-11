@@ -30,6 +30,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import social.aloha.core.data.AccountMaintenance
 import social.aloha.core.data.AccountRepository
+import social.aloha.core.data.AllAccounts
 import social.aloha.core.data.ReauthRequest
 import social.aloha.core.data.compose.Outbox
 import social.aloha.core.data.sync.UnreadCounts
@@ -88,6 +89,7 @@ data class SwitcherAccount(
 @HiltViewModel
 class AppViewModel @Inject constructor(
     private val accounts: AccountRepository,
+    private val allAccounts: AllAccounts,
     private val signOuts: AccountSignOut,
     private val caches: DeviceCaches,
     private val links: LinkOpener,
@@ -157,6 +159,7 @@ class AppViewModel @Inject constructor(
         viewModelScope.launch {
             accounts.activeAccount.filterNotNull().map { it.id }.distinctUntilChanged().collect { adding.value = false }
         }
+        viewModelScope.launch { allAccounts.keepFirstInUse() }
         // once the last account is gone, signed out or deleted, the images and responses kept for it go too
         viewModelScope.launch {
             accounts.accounts.map { it.isEmpty() }.distinctUntilChanged().filter { it }.collect { caches.clear() }
@@ -177,6 +180,10 @@ class AppViewModel @Inject constructor(
     val unreadNotifications: StateFlow<Int> =
         combine(accounts.activeAccount, unread.all) { active, counts -> active?.let { counts[it.id] } ?: 0 }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), 0)
+
+    /** Whether every account shows together, the first in use. */
+    val showingAll: StateFlow<Boolean> =
+        allAccounts.on.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), false)
 
     val switcher: StateFlow<List<SwitcherAccount>> =
         combine(accounts.accounts, accounts.activeAccount, unread.all) { all, active, counts ->
@@ -240,7 +247,8 @@ class AppViewModel @Inject constructor(
     private fun openAs(accountId: String?, shared: Boolean = false, key: (accountId: String) -> NavKey) {
         viewModelScope.launch {
             val id = accounts.accountFor(accountId, shared) ?: return@launch
-            accounts.activate(id)
+            // what came for another account than the one in use opens in that account alone
+            if (id != accounts.activeAccount.value?.id) allAccounts.show(id)
             destination.value = id to key(id)
         }
     }
@@ -290,9 +298,12 @@ class AppViewModel @Inject constructor(
         reauth.ask()
     }
 
-    /** Switching paints the other account from its cache at once; nothing waits for its server. */
-    fun switchTo(id: String) {
-        viewModelScope.launch { accounts.activate(id) }
+    /**
+     * Account [id] alone, painted from its cache at once, nothing waiting for its server; with none, every
+     * account together, as the first of them.
+     */
+    fun switchTo(id: String?) {
+        viewModelScope.launch { if (id == null) allAccounts.showAll() else allAccounts.show(id) }
     }
 
     fun addAccount() {

@@ -5,6 +5,7 @@ package social.aloha.feature.settings
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -18,6 +19,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -35,8 +37,10 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import social.aloha.core.data.AccountOrder
 import social.aloha.core.data.AccountRepository
+import social.aloha.core.data.AllAccounts
 import social.aloha.core.data.ReauthRequest
 import social.aloha.core.designsystem.AlohaIcons
+import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.sync.AccountSignOut
 import social.aloha.core.ui.Avatar
 import social.aloha.core.ui.ConfirmDialog
@@ -56,6 +60,7 @@ internal data class AccountEntry(
 @HiltViewModel
 internal class AccountsSettingsViewModel @Inject constructor(
     private val accounts: AccountRepository,
+    private val allAccounts: AllAccounts,
     private val order: AccountOrder,
     private val signOuts: AccountSignOut,
     private val reauth: ReauthRequest,
@@ -76,10 +81,10 @@ internal class AccountsSettingsViewModel @Inject constructor(
         viewModelScope.launch { order.reorder(ids) }
     }
 
-    /** The account becomes the one in use, and its sign-in shows. */
+    /** The account becomes the one in use, alone unless it is the first, and its sign-in shows. */
     fun signInAgain(id: String) {
         viewModelScope.launch {
-            accounts.activate(id)
+            if (id == entries.value.firstOrNull()?.id) accounts.activate(id) else allAccounts.show(id)
             reauth.ask()
         }
     }
@@ -117,6 +122,14 @@ internal fun AccountsContent(
 ) {
     var leaving by rememberSaveable { mutableStateOf<String?>(null) }
     Column {
+        if (entries.size > 1) {
+            Text(
+                stringResource(R.string.accounts_first_explained),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = AlohaSpacing.m, vertical = AlohaSpacing.xs),
+            )
+        }
         entries.forEachIndexed { index, entry ->
             if (index > 0) HorizontalDivider()
             ListItem(

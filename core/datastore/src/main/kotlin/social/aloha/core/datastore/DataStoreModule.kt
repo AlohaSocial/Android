@@ -78,6 +78,11 @@ internal object DataStoreModule {
 
     @Provides
     @Singleton
+    fun accountViewPreferences(@AppStore store: DataStore<Preferences>): AccountViewPreferences =
+        AccountViewPreferences(store)
+
+    @Provides
+    @Singleton
     fun intelligencePreferences(@AppStore store: DataStore<Preferences>): IntelligencePreferences =
         IntelligencePreferences(store)
 
