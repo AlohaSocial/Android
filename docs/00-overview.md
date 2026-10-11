@@ -127,8 +127,6 @@ Full treatment in [06-media-modes.md](06-media-modes.md).
   *configuration* — storage, retention, relays, blocklist subscriptions, setup
   checks — is not: it belongs in the Nextcloud administration page, which is
   where an administrator already is when they are doing it.
-- **No Nextcloud Files browser**, beyond the single "attach a file already on
-  my Nextcloud" picker described in [07-composer.md](07-composer.md) §6.
 - **No PeerTube upload.** Nextcloud Social's PeerTube routes are read-only.
   Video is posted through the Mastodon media + status routes instead.
 - **No custom server-side feed algorithm.** Ordering is the server's.
