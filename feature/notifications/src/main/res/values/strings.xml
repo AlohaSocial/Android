@@ -35,6 +35,8 @@
     <string name="notifications_others_plain">Show everyone</string>
     <!-- Spoken before a notification the person has not seen yet -->
     <string name="notifications_unread">New</string>
+    <!-- Spoken at the end of a notification while every account shows together: the account it came to. %s: its handle -->
+    <string name="notifications_to">To %s</string>
     <!-- Heading shown when there are no notifications yet -->
     <string name="notifications_empty">Nothing yet</string>
     <!-- Under the heading above: what will show here -->

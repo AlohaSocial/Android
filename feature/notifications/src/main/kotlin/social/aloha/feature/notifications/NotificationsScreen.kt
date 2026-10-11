@@ -43,6 +43,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalResources
@@ -74,6 +75,7 @@ import social.aloha.core.ui.PostTime
 import social.aloha.core.ui.R as UiR
 import social.aloha.core.ui.RefreshBox
 import social.aloha.core.ui.Skeleton
+import social.aloha.core.ui.StackedAvatars
 import social.aloha.core.ui.TopBarTitle
 import social.aloha.core.ui.TroubleStrip
 import social.aloha.core.ui.itemMotion
@@ -230,9 +232,11 @@ internal fun NotificationRow(
     val age = PostAge.of(row.at, now)
     val spokenAge = age.spoken(stringResource(UiR.string.status_age_now))
     val unread = stringResource(R.string.notifications_unread)
-    val description = listOfNotNull(unread.takeIf { row.unread }, summary, row.preview, spokenAge).joinToString(". ")
+    val to = row.to?.let { stringResource(R.string.notifications_to, it.handle) }
+    val description =
+        listOfNotNull(unread.takeIf { row.unread }, summary, row.preview, spokenAge, to).joinToString(". ")
     val background = if (row.unread) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surface
-    val mutable = row.kind == NotificationKind.Mention && row.statusId != null
+    val mutable = row.kind == NotificationKind.Mention && (row.statusId != null || row.url != null)
     val mute = stringResource(R.string.notifications_mute_conversation)
     val profiles = profileActions(row.people, actions::onProfile)
     var menu by remember { mutableStateOf(false) }
@@ -284,12 +288,22 @@ private fun RowScope.RowContent(
     actions: NotificationsActions,
     origin: String?,
 ) {
-    Icon(
-        row.kind.icon,
-        contentDescription = null,
-        tint = row.kind.tint(),
-        modifier = Modifier.padding(top = AlohaSpacing.xs).size(KIND_ICON),
-    )
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Icon(
+            row.kind.icon,
+            contentDescription = null,
+            tint = row.kind.tint(),
+            modifier = Modifier.padding(top = AlohaSpacing.xs).size(KIND_ICON),
+        )
+        row.to?.let { to ->
+            StackedAvatars(
+                listOf(to.avatarUrl),
+                TO_MARK,
+                Modifier.padding(top = AlohaSpacing.xs),
+                rings = listOf(to.colour?.let(::Color) ?: MaterialTheme.colorScheme.outline),
+            )
+        }
+    }
     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(AlohaSpacing.xs)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Faces(row.people, actions::onProfile, Modifier.weight(1f))
@@ -302,7 +316,7 @@ private fun RowScope.RowContent(
         )
         Details(row, actions, origin)
         if (row.groupKey != null && row.others > 0) {
-            TextButton(onClick = { actions.onOthers(row.groupKey) }) {
+            TextButton(onClick = { actions.onOthers(row.key) }) {
                 Text(
                     if (LocalReadingStyle.current.showCounts) {
                         pluralStringResource(R.plurals.notifications_others, row.others, row.others)
@@ -377,3 +391,4 @@ private val Trouble.message: Int
 /** How many lines of a post a notification row shows. */
 internal const val PREVIEW_LINES = 2
 private val KIND_ICON = 20.dp
+private val TO_MARK = 18.dp

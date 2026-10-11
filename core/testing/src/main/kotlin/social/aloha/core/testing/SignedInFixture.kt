@@ -173,8 +173,9 @@ public class SignedInFixture(private val context: Context) : Closeable {
     public suspend fun signIn(
         apiBase: HttpUrl,
         capabilities: ServerCapabilities = ServerCapabilities.minimal(apiBase.toString()),
+        remoteId: String = "6",
     ): SignedInAccount = accounts.signedIn(
-        NewAccount(apiBase.host, "6", "alice", "Alice", null, null, capabilities, profilePending = false),
+        NewAccount(apiBase.host, remoteId, "alice", "Alice", null, null, capabilities, profilePending = false),
         AccessToken(MockCredentials.ACCESS_TOKEN, ""),
     )
 

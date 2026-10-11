@@ -10,7 +10,8 @@ import social.aloha.core.model.NotificationKind
 internal interface NotificationRowActions {
     fun onOpen(row: NotificationRowUi)
 
-    fun onOthers(groupKey: String)
+    /** Everyone in the group of row [key], which may be another account's than the one in use. */
+    fun onOthers(key: String)
 
     /** No more notifications from the conversation a mention or reply belongs to. */
     fun onMuteConversation(row: NotificationRowUi)

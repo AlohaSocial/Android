@@ -47,6 +47,7 @@ import social.aloha.core.model.SeveranceEvent
 import social.aloha.core.model.Status
 import social.aloha.core.sync.Distributor
 import social.aloha.core.ui.LocalReadingStyle
+import social.aloha.core.ui.SeenBy
 
 /** The notifications screens, each also run through the Accessibility Test Framework checks. */
 @RunWith(RobolectricTestRunner::class)
@@ -117,7 +118,7 @@ class NotificationsScreenshotTest {
 
         override fun onOpen(row: NotificationRowUi) = Unit
 
-        override fun onOthers(groupKey: String) = Unit
+        override fun onOthers(key: String) = Unit
 
         override fun onMuteConversation(row: NotificationRowUi) = Unit
 
@@ -182,6 +183,30 @@ class NotificationsScreenshotTest {
     @Test
     fun notificationsDark() = capture("notifications-dark", ThemeSettings(mode = ThemeMode.Dark)) {
         NotificationsScreen(list, actions, navigationIcon = {})
+    }
+
+    /** Every account together: each row marked with the account it came to, in that account's colour. */
+    private val everyAccount = list.copy(
+        rows = list.rows.mapIndexed { index, row ->
+            row.copy(
+                to = if (index % 2 == 0) {
+                    SeenBy("@alice@one.example", null, 0xFF0082C9.toInt())
+                } else {
+                    SeenBy("@alice@two.example", null, null)
+                },
+            )
+        },
+    )
+
+    @Test
+    fun allAccounts() = capture("notifications-all-accounts") {
+        NotificationsScreen(everyAccount, actions, navigationIcon = {})
+    }
+
+    @Test
+    @Config(fontScale = 2f)
+    fun allAccountsLargeFont() = capture("notifications-all-accounts-font200") {
+        NotificationsScreen(everyAccount, actions, navigationIcon = {})
     }
 
     @Test

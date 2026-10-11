@@ -28,10 +28,12 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import social.aloha.core.data.AllAccounts
 import social.aloha.core.data.notifications.NotificationFiltering
 import social.aloha.core.data.sync.SyncSettings
 import social.aloha.core.data.timeline.StatusInteractions
 import social.aloha.core.datastore.AccountSettingsStore
+import social.aloha.core.datastore.AccountViewPreferences
 import social.aloha.core.datastore.AppPreferences
 import social.aloha.core.datastore.NotificationPreferences
 import social.aloha.core.model.NotificationKind
@@ -104,7 +106,7 @@ class NotificationsViewModelTest {
         val account = fixture.signIn(server.url("/"), capabilities)
         unread.set(account.id, 2)
         viewModel = NotificationsViewModel(
-            fixture.accounts,
+            AllAccounts(fixture.accounts, AccountViewPreferences(InMemoryDataStore(emptyPreferences()))),
             fixture.notifications,
             NotificationFiltering(fixture.clients),
             unread,
@@ -114,6 +116,7 @@ class NotificationsViewModelTest {
                 NotificationPreferences(InMemoryDataStore(emptyPreferences())),
             ),
             StatusInteractions(fixture.statuses, fixture.clients),
+            AccountSettingsStore(InMemoryDataStore(emptyMap())),
             fixture.clock,
         )
     }
@@ -127,6 +130,33 @@ class NotificationsViewModelTest {
 
     private suspend fun await(predicate: (NotificationsUiState) -> Boolean): NotificationsUiState =
         withTimeout(10.seconds) { viewModel.uiState.first(predicate) }
+
+    @Test
+    fun `with a second account, both show together, each marked and read on its own server`() = runBlocking {
+        val second = Notifications()
+        val secondServer = MockWebServer().apply {
+            dispatcher = second
+            start()
+        }
+        try {
+            val grouped = ServerCapabilities.minimal(secondServer.url("/").toString()).copy(groupedNotifications = true)
+            val account = fixture.signIn(secondServer.url("/"), grouped, remoteId = "7")
+            viewModel.onShown(isShown = true)
+            val state = await { it.rows.size == 6 }
+            assertTrue(state.rows.all { it.to != null })
+            val host = secondServer.url("/").host
+            // the second account's mention names its post by address and its author by handle, never by its ids
+            val mention = state.rows.single { it.key == "${account.id}/ungrouped-90" }
+            assertEquals(null, mention.statusId)
+            assertEquals("remote:alice@$host", mention.accountId)
+            withTimeout(10.seconds) {
+                while (second.asked.none { it.startsWith("POST /api/v1/markers") }) delay(POLL_MS)
+            }
+            assertTrue(notifications.asked.any { it.startsWith("POST /api/v1/markers") })
+        } finally {
+            secondServer.close()
+        }
+    }
 
     @Test
     fun `what came after the read marker is new, and showing it marks it read`() = runBlocking {
@@ -155,8 +185,9 @@ class NotificationsViewModelTest {
     @Test
     fun `a group's others lists everyone in it`() = runBlocking {
         viewModel.onShown(isShown = true)
-        await { it.loadedOnce }
-        viewModel.onOthers("favourite-s1")
+        val row = await { state -> state.rows.any { it.groupKey == "favourite-s1" } }
+            .rows.single { it.groupKey == "favourite-s1" }
+        viewModel.onOthers(row.key)
         val group = await { it.group?.accounts != null }.group!!
         assertEquals(listOf("Alice", "Bob", "Carol"), group.accounts!!.map { it.displayName })
         viewModel.onGroupClosed()
@@ -179,8 +210,9 @@ class NotificationsViewModelTest {
     @Test
     fun `a follow request row that groups two people answers both`() = runBlocking {
         viewModel.onShown(isShown = true)
-        await { state -> state.rows.any { it.kind == NotificationKind.FollowRequest } }
-        viewModel.onFollowRequest("follow_request", accept = true)
+        val request = await { state -> state.rows.any { it.kind == NotificationKind.FollowRequest } }
+            .rows.single { it.kind == NotificationKind.FollowRequest }
+        viewModel.onFollowRequest(request.key, accept = true)
         await { state -> state.rows.none { it.kind == NotificationKind.FollowRequest } }
         val answered = notifications.asked.filter { "/follow_requests/" in it }
         assertTrue(answered.toString(), answered.any { "/follow_requests/1/authorize" in it })
