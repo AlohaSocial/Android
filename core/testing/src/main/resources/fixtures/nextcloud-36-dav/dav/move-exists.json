@@ -1,0 +1,11 @@
+{
+  "request": {
+    "method": "MOVE",
+    "path": "/remote.php/dav/uploads/alice/aloha-fixture-upload/.file"
+  },
+  "status": 412,
+  "headers": {
+    "Content-Type": "application/xml; charset=utf-8"
+  },
+  "body": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<d:error xmlns:d=\"DAV:\" xmlns:s=\"http://sabredav.org/ns\">\n  <s:exception>Sabre\\DAV\\Exception\\PreconditionFailed</s:exception>\n  <s:message>The destination node already exists, and the overwrite header is set to false</s:message>\n  <s:header>Overwrite</s:header>\n</d:error>\n"
+}
