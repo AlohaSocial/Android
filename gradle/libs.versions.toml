@@ -42,6 +42,7 @@ mlkitGenaiPrompt = "1.0.0-beta4"
 litert = "1.4.2"
 timber = "5.0.1"
 work = "2.12.0"
+appsearch = "1.1.0"
 unifiedpush = "3.3.5"
 glance = "1.2.0"
 media3 = "1.11.1"
@@ -62,6 +63,9 @@ androidx-hilt-lifecycle-viewmodel-compose = { module = "androidx.hilt:hilt-lifec
 androidx-hilt-work = { module = "androidx.hilt:hilt-work", version.ref = "androidxHilt" }
 androidx-hilt-compiler = { module = "androidx.hilt:hilt-compiler", version.ref = "androidxHilt" }
 androidx-work-runtime = { module = "androidx.work:work-runtime-ktx", version.ref = "work" }
+androidx-appsearch = { module = "androidx.appsearch:appsearch", version.ref = "appsearch" }
+androidx-appsearch-platform-storage = { module = "androidx.appsearch:appsearch-platform-storage", version.ref = "appsearch" }
+androidx-appsearch-builtin-types = { module = "androidx.appsearch:appsearch-builtin-types", version.ref = "appsearch" }
 androidx-work-testing = { module = "androidx.work:work-testing", version.ref = "work" }
 unifiedpush-connector = { module = "org.unifiedpush.android:connector", version.ref = "unifiedpush" }
 androidx-glance-appwidget = { module = "androidx.glance:glance-appwidget", version.ref = "glance" }

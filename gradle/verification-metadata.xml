@@ -46,6 +46,7 @@
             <trusting group="androidx.activity"/>
             <trusting group="androidx.annotation"/>
             <trusting group="androidx.appcompat"/>
+            <trusting group="androidx.appsearch"/>
             <trusting group="androidx.collection"/>
             <trusting group="androidx.core"/>
             <trusting group="androidx.exifinterface"/>
@@ -87,6 +88,7 @@
          <trusted-key id="3051D45031E13516A6E8FAFF280D66A55F5316C5" group="org.bitbucket.b_c" name="jose4j" version="0.9.6"/>
          <trusted-key id="31BAE2E51D95E0F8AD9B7BCC40A3C4432BD7308C" group="com.googlecode.juniversalchardet" name="juniversalchardet" version="1.0.3"/>
          <trusted-key id="32118CF76C9EC5D918E54967CA80D1F0EB6CA4BA" group="org.codehaus.plexus"/>
+         <trusted-key id="3288B8BE8512D6C0CA185268C51E6CBC7FF46F0B" group="^com[.]google[.]auto($|([.].*))" regex="true"/>
          <trusted-key id="33FD4BFD33554634053D73C0C2148900BCD3C2AF">
             <trusting group="org.jetbrains" name="annotations" version="23.0.0"/>
             <trusting group="org.jetbrains.runtime" name="jbr-api"/>
@@ -108,6 +110,7 @@
          <trusted-key id="4F8FEC6785F611D9A712EA2734918B7D3969D2F5" group="com.google.dagger" name="dagger" version="2.28.3"/>
          <trusted-key id="517B94F8D0A46317A28D8AB30DA8A5EC02D11EAD" group="net.sf.jopt-simple" name="jopt-simple" version="4.9"/>
          <trusted-key id="5767F9CDE920750621875079A40E24B5B408DBD5" group="org.robolectric"/>
+         <trusted-key id="5CE325996A35213326AE2C68912D2C0ECCDA55C0" group="com.google.errorprone"/>
          <trusted-key id="5DD80B0DDCCBE005F0A47FD66751E1A6E2001B8D" group="^com[.]squareup($|([.].*))" regex="true"/>
          <trusted-key id="5F6C2148AD4911FE308110E5F0D0AE433308B042" group="io.gitlab.arturbosch.detekt"/>
          <trusted-key id="60200AC4AE761F1614D6C46766D68DAA073BE985">

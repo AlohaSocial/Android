@@ -22,6 +22,7 @@ public class AccountSignOut @Inject constructor(
     private val push: PushRegistrar,
     private val removal: AccountRemoval,
     private val notifications: LocalNotifications,
+    private val search: DeviceSearch,
     @param:ApplicationScope private val scope: CoroutineScope,
 ) {
     public fun signOut(account: SignedInAccount): Job = scope.launch {
@@ -30,6 +31,7 @@ public class AccountSignOut @Inject constructor(
         withTimeoutOrNull(PUSH_FORGET_MILLIS) { push.forget(account) }
         removal.signOut(account)
         notifications.forget(account.id)
+        search.forget(account.id)
     }
 
     private companion object {

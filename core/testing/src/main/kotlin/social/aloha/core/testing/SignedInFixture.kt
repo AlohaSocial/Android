@@ -18,6 +18,7 @@ import social.aloha.core.data.AccountOrder
 import social.aloha.core.data.AccountRemoval
 import social.aloha.core.data.AccountRepository
 import social.aloha.core.data.ClientFactory
+import social.aloha.core.data.DeviceSearchSettings
 import social.aloha.core.data.NewAccount
 import social.aloha.core.data.SignInCoordinator
 import social.aloha.core.data.compose.ComposeRepository
@@ -28,7 +29,11 @@ import social.aloha.core.data.nextcloud.NextcloudConnection
 import social.aloha.core.data.notifications.NotificationsRepository
 import social.aloha.core.data.notifications.RaisedNotifications
 import social.aloha.core.data.photos.Albums
+import social.aloha.core.data.profile.FollowedAuthors
 import social.aloha.core.data.profile.OwnProfile
+import social.aloha.core.data.profile.ProfileRepository
+import social.aloha.core.data.saved.SavedPosts
+import social.aloha.core.data.search.Searches
 import social.aloha.core.data.sync.UnreadCounts
 import social.aloha.core.data.sync.WidgetUpdates
 import social.aloha.core.data.timeline.CacheSweeper
@@ -41,7 +46,9 @@ import social.aloha.core.database.AccountsDatabase
 import social.aloha.core.database.CacheDatabase
 import social.aloha.core.database.OutboxDatabase
 import social.aloha.core.datastore.AccountSettingsStore
+import social.aloha.core.datastore.AppLockPreferences
 import social.aloha.core.datastore.AppPreferences
+import social.aloha.core.datastore.DeviceSearchPreferences
 import social.aloha.core.datastore.TokenVault
 import social.aloha.core.datastore.VaultKey
 import social.aloha.core.datastore.WidgetFeedStore
@@ -130,6 +137,22 @@ public class SignedInFixture(private val context: Context) : Closeable {
     public val albums: Albums by lazy { Albums(clients, statuses) }
 
     public val ownProfile: OwnProfile by lazy { OwnProfile(clients, database.accountDao()) }
+
+    public val profiles: ProfileRepository by lazy { ProfileRepository(clients, statuses, FollowedAuthors(clients)) }
+
+    public val saved: SavedPosts by lazy { SavedPosts(clients, statuses) }
+
+    /** The app lock's settings, off until a test turns it on. */
+    public val appLock: AppLockPreferences = AppLockPreferences(InMemoryDataStore(emptyPreferences()))
+
+    /** The phone's search, on until a test turns it off, and off while [appLock] is on. */
+    public val deviceSearch: DeviceSearchSettings =
+        DeviceSearchSettings(DeviceSearchPreferences(InMemoryDataStore(emptyPreferences())), appLock)
+
+    /** Search, with the recent searches in settings of their own. */
+    public val searches: Searches by lazy {
+        Searches(clients, statuses, AccountSettingsStore(InMemoryDataStore(emptyMap())))
+    }
 
     /** What sends posts, storing what the server made in an in-memory cache. */
     public val sender: PostSender by lazy {

@@ -36,12 +36,16 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import social.aloha.core.data.sync.PushSubscriptions
+import social.aloha.core.data.sync.SyncSettings
 import social.aloha.core.datastore.AccountSettingsStore
 import social.aloha.core.datastore.AppPreferences
+import social.aloha.core.datastore.NotificationPreferences
 import social.aloha.core.model.ServerCapabilities
 import social.aloha.core.sync.AccountSignOut
 import social.aloha.core.sync.AvatarSource
+import social.aloha.core.sync.DeviceSearch
 import social.aloha.core.sync.LocalNotifications
+import social.aloha.core.sync.NoSearchIndex
 import social.aloha.core.sync.PushRegistrar
 import social.aloha.core.testing.InMemoryDataStore
 import social.aloha.core.testing.SignedInFixture
@@ -103,7 +107,21 @@ class DeleteAccountViewModelTest {
         fixture.nextcloud,
     )
     private val signOuts =
-        AccountSignOut(push, fixture.removal, LocalNotifications(context, avatars = AvatarSource { null }), scope)
+        AccountSignOut(
+            push,
+            fixture.removal,
+            LocalNotifications(context, avatars = AvatarSource { null }),
+            DeviceSearch(
+                context,
+                NoSearchIndex,
+                fixture.accounts,
+                fixture.profiles,
+                fixture.saved,
+                fixture.searches,
+                fixture.deviceSearch,
+            ),
+            scope,
+        )
     private val store = ViewModelStore()
     private val viewModel = DeleteAccountViewModel(fixture.accounts, fixture.removal, signOuts, scope).also {
         store.put("delete", it)

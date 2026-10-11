@@ -73,6 +73,7 @@ public class SyncEngine @Inject internal constructor(
     private val listeners: Set<@JvmSuppressWildcards PollListener>,
     private val background: BackgroundRefresh,
     private val digests: DigestScheduler,
+    private val deviceSearch: DeviceSearch,
     private val stream: UserStream,
     @param:ApplicationScope private val scope: CoroutineScope,
     private val clock: Clock,
@@ -105,6 +106,7 @@ public class SyncEngine @Inject internal constructor(
                 loop = scope.launch { run() }
                 scope.launch { background.keepScheduled() }
                 scope.launch { digests.keepScheduled() }
+                scope.launch { deviceSearch.keepIndexed() }
                 scope.launch { keepRegistered() }
                 scope.launch { stream.keepOpen(foreground, device.online) }
                 // a notification on the stream is a count to fetch now rather than at the next poll; a burst
