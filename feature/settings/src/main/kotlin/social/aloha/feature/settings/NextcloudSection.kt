@@ -28,13 +28,19 @@ import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.ui.SettingsSection
 import social.aloha.core.ui.openInBrowser
 
+/** The Nextcloud section's key, where connecting the Nextcloud starts. */
+public const val NEXTCLOUD_SECTION_KEY: String = "nextcloud"
+
+/** The Nextcloud section's place in Settings; the pages it connects follow right after it. */
+public const val NEXTCLOUD_SECTION_ORDER: Int = 900
+
 /**
  * Connecting the active account to the Nextcloud its Social server runs on. The approval happens in the
  * browser; the section waits for it and shows how it went.
  */
 internal object NextcloudSection : SettingsSection {
-    override val key: String = "nextcloud"
-    override val order: Int = 900
+    override val key: String = NEXTCLOUD_SECTION_KEY
+    override val order: Int = NEXTCLOUD_SECTION_ORDER
     override val title: Int = R.string.settings_nextcloud
     override val icon: ImageVector = AlohaIcons.Nextcloud
 

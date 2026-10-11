@@ -40,8 +40,10 @@ import androidx.compose.material.icons.outlined.AddComment
 import androidx.compose.material.icons.outlined.AddPhotoAlternate
 import androidx.compose.material.icons.outlined.AddReaction
 import androidx.compose.material.icons.outlined.AmpStories
+import androidx.compose.material.icons.outlined.Apps
 import androidx.compose.material.icons.outlined.AttachFile
 import androidx.compose.material.icons.outlined.AutoAwesome
+import androidx.compose.material.icons.outlined.BarChart
 import androidx.compose.material.icons.outlined.Bedtime
 import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material.icons.outlined.Close
@@ -50,6 +52,7 @@ import androidx.compose.material.icons.outlined.ContentCut
 import androidx.compose.material.icons.outlined.Create
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.DoneAll
+import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.DragHandle
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.EditNote
@@ -102,6 +105,7 @@ import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material.icons.outlined.Tag
 import androidx.compose.material.icons.outlined.TextFields
 import androidx.compose.material.icons.outlined.ThumbDown
+import androidx.compose.material.icons.outlined.Today
 import androidx.compose.material.icons.outlined.Translate
 import androidx.compose.material.icons.outlined.VideoLibrary
 import androidx.compose.material.icons.outlined.ViewAgenda
@@ -219,6 +223,10 @@ public object AlohaIcons {
     public val Appearance: ImageVector = Icons.Outlined.Palette
     public val About: ImageVector = Icons.Outlined.Info
     public val Nextcloud: ImageVector = Icons.Outlined.Cloud
+    public val Apps: ImageVector = Icons.Outlined.Apps
+    public val OnThisDay: ImageVector = Icons.Outlined.Today
+    public val Download: ImageVector = Icons.Outlined.Download
+    public val Statistics: ImageVector = Icons.Outlined.BarChart
     public val Rules: ImageVector = Icons.AutoMirrored.Outlined.Rule
     public val NewPosts: ImageVector = Icons.Filled.ArrowUpward
     public val ArrowUpward: ImageVector = Icons.Filled.ArrowUpward

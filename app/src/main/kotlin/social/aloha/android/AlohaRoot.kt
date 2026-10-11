@@ -77,6 +77,7 @@ fun AlohaRoot(viewModel: AppViewModel = hiltViewModel()) {
                     AlohaApp(
                         readerId = current.accountId,
                         serverAccountId = current.serverAccountId,
+                        nextcloudSocial = switcher.firstOrNull { it.id == current.accountId }?.nextcloudSocial == true,
                         pendingLink = pending,
                         onPendingLinkTaken = viewModel::externalHandled,
                         // only the shell of the account it belongs to takes it, not the one switched away from
