@@ -5,9 +5,11 @@ package social.aloha.feature.timeline
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Clock
-import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
@@ -23,6 +25,7 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -38,10 +41,13 @@ import social.aloha.core.data.timeline.TimelinePositions
 import social.aloha.core.data.timeline.TimelineRepository
 import social.aloha.core.data.timeline.TimelineRow
 import social.aloha.core.data.timeline.Toggle
+import social.aloha.core.data.video.WatchPositions
 import social.aloha.core.datastore.AccountSettings
 import social.aloha.core.datastore.AccountSettingsStore
 import social.aloha.core.datastore.AppPreferences
+import social.aloha.core.datastore.ModePreferences
 import social.aloha.core.datastore.ReadingPreferences
+import social.aloha.core.model.FeedMode
 import social.aloha.core.model.SignedInAccount
 import social.aloha.core.model.Status
 import social.aloha.core.model.SwipeAction
@@ -53,14 +59,16 @@ import social.aloha.core.ui.StatusRowUi
 import social.aloha.core.ui.minuteTicks
 
 /**
- * Home's Following feed of every account together, the way a mail client shows all inboxes ([MergedRows]
- * says how). A refresh fetches every account at once and holds what it brings behind the pill; scrolling
- * on loads more from whichever account is behind. Where the list was left is kept for it alone, and
- * reading moves each account's own read marker as far as its posts were read.
+ * Home's Following feed, or a mode's timeline, of every account together, the way a mail client shows all
+ * inboxes ([MergedRows] says how); a mode is each account's own source for it. A refresh fetches every
+ * account at once and holds what it brings behind the pill; scrolling on loads more from whichever
+ * account is behind. Where the list was left is kept for it alone, and reading Following moves each
+ * account's own read marker as far as its posts were read.
  */
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
-@HiltViewModel
-internal class MergedTimelineViewModel @Inject constructor(
+@HiltViewModel(assistedFactory = MergedTimelineViewModel.Factory::class)
+internal class MergedTimelineViewModel @AssistedInject constructor(
+    @Assisted private val feed: TimelineFeed,
     allAccounts: AllAccounts,
     timelines: TimelineRepository,
     private val rows: MergedRows,
@@ -69,10 +77,17 @@ internal class MergedTimelineViewModel @Inject constructor(
     private val settings: AccountSettingsStore,
     preferences: AppPreferences,
     private val reading: ReadingPreferences,
+    private val modes: ModePreferences,
+    private val watching: WatchPositions,
     clock: Clock,
     private val signals: TimelineSignals,
 ) : ViewModel(),
     TimelineModel {
+    @AssistedFactory
+    interface Factory {
+        fun create(feed: TimelineFeed): MergedTimelineViewModel
+    }
+
     /** The screen's own requests, beside what the [pager] is doing. */
     private data class Control(
         val restoreTo: TimelineUiState.Restore? = null,
@@ -93,36 +108,72 @@ internal class MergedTimelineViewModel @Inject constructor(
     private var shown = false
     private var noted = emptySet<String>()
 
+    /** Where the merged list of [feed] keeps its place: one per mode, whatever source each account reads. */
+    private val place = TimelineKey(feed.mode, TimelineSource.Home)
+
     @Volatile private var last = MergedRows.Built(emptyList(), emptyMap(), emptyMap(), emptyList(), emptyList())
 
     @Volatile private var stored: Map<String, List<TimelineRow>> = emptyMap()
 
-    private val carousel: Flow<Boolean> = reading.style.map { it.boostCarousel }.distinctUntilChanged()
+    /** Each account shown with its timeline for [feed]: Following, or the source it chose for the mode. */
+    private val keys: StateFlow<List<Pair<SignedInAccount, TimelineKey>>> = accounts.flatMapLatest { list ->
+        if (list.isEmpty()) {
+            flowOf(emptyList())
+        } else {
+            combine(list.map { account -> settings.settings(account.id).map { account to keyFor(account, it) } }) {
+                it.toList()
+            }
+        }
+    }.distinctUntilChanged().stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
-    private val built: Flow<MergedRows.Built> = accounts.filter { it.isNotEmpty() }.flatMapLatest { list ->
+    /** Whether boosts in a row fold into one row of cards: Following's, where the reader chose it. */
+    private val carousel: Flow<Boolean> = if (feed.mode == FeedMode.Home) {
+        reading.style.map { it.boostCarousel }.distinctUntilChanged()
+    } else {
+        flowOf(false)
+    }
+
+    private val built: Flow<MergedRows.Built> = keys.filter { it.isNotEmpty() }.flatMapLatest { keys ->
+        val list = keys.map { it.first }
         combine(
-            pager.observe(list.map { it to HOME }),
+            pager.observe(keys),
             looks(list),
             colors.filterNotNull(),
             carousel,
             combine(pager.states, control, ::Pair),
         ) { stored, looks, colors, carousel, (paging, control) ->
             this.stored = stored
-            val built = rows.build(MergedRows.Input(list, stored, looks), colors, paging)
+            val sources = keys.associate { (account, key) -> account.id to key.source }
+            val built = rows.build(MergedRows.Input(list, stored, looks, sources), colors, paging)
             val items = caughtUp(built.items, control.caughtUpAt)
                 .let { if (carousel) foldBoosts(it, control.expandedBoosts) else it }
             built.copy(items = items).also { last = it }
         }
     }.flowOn(Dispatchers.Default)
 
+    /** Grid or feed, for Photos only; how far the account in use got in each video, for Video only. */
+    private val layout: Flow<Pair<Boolean?, Map<String, Double>?>> = combine(
+        if (feed.mode == FeedMode.Photos) modes.photosGrid else flowOf(null),
+        if (feed.mode == FeedMode.Video) {
+            accounts.map { it.firstOrNull()?.id }.distinctUntilChanged()
+                .flatMapLatest { id -> id?.let(watching::observe) ?: flowOf(emptyMap()) }
+        } else {
+            flowOf(null)
+        },
+        ::Pair,
+    )
+
     override val uiState: StateFlow<TimelineUiState> = combine(
         built,
         combine(pager.states, control, ::Pair),
-        combine(preferences.swipeTowardsEnd, preferences.swipeTowardsStart, ::Pair),
+        combine(preferences.swipeTowardsEnd, preferences.swipeTowardsStart, layout, ::Triple),
         accounts.filter { it.isNotEmpty() },
         minuteTicks(clock),
-    ) { built, (paging, control), swipes, accounts, now ->
+    ) { built, (paging, control), (towardsEnd, towardsStart, layout), accounts, now ->
+        val swipes = towardsEnd to towardsStart
         TimelineUiState(
+            grid = layout.first,
+            watched = layout.second,
             sources = emptyList(),
             items = built.items,
             loadedOnce = paging.loadedOnce,
@@ -152,16 +203,19 @@ internal class MergedTimelineViewModel @Inject constructor(
                 .collect { if (it) pager.reveal() }
         }
         viewModelScope.launch {
-            accounts.filter { it.isNotEmpty() }.distinctUntilChanged { a, b -> a.map { it.id } == b.map { it.id } }
-                .collect { list ->
-                    control.value = Control()
-                    // the poll keeps fresh the accounts on screen now, not those shown before
-                    if (shown) note(list.map { it.id })
-                    rows.keepOnly(list)
-                    scheduleRestore()
-                    pager.start(list.map { it to HOME })
-                    list.forEach { rows.refreshFilters(it) }
-                }
+            // other accounts, or another source of one of them, start afresh
+            keys.filter { it.isNotEmpty() }.distinctUntilChanged { a, b ->
+                a.map { (account, key) -> account.id to key } == b.map { (account, key) -> account.id to key }
+            }.collect { keys ->
+                val list = keys.map { it.first }
+                control.value = Control()
+                // the poll keeps fresh the accounts on screen now, not those shown before
+                if (shown) note(list.map { it.id })
+                rows.keepOnly(list)
+                scheduleRestore()
+                pager.start(keys)
+                list.forEach { rows.refreshFilters(it) }
+            }
         }
         viewModelScope.launch {
             signals.timelineDue.collect { id ->
@@ -171,16 +225,27 @@ internal class MergedTimelineViewModel @Inject constructor(
         }
     }
 
-    /** Each account's reading settings and filters, and the colour its rows are marked in. */
+    /**
+     * Each account's reading settings and filters, and the colour its rows are marked in. Hiding boosts
+     * and replies is Following's: a mode shows what it is made of.
+     */
     private fun looks(list: List<SignedInAccount>): Flow<Map<String, AccountLook>> = combine(
         list.map { account ->
             combine(settings.settings(account.id), rows.filters(account.id)) { own, filters ->
-                account.id to AccountLook(own, filters, own.accent ?: account.capabilities.theme?.colour)
+                val reading = if (feed.mode == FeedMode.Home) own else own.copy(showBoosts = true, showReplies = true)
+                account.id to AccountLook(reading, filters, own.accent ?: account.capabilities.theme?.colour)
             }
         },
     ) { it.toMap() }
 
-    private fun shownKeys(): List<Pair<SignedInAccount, TimelineKey>> = accounts.value.map { it to HOME }
+    /** [account]'s timeline for [feed]: Following, or the source it chose for the mode while its server serves it. */
+    private fun keyFor(account: SignedInAccount, own: AccountSettings): TimelineKey {
+        val chosen = if (feed.mode == FeedMode.Home) null else own.modeSources[feed.mode.key]
+        val source = chosen?.takeIf { it in homeSources(account.capabilities) } ?: TimelineSource.Home
+        return TimelineKey(feed.mode, source)
+    }
+
+    private fun shownKeys(): List<Pair<SignedInAccount, TimelineKey>> = keys.value
 
     override fun onShown(isShown: Boolean) {
         shown = isShown
@@ -214,10 +279,12 @@ internal class MergedTimelineViewModel @Inject constructor(
 
     override fun onActionFailureShown() = control.update { it.copy(actionFailed = false) }
 
-    // the merged feed is Following; a source, a layout or a gap is each account's own timeline's
+    // each account reads its own source, chosen on its own; gaps are filled as the list is scrolled
     override fun onSource(source: TimelineSource) = Unit
 
-    override fun onGrid(grid: Boolean) = Unit
+    override fun onGrid(grid: Boolean) {
+        viewModelScope.launch { modes.setPhotosGrid(grid) }
+    }
 
     override fun onFillGap(gapId: String, fromBelow: Boolean) = Unit
 
@@ -277,7 +344,7 @@ internal class MergedTimelineViewModel @Inject constructor(
     private fun scheduleRestore() {
         restoreJob?.cancel()
         restoreJob = viewModelScope.launch {
-            val saved = positions.savedMerged(HOME) ?: return@launch
+            val saved = positions.savedMerged(place) ?: return@launch
             control.update { it.copy(caughtUpAt = saved.statusId) }
             if (!reading.restorePosition.first()) return@launch
             val items = built.first { it.items.isNotEmpty() }.items
@@ -286,9 +353,10 @@ internal class MergedTimelineViewModel @Inject constructor(
         }
     }
 
-    /** Keeps where the list is, and moves each account's read marker down to what was read of its posts. */
+    /** Keeps where the list is, and on Following moves each account's read marker down to what was read of it. */
     private suspend fun savePosition(position: TimelinePosition) {
-        positions.saveMerged(HOME, position)
+        positions.saveMerged(place, position)
+        if (feed.mode != FeedMode.Home) return
         val at = last.times[position.statusId] ?: return
         val byId = accounts.value.associateBy { it.id }
         MergedTimeline.readUpTo(stored, at).forEach { (id, statusId) ->
@@ -297,7 +365,6 @@ internal class MergedTimelineViewModel @Inject constructor(
     }
 
     private companion object {
-        val HOME = TimelineKey.home()
         const val PILL_AVATARS = 3
         const val STOP_MILLIS = 5_000L
         const val SAVE_DEBOUNCE_MILLIS = 500L

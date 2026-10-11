@@ -47,15 +47,18 @@ import social.aloha.core.data.timeline.StatusRepository
 import social.aloha.core.data.timeline.TimelinePositions
 import social.aloha.core.data.timeline.TimelineRepository
 import social.aloha.core.data.timeline.Toggle
+import social.aloha.core.data.video.WatchPositions
 import social.aloha.core.database.AccountsDatabase
 import social.aloha.core.database.CacheDatabase
 import social.aloha.core.datastore.AccountSettingsStore
 import social.aloha.core.datastore.AccountViewPreferences
 import social.aloha.core.datastore.AppPreferences
+import social.aloha.core.datastore.ModePreferences
 import social.aloha.core.datastore.ReadingPreferences
 import social.aloha.core.datastore.TokenVault
 import social.aloha.core.html.RichTextCache
 import social.aloha.core.model.AccessToken
+import social.aloha.core.model.FeedMode
 import social.aloha.core.model.ServerCapabilities
 import social.aloha.core.model.TimelineSource
 import social.aloha.core.network.RateLimiter
@@ -120,27 +123,31 @@ class MergedTimelineViewModelTest {
         signIn(firstServer, "6")
         signIn(secondServer, "7")
         secondHost = secondServer.url("/").host
-        val reading = ReadingPreferences(InMemoryDataStore(emptyPreferences()))
-        viewModel = MergedTimelineViewModel(
-            AllAccounts(accounts, AccountViewPreferences(InMemoryDataStore(emptyPreferences()))),
-            TimelineRepository(cache.timelineDao(), statuses, clients, accounts, clock, Dispatchers.IO),
-            MergedRows {
-                TimelineRowBuilder(
-                    RichTextCache(),
-                    FilterRepository(cache.filterDao(), clients),
-                    FollowedAuthors(clients),
-                    clock,
-                )
-            },
-            StatusInteractions(statuses, clients),
-            TimelinePositions(cache.positionDao(), clients),
-            AccountSettingsStore(InMemoryDataStore(emptyMap())),
-            AppPreferences(InMemoryDataStore(emptyPreferences())),
-            reading,
-            clock,
-            TimelineSignals(),
-        ).apply { onColors(RichTextColors(Color.Blue, Color.Gray, Color.LightGray)) }
+        viewModel = create(TimelineFeed.Pinned(TimelineSource.Home))
     }
+
+    private fun create(feed: TimelineFeed) = MergedTimelineViewModel(
+        feed,
+        AllAccounts(accounts, AccountViewPreferences(InMemoryDataStore(emptyPreferences()))),
+        TimelineRepository(cache.timelineDao(), statuses, clients, accounts, clock, Dispatchers.IO),
+        MergedRows {
+            TimelineRowBuilder(
+                RichTextCache(),
+                FilterRepository(cache.filterDao(), clients),
+                FollowedAuthors(clients),
+                clock,
+            )
+        },
+        StatusInteractions(statuses, clients),
+        TimelinePositions(cache.positionDao(), clients),
+        AccountSettingsStore(InMemoryDataStore(emptyMap())),
+        AppPreferences(InMemoryDataStore(emptyPreferences())),
+        ReadingPreferences(InMemoryDataStore(emptyPreferences())),
+        ModePreferences(InMemoryDataStore(emptyPreferences())),
+        WatchPositions(clients, cache.watchPositionDao(), statuses, clock),
+        clock,
+        TimelineSignals(),
+    ).apply { onColors(RichTextColors(Color.Blue, Color.Gray, Color.LightGray)) }
 
     private suspend fun signIn(server: MockWebServer, remoteId: String) {
         val apiBase = server.url("/")
@@ -216,12 +223,25 @@ class MergedTimelineViewModelTest {
         assertEquals(mapOf("first" to "84", "second" to "89"), markers)
     }
 
+    @Test
+    fun `Photos shows every account's pictures together, as a grid, and moves no read marker`() = runBlocking {
+        first.media = { listOf(NumberedTimeline.image(it)) }
+        second.media = { listOf(NumberedTimeline.image(it)) }
+        val photos = create(TimelineFeed.Mode(FeedMode.Photos))
+        val state = withTimeout(10.seconds) { photos.uiState.first { it.loadedOnce && it.items.size == 30 } }
+        assertEquals(true, state.grid)
+        photos.onScrolled(state.items.first().key, 0)
+        delay(SETTLE_MILLIS)
+        assertTrue(asked.none { " POST /api/v1/markers" in it })
+    }
+
     /** The home read marker a recorded request sets. */
     private fun marked(request: String) = MARKER.find(request)?.groupValues?.get(1)
 
     private companion object {
         val NOON: Instant = Instant.parse("2026-10-11T12:00:00Z")
         const val POLL_MILLIS = 50L
+        const val SETTLE_MILLIS = 1_000L
         val MARKER = Regex("""last_read_id(?:%5D|])=(\d+)""")
     }
 }

@@ -275,6 +275,7 @@ fun AlohaApp(
     resolveLink: suspend (address: String, fromPost: Boolean) -> NavKey? = { _, _ -> null },
     accountButton: @Composable (AccountLinks) -> Unit = {},
     modes: ModeNavigation = ModeNavigation(),
+    allAccounts: Boolean = false,
     timeline: @Composable (
         TimelineFeed,
         StatusNavigation,
@@ -470,6 +471,7 @@ fun AlohaApp(
                                     onComposeAs = { backStack.push(composerFor(it)) },
                                     onCatchUp = { backStack.push(CatchUpKey(readerId)) },
                                     onChannels = { backStack.push(ChannelsKey(readerId)) }.takeIf { nextcloudSocial },
+                                    allAccounts = allAccounts,
                                 )
                                 timeline(feed, statusNavigation, links) { accountButton(accountLinks) }
                             }
@@ -823,6 +825,7 @@ private fun ModeTimeline(
         navigation,
         feed = feed,
         navigationIcon = accountButton,
+        allAccounts = links.allAccounts,
         header = {
             when (feed.mode) {
                 FeedMode.Photos -> StoriesRail(
@@ -875,6 +878,8 @@ data class HomeLinks(
     val onCatchUp: () -> Unit = {},
     /** The reader's video channels, where the server keeps them; null where it does not. */
     val onChannels: (() -> Unit)? = null,
+    /** Every account shows together: the modes read as lists of posts merge them. */
+    val allAccounts: Boolean = false,
 )
 
 /** Where the account button's sheet leads, one [AccountPlace] at a time. */

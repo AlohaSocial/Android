@@ -136,7 +136,7 @@ public fun TimelineRoute(
         onSearch = onSearch,
         toolbar = toolbar,
         header = header,
-        onVideo = nav::openVideo,
+        onVideo = { nav.openVideoOf(it, items) },
         shake = shakes,
     )
 
@@ -153,7 +153,7 @@ public fun TimelineRoute(
 /** Every account's timeline together where [allAccounts], else [feed] of the account in use. */
 @Composable
 private fun timelineModel(feed: TimelineFeed, allAccounts: Boolean): TimelineModel = if (allAccounts) {
-    hiltViewModel<MergedTimelineViewModel>()
+    hiltViewModel<MergedTimelineViewModel, MergedTimelineViewModel.Factory>(key = "all-$feed") { it.create(feed) }
 } else {
     hiltViewModel<TimelineViewModel, TimelineViewModel.Factory>(key = feed.toString()) { it.create(feed) }
 }
@@ -171,6 +171,21 @@ private fun routed(
     merged != null -> MergedActions(rowActions, elsewhere { merged.ownerOf(it.statusId) })
     (feed as? TimelineFeed.Pinned)?.source is TimelineSource.Remote -> elsewhere(null)
     else -> rowActions
+}
+
+/**
+ * The watch page of [statusId]; a video another account than the one in use holds, under its server's
+ * name, opens by its address instead, which the server in use finds.
+ */
+private fun StatusNavigation.openVideoOf(statusId: String, items: List<TimelineItem>) {
+    if (statusId.startsWith(
+            TimelineSource.Remote.ID_PREFIX,
+        )
+    ) {
+        urlIn(items, statusId)?.let(::openWeb)
+    } else {
+        openVideo(statusId)
+    }
 }
 
 /** The address of the post [statusId] among [items]. */
