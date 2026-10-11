@@ -5,11 +5,15 @@ package social.aloha.feature.timeline
 
 import androidx.compose.runtime.Immutable
 import java.time.Instant
+import kotlinx.coroutines.flow.StateFlow
 import social.aloha.core.data.Trouble
+import social.aloha.core.data.timeline.Toggle
 import social.aloha.core.model.FeedMode
 import social.aloha.core.model.ServerCapabilities
 import social.aloha.core.model.SwipeAction
 import social.aloha.core.model.TimelineSource
+import social.aloha.core.ui.RichTextColors
+import social.aloha.core.ui.SeenBy
 import social.aloha.core.ui.StatusRowUi
 
 /** What a timeline screen reads: home, from the source chosen for it, or one hashtag's public posts. */
@@ -48,7 +52,8 @@ internal sealed interface TimelineItem {
     /** Whether this item shows the row [rowId], so a position saved at that row finds it. */
     fun shows(rowId: String): Boolean = key == rowId
 
-    data class Post(val row: StatusRowUi) : TimelineItem {
+    /** [seenBy]: where every account shows together, the reader's accounts that see it, the one it acts as first. */
+    data class Post(val row: StatusRowUi, val seenBy: List<SeenBy> = emptyList()) : TimelineItem {
         override val key: String get() = row.rowId
     }
 
@@ -132,4 +137,23 @@ internal interface TimelineScreenActions {
 
     /** A swipe that changes the post; a reply opens the post instead, which the screen does. */
     fun onSwipe(row: StatusRowUi, action: SwipeAction)
+}
+
+/** What a timeline screen reads and asks of the model behind it, one account's timeline or every account's. */
+internal interface TimelineModel : TimelineScreenActions {
+    val uiState: StateFlow<TimelineUiState>
+
+    /** Rows are rendered with the theme's colours, which only the screen knows. */
+    fun onColors(value: RichTextColors)
+
+    /** The screen came into view or left it. */
+    fun onShown(isShown: Boolean)
+
+    fun onActionFailureShown()
+
+    fun onToggle(statusId: String, toggle: Toggle)
+
+    fun onVote(statusId: String, choices: List<Int>)
+
+    fun onDelete(statusId: String)
 }

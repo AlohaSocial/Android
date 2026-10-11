@@ -46,6 +46,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import social.aloha.core.data.AccountRepository
+import social.aloha.core.data.AllAccounts
 import social.aloha.core.data.compose.Outbox
 import social.aloha.core.data.timeline.PinnedFeeds
 import social.aloha.core.data.timeline.TimelinePositions
@@ -81,12 +82,15 @@ internal data class HomeFeedsState(
     val titleNext: Boolean = false,
     /** The reader has a draft put aside. */
     val draft: Boolean = false,
+    /** Every account shows together: Following is all of their home timelines as one. */
+    val allAccounts: Boolean = false,
 )
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 internal class HomeFeedsViewModel @Inject constructor(
     accounts: AccountRepository,
+    allAccounts: AllAccounts,
     pinned: PinnedFeeds,
     private val settings: AccountSettingsStore,
     private val timelines: TimelineRepository,
@@ -108,10 +112,10 @@ internal class HomeFeedsViewModel @Inject constructor(
             pinned.feeds(reader),
             settings.settings(reader.id),
             unread,
-            combine(noSwipes, reading.titleNextFeed, ::Pair),
+            combine(noSwipes, reading.titleNextFeed, allAccounts.on, ::Triple),
             drafts.distinctUntilChanged(),
-        ) { feeds, own, dots, (swipe, next), draft ->
-            HomeFeedsState(feeds, dots, own.explainedFeeds, own.showBoosts, own.showReplies, swipe, next, draft)
+        ) { feeds, own, dots, (swipe, next, all), draft ->
+            HomeFeedsState(feeds, dots, own.explainedFeeds, own.showBoosts, own.showReplies, swipe, next, draft, all)
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_MILLIS), HomeFeedsState())
 
@@ -189,7 +193,8 @@ public fun HomeRoute(
             feed = TimelineFeed.Pinned(feed.source),
             listState = list,
             header = banner,
-            onCatchUp = onCatchUp.takeIf { feed.source == TimelineSource.Home },
+            onCatchUp = onCatchUp.takeIf { feed.source == TimelineSource.Home && !state.allAccounts },
+            allAccounts = state.allAccounts && feed.source == TimelineSource.Home,
         )
     }
 }

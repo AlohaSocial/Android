@@ -17,7 +17,7 @@ import androidx.compose.ui.zIndex
 
 /**
  * A few people as overlapping avatars, the first on top, each ringed in [ring], the colour behind them,
- * so the overlap reads. Decoration only: the text beside it names them.
+ * so the overlap reads, or in its own of [rings]. Decoration only: the text beside it names them.
  */
 @Composable
 public fun StackedAvatars(
@@ -26,6 +26,7 @@ public fun StackedAvatars(
     modifier: Modifier = Modifier,
     ring: Color = MaterialTheme.colorScheme.surface,
     maximum: Int = MAXIMUM,
+    rings: List<Color> = emptyList(),
 ) {
     val shown = urls.take(maximum)
     Row(modifier, horizontalArrangement = Arrangement.spacedBy(-size / OVERLAP)) {
@@ -35,7 +36,7 @@ public fun StackedAvatars(
                 size,
                 Modifier
                     .zIndex((shown.size - index).toFloat())
-                    .border(RING, ring, CircleShape),
+                    .border(RING, rings.getOrNull(index) ?: ring, CircleShape),
             )
         }
     }

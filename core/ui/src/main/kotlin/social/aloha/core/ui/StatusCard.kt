@@ -87,7 +87,17 @@ public interface StatusActions {
 
     /** The menu items this screen can carry out; the others are not offered. */
     public val menu: Set<StatusMenuItem> get() = StatusMenuItem.entries.toSet()
+
+    /** The menu items this screen can carry out on [row], where rows differ in what can be done to them. */
+    public fun menuFor(row: StatusRowUi): Set<StatusMenuItem> = menu
 }
+
+/**
+ * One of the reader's accounts that sees a post, where every account shows together: its face, ringed in
+ * its own [colour] where it has one, and its handle for a screen reader.
+ */
+@Immutable
+public data class SeenBy(val handle: String, val avatarUrl: String?, val colour: Int?)
 
 /** The overflow menu. The author's own items appear only on their own posts. */
 public enum class StatusMenuItem {
@@ -129,6 +139,7 @@ public fun StatusCard(
     canReact: Boolean = false,
     animateEmoji: Boolean = true,
     focused: Boolean = false,
+    seenBy: List<SeenBy> = emptyList(),
 ) {
     // a translation takes the post's place, everywhere the card reads it: its text, its label, its links
     val translations = LocalStatusTranslations.current
@@ -147,8 +158,11 @@ public fun StatusCard(
     val row = withMatchesPainted(translatedRow, warning != null)
     var pollChoice by rememberSaveable(row.rowId) { mutableStateOf(listOf<Int>()) }
     val bodyShown = row.spoiler == null || hiding.spoilerRevealed
-    val label = listOfNotNull(accessibilityLabel(row, now, bodyShown), translation?.let { translationText(it) })
-        .joinToString(". ")
+    val label = listOfNotNull(
+        accessibilityLabel(row, now, bodyShown),
+        translation?.let { translationText(it) },
+        seenByText(seenBy),
+    ).joinToString(". ")
     val controls = CardControls(
         hiding.spoilerRevealed,
         hiding.onSpoiler,
@@ -174,11 +188,24 @@ public fun StatusCard(
         ) {
             ReadingTextSize {
                 row.context?.let { ContextLineRow(it, now) }
-                CardLayout(row, now, policy, actions, Flags(showActions, canReact, animateEmoji, focused), controls)
+                CardLayout(
+                    row,
+                    now,
+                    policy,
+                    actions,
+                    Flags(showActions, canReact, animateEmoji, focused),
+                    controls,
+                    seenBy,
+                )
             }
         }
     }
 }
+
+/** Which of the reader's accounts see the post, said for a screen reader; null where none is marked. */
+@Composable
+private fun seenByText(seenBy: List<SeenBy>): String? = seenBy.takeIf { it.isNotEmpty() }
+    ?.let { stringResource(R.string.status_seen_by, it.joinToString(", ") { account -> account.handle }) }
 
 /**
  * The avatar beside the header, and the content under the name, so text, media, poll and cards hang in
@@ -192,9 +219,21 @@ private fun CardLayout(
     actions: StatusActions,
     flags: Flags,
     controls: CardControls,
+    seenBy: List<SeenBy>,
 ) {
     val avatar = @Composable {
-        Avatar(row.author.avatarUrl, AVATAR, Modifier.clickable { actions.onProfile(row.author.id) })
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Avatar(row.author.avatarUrl, AVATAR, Modifier.clickable { actions.onProfile(row.author.id) })
+            if (seenBy.isNotEmpty()) {
+                val outline = MaterialTheme.colorScheme.outline
+                StackedAvatars(
+                    seenBy.map { it.avatarUrl },
+                    SEEN_BY,
+                    Modifier.padding(top = AlohaSpacing.xxs),
+                    rings = seenBy.map { account -> account.colour?.let(::Color) ?: outline },
+                )
+            }
+        }
     }
     if (flags.focused) {
         Row(horizontalArrangement = Arrangement.spacedBy(AlohaSpacing.s)) {
@@ -438,7 +477,7 @@ private fun StatusMenu(row: StatusRowUi, actions: StatusActions) {
     Box {
         IconButton(onClick = { open = true }) { Icon(AlohaIcons.More, stringResource(R.string.status_action_more)) }
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
-            menuItems(row, actions.menu).forEach { (item, icon, text) ->
+            menuItems(row, actions.menuFor(row)).forEach { (item, icon, text) ->
                 DropdownMenuItem(
                     text = { Text(stringResource(text)) },
                     leadingIcon = { Icon(icon, contentDescription = null) },
@@ -467,6 +506,8 @@ private class TranslatingActions(
 
     override val menu: Set<StatusMenuItem> get() = screen.menu - TRANSLATION_ITEMS + added
 
+    override fun menuFor(row: StatusRowUi): Set<StatusMenuItem> = screen.menuFor(row) - TRANSLATION_ITEMS + added
+
     override fun onMenu(row: StatusRowUi, item: StatusMenuItem) = when (item) {
         StatusMenuItem.Translate -> translations.translate(row)
         StatusMenuItem.ShowOriginal -> translations.showOriginal(row.statusId)
@@ -479,4 +520,5 @@ private val TRANSLATION_ITEMS =
     setOf(StatusMenuItem.Translate, StatusMenuItem.ShowOriginal, StatusMenuItem.TranslationLanguage)
 
 internal val AVATAR = 44.dp
+private val SEEN_BY = 18.dp
 internal val SMALL_ICON = 16.dp

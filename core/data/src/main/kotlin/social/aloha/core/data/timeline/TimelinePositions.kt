@@ -34,7 +34,7 @@ public class TimelinePositions @Inject constructor(private val dao: PositionDao,
         dao.set(TimelinePositionEntity(account.id, key.storageKey, position.statusId, position.offset))
     }
 
-    /** Where the merged timeline [key] was left, its own and no account's; the row is a [MergedPost.key]. */
+    /** Where the merged timeline [key] was left, its own and no account's, by the row as the merged list shows it. */
     public suspend fun savedMerged(key: TimelineKey): TimelinePosition? =
         dao.get(MERGED, key.storageKey)?.let { TimelinePosition(it.statusId, it.offset) }
 

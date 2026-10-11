@@ -298,6 +298,7 @@ private fun TimelineRow(
                 LocalSensitiveMediaPolicy.current,
                 rowActions,
                 Modifier.semantics { this.selected = chosen },
+                seenBy = item.seenBy,
             )
         }
 

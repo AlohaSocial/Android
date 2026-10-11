@@ -142,7 +142,7 @@ internal fun customActions(
                 ?: stringResource(R.string.status_media_no_description),
         ) { actions.onMedia(row, index) }
     }
-    val menu = menuItems(row, actions.menu).map { (item, _, text) ->
+    val menu = menuItems(row, actions.menuFor(row)).map { (item, _, text) ->
         action(stringResource(text)) { actions.onMenu(row, item) }
     }
     val spoiler = spoilerActions(row, controls)
