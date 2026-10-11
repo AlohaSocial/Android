@@ -34,6 +34,7 @@ import social.aloha.core.ui.LocalActAs
 import social.aloha.core.ui.R as UiR
 import social.aloha.core.ui.RichTextColors
 import social.aloha.core.ui.RoutedStatusActions
+import social.aloha.core.ui.StatusActions
 import social.aloha.core.ui.StatusNavigation
 import social.aloha.core.ui.StatusRowUi
 
@@ -48,9 +49,9 @@ public fun TimelineRoute(
     toolbar: @Composable () -> Unit = {},
     listState: LazyListState = rememberLazyListState(),
     onCatchUp: (() -> Unit)? = null,
+    allAccounts: Boolean = false,
 ) {
-    val viewModel =
-        hiltViewModel<TimelineViewModel, TimelineViewModel.Factory>(key = feed.toString()) { it.create(feed) }
+    val viewModel = timelineModel(feed, allAccounts)
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val snackbars = remember { SnackbarHostState() }
@@ -61,7 +62,8 @@ public fun TimelineRoute(
     val copied = stringResource(UiR.string.status_link_copied)
     val nav by rememberUpdatedState(navigation)
 
-    LaunchedEffect(colors) { viewModel.onColors(colors) }
+    // the model changes in place between one account and every account: the new one needs the colours too
+    LaunchedEffect(viewModel, colors) { viewModel.onColors(colors) }
     LifecycleResumeEffect(viewModel) {
         viewModel.onShown(isShown = true)
         onPauseOrDispose { viewModel.onShown(isShown = false) }
@@ -99,15 +101,9 @@ public fun TimelineRoute(
 
     val actAs = LocalActAs.current
     val items by rememberUpdatedState(state.items)
-    val shown = remember(rowActions, actAs, feed) {
-        if ((feed as? TimelineFeed.Pinned)?.source is TimelineSource.Remote) {
-            Elsewhere(rowActions, actAs, { nav }) { id ->
-                items.firstNotNullOfOrNull {
-                    (it as? TimelineItem.Post)?.row?.takeIf { row -> row.statusId == id }?.url
-                }
-            }
-        } else {
-            rowActions
+    val shown = remember(rowActions, actAs, feed, viewModel) {
+        routed(rowActions, feed, viewModel as? MergedTimelineViewModel) { actingAs ->
+            Elsewhere(rowActions, actAs, { nav }, { urlIn(items, it) }, actingAs ?: { actAs?.current })
         }
     }
     val timelineActions = rememberCaughtUp(viewModel, onCatchUp)
@@ -154,9 +150,36 @@ public fun TimelineRoute(
     }
 }
 
+/** Every account's timeline together where [allAccounts], else [feed] of the account in use. */
+@Composable
+private fun timelineModel(feed: TimelineFeed, allAccounts: Boolean): TimelineModel = if (allAccounts) {
+    hiltViewModel<MergedTimelineViewModel>()
+} else {
+    hiltViewModel<TimelineViewModel, TimelineViewModel.Factory>(key = feed.toString()) { it.create(feed) }
+}
+
+/**
+ * What a row's actions do on [feed]: every account's posts each as the account it belongs to holds it,
+ * another server's posts [elsewhere], acting as the reader, else as [rowActions] do them.
+ */
+private fun routed(
+    rowActions: StatusActions,
+    feed: TimelineFeed,
+    merged: MergedTimelineViewModel?,
+    elsewhere: (actingAs: ((StatusRowUi) -> String?)?) -> Elsewhere,
+): StatusActions = when {
+    merged != null -> MergedActions(rowActions, elsewhere { merged.ownerOf(it.statusId) })
+    (feed as? TimelineFeed.Pinned)?.source is TimelineSource.Remote -> elsewhere(null)
+    else -> rowActions
+}
+
+/** The address of the post [statusId] among [items]. */
+private fun urlIn(items: List<TimelineItem>, statusId: String): String? =
+    items.firstNotNullOfOrNull { (it as? TimelineItem.Post)?.row?.takeIf { row -> row.statusId == statusId }?.url }
+
 /** [viewModel]'s actions, the caught-up line opening what arrived since where [onCatchUp] is given. */
 @Composable
-private fun rememberCaughtUp(viewModel: TimelineViewModel, onCatchUp: (() -> Unit)?): TimelineScreenActions {
+private fun rememberCaughtUp(viewModel: TimelineModel, onCatchUp: (() -> Unit)?): TimelineScreenActions {
     val catchUp by rememberUpdatedState(onCatchUp)
     return remember(viewModel, onCatchUp != null) {
         if (onCatchUp == null) {

@@ -32,9 +32,17 @@ public data class NextcloudTheme(
     public fun hex(onDarkBackground: Boolean): String? =
         (if (onDarkBackground) elementDarkHex else elementBrightHex) ?: colourHex
 
+    /** The colour the administrator chose, as an opaque ARGB colour; null without one. */
+    val colour: Int? get() = colourHex?.let(::argb)
+
     public companion object {
         private const val SHORT_HEX = 3
         private const val LONG_HEX = 6
+        private const val HEX = 16
+        private const val OPAQUE = 0xFF000000.toInt()
+
+        /** `#rrggbb`, as [normalise] leaves it, as an opaque ARGB colour. */
+        public fun argb(hex: String): Int? = hex.removePrefix("#").toIntOrNull(HEX)?.let { it or OPAQUE }
 
         /** `#abc` and `abcdef` both become six-digit `#aabbcc`; anything else is null, not a colour nobody chose. */
         public fun normalise(raw: String?): String? {

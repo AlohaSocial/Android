@@ -42,7 +42,7 @@ A timeline is the rows of `timeline_entry` for one account and one timeline key,
 
 On screen a gap is a "Load more" row (`GapRow`) in the timeline, the photo and video grids, and a profile's posts.
 
-The merged timeline has no table of its own. `MergedTimeline` combines every account's stored rows in memory, after each account's own filters and settings: a post is known by its `uri` (a boost by the post it boosts), shows once, and acts as the first account in account order that has it. The list ends at the frontier, the oldest point every account with more below has reached, counting only rows above an account's first gap; `MergedPager` refreshes all accounts in parallel and loads the next page, or fills the gap, for the accounts at the frontier. Its read position is stored in `timeline_position` under the reserved account `*merged`; reading moves each account's home marker to its newest post no newer than the row read.
+The merged timeline has no table of its own. `MergedTimeline` combines every account's stored rows in memory, after each account's own filters and settings: a post is known by its `uri` (a boost by the post it boosts), shows once, and acts as the first account in account order that has it. The list ends at the frontier, the oldest point every account with more below has reached, counting only rows above an account's first gap; `MergedPager` refreshes all accounts in parallel and loads the next page, or fills the gap, for the accounts at the frontier. Its read position, the row as the merged list shows it, is stored in `timeline_position` under the reserved account `*merged`; reading moves each account's home marker to its newest post no newer than the row read.
 
 ## Sweeping
 

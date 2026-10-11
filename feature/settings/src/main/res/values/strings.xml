@@ -158,6 +158,8 @@
     <string name="settings_accounts_needs_reauth">%1$s: sign in again to keep using it</string>
     <!-- Content description: moves the account one place up the list. %1$s: its handle -->
     <string name="accounts_move_up">Move %1$s up</string>
+    <!-- Above the list of accounts when several are signed in: what the order means for "All accounts", the view of every account's timeline together -->
+    <string name="accounts_first_explained">With All accounts, you write, search and change settings as the first account. Move an account up to make it the first.</string>
     <!-- Content description: moves the account one place down the list. %1$s: its handle -->
     <string name="accounts_move_down">Move %1$s down</string>
     <!-- Button: sign the account in again -->

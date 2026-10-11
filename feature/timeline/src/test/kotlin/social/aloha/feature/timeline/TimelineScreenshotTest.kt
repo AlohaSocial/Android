@@ -30,6 +30,7 @@ import social.aloha.core.model.TimelineSource
 import social.aloha.core.testing.StatusSamples
 import social.aloha.core.ui.RichLinkTarget
 import social.aloha.core.ui.RichTextColors
+import social.aloha.core.ui.SeenBy
 import social.aloha.core.ui.StatusActions
 import social.aloha.core.ui.StatusMenuItem
 import social.aloha.core.ui.StatusRowMapper
@@ -165,6 +166,27 @@ class TimelineScreenshotTest {
 
     @Test
     fun boostCarouselRightToLeft() = capture("timeline-boosts-rtl", direction = LayoutDirection.Rtl) { folded() }
+
+    /** Every account together: a post two accounts see, one only the second sees, each marked in its colour. */
+    @Composable
+    private fun everyAccount(): TimelineUiState {
+        val posts = posts()
+        val first = SeenBy("@alice@one.example", null, 0xFF0082C9.toInt())
+        val second = SeenBy("@alice@two.example", null, null)
+        return loaded(
+            listOf(
+                (posts[0] as TimelineItem.Post).copy(seenBy = listOf(first, second)),
+                (posts[1] as TimelineItem.Post).copy(seenBy = listOf(second)),
+            ),
+        ).copy(sources = emptyList())
+    }
+
+    @Test
+    fun allAccounts() = capture("timeline-all-accounts") { everyAccount() }
+
+    @Test
+    @Config(fontScale = 2f)
+    fun allAccountsLargeFont() = capture("timeline-all-accounts-font200") { everyAccount() }
 
     @Test
     fun empty() = capture("timeline-empty") { loaded(emptyList()) }

@@ -31,7 +31,7 @@ internal fun themeOf(appearance: Appearance, server: NextcloudTheme?, accountAcc
         },
         black = appearance.black,
         colourSource = when (appearance.accent) {
-            AccentSource.Server -> server?.colourHex?.let(::argb)?.let(ColourSource::Server) ?: ColourSource.Seed
+            AccentSource.Server -> server?.colour?.let(ColourSource::Server) ?: ColourSource.Seed
 
             AccentSource.Wallpaper -> ColourSource.Dynamic
 
@@ -42,9 +42,3 @@ internal fun themeOf(appearance: Appearance, server: NextcloudTheme?, accountAcc
             )
         },
     )
-
-/** `#rrggbb`, as [NextcloudTheme] normalises it, as an opaque ARGB colour. */
-private fun argb(hex: String): Int? = hex.removePrefix("#").toIntOrNull(HEX)?.let { it or OPAQUE }
-
-private const val HEX = 16
-private const val OPAQUE = 0xFF000000.toInt()

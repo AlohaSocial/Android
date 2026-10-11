@@ -84,7 +84,7 @@ internal class TimelineViewModel @AssistedInject constructor(
     private val signals: TimelineSignals,
     private val watching: WatchPositions,
 ) : ViewModel(),
-    TimelineScreenActions {
+    TimelineModel {
     @AssistedFactory
     interface Factory {
         fun create(feed: TimelineFeed): TimelineViewModel
@@ -218,7 +218,7 @@ internal class TimelineViewModel @AssistedInject constructor(
     /** Grid or feed, for Photos only: every other timeline is a list. */
     private val grid: Flow<Boolean?> = if (feed.mode == FeedMode.Photos) modes.photosGrid else flowOf(null)
 
-    val uiState: StateFlow<TimelineUiState> = combine(
+    override val uiState: StateFlow<TimelineUiState> = combine(
         items,
         combine(pager.states, control, ::Pair),
         combine(accountSettings, swipes, combine(grid, watched, ::Pair), ::Triple),
@@ -303,7 +303,7 @@ internal class TimelineViewModel @AssistedInject constructor(
      * The screen came into view or left it. Coming into view refreshes unless this timeline fetched
      * within the last minute; while in view, the poll keeps it fresh.
      */
-    fun onShown(isShown: Boolean) {
+    override fun onShown(isShown: Boolean) {
         if (isShown) {
             shownFor = account.value?.id?.also { signals.noteShown(it, isShown = true) }
             viewModelScope.launch { current()?.let { (account, key) -> pager.refreshIfStale(account, key) } }
@@ -314,7 +314,7 @@ internal class TimelineViewModel @AssistedInject constructor(
     }
 
     /** Rows are rendered with the theme's colours, which only the screen knows. */
-    fun onColors(value: RichTextColors) {
+    override fun onColors(value: RichTextColors) {
         colors.value = value
     }
 
@@ -337,7 +337,7 @@ internal class TimelineViewModel @AssistedInject constructor(
         control.update { it.copy(restoreTo = null) }
     }
 
-    fun onActionFailureShown() {
+    override fun onActionFailureShown() {
         control.update { it.copy(actionFailed = false) }
     }
 
@@ -388,15 +388,15 @@ internal class TimelineViewModel @AssistedInject constructor(
         }
     }
 
-    fun onToggle(statusId: String, toggle: Toggle) = act(statusId) { account, status ->
+    override fun onToggle(statusId: String, toggle: Toggle) = act(statusId) { account, status ->
         interactions.toggle(account, status, toggle)
     }
 
-    fun onVote(statusId: String, choices: List<Int>) = act(statusId) { account, status ->
+    override fun onVote(statusId: String, choices: List<Int>) = act(statusId) { account, status ->
         interactions.vote(account, status, choices)
     }
 
-    fun onDelete(statusId: String) = act(statusId) { account, status -> interactions.delete(account, status) }
+    override fun onDelete(statusId: String) = act(statusId) { account, status -> interactions.delete(account, status) }
 
     private fun act(statusId: String, block: suspend (SignedInAccount, Status) -> ApiError?) {
         val status = rows.statusFor(statusId) ?: return
@@ -439,13 +439,6 @@ internal class TimelineViewModel @AssistedInject constructor(
         }
     }
 
-    /** [items] with the caught-up line above the post [at], when that post is shown and is not the newest. */
-    private fun caughtUp(items: List<TimelineItem>, at: String?): List<TimelineItem> {
-        val index = if (at == null) -1 else items.indexOfFirst { it.key == at }
-        if (index <= 0) return items
-        return items.subList(0, index) + TimelineItem.CaughtUp + items.subList(index, items.size)
-    }
-
     private suspend fun savePosition(position: TimelinePosition) {
         val (account, key) = current() ?: return
         positions.save(account, key, position)
@@ -477,7 +470,14 @@ internal class TimelineViewModel @AssistedInject constructor(
     }
 }
 
-private fun imagesOf(item: TimelineItem): List<String> = when (item) {
+/** [items] with the caught-up line above the post [at], when that post is shown and is not the newest. */
+internal fun caughtUp(items: List<TimelineItem>, at: String?): List<TimelineItem> {
+    val index = if (at == null) -1 else items.indexOfFirst { it.key == at }
+    if (index <= 0) return items
+    return items.subList(0, index) + TimelineItem.CaughtUp + items.subList(index, items.size)
+}
+
+internal fun imagesOf(item: TimelineItem): List<String> = when (item) {
     is TimelineItem.Post -> imagesOf(item.row)
     is TimelineItem.Boosts -> item.rows.flatMap(::imagesOf)
     is TimelineItem.Gap, TimelineItem.CaughtUp -> emptyList()
