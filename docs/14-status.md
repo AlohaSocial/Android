@@ -34,7 +34,7 @@ Between the phases: CI artifact retention ([#3](https://github.com/AlohaSocial/A
 
 | What | Notes |
 |---|---|
-| A merged timeline of every account, the default view | Like a mail client's unified inbox, with each account still selectable on its own; this was a non-goal for 1.0 in [00-overview.md](00-overview.md) §6 until 2026-10-11. The data layer is built ([04-data-model.md](04-data-model.md)); the account switcher's "All accounts", the default account, the theme, and merged Notifications and modes are next |
+| A merged timeline of every account, the default view | Like a mail client's unified inbox, with each account still selectable on its own; this was a non-goal for 1.0 in [00-overview.md](00-overview.md) §6 until 2026-10-11. The data layer ([04-data-model.md](04-data-model.md)), "All accounts" in the account sheet, and Home's Following of every account together are built ([03-auth-and-accounts.md](03-auth-and-accounts.md)); merged Notifications and modes are next |
 
 ## Not built
 
