@@ -148,22 +148,22 @@ internal class RequestExecutor(
          */
         fun Endpoint.hasDotSegment(): Boolean = path.split('/', '\\').any { it.lowercase() in DOT_SEGMENTS }
 
-        fun ApiError.kind(): String = (if (this is ApiError.Transport) cause else this).javaClass.simpleName
+        fun HttpOutcome.log(endpoint: Endpoint, millis: Long) = log("${endpoint.method} ${endpoint.path}", millis)
+    }
+}
 
-        /** A request that was answered with success at `DEBUG`; any other outcome at `INFO`, so a release keeps it. */
-        fun HttpOutcome.log(endpoint: Endpoint, millis: Long) {
-            val network = Timber.tag(LogArea.Network.name)
-            when {
-                this is HttpOutcome.Answered && response.isSuccessful ->
-                    network.d("%s %s → %d in %d ms", endpoint.method, endpoint.path, response.code, millis)
+private fun ApiError.kind(): String = (if (this is ApiError.Transport) cause else this).javaClass.simpleName
 
-                this is HttpOutcome.Answered ->
-                    network.i("%s %s → %d in %d ms", endpoint.method, endpoint.path, response.code, millis)
-
-                this is HttpOutcome.Failed ->
-                    network.i("%s %s → %s in %d ms", endpoint.method, endpoint.path, error.kind(), millis)
-            }
-        }
+/**
+ * A request that was answered with success at `DEBUG`; any other outcome at `INFO`, so a release keeps it.
+ * [label] names the request: its method and path, or what stands in for a path that holds names.
+ */
+internal fun HttpOutcome.log(label: String, millis: Long) {
+    val network = Timber.tag(LogArea.Network.name)
+    when (this) {
+        is HttpOutcome.Answered if response.isSuccessful -> network.d("%s → %d in %d ms", label, response.code, millis)
+        is HttpOutcome.Answered -> network.i("%s → %d in %d ms", label, response.code, millis)
+        is HttpOutcome.Failed -> network.i("%s → %s in %d ms", label, error.kind(), millis)
     }
 }
 
