@@ -98,13 +98,24 @@ internal object Multistatus {
             if (value.isEmpty()) return
             when (namespace to name) {
                 DAV to "href" -> href = value
+
                 DAV to "getcontenttype" -> mimeType = value
+
                 DAV to "getlastmodified" -> modified = httpDate(value)
+
                 DAV to "getetag" -> etag = value.removeSurrounding("\"")
+
                 OWNCLOUD to "fileid" -> fileId = value.toLongOrNull()
+
                 OWNCLOUD to "size" -> size = value.toLongOrNull() ?: 0L
+
+                // an upload's chunks have only this; a file has both, and oc:size covers folders too
+                DAV to "getcontentlength" -> if (size == 0L) size = value.toLongOrNull() ?: 0L
+
                 OWNCLOUD to "permissions" -> permissions = value
+
                 NEXTCLOUD to "has-preview" -> hasPreview = value == "true"
+
                 NEXTCLOUD to "is-encrypted" -> encrypted = value == "1" || value == "true"
             }
         }

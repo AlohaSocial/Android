@@ -26,6 +26,10 @@ internal object DavPaths {
         return builder.build()
     }
 
+    /** The folder an upload's chunks gather in, [uploadId] being the upload's own. */
+    fun upload(root: HttpUrl, userId: String, uploadId: String): HttpUrl = root.newBuilder()
+        .addPathSegments("remote.php/dav/uploads").addPathSegment(userId).addPathSegment(uploadId).build()
+
     /**
      * [path]'s segments, without the empty ones a leading, trailing or doubled slash makes; null when one
      * is `.` or `..`, which OkHttp would resolve, moving a request that carries the password elsewhere.

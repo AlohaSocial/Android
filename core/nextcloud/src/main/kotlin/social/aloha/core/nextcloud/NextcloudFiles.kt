@@ -3,6 +3,7 @@
 
 package social.aloha.core.nextcloud
 
+import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -30,9 +31,21 @@ public class Preview(public val url: String, public val authorization: String) {
 }
 
 /**
- * A person's Nextcloud Files, through the app password of the Nextcloud connection: listings and
- * previews. Not a WebDAV client: only what browsing and attaching need, as Nextcloud's own clients
- * talk to Files.
+ * A file to save in Nextcloud Files: [source] as [name] in [folder], a path from the root of the person's
+ * files. A file over ten MiB goes in chunks gathered under [id], so asking again with the same id carries
+ * on from the chunks already there.
+ */
+public class NextcloudUpload(
+    public val folder: String,
+    public val name: String,
+    public val source: File,
+    public val id: String,
+)
+
+/**
+ * A person's Nextcloud Files, through the app password of the Nextcloud connection: listings, previews,
+ * and saving a file. Not a WebDAV client: only what browsing and attaching need, as Nextcloud's own
+ * clients talk to Files.
  *
  * The password goes out as HTTP Basic from the first request, not after a 401, and only to the
  * Nextcloud the account runs on; OkHttp drops it from a redirect to another host. Every failure is
@@ -73,6 +86,25 @@ public class NextcloudFiles @Inject constructor(
             .addQueryParameter("c", file.etag)
             .build()
         return Preview(url.toString(), authorization)
+    }
+
+    /**
+     * Saves [upload] in [account]'s files and returns the path it was saved at: its name, or the first of
+     * `name (2).ext`, `name (3).ext` and on that is free, since a file already there is never
+     * overwritten. [onSent] hears how many bytes of the file have gone, and of how many.
+     */
+    public suspend fun upload(
+        account: SignedInAccount,
+        upload: NextcloudUpload,
+        onSent: (sent: Long, total: Long) -> Unit,
+    ): ApiResult<String> = withSession(account) { session -> DavUpload(exchange, session, upload, io, onSent).run() }
+
+    /** Removes the chunks the upload [uploadId] gathered, once it will not be carried on. */
+    public suspend fun abandon(account: SignedInAccount, uploadId: String) {
+        withSession(account) { session ->
+            val request = session.request(DavPaths.upload(session.root, session.userId, uploadId)).delete().build()
+            exchange.exchange(request, "DELETE upload") { ApiResult.Success(Unit) }
+        }
     }
 
     private suspend fun propfind(session: DavSession, url: HttpUrl, folder: String): ApiResult<NextcloudFolder> {

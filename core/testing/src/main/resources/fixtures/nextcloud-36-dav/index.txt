@@ -8,3 +8,4 @@ dav/put-chunk.json
 dav/move-assemble.json
 dav/move-exists.json
 ocs/cloud-user.json
+dav/propfind-upload.json
