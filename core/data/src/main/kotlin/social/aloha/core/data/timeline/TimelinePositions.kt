@@ -34,6 +34,14 @@ public class TimelinePositions @Inject constructor(private val dao: PositionDao,
         dao.set(TimelinePositionEntity(account.id, key.storageKey, position.statusId, position.offset))
     }
 
+    /** Where the merged timeline [key] was left, its own and no account's; the row is a [MergedPost.key]. */
+    public suspend fun savedMerged(key: TimelineKey): TimelinePosition? =
+        dao.get(MERGED, key.storageKey)?.let { TimelinePosition(it.statusId, it.offset) }
+
+    public suspend fun saveMerged(key: TimelineKey, position: TimelinePosition) {
+        dao.set(TimelinePositionEntity(MERGED, key.storageKey, position.statusId, position.offset))
+    }
+
     /** The newest home post read, on this device or another; null where neither says. */
     public suspend fun lastRead(account: SignedInAccount): String? =
         ServerIds.newest(listOfNotNull(saved(account, TimelineKey.home())?.statusId, homeMarker(account)))
@@ -54,6 +62,9 @@ public class TimelinePositions @Inject constructor(private val dao: PositionDao,
     }
 
     internal companion object {
+        /** The merged timeline's place among the accounts' positions; no account id is ever this. */
+        private const val MERGED = "*merged"
+
         /** Status ids are numbers too long for a Long: a longer one is newer, else the later one in text order. */
         fun isNewer(id: String, than: String): Boolean = if (id.length !=
             than.length

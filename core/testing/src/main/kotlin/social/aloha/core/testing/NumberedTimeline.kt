@@ -32,6 +32,9 @@ public class NumberedTimeline(template: JsonObject = homeTemplate()) : Dispatche
 
     @Volatile public var narrows: Boolean = false
 
+    /** Fields a status has beyond the template's, such as its own `uri` and `created_at`. */
+    @Volatile public var fields: (Int) -> Map<String, JsonPrimitive> = { emptyMap() }
+
     /** The home read marker the server keeps, by post number; null for a server that keeps none. */
     @Volatile public var homeMarker: Int? = null
     private val template = JsonObject(template + ("reblog" to JsonNull))
@@ -74,7 +77,8 @@ public class NumberedTimeline(template: JsonObject = homeTemplate()) : Dispatche
     private fun status(id: String, changes: Map<String, JsonPrimitive> = emptyMap()) =
         JsonObject(template + ("id" to JsonPrimitive(id)) + changes)
 
-    private fun status(id: Int) = JsonObject(status(id.toString()) + ("media_attachments" to JsonArray(media(id))))
+    private fun status(id: Int) =
+        JsonObject(status(id.toString(), fields(id)) + ("media_attachments" to JsonArray(media(id))))
 
     /** Whether the server lets [id] through the narrowing [url] asks for. */
     private fun passes(url: HttpUrl, id: Int): Boolean {
