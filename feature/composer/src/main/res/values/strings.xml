@@ -576,4 +576,71 @@
     <string name="composer_rewrite_too_long">That didn’t fit.</string>
     <!-- Rewrite sheet: the rewrite failed, or lost a mention, hashtag or link and was turned down -->
     <string name="composer_rewrite_failed">This device couldn’t rewrite that and keep every mention, hashtag and link.</string>
+    <!-- Title of the page that browses the writer's Nextcloud Files to attach from -->
+    <string name="files_title">Nextcloud Files</string>
+    <!-- Under the title of the Files browser; %1$d is how many files are picked, %2$d how many the post has room for -->
+    <plurals name="files_picked">
+        <item quantity="one">%1$d of %2$d picked</item>
+        <item quantity="other">%1$d of %2$d picked</item>
+    </plurals>
+    <!-- Spoken label of the button that closes the Files browser without attaching anything -->
+    <string name="files_close">Close</string>
+    <!-- Button in the Files browser that attaches the picked files to the post -->
+    <string name="files_attach">Attach</string>
+    <!-- First step of the path shown above a folder: the root of the writer's files -->
+    <string name="files_root">Files</string>
+    <!-- Spoken action on a folder in the Files browser -->
+    <string name="files_open">Open folder</string>
+    <!-- Shown in the Files browser for a folder with nothing in it -->
+    <string name="files_empty">Nothing in this folder</string>
+    <!-- Heading of the choices of how the Files browser orders files, in its menu -->
+    <string name="files_sort">Sort</string>
+    <!-- Order of files in the Files browser: by name -->
+    <string name="files_sort_name">By name</string>
+    <!-- Order of files in the Files browser: most recently changed first -->
+    <string name="files_sort_newest">Newest first</string>
+    <!-- Order of files in the Files browser: largest first -->
+    <string name="files_sort_largest">Largest first</string>
+    <!-- Spoken label of the button that opens more choices in the Files browser -->
+    <string name="files_more">More</string>
+    <!-- Choice in the Files browser that types a file's path instead of finding it -->
+    <string name="files_type_path">Type a path</string>
+    <!-- Button in the Files browser that uploads a file from the phone into the folder shown -->
+    <string name="files_upload">Upload here</string>
+    <!-- Under the name of a file going from the phone into the writer's Nextcloud -->
+    <string name="files_uploading">Uploading</string>
+    <!-- Under the name of a file that will go into the writer's Nextcloud once there is a network -->
+    <string name="files_upload_waiting">Waiting to upload</string>
+    <!-- Spoken label of the button that stops a file going into the writer's Nextcloud; %1$s is the file's name -->
+    <string name="files_upload_cancel">Stop uploading %1$s</string>
+    <!-- Shown when a file from the phone could not be put into the writer's Nextcloud -->
+    <string name="files_upload_failed">Couldn’t upload the file to your Nextcloud</string>
+    <!-- Why a file in the Files browser cannot be attached: it is end-to-end encrypted, so the server cannot read it -->
+    <string name="files_encrypted">End-to-end encrypted, so your server can’t attach it</string>
+    <!-- Why a file in the Files browser cannot be attached: it was shared without the right to read it -->
+    <string name="files_unreadable">Shared with you without the right to read it</string>
+    <!-- Why a file in the Files browser cannot be attached: the server does not take files of its type -->
+    <string name="files_type">Not a kind of file your server takes</string>
+    <!-- Why a file in the Files browser cannot be attached; %1$s is the server's size limit, such as 40 MB -->
+    <string name="files_too_large">Over your server’s limit of %1$s</string>
+    <!-- Shown in the Files browser when the writer's Nextcloud cannot be reached -->
+    <string name="files_offline">Can’t reach your Nextcloud. Check your connection and try again.</string>
+    <!-- Shown in the Files browser when the connection to the writer's Nextcloud was signed out there -->
+    <string name="files_signed_out">Your Nextcloud connection was signed out. Connect it again to browse your files.</string>
+    <!-- Shown in the Files browser for a folder the writer has no access to -->
+    <string name="files_forbidden">You don’t have access to this folder.</string>
+    <!-- Shown in the Files browser for a folder that was moved or deleted -->
+    <string name="files_gone">This folder isn’t there any more. It may have been moved or deleted.</string>
+    <!-- Shown in the Files browser when a folder could not be read for another reason -->
+    <string name="files_failed">Couldn’t open this folder.</string>
+    <!-- Button that asks for a folder again -->
+    <string name="files_retry">Try again</string>
+    <!-- Button that opens the settings to connect the Nextcloud again -->
+    <string name="files_connect">Connect again</string>
+    <!-- Button that goes back to the root of the writer's files -->
+    <string name="files_to_root">Go to your files</string>
+    <!-- Line in the path dialog when the Nextcloud is not connected, which browsing the files needs -->
+    <string name="composer_file_connect_about">Connect your Nextcloud to browse your files instead of typing a path.</string>
+    <!-- Button in the path dialog that opens the settings to connect the Nextcloud -->
+    <string name="composer_file_connect">Connect Nextcloud</string>
 </resources>

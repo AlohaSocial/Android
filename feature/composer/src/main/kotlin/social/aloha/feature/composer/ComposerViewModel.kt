@@ -165,6 +165,10 @@ internal class ComposerViewModel @AssistedInject constructor(
     /** When the post goes out, if not at once. */
     val scheduledAt = MutableStateFlow<Instant?>(null)
     private var reader: SignedInAccount? = null
+
+    /** The account writing, once it is known; the writer can change it. */
+    val readerId: String? get() = reader?.id
+
     private var parent: Status? = null
     private var emojiList: List<CustomEmoji> = emptyList()
 
@@ -396,8 +400,8 @@ internal class ComposerViewModel @AssistedInject constructor(
         if (tagShort && uris.isNotEmpty()) segments.getOrNull(focused)?.let { segments[focused] = tagged(it) }
     }
 
-    // a poll takes the opening post's place for media
-    private val room: Int
+    /** How many more attachments the post in focus has room for; a poll takes the opening post's place for media. */
+    val room: Int
         get() = if (focused == 0 && poll.value != null) {
             0
         } else {
@@ -537,6 +541,7 @@ internal class ComposerViewModel @AssistedInject constructor(
                 quotePolicies = if (quoting) QuotePolicy.entries else emptyList(),
                 gifLibrary = account.capabilities.isNextcloudSocial,
                 nextcloudFiles = account.capabilities.mediaFromNextcloudFiles,
+                nextcloudConnected = account.nextcloudConnected,
             )
         }
         emojiList = compose.emojis(account)
