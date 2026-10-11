@@ -233,8 +233,8 @@ class AppViewModel @Inject constructor(
         statusId?.let { ThreadKey(id, it) } ?: profileId?.let { AccountKey(id, id = it) } ?: NotificationsKey
     }
 
-    /** Opens search, as [accountId] or the account in use. */
-    fun openSearch(accountId: String?) = openAs(accountId, key = ::SearchKey)
+    /** Opens search, as [accountId] or the account in use, on what [query] finds. */
+    fun openSearch(accountId: String?, query: String = "") = openAs(accountId) { id -> SearchKey(id, query) }
 
     /** Switches to the account [accountFor] picks and opens what [key] names there. */
     private fun openAs(accountId: String?, shared: Boolean = false, key: (accountId: String) -> NavKey) {

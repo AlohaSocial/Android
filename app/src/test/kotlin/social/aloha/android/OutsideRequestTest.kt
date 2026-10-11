@@ -51,6 +51,21 @@ class OutsideRequestTest {
     }
 
     @Test
+    fun `an entry of the phone's search opens as its account, written out and read back as the system does`() {
+        fun throughTheIndex(intent: Intent) =
+            Intent.parseUri(intent.toUri(Intent.URI_INTENT_SCHEME), Intent.URI_INTENT_SCHEME)
+
+        assertEquals(
+            OutsideRequest.Open("a1", "s1", null),
+            OutsideRequest.of(throughTheIndex(AppIntents.open(context, "a1", "s1")), own),
+        )
+        assertEquals(
+            OutsideRequest.Search("a1", "surfing #aloha"),
+            OutsideRequest.of(throughTheIndex(AppIntents.search(context, "a1", "surfing #aloha")), own),
+        )
+    }
+
+    @Test
     fun `a Direct Share names its account, a plain share none, and another shortcut never`() {
         val direct = send("Aloha").putExtra(ShortcutManagerCompat.EXTRA_SHORTCUT_ID, "account:a2")
         assertEquals("a2", (OutsideRequest.of(direct, own) as OutsideRequest.Share).accountId)

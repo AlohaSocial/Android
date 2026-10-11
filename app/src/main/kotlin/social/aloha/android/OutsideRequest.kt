@@ -25,7 +25,7 @@ sealed interface OutsideRequest {
 
     data class Compose(val accountId: String?) : OutsideRequest
 
-    data class Search(val accountId: String?) : OutsideRequest
+    data class Search(val accountId: String?, val query: String = "") : OutsideRequest
 
     companion object {
         /** The activity alias the share sheet lists as "Open in Aloha". */
@@ -66,7 +66,7 @@ sealed interface OutsideRequest {
 
                 AppIntents.ACTION_COMPOSE -> Compose(account)
 
-                AppIntents.ACTION_SEARCH -> Search(account)
+                AppIntents.ACTION_SEARCH -> Search(account, intent.getStringExtra(AppIntents.EXTRA_QUERY).orEmpty())
 
                 else -> null
             }

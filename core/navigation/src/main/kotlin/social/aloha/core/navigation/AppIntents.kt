@@ -26,6 +26,9 @@ public object AppIntents {
     public const val EXTRA_STATUS: String = "status"
     public const val EXTRA_PROFILE: String = "profile"
 
+    /** What [ACTION_SEARCH] searches for when it opens; nothing, for search as it was left. */
+    public const val EXTRA_QUERY: String = "query"
+
     /**
      * Opens the app on [statusId] of [accountId], else on [profileId], else on its notifications. Each
      * intent is told apart by its data, so two taps never share one pending intent and its extras.
@@ -41,6 +44,12 @@ public object AppIntents {
      * [ACTION_OPEN], a new post for [ACTION_COMPOSE] and search for [ACTION_SEARCH].
      */
     public fun asActiveAccount(context: Context, action: String): Intent = launch(context, action, "active/$action")
+
+    /** Opens search as [accountId], on what [query] finds. */
+    public fun search(context: Context, accountId: String, query: String): Intent =
+        launch(context, ACTION_SEARCH, "search/$accountId/${Uri.encode(query)}")
+            .putExtra(EXTRA_ACCOUNT, accountId)
+            .putExtra(EXTRA_QUERY, query)
 
     /** Opens the composer on a new post by [accountId]. */
     public fun compose(context: Context, accountId: String): Intent =

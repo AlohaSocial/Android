@@ -240,7 +240,7 @@ open class MainActivity : ComponentActivity() {
             is OutsideRequest.Draft -> app.openDraft(request.accountId, request.draftId)
             is OutsideRequest.Open -> app.openNotification(request.accountId, request.statusId, request.profileId)
             is OutsideRequest.Compose -> app.openDraft(request.accountId, draftId = UUID.randomUUID().toString())
-            is OutsideRequest.Search -> app.openSearch(request.accountId)
+            is OutsideRequest.Search -> app.openSearch(request.accountId, request.query)
             null -> Unit
         }
     }
