@@ -9,6 +9,7 @@ plugins {
 dependencies {
     implementation(project(":core:data"))
     implementation(project(":core:navigation"))
+    implementation(project(":core:nextcloud"))
     api(libs.androidx.work.runtime)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.hilt.work)
