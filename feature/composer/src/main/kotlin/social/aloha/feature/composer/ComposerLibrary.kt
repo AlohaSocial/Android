@@ -127,8 +127,8 @@ internal fun GifSheet(
 
 /**
  * A file from the writer's own Nextcloud, by its path from their files' root: the server copies it
- * in, so nothing travels to the phone and back. The paths attached before are offered, and, while the
- * Nextcloud is not connected, [onConnect] to browse the files instead.
+ * in, so nothing travels to the phone and back. The paths attached before are offered. While the
+ * Nextcloud is not connected, which reading its files needs, it says so and offers [onConnect] instead.
  */
 @Composable
 internal fun NextcloudFileDialog(
@@ -137,6 +137,7 @@ internal fun NextcloudFileDialog(
     onDismiss: () -> Unit,
     onConnect: (() -> Unit)? = null,
 ) {
+    if (onConnect != null) return ConnectFirstDialog(onConnect, onDismiss)
     var path by rememberSaveable { mutableStateOf("") }
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -159,14 +160,6 @@ internal fun NextcloudFileDialog(
                         recent.forEach { AssistChip(onClick = { path = it }, label = { Text(it, maxLines = 1) }) }
                     }
                 }
-                if (onConnect != null) {
-                    Text(
-                        stringResource(R.string.composer_file_connect_about),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    TextButton(onClick = onConnect) { Text(stringResource(R.string.composer_file_connect)) }
-                }
             }
         },
         confirmButton = {
@@ -174,6 +167,18 @@ internal fun NextcloudFileDialog(
                 Text(stringResource(R.string.composer_file_attach))
             }
         },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.composer_keep_editing)) } },
+    )
+}
+
+/** Attaching from the Nextcloud before it is connected: what that needs, and the way to connect it. */
+@Composable
+private fun ConnectFirstDialog(onConnect: () -> Unit, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.composer_file_title)) },
+        text = { Text(stringResource(R.string.composer_file_connect_about)) },
+        confirmButton = { TextButton(onClick = onConnect) { Text(stringResource(R.string.composer_file_connect)) } },
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.composer_keep_editing)) } },
     )
 }

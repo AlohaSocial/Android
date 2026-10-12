@@ -12,6 +12,7 @@ import social.aloha.core.model.MediaAttachment
 import social.aloha.core.model.ScheduledStatus
 import social.aloha.core.model.Status
 import social.aloha.core.network.ApiRequest
+import social.aloha.core.network.Authentication
 import social.aloha.core.network.Body
 import social.aloha.core.network.Endpoint
 import social.aloha.core.network.HttpMethod
@@ -117,13 +118,15 @@ public object MediaEndpoints {
 
     /**
      * Attaches a file the viewer already has in Nextcloud, so it never travels to the phone and back.
-     * A traversal or a folder answers 422.
+     * A traversal or a folder answers 422. A Nextcloud-session route: reading the reader's files is
+     * more than a bearer token is granted, which Social answers with 403 since 0.26.215.
      */
     public fun fromNextcloudFile(path: String, description: String?): ApiRequest<MediaAttachment> = attachment(
         Endpoint(
             "api/v1/media/from-file",
             HttpMethod.POST,
             body = Body.Form(listOf(QueryItem("path", path)) + queryOf("description", description)),
+            authentication = Authentication.NextcloudSession,
         ),
     )
 

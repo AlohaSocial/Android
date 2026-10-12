@@ -639,8 +639,8 @@
     <string name="files_connect">Connect again</string>
     <!-- Button that goes back to the root of the writer's files -->
     <string name="files_to_root">Go to your files</string>
-    <!-- Line in the path dialog when the Nextcloud is not connected, which browsing the files needs -->
-    <string name="composer_file_connect_about">Connect your Nextcloud to browse your files instead of typing a path.</string>
+    <!-- Shown instead of the path field while the Nextcloud is not connected: reading the person's files needs the connection -->
+    <string name="composer_file_connect_about">To attach a file from your Nextcloud, connect it first. Your server lets only the Nextcloud connection read your files.</string>
     <!-- Button in the path dialog that opens the settings to connect the Nextcloud -->
     <string name="composer_file_connect">Connect Nextcloud</string>
 </resources>

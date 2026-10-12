@@ -55,6 +55,7 @@ import social.aloha.core.datastore.AccountSettingsStore
 import social.aloha.core.datastore.AppPreferences
 import social.aloha.core.datastore.IntelligencePreferences
 import social.aloha.core.datastore.TokenVault
+import social.aloha.core.datastore.VaultKey
 import social.aloha.core.intelligence.Intelligence
 import social.aloha.core.model.AccessToken
 import social.aloha.core.model.ServerCapabilities
@@ -145,7 +146,7 @@ internal class Posts(private val script: MutableList<Int>) : Dispatcher() {
 
             path.endsWith("/media/from-gif") -> media(request, "slug")
 
-            path.endsWith("/media/from-file") -> media(request, "path")
+            path.endsWith("/media/from-file") -> fromFile(request)
 
             else -> story(request)
         }
@@ -168,6 +169,19 @@ internal class Posts(private val script: MutableList<Int>) : Dispatcher() {
     }
 
     /** Media the server makes itself, named by what was asked for; a path it has no file at is a 422. */
+
+    // a Nextcloud file attached as Social answers since 0.26.215: only the Nextcloud session reads the
+    // files, a bearer token being a 403, and that session passes its CSRF check only as an OCS request
+    private fun fromFile(request: RecordedRequest): MockResponse = when {
+        request.headers["Authorization"]?.startsWith(
+            "Basic ",
+        ) != true -> MockResponse.Builder().code(403).body("{}").build()
+
+        request.headers["OCS-APIRequest"] != "true" -> MockResponse.Builder().code(401).body("{}").build()
+
+        else -> media(request, "path")
+    }
+
     private fun media(request: RecordedRequest, field: String): MockResponse {
         val asked = form(request)[field].orEmpty()
         if (asked == "missing.jpg") return MockResponse.Builder().code(422).body("""{"error":"not found"}""").build()
@@ -222,9 +236,10 @@ internal abstract class ComposerTestSetup {
     protected val context = ApplicationProvider.getApplicationContext<android.content.Context>()
     protected val accountsDb = Room.inMemoryDatabaseBuilder(context, AccountsDatabase::class.java).build()
     protected val cache = Room.inMemoryDatabaseBuilder(context, CacheDatabase::class.java).build()
+    private val vault = TokenVault(InMemoryDataStore(ByteArray(0)), FakeSecretCipher(), Dispatchers.IO)
     protected val accounts = AccountRepository(
         accountsDb.accountDao(),
-        TokenVault(InMemoryDataStore(ByteArray(0)), FakeSecretCipher(), Dispatchers.IO),
+        vault,
         AppPreferences(InMemoryDataStore(emptyPreferences())),
         clock,
         scope,
@@ -279,6 +294,9 @@ internal abstract class ComposerTestSetup {
             NewAccount(apiBase.host, "6", "alice", "Alice", null, null, capabilities, profilePending = false),
             AccessToken(MockCredentials.ACCESS_TOKEN, ""),
         )
+        // connected to its Nextcloud, whose files a post attaches with the app password
+        vault.put(VaultKey.AppPassword(account.id), "Basic YWxpY2U6YXBw")
+        accountsDb.accountDao().setNextcloudConnected(account.id, connected = true)
         val timelines = TimelineRepository(cache.timelineDao(), statuses, clients, accounts, clock, Dispatchers.IO)
         val settings = AccountSettingsStore(InMemoryDataStore(emptyMap()))
         val compose = ComposeRepository(clients, statuses, timelines, settings, clock, scope)
