@@ -58,11 +58,15 @@ internal class MergedRows @Inject constructor(private val builders: Provider<Tim
         each.values.forEach { it.clear() }
     }
 
-    /** The [accounts] shown, the first in use, each one's [stored] rows and how it reads them. */
+    /**
+     * The [accounts] shown, the first in use, each one's [stored] rows and how it reads them, from the [sources]
+     * each reads, Following where none is named.
+     */
     data class Input(
         val accounts: List<SignedInAccount>,
         val stored: Map<String, List<TimelineRow>>,
         val looks: Map<String, AccountLook>,
+        val sources: Map<String, TimelineSource> = emptyMap(),
     )
 
     /**
@@ -116,7 +120,8 @@ internal class MergedRows @Inject constructor(private val builders: Provider<Tim
                 }
             }
         }
-        return builder(account.id).build(account, TimelineSource.Home, stored, shape)
+        val source = input.sources[account.id] ?: TimelineSource.Home
+        return builder(account.id).build(account, source, stored, shape)
             .filterIsInstance<TimelineItem.Post>().associateBy { it.row.rowId }
     }
 }

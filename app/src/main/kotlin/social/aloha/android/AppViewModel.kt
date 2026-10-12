@@ -176,9 +176,9 @@ class AppViewModel @Inject constructor(
         combine(accounts.accounts, accounts.activeAccount, reauth.requested, adding, ::sessionOf)
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), AppSession.Loading)
 
-    /** The active account's unread notifications, as its server last said. */
+    /** The unread notifications of the accounts shown, as their servers last said. */
     val unreadNotifications: StateFlow<Int> =
-        combine(accounts.activeAccount, unread.all) { active, counts -> active?.let { counts[it.id] } ?: 0 }
+        combine(allAccounts.shown, unread.all) { shown, counts -> shown.sumOf { counts[it.id] ?: 0 } }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), 0)
 
     /** Whether every account shows together, the first in use. */

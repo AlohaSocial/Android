@@ -66,6 +66,7 @@ fun AlohaRoot(viewModel: AppViewModel = hiltViewModel()) {
                 val modes by viewModel.modes.collectAsStateWithLifecycle()
                 val sharing by viewModel.pendingShare.collectAsStateWithLifecycle()
                 val switcher by viewModel.switcher.collectAsStateWithLifecycle()
+                val all by viewModel.showingAll.collectAsStateWithLifecycle()
                 val translations: TranslationsViewModel = hiltViewModel(key = "translations-${current.accountId}")
                 val media: MediaPolicyViewModel = hiltViewModel()
                 val policy by media.policy.collectAsStateWithLifecycle()
@@ -87,6 +88,7 @@ fun AlohaRoot(viewModel: AppViewModel = hiltViewModel()) {
                         resolveLink = viewModel::destination,
                         accountButton = { links -> AccountSwitcher(viewModel, links) },
                         modes = modes,
+                        allAccounts = all,
                     )
                     sharing?.let { content ->
                         AccountPicker(

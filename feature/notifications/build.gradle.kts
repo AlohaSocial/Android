@@ -8,6 +8,7 @@ plugins {
 
 dependencies {
     implementation(project(":core:data"))
+    implementation(project(":core:datastore"))
     implementation(project(":core:html"))
     implementation(project(":core:sync"))
     testImplementation(project(":core:testing"))

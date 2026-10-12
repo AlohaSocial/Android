@@ -26,6 +26,7 @@ import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.html.RichTextCache
 import social.aloha.core.model.Account
 import social.aloha.core.model.NotificationKind
+import social.aloha.core.model.TimelineSource
 import social.aloha.core.ui.AccountRow
 import social.aloha.core.ui.ListProgress
 import social.aloha.core.ui.RichTextColors
@@ -64,10 +65,11 @@ public fun NotificationsRoute(
             override fun onNearEnd() = viewModel.onNearEnd()
 
             override fun onOpen(row: NotificationRowUi) {
-                row.statusId?.let(navigation::openThread) ?: row.accountId?.let { navigation.openProfile(it, null) }
+                row.statusId?.let(navigation::openThread) ?: row.url?.let(navigation::openWeb)
+                    ?: row.accountId?.let(navigation::openPerson)
             }
 
-            override fun onOthers(groupKey: String) = viewModel.onOthers(groupKey)
+            override fun onOthers(key: String) = viewModel.onOthers(key)
 
             override fun onMuteConversation(row: NotificationRowUi) = viewModel.onMuteConversation(row.key)
 
@@ -79,7 +81,7 @@ public fun NotificationsRoute(
 
             override fun onAskedForPermission() = viewModel.onAskedForPermission()
 
-            override fun onProfile(accountId: String) = navigation.openProfile(accountId, null)
+            override fun onProfile(accountId: String) = navigation.openPerson(accountId)
 
             override fun onFollowRequest(row: NotificationRowUi, accept: Boolean) =
                 viewModel.onFollowRequest(row.key, accept)
@@ -93,7 +95,7 @@ public fun NotificationsRoute(
     }
     NotificationsScreen(state.copy(pausedUntil = paused), actions, navigationIcon, modifier)
     state.group?.let { group ->
-        GroupAccountsSheet(group, onOpen = { navigation.openProfile(it, null) }, onClose = viewModel::onGroupClosed)
+        GroupAccountsSheet(group, onOpen = navigation::openPerson, onClose = viewModel::onGroupClosed)
     }
 }
 
@@ -129,3 +131,14 @@ private fun GroupAccounts(accounts: List<Account>, onOpen: (String) -> Unit) {
         }
     }
 }
+
+/**
+ * The profile of [accountId]; one known by another server than the one in use, under that server's name,
+ * opens by its handle instead.
+ */
+private fun StatusNavigation.openPerson(accountId: String) =
+    if (accountId.startsWith(TimelineSource.Remote.ID_PREFIX)) {
+        openProfile(null, accountId.removePrefix(TimelineSource.Remote.ID_PREFIX))
+    } else {
+        openProfile(accountId, null)
+    }
