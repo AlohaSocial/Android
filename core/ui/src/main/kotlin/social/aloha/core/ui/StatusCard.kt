@@ -40,6 +40,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -127,6 +128,8 @@ public enum class StatusMenuItem {
  * @param canReact whether the server takes emoji reactions (shown in a thread, where they are fetched).
  * @param focused the post a thread is about: larger text, its content the full width of the card rather
  *   than beside the avatar, and no tap to open it, since it is open.
+ * @param pictureFirst for a feed of pictures: the content the full width of the card, its pictures
+ *   before its text.
  */
 @Composable
 public fun StatusCard(
@@ -140,6 +143,7 @@ public fun StatusCard(
     animateEmoji: Boolean = true,
     focused: Boolean = false,
     seenBy: List<SeenBy> = emptyList(),
+    pictureFirst: Boolean = false,
 ) {
     // a translation takes the post's place, everywhere the card reads it: its text, its label, its links
     val translations = LocalStatusTranslations.current
@@ -193,7 +197,7 @@ public fun StatusCard(
                     now,
                     policy,
                     actions,
-                    Flags(showActions, canReact, animateEmoji, focused),
+                    Flags(showActions, canReact, animateEmoji, focused, pictureFirst),
                     controls,
                     seenBy,
                 )
@@ -209,7 +213,8 @@ private fun seenByText(seenBy: List<SeenBy>): String? = seenBy.takeIf { it.isNot
 
 /**
  * The avatar beside the header, and the content under the name, so text, media, poll and cards hang in
- * one column; a focused post takes the full width under the header instead.
+ * one column; a focused post, and one whose pictures come first, take the full width under the header
+ * instead.
  */
 @Composable
 private fun CardLayout(
@@ -235,7 +240,7 @@ private fun CardLayout(
             }
         }
     }
-    if (flags.focused) {
+    if (flags.focused || flags.pictureFirst) {
         Row(horizontalArrangement = Arrangement.spacedBy(AlohaSpacing.s)) {
             avatar()
             StatusHeader(row, now, flags.animateEmoji, { actions.onHistory(row) }, controls, Modifier.weight(1f))
@@ -269,6 +274,7 @@ private data class Flags(
     val canReact: Boolean,
     val animateEmoji: Boolean,
     val focused: Boolean,
+    val pictureFirst: Boolean,
 )
 
 /** Everything under the header: the warning, the body, the translation, the date, the actions. */
@@ -281,28 +287,25 @@ private fun StatusContent(
     controls: CardControls,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(AlohaSpacing.xs)) {
-        row.spoiler?.let { spoiler ->
-            HiddenCard(
-                HiddenEdge.Warning,
-                AlohaIcons.ContentWarning,
-                stringResource(
-                    if (controls.spoilerRevealed) R.string.status_warning_rehide else R.string.status_filtered_show,
-                ),
-                controls.onSpoiler,
-            ) {
-                Text(
-                    spoiler,
-                    inlineContent = rememberEmojiContent(row.emojis, flags.animateEmoji),
-                    style = MaterialTheme.typography.bodyMedium.contentDirection(),
-                    modifier = Modifier.weight(1f),
-                )
-            }
-        }
-        if (row.spoiler == null || controls.spoilerRevealed) {
-            StatusBody(row, policy, actions, flags.canReact, flags.animateEmoji, flags.focused, controls)
+        row.spoiler?.let { Warning(it, row, flags.animateEmoji, controls) }
+        val shown = row.spoiler == null || controls.spoilerRevealed
+        val actionRow = @Composable { if (flags.showActions) ActionRow(row, actions) }
+        // where the pictures come first, the actions follow them and the words come last, as in a photo app
+        val underPictures = flags.pictureFirst && shown && row.media.isNotEmpty()
+        if (shown) {
+            StatusBody(
+                row,
+                policy,
+                actions,
+                flags.canReact,
+                flags.animateEmoji,
+                flags.focused,
+                controls,
+                underPictures = actionRow.takeIf { underPictures },
+            )
         }
         controls.translation?.let { TranslationLine(it, controls.onShowOriginal, controls.onGetLanguage) }
-        if (flags.showActions) ActionRow(row, actions)
+        if (!underPictures) actionRow()
     }
 }
 

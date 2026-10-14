@@ -70,8 +70,8 @@ public class ModePreferences(private val store: DataStore<Preferences>) {
         store.edit { it[MODES_OFFERED] = true }
     }
 
-    /** Whether Photos shows as a grid, as it does until the person picks the feed. */
-    public val photosGrid: Flow<Boolean> = store.data.map { it[PHOTOS_GRID] ?: true }
+    /** Whether Photos shows as a grid; it opens as a feed, picture first, until the person picks the grid. */
+    public val photosGrid: Flow<Boolean> = store.data.map { it[PHOTOS_GRID] ?: false }
 
     public suspend fun setPhotosGrid(grid: Boolean) {
         store.edit { it[PHOTOS_GRID] = grid }

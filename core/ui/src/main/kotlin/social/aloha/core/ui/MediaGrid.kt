@@ -30,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
@@ -47,14 +48,17 @@ import social.aloha.core.model.SensitiveMediaPolicy
  * Laid out by count: one at its own shape within bounds, two side by side, three or four in a grid. What
  * is sensitive is covered while the policy says so, keeping its size, and is not even downloaded until
  * revealed; the cover shows the first attachment's blurhash, warning stripes and [wording], the author's
- * content warning where there is one. Reading's previewless mode lists the media as rows instead.
+ * content warning where there is one. Reading's previewless mode lists the media as rows instead. [shape]
+ * rounds its corners; a grid that runs to the screen's edges has none.
  */
 @Composable
 internal fun MediaGrid(
     media: List<MediaAttachment>,
     sensitive: Boolean,
     policy: SensitiveMediaPolicy,
+    modifier: Modifier = Modifier,
     wording: String? = null,
+    shape: Shape = MaterialTheme.shapes.medium,
     onOpen: (Int) -> Unit,
 ) {
     val covered = sensitive && !policy.allowsAutomaticReveal
@@ -71,7 +75,7 @@ internal fun MediaGrid(
     var describing by remember { mutableStateOf<String?>(null) }
     val hidden = covered && !revealed
     val shown = media.take(MAX_TILES)
-    Box(Modifier.fillMaxWidth().clip(MaterialTheme.shapes.medium)) {
+    Box(modifier.fillMaxWidth().clip(shape)) {
         when (shown.size) {
             1 -> Tile(shown[0], Modifier.fillMaxWidth().aspectRatio(aspectOf(shown[0])), hidden, { describing = it }) {
                 onOpen(0)

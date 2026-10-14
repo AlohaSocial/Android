@@ -14,7 +14,7 @@ This is the Apple app's specification, carried over as the product contract for 
 | Background play | One app-wide player per kind, video and audio, each with a Media3 `MediaSessionService` (lock screen, notification, headphones). Both sessions are exported and play-only: other apps may play, pause, seek and skip, never set what plays. An account switch or sign-out stops both. |
 | Shorts | One player and Media3's `DefaultPreloadManager` (next 3, previous 1; 1 ahead under battery saver or Data Saver) instead of a pool of three; the page being swiped in shows its poster. Each page decides play or pause: in front, revealed if sensitive, not paused by the reader. Without ffmpeg on the server `meta` is empty, so the deferred reclassification is required; the client-side first-frame poster is not built yet. |
 | Autoplay (§4) | Deliberately different from the policy below, which forbids a per-network setting: Settings, Media has *Play shorts on mobile data* (on by default; off, a short waits for a tap on mobile data and still plays by itself on Wi-Fi), *Loop shorts* and *Start shorts muted* (`ModePreferences`). There is no app-wide *Autoplay video* toggle. |
-| Photos | Grid of adaptive 112 dp squares (three on a phone) or feed, remembered per device. Explore uses Pixelfed's trending posts and Mastodon's `/trends/tags` (Pixelfed's hashtag route answers `[]`). |
+| Photos | Feed (the default: picture first, text below) or grid of adaptive 112 dp squares (three on a phone), remembered per device. Explore uses Pixelfed's trending posts and Mastodon's `/trends/tags` (Pixelfed's hashtag route answers `[]`). |
 | Stories | The rail heads Photos where the server has stories, led by "New story"; with no stories it shows that tile alone, never an empty-state text. The player is a full-screen dialog over the app; next, previous and pause are also screen-reader actions. A reply is kept beside the story for its poster, not sent as a direct message. Posting is the composer's "Share as a story" toggle. A profile has a Stories tab that lists the account's stories and opens each on the web; the in-app player is not reachable from a profile. |
 | News | No layout of its own: the timeline row already shows the poster's comment above a full-width link card. A tap on the card opens it in the app where the server finds the post or profile, else in a Custom Tab; no reader mode. |
 | Audio | A list with a play button per post; playing one queues the list from it on. The mini player sits above the navigation on every screen. |
@@ -242,10 +242,10 @@ For Pixelfed-style image posts.
 
 ### Layout
 
-- **Grid** (default): a 3-column square grid on iPhone, adaptive on larger
+- **Grid**: a 3-column square grid on iPhone, adaptive on larger
   screens, blurhash placeholders, multi-attachment posts carrying a stack badge.
-- **Feed**: a single-column large-image feed with full captions and the action
-  row — the layout people expect from a photo app.
+- **Feed** (default): a single-column large-image feed, each post's pictures first, edge to edge with square corners, then its actions, then a caption of two lines ending in "… more" where there is more —
+  the layout people expect from a photo app.
 - The toggle lives in the mode's toolbar and is remembered.
 
 ### Detail

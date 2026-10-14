@@ -224,12 +224,12 @@ class MergedTimelineViewModelTest {
     }
 
     @Test
-    fun `Photos shows every account's pictures together, as a grid, and moves no read marker`() = runBlocking {
+    fun `Photos shows every account's pictures together, as a feed, and moves no read marker`() = runBlocking {
         first.media = { listOf(NumberedTimeline.image(it)) }
         second.media = { listOf(NumberedTimeline.image(it)) }
         val photos = create(TimelineFeed.Mode(FeedMode.Photos))
         val state = withTimeout(10.seconds) { photos.uiState.first { it.loadedOnce && it.items.size == 30 } }
-        assertEquals(true, state.grid)
+        assertEquals(false, state.grid)
         photos.onScrolled(state.items.first().key, 0)
         delay(SETTLE_MILLIS)
         assertTrue(asked.none { " POST /api/v1/markers" in it })

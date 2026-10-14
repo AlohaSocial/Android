@@ -132,6 +132,18 @@ class TimelineScreenshotTest {
     }
 
     @Test
+    fun photoFeed() = capture("photos-feed") {
+        val mapper = StatusRowMapper(cache, RichTextColors.fromTheme())
+        // a long caption follows the actions and stops at two lines, ending in "… more"
+        val long = "<p>" + "Paddled out before sunrise, and the light came up over the reef. ".repeat(4) + "</p>"
+        val photos = listOf(
+            StatusSamples.post(long).copy(mediaAttachments = listOf(StatusSamples.image("a"))),
+            StatusSamples.gallery,
+        ).mapIndexed { index, status -> TimelineItem.Post(mapper.map(status.copy(id = "photo$index"), "1", null)) }
+        loaded(photos).copy(grid = false)
+    }
+
+    @Test
     fun caughtUp() = capture("timeline-caught-up") {
         val posts = posts()
         loaded(listOf(posts[0], TimelineItem.CaughtUp, posts[1]))

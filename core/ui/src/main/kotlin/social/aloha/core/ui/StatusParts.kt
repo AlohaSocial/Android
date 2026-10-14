@@ -19,19 +19,21 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import social.aloha.core.designsystem.AlohaIcons
@@ -48,11 +50,19 @@ internal fun StatusBody(
     animateEmoji: Boolean,
     focused: Boolean = false,
     controls: CardControls = CardControls(),
+    underPictures: (@Composable () -> Unit)? = null,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(AlohaSpacing.s)) {
-        if (row.body.isNotEmpty()) BodyText(row, animateEmoji, focused, controls.collapse)
-        if (row.media.isNotEmpty()) {
-            MediaGrid(row.media, row.sensitive, policy, row.spoiler?.text) { actions.onMedia(row, it) }
+        if (underPictures != null) {
+            // a picture shown first, what comes under it, and its words as a caption, closed up as in a photo app
+            Column {
+                BodyMedia(row, policy, actions, edgeToEdge = true)
+                underPictures()
+                if (row.body.isNotEmpty()) BodyText(row, animateEmoji, focused, controls.collapse, caption = true)
+            }
+        } else {
+            if (row.body.isNotEmpty()) BodyText(row, animateEmoji, focused, controls.collapse, caption = false)
+            BodyMedia(row, policy, actions, edgeToEdge = false)
         }
         row.poll?.let {
             PollView(it, controls.pollChoice, controls.onPollChoice) { choices -> actions.onVote(row, choices) }
@@ -66,28 +76,69 @@ internal fun StatusBody(
     }
 }
 
-/** The post's text, larger when [focused]; a long one clipped behind Expand where Reading collapses them. */
+/** The post's pictures; [edgeToEdge], they run through the card's margin to the screen's edges, unrounded. */
 @Composable
-private fun BodyText(row: StatusRowUi, animateEmoji: Boolean, focused: Boolean, collapse: Collapse) {
+private fun BodyMedia(row: StatusRowUi, policy: SensitiveMediaPolicy, actions: StatusActions, edgeToEdge: Boolean) {
+    if (row.media.isEmpty()) return
+    MediaGrid(
+        row.media,
+        row.sensitive,
+        policy,
+        wording = row.spoiler?.text,
+        modifier = if (edgeToEdge) Modifier.bleed(AlohaSpacing.m) else Modifier,
+        shape = if (edgeToEdge) RectangleShape else MaterialTheme.shapes.medium,
+    ) { actions.onMedia(row, it) }
+}
+
+/**
+ * The post's text, larger when [focused]; a long one clipped behind Expand where Reading collapses them, and
+ * under a picture shown first, a caption of a few lines.
+ */
+@Composable
+private fun BodyText(row: StatusRowUi, animateEmoji: Boolean, focused: Boolean, collapse: Collapse, caption: Boolean) {
     // the post a thread is about reads larger than the replies around it
     val style = if (focused) {
         MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Normal)
     } else {
         MaterialTheme.typography.bodyLarge
     }
-    val text = @Composable {
-        Text(
-            row.body,
-            inlineContent = rememberEmojiContent(row.emojis, animateEmoji),
-            style = style.asRead(LocalReadingStyle.current).contentDirection(),
-        )
-    }
+    val read = style.asRead(LocalReadingStyle.current).contentDirection()
+    val emoji = rememberEmojiContent(row.emojis, animateEmoji)
+    if (caption) return Caption(row, read, emoji)
+    val text = @Composable { Text(row.body, inlineContent = emoji, style = read) }
     if (!collapse.collapsible) return text()
     Collapsible(collapsed = !collapse.expanded, tall = collapse.tall, onTall = collapse.onTall, content = text) {
         TextButton(onClick = collapse.onExpand) {
             Text(stringResource(if (collapse.expanded) R.string.status_collapse else R.string.status_expand))
         }
     }
+}
+
+/** The content warning, with the button that shows what it hides or hides it again. */
+@Composable
+internal fun Warning(spoiler: AnnotatedString, row: StatusRowUi, animateEmoji: Boolean, controls: CardControls) {
+    HiddenCard(
+        HiddenEdge.Warning,
+        AlohaIcons.ContentWarning,
+        stringResource(if (controls.spoilerRevealed) R.string.status_warning_rehide else R.string.status_filtered_show),
+        controls.onSpoiler,
+    ) {
+        Text(
+            spoiler,
+            inlineContent = rememberEmojiContent(row.emojis, animateEmoji),
+            style = MaterialTheme.typography.bodyMedium.contentDirection(),
+            modifier = Modifier.weight(1f),
+        )
+    }
+}
+
+/** Wider than its column by [inset] on each side, so it reaches through a margin of that width. */
+private fun Modifier.bleed(inset: Dp): Modifier = layout { measurable, constraints ->
+    val extra = (inset * 2).roundToPx()
+    val placeable = measurable.measure(
+        constraints.copy(minWidth = constraints.minWidth + extra, maxWidth = constraints.maxWidth + extra),
+    )
+    layout(constraints.maxWidth, placeable.height) { placeable.place(-extra / 2, 0) }
 }
 
 /** What follows the body: a withdrawn quote, the place and archive chips, and the reactions. */

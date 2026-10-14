@@ -299,6 +299,8 @@ private fun TimelineRow(
                 rowActions,
                 Modifier.semantics { this.selected = chosen },
                 seenBy = item.seenBy,
+                // Photos as a feed: each picture before its words, the width of the screen
+                pictureFirst = state.grid == false,
             )
         }
 
