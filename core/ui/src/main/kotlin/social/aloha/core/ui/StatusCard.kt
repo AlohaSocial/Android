@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.DropdownMenu
@@ -227,14 +228,15 @@ private fun CardLayout(
     seenBy: List<SeenBy>,
 ) {
     val avatar = @Composable {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        // which of the reader's accounts see the post sits on the author's picture, at its corner
+        Box {
             Avatar(row.author.avatarUrl, AVATAR, Modifier.clickable { actions.onProfile(row.author.id) })
             if (seenBy.isNotEmpty()) {
                 val outline = MaterialTheme.colorScheme.outline
                 StackedAvatars(
                     seenBy.map { it.avatarUrl },
                     SEEN_BY,
-                    Modifier.padding(top = AlohaSpacing.xxs),
+                    Modifier.align(Alignment.BottomEnd).offset(x = SEEN_BY_OUT, y = SEEN_BY_OUT),
                     rings = seenBy.map { account -> account.colour?.let(::Color) ?: outline },
                 )
             }
@@ -524,4 +526,5 @@ private val TRANSLATION_ITEMS =
 
 internal val AVATAR = 44.dp
 private val SEEN_BY = 18.dp
+private val SEEN_BY_OUT = 4.dp
 internal val SMALL_ICON = 16.dp
