@@ -83,9 +83,15 @@ public object InstanceEndpoints {
     /**
      * Sets how sensitive media is shown (Nextcloud extension). [policy] is a
      * [social.aloha.core.model.SensitiveMediaPolicy] wire value, or `""` to follow the instance again.
+     * Sent under both names: Social up to 0.24.1, the released versions, reads only `expandMedia`,
+     * later ones only `expand_media`, and either takes the one it misses as `""`.
      */
     public fun setExpandMedia(policy: String): ApiRequest<Unit> = unitRequest(
-        Endpoint("api/v1/preferences", HttpMethod.PUT, body = Body.Form(listOf(QueryItem("expandMedia", policy)))),
+        Endpoint(
+            "api/v1/preferences",
+            HttpMethod.PUT,
+            body = Body.Form(listOf(QueryItem("expand_media", policy), QueryItem("expandMedia", policy))),
+        ),
     )
 }
 
