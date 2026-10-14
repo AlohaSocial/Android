@@ -14,8 +14,8 @@ import kotlinx.serialization.Serializable
  * @property visibility [Visibility.Unknown] when the server sent nothing or a value this app does not
  *   know, which is treated as the most restrictive, never as public.
  * @property poll present-or-null on Nextcloud Social; other servers omit it.
- * @property reactions emoji reactions where the server supports them. Nextcloud Social always sends
- *   an empty list here and serves the real reactions only from `/statuses/{id}/reactions`.
+ * @property reactions emoji reactions where the server supports them. Nextcloud Social before 0.26.221
+ *   sends an empty list here and serves the real reactions only from `/statuses/{id}/reactions`.
  * @property quoteApprovalPolicy who may quote this post (`public`, `followers`, `nobody`), where the
  *   server says.
  * @property quoteApproval what quoting this post comes to for the reader (`automatic`, `manual`, `denied`,

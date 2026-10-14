@@ -8,6 +8,7 @@ import androidx.datastore.preferences.core.emptyPreferences
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import java.time.Clock
+import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -19,6 +20,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import kotlinx.coroutines.withTimeout
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
@@ -61,11 +63,21 @@ import social.aloha.core.ui.RichTextColors
 
 /**
  * A small conversation as Nextcloud Social serves it: one post above the focused one, a reply and a
- * reply to that below, reactions only from their own route, and two versions in the edit history.
+ * reply to that below, reactions on the focused post (which a server before 0.26.221 leaves empty) and from
+ * their own route, and two versions in the edit history.
  */
 private class Conversation : Dispatcher() {
     /** A reply someone else posted after the thread was first opened. */
     @Volatile var grown = false
+
+    /** The paths asked for, in order. */
+    val asked = CopyOnWriteArrayList<String>()
+
+    /** Whether the focused post carries its reactions, as Social does from 0.26.221 on; before, it is empty. */
+    @Volatile var reactionsOnStatus = false
+
+    /** Whether the focused post leaves the reactions out altogether. */
+    @Volatile var reactionsLeftOut = false
 
     private val template = JsonObject(NumberedTimeline.homeTemplate() + ("reblog" to JsonNull))
 
@@ -74,10 +86,12 @@ private class Conversation : Dispatcher() {
             extra,
     )
 
-    override fun dispatch(request: RecordedRequest): MockResponse = body(request.url.encodedPath)?.let {
-        MockResponse.Builder().code(200).body(it).addHeader("content-type", "application/json").build()
+    override fun dispatch(request: RecordedRequest): MockResponse {
+        val path = request.url.encodedPath.also(asked::add)
+        return body(path)?.let {
+            MockResponse.Builder().code(200).body(it).addHeader("content-type", "application/json").build()
+        } ?: MockResponse.Builder().code(404).body("{}").build()
     }
-        ?: MockResponse.Builder().code(404).body("{}").build()
 
     private fun body(path: String): String? = when {
         "/statuses/gone" in path -> null
@@ -89,9 +103,11 @@ private class Conversation : Dispatcher() {
             "favourites_count" to JsonPrimitive(1),
         ).toString()
 
-        path.endsWith(
-            "/statuses/f",
-        ) -> status("f", "a1", "edited_at" to JsonPrimitive("2026-09-29T11:00:00.000Z")).toString()
+        path.endsWith("/statuses/f") -> {
+            val focused = status("f", "a1", "edited_at" to JsonPrimitive("2026-09-29T11:00:00.000Z"))
+            val reactions = Json.parseToJsonElement(if (reactionsOnStatus) ON_STATUS else "[]")
+            JsonObject(if (reactionsLeftOut) focused - "reactions" else focused + ("reactions" to reactions)).toString()
+        }
 
         path.endsWith("/statuses/p") ->
             status("p", null, "favourites_count" to JsonPrimitive(2), "reblogs_count" to JsonPrimitive(0)).toString()
@@ -115,6 +131,10 @@ private class Conversation : Dispatcher() {
         path.endsWith("/history") -> history().toString()
 
         else -> null
+    }
+
+    private companion object {
+        const val ON_STATUS = """[{"name":"🌊","count":1,"me":false}]"""
     }
 
     private fun history(): JsonArray {
@@ -167,10 +187,11 @@ class ThreadViewModelTest {
         server.close()
     }
 
-    private suspend fun open(statusId: String, history: Boolean = false): ThreadViewModel {
+    private suspend fun open(statusId: String, history: Boolean = false, version: String = ""): ThreadViewModel {
         Dispatchers.setMain(Dispatchers.Unconfined)
         val apiBase = server.url("/")
-        val capabilities = ServerCapabilities.minimal(apiBase.toString()).copy(softwareName = "nextcloud-social")
+        val capabilities = ServerCapabilities.minimal(apiBase.toString())
+            .copy(softwareName = "nextcloud-social", softwareVersion = version)
         val account = accounts.signedIn(
             NewAccount(apiBase.host, "6", "alice", "Alice", null, null, capabilities, profilePending = false),
             AccessToken(MockCredentials.ACCESS_TOKEN, ""),
@@ -219,6 +240,22 @@ class ThreadViewModelTest {
             )
             assertTrue(StatusListKind.BoostedBy !in state.people)
         }
+
+    @Test
+    fun `from Social 0,26,221 the post carries its reactions, and no second request asks for them`() = runBlocking {
+        conversation.reactionsOnStatus = true
+        val state = open("f", version = "0.26.221").await { StatusListKind.Reactions in it.lists }
+        assertEquals(1, state.lists[StatusListKind.Reactions])
+        assertEquals(listOf("🌊"), state.posts().single { it.focused }.row.reactions.map { it.name })
+        assertTrue(conversation.asked.none { it.endsWith("/reactions") })
+    }
+
+    @Test
+    fun `a post that leaves its reactions out has them asked for, whatever the version`() = runBlocking {
+        conversation.reactionsLeftOut = true
+        val state = open("f", version = "0.26.251").await { StatusListKind.Reactions in it.lists }
+        assertEquals(listOf("🎉"), state.posts().single { it.focused }.row.reactions.map { it.name })
+    }
 
     @Test
     fun `reactions, which the status never carries on Nextcloud Social, come from their own route`() = runBlocking {
