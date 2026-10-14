@@ -480,7 +480,14 @@ private fun ActionButton(
 private fun StatusMenu(row: StatusRowUi, actions: StatusActions) {
     var open by remember { mutableStateOf(false) }
     Box {
-        IconButton(onClick = { open = true }) { Icon(AlohaIcons.More, stringResource(R.string.status_action_more)) }
+        // in the muted colour of the actions beside it, not the stronger one a button gives by default
+        IconButton(onClick = { open = true }) {
+            Icon(
+                AlohaIcons.More,
+                stringResource(R.string.status_action_more),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
             menuItems(row, actions.menuFor(row)).forEach { (item, icon, text) ->
                 DropdownMenuItem(
