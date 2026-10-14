@@ -24,6 +24,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -55,13 +56,15 @@ import social.aloha.core.ui.squish
 internal fun NewPostsPill(count: Int, avatars: List<String?>, onReveal: () -> Unit, modifier: Modifier) {
     var dismissed by remember { mutableStateOf<Int?>(null) }
     val reduced = rememberReducedMotion()
+    val waiting = rememberWaiting(count, avatars)
     AnimatedVisibility(
         visible = count > 0 && count != dismissed,
         modifier = modifier,
         enter = if (reduced) EnterTransition.None else pillEnter,
         exit = if (reduced) ExitTransition.None else pillExit,
     ) {
-        val label = pluralStringResource(R.plurals.timeline_new_posts, count, count)
+        val (shown, faces) = waiting
+        val label = pluralStringResource(R.plurals.timeline_new_posts, shown, shown)
         val dismiss = stringResource(UiR.string.list_new_posts_dismiss)
         val interactions = remember { MutableInteractionSource() }
         val flick = with(LocalDensity.current) { FLICK.toPx() }
@@ -83,23 +86,36 @@ internal fun NewPostsPill(count: Int, avatars: List<String?>, onReveal: () -> Un
                     liveRegion = LiveRegionMode.Polite
                     customActions = listOf(CustomAccessibilityAction(dismiss) { true.also { dismissed = count } })
                 },
-            contentPadding = if (avatars.isEmpty()) {
+            contentPadding = if (faces.isEmpty()) {
                 ButtonDefaults.ContentPadding
             } else {
                 ButtonDefaults.ButtonWithIconContentPadding
             },
         ) {
-            if (avatars.isEmpty()) {
+            if (faces.isEmpty()) {
                 Text(label)
             } else {
                 Icon(AlohaIcons.NewPosts, contentDescription = null, modifier = Modifier.size(ButtonDefaults.IconSize))
                 Spacer(Modifier.width(ButtonDefaults.IconSpacing))
-                StackedAvatars(avatars, PILL_AVATAR, ring = MaterialTheme.colorScheme.primary)
+                StackedAvatars(faces, PILL_AVATAR, ring = MaterialTheme.colorScheme.primary)
                 Spacer(Modifier.width(ButtonDefaults.IconSpacing))
                 Text(label)
             }
         }
     }
+}
+
+private data class Waiting(val count: Int, val avatars: List<String?>)
+
+private class LastWaiting(var waiting: Waiting)
+
+/** The posts just shown leave the count at nought; the pill leaves with what it said, not "0 new posts". */
+@Composable
+private fun rememberWaiting(count: Int, avatars: List<String?>): Waiting {
+    val last = remember { LastWaiting(Waiting(count, avatars)) }
+    val waiting = if (count > 0) Waiting(count, avatars) else last.waiting
+    SideEffect { last.waiting = waiting }
+    return waiting
 }
 
 /** Black keeps the pill to an outline, as it keeps every filled surface off an OLED screen. */
