@@ -78,7 +78,7 @@ internal data class HomeFeedsState(
     val explained: Set<String> = emptySet(),
     val showBoosts: Boolean = true,
     val showReplies: Boolean = true,
-    val swipeBetween: Boolean = false,
+    val swipeBetween: Boolean = true,
     val titleNext: Boolean = false,
     /** The reader has a draft put aside. */
     val draft: Boolean = false,

@@ -106,8 +106,8 @@ internal data class TimelineUiState(
     val restoreTo: Restore? = null,
     val scrollToTop: Boolean = false,
     val actionFailed: Boolean = false,
-    val swipeTowardsEnd: SwipeAction = SwipeAction.Favourite,
-    val swipeTowardsStart: SwipeAction = SwipeAction.Boost,
+    val swipeTowardsEnd: SwipeAction = SwipeAction.None,
+    val swipeTowardsStart: SwipeAction = SwipeAction.None,
 ) {
     @Immutable
     data class Restore(val index: Int, val offset: Int)

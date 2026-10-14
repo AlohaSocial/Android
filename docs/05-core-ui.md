@@ -189,7 +189,10 @@ Rules:
   Share, Copy Link, Open in Browser, Translate, Report, Mute Conversation, and
   (own posts) Edit, Delete, Delete & Redraft, Pin.
 - **Swipe actions** are configurable: leading pair and trailing pair, each
-  chosen from reply / boost / favourite / bookmark / share / none.
+  chosen from reply / boost / favourite / bookmark / share / none. Both are
+  none until chosen: a boost or a favourite shows to everyone, and a sideways
+  drag by mistake should not make one. With no swipe on posts, a sideways
+  swipe moves between Home's feeds.
 
 ### Performance requirements
 
