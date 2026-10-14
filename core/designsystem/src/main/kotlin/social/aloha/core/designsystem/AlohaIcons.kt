@@ -36,7 +36,6 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.VideoLibrary
 import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.AddCircleOutline
 import androidx.compose.material.icons.outlined.AddComment
 import androidx.compose.material.icons.outlined.AddPhotoAlternate
 import androidx.compose.material.icons.outlined.AddReaction
@@ -50,6 +49,7 @@ import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Cloud
 import androidx.compose.material.icons.outlined.ContentCut
+import androidx.compose.material.icons.outlined.ContentPaste
 import androidx.compose.material.icons.outlined.Create
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.DoneAll
@@ -65,6 +65,7 @@ import androidx.compose.material.icons.outlined.FilterAlt
 import androidx.compose.material.icons.outlined.Flag
 import androidx.compose.material.icons.outlined.Folder
 import androidx.compose.material.icons.outlined.FormatQuote
+import androidx.compose.material.icons.outlined.GifBox
 import androidx.compose.material.icons.outlined.GridView
 import androidx.compose.material.icons.outlined.Groups
 import androidx.compose.material.icons.outlined.Headphones
@@ -111,6 +112,7 @@ import androidx.compose.material.icons.outlined.Today
 import androidx.compose.material.icons.outlined.Translate
 import androidx.compose.material.icons.outlined.Upload
 import androidx.compose.material.icons.outlined.VideoLibrary
+import androidx.compose.material.icons.outlined.Videocam
 import androidx.compose.material.icons.outlined.ViewAgenda
 import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material.icons.outlined.WarningAmber
@@ -256,7 +258,9 @@ public object AlohaIcons {
     public val TextCard: ImageVector = Icons.Outlined.TextFields
     public val Trim: ImageVector = Icons.Outlined.ContentCut
     public val Camera: ImageVector = Icons.Outlined.PhotoCamera
-    public val AttachMore: ImageVector = Icons.Outlined.AddCircleOutline
+    public val Paste: ImageVector = Icons.Outlined.ContentPaste
+    public val Gif: ImageVector = Icons.Outlined.GifBox
+    public val RecordVideo: ImageVector = Icons.Outlined.Videocam
     public val Poll: ImageVector = Icons.Outlined.Poll
     public val Schedule: ImageVector = Icons.Outlined.Schedule
     public val AddReaction: ImageVector = Icons.Outlined.AddReaction

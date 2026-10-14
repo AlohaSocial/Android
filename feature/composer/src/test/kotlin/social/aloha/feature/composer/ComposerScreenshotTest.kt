@@ -227,6 +227,25 @@ class ComposerScreenshotTest {
     }
 
     @Test
+    fun attach() = captureAttach("composer-attach")
+
+    @Test
+    @Config(fontScale = 2f)
+    fun attachLargeFont() = captureAttach("composer-attach-font200")
+
+    @OptIn(ExperimentalRoborazziApi::class)
+    private fun captureAttach(name: String) {
+        compose.setContent {
+            AlohaTheme(ThemeSettings(mode = ThemeMode.Light)) {
+                NewPost(fresh.copy(gifLibrary = true, nextcloudFiles = true))
+            }
+        }
+        compose.onNodeWithContentDescription("Attach").performClick()
+        compose.waitForIdle()
+        captureScreenRoboImage("src/test/screenshots/$name.png")
+    }
+
+    @Test
     fun preview() = captureScreen("composer-preview") {
         PreviewSheet(
             fresh.copy(spoilerShown = true),
