@@ -66,6 +66,14 @@ public data class ServerCapabilities(
 
     val isNextcloudSocial: Boolean get() = "nextcloud" in softwareName && "social" in softwareName
 
+    /**
+     * Whether a post this server serves carries its reactions, so the single post needs no second request
+     * for them: Nextcloud Social from 0.26.221 on. Before, it sent an empty list on every post and served the
+     * real ones only from `/statuses/{id}/reactions`; an empty list there cannot tell the two apart, so the
+     * version decides.
+     */
+    val reactionsOnStatus: Boolean get() = isNextcloudSocial && atLeast(softwareVersion, REACTIONS_ON_STATUS)
+
     /** How this server measures a post against its character limit. */
     val lengthRule: LengthRule get() = if (isNextcloudSocial) LengthRule.CodePoints else LengthRule.Mastodon
 
@@ -98,6 +106,7 @@ public data class ServerCapabilities(
 
     public companion object {
         private const val APP_PREFIX = "index.php/apps/social/"
+        private val REACTIONS_ON_STATUS = listOf(0, 26, 221)
 
         /** Raised whenever detection learns a new field: 1 added the live feeds. */
         public const val CURRENT_FORMAT: Int = 1
@@ -105,6 +114,18 @@ public data class ServerCapabilities(
         /** The most conservative statement about a server: it speaks the Mastodon API at [apiBase]. */
         public fun minimal(apiBase: String): ServerCapabilities = ServerCapabilities(apiBase = apiBase)
     }
+}
+
+/**
+ * Whether the dotted [version] (`0.26.251`, anything after its numbers ignored) is [least] or later; one that
+ * reads as no number at all is not.
+ */
+internal fun atLeast(version: String, least: List<Int>): Boolean {
+    val parts = version.trim().split('.').map { part -> part.takeWhile(Char::isDigit) }
+    if (parts.first().isEmpty()) return false
+    val numbers = parts.map { it.toIntOrNull() ?: 0 }
+    val differing = least.indices.firstOrNull { numbers.getOrElse(it) { 0 } != least[it] }
+    return differing == null || numbers.getOrElse(differing) { 0 } > least[differing]
 }
 
 @Serializable

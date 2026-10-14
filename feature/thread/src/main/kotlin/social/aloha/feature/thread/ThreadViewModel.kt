@@ -258,8 +258,12 @@ internal class ThreadViewModel @AssistedInject constructor(
             }
         }
         val capabilities = account.capabilities
-        if (capabilities.emojiReactions || capabilities.isNextcloudSocial) {
-            viewModelScope.launch {
+        val carried = shown.reactions?.takeIf { capabilities.reactionsOnStatus }
+        when {
+            // the post came with them, an empty list included: reacting starts from those
+            carried != null -> control.update { it.copy(reactions = carried) }
+
+            capabilities.emojiReactions || capabilities.isNextcloudSocial -> viewModelScope.launch {
                 (threads.reactions(account, shown.id) as? Answer.Got)?.let { answer ->
                     control.update { it.copy(reactions = answer.value) }
                 }

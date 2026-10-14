@@ -66,7 +66,7 @@ internal fun SwipeRow(
 ) {
     // with no swipe chosen a sideways drag is not the post's at all: it is left to what holds the list,
     // such as Home's pager moving between feeds
-    if (setOf(towardsEnd, towardsStart) == setOf(SwipeAction.None)) return Post(selected, Modifier, content)
+    if (towardsEnd == SwipeAction.None && towardsStart == SwipeAction.None) return Post(selected, Modifier, content)
     SwipingRow(row, selected, towardsEnd, towardsStart, onSwipe, content)
 }
 
