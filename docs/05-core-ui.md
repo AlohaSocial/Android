@@ -189,7 +189,10 @@ Rules:
   Share, Copy Link, Open in Browser, Translate, Report, Mute Conversation, and
   (own posts) Edit, Delete, Delete & Redraft, Pin.
 - **Swipe actions** are configurable: leading pair and trailing pair, each
-  chosen from reply / boost / favourite / bookmark / share / none.
+  chosen from reply / boost / favourite / bookmark / share / none. Both are
+  none until chosen: a boost or a favourite shows to everyone, and a sideways
+  drag by mistake should not make one. With no swipe on posts, a sideways
+  swipe moves between Home's feeds.
 
 ### Performance requirements
 
@@ -275,7 +278,10 @@ exist undocumented.
   `/api/v2/notifications/{group_key}/accounts`.
 - Mentions never group. Polls, edits and moderation decisions never group.
 - Filter chips across the top: All · Mentions · Boosts · Favourites · Follows ·
-  Polls · Updates. Backed by `types`/`exclude_types`.
+  Polls · Updates. Backed by `types`/`exclude_types`. Each choice keeps its
+  list as last loaded, so turning back to it shows it at once while it
+  refreshes; after the whole list loads, each chip's kind is fetched once in
+  the background, so even a first tap shows its list without waiting.
 - Unread count from `/api/v2/notifications/unread_count` (groups, not rows) or
   the v1 route, both capped at 99 by the server.
 - The read marker is `POST /api/v1/markers` with `notifications[last_read_id]`.

@@ -168,7 +168,7 @@ private fun routed(
     merged: MergedTimelineViewModel?,
     elsewhere: (actingAs: ((StatusRowUi) -> String?)?) -> Elsewhere,
 ): StatusActions = when {
-    merged != null -> MergedActions(rowActions, elsewhere { merged.ownerOf(it.statusId) })
+    merged != null -> MergedActions(rowActions, elsewhere { merged.ownerOf(it.statusId) }, merged::heldAs)
     (feed as? TimelineFeed.Pinned)?.source is TimelineSource.Remote -> elsewhere(null)
     else -> rowActions
 }

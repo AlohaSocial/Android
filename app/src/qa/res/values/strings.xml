@@ -4,6 +4,8 @@
   ~ SPDX-License-Identifier: MIT
 -->
 <resources>
-    <!-- The name of the QA build under the launcher icon and in system settings. A brand name, not translated. -->
+    <!-- The name of the QA build in system settings. A brand name, not translated. -->
     <string name="app_name" translatable="false">Aloha Social QA</string>
+    <!-- The QA build's short name under the launcher icon and in the recent-apps switcher. A brand name, not translated. -->
+    <string name="launcher_name" translatable="false">Aloha QA</string>
 </resources>

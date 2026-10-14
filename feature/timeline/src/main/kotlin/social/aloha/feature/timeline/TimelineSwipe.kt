@@ -64,6 +64,21 @@ internal fun SwipeRow(
     onSwipe: (StatusRowUi, SwipeAction) -> Unit,
     content: @Composable () -> Unit,
 ) {
+    // with no swipe chosen a sideways drag is not the post's at all: it is left to what holds the list,
+    // such as Home's pager moving between feeds
+    if (setOf(towardsEnd, towardsStart) == setOf(SwipeAction.None)) return Post(selected, Modifier, content)
+    SwipingRow(row, selected, towardsEnd, towardsStart, onSwipe, content)
+}
+
+@Composable
+private fun SwipingRow(
+    row: StatusRowUi,
+    selected: Boolean,
+    towardsEnd: SwipeAction,
+    towardsStart: SwipeAction,
+    onSwipe: (StatusRowUi, SwipeAction) -> Unit,
+    content: @Composable () -> Unit,
+) {
     val current by rememberUpdatedState(row)
     val haptics = rememberHaptics()
     val scope = rememberCoroutineScope()

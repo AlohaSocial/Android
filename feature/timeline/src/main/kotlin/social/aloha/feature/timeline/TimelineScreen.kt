@@ -150,7 +150,7 @@ internal fun TimelineScreen(
     ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize()) {
             // what another feature puts atop this timeline, such as Photos' stories
-            header()
+            TimelineHeader(state, listState, gridState, header)
             if (state.sources.size > 1) SourceRow(state.source, state.sources, actions::onSource)
             state.trouble?.let { TroubleStrip(it) }
             RefreshBox(
@@ -299,6 +299,8 @@ private fun TimelineRow(
                 rowActions,
                 Modifier.semantics { this.selected = chosen },
                 seenBy = item.seenBy,
+                // Photos as a feed: each picture before its words, the width of the screen
+                pictureFirst = state.grid == false,
             )
         }
 

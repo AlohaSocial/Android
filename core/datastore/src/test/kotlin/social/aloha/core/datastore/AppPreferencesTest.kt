@@ -26,19 +26,19 @@ class AppPreferencesTest {
     }
 
     @Test
-    fun `a swipe favourites towards the end and boosts towards the start until chosen otherwise`() = runTest {
+    fun `no swipe acts on a post until one is chosen`() = runTest {
         val preferences = AppPreferences(Memory(emptyPreferences()))
-        assertEquals(SwipeAction.Favourite, preferences.swipeTowardsEnd.first())
-        assertEquals(SwipeAction.Boost, preferences.swipeTowardsStart.first())
-        preferences.setSwipeTowardsEnd(SwipeAction.Reply)
-        preferences.setSwipeTowardsStart(SwipeAction.None)
-        assertEquals(SwipeAction.Reply, preferences.swipeTowardsEnd.first())
+        assertEquals(SwipeAction.None, preferences.swipeTowardsEnd.first())
         assertEquals(SwipeAction.None, preferences.swipeTowardsStart.first())
+        preferences.setSwipeTowardsEnd(SwipeAction.Reply)
+        preferences.setSwipeTowardsStart(SwipeAction.Boost)
+        assertEquals(SwipeAction.Reply, preferences.swipeTowardsEnd.first())
+        assertEquals(SwipeAction.Boost, preferences.swipeTowardsStart.first())
     }
 
     @Test
     fun `a choice a later build wrote, which this one does not know, reads as the default`() = runTest {
         val stored = mutablePreferencesOf(stringPreferencesKey("swipe_towards_end") to "Translate")
-        assertEquals(SwipeAction.Favourite, AppPreferences(Memory(stored)).swipeTowardsEnd.first())
+        assertEquals(SwipeAction.None, AppPreferences(Memory(stored)).swipeTowardsEnd.first())
     }
 }

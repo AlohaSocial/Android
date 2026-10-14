@@ -26,12 +26,16 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -133,6 +137,7 @@ internal fun SegmentField(
             hint(index, state),
             state.overFrom.getOrNull(index),
             readOnly = posted || state.posting,
+            focusOnOpen = index == 0,
         ) { actions.onText(index, it) }
         if (index == 0) QuoteParts(state, actions)
         state.attachments.getOrNull(index)?.takeIf {
@@ -145,7 +150,8 @@ internal fun SegmentField(
 
 /**
  * A post's text, coloured as it is typed, what is past the limit from [overFrom] in the error colours; [label]
- * names it within a thread, [hint] shows while it is empty.
+ * names it within a thread, [hint] shows while it is empty. The [focusOnOpen] one takes the keyboard as the
+ * composer opens, so writing starts at once.
  */
 @Composable
 private fun SegmentText(
@@ -154,8 +160,18 @@ private fun SegmentText(
     hint: Int,
     overFrom: Int?,
     readOnly: Boolean,
+    focusOnOpen: Boolean,
     onText: (TextFieldValue) -> Unit,
 ) {
+    val focus = remember { FocusRequester() }
+    // once a composer, not again on a turn of the screen or when a failed post gives the text back
+    var focused by rememberSaveable { mutableStateOf(false) }
+    if (focusOnOpen) {
+        LaunchedEffect(focus) {
+            if (!focused && !readOnly) focus.requestFocus()
+            focused = true
+        }
+    }
     val colors = MaterialTheme.colorScheme
     val highlight = remember(colors, overFrom) {
         val over = SpanStyle(color = colors.onErrorContainer, background = colors.errorContainer)
@@ -174,7 +190,7 @@ private fun SegmentText(
             disabledContainerColor = Color.Transparent,
         ),
         textStyle = MaterialTheme.typography.bodyLarge,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().focusRequester(focus),
     )
 }
 

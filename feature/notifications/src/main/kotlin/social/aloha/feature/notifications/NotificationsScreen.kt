@@ -87,7 +87,7 @@ import social.aloha.core.ui.spoken
 import social.aloha.core.ui.topScrollTail
 
 /** The chips across the top, each backed by the server's `types` filter. */
-private val FILTERS = listOf(
+internal val FILTERS = listOf(
     NotificationKind.Mention to R.string.notifications_filter_mentions,
     NotificationKind.Reblog to R.string.notifications_filter_boosts,
     NotificationKind.Favourite to R.string.notifications_filter_favourites,

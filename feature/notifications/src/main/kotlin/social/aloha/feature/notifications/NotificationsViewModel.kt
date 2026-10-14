@@ -15,6 +15,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -22,10 +23,12 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import social.aloha.core.data.AllAccounts
@@ -123,22 +126,65 @@ internal class NotificationsViewModel @Inject constructor(
     private val accountSettings: AccountSettingsStore,
     clock: Clock,
 ) : ViewModel() {
+    /** [kept]: each choice of kinds' list as last loaded, so turning back to one shows it at once. */
     private data class Control(
         val parts: Map<String, NotificationPart> = emptyMap(),
         val kinds: Set<NotificationKind> = emptySet(),
+        val kept: Map<Set<NotificationKind>, Map<String, NotificationPart>> = emptyMap(),
         val refreshing: Boolean = false,
         val loadedOnce: Boolean = false,
         val loadingOlder: Boolean = false,
         val pendingRequests: Int = 0,
         val group: GroupSheet? = null,
         val notice: Int? = null,
-    )
+    ) {
+        /**
+         * Showing [chosen]: their list as last loaded, with the read markers of the one left, or the
+         * skeleton for kinds not loaded yet, never the rows of the kinds left. A list left before it loaded
+         * is not kept: it would show as empty.
+         */
+        fun turnedTo(chosen: Set<NotificationKind>): Control {
+            val back = kept[chosen]?.mapValues { (id, part) -> part.copy(marker = parts[id]?.marker ?: part.marker) }
+            return copy(
+                kinds = chosen,
+                parts = back.orEmpty(),
+                kept = if (loadedOnce) kept + (kinds to parts) else kept,
+                loadedOnce = back != null,
+            )
+        }
+
+        /**
+         * A refresh of [chosen] done: shown where they are still the kinds shown, else kept for when they are
+         * chosen again, and dropped where the accounts it was for are no longer the ones shown.
+         */
+        fun refreshed(chosen: Set<NotificationKind>, lists: Map<String, NotificationPart>, sameAccounts: Boolean) =
+            when {
+                sameAccounts && chosen == kinds -> copy(parts = lists, refreshing = false, loadedOnce = true)
+                sameAccounts -> copy(kept = kept + (chosen to lists), refreshing = false)
+                else -> copy(refreshing = false)
+            }
+
+        /** [kinds]' list fetched ahead, unless the reader opened them meanwhile, which is newer. */
+        fun preloaded(kinds: Set<NotificationKind>, lists: Map<String, NotificationPart>): Control =
+            if (kinds in kept || kinds == this.kinds) this else copy(kept = kept + (kinds to lists))
+
+        /** Without [key] of [owner]'s, in the list shown and every list kept, so an answered row stays gone. */
+        fun without(owner: String, key: String): Control {
+            val gone = { lists: Map<String, NotificationPart> ->
+                lists[owner]?.let { part -> lists + (owner to part.copy(items = part.items.filter { it.key != key })) }
+                    ?: lists
+            }
+            return copy(parts = gone(parts), kept = kept.mapValues { (_, lists) -> gone(lists) })
+        }
+    }
 
     /** The accounts shown, the one in use first. */
     private val accounts: StateFlow<List<SignedInAccount>> =
         allAccounts.shown.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
     private val control = MutableStateFlow(Control())
     private var shown = false
+
+    private var preloaded = false
 
     @Volatile private var merged = MergedNotifications(emptyList(), emptyList())
 
@@ -199,6 +245,7 @@ internal class NotificationsViewModel @Inject constructor(
             // other accounts start from nothing
             accounts.filter { it.isNotEmpty() }.map { list -> list.map { it.id } }.distinctUntilChanged().collect {
                 control.value = Control()
+                preloaded = false
                 if (shown) refresh()
             }
         }
@@ -221,12 +268,12 @@ internal class NotificationsViewModel @Inject constructor(
 
     /** Toggles [kind]; none chosen shows every kind. Follows include follow requests. */
     fun onKind(kind: NotificationKind) {
-        control.update { it.copy(kinds = if (kind in it.kinds) it.kinds - kind else it.kinds + kind) }
+        control.update { it.turnedTo(if (kind in it.kinds) it.kinds - kind else it.kinds + kind) }
         viewModelScope.launch { refresh(asked = false) }
     }
 
     fun onAllKinds() {
-        control.update { it.copy(kinds = emptySet()) }
+        control.update { it.turnedTo(emptySet()) }
         viewModelScope.launch { refresh(asked = false) }
     }
 
@@ -246,7 +293,9 @@ internal class NotificationsViewModel @Inject constructor(
                 }.awaitAll()
             }
             control.update { current ->
-                // a page asked for below what a refresh has since replaced belongs to nothing shown now
+                // a page asked for below what a refresh has since replaced, or for kinds left since, belongs
+                // to nothing shown now
+                if (current.kinds != state.kinds) return@update current.copy(loadingOlder = false)
                 val parts = pages.fold(current.parts) { parts, (id, answer) ->
                     val part = parts[id]?.takeIf { it.olderThan == state.parts[id]?.olderThan } ?: return@fold parts
                     parts + (id to part.with(answer))
@@ -311,15 +360,7 @@ internal class NotificationsViewModel @Inject constructor(
                     accept -> R.string.notifications_request_accepted
                     else -> R.string.notifications_request_declined
                 }
-                val part = it.parts[owned.owner]
-                val parts = if (done &&
-                    part != null
-                ) {
-                    it.parts + (owned.owner to part.copy(items = part.items - item))
-                } else {
-                    it.parts
-                }
-                it.copy(parts = parts, notice = notice)
+                (if (done) it.without(owned.owner, item.key) else it).copy(notice = notice)
             }
         }
     }
@@ -345,13 +386,25 @@ internal class NotificationsViewModel @Inject constructor(
             shownNow.map { async { it.id to repository.newest(it, kinds.expanded(), control.value.parts[it.id]) } }
                 .awaitAll()
         }.toMap()
-        // the kinds or the accounts changed meanwhile, and their own refresh was turned away: run it now
-        val current = shownNow.map { it.id } == accounts.value.map { it.id } && kinds == control.value.kinds
-        control.update {
-            if (current) it.copy(parts = parts, refreshing = false, loadedOnce = true) else it.copy(refreshing = false)
-        }
+        // the kinds or the accounts changed meanwhile, and their own refresh was turned away: run it now,
+        // keeping what came for kinds left, which shows at once when they are chosen again
+        val sameAccounts = shownNow.map { it.id } == accounts.value.map { it.id }
+        val current = sameAccounts && kinds == control.value.kinds
+        control.update { it.refreshed(kinds, parts, sameAccounts) }
         if (!current) return refresh(asked)
         afterLoad(shownNow, parts, kinds.isEmpty(), asked)
+        if (kinds.isEmpty() && !preloaded) {
+            preloaded = true
+            var brought = 0
+            repository.eachKind(shownNow, parts)
+                .takeWhile { shown && shownNow.map { it.id } == accounts.value.map { it.id } }
+                .collect { (kinds, lists) ->
+                    brought++
+                    control.update { it.preloaded(kinds, lists) }
+                }
+            // cut short by a failure or by leaving the screen: the next whole list tries again
+            if (brought < FILTERS.size) preloaded = false
+        }
     }
 
     /**
@@ -401,6 +454,31 @@ private fun NotificationPart.with(answer: Answer<social.aloha.core.data.notifica
     }
 
 /**
+ * Each chip's kind on its own, newest first, for [accounts], with the read markers of [all], their whole
+ * list: fetched ahead so the first tap on a chip shows its list at once. A kind one account fails to
+ * bring ends it.
+ */
+private fun NotificationsRepository.eachKind(
+    accounts: List<SignedInAccount>,
+    all: Map<String, NotificationPart>,
+): Flow<Pair<Set<NotificationKind>, Map<String, NotificationPart>>> = flow {
+    for (kind in FILTERS.map { it.first }) {
+        val kinds = setOf(kind)
+        val lists = coroutineScope {
+            accounts.map { account ->
+                async {
+                    (page(account, kinds.expanded()) as? Answer.Got)?.value?.let {
+                        account.id to NotificationPart(it.items, all[account.id]?.marker, it.olderThan)
+                    }
+                }
+            }.awaitAll()
+        }
+        if (lists.any { it == null }) return@flow
+        emit(kinds to lists.filterNotNull().toMap())
+    }
+}
+
+/**
  * [account]'s newest notifications of [kinds], after [previous]; a marker that cannot be read leaves the
  * rows as new as they were, and a failure keeps what was there.
  */
@@ -410,8 +488,14 @@ private suspend fun NotificationsRepository.newest(
     previous: NotificationPart?,
 ): NotificationPart {
     val before = previous ?: NotificationPart()
-    val marker = (readMarker(account) as? Answer.Got)?.value ?: before.marker
-    return when (val answer = page(account, kinds)) {
+    // the marker and the page side by side, one round trip rather than two
+    val (read, answer) = coroutineScope {
+        val read = async { readMarker(account) }
+        val answer = async { page(account, kinds) }
+        read.await() to answer.await()
+    }
+    val marker = (read as? Answer.Got)?.value ?: before.marker
+    return when (answer) {
         is Answer.Got -> NotificationPart(answer.value.items, marker, answer.value.olderThan)
         is Answer.Missed -> before.copy(marker = marker, trouble = answer.error.trouble)
     }

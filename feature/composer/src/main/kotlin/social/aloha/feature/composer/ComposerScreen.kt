@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -139,9 +140,28 @@ private fun Writing(state: ComposerUiState, segments: List<TextFieldValue>, spoi
     }
     GamesHint(state.games)
     state.scheduledAt?.let { ScheduleLine(it, actions::onPickSchedule) { actions.onSchedule(null) } }
-    TextButton(onClick = actions::onAddSegment, enabled = state.threadable) {
-        Icon(AlohaIcons.AddToThread, contentDescription = null)
-        Text(stringResource(R.string.composer_add_segment), Modifier.padding(start = AlohaSpacing.xs))
+    AddToThread(state, segments, actions::onAddSegment)
+}
+
+/**
+ * The way on to a thread's next post, once the last one has something in it, words or pictures, and quiet
+ * beside the writing.
+ */
+@Composable
+private fun AddToThread(state: ComposerUiState, segments: List<TextFieldValue>, onAdd: () -> Unit) {
+    val last = segments.lastIndex
+    if (segments[last].text.isBlank() && state.attachments.getOrNull(last).isNullOrEmpty()) return
+    TextButton(
+        onClick = onAdd,
+        enabled = state.threadable,
+        colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurfaceVariant),
+    ) {
+        Icon(AlohaIcons.AddToThread, contentDescription = null, Modifier.size(ButtonDefaults.IconSize))
+        Text(
+            stringResource(R.string.composer_add_segment),
+            Modifier.padding(start = ButtonDefaults.IconSpacing),
+            style = MaterialTheme.typography.labelLarge,
+        )
     }
 }
 

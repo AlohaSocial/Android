@@ -154,10 +154,25 @@
     <string name="composer_unreached">Couldn\'t reach the server. Nothing is lost; try again.</string>
     <!-- Error when the post being replied to cannot be found from the account chosen -->
     <string name="composer_reply_not_found">That account\'s server can\'t find the post you\'re replying to.</string>
-    <!-- Toolbar button that picks pictures or videos to attach -->
-    <string name="composer_add_media">Add pictures or videos</string>
-    <!-- Toolbar button that picks any file to attach -->
-    <string name="composer_add_file">Attach a file</string>
+    <!-- Toolbar button, and the title of the sheet it opens, for everything that attaches to a post -->
+    <string name="composer_attach">Attach</string>
+    <!-- Attach sheet tile: pick pictures or videos from the device -->
+    <string name="composer_attach_gallery">Gallery</string>
+    <!-- Attach sheet tile: pick any file from the device -->
+    <string name="composer_attach_file">File</string>
+    <!-- Attach sheet tile: take a photo with the camera -->
+    <string name="composer_attach_photo">Take photo</string>
+    <!-- Attach sheet tile: record a video with the camera -->
+    <string name="composer_attach_video">Record video</string>
+    <!-- Attach sheet tile: record a short video that stops after a set time; the placeholder is seconds -->
+    <plurals name="composer_attach_short">
+        <item quantity="one">%1$d-second short</item>
+        <item quantity="other">%1$d-second short</item>
+    </plurals>
+    <!-- Attach sheet tile: attach the pictures or videos on the clipboard -->
+    <string name="composer_attach_paste">Paste</string>
+    <!-- Attach sheet tile: attach a file from the writer's own Nextcloud -->
+    <string name="composer_attach_nextcloud">Nextcloud</string>
     <!-- Toolbar toggle that marks the attached media as sensitive, hidden until tapped -->
     <string name="composer_media_sensitive">Mark media as sensitive</string>
     <!-- What tapping an attachment does, read by screen readers -->
@@ -261,14 +276,8 @@
     <string name="composer_edit_still_too_large">Still over this server\'s %1$s. Keep less of it, or make it smaller.</string>
     <!-- Snackbar when a video or picture could not be edited -->
     <string name="composer_edit_failed">That couldn\'t be changed. It\'s as it was.</string>
-    <!-- Toolbar button that opens the menu of other ways to attach something: paste, GIFs, Nextcloud files -->
-    <string name="composer_more_sources">More ways to attach</string>
-    <!-- Menu item that attaches the pictures or videos on the clipboard -->
-    <string name="composer_paste">Paste a picture or video</string>
-    <!-- Menu item that opens the server's own GIF library -->
+    <!-- Attach sheet tile that opens the server's own GIF library -->
     <string name="composer_gifs">GIF</string>
-    <!-- Menu item that attaches a file from the writer's own Nextcloud, by its path -->
-    <string name="composer_nextcloud_file">File from Nextcloud</string>
     <!-- Title of the sheet listing the server's GIFs -->
     <string name="composer_gifs_title">GIFs</string>
     <!-- Search field in the GIF sheet -->
@@ -442,17 +451,6 @@
     <string name="composer_media_stage_processing">The server is preparing it</string>
     <!-- A trimmed video's size estimate when it is still over the server's limit; the placeholder is a size -->
     <string name="composer_video_estimate_over">About %1$s, still over the server\'s limit</string>
-    <!-- Toolbar button that opens the camera menu -->
-    <string name="composer_camera">Camera</string>
-    <!-- Camera menu: take a photo -->
-    <string name="composer_camera_photo">Take a photo</string>
-    <!-- Camera menu: record a video -->
-    <string name="composer_camera_video">Record a video</string>
-    <!-- Camera menu: record a short video that stops after a set time; the placeholder is seconds -->
-    <plurals name="composer_camera_short">
-        <item quantity="one">Record a short, %1$d second</item>
-        <item quantity="other">Record a short, %1$d seconds</item>
-    </plurals>
     <!-- Title of the dialog asked once after recording the first short -->
     <string name="composer_shorts_title">Tag shorts with #shorts?</string>
     <!-- Body of the dialog about tagging shorts -->

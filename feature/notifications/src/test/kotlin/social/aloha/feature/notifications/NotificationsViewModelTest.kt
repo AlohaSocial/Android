@@ -7,6 +7,8 @@ import android.content.Context
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.test.core.app.ApplicationProvider
 import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -22,6 +24,7 @@ import mockwebserver3.MockWebServer
 import mockwebserver3.RecordedRequest
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -44,9 +47,16 @@ import social.aloha.core.testing.SignedInFixture
 private class Notifications : Dispatcher() {
     val asked = CopyOnWriteArrayList<String>()
 
+    /** Held until opened: the answer to a request for mentions and boosts together. */
+    val mixed = CountDownLatch(1)
+
     override fun dispatch(request: RecordedRequest): MockResponse {
         val path = request.url.encodedPath
-        asked += "${request.method} $path?${request.url.encodedQuery.orEmpty()} ${request.body?.utf8().orEmpty()}"
+        val query = request.url.encodedQuery.orEmpty()
+        asked += "${request.method} $path?$query ${request.body?.utf8().orEmpty()}"
+        if ("types%5B%5D=mention" in query && "types%5B%5D=reblog" in query) {
+            mixed.await(MIXED_SECONDS, TimeUnit.SECONDS)
+        }
         return when {
             path.endsWith("/api/v2/notifications") -> json(PAGE)
 
@@ -70,6 +80,7 @@ private class Notifications : Dispatcher() {
         MockResponse.Builder().code(200).body(body).addHeader("content-type", "application/json").build()
 
     private companion object {
+        const val MIXED_SECONDS = 10L
         const val ALICE = """{"id":"1","username":"alice","acct":"alice","display_name":"Alice"}"""
         const val BOB = """{"id":"2","username":"bob","acct":"bob","display_name":"Bob"}"""
         const val CAROL = """{"id":"3","username":"carol","acct":"carol","display_name":"Carol"}"""
@@ -206,6 +217,26 @@ class NotificationsViewModelTest {
         }
         assertTrue(asked, asked.startsWith("GET /api/v2/notifications?") && "types%5B%5D=follow_request" in asked)
     }
+
+    @Test
+    fun `each chip's list is fetched ahead and shows at once, a mix not seen yet waits on its skeleton`() =
+        runBlocking {
+            viewModel.onShown(isShown = true)
+            await { it.loadedOnce }
+            // the last chip's kind is fetched last
+            withTimeout(10.seconds) { while (notifications.asked.none { "types%5B%5D=update" in it }) delay(POLL_MS) }
+            viewModel.onKind(NotificationKind.Mention)
+            assertTrue(await { it.kinds == setOf(NotificationKind.Mention) }.loadedOnce)
+            viewModel.onKind(NotificationKind.Reblog)
+            val mix = setOf(NotificationKind.Mention, NotificationKind.Reblog)
+            // its answer held back, the mix can only be on its skeleton
+            assertFalse(await { it.kinds == mix }.loadedOnce)
+            notifications.mixed.countDown()
+            await { it.kinds == mix && it.loadedOnce }
+            // the whole list, left for a chip, is back at once
+            viewModel.onAllKinds()
+            assertTrue(await { it.kinds.isEmpty() }.loadedOnce)
+        }
 
     @Test
     fun `a follow request row that groups two people answers both`() = runBlocking {

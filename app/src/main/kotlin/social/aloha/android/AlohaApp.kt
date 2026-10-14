@@ -363,8 +363,8 @@ fun AlohaApp(
                 backStack.push(AlbumsKey(readerId))
             }
 
-            override fun openMedia(statusId: String, index: Int) {
-                viewing = MediaViewerKey(readerId, statusId, index)
+            override fun openMedia(statusId: String, index: Int, accountId: String?) {
+                viewing = MediaViewerKey(accountId ?: readerId, statusId, index)
             }
 
             override fun openVideo(statusId: String) {

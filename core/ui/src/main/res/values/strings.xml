@@ -50,6 +50,10 @@
     <string name="status_rehide">Hide again</string>
     <!-- Button under a long post's shortened text: shows all of it -->
     <string name="status_expand">Expand</string>
+    <!-- Link at the end of a picture's shortened caption, after an ellipsis: shows the rest of it -->
+    <string name="status_more">more</string>
+    <!-- Link at the end of a picture's caption opened in full: shortens it again -->
+    <string name="status_less">less</string>
     <!-- Button under a long post's full text: shortens it again -->
     <string name="status_collapse">Collapse</string>
     <!-- Pill on sensitive media once shown: covers it again -->

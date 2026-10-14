@@ -98,82 +98,18 @@ internal fun Toolbar(
 }
 
 /**
- * Adding pictures, videos or files, while the post has room for them, and marking them sensitive; or
+ * Attaching pictures, videos or files, while the post has room for them, and marking them sensitive; or
  * a poll instead, on an opening post without media.
  */
 @Composable
 private fun MediaButtons(state: ComposerUiState, actions: ComposerActions) {
     val attached = state.attachments.maxOfOrNull { it.size } ?: 0
-    val room = state.poll == null && state.attachments.any { it.size < state.maxAttachments }
-    IconButton(onClick = actions::onPickMedia, enabled = room && !state.posting) {
-        Icon(AlohaIcons.AddMedia, stringResource(R.string.composer_add_media))
-    }
-    IconButton(onClick = actions::onPickFiles, enabled = room && !state.posting) {
-        Icon(AlohaIcons.AttachFile, stringResource(R.string.composer_add_file))
-    }
-    CameraMenu(enabled = room && !state.posting, onCapture = actions::onCapture)
-    MoreSourcesMenu(state, enabled = room && !state.posting, actions)
+    AttachButton(state, actions)
     ShareAs(state, actions)
     PollToggle(state, actions)
     if (attached > 0) {
         OutlinedIconToggleButton(checked = state.mediaSensitive, onCheckedChange = actions::onSensitive) {
             Icon(AlohaIcons.Sensitive, stringResource(R.string.composer_media_sensitive))
-        }
-    }
-}
-
-/** What else attaches: the clipboard, and what the server offers of its own, GIFs and Nextcloud files. */
-@Composable
-private fun MoreSourcesMenu(state: ComposerUiState, enabled: Boolean, actions: MediaActions) {
-    var open by remember { mutableStateOf(false) }
-    Box {
-        IconButton(onClick = { open = true }, enabled = enabled) {
-            Icon(AlohaIcons.AttachMore, stringResource(R.string.composer_more_sources))
-        }
-        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
-            val choices = listOfNotNull(
-                stringResource(R.string.composer_paste) to actions::onPaste,
-                (stringResource(R.string.composer_gifs) to actions::onGifs).takeIf { state.gifLibrary },
-                (stringResource(R.string.composer_nextcloud_file) to actions::onNextcloudFile)
-                    .takeIf { state.nextcloudFiles },
-            )
-            choices.forEach { (label, action) ->
-                DropdownMenuItem(
-                    text = { Text(label) },
-                    onClick = {
-                        open = false
-                        action()
-                    },
-                )
-            }
-        }
-    }
-}
-
-/** The camera: a photo, a video, or a short of one of the set lengths. */
-@Composable
-private fun CameraMenu(enabled: Boolean, onCapture: (Capture) -> Unit) {
-    var open by remember { mutableStateOf(false) }
-    Box {
-        IconButton(onClick = { open = true }, enabled = enabled) {
-            Icon(AlohaIcons.Camera, stringResource(R.string.composer_camera))
-        }
-        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
-            val choices = listOf(
-                Capture.Photo to stringResource(R.string.composer_camera_photo),
-                Capture.Video to stringResource(R.string.composer_camera_video),
-            ) + Capture.SHORT_SECONDS.map {
-                Capture.Short(it) to pluralStringResource(R.plurals.composer_camera_short, it, it)
-            }
-            choices.forEach { (capture, label) ->
-                DropdownMenuItem(
-                    text = { Text(label) },
-                    onClick = {
-                        open = false
-                        onCapture(capture)
-                    },
-                )
-            }
         }
     }
 }

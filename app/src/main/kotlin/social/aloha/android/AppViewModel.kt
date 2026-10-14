@@ -112,9 +112,13 @@ class AppViewModel @Inject constructor(
         ModeNavigation(choices.wide(capabilities), choices.narrow(capabilities))
     }.stateIn(viewModelScope, SharingStarted.Eagerly, ModeNavigation())
 
-    /** The theme every window wears: the reader's choice, coloured by their server where they chose it. */
+    /**
+     * The theme every window wears: the reader's choice, coloured by their server where they chose it.
+     * Null until the accounts are read, which holds the splash screen, so the app's own colour never
+     * shows for a moment before the server's.
+     */
     @OptIn(ExperimentalCoroutinesApi::class)
-    val theme: StateFlow<ThemeSettings?> = accounts.activeAccount.flatMapLatest { reader ->
+    val theme: StateFlow<ThemeSettings?> = accounts.activeOnceRead.flatMapLatest { reader ->
         combine(appPreferences.appearance, accountSettings.accent(reader?.id)) { look, own ->
             themeOf(look, reader?.capabilities?.theme, own)
         }

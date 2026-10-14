@@ -87,7 +87,13 @@ class TimelineSwipeTest {
     private fun state(): TimelineUiState {
         val mapper = StatusRowMapper(RichTextCache(), RichTextColors.fromTheme())
         val items = (0..1).map { TimelineItem.Post(mapper.map(StatusSamples.post().copy(id = "s$it"), "1", null)) }
-        return TimelineUiState(items = items, loadedOnce = true, now = StatusSamples.NOW)
+        return TimelineUiState(
+            items = items,
+            loadedOnce = true,
+            now = StatusSamples.NOW,
+            swipeTowardsEnd = SwipeAction.Favourite,
+            swipeTowardsStart = SwipeAction.Boost,
+        )
     }
 
     private fun show(haptics: Boolean = true) {

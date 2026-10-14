@@ -32,11 +32,11 @@ public class AppPreferences(private val store: DataStore<Preferences>) {
     /** The version of the terms the person accepted; 0 before they accepted any. */
     public val acceptedTermsVersion: Flow<Int> = store.data.map { it[ACCEPTED_TERMS] ?: 0 }
 
-    /** A swipe towards the end of the line; favouriting until chosen otherwise. */
-    public val swipeTowardsEnd: Flow<SwipeAction> = store.data.map { swipe(it[SWIPE_END], SwipeAction.Favourite) }
+    /** A swipe towards the end of the line; none until chosen, since a favourite shows to everyone. */
+    public val swipeTowardsEnd: Flow<SwipeAction> = store.data.map { swipe(it[SWIPE_END], SwipeAction.None) }
 
-    /** A swipe towards the start of the line; boosting until chosen otherwise. */
-    public val swipeTowardsStart: Flow<SwipeAction> = store.data.map { swipe(it[SWIPE_START], SwipeAction.Boost) }
+    /** A swipe towards the start of the line; none until chosen, since a boost shows to everyone. */
+    public val swipeTowardsStart: Flow<SwipeAction> = store.data.map { swipe(it[SWIPE_START], SwipeAction.None) }
 
     /** Whether posting warns when a picture has no description; on until turned off. It never blocks. */
     public val warnMissingDescription: Flow<Boolean> = store.data.map { it[WARN_DESCRIPTION] ?: true }

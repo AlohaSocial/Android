@@ -10,11 +10,19 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.test.assertIsFocused
+import androidx.compose.ui.test.assertIsNotFocused
+import androidx.compose.ui.test.hasSetTextAction
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.accessibility.enableAccessibilityChecks
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.tryPerformAccessibilityChecks
@@ -186,6 +194,13 @@ class ComposerScreenshotTest {
     fun newPost() = capture("composer-new") { NewPost() }
 
     @Test
+    fun `the post's text takes the keyboard as the composer opens, a thread's first post only`() {
+        compose.setContent { AlohaTheme { ReplyInThread() } }
+        compose.onNode(hasSetTextAction() and hasText("I'm in", substring = true)).assertIsFocused()
+        compose.onNode(hasSetTextAction() and hasText("bring a board", substring = true)).assertIsNotFocused()
+    }
+
+    @Test
     fun newPostDark() = capture("composer-new-dark", ThemeSettings(mode = ThemeMode.Dark)) { NewPost() }
 
     @Test
@@ -213,6 +228,42 @@ class ComposerScreenshotTest {
             spoiler = "",
             actions = NoActions,
         )
+    }
+
+    @Test
+    fun `a thread goes on only from a post with something in it`() {
+        var text by mutableStateOf(value(""))
+        var state by mutableStateOf(fresh)
+        compose.setContent {
+            AlohaTheme { ComposerScreen(state, listOf(text), spoiler = "", actions = NoActions) }
+        }
+        compose.onNodeWithText("Add to thread").assertDoesNotExist()
+        text = value("Aloha")
+        compose.onNodeWithText("Add to thread").assertExists()
+        // a picture with no words is something to go on from too
+        text = value("")
+        val picture = Attachment("beach", File("beach.jpg"), "beach.jpg", "image/jpeg", UploadState.Done("1", null))
+        state = fresh.copy(attachments = listOf(listOf(picture)))
+        compose.onNodeWithText("Add to thread").assertExists()
+    }
+
+    @Test
+    fun attach() = captureAttach("composer-attach")
+
+    @Test
+    @Config(fontScale = 2f)
+    fun attachLargeFont() = captureAttach("composer-attach-font200")
+
+    @OptIn(ExperimentalRoborazziApi::class)
+    private fun captureAttach(name: String) {
+        compose.setContent {
+            AlohaTheme(ThemeSettings(mode = ThemeMode.Light)) {
+                NewPost(fresh.copy(gifLibrary = true, nextcloudFiles = true))
+            }
+        }
+        compose.onNodeWithContentDescription("Attach").performClick()
+        compose.waitForIdle()
+        captureScreenRoboImage("src/test/screenshots/$name.png")
     }
 
     @Test

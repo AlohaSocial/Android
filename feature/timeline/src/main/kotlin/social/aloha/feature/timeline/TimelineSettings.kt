@@ -45,8 +45,8 @@ import social.aloha.core.ui.SwitchRow
 internal data class TimelineSettingsState(
     val showBoosts: Boolean = true,
     val showReplies: Boolean = true,
-    val swipeTowardsEnd: SwipeAction = SwipeAction.Favourite,
-    val swipeTowardsStart: SwipeAction = SwipeAction.Boost,
+    val swipeTowardsEnd: SwipeAction = SwipeAction.None,
+    val swipeTowardsStart: SwipeAction = SwipeAction.None,
     val restorePosition: Boolean = true,
     val newPostsPill: Boolean = true,
     val titleNextFeed: Boolean = false,

@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -58,10 +59,17 @@ public class AccountRepository @Inject constructor(
     /** Every account in the order the person arranged them. */
     public val accounts: Flow<List<SignedInAccount>> = accountList.filterNotNull()
 
-    /** The active account, falling back to the first one when none is marked active. */
-    public val activeAccount: StateFlow<SignedInAccount?> = combine(accounts, preferences.activeAccountId) { all, id ->
+    /**
+     * The active account once the list is read: null only when nobody is signed in, never for a list
+     * not read yet, as [activeAccount] starts.
+     */
+    public val activeOnceRead: Flow<SignedInAccount?> = combine(accounts, preferences.activeAccountId) { all, id ->
         all.firstOrNull { it.id == id } ?: all.firstOrNull()
-    }.stateIn(scope, SharingStarted.Eagerly, initialValue = null)
+    }.distinctUntilChanged()
+
+    /** The active account, falling back to the first one when none is marked active. */
+    public val activeAccount: StateFlow<SignedInAccount?> =
+        activeOnceRead.stateIn(scope, SharingStarted.Eagerly, initialValue = null)
 
     /** The accounts as they are in the database right now, for work that must not act on a stale list. */
     public suspend fun all(): List<SignedInAccount> = dao.all().map { it.toDomain() }
