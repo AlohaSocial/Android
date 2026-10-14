@@ -12,6 +12,10 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.test.assertIsFocused
+import androidx.compose.ui.test.assertIsNotFocused
+import androidx.compose.ui.test.hasSetTextAction
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.accessibility.enableAccessibilityChecks
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -184,6 +188,13 @@ class ComposerScreenshotTest {
 
     @Test
     fun newPost() = capture("composer-new") { NewPost() }
+
+    @Test
+    fun `the post's text takes the keyboard as the composer opens, a thread's first post only`() {
+        compose.setContent { AlohaTheme { ReplyInThread() } }
+        compose.onNode(hasSetTextAction() and hasText("I'm in", substring = true)).assertIsFocused()
+        compose.onNode(hasSetTextAction() and hasText("bring a board", substring = true)).assertIsNotFocused()
+    }
 
     @Test
     fun newPostDark() = capture("composer-new-dark", ThemeSettings(mode = ThemeMode.Dark)) { NewPost() }
