@@ -211,8 +211,9 @@ internal class SignInViewModel @Inject constructor(
     private suspend fun finish(callback: String) {
         val before = state.value.step
         show(SignInStep.Finishing)
-        val result = coordinator.complete(callback)
+        // taken before it is acted on: the sign-in can end this screen, and with it this work, mid-way
         inbox.consume(callback)
+        val result = coordinator.complete(callback)
         when (result) {
             // the app leaves this screen once the account is active
             is SignInResult.SignedIn -> Unit

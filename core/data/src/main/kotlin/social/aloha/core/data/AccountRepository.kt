@@ -10,8 +10,11 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
@@ -74,6 +77,15 @@ public class AccountRepository @Inject constructor(
     /** The accounts as they are in the database right now, for work that must not act on a stale list. */
     public suspend fun all(): List<SignedInAccount> = dao.all().map { it.toDomain() }
 
+    private val completed = MutableSharedFlow<String>(extraBufferCapacity = 1)
+
+    /**
+     * The id of each account signed in, new or signed in again, once it is stored and made active. Which
+     * account is active says nothing reliable about it: with every account shown together the first one is
+     * made active again at once, and an account signed in again was active already.
+     */
+    public val signIns: SharedFlow<String> = completed.asSharedFlow()
+
     /** One account as it is in the database right now, or null once it is signed out. */
     public suspend fun byId(id: String): SignedInAccount? = dao.get(id)?.toDomain()
 
@@ -102,6 +114,7 @@ public class AccountRepository @Inject constructor(
         )
         dao.upsert(entity)
         preferences.setActiveAccountId(id)
+        completed.tryEmit(id)
         return entity.toDomain()
     }
 

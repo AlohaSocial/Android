@@ -135,6 +135,17 @@ class SignInAcceptanceTest(private val configuration: MockServerConfiguration) {
     }
 
     @Test
+    fun `the same callback seen again finishes nothing, and its code is exchanged once`() = runBlocking {
+        val server = finder.found(mock.origin.toString())
+        val authorize = (coordinator.beginAuthorization(server) as Authorization.Started).url.toHttpUrl()
+        val callback = "alohasocial://oauth-callback/?code=mock-code&state=${authorize.queryParameter("state")}"
+        assertTrue(coordinator.complete(callback) is SignInResult.SignedIn)
+        // a sign-in screen opened later, for another account, finds the callback still in hand
+        assertEquals(SignInResult.NotForUs, coordinator.complete(callback))
+        assertEquals(1, mock.requests.count { it.url.encodedPath.endsWith("/oauth/token") })
+    }
+
+    @Test
     fun `a callback carrying another state is dropped without an exchange`() = runBlocking {
         coordinator.beginAuthorization(finder.found(mock.origin.toString()))
         assertEquals(

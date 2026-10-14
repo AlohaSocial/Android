@@ -163,6 +163,8 @@ class AppViewModel @Inject constructor(
         viewModelScope.launch {
             accounts.activeAccount.filterNotNull().map { it.id }.distinctUntilChanged().collect { adding.value = false }
         }
+        // an account added ends the adding by itself: it need not stay the one in use, nor be a new one
+        viewModelScope.launch { accounts.signIns.collect { adding.value = false } }
         viewModelScope.launch { allAccounts.keepFirstInUse() }
         // once the last account is gone, signed out or deleted, the images and responses kept for it go too
         viewModelScope.launch {

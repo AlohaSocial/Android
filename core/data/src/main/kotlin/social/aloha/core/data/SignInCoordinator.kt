@@ -105,14 +105,20 @@ public class SignInCoordinator @Inject constructor(
         vault.remove(VaultKey.PendingAuthorization)
     }
 
-    /** Finishes the sign-in with the callback URI the browser handed back. Never retried automatically. */
+    /**
+     * Finishes the sign-in with the callback URI the browser handed back. Never retried automatically: the
+     * pending authorization is claimed before anything is asked, so the same callback seen again, after
+     * the screen that took it went away mid-way, finds nothing to finish.
+     */
     public suspend fun complete(callbackUri: String): SignInResult {
         val pending = pending() ?: return SignInResult.NotForUs
-        return when (val callback = OAuthCallback.parse(callbackUri, pending.state)) {
+        val callback = OAuthCallback.parse(callbackUri, pending.state)
+        if (callback != OAuthCallback.StateMismatch) cancel()
+        return when (callback) {
             OAuthCallback.StateMismatch -> SignInResult.NotForUs
-            is OAuthCallback.Denied -> refused(callback.reason).also { cancel() }
-            OAuthCallback.MissingCode -> refused(null).also { cancel() }
-            is OAuthCallback.Code -> exchange(pending, callback.code).also { cancel() }
+            is OAuthCallback.Denied -> refused(callback.reason)
+            OAuthCallback.MissingCode -> refused(null)
+            is OAuthCallback.Code -> exchange(pending, callback.code)
         }
     }
 
