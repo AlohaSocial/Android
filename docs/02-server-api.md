@@ -140,7 +140,7 @@ composer. See [07-composer.md](07-composer.md) §6.
 | Route | Use |
 |---|---|
 | `GET /api/v1/preferences` | `reading:expand:media` is real here, with PeerTube's three NSFW policies under Mastodon's names: `show_all` (display), `default` (blur, blurhash showing, one press away), `hide_all` (not drawn at all — opening the post is what it takes). Also `posting:default:visibility`, `:sensitive`, `:language`. |
-| `PUT /api/v1/preferences` | **Nextcloud extension.** Body `expandMedia` ∈ `show_all` \| `default` \| `hide_all` \| `''`. `''` means "follow the instance default" and is distinct from picking today's default. Anything else is a **422**. Answers the effective policy, the `choice`, and the `instance` default. |
+| `PUT /api/v1/preferences` | **Nextcloud extension.** Body `expand_media` (`expandMedia` up to 0.24.1, the released versions, so the app sends both) ∈ `show_all` \| `default` \| `hide_all` \| `''`. `''` means "follow the instance default" and is distinct from picking today's default. Anything else is a **422**. Answers the effective policy, the `choice`, and the `instance` default. |
 
 The app must read this before showing any timeline and must honour all three
 states. `reading:expand:spoilers` is always `false` here — a content warning is

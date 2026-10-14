@@ -56,7 +56,7 @@ class SensitiveMediaTest {
         val sent = server.takeRequest()
         assertEquals("PUT", sent.method)
         assertEquals("/api/v1/preferences", sent.url.encodedPath)
-        assertEquals("expandMedia=hide_all", sent.body?.utf8())
+        assertEquals("expand_media=hide_all&expandMedia=hide_all", sent.body?.utf8())
         assertEquals(SensitiveMediaPolicy.HideAll, media.policy(reader.id).first())
         // Mastodon has no such route
         server.enqueue(json(404, """{"error":"Record not found"}"""))
