@@ -29,7 +29,7 @@ class StatusRoutingTest {
             opened += "thread $statusId"
         }
 
-        override fun openMedia(statusId: String, index: Int) {
+        override fun openMedia(statusId: String, index: Int, accountId: String?) {
             opened += "media $statusId $index"
         }
 

@@ -317,6 +317,15 @@ internal class MergedTimelineViewModel @AssistedInject constructor(
     /** The account a shown post acts as, by the id it shows under. */
     fun ownerOf(statusId: String): String? = last.owners[statusId]?.first
 
+    /** The account a shown post belongs to, and the id that account stores it under, a boost's own for a boost. */
+    fun heldAs(statusId: String): Pair<String, String>? {
+        val (owner, own) = last.owners[statusId] ?: return null
+        val status = stored[owner].orEmpty().firstNotNullOfOrNull { row ->
+            (row as? TimelineRow.Post)?.status?.takeIf { it.displayed.id == own }
+        } ?: return null
+        return owner to status.id
+    }
+
     override fun onToggle(statusId: String, toggle: Toggle) = act(statusId) { account, status ->
         interactions.toggle(account, status, toggle)
     }

@@ -57,8 +57,11 @@ public interface StatusNavigation {
     /** The reader's albums, to put their post [statusId] into; only a server with albums offers it. */
     public fun addToAlbum(statusId: String) {}
 
-    /** The media viewer on a post's [index]th attachment; without one, the post. */
-    public fun openMedia(statusId: String, index: Int): Unit = openThread(statusId)
+    /**
+     * The media viewer on a post's [index]th attachment; without one, the post. [accountId] names the account
+     * that holds it where that is not the one in use, for a post shown among every account's.
+     */
+    public fun openMedia(statusId: String, index: Int, accountId: String? = null): Unit = openThread(statusId)
 
     /** The watch page of a post's video; without one, the post. */
     public fun openVideo(statusId: String): Unit = openThread(statusId)

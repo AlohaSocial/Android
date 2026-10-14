@@ -224,6 +224,19 @@ class MergedTimelineViewModelTest {
     }
 
     @Test
+    fun `a picture another account holds opens as that account, by the id it stores the post under`() = runBlocking {
+        first.media = { listOf(NumberedTimeline.image(it)) }
+        second.media = { listOf(NumberedTimeline.image(it)) }
+        val photos = create(TimelineFeed.Mode(FeedMode.Photos))
+        val state = withTimeout(10.seconds) { photos.uiState.first { it.loadedOnce && it.items.size == 30 } }
+        val held = state.items.filterIsInstance<TimelineItem.Post>()
+            .first { it.row.statusId.startsWith(TimelineSource.Remote.ID_PREFIX) }.row
+        val (account, id) = checkNotNull(photos.heldAs(held.statusId))
+        assertEquals(photos.ownerOf(held.statusId), account)
+        assertTrue(statuses.observe(account, id).first() != null)
+    }
+
+    @Test
     fun `Photos shows every account's pictures together, as a feed, and moves no read marker`() = runBlocking {
         first.media = { listOf(NumberedTimeline.image(it)) }
         second.media = { listOf(NumberedTimeline.image(it)) }

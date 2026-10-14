@@ -51,6 +51,10 @@ internal class Elsewhere(
     override fun onProfile(accountId: String) =
         navigation().openProfile(null, accountId.removePrefix(TimelineSource.Remote.ID_PREFIX))
 
+    /** The media viewer on [statusId]'s [index]th attachment as [accountId], which holds the post. */
+    fun openMediaAs(accountId: String, statusId: String, index: Int) =
+        navigation().openMedia(statusId, index, accountId)
+
     // someone the post names under another server's name opens by their handle, like its author
     override fun onLink(target: RichLinkTarget) =
         if (target is RichLinkTarget.Mention && target.accountId?.startsWith(TimelineSource.Remote.ID_PREFIX) == true) {
@@ -68,12 +72,16 @@ internal class Elsewhere(
 
 /**
  * Every account's posts together: a post the account in use holds is acted on as on its own timeline; one
- * shown as another account ([heldBy]) is a post [Elsewhere], replied to as that account, its pictures and
- * quotes opening the post. Boosting, favouriting and bookmarking stay with [base], whose screen acts as
- * the account the post belongs to, on its own ids there.
+ * shown as another account ([heldBy]) is a post [Elsewhere], replied to as that account, its quotes opening
+ * the post, and its pictures opening in the viewer as the account that holds it ([heldAs]: that account and
+ * the post's id there), with no server asked. Boosting, favouriting and bookmarking stay with [base], whose
+ * screen acts as the account the post belongs to, on its own ids there.
  */
-internal class MergedActions(private val base: StatusActions, private val elsewhere: Elsewhere) :
-    StatusActions by base {
+internal class MergedActions(
+    private val base: StatusActions,
+    private val elsewhere: Elsewhere,
+    private val heldAs: (statusId: String) -> Pair<String, String>? = { null },
+) : StatusActions by base {
     private fun of(id: String): StatusActions = if (id.startsWith(TimelineSource.Remote.ID_PREFIX)) elsewhere else base
 
     private fun StatusRowUi.held() = statusId.startsWith(TimelineSource.Remote.ID_PREFIX)
@@ -86,8 +94,10 @@ internal class MergedActions(private val base: StatusActions, private val elsewh
 
     override fun onProfile(accountId: String) = of(accountId).onProfile(accountId)
 
-    override fun onMedia(row: StatusRowUi, index: Int) =
-        if (row.held()) onOpen(row.statusId) else base.onMedia(row, index)
+    override fun onMedia(row: StatusRowUi, index: Int) {
+        if (!row.held()) return base.onMedia(row, index)
+        heldAs(row.statusId)?.let { (account, id) -> elsewhere.openMediaAs(account, id, index) } ?: onOpen(row.statusId)
+    }
 
     override fun onQuote(row: StatusRowUi) = if (row.held()) onOpen(row.statusId) else base.onQuote(row)
 
