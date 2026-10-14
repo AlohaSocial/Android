@@ -28,8 +28,10 @@
     <string name="list_back">Back</string>
     <!-- Opens who is in a list, from its timeline -->
     <string name="list_members">People in this list</string>
-    <!-- The name under the launcher icon and in system settings. A brand name, not translated. -->
+    <!-- The name in system settings. A brand name, not translated. -->
     <string name="app_name" translatable="false">Aloha Social</string>
+    <!-- The short name under the launcher icon and in the recent-apps switcher, where the full one is cut off. A brand name, not translated. -->
+    <string name="launcher_name" translatable="false">Aloha</string>
     <!-- Navigation item: the home timeline of the signed-in account. -->
     <string name="destination_home">Home</string>
     <!-- Navigation item: the photo mode, a grid of posts with pictures. -->
