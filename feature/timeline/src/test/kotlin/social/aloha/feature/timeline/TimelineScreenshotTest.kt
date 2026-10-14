@@ -4,12 +4,16 @@
 package social.aloha.feature.timeline
 
 import android.app.Application
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.test.junit4.accessibility.enableAccessibilityChecks
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.performScrollToIndex
 import androidx.compose.ui.test.tryPerformAccessibilityChecks
 import androidx.compose.ui.unit.LayoutDirection
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
@@ -129,6 +133,23 @@ class TimelineScreenshotTest {
         ).mapIndexed { index, status -> TimelineItem.Post(mapper.map(status.copy(id = "photo$index"), "1", null)) }
         loaded(photos + photos.mapIndexed { index, item -> TimelineItem.Post(item.row.copy(rowId = "more$index")) })
             .copy(grid = true)
+    }
+
+    @Test
+    fun `what sits atop the timeline slides away once it is scrolled, and back at the top`() {
+        compose.setContent {
+            val posts = posts()
+            val many = (0..19).map { index -> posts[index % posts.size] as TimelineItem.Post }
+                .mapIndexed { index, item -> TimelineItem.Post(item.row.copy(rowId = "many$index")) }
+            AlohaTheme {
+                TimelineScreen(loaded(many), NoActions, NoActions, header = { Text("Stories") })
+            }
+        }
+        compose.onNodeWithText("Stories").assertExists()
+        compose.onNodeWithTag(TIMELINE_LIST).performScrollToIndex(5)
+        compose.onNodeWithText("Stories").assertDoesNotExist()
+        compose.onNodeWithTag(TIMELINE_LIST).performScrollToIndex(0)
+        compose.onNodeWithText("Stories").assertExists()
     }
 
     @Test
