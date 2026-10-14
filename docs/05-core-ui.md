@@ -278,7 +278,10 @@ exist undocumented.
   `/api/v2/notifications/{group_key}/accounts`.
 - Mentions never group. Polls, edits and moderation decisions never group.
 - Filter chips across the top: All · Mentions · Boosts · Favourites · Follows ·
-  Polls · Updates. Backed by `types`/`exclude_types`.
+  Polls · Updates. Backed by `types`/`exclude_types`. Each choice keeps its
+  list as last loaded, so turning back to it shows it at once while it
+  refreshes; after the whole list loads, each chip's kind is fetched once in
+  the background, so even a first tap shows its list without waiting.
 - Unread count from `/api/v2/notifications/unread_count` (groups, not rows) or
   the v1 route, both capped at 99 by the server.
 - The read marker is `POST /api/v1/markers` with `notifications[last_read_id]`.
