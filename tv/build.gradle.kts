@@ -42,6 +42,8 @@ dependencies {
     implementation(libs.androidx.navigation3.ui)
     implementation(libs.androidx.lifecycle.viewmodel.navigation3)
     implementation(libs.tv.material)
+    // the player's own view: its controls take the D-pad, seeking included
+    implementation(libs.androidx.media3.ui)
     implementation(libs.timber)
     debugImplementation(libs.compose.ui.tooling)
     testImplementation(project(":core:testing"))

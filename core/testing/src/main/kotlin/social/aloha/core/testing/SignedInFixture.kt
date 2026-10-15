@@ -122,6 +122,11 @@ public class SignedInFixture(private val context: Context) : Closeable {
     /** The stored posts, in the in-memory cache. */
     public val statuses: StatusRepository by lazy { StatusRepository(cache.value.statusDao(), clock) }
 
+    /** The timelines of these accounts, on the in-memory cache, their posts stored in [statuses]. */
+    public val timelines: TimelineRepository by lazy {
+        TimelineRepository(cache.value.timelineDao(), statuses, clients, accounts, clock, Dispatchers.IO)
+    }
+
     /** Watch positions, on the in-memory cache, reported as of [at]. */
     public fun watchPositions(at: Clock = clock): WatchPositions =
         WatchPositions(clients, cache.value.watchPositionDao(), statuses, at)

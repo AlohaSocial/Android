@@ -28,7 +28,15 @@ import kotlinx.coroutines.flow.map
 import kotlinx.serialization.Serializable
 import social.aloha.core.data.AccountRepository
 import social.aloha.tv.account.AccountRoute
+import social.aloha.tv.browse.ChannelRoute
+import social.aloha.tv.browse.SearchRoute
+import social.aloha.tv.home.HomeLinks
+import social.aloha.tv.home.HomeRoute
+import social.aloha.tv.home.PersonCardUi
+import social.aloha.tv.home.VideoCardUi
 import social.aloha.tv.signin.TvSignInRoute
+import social.aloha.tv.watch.ShortsRoute
+import social.aloha.tv.watch.WatchRoute
 
 /** The TV app's one activity; every screen is a destination inside it. */
 @AndroidEntryPoint
@@ -42,6 +50,21 @@ class TvActivity : ComponentActivity() {
         }
     }
 }
+
+@Serializable
+internal data object HomeKey : NavKey
+
+@Serializable
+internal data class WatchKey(val statusId: String) : NavKey
+
+@Serializable
+internal data class ShortsKey(val startId: String) : NavKey
+
+@Serializable
+internal data class ChannelKey(val accountId: String, val name: String) : NavKey
+
+@Serializable
+internal data object SearchKey : NavKey
 
 @Serializable
 internal data object AccountKey : NavKey
@@ -61,7 +84,16 @@ private fun TvApp(viewModel: TvAppViewModel = hiltViewModel()) {
         false -> return TvSignInRoute()
         true -> Unit
     }
-    val backStack = rememberNavBackStack(AccountKey)
+    val backStack = rememberNavBackStack(HomeKey)
+    val onVideo: (VideoCardUi) -> Unit = { backStack.add(WatchKey(it.id)) }
+    val onPerson: (PersonCardUi) -> Unit = { backStack.add(ChannelKey(it.id, it.name)) }
+    val home = HomeLinks(
+        onVideo = onVideo,
+        onShort = { backStack.add(ShortsKey(it.id)) },
+        onPerson = onPerson,
+        onSearch = { backStack.add(SearchKey) },
+        onAccount = { backStack.add(AccountKey) },
+    )
     NavDisplay(
         backStack = backStack,
         onBack = { backStack.removeLastOrNull() },
@@ -70,6 +102,11 @@ private fun TvApp(viewModel: TvAppViewModel = hiltViewModel()) {
             rememberViewModelStoreNavEntryDecorator(),
         ),
         entryProvider = entryProvider {
+            entry<HomeKey> { HomeRoute(home) }
+            entry<WatchKey> { WatchRoute(it.statusId) }
+            entry<ShortsKey> { ShortsRoute(it.startId) }
+            entry<ChannelKey> { ChannelRoute(it.accountId, it.name, onVideo) }
+            entry<SearchKey> { SearchRoute(onVideo, onPerson) }
             entry<AccountKey> { AccountRoute() }
         },
     )
