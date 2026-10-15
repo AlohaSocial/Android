@@ -8,7 +8,6 @@ plugins {
 
 dependencies {
     implementation(project(":core:data"))
-    implementation(libs.zxing.core)
     testImplementation(project(":core:testing"))
     testImplementation(project(":core:database"))
     testImplementation(libs.kotlinx.coroutines.test)

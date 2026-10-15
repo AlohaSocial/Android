@@ -8,6 +8,8 @@ plugins {
 
 dependencies {
     implementation(libs.materialkolor.utilities)
+    // the QR codes a phone scans: a profile to follow, a TV to sign in
+    implementation(libs.zxing.core)
     api(libs.compose.material3)
     api(libs.compose.material.icons.extended)
     testImplementation(libs.junit4)
