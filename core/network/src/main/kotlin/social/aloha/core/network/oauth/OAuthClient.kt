@@ -55,13 +55,14 @@ public class OAuthClient internal constructor(private val executor: RequestExecu
         apiBase: HttpUrl,
         scopes: String = OAuthIdentity.SCOPES,
         redirectUris: String = OAuthIdentity.REGISTERED_REDIRECTS,
+        clientName: String = OAuthIdentity.CLIENT_NAME,
     ): ApiResult<ClientRegistration> {
         val endpoint = Endpoint(
             path = "api/v1/apps",
             method = HttpMethod.POST,
             body = Body.Form(
                 listOf(
-                    QueryItem("client_name", OAuthIdentity.CLIENT_NAME),
+                    QueryItem("client_name", clientName),
                     QueryItem("redirect_uris", redirectUris),
                     QueryItem("scopes", scopes),
                     QueryItem("website", OAuthIdentity.WEBSITE),

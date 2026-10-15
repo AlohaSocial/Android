@@ -6,4 +6,26 @@
 <resources>
     <!-- The watch app's name in the watch's app list -->
     <string name="wear_app_name">Aloha Social</string>
+    <!-- Asks for the server before signing in on the watch -->
+    <string name="wear_sign_in_body">Sign in with the server your account is on. The sign-in page opens on your phone.</string>
+    <!-- Button that opens the keyboard or voice input to enter the server -->
+    <string name="wear_server_button">Enter your server</string>
+    <!-- Label of the input where the server address is entered -->
+    <string name="wear_server_label">Server, like cloud.example.org</string>
+    <!-- Shown while the sign-in page is open on the phone; %1$s is the server -->
+    <string name="wear_waiting">Continue on your phone to sign in to %1$s.</string>
+    <!-- Shown once the watch is signed in; %1$s is the account's handle -->
+    <string name="wear_signed_in_as">Signed in as @%1$s</string>
+    <!-- Button that signs the watch out and gives its token back to the server -->
+    <string name="wear_sign_out">Sign out</string>
+    <!-- The text entered was not a server address -->
+    <string name="wear_problem_address">That isn’t a server address. Try something like cloud.example.org.</string>
+    <!-- No server answered at the address entered -->
+    <string name="wear_problem_unreachable">No server answered there. Check the address and the watch’s connection.</string>
+    <!-- The server answered, but signing in failed there -->
+    <string name="wear_problem_server">The server didn’t finish the sign-in. Try again.</string>
+    <!-- The sign-in page could not be opened on the phone, or it was closed -->
+    <string name="wear_problem_phone">The sign-in page didn’t open on your phone. Check that the phone is nearby and connected.</string>
+    <!-- The person declined the sign-in on the phone -->
+    <string name="wear_problem_refused">Sign-in was declined on your phone.</string>
 </resources>

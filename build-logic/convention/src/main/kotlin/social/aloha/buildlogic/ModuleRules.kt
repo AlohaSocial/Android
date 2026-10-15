@@ -31,7 +31,7 @@ object ModuleRules {
     private val widget = setOf(":core:data", ":core:navigation", ":core:designsystem", MODEL)
 
     /** The watch app: its own UI on Wear's Material, so none of the phone's UI modules. */
-    private val wear = setOf(MODEL)
+    private val wear = setOf(MODEL, ":core:network", ":core:datastore")
 
     fun allows(from: String, to: String, testOnly: Boolean = false): Boolean = when {
         from == ":app" -> true
