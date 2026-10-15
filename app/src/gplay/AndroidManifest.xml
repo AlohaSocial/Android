@@ -7,6 +7,19 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <application>
+        <!-- the watch app asks for the account in use here; Data Layer messages come only from this app -->
+        <service
+            android:name=".WatchHandoverService"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.google.android.gms.wearable.MESSAGE_RECEIVED" />
+                <data
+                    android:host="*"
+                    android:path="/aloha/handover/request"
+                    android:scheme="wear" />
+            </intent-filter>
+        </service>
+
         <!-- ML Kit starts when a feature first uses it (MlKitStart), not with every launch -->
         <provider
             android:name="com.google.mlkit.common.internal.MlKitInitProvider"

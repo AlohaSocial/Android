@@ -12,11 +12,18 @@ import social.aloha.core.data.notifications.RaisedNotifications
 import social.aloha.core.data.sync.WidgetUpdates
 import social.aloha.core.data.timeline.CacheSweeper
 import social.aloha.core.datastore.AccountSettingsStore
+import social.aloha.core.model.AccessToken
+import social.aloha.core.model.ClientRegistration
 import social.aloha.core.model.SignedInAccount
 import social.aloha.core.network.ApiError
 import social.aloha.core.network.endpoints.SocialAccountEndpoints
 import social.aloha.core.network.oauth.OAuthClient
 import social.aloha.core.network.oauth.OAuthEndpoints
+
+/** Told when an account has left this device, with the token it held, before its server hears of it. */
+public fun interface AccountRemovalListener {
+    public suspend fun removed(account: SignedInAccount, token: AccessToken?)
+}
 
 /**
  * Signing an account out of this device. Its token is revoked on its server, so it stops working
@@ -36,6 +43,7 @@ public class AccountRemoval @Inject constructor(
     private val widgets: WidgetUpdates,
     private val raised: RaisedNotifications,
     private val clients: ClientFactory,
+    private val removalListeners: Set<@JvmSuppressWildcards AccountRemovalListener> = emptySet(),
 ) {
     /**
      * Deletes [account] on its Nextcloud Social server, for good: its posts, its follows, and a `Delete`
@@ -58,7 +66,16 @@ public class AccountRemoval @Inject constructor(
         outbox.forget(account.id)
         widgets.forget(account.id)
         raised.forget(account.id)
-        appPassword?.let { nextcloud.revoke(account, it) }
+        // a listener that fails never keeps the token alive on the server
+        try {
+            removalListeners.forEach { it.removed(account, token) }
+        } finally {
+            appPassword?.let { nextcloud.revoke(account, it) }
+            revoke(account, token, registration)
+        }
+    }
+
+    private suspend fun revoke(account: SignedInAccount, token: AccessToken?, registration: ClientRegistration?) {
         val base = account.apiBase.toHttpUrlOrNull() ?: return
         if (token != null && registration != null) {
             oauth.revoke(OAuthEndpoints.from(oauth.metadata(base), base), registration, token)

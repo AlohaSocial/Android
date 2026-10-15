@@ -37,6 +37,7 @@ rootProject.name = "AlohaSocial"
 include(":app")
 include(":benchmark")
 include(":widget")
+include(":wear")
 listOf(
     "model", "html", "network", "database", "datastore", "data", "sync", "media",
     "designsystem", "ui", "navigation", "nextcloud", "platform", "intelligence", "testing",

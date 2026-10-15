@@ -30,6 +30,9 @@ public sealed class VaultKey(internal val name: String) {
 
     /** The sign-in in flight: state, PKCE verifier and API base, kept only while the browser tab is open. */
     public data object PendingAuthorization : VaultKey("pending-authorization")
+
+    /** The watch app's one account: its server, its handle, its own token and the client that token went to. */
+    public data object WatchAccount : VaultKey("watch-account")
 }
 
 /** Encrypts and decrypts the vault blob; the Keystore implementation in production, a fake in tests. */

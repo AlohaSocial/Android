@@ -4,7 +4,7 @@ What the Play Console and F-Droid are told, and why each answer is true of the b
 
 ## Flavours
 
-`generic` (F-Droid) carries no Google library apart from the open-source LiteRT runtime its alt-text drafts use, which reports to no one. `gplay` (Google Play) adds Google's ML Kit to reach Gemini Nano ([10-intelligence.md](10-intelligence.md)), each off until the reader turns it on. ML Kit would send Google diagnostics about its own use; the Play build removes the backend that sends them, so the app transmits none, and the answers below hold for both builds. Gemini Nano runs in Android's AICore service, which is part of Android, not of the app, and is not the app's to declare.
+`generic` (F-Droid) carries no Google library apart from the open-source LiteRT runtime its alt-text drafts use, which reports to no one. `gplay` (Google Play) adds Google's ML Kit to reach Gemini Nano ([10-intelligence.md](10-intelligence.md)), each off until the reader turns it on, and Google's Wear OS Data Layer, through which the watch app can ask the phone app for the account in use; it registers no component and reports nothing of its own, and the two messages pass between the reader's own phone and watch without being kept. ML Kit would send Google diagnostics about its own use; the Play build removes the backend that sends them, so the app transmits none, and the answers below hold for both builds. Gemini Nano runs in Android's AICore service, which is part of Android, not of the app, and is not the app's to declare.
 
 ## Data safety (Play Console)
 
