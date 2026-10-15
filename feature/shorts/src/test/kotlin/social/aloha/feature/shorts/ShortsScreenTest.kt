@@ -29,6 +29,7 @@ import social.aloha.core.designsystem.AlohaTheme
 import social.aloha.core.designsystem.ThemeMode
 import social.aloha.core.designsystem.ThemeSettings
 import social.aloha.core.html.RichTextCache
+import social.aloha.core.media.ShortSource
 import social.aloha.core.model.AttachmentKind
 import social.aloha.core.model.MediaAttachment
 import social.aloha.core.testing.StatusSamples

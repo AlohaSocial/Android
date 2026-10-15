@@ -29,6 +29,7 @@ import social.aloha.core.data.timeline.TimelineRow
 import social.aloha.core.data.timeline.Toggle
 import social.aloha.core.datastore.ModePreferences
 import social.aloha.core.html.RichTextCache
+import social.aloha.core.media.ShortSource
 import social.aloha.core.model.AttachmentKind
 import social.aloha.core.model.FeedMode
 import social.aloha.core.model.MediaAttachment

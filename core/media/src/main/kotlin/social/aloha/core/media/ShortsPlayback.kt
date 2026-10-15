@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 Aloha Social contributors
 // SPDX-License-Identifier: MIT
 
-package social.aloha.feature.shorts
+package social.aloha.core.media
 
 import android.content.Context
 import android.net.ConnectivityManager
@@ -17,27 +17,25 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.preload.DefaultPreloadManager
 import androidx.media3.exoplayer.source.preload.TargetPreloadStatusControl
-import social.aloha.core.media.Sound
-import social.aloha.core.media.forSound
 import social.aloha.core.model.VideoSource
 
 /**
  * Which shorts are worth loading ahead, by their distance from the one on screen: the next [depth] and
  * the one before, so a swipe either way starts at once. Everything else is its poster until it nears.
  */
-internal object ShortsPreload {
+public object ShortsPreload {
     /** How far ahead, normally; one, under battery saver or Data Saver, which still autoplays the visible short. */
-    const val DEPTH = 3
-    const val LEAN_DEPTH = 1
+    public const val DEPTH: Int = 3
+    public const val LEAN_DEPTH: Int = 1
 
     /** The first seconds of each, which is all a swipe needs before the player catches up. */
-    const val LOADED_MILLIS = 2_000L
+    public const val LOADED_MILLIS: Long = 2_000L
 
-    fun wanted(distance: Int, depth: Int): Boolean = distance in 1..depth || distance == -1
+    public fun wanted(distance: Int, depth: Int): Boolean = distance in 1..depth || distance == -1
 }
 
 /** One short to play: where from, best first, and its key in the pager. */
-internal data class ShortSource(val id: String, val sources: List<VideoSource>)
+public data class ShortSource(val id: String, val sources: List<VideoSource>)
 
 /**
  * The shorts' one player, and what is loaded ahead of it. Only the short on screen plays; the next three
@@ -49,7 +47,7 @@ internal data class ShortSource(val id: String, val sources: List<VideoSource>)
  * players, one per visible page, is the upgrade where the swipe should show moving video.
  */
 @OptIn(UnstableApi::class)
-internal class ShortsPlayback(private val context: Context) {
+public class ShortsPlayback(private val context: Context) {
     private var current = C.INDEX_UNSET
     private var items: List<ShortSource> = emptyList()
     private val mediaItems = HashMap<String, MediaItem>()
@@ -66,7 +64,7 @@ internal class ShortsPlayback(private val context: Context) {
         },
     )
 
-    val player: ExoPlayer = builder.buildExoPlayer(ExoPlayer.Builder(context).forSound(Sound.Film)).apply {
+    public val player: ExoPlayer = builder.buildExoPlayer(ExoPlayer.Builder(context).forSound(Sound.Film)).apply {
         repeatMode = Player.REPEAT_MODE_ONE
         addListener(
             object : Player.Listener {
@@ -78,7 +76,7 @@ internal class ShortsPlayback(private val context: Context) {
     private val preload: DefaultPreloadManager = builder.build()
 
     /** The shorts the pager holds, in its order; new ones are loaded ahead as they come near. */
-    fun setItems(shorts: List<ShortSource>) {
+    public fun setItems(shorts: List<ShortSource>) {
         // the ranking is each short's place in the pager: newer ones above move them all, so start over
         val appended = shorts.take(items.size).map { it.id } == items.map { it.id }
         if (!appended) {
@@ -98,7 +96,7 @@ internal class ShortsPlayback(private val context: Context) {
     }
 
     /** Plays short [index], from what was loaded ahead where it was. */
-    fun show(index: Int, muted: Boolean) {
+    public fun show(index: Int, muted: Boolean) {
         val short = items.getOrNull(index) ?: return
         val item = mediaItems[short.id] ?: return
         if (current == index && player.currentMediaItem?.mediaId == short.id) return
@@ -114,15 +112,15 @@ internal class ShortsPlayback(private val context: Context) {
     }
 
     /** A short starts over when it ends, or stops there. */
-    fun setLoop(loop: Boolean) {
+    public fun setLoop(loop: Boolean) {
         player.repeatMode = if (loop) Player.REPEAT_MODE_ONE else Player.REPEAT_MODE_OFF
     }
 
-    fun setMuted(muted: Boolean) {
+    public fun setMuted(muted: Boolean) {
         player.volume = if (muted) 0f else 1f
     }
 
-    fun release() {
+    public fun release() {
         preload.release()
         player.release()
     }
