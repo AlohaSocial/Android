@@ -38,6 +38,7 @@ public data class ServerCapabilities(
     val onlyMediaFilter: Boolean = false,
     val onlyVideoFilter: Boolean = false,
     val onlyNewsFilter: Boolean = false,
+    val onlyShortFilter: Boolean = false,
     val hlsLadder: Boolean = false,
     val watchPositions: Boolean = false,
     val stories: Boolean = false,
@@ -108,8 +109,8 @@ public data class ServerCapabilities(
         private const val APP_PREFIX = "index.php/apps/social/"
         private val REACTIONS_ON_STATUS = listOf(0, 26, 221)
 
-        /** Raised whenever detection learns a new field: 1 added the live feeds. */
-        public const val CURRENT_FORMAT: Int = 1
+        /** Raised whenever detection learns a new field: 1 added the live feeds, 2 the Shorts narrowing. */
+        public const val CURRENT_FORMAT: Int = 2
 
         /** The most conservative statement about a server: it speaks the Mastodon API at [apiBase]. */
         public fun minimal(apiBase: String): ServerCapabilities = ServerCapabilities(apiBase = apiBase)

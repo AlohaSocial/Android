@@ -28,8 +28,8 @@ import social.aloha.core.network.unitRequest
 
 public object TimelineEndpoints {
     /**
-     * A page of [source]. The [filters] are Nextcloud Social's narrowings; `only_video` wins over
-     * `only_media` when both are set, since every video is media.
+     * A page of [source]. The [filters] are Nextcloud Social's narrowings; `only_short` wins over
+     * `only_video`, and that over `only_media`, since every short is a video and every video is media.
      */
     public fun timeline(
         source: TimelineSource,
@@ -76,10 +76,10 @@ public object TimelineEndpoints {
         else -> ownRoutes[source] ?: "api/v1/timelines/${source.pathSegment}/"
     }
 
-    private fun filterItems(filters: TimelineFilters): List<QueryItem> = if (filters.onlyVideo) {
-        flagQuery("only_video", true)
-    } else {
-        flagQuery("only_media", filters.onlyMedia) + flagQuery("only_news", filters.onlyNews)
+    private fun filterItems(filters: TimelineFilters): List<QueryItem> = when {
+        filters.onlyShort -> flagQuery("only_short", true)
+        filters.onlyVideo -> flagQuery("only_video", true)
+        else -> flagQuery("only_media", filters.onlyMedia) + flagQuery("only_news", filters.onlyNews)
     }
 
     public fun conversations(

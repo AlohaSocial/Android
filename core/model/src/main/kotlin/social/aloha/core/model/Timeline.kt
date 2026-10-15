@@ -144,16 +144,17 @@ public data class TimelineKey(val mode: FeedMode, val source: TimelineSource) {
 }
 
 /**
- * The narrowings Nextcloud Social accepts beyond Mastodon's parameters. `only_video` is the narrower
- * of the first two and wins when both are set, since every video is media.
+ * The narrowings Nextcloud Social accepts beyond Mastodon's parameters. Of the first three the narrowest
+ * set wins, since every short is a video and every video is media.
  */
 @Serializable
 public data class TimelineFilters(
     val onlyMedia: Boolean = false,
     val onlyVideo: Boolean = false,
     val onlyNews: Boolean = false,
+    val onlyShort: Boolean = false,
 ) {
-    val isEmpty: Boolean get() = !onlyMedia && !onlyVideo && !onlyNews
+    val isEmpty: Boolean get() = !onlyMedia && !onlyVideo && !onlyNews && !onlyShort
 
     public companion object {
         public val None: TimelineFilters = TimelineFilters()
@@ -166,6 +167,8 @@ public data class TimelineFilters(
             FeedMode.Home -> None
 
             FeedMode.Photos, FeedMode.Audio -> TimelineFilters(onlyMedia = capabilities.onlyMediaFilter)
+
+            FeedMode.Shorts if capabilities.onlyShortFilter -> TimelineFilters(onlyShort = true)
 
             FeedMode.Video, FeedMode.Shorts ->
                 if (capabilities.onlyVideoFilter) {
@@ -184,7 +187,9 @@ public data class TimelineFilters(
  * per visible page. The device filters every mode but home, since even a server that narrows leaves
  * some of it (`only_media` includes video, `only_video` every video that is not a short, and Mastodon
  * ignores `only_media` on home); where the server narrowed, the first page mostly fills and fetching
- * stops there.
+ * stops there. `only_short` lets through nothing the device would leave out: the server's rule (one
+ * video, at most 180 seconds, no wider than square) is the device's without its hashtag and one-minute
+ * shortcuts.
  */
 public object OverFetch {
     public const val MAXIMUM_UPSTREAM_PAGES: Int = 5
