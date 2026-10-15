@@ -140,15 +140,18 @@ public object SocialAccountEndpoints {
     )
 }
 
-/** Applications that hold a token for the reader's account; a Nextcloud-session route. */
+/**
+ * Applications that hold a token for the reader's account. Session or token, but through the token
+ * the server lets an app sign out only itself: every other id answers 403.
+ */
 public object AuthorizedAppEndpoints {
     public fun all(): ApiRequest<List<AuthorizedApp>> = listRequest(
-        Endpoint("api/v1/authorized_apps", authentication = Authentication.NextcloudSession),
+        Endpoint("api/v1/authorized_apps", authentication = Authentication.SessionOrBearer),
         AuthorizedAppDto.serializer(),
     ) { it.toDomain() }
 
     public fun revoke(id: String): ApiRequest<Unit> = unitRequest(
-        Endpoint("api/v1/authorized_apps/$id", HttpMethod.DELETE, authentication = Authentication.NextcloudSession),
+        Endpoint("api/v1/authorized_apps/$id", HttpMethod.DELETE, authentication = Authentication.SessionOrBearer),
     )
 }
 

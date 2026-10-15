@@ -22,11 +22,14 @@ import mockwebserver3.MockWebServer
 import mockwebserver3.RecordedRequest
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import social.aloha.core.data.nextcloud.NextcloudExtras
+import social.aloha.core.model.ServerCapabilities
 import social.aloha.core.testing.SignedInFixture
 
 /** Two apps as Social 0.26.181 lists them: `created_at` in seconds, `signed_in` a flag. */
@@ -45,10 +48,12 @@ class AuthorizedAppsViewModelTest {
     private val fixture = SignedInFixture(ApplicationProvider.getApplicationContext<Context>())
     private val store = ViewModelStore()
     private val asked = CopyOnWriteArrayList<String>()
+    private val authorizations = CopyOnWriteArrayList<String>()
     private val server = MockWebServer().apply {
         dispatcher = object : Dispatcher() {
             override fun dispatch(request: RecordedRequest): MockResponse {
                 asked += "${request.method} ${request.url.encodedPath}"
+                authorizations += request.headers["Authorization"].orEmpty().substringBefore(' ')
                 val body = if (request.method == "GET") APPS else "{}"
                 return MockResponse.Builder().body(body).addHeader("content-type", "application/json").build()
             }
@@ -65,8 +70,10 @@ class AuthorizedAppsViewModelTest {
         server.close()
     }
 
-    private fun open(connected: Boolean): AuthorizedAppsViewModel = runBlocking {
-        val reader = fixture.signIn(server.url("/"))
+    private fun open(connected: Boolean, version: String = "0.26.219"): AuthorizedAppsViewModel = runBlocking {
+        val capabilities = ServerCapabilities.minimal(server.url("/").toString())
+            .copy(softwareName = "nextcloud-social", softwareVersion = version)
+        val reader = fixture.signIn(server.url("/"), capabilities)
         if (connected) fixture.connectNextcloud(reader.id, "Basic YWxpY2U6YXBw")
         AuthorizedAppsViewModel(reader.id, fixture.accounts, NextcloudExtras(fixture.clients))
             .also { store.put("apps", it) }
@@ -89,7 +96,19 @@ class AuthorizedAppsViewModelTest {
         viewModel.onRevoke("12")
         withTimeout(WAIT_MILLIS) { viewModel.uiState.first { it.apps.size == 1 } }
         assertEquals("DELETE /api/v1/authorized_apps/12", asked.last())
+        assertEquals(listOf("Basic", "Basic"), authorizations)
+        assertTrue(state.canRevoke)
     }
+
+    @Test
+    fun `a server that takes the sign-in token lists the apps without the connection, but offers no revoking`() =
+        runBlocking {
+            val viewModel = open(connected = false, version = "0.26.220")
+            val state = withTimeout(WAIT_MILLIS) { viewModel.uiState.first { it.status == PageStatus.Ready } }
+            assertEquals(listOf("37", "12"), state.apps.map { it.id })
+            assertEquals(listOf("Bearer"), authorizations)
+            assertFalse(state.canRevoke)
+        }
 
     private companion object {
         const val WAIT_MILLIS = 5_000L

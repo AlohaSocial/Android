@@ -62,15 +62,18 @@ class ExtensionEndpointsTest {
     }
 
     @Test
-    fun `the routes a bearer token cannot reach go out on the Nextcloud credential`() {
+    fun `the account's own pages take either credential, the held posts only the Nextcloud one`() {
         listOf(
             MemoryEndpoints.onThisDay().endpoint,
             MemoryEndpoints.recap().endpoint,
-            ReviewEndpoints.held().endpoint,
             StatisticsEndpoints.overview(30).endpoint,
+            StatisticsEndpoints.export(30),
             ChannelEndpoints.all().endpoint,
+            ExportEndpoints.archive(),
             AuthorizedAppEndpoints.all().endpoint,
-        ).forEach { assertEquals(Authentication.NextcloudSession, it.authentication, it.path) }
+            AuthorizedAppEndpoints.revoke("12").endpoint,
+        ).forEach { assertEquals(Authentication.SessionOrBearer, it.authentication, it.path) }
+        assertEquals(Authentication.NextcloudSession, ReviewEndpoints.held().endpoint.authentication)
         assertEquals(Authentication.Bearer, InterestEndpoints.state().endpoint.authentication)
     }
 

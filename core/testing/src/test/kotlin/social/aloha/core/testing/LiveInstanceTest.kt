@@ -42,6 +42,7 @@ import social.aloha.core.network.ApiResult
 import social.aloha.core.network.RateLimiter
 import social.aloha.core.network.capabilities.CapabilityDetector
 import social.aloha.core.network.endpoints.AccountEndpoints
+import social.aloha.core.network.endpoints.AuthorizedAppEndpoints
 import social.aloha.core.network.oauth.OAuthClient
 import social.aloha.core.network.oauth.OAuthEndpoints
 import social.aloha.core.network.oauth.OAuthIdentity
@@ -144,6 +145,10 @@ class LiveInstanceTest {
         assertTrue(account.capabilities.onlyShortFilter)
         val me = clients.forAccount(account)?.execute(AccountEndpoints.verifyCredentials())
         assertTrue("$me", me is ApiResult.Success)
+        // the account's own pages, with the sign-in token alone: nothing connected the Nextcloud here
+        assertTrue(account.capabilities.accountPagesWithToken)
+        val apps = clients.forAccount(account)?.execute(AuthorizedAppEndpoints.all())
+        assertTrue("$apps", apps is ApiResult.Success)
     }
 
     @Test

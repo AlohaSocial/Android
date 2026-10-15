@@ -89,7 +89,12 @@ public class ApiClient internal constructor(
     /** The `Authorization` value, `""` for a public route, or null when the route's credential is missing. */
     private suspend fun authorization(authentication: Authentication): String? = when (authentication) {
         Authentication.None, Authentication.NextcloudPublic -> ""
+
         Authentication.Bearer -> credentials.current().bearerToken?.let { "Bearer $it" }
+
         Authentication.NextcloudSession -> credentials.current().nextcloudBasic
+
+        Authentication.SessionOrBearer ->
+            authorization(Authentication.NextcloudSession) ?: authorization(Authentication.Bearer)
     }
 }

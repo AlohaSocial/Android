@@ -458,6 +458,8 @@
     <string name="apps_revoke_confirm">Revoke access</string>
     <!-- Closes the dialog without signing the app out -->
     <string name="apps_cancel">Cancel</string>
+    <!-- Above the list of apps while the Nextcloud is not connected: the sign-in token can list them but not sign another app out -->
+    <string name="apps_revoke_needs_nextcloud">To sign an app out from here, connect your Nextcloud.</string>
     <!-- Shown when signing an app out did not work -->
     <string name="apps_revoke_failed">Couldn’t revoke this app.</string>
     <!-- Title of the page with the reader's posts from this day in other years and the weekly recap -->

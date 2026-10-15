@@ -156,24 +156,35 @@ class SettingsScreenshotTest {
         TextPage("Privacy", onClose = {}) { PrivacyStatement(NOTICE) }
     }
 
+    private fun signedInApps(): List<AuthorizedApp> {
+        val signedIn = Instant.parse("2026-09-29T10:00:00Z")
+        return listOf(
+            AuthorizedApp(
+                "37",
+                "Aloha Social",
+                "https://aloha.social",
+                createdAt = signedIn,
+                lastUsedAt = signedIn,
+                scopes = listOf("read", "write", "follow", "push"),
+            ),
+            AuthorizedApp("12", "Tusky", createdAt = signedIn, scopes = listOf("read", "write")),
+        )
+    }
+
     @Test
     fun authorizedApps() = capture("settings-authorized-apps") {
-        val signedIn = Instant.parse("2026-09-29T10:00:00Z")
         AuthorizedAppsScreen(
-            AuthorizedAppsUiState(
-                PageStatus.Ready,
-                listOf(
-                    AuthorizedApp(
-                        "37",
-                        "Aloha Social",
-                        "https://aloha.social",
-                        createdAt = signedIn,
-                        lastUsedAt = signedIn,
-                        scopes = listOf("read", "write", "follow", "push"),
-                    ),
-                    AuthorizedApp("12", "Tusky", createdAt = signedIn, scopes = listOf("read", "write")),
-                ),
-            ),
+            AuthorizedAppsUiState(PageStatus.Ready, signedInApps()),
+            NoAppActions,
+            onConnect = {},
+            onBack = {},
+        )
+    }
+
+    @Test
+    fun authorizedAppsThroughTheToken() = capture("settings-authorized-apps-token") {
+        AuthorizedAppsScreen(
+            AuthorizedAppsUiState(PageStatus.Ready, signedInApps(), canRevoke = false),
             NoAppActions,
             onConnect = {},
             onBack = {},

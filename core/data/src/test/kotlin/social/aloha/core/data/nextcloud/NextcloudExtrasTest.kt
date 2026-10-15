@@ -19,7 +19,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import social.aloha.core.data.Answer
-import social.aloha.core.network.ApiError
 import social.aloha.core.testing.SignedInFixture
 
 /** Answers as Social 0.26.181 gave them on the dev instance, trimmed. */
@@ -75,11 +74,12 @@ class NextcloudExtrasTest {
     }
 
     @Test
-    fun `without the Nextcloud connection nothing is sent`() = runBlocking {
+    fun `without the Nextcloud connection they go with the sign-in token`() = runBlocking {
         val reader = fixture.signIn(server.url("/"))
-        assertTrue((extras.statistics(reader, days = 90) as Answer.Missed).error is ApiError.Unauthorised)
-        val export = extras.exportAccount(reader, ByteArrayOutputStream())
-        assertTrue((export as Answer.Missed).error is ApiError.Unauthorised)
-        assertEquals(0, asked.size)
+        assertTrue(extras.statistics(reader, days = 90) is Answer.Got)
+        val csv = ByteArrayOutputStream()
+        assertTrue(extras.exportStatistics(reader, days = 90, into = csv) is Answer.Got)
+        assertEquals(2, asked.size)
+        assertTrue(asked.all { it.headers["Authorization"].orEmpty().startsWith("Bearer ") })
     }
 }

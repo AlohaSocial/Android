@@ -6,7 +6,7 @@ This is the Apple app's specification, carried over as the product contract for 
 
 | Topic | Android |
 |---|---|
-| Credentials | A Social OAuth token, or a Nextcloud app password over HTTP Basic with `OCS-APIRequest: true`; the second also reaches memories, statistics, channels and migration. |
+| Credentials | A Social OAuth token, or a Nextcloud app password over HTTP Basic with `OCS-APIRequest: true`; the second also reaches the held posts and account deletion, and before 0.26.220 memories, statistics, channels, the exports and the authorized apps, which take either from then on. |
 | Caching | Nextcloud Social 0.26.97 sends no `ETag` on the polling routes (`Cache-Control: no-store`). |
 | Boosts | `reblog` is always `null`; a boost is not visible as a boost. |
 | Media | `POST /api/v2/media` answers 200 synchronously; `focus` is stored; `hls_url` and video `meta` are empty without ffmpeg on the server. Since 0.26.123 `image_size_limit` and `video_size_limit` are capped at what PHP accepts, which the composer's pre-flight checks against, and a refused upload says why: a `422` for a file too large (naming the limit) or an interrupted upload, which the attachment card shows; a `500` naming a server problem, retried like any server error. |
