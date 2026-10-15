@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.emptyPreferences
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import java.time.Clock
+import java.util.concurrent.CopyOnWriteArrayList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -26,6 +27,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.ParameterizedRobolectricTestRunner
 import social.aloha.core.data.AccountRemoval
+import social.aloha.core.data.AccountRemovalListener
 import social.aloha.core.data.AccountRepository
 import social.aloha.core.data.Authorization
 import social.aloha.core.data.ClientFactory
@@ -94,6 +96,7 @@ class SignInAcceptanceTest(private val configuration: MockServerConfiguration) {
         ApplicationProvider.getApplicationContext(),
         OutboxDatabase::class.java,
     ).build()
+    private val toldOfRemoval = CopyOnWriteArrayList<String>()
     private val removal = AccountRemoval(
         accounts,
         OAuthClient(http, limiter, Dispatchers.IO),
@@ -104,6 +107,8 @@ class SignInAcceptanceTest(private val configuration: MockServerConfiguration) {
         WidgetUpdates(ApplicationProvider.getApplicationContext(), WidgetFeedStore(InMemoryDataStore(emptyMap()))),
         RaisedNotifications(database.raisedDao()),
         clients,
+        // whoever has to hear of a sign-out, the watch among them, before the server hears of it
+        setOf(AccountRemovalListener { account, _ -> toldOfRemoval += "${account.id}:${mock.requests.size}" }),
     )
 
     @After
@@ -174,8 +179,10 @@ class SignInAcceptanceTest(private val configuration: MockServerConfiguration) {
             settings.update(account.id) { it.copy(showBoosts = false) }
             vault.put(VaultKey.AppPassword(account.id), APP_PASSWORD)
 
+            val askedBefore = mock.requests.size
             removal.signOut(account)
 
+            assertEquals(listOf("${account.id}:$askedBefore"), toldOfRemoval)
             val revoke = mock.requests.last { it.url.encodedPath.endsWith("/oauth/revoke") }
             assertTrue(revoke.body?.utf8().orEmpty().contains("token=${MockCredentials.ACCESS_TOKEN}"))
             val handedBack = mock.requests.last { it.url.encodedPath.endsWith("/ocs/v2.php/core/apppassword") }

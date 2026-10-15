@@ -29,7 +29,7 @@ import social.aloha.core.network.valueOrNull
 import social.aloha.wear.BuildConfig
 
 /** Why signing in on the watch stopped. */
-enum class WatchSignInProblem { Address, Unreachable, Server, Phone, Refused }
+enum class WatchSignInProblem { Address, Unreachable, Server, Phone, Refused, NothingOnPhone }
 
 sealed interface WatchSignInResult {
     data class SignedIn(val account: WatchAccount) : WatchSignInResult
@@ -47,6 +47,7 @@ class WatchSignIn @Inject constructor(
     private val probe: ServerProbe,
     private val oauth: OAuthClient,
     private val browser: PhoneBrowser,
+    private val phone: PhoneAccounts,
     private val accounts: WatchAccounts,
     private val http: OkHttpClient,
     private val rateLimiter: RateLimiter,
@@ -95,15 +96,25 @@ class WatchSignIn @Inject constructor(
     }
 
     /**
+     * The account in use on the phone, which needs no sign-in here: it comes with the phone's token. Null when
+     * the phone had none to give.
+     */
+    suspend fun fromPhone(): WatchAccount? {
+        val handed = phone.account()?.takeIf { it.token.isNotEmpty() } ?: return null
+        return WatchAccount(handed.apiBase, handed.handle, handed.token, shared = true).also { accounts.keep(it) }
+    }
+
+    /**
      * Forgets the account first, so the watch is signed out whatever the network does or however the request
-     * ends, then gives the token back to the server where it can be reached.
+     * ends, then gives the watch's own token back to the server where it can be reached; the phone's token, when
+     * the account came from there, is only forgotten.
      */
     suspend fun signOut() {
         val account = accounts.current() ?: return
         accounts.forget()
         val base = account.apiBase.toHttpUrlOrNull()
         val revocation = account.revocationEndpoint.toHttpUrlOrNull()
-        if (base != null && revocation != null) {
+        if (!account.shared && base != null && revocation != null) {
             oauth.revoke(
                 OAuthEndpoints.conventional(base).copy(revocation = revocation),
                 ClientRegistration(account.clientId, account.clientSecret, SCOPES),

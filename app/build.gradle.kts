@@ -93,6 +93,9 @@ dependencies {
     implementation(project(":core:intelligence"))
     // Gemini Nano, Google's part of the on-device features, in the Play build alone
     "gplayImplementation"(libs.mlkit.genai.prompt)
+    // the watch app asking for the account in use, over Wear's Data Layer
+    "gplayImplementation"(libs.play.services.wearable)
+    "gplayImplementation"(libs.kotlinx.coroutines.play.services)
     testImplementation(project(":core:testing"))
     testImplementation(libs.aboutlibraries.core)
     testImplementation(project(":core:database"))

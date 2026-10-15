@@ -10,6 +10,10 @@
     <string name="wear_sign_in_body">Sign in with the server your account is on. The sign-in page opens on your phone.</string>
     <!-- Button that opens the keyboard or voice input to enter the server -->
     <string name="wear_server_button">Enter your server</string>
+    <!-- Button that signs the watch in with the account in use in the Aloha app on the phone -->
+    <string name="wear_use_phone">Use your phone’s account</string>
+    <!-- Shown while the watch asks the phone app for its account -->
+    <string name="wear_asking_phone">Asking your phone…</string>
     <!-- Label of the input where the server address is entered -->
     <string name="wear_server_label">Server, like cloud.example.org</string>
     <!-- Shown while the sign-in page is open on the phone; %1$s is the server -->
@@ -28,4 +32,6 @@
     <string name="wear_problem_phone">The sign-in page didn’t open on your phone. Check that the phone is nearby and connected.</string>
     <!-- The person declined the sign-in on the phone -->
     <string name="wear_problem_refused">Sign-in was declined on your phone.</string>
+    <!-- The phone app had no account to hand over, or did not answer in time -->
+    <string name="wear_problem_nothing_on_phone">Your phone didn’t hand over an account. Sign in to Aloha Social there first, or enter your server.</string>
 </resources>

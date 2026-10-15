@@ -39,6 +39,9 @@ dependencies {
     implementation(libs.wear.input)
     implementation(libs.wear.phone.interactions)
     implementation(libs.wear.tooling.preview)
+    // the phone app handing over its account, over Wear's Data Layer
+    "gplayImplementation"(libs.play.services.wearable)
+    "gplayImplementation"(libs.kotlinx.coroutines.play.services)
     debugImplementation(libs.compose.ui.tooling)
     testImplementation(project(":core:testing"))
     testImplementation(libs.junit4)

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ SPDX-FileCopyrightText: 2026 Aloha Social contributors
+  ~ SPDX-License-Identifier: MIT
+-->
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- what the watch app looks for to find a phone that can hand it an account (WatchHandover) -->
+    <string-array name="android_wear_capabilities" translatable="false" tools:ignore="UnusedResources">
+        <item>aloha_phone</item>
+    </string-array>
+</resources>

@@ -49,6 +49,7 @@ wearPhoneInteractions = "1.1.1"
 wearToolingPreview = "1.0.0"
 wearInput = "1.2.0"
 wearMinSdk = "30"
+playServicesWearable = "20.0.1"
 media3 = "1.11.1"
 compileSdk = "37"
 targetSdk = "36"
@@ -76,6 +77,8 @@ wear-compose-foundation = { module = "androidx.wear.compose:compose-foundation",
 wear-phone-interactions = { module = "androidx.wear:wear-phone-interactions", version.ref = "wearPhoneInteractions" }
 wear-tooling-preview = { module = "androidx.wear:wear-tooling-preview", version.ref = "wearToolingPreview" }
 wear-input = { module = "androidx.wear:wear-input", version.ref = "wearInput" }
+play-services-wearable = { module = "com.google.android.gms:play-services-wearable", version.ref = "playServicesWearable" }
+kotlinx-coroutines-play-services = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-play-services", version.ref = "coroutines" }
 androidx-media3-transformer = { module = "androidx.media3:media3-transformer", version.ref = "media3" }
 androidx-media3-effect = { module = "androidx.media3:media3-effect", version.ref = "media3" }
 androidx-media3-common = { module = "androidx.media3:media3-common", version.ref = "media3" }

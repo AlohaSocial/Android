@@ -62,12 +62,18 @@ fun SignInRoute(viewModel: SignInViewModel = hiltViewModel()) {
                 },
             )
         },
+        onUsePhone = viewModel::onUsePhone,
         onSignOut = viewModel::onSignOut,
     )
 }
 
 @Composable
-internal fun SignInScreen(state: SignInUiState, onEnterServer: () -> Unit, onSignOut: () -> Unit) {
+internal fun SignInScreen(
+    state: SignInUiState,
+    onEnterServer: () -> Unit,
+    onUsePhone: () -> Unit,
+    onSignOut: () -> Unit,
+) {
     val list = rememberTransformingLazyColumnState()
     val spec = rememberTransformationSpec()
     ScreenScaffold(scrollState = list) { padding ->
@@ -80,12 +86,20 @@ internal fun SignInScreen(state: SignInUiState, onEnterServer: () -> Unit, onSig
 
                 is SignInUiState.SignedOut -> {
                     item { Centred(stringResource(state.problem?.text() ?: R.string.wear_sign_in_body)) }
+                    if (state.phoneInReach) {
+                        item { WideButton(spec, stringResource(R.string.wear_use_phone), onUsePhone) }
+                    }
                     item { WideButton(spec, stringResource(R.string.wear_server_button), onEnterServer) }
                 }
 
                 is SignInUiState.Waiting -> {
                     item { CircularProgressIndicator() }
-                    item { Centred(stringResource(R.string.wear_waiting, state.server)) }
+                    item {
+                        Centred(
+                            state.server?.let { stringResource(R.string.wear_waiting, it) }
+                                ?: stringResource(R.string.wear_asking_phone),
+                        )
+                    }
                 }
 
                 is SignInUiState.SignedIn -> {
@@ -123,4 +137,5 @@ private fun WatchSignInProblem.text(): Int = when (this) {
     WatchSignInProblem.Server -> R.string.wear_problem_server
     WatchSignInProblem.Phone -> R.string.wear_problem_phone
     WatchSignInProblem.Refused -> R.string.wear_problem_refused
+    WatchSignInProblem.NothingOnPhone -> R.string.wear_problem_nothing_on_phone
 }

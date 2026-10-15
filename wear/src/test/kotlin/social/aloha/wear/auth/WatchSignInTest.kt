@@ -15,6 +15,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import social.aloha.core.datastore.TokenVault
+import social.aloha.core.model.HandedOverAccount
 import social.aloha.core.network.RateLimiter
 import social.aloha.core.network.oauth.OAuthClient
 import social.aloha.core.network.probe.ServerProbe
@@ -46,10 +47,18 @@ class WatchSignInTest {
         private fun HttpUrl.state() = queryParameter("state").orEmpty()
     }
 
-    private fun signIn(phone: PhoneBrowser) = WatchSignIn(
+    /** The Play build's phone app, holding [held], or nothing as in the F-Droid build. */
+    private class PhoneApp(private val held: HandedOverAccount?) : PhoneAccounts {
+        override suspend fun reachable() = held != null
+
+        override suspend fun account() = held
+    }
+
+    private fun signIn(browser: PhoneBrowser, phoneApp: PhoneAccounts = PhoneApp(null)) = WatchSignIn(
         ServerProbe(http, limiter, Dispatchers.IO),
         OAuthClient(http, limiter, Dispatchers.IO),
-        phone,
+        browser,
+        phoneApp,
         accounts,
         http,
         limiter,
@@ -93,6 +102,26 @@ class WatchSignInTest {
 
         assertNull(accounts.current())
         assertTrue(mock.requests.any { it.url.encodedPath.endsWith("/oauth/revoke") })
+    }
+
+    @Test
+    fun `the phone's account is taken as it is, and signing out leaves its token alone`() = runBlocking {
+        val handed = HandedOverAccount(mock.origin.toString(), "alice", "phone-token")
+        val watch = signIn(ConsentingPhone(), PhoneApp(handed))
+
+        val account = watch.fromPhone()!!
+        assertEquals("phone-token", account.token)
+        assertTrue(account.shared)
+        watch.signOut()
+
+        assertNull(accounts.current())
+        assertTrue(mock.requests.none { it.url.encodedPath.endsWith("/oauth/revoke") })
+    }
+
+    @Test
+    fun `a phone with nobody signed in hands over nothing`() = runBlocking {
+        assertNull(signIn(ConsentingPhone(), PhoneApp(HandedOverAccount("https://x.test/", "a"))).fromPhone())
+        assertNull(accounts.current())
     }
 
     private companion object {

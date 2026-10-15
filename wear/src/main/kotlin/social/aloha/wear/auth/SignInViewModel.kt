@@ -11,6 +11,7 @@ import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /** Where the watch's sign-in stands. */
@@ -18,24 +19,30 @@ import kotlinx.coroutines.launch
 sealed interface SignInUiState {
     data object Loading : SignInUiState
 
-    /** Not signed in; [problem] says why the last attempt stopped, if one did. */
-    data class SignedOut(val problem: WatchSignInProblem? = null) : SignInUiState
+    /**
+     * Not signed in; [problem] says why the last attempt stopped, if one did, and [phoneInReach] whether the
+     * phone app can hand over its account.
+     */
+    data class SignedOut(val problem: WatchSignInProblem? = null, val phoneInReach: Boolean = false) : SignInUiState
 
-    /** The sign-in page is open on the phone, or the watch is talking to the server. */
-    data class Waiting(val server: String) : SignInUiState
+    /** The sign-in page is open on the phone, or the watch is talking to the server or the phone. */
+    data class Waiting(val server: String?) : SignInUiState
 
     data class SignedIn(val handle: String) : SignInUiState
 }
 
 @HiltViewModel
-class SignInViewModel @Inject constructor(private val signIn: WatchSignIn, private val accounts: WatchAccounts) :
-    ViewModel() {
+class SignInViewModel @Inject constructor(
+    private val signIn: WatchSignIn,
+    private val accounts: WatchAccounts,
+    private val phone: PhoneAccounts,
+) : ViewModel() {
     private val state = MutableStateFlow<SignInUiState>(SignInUiState.Loading)
     val uiState: StateFlow<SignInUiState> = state.asStateFlow()
 
     init {
         viewModelScope.launch {
-            state.value = accounts.current()?.let { SignInUiState.SignedIn(it.handle) } ?: SignInUiState.SignedOut()
+            state.value = accounts.current()?.let { SignInUiState.SignedIn(it.handle) } ?: signedOut()
         }
     }
 
@@ -45,15 +52,34 @@ class SignInViewModel @Inject constructor(private val signIn: WatchSignIn, priva
         viewModelScope.launch {
             state.value = when (val result = signIn.signIn(typed)) {
                 is WatchSignInResult.SignedIn -> SignInUiState.SignedIn(result.account.handle)
-                is WatchSignInResult.Failed -> SignInUiState.SignedOut(result.problem)
+                is WatchSignInResult.Failed -> signedOut(result.problem)
             }
+        }
+    }
+
+    fun onUsePhone() {
+        if (state.value is SignInUiState.Waiting) return
+        state.value = SignInUiState.Waiting(server = null)
+        viewModelScope.launch {
+            state.value = signIn.fromPhone()?.let { SignInUiState.SignedIn(it.handle) }
+                ?: signedOut(WatchSignInProblem.NothingOnPhone)
         }
     }
 
     fun onSignOut() {
         viewModelScope.launch {
             signIn.signOut()
-            state.value = SignInUiState.SignedOut()
+            state.value = signedOut()
         }
+    }
+
+    private fun signedOut(problem: WatchSignInProblem? = null): SignInUiState.SignedOut {
+        val signedOut = SignInUiState.SignedOut(problem)
+        // the phone is asked after the screen shows, so a slow Data Layer never holds it up
+        viewModelScope.launch {
+            val inReach = phone.reachable()
+            state.update { if (it == signedOut) signedOut.copy(phoneInReach = inReach) else it }
+        }
+        return signedOut
     }
 }

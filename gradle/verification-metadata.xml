@@ -59,6 +59,7 @@
             <trusting group="androidx.wear" name="wear-input" version="1.2.0"/>
             <trusting group="androidx.window"/>
             <trusting group="com.google.android.gms" name="play-services-basement" version="18.9.0"/>
+            <trusting group="com.google.android.gms" name="play-services-wearable" version="20.0.1"/>
             <trusting group="^androidx[.]compose($|([.].*))" regex="true"/>
             <trusting group="^androidx[.]test($|([.].*))" regex="true"/>
          </trusted-key>

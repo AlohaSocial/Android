@@ -14,16 +14,18 @@ import social.aloha.core.datastore.VaultKey
 
 /**
  * The account the watch is signed in to, with the token it holds and the client that token went to, so
- * signing out can revoke it.
+ * signing out can revoke it. A [shared] account came from the phone with the phone's own token: signing
+ * the watch out only forgets it, since revoking it would sign the phone out too.
  */
 @Serializable
 data class WatchAccount(
     val apiBase: String,
     val handle: String,
     val token: String,
-    val clientId: String,
-    val clientSecret: String,
-    val revocationEndpoint: String,
+    val clientId: String = "",
+    val clientSecret: String = "",
+    val revocationEndpoint: String = "",
+    val shared: Boolean = false,
 ) {
     override fun toString(): String = "WatchAccount($handle at $apiBase)"
 }
