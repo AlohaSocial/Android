@@ -1,6 +1,6 @@
 # 09 — Platform integrations
 
-Where the app meets the rest of Android: home-screen widgets, launcher shortcuts and sharing, links, windows and foldables, the keyboard, media sessions and the app lock. Written from the code. Android TV and Wear OS are later increments; nothing for them is built.
+Where the app meets the rest of Android: home-screen widgets, launcher shortcuts and sharing, links, windows and foldables, the keyboard, media sessions and the app lock. Written from the code. Android TV and Wear OS are apps of their own, [16-tv.md](16-tv.md) and [15-wear.md](15-wear.md).
 
 ## Widgets
 

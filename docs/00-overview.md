@@ -6,7 +6,7 @@ This is the Apple app's specification, carried over as the product contract for 
 
 | Topic | Android |
 |---|---|
-| Platforms | Phone, tablet and foldable in 1.0; Android TV in 1.1, Wear OS in 1.2. No watch or TV target ships with 1.0. |
+| Platforms | Phone, tablet and foldable in 1.0; Android TV and Wear OS as apps of their own, later ([16-tv.md](16-tv.md), [15-wear.md](15-wear.md)). No watch or TV target ships with 1.0. |
 | Design | Material 3 (1.4 stable) instead of the iOS materials; the navigation suite is a bar, rail or drawer by window size. |
 | Dependencies | Jetpack and a short list of libraries instead of "Apple frameworks only"; no analytics or crash SDK in either flavor. |
 | Distribution | Two flavors: `generic` for F-Droid, `gplay` for Google Play. |
