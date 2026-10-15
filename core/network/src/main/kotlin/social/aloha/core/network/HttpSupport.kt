@@ -5,7 +5,11 @@ package social.aloha.core.network
 
 import java.io.IOException
 import kotlin.coroutines.resume
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import okhttp3.Call
@@ -24,7 +28,9 @@ import okio.Buffer
 import okio.BufferedSink
 import okio.ForwardingSink
 import okio.buffer
+import social.aloha.core.model.LogArea
 import social.aloha.core.network.tls.UntrustedServerCertificateException
+import timber.log.Timber
 
 /**
  * Sends [request], suspending until the answer arrives; cancelling the coroutine cancels the call. An
@@ -50,6 +56,30 @@ internal suspend fun OkHttpClient.send(
             }
         },
     )
+}
+
+/**
+ * [read]s an answer whose body may still break off on its way in, after the headers arrived: a connection
+ * reset, a proxy closing early, a gzip stream cut short. That is a transport failure like any other, never
+ * an exception that escapes the request; cancelling the caller still cancels.
+ */
+internal suspend inline fun <T> readingBody(read: () -> ApiResult<T>): ApiResult<T> = try {
+    read()
+} catch (e: IOException) {
+    currentCoroutineContext().ensureActive()
+    ApiResult.Failure(e.toApiError())
+}
+
+/**
+ * A refusal's body, to word its error, read off the caller's thread; empty when it breaks off on its way in,
+ * so the error is still the status's: a 401 still asks for a new sign-in, a 429 still holds the host back.
+ */
+internal suspend fun Response.errorBody(io: CoroutineDispatcher): String = try {
+    withContext(io) { body.string() }
+} catch (e: IOException) {
+    currentCoroutineContext().ensureActive()
+    Timber.tag(LogArea.Network.name).w("Error body of %d broke off: %s", code, e.javaClass.simpleName)
+    ""
 }
 
 /**

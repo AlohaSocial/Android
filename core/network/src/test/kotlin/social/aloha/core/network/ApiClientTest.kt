@@ -9,6 +9,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.runTest
 import mockwebserver3.MockResponse
 import mockwebserver3.MockWebServer
+import mockwebserver3.SocketEffect
 import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
@@ -215,6 +216,24 @@ class ApiClientTest {
     }
 
     @Test
+    fun `a body that breaks off after the headers is a transport error, not a crash`() = runTest {
+        server.enqueue(
+            MockResponse.Builder().body("[" + "{},".repeat(BROKEN_BODY_ITEMS) + "{}]")
+                .onResponseBody(SocketEffect.CloseSocket()).build(),
+        )
+        assertInstanceOf(ApiError.Transport::class.java, client().execute(emojis()).errorOrNull())
+    }
+
+    @Test
+    fun `a refusal whose body breaks off is still the refusal its status says`() = runTest {
+        server.enqueue(
+            MockResponse.Builder().code(401).body("{\"error\":\"" + "x".repeat(BROKEN_BODY_ITEMS) + "\"}")
+                .onResponseBody(SocketEffect.CloseSocket()).build(),
+        )
+        assertInstanceOf(ApiError.Unauthorised::class.java, client().execute(emojis()).errorOrNull())
+    }
+
+    @Test
     fun `a body of the wrong shape is a decoding error, not a crash`() = runTest {
         respond("""{"not":"a list"}""")
         val single = request(Endpoint("api/v1/x"), CustomEmojiDto.serializer()) { it.toDomain() }
@@ -233,5 +252,6 @@ class ApiClientTest {
     private companion object {
         const val SHORT_MILLIS = 300L
         const val SLOW_MILLIS = 1000L
+        const val BROKEN_BODY_ITEMS = 50_000
     }
 }
