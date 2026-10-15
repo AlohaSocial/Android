@@ -28,6 +28,7 @@ android {
 dependencies {
     implementation(project(":core:network"))
     implementation(project(":core:datastore"))
+    implementation(project(":core:html"))
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.ui)
     implementation(libs.compose.ui.tooling.preview)
@@ -37,6 +38,10 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.wear.compose.material3)
     implementation(libs.wear.compose.foundation)
+    implementation(libs.wear.compose.navigation3)
+    implementation(libs.androidx.navigation3.runtime)
+    implementation(libs.androidx.navigation3.ui)
+    implementation(libs.androidx.lifecycle.viewmodel.navigation3)
     implementation(libs.wear.input)
     implementation(libs.wear.phone.interactions)
     implementation(libs.wear.tooling.preview)

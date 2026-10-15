@@ -6,6 +6,12 @@ package social.aloha.wear.auth
 import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
@@ -34,6 +40,15 @@ data class WatchAccount(
 @Singleton
 class WatchAccounts @Inject constructor(private val vault: TokenVault) {
     private val json = Json { ignoreUnknownKeys = true }
+    private val changes = MutableStateFlow<WatchAccount?>(null)
+    private val changing = Mutex()
+
+    /** The account as it changes, starting from what the vault holds; null while signed out. */
+    val account: Flow<WatchAccount?> = flow {
+        // under the lock, so a sign-in or sign-out at the same moment is never overwritten by what was read
+        changing.withLock { changes.value = current() }
+        emitAll(changes)
+    }
 
     // a vault that cannot be read leaves the watch signed out, never a tile or a request that fails
     suspend fun current(): WatchAccount? = try {
@@ -44,11 +59,20 @@ class WatchAccounts @Inject constructor(private val vault: TokenVault) {
         null
     }
 
-    suspend fun keep(account: WatchAccount) {
+    suspend fun keep(account: WatchAccount): Unit = changing.withLock {
         vault.put(VaultKey.WatchAccount, json.encodeToString(WatchAccount.serializer(), account))
+        changes.value = account
     }
 
-    suspend fun forget() {
+    suspend fun forget(): Unit = changing.withLock { remove() }
+
+    /** Forgets the account only while it still holds [token]: one signed in since then stays. */
+    suspend fun forget(token: String): Unit = changing.withLock {
+        if (current()?.token == token) remove()
+    }
+
+    private suspend fun remove() {
         vault.remove(VaultKey.WatchAccount)
+        changes.value = null
     }
 }

@@ -111,7 +111,8 @@ class WatchSignIn @Inject constructor(
      */
     suspend fun signOut() {
         val account = accounts.current() ?: return
-        accounts.forget()
+        // only the account read here: one kept since, by a sign-in or a handover, stays
+        accounts.forget(account.token)
         val base = account.apiBase.toHttpUrlOrNull()
         val revocation = account.revocationEndpoint.toHttpUrlOrNull()
         if (!account.shared && base != null && revocation != null) {

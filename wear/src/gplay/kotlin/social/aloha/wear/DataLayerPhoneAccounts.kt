@@ -82,7 +82,7 @@ class PhoneSignOutService : WearableListenerService() {
         scope.launch {
             val current = accounts.current()
             if (current?.shared == true && WatchHandover.digest(current.token) == gone.tokenDigest) {
-                accounts.forget()
+                accounts.forget(current.token)
             }
         }
     }

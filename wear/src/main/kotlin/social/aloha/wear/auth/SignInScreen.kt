@@ -8,33 +8,22 @@ import android.app.RemoteInput
 import android.view.inputmethod.EditorInfo
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.heading
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.wear.compose.foundation.lazy.TransformingLazyColumn
-import androidx.wear.compose.foundation.lazy.TransformingLazyColumnItemScope
 import androidx.wear.compose.foundation.lazy.rememberTransformingLazyColumnState
-import androidx.wear.compose.material3.Button
 import androidx.wear.compose.material3.CircularProgressIndicator
-import androidx.wear.compose.material3.ListHeader
 import androidx.wear.compose.material3.ScreenScaffold
-import androidx.wear.compose.material3.SurfaceTransformation
-import androidx.wear.compose.material3.Text
-import androidx.wear.compose.material3.lazy.TransformationSpec
 import androidx.wear.compose.material3.lazy.rememberTransformationSpec
-import androidx.wear.compose.material3.lazy.transformedHeight
 import androidx.wear.input.RemoteInputIntentHelper
 import androidx.wear.input.wearableExtender
+import social.aloha.wear.Centred
+import social.aloha.wear.Heading
 import social.aloha.wear.R
+import social.aloha.wear.WideButton
 
 private const val SERVER_KEY = "server"
 
@@ -78,9 +67,7 @@ internal fun SignInScreen(
     val spec = rememberTransformationSpec()
     ScreenScaffold(scrollState = list) { padding ->
         TransformingLazyColumn(state = list, contentPadding = padding) {
-            item {
-                ListHeader(Modifier.semantics { heading() }) { Text(stringResource(R.string.wear_app_name)) }
-            }
+            item { Heading(spec, stringResource(R.string.wear_app_name)) }
             when (state) {
                 SignInUiState.Loading -> item { CircularProgressIndicator() }
 
@@ -110,26 +97,6 @@ internal fun SignInScreen(
         }
     }
 }
-
-/** A full-width button that shrinks and fades at the round screen's edge as the list scrolls. */
-@Composable
-private fun TransformingLazyColumnItemScope.WideButton(spec: TransformationSpec, label: String, onClick: () -> Unit) {
-    Button(
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth().transformedHeight(this, spec),
-        transformation = SurfaceTransformation(spec),
-    ) {
-        Text(label)
-    }
-}
-
-@Composable
-private fun Centred(text: String) {
-    // kept off the round screen's rim, where a line's ends would meet the edge and the scroll indicator
-    Text(text, Modifier.fillMaxWidth().padding(horizontal = TEXT_INSET), textAlign = TextAlign.Center)
-}
-
-private val TEXT_INSET = 14.dp
 
 private fun WatchSignInProblem.text(): Int = when (this) {
     WatchSignInProblem.Address -> R.string.wear_problem_address

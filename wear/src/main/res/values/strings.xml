@@ -34,4 +34,60 @@
     <string name="wear_problem_refused">Sign-in was declined on your phone.</string>
     <!-- The phone app had no account to hand over, or did not answer in time -->
     <string name="wear_problem_nothing_on_phone">Your phone didn’t hand over an account. Sign in to Aloha Social there first, or enter your server.</string>
+    <!-- Title of the watch's home timeline -->
+    <string name="wear_home">Home</string>
+    <!-- Button and title of the notifications list -->
+    <string name="wear_notifications">Notifications</string>
+    <!-- Button that opens the account the watch is signed in to, where it can sign out -->
+    <string name="wear_account">Account</string>
+    <!-- Shown when a list or a post could not be loaded -->
+    <string name="wear_load_failed">Couldn’t load this. Check the watch’s connection.</string>
+    <!-- Button that loads a list again -->
+    <string name="wear_retry">Try again</string>
+    <!-- Shown when a list has nothing in it -->
+    <string name="wear_nothing_yet">Nothing here yet.</string>
+    <!-- Above a boosted post; %1$s is who boosted it -->
+    <string name="wear_boosted_by">Boosted by %1$s</string>
+    <!-- A post's content warning, shown in place of its text; %1$s is the warning -->
+    <string name="wear_content_warning">Content warning: %1$s</string>
+    <!-- Button that shows a post hidden behind its content warning -->
+    <string name="wear_show_post">Show post</string>
+    <!-- Switch that favourites a post or takes the favourite back -->
+    <string name="wear_favourite">Favourite</string>
+    <!-- Switch that boosts a post or takes the boost back -->
+    <string name="wear_boost">Boost</string>
+    <!-- Switch that bookmarks a post or removes the bookmark -->
+    <string name="wear_bookmark">Bookmark</string>
+    <!-- Button that answers a post; also the label of the answer input -->
+    <string name="wear_reply">Reply</string>
+    <!-- Shown once an answer was posted -->
+    <string name="wear_reply_sent">Reply sent.</string>
+    <!-- Shown when a favourite, boost, bookmark or reply did not go through -->
+    <string name="wear_action_failed">That didn’t go through. Try again.</string>
+    <!-- Notification: %1$s is who favourited the reader's post -->
+    <string name="wear_notice_favourite">%1$s favourited your post</string>
+    <!-- Notification: %1$s is who boosted the reader's post -->
+    <string name="wear_notice_boost">%1$s boosted your post</string>
+    <!-- Notification: %1$s is who mentioned the reader -->
+    <string name="wear_notice_mention">%1$s mentioned you</string>
+    <!-- Notification: %1$s is who followed the reader -->
+    <string name="wear_notice_follow">%1$s followed you</string>
+    <!-- Notification: %1$s is who asked to follow the reader -->
+    <string name="wear_notice_follow_request">%1$s asked to follow you</string>
+    <!-- Notification: %1$s is who posted, among those the reader hears every post of -->
+    <string name="wear_notice_status">%1$s posted</string>
+    <!-- Notification: %1$s is who edited a post the reader interacted with -->
+    <string name="wear_notice_update">%1$s edited a post</string>
+    <!-- Notification: a poll the reader voted in or made has ended; %1$s is its author -->
+    <string name="wear_notice_poll">%1$s’s poll has ended</string>
+    <!-- Notification of any other kind; %1$s is who it is from -->
+    <string name="wear_notice_other">From %1$s</string>
+    <!-- Ready answers offered next to voice and keyboard when replying from the watch -->
+    <string-array name="wear_quick_replies">
+        <item>Thanks!</item>
+        <item>Sounds good</item>
+        <item>On my way</item>
+        <item>Talk later</item>
+        <item>👍</item>
+    </string-array>
 </resources>

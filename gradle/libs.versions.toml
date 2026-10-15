@@ -77,6 +77,7 @@ wear-compose-foundation = { module = "androidx.wear.compose:compose-foundation",
 wear-phone-interactions = { module = "androidx.wear:wear-phone-interactions", version.ref = "wearPhoneInteractions" }
 wear-tooling-preview = { module = "androidx.wear:wear-tooling-preview", version.ref = "wearToolingPreview" }
 wear-input = { module = "androidx.wear:wear-input", version.ref = "wearInput" }
+wear-compose-navigation3 = { module = "androidx.wear.compose:compose-navigation3", version.ref = "wearCompose" }
 play-services-wearable = { module = "com.google.android.gms:play-services-wearable", version.ref = "playServicesWearable" }
 kotlinx-coroutines-play-services = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-play-services", version.ref = "coroutines" }
 androidx-media3-transformer = { module = "androidx.media3:media3-transformer", version.ref = "media3" }
