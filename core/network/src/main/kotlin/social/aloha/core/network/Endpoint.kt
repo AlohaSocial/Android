@@ -21,6 +21,13 @@ public enum class Authentication {
      */
     NextcloudSession,
 
+    /**
+     * A route that takes either: the app password as [NextcloudSession] where the Nextcloud is connected,
+     * since only the session may sign other apps out, and the Social bearer token otherwise. Nextcloud
+     * Social takes the token on these routes from 0.26.220; before, they are the session's alone.
+     */
+    SessionOrBearer,
+
     /** A public Nextcloud OCS route: no credential, but `OCS-APIRequest: true`, which OCS requires of every call. */
     NextcloudPublic,
 }

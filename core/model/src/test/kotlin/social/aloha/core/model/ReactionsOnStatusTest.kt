@@ -29,4 +29,15 @@ class ReactionsOnStatusTest {
         assertEquals(true, on("nextcloud-social", "0.26.221-rc1"))
         assertEquals(false, on("mastodon", "4.5.0"))
     }
+
+    @Test
+    fun `the account's own pages take the sign-in token from 0,26,220 on, and only on Nextcloud Social`() {
+        fun pages(name: String, version: String) =
+            ServerCapabilities.minimal("https://x.test/").copy(softwareName = name, softwareVersion = version)
+                .accountPagesWithToken
+        assertEquals(false, pages("nextcloud-social", "0.26.219"))
+        assertEquals(true, pages("nextcloud-social", "0.26.220"))
+        assertEquals(false, pages("nextcloud-social", "dev"))
+        assertEquals(false, pages("mastodon", "4.5.0"))
+    }
 }

@@ -86,7 +86,10 @@ internal fun AuthorizedAppsScreen(
             )
         } else {
             LazyColumn(Modifier.padding(padding).fillMaxSize().readingColumn()) {
-                items(state.apps, key = { it.id }) { app -> AppRow(app) { revoking = app.id } }
+                if (!state.canRevoke) item(key = "connect") { ConnectToRevoke(onConnect) }
+                items(state.apps, key = { it.id }) { app ->
+                    AppRow(app, onRevoke = { revoking = app.id }.takeIf { state.canRevoke })
+                }
             }
         }
     }
@@ -110,7 +113,17 @@ internal fun AuthorizedAppsScreen(
 }
 
 @Composable
-private fun AppRow(app: AuthorizedApp, onRevoke: () -> Unit) {
+private fun ConnectToRevoke(onConnect: () -> Unit) {
+    ListItem(
+        headlineContent = { Text(stringResource(R.string.apps_revoke_needs_nextcloud)) },
+        trailingContent = {
+            TextButton(onClick = onConnect) { Text(stringResource(R.string.nextcloud_page_connect)) }
+        },
+    )
+}
+
+@Composable
+private fun AppRow(app: AuthorizedApp, onRevoke: (() -> Unit)?) {
     val name = app.shownName()
     ListItem(
         headlineContent = { Text(name) },
@@ -126,13 +139,16 @@ private fun AppRow(app: AuthorizedApp, onRevoke: () -> Unit) {
                 }
             }
         },
-        trailingContent = {
-            val label = stringResource(R.string.apps_revoke_for, name)
-            TextButton(onClick = onRevoke, modifier = Modifier.semantics { contentDescription = label }) {
-                Text(stringResource(R.string.apps_revoke), color = MaterialTheme.colorScheme.error)
-            }
-        },
+        trailingContent = onRevoke?.let { revoke -> { RevokeButton(name, revoke) } },
     )
+}
+
+@Composable
+private fun RevokeButton(name: String, onRevoke: () -> Unit) {
+    val label = stringResource(R.string.apps_revoke_for, name)
+    TextButton(onClick = onRevoke, modifier = Modifier.semantics { contentDescription = label }) {
+        Text(stringResource(R.string.apps_revoke), color = MaterialTheme.colorScheme.error)
+    }
 }
 
 @Composable

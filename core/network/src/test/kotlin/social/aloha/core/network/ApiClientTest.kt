@@ -85,6 +85,20 @@ class ApiClientTest {
     }
 
     @Test
+    fun `a route taking either sends the app password where there is one, the token otherwise`() = runTest {
+        respond("[]")
+        val session = client().execute(emojis(Authentication.SessionOrBearer))
+        assertEquals(ApiResult.Success(emptyList<CustomEmoji>()), session)
+        assertEquals("Basic YWxpY2U6cHc=", server.takeRequest(1, TimeUnit.SECONDS)?.headers?.get("Authorization"))
+        respond("[]")
+        val bearer = client(Credentials("secret-token")).execute(emojis(Authentication.SessionOrBearer))
+        assertEquals(ApiResult.Success(emptyList<CustomEmoji>()), bearer)
+        val recorded = server.takeRequest(1, TimeUnit.SECONDS)
+        assertEquals("Bearer secret-token", recorded?.headers?.get("Authorization"))
+        assertEquals("true", recorded?.headers?.get("OCS-APIRequest"))
+    }
+
+    @Test
     fun `a refused token asks for a new sign-in, a refused app password does not`() = runTest {
         var told = 0
         val credentials = Credentials("secret-token", "Basic YWxpY2U6cHc=")

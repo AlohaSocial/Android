@@ -35,17 +35,17 @@ private const val ZIP = "application/zip"
 private const val CSV = "text/csv"
 
 /**
- * The account to keep or take to another server. Nextcloud-session routes, and downloads rather than
- * JSON, so they are for `ApiClient.download`.
+ * The account to keep or take to another server. Routes taking the session or the token, and downloads
+ * rather than JSON, so they are for `ApiClient.download`.
  */
 public object ExportEndpoints {
     /** The whole account as a Mastodon-style archive: a zip of the actor, its posts and its media. */
     public fun archive(): Endpoint =
-        Endpoint("api/v1/migration/export", authentication = Authentication.NextcloudSession)
+        Endpoint("api/v1/migration/export", authentication = Authentication.SessionOrBearer)
 
     /** One of the account's lists as the CSV other servers import, without the whole archive. */
     public fun list(kind: MigrationListKind): Endpoint =
-        Endpoint("api/v1/migration/export/${kind.wire}", authentication = Authentication.NextcloudSession)
+        Endpoint("api/v1/migration/export/${kind.wire}", authentication = Authentication.SessionOrBearer)
 }
 
 /** Taking the account somewhere else, or bringing one here. */
@@ -116,13 +116,13 @@ public object MigrationEndpoints {
         aliases(Endpoint("api/v1/migration/aliases", HttpMethod.DELETE, query = listOf(QueryItem("alias", alias))))
 }
 
-/** The reader's own numbers. A Nextcloud-session route: a bearer token answers 401. */
+/** The reader's own numbers; routes taking the session or the token. */
 public object StatisticsEndpoints {
     /** The same numbers over [days] (0 for everything) as a CSV; a download, so `ApiClient.download`. */
     public fun export(days: Int): Endpoint = Endpoint(
         "api/v1/statistics/export",
         query = listOf(QueryItem("days", days.toString())),
-        authentication = Authentication.NextcloudSession,
+        authentication = Authentication.SessionOrBearer,
     )
 
     /** [days] 0 means everything; [fresh] bypasses the server's cache. */
@@ -130,13 +130,13 @@ public object StatisticsEndpoints {
         Endpoint(
             "api/v1/statistics",
             query = listOf(QueryItem("days", days.toString())) + flagQuery("fresh", fresh),
-            authentication = Authentication.NextcloudSession,
+            authentication = Authentication.SessionOrBearer,
         ),
         StatisticsDto.serializer(),
     ) { it.toDomain() }
 }
 
-/** The reader's video channels, PeerTube's `Group`. A Nextcloud-session route; every answer is `{channels: [...]}`. */
+/** The reader's video channels, PeerTube's `Group`. Session or token; every answer is `{channels: [...]}`. */
 public object ChannelEndpoints {
     private fun channels(endpoint: Endpoint): ApiRequest<List<VideoChannel>> =
         request(endpoint, ListOrMemberSerializer(VideoChannelDto.serializer(), "channels")) { list ->
@@ -144,7 +144,7 @@ public object ChannelEndpoints {
         }
 
     public fun all(): ApiRequest<List<VideoChannel>> =
-        channels(Endpoint("api/v1/channels", authentication = Authentication.NextcloudSession))
+        channels(Endpoint("api/v1/channels", authentication = Authentication.SessionOrBearer))
 
     public fun create(handle: String, name: String, description: String): ApiRequest<List<VideoChannel>> = channels(
         Endpoint(
@@ -153,7 +153,7 @@ public object ChannelEndpoints {
             body = Body.Form(
                 listOf(QueryItem("handle", handle), QueryItem("name", name), QueryItem("description", description)),
             ),
-            authentication = Authentication.NextcloudSession,
+            authentication = Authentication.SessionOrBearer,
         ),
     )
 
@@ -162,7 +162,7 @@ public object ChannelEndpoints {
             "api/v1/channels/$id",
             HttpMethod.PUT,
             body = Body.Form(listOf(QueryItem("name", name), QueryItem("description", description))),
-            authentication = Authentication.NextcloudSession,
+            authentication = Authentication.SessionOrBearer,
         ),
     )
 }

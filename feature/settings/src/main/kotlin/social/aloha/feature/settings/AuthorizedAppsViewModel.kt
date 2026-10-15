@@ -25,6 +25,8 @@ internal data class AuthorizedAppsUiState(
     val status: PageStatus = PageStatus.Loading,
     val apps: List<AuthorizedApp> = emptyList(),
     val revokeFailed: Boolean = false,
+    /** Through the sign-in token alone the server lists the apps but lets none but this one go. */
+    val canRevoke: Boolean = true,
 )
 
 /** What the authorized apps page asks for. */
@@ -77,7 +79,10 @@ internal class AuthorizedAppsViewModel @AssistedInject constructor(
                 state.update { it.copy(status = blocked) }
             } ?: return@launch
             when (val answer = extras.authorizedApps(account)) {
-                is Answer.Got -> state.update { it.copy(status = PageStatus.Ready, apps = answer.value) }
+                is Answer.Got -> state.update {
+                    it.copy(status = PageStatus.Ready, apps = answer.value, canRevoke = account.nextcloudConnected)
+                }
+
                 is Answer.Missed -> state.update { it.copy(status = PageStatus.Failed) }
             }
         }

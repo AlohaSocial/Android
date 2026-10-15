@@ -35,13 +35,13 @@ import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.model.SignedInAccount
 
-/** Where a page of what only the Nextcloud session reaches stands. */
+/** Where a page of the account's own, which older servers show only to the Nextcloud session, stands. */
 internal enum class PageStatus { Loading, NeedsConnection, Failed, Ready }
 
 /** Whether [account] can ask at all: a page says so before asking rather than after a refusal. */
 internal fun pageStatusOf(account: SignedInAccount?): PageStatus? = when {
     account == null -> PageStatus.Failed
-    !account.nextcloudConnected -> PageStatus.NeedsConnection
+    !account.nextcloudConnected && !account.capabilities.accountPagesWithToken -> PageStatus.NeedsConnection
     else -> null
 }
 

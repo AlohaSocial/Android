@@ -75,6 +75,13 @@ public data class ServerCapabilities(
      */
     val reactionsOnStatus: Boolean get() = isNextcloudSocial && atLeast(softwareVersion, REACTIONS_ON_STATUS)
 
+    /**
+     * Whether the account's own pages (memories, statistics, video channels, the exports and the authorized
+     * apps) take the sign-in token, so they need no Nextcloud connection: Nextcloud Social from 0.26.220 on.
+     * Before, a token answers 401 there, which says nothing a probe could tell from a revoked token.
+     */
+    val accountPagesWithToken: Boolean get() = isNextcloudSocial && atLeast(softwareVersion, ACCOUNT_PAGES_WITH_TOKEN)
+
     /** How this server measures a post against its character limit. */
     val lengthRule: LengthRule get() = if (isNextcloudSocial) LengthRule.CodePoints else LengthRule.Mastodon
 
@@ -108,6 +115,7 @@ public data class ServerCapabilities(
     public companion object {
         private const val APP_PREFIX = "index.php/apps/social/"
         private val REACTIONS_ON_STATUS = listOf(0, 26, 221)
+        private val ACCOUNT_PAGES_WITH_TOKEN = listOf(0, 26, 220)
 
         /** Raised whenever detection learns a new field: 1 added the live feeds, 2 the Shorts narrowing. */
         public const val CURRENT_FORMAT: Int = 2

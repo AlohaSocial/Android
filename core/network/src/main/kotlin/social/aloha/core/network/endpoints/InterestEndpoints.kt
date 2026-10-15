@@ -145,18 +145,18 @@ public object SubscriptionEndpoints {
 }
 
 /**
- * The reader's own past posts. These routes take a Nextcloud session, not the Social token: a
- * bearer token answers 401, so they go out with the app password.
+ * The reader's own past posts, through the session or the token, as [Authentication.SessionOrBearer]
+ * says.
  */
 public object MemoryEndpoints {
     /** Posts of the reader's from this calendar day in earlier years. */
     public fun onThisDay(): ApiRequest<List<Status>> = listRequest(
-        Endpoint("api/v1/memories/on_this_day", authentication = Authentication.NextcloudSession),
+        Endpoint("api/v1/memories/on_this_day", authentication = Authentication.SessionOrBearer),
         StatusDto.serializer(),
     ) { it.toDomain() }
 
     public fun recap(): ApiRequest<WeeklyRecap> = request(
-        Endpoint("api/v1/memories/recap", authentication = Authentication.NextcloudSession),
+        Endpoint("api/v1/memories/recap", authentication = Authentication.SessionOrBearer),
         WeeklyRecapDto.serializer(),
     ) { it.toDomain() }
 
@@ -165,12 +165,12 @@ public object MemoryEndpoints {
             "api/v1/memories/recap",
             HttpMethod.POST,
             body = Body.Form(listOf(QueryItem("enabled", enabled.asFlag()))),
-            authentication = Authentication.NextcloudSession,
+            authentication = Authentication.SessionOrBearer,
         ),
     )
 }
 
-/** The reader's own posts waiting for a moderator; a Nextcloud-session route like the memories. */
+/** The reader's own posts waiting for a moderator; a Nextcloud-session route. */
 public object ReviewEndpoints {
     public fun held(): ApiRequest<HeldPostsPage> = request(
         Endpoint("api/v1/review", authentication = Authentication.NextcloudSession),

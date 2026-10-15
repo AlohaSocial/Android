@@ -79,7 +79,9 @@ internal fun Endpoint.resolve(base: HttpUrl): HttpUrl {
 internal fun HttpUrl.sameOrigin(other: HttpUrl): Boolean =
     scheme == other.scheme && host == other.host && port == other.port
 
-private val OCS_ROUTES = setOf(Authentication.NextcloudSession, Authentication.NextcloudPublic)
+// the header costs a bearer request nothing, so a route taking either sends it whichever goes out
+private val OCS_ROUTES =
+    setOf(Authentication.NextcloudSession, Authentication.SessionOrBearer, Authentication.NextcloudPublic)
 
 private val JSON_MEDIA = "application/json; charset=utf-8".toMediaType()
 
