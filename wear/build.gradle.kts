@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.aloha.android.hilt)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.aloha.screenshot)
 }
 
 android {
