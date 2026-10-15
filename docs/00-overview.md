@@ -84,7 +84,7 @@ its own gestures. They are not filters bolted onto one list.
 | **Home** (text) | Mastodon | Universal |
 | **Photos** | Pixelfed | `only_media=true` on Nextcloud Social; client-side filter elsewhere |
 | **Video** | PeerTube | `only_video=true` on Nextcloud Social; client-side filter elsewhere |
-| **Shorts** | Loops | Client-side classification everywhere (see [06-media-modes.md](06-media-modes.md) §4) |
+| **Shorts** | Loops | `only_short=true` on Nextcloud Social 0.26.222 and later; client-side classification everywhere (see [06-media-modes.md](06-media-modes.md) §4) |
 | **News** | — | `only_news=true` on Nextcloud Social only; hidden elsewhere |
 | **Audio** | — | Client-side classification everywhere |
 

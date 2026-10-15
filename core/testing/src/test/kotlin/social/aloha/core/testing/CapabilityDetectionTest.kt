@@ -52,6 +52,8 @@ class CapabilityDetectionTest {
         assertTrue(capabilities.stories && capabilities.collections && capabilities.watchPositions)
         assertTrue(capabilities.groupedNotifications && capabilities.filtersV2 && capabilities.editHistory)
         assertTrue(capabilities.preferencesWrite)
+        // the corpus's 0.26.97 predates `features.shorts`, so Shorts still narrows by `only_video`
+        assertFalse(capabilities.onlyShortFilter)
         assertEquals(null, capabilities.streamingUrl)
         assertEquals(null, capabilities.webPushVapidKey)
         assertEquals(detectedAt, capabilities.detectedAt)

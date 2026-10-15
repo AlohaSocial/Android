@@ -141,6 +141,7 @@ class LiveInstanceTest {
         println("LIVE apiBase=${account.apiBase} handle=${account.handle} caps=${account.capabilities}")
         assertTrue(account.capabilities.isNextcloudSocial)
         assertTrue(account.capabilities.onlyVideoFilter)
+        assertTrue(account.capabilities.onlyShortFilter)
         val me = clients.forAccount(account)?.execute(AccountEndpoints.verifyCredentials())
         assertTrue("$me", me is ApiResult.Success)
     }

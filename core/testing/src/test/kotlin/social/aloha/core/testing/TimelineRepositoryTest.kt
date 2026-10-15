@@ -319,6 +319,29 @@ class TimelineRepositoryTest {
     }
 
     @Test
+    fun `a server that announces shorts is asked for them alone`() = runBlocking {
+        val server = numbered {
+            newest = 40
+            narrows = true
+            media = {
+                when {
+                    it % 2 == 0 -> listOf(NumberedTimeline.video(it, width = 1080, height = 1920, duration = 20.0))
+                    else -> listOf(NumberedTimeline.video(it, width = 1920, height = 1080, duration = 600.0))
+                }
+            }
+        }
+        val capabilities = ServerCapabilities.minimal(server.url("/").toString())
+            .copy(onlyMediaFilter = true, onlyVideoFilter = true, onlyShortFilter = true)
+        val account = signedInAt(server.url("/"), capabilities)
+        val shorts = TimelineKey(FeedMode.Shorts, TimelineSource.Home)
+        timelines.refresh(account, shorts, RefreshPlan.of(false, null))
+        assertEquals((40 downTo 2 step 2).map(Int::toString), rows(account, shorts).ids())
+        val asked = server.takeRequest().url
+        assertEquals("true", asked.queryParameter("only_short"))
+        assertEquals(null, asked.queryParameter("only_video"))
+    }
+
+    @Test
     fun `photos keep only photos where the server's only_media lets video through`() = runBlocking {
         val server = numbered {
             newest = 20

@@ -140,6 +140,14 @@ class EndpointsTest {
     }
 
     @Test
+    fun `only_short is sent alone since every short is a video`() {
+        val filters = TimelineFilters(onlyVideo = true, onlyShort = true)
+        val endpoint = TimelineEndpoints.timeline(TimelineSource.Hashtag("loops"), filters).endpoint
+        assertEquals("true", endpoint.queryValue("only_short"))
+        assertFalse("only_video" in endpoint.queryNames())
+    }
+
+    @Test
     fun `a hashtag feed asks for its other tags and this server alone where it says so`() {
         val tag = TimelineSource.Hashtag(
             "surf",

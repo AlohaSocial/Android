@@ -68,11 +68,12 @@ capability flag (§4).
 | Parameter | Meaning |
 |---|---|
 | `only_media` | Posts carrying any attachment. **Powers Photos mode.** |
-| `only_video` | Posts carrying a `video` attachment, *or* that arrived as a PeerTube `Video`. Narrower than `only_media` and wins when both are sent. **Powers Video and Shorts modes.** |
+| `only_video` | Posts carrying a `video` attachment, *or* that arrived as a PeerTube `Video`. Narrower than `only_media` and wins when both are sent. **Powers Video mode, and Shorts before 0.26.222.** |
+| `only_short` | Posts whose only attachment is a `video` of at most `limits.short_max_duration` seconds (180) and no wider than `limits.short_max_aspect_ratio` (1.0), both from `/api/v2/config`; a video whose length or shape the server has not measured is not one. Narrower than `only_video` and wins over it. From 0.26.222, announced by `/api/v2/config` `features.shorts`. **Powers Shorts mode.** |
 | `only_news` | Posts that arrived as an ActivityPub `Article`/`Page`, or whose text links outward. Not a subset of `only_media`. **Powers News mode.** |
 
 `{timeline}` is one of `home`, `account`, `public`, `direct`, `favourites`
-(case-insensitive). Anything else is a **422**. The same three parameters work
+(case-insensitive). Anything else is a **422**. The same parameters work
 on `/api/v1/timelines/tag/{hashtag}` and `/api/v1/timelines/list/{id}`.
 
 On servers without these, the modes fall back to fetching the ordinary timeline
@@ -251,7 +252,8 @@ Detection order, all of it tolerant of failure:
    `/api/v1/timelines/public?limit=1&only_video=true` and checking for a **422**
    (Mastodon accepts unknown query parameters silently, so absence of 422 is
    not proof — additionally gate on `softwareName == "nextcloud social"` for
-   `only_video` and `only_news`, which are this app's own).
+   `only_video` and `only_news`, which are this app's own). `only_short` is
+   not probed: `/api/v2/config` `features.shorts` announces it.
 5. `hlsLadder`, `emojiReactions` and `quotePosts` are latched on first sighting
    of the relevant field in a decoded entity, and persisted.
 

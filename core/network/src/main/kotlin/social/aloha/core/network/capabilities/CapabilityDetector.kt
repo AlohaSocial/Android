@@ -41,7 +41,8 @@ import social.aloha.core.network.unitRequest
  * as absent on 404. `only_video` and `only_news` are Nextcloud Social's own and are trusted only
  * when NodeInfo names Nextcloud Social: Mastodon ignores unknown parameters, so their acceptance
  * proves nothing there. Pixelfed's `/api/v2/config` `features`, which Nextcloud Social serves
- * publicly, is taken at its word where it speaks. `hls_url`, reactions and quotes have nothing
+ * publicly, is taken at its word where it speaks; its `shorts`, Nextcloud Social's own from 0.26.222,
+ * is the only word on `only_short`. `hls_url`, reactions and quotes have nothing
  * announcing them and are latched later, on first sighting in an entity.
  */
 public class CapabilityDetector internal constructor(executor: RequestExecutor, private val now: () -> Instant) {
@@ -81,6 +82,7 @@ public class CapabilityDetector internal constructor(executor: RequestExecutor, 
             onlyMediaFilter = found.onlyMedia,
             onlyVideoFilter = found.onlyVideo,
             onlyNewsFilter = found.onlyNews,
+            onlyShortFilter = found.onlyShort,
             watchPositions = found.watch,
             stories = found.stories,
             collections = found.collections,
@@ -106,6 +108,7 @@ public class CapabilityDetector internal constructor(executor: RequestExecutor, 
         val onlyMedia: Boolean,
         val onlyVideo: Boolean,
         val onlyNews: Boolean,
+        val onlyShort: Boolean,
         val languages: Map<String, List<String>>,
         val theme: NextcloudTheme?,
     )
@@ -137,6 +140,7 @@ public class CapabilityDetector internal constructor(executor: RequestExecutor, 
             onlyMedia = media.await(),
             onlyVideo = video.await(),
             onlyNews = news.await(),
+            onlyShort = features.await()?.shorts == true,
             languages = languages.await(),
             theme = theme.await(),
         )
@@ -223,6 +227,7 @@ internal data class PixelfedFeaturesDto(val features: Features? = null) {
     data class Features(
         @Serializable(with = OptionalBoolSerializer::class) val stories: Boolean? = null,
         @Serializable(with = OptionalBoolSerializer::class) val collections: Boolean? = null,
+        @Serializable(with = OptionalBoolSerializer::class) val shorts: Boolean? = null,
         @SerialName("stories_reactions") @Serializable(with = OptionalBoolSerializer::class)
         val storiesReactions: Boolean? = null,
     )

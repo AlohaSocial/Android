@@ -51,7 +51,7 @@ boosted in Home.
 | Home | `/timelines/{home,public}` | same |
 | Photos | `+ only_media=true` | fetch normally, filter to statuses whose attachments are all images, over-fetch ×3 to fill a page |
 | Video | `+ only_video=true` | filter to statuses carrying a `video` attachment, over-fetch ×5 |
-| Shorts | `+ only_video=true`, then client-side short classification | as Video, then classification, over-fetch ×8 |
+| Shorts | `+ only_short=true` where `/api/v2/config` `features.shorts` says so (0.26.222 on), `+ only_video=true` before; client-side short classification either way | as Video, then classification, over-fetch ×8 |
 | News | `+ only_news=true` | **mode hidden** — there is no client-side equivalent worth faking |
 | Audio | filter to `audio` attachments | same |
 
@@ -170,10 +170,12 @@ provisionally excluded from Shorts, and reclassified once the player reports
 Classification is a pure function in `AlohaModels` (`ContentClassifier`) with
 unit tests over a fixture corpus. It is the single place the rule lives.
 
-> **Server opportunity, not a requirement:** an `only_short` narrowing on
-> `/api/v1/timelines/{timeline}/`, decided on the write the same way `only_video`
-> and `only_news` are, would make this mode exact instead of heuristic. Worth
-> proposing upstream; the app must work without it.
+> **Server narrowing:** Nextcloud Social 0.26.222 and later take `only_short`
+> on the timelines and announce it with `/api/v2/config` `features.shorts`. Its
+> rule (one video, at most `limits.short_max_duration` seconds, no wider than
+> `limits.short_max_aspect_ratio`) is this classification without the hashtag
+> and one-minute shortcuts, so the device's pass over such a page leaves
+> nothing out. Older servers and Mastodon keep the classification alone.
 
 ### Experience
 

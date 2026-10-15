@@ -8,8 +8,10 @@ import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.doubleOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import mockwebserver3.Dispatcher
 import mockwebserver3.MockResponse
 import mockwebserver3.RecordedRequest
@@ -20,8 +22,8 @@ import okhttp3.HttpUrl
  * the dev instance): `max_id` answers what lies below, `min_id` the posts immediately above, `since_id`
  * the newest above. New posts are added by raising [newest]. Favouriting, boosting and bookmarking answer
  * as the server would, or with a server error while [failActions] is set; filters and markers answer empty.
- * [media] gives a status its attachments; with [narrows] set the server honours `only_media` and
- * `only_video` as Nextcloud Social does, leaving out what does not match before it pages.
+ * [media] gives a status its attachments; with [narrows] set the server honours `only_media`,
+ * `only_video` and `only_short` as Nextcloud Social does, leaving out what does not match before it pages.
  */
 public class NumberedTimeline(template: JsonObject = homeTemplate()) : Dispatcher() {
     @Volatile public var newest: Int = 0
@@ -85,6 +87,7 @@ public class NumberedTimeline(template: JsonObject = homeTemplate()) : Dispatche
         if (!narrows) return true
         val types = media(id).map { it["type"].toString().trim('"') }
         return when {
+            url.queryParameter("only_short") == "true" -> media(id).singleOrNull()?.let(::isShort) == true
             url.queryParameter("only_video") == "true" -> "video" in types
             url.queryParameter("only_media") == "true" -> types.isNotEmpty()
             else -> true
@@ -149,6 +152,18 @@ public class NumberedTimeline(template: JsonObject = homeTemplate()) : Dispatche
             ),
         )
 
+        /** Nextcloud Social's rule for `only_short`: a video no longer than 180 seconds, no wider than square. */
+        private fun isShort(attachment: JsonObject): Boolean {
+            val original = attachment["meta"]?.jsonObject?.get("original")?.jsonObject ?: return false
+            fun number(key: String) = original[key]?.jsonPrimitive?.doubleOrNull ?: 0.0
+            val duration = number("duration")
+            val width = number("width")
+            val height = number("height")
+            return attachment["type"]?.jsonPrimitive?.content == "video" &&
+                duration > 0 && duration <= SHORT_SECONDS && height > 0 && width > 0 && width <= height
+        }
+
+        private const val SHORT_SECONDS = 180.0
         private val ACTION = Regex(".*/api/v1/statuses/([^/]+)/(\\w+)")
         private const val DEFAULT_LIMIT = 20
         private const val OK = 200
