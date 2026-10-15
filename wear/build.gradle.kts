@@ -44,6 +44,10 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.navigation3)
     implementation(libs.wear.input)
     implementation(libs.wear.phone.interactions)
+    implementation(libs.wear.tiles)
+    implementation(libs.wear.protolayout.material3)
+    implementation(libs.wear.complications.data.source.ktx)
+    implementation(libs.androidx.concurrent.futures.ktx)
     implementation(libs.wear.tooling.preview)
     // the phone app handing over its account, over Wear's Data Layer
     "gplayImplementation"(libs.play.services.wearable)

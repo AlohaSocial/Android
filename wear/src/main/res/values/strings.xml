@@ -90,4 +90,21 @@
         <item>Talk later</item>
         <item>👍</item>
     </string-array>
+    <!-- Title of the tile with the newest mention, and its name in the tile picker -->
+    <string name="wear_tile_title">Latest mention</string>
+    <!-- The tile's mention: %1$s is who wrote it, %2$s its text -->
+    <string name="wear_tile_mention">%1$s: %2$s</string>
+    <!-- The tile's mention when it is a private message, whose text the tile does not show; %1$s is who sent it -->
+    <string name="wear_tile_private">%1$s sent you a private message</string>
+    <!-- The tile when nobody has mentioned the reader, or the server could not be asked -->
+    <string name="wear_tile_no_mention">No mentions to show.</string>
+    <!-- The tile while the watch is not signed in -->
+    <string name="wear_tile_signed_out">Open Aloha Social to sign in.</string>
+    <!-- Name of the unread-count complication in the watch face's picker -->
+    <string name="wear_complication_label">Unread notifications</string>
+    <!-- Spoken description of the unread count on the watch face -->
+    <plurals name="wear_unread">
+        <item quantity="one">%d unread notification</item>
+        <item quantity="other">%d unread notifications</item>
+    </plurals>
 </resources>

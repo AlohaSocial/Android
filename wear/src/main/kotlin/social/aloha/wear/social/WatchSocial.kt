@@ -67,6 +67,17 @@ class WatchSocial @Inject constructor(
 
     suspend fun post(id: String): WatchPost? = call(StatusEndpoints.status(id))?.let(::post)
 
+    /** Whether the watch holds an account, so a surface can say "sign in" rather than "nothing". */
+    suspend fun signedIn(): Boolean = accounts.current() != null
+
+    /** How many notifications the reader has not seen, for the watch face. */
+    suspend fun unreadCount(): Int? = call(NotificationEndpoints.unreadCount(grouped = false))?.count
+
+    /** The newest mention, for the tile; null when there is none or the server could not be asked. */
+    suspend fun latestMention(): WatchNotice? = call(
+        NotificationEndpoints.flat(limit = 1, types = listOf(NotificationKind.Mention.wire)),
+    )?.firstOrNull()?.notice()
+
     /** Favourites, boosts or bookmarks [post], or takes that back where it is set; the post as it is now. */
     suspend fun toggle(post: WatchPost, mark: Mark): WatchPost? {
         val action = when (mark) {
