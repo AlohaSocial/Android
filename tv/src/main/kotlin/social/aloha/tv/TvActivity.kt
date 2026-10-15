@@ -6,37 +6,71 @@ package social.aloha.tv
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Devices
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.tv.material3.MaterialTheme
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
+import androidx.navigation3.runtime.NavKey
+import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.runtime.rememberNavBackStack
+import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
+import androidx.navigation3.ui.NavDisplay
 import androidx.tv.material3.Surface
-import androidx.tv.material3.Text
+import dagger.hilt.android.AndroidEntryPoint
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import kotlinx.serialization.Serializable
+import social.aloha.core.data.AccountRepository
+import social.aloha.tv.account.AccountRoute
+import social.aloha.tv.signin.TvSignInRoute
 
 /** The TV app's one activity; every screen is a destination inside it. */
+@AndroidEntryPoint
 class TvActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent { TvApp() }
-    }
-}
-
-@Composable
-internal fun TvApp() {
-    MaterialTheme {
-        Surface(Modifier.fillMaxSize()) {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(stringResource(R.string.tv_app_name), style = MaterialTheme.typography.displayMedium)
+        setContent {
+            TvTheme {
+                Surface(Modifier.fillMaxSize()) { TvApp() }
             }
         }
     }
 }
 
-@Preview(device = Devices.TV_1080p)
+@Serializable
+internal data object AccountKey : NavKey
+
+@HiltViewModel
+internal class TvAppViewModel @Inject constructor(accounts: AccountRepository) : ViewModel() {
+    /** Whether an account is signed in; nothing until the accounts were read, so sign-in never flashes up first. */
+    val signedIn: Flow<Boolean> = accounts.activeOnceRead.map { it != null }
+}
+
+/** Sign-in until there is an account; then the app, which a lost account sends back to sign-in. */
 @Composable
-private fun TvAppPreview() = TvApp()
+private fun TvApp(viewModel: TvAppViewModel = hiltViewModel()) {
+    val signedIn by viewModel.signedIn.collectAsStateWithLifecycle(initialValue = null)
+    when (signedIn) {
+        null -> return
+        false -> return TvSignInRoute()
+        true -> Unit
+    }
+    val backStack = rememberNavBackStack(AccountKey)
+    NavDisplay(
+        backStack = backStack,
+        onBack = { backStack.removeLastOrNull() },
+        entryDecorators = listOf(
+            rememberSaveableStateHolderNavEntryDecorator(),
+            rememberViewModelStoreNavEntryDecorator(),
+        ),
+        entryProvider = entryProvider {
+            entry<AccountKey> { AccountRoute() }
+        },
+    )
+}

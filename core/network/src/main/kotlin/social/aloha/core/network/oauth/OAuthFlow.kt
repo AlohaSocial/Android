@@ -34,6 +34,9 @@ public object OAuthIdentity {
     /** The fallback when link verification failed on this device; PKCE makes a hijacked code useless. */
     public const val SCHEME_REDIRECT: String = "alohasocial://oauth-callback"
 
+    /** No redirect: the server shows the code on its page, for the person to type into a device without a browser. */
+    public const val OUT_OF_BAND_REDIRECT: String = "urn:ietf:wg:oauth:2.0:oob"
+
     /** Both are registered, one per line; Nextcloud Social splits `redirect_uris` on newlines. */
     public const val REGISTERED_REDIRECTS: String = "$APP_LINK_REDIRECT\n$SCHEME_REDIRECT"
 }

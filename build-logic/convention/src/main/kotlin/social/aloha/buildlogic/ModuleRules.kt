@@ -34,7 +34,9 @@ object ModuleRules {
     private val wear = setOf(MODEL, ":core:network", ":core:datastore", ":core:html")
 
     /** The TV app: its own UI on Compose for TV's Material, so none of the phone's UI modules. */
-    private val tv = setOf(MODEL)
+    private val tv = setOf(
+        MODEL, ":core:data", ":core:network", ":core:html", ":core:media", ":core:designsystem",
+    )
 
     fun allows(from: String, to: String, testOnly: Boolean = false): Boolean = when {
         from == ":app" -> true

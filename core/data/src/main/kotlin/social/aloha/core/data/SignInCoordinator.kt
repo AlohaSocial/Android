@@ -122,6 +122,18 @@ public class SignInCoordinator @Inject constructor(
         }
     }
 
+    /**
+     * Finishes an out-of-band sign-in with the [code] the server's page showed and the person typed. There is
+     * no callback to carry the state; PKCE ties the code to this sign-in instead. Claimed before the exchange,
+     * as [complete] is: a code the server refuses means starting over.
+     */
+    public suspend fun completeWithCode(code: String): SignInResult {
+        val pending = pending() ?: return SignInResult.NotForUs
+        val typed = code.trim().ifEmpty { return refused(null) }
+        cancel()
+        return exchange(pending, typed)
+    }
+
     private fun refused(reason: String?) = SignInResult.Failed(SignInProblem.Refused(reason))
 
     private suspend fun exchange(pending: PendingAuthorization, code: String): SignInResult {

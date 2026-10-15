@@ -6,4 +6,44 @@
 <resources>
     <!-- The TV app's name in the TV's app row -->
     <string name="tv_app_name">Aloha Social</string>
+    <!-- Heading of the TV's sign-in screen -->
+    <string name="tv_sign_in_title">Sign in to Aloha Social</string>
+    <!-- Asks for the server before signing in on the TV -->
+    <string name="tv_sign_in_body">Enter the server your account is on. You’ll finish signing in on your phone.</string>
+    <!-- Label of the input where the server address is entered -->
+    <string name="tv_server_label">Server, like cloud.example.org</string>
+    <!-- Button that looks for the server entered -->
+    <string name="tv_continue">Continue</string>
+    <!-- Shown while the TV looks for the server or finishes signing in -->
+    <string name="tv_working">One moment…</string>
+    <!-- Next to the QR code of the sign-in page; %1$s is the server -->
+    <string name="tv_scan">Scan the code with your phone, sign in to %1$s and allow Aloha Social. Then enter the code the page shows.</string>
+    <!-- Spoken description of the QR code; %1$s is the server -->
+    <string name="tv_qr_described">QR code of the sign-in page on %1$s</string>
+    <!-- Label of the input where the code from the sign-in page is entered -->
+    <string name="tv_code_label">Code from the sign-in page</string>
+    <!-- Button that signs in with the code entered -->
+    <string name="tv_sign_in">Sign in</string>
+    <!-- Button that goes back to entering another server -->
+    <string name="tv_other_server">Use another server</string>
+    <!-- The text entered was not a server address -->
+    <string name="tv_problem_address">That isn’t a server address. Try something like cloud.example.org.</string>
+    <!-- The address asks for an unencrypted connection, which the app does not use -->
+    <string name="tv_problem_insecure">That server doesn’t use a secure connection (https), so Aloha Social can’t sign in there.</string>
+    <!-- No server answered at the address entered -->
+    <string name="tv_problem_unreachable">No server answered there. Check the address and the TV’s connection.</string>
+    <!-- Something answered, but not a server Aloha Social can sign in to -->
+    <string name="tv_problem_not_a_server">Something answered there, but not a server Aloha Social can sign in to.</string>
+    <!-- The server's certificate is not trusted; the phone app can be told to trust it, the TV cannot -->
+    <string name="tv_problem_certificate">The server’s certificate isn’t trusted by this TV. Sign in on your phone to review it.</string>
+    <!-- The server answered, but signing in failed there -->
+    <string name="tv_problem_server">The server didn’t finish the sign-in. Try again.</string>
+    <!-- The code typed was refused; a new sign-in page has been started -->
+    <string name="tv_problem_code">That code didn’t work. Scan the new code and try again.</string>
+    <!-- Heading of the screen with the account the TV is signed in to -->
+    <string name="tv_account">Account</string>
+    <!-- Who the TV is signed in as; %1$s is the handle, %2$s the server -->
+    <string name="tv_signed_in_as">Signed in as @%1$s on %2$s</string>
+    <!-- Button that signs the TV out and gives its token back to the server -->
+    <string name="tv_sign_out">Sign out</string>
 </resources>

@@ -5,6 +5,8 @@
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <!-- offered to TVs only, which have no touchscreen -->
     <uses-feature
         android:name="android.software.leanback"
@@ -14,12 +16,14 @@
         android:required="false" />
 
     <application
+        android:name=".TvApplication"
         android:allowBackup="false"
         android:banner="@drawable/tv_banner"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/tv_app_name"
+        android:networkSecurityConfig="@xml/network_security_config"
         android:supportsRtl="true"
         android:theme="@android:style/Theme.DeviceDefault.NoActionBar">
 
