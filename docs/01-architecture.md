@@ -4,12 +4,13 @@ How the Android app is put together: its modules and the rules between them, the
 
 ## Modules
 
-`settings.gradle.kts` includes three single modules, `:app`, `:widget` and `:benchmark`, plus a list of `:core:*` and `:feature:*` modules.
+`settings.gradle.kts` includes four single modules, `:app`, `:widget`, `:wear` and `:benchmark`, plus a list of `:core:*` and `:feature:*` modules.
 
 | Module | Holds |
 |---|---|
 | `:app` | `MainActivity`, `WindowActivity`, `OAuthRedirectActivity`, the application class, the navigation graph (`AlohaApp.kt`), the share target and shortcuts, the app lock, device translation; wires every feature together |
 | `:widget` | The four Glance home-screen widgets and their configure activity |
+| `:wear` | The Wear OS app, on Wear's Compose Material 3: its own sign-in, home, notifications, a post, the tile and the complication; see [15-wear.md](15-wear.md) |
 | `:benchmark` | Macrobenchmarks and the baseline profile generator; see [benchmarking.md](benchmarking.md) |
 | `:core:model` | Pure Kotlin entities and value types (`Status`, `Account`, `ServerCapabilities`, `FeedMode`), no Android SDK |
 | `:core:html` | Pure Kotlin: post HTML to annotated text |
@@ -33,6 +34,7 @@ How the Android app is put together: its modules and the rules between them, the
 - `:app` may depend on anything; `:benchmark` only on `:app`.
 - Nothing depends on a `:feature:*` module, and a feature depends only on `:core:*`. Two features that need the same thing get it from a core module.
 - `:widget` may use `:core:data`, `:core:navigation`, `:core:designsystem` and `:core:model`.
+- `:wear` may use `:core:model`, `:core:network`, `:core:datastore` and `:core:html`, none of the phone's UI.
 - Each core module has a row naming what it may use. `:core:model` and `:core:designsystem` use nothing; `:core:data` uses network, database, datastore, html and model; `:core:sync` uses data, navigation and model. A module without a row fails the check, so adding a module means adding its row.
 - Any module's tests may use `:core:testing`.
 

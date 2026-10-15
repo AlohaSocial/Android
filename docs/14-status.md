@@ -49,7 +49,7 @@ Between the phases: CI artifact retention ([#3](https://github.com/AlohaSocial/A
 | Handoff and Spotlight counterparts | [00-overview.md](00-overview.md) §5 | No Android equivalent is planned yet |
 | The reproducible-build check | [12-store.md](12-store.md) | Two clean builds of the first release tag, compared, when it is cut; nothing in CI checks it today |
 | Translations of the app | [12-conventions-quality.md](12-conventions-quality.md) | English only; every string is ready for translators |
-| Android TV and Wear OS | [00-overview.md](00-overview.md) | Later increments |
+| Android TV | [00-overview.md](00-overview.md) | A later increment |
 
 ## Deliberately different
 

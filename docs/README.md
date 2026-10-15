@@ -19,4 +19,5 @@ Two kinds of document. The **ported** ones are the Apple app's product specifica
 | [12-store.md](12-store.md) | Android | Store listing, Data safety, content rating, permissions |
 | [12-conventions-quality.md](12-conventions-quality.md) | Android | Testing, CI, checks, strings, logging, commits and pull requests |
 | [14-status.md](14-status.md) | Android | What is built, in progress, not built, and deliberately different |
+| [15-wear.md](15-wear.md) | Android | The watch app: signing in, the handover from the phone, screens, tile and complication, the Wear listing |
 | [benchmarking.md](benchmarking.md) | Android | How the performance budgets are measured |
