@@ -49,6 +49,7 @@ wearPhoneInteractions = "1.1.1"
 wearToolingPreview = "1.0.0"
 wearInput = "1.2.0"
 wearMinSdk = "30"
+tvMaterial = "1.1.0"
 playServicesWearable = "20.0.1"
 wearTiles = "1.6.2"
 wearProtolayout = "1.4.2"
@@ -80,6 +81,7 @@ wear-compose-material3 = { module = "androidx.wear.compose:compose-material3", v
 wear-compose-foundation = { module = "androidx.wear.compose:compose-foundation", version.ref = "wearCompose" }
 wear-phone-interactions = { module = "androidx.wear:wear-phone-interactions", version.ref = "wearPhoneInteractions" }
 wear-tooling-preview = { module = "androidx.wear:wear-tooling-preview", version.ref = "wearToolingPreview" }
+tv-material = { module = "androidx.tv:tv-material", version.ref = "tvMaterial" }
 wear-input = { module = "androidx.wear:wear-input", version.ref = "wearInput" }
 wear-compose-navigation3 = { module = "androidx.wear.compose:compose-navigation3", version.ref = "wearCompose" }
 wear-tiles = { module = "androidx.wear.tiles:tiles", version.ref = "wearTiles" }

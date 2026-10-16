@@ -31,6 +31,7 @@ import social.aloha.core.data.AccountRemovalListener
 import social.aloha.core.data.AccountRepository
 import social.aloha.core.data.Authorization
 import social.aloha.core.data.ClientFactory
+import social.aloha.core.data.RedirectUriProvider
 import social.aloha.core.data.SignInCoordinator
 import social.aloha.core.data.SignInResult
 import social.aloha.core.data.compose.Outbox
@@ -148,6 +149,31 @@ class SignInAcceptanceTest(private val configuration: MockServerConfiguration) {
         // a sign-in screen opened later, for another account, finds the callback still in hand
         assertEquals(SignInResult.NotForUs, coordinator.complete(callback))
         assertEquals(1, mock.requests.count { it.url.encodedPath.endsWith("/oauth/token") })
+    }
+
+    @Test
+    fun `a code typed from the server's page finishes an out-of-band sign-in, once`() = runBlocking {
+        val outOfBand = object : RedirectUriProvider {
+            override fun redirectUri() = OAuthIdentity.OUT_OF_BAND_REDIRECT
+
+            override fun registeredRedirects() = OAuthIdentity.OUT_OF_BAND_REDIRECT
+        }
+        val tv = SignInCoordinator(
+            accounts,
+            vault,
+            OAuthClient(http, limiter, Dispatchers.IO),
+            CapabilityDetector(http, limiter, Dispatchers.IO) { java.time.Instant.now() },
+            outOfBand,
+            clients,
+        )
+        val authorize = (tv.beginAuthorization(finder.found(mock.origin.toString())) as Authorization.Started).url
+        assertEquals(OAuthIdentity.OUT_OF_BAND_REDIRECT, authorize.toHttpUrl().queryParameter("redirect_uri"))
+
+        assertTrue(tv.completeWithCode(" ${MockCredentials.AUTHORIZATION_CODE}\n") is SignInResult.SignedIn)
+        assertEquals(SignInResult.NotForUs, tv.completeWithCode(MockCredentials.AUTHORIZATION_CODE))
+        val exchange = mock.requests.single { it.url.encodedPath.endsWith("/oauth/token") }.body?.utf8().orEmpty()
+        assertTrue(exchange, Regex("(^|&)code=${MockCredentials.AUTHORIZATION_CODE}(&|$)").containsMatchIn(exchange))
+        assertTrue(exchange, "urn%3Aietf%3Awg%3Aoauth%3A2.0%3Aoob" in exchange)
     }
 
     @Test

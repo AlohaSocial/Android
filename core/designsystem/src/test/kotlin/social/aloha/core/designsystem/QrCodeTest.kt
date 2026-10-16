@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 Aloha Social contributors
 // SPDX-License-Identifier: MIT
 
-package social.aloha.feature.profile
+package social.aloha.core.designsystem
 
 import com.google.zxing.BinaryBitmap
 import com.google.zxing.RGBLuminanceSource
@@ -10,12 +10,12 @@ import com.google.zxing.qrcode.QRCodeReader
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
-class ProfileQrTest {
+class QrCodeTest {
     @Test
     fun `the code reads back as the profile's address`() {
         val url = "https://cloud.example/apps/social/@alice"
         val matrix = qrOf(url)
-        // drawn at four pixels a module with a quiet zone, as the dialog draws it
+        // drawn at four pixels a module with a quiet zone, as the profile dialog draws it
         val scale = 4
         val quiet = 4 * scale
         val side = matrix.width * scale + 2 * quiet

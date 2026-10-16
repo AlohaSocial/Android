@@ -3,13 +3,10 @@
 
 package social.aloha.core.network
 
-import java.io.IOException
 import java.io.OutputStream
 import java.util.concurrent.TimeUnit
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.runInterruptible
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerializationException
@@ -69,7 +66,7 @@ internal class RequestExecutor(
         sent.log(request.endpoint, (System.nanoTime() - started) / NANOS_PER_MILLI)
         return when (sent) {
             is HttpOutcome.Failed -> ApiResult.Failure(sent.error)
-            is HttpOutcome.Answered -> sent.response.use { response -> answer(request, response, url) }
+            is HttpOutcome.Answered -> readingBody { sent.response.use { response -> answer(request, response, url) } }
         }
     }
 
@@ -93,15 +90,12 @@ internal class RequestExecutor(
             is HttpOutcome.Failed -> return ApiResult.Failure(sent.error)
             is HttpOutcome.Answered -> sent.response
         }
-        return response.use { if (it.isSuccessful) write(it, into) else failure(it, url) }
+        return readingBody { response.use { if (it.isSuccessful) write(it, into) else failure(it, url) } }
     }
 
-    private suspend fun write(response: Response, into: OutputStream): ApiResult<Unit> = try {
+    private suspend fun write(response: Response, into: OutputStream): ApiResult<Unit> {
         runInterruptible(ioDispatcher) { response.body.byteStream().use { it.copyTo(into) } }
-        ApiResult.Success(Unit)
-    } catch (e: IOException) {
-        currentCoroutineContext().ensureActive()
-        ApiResult.Failure(e.toApiError())
+        return ApiResult.Success(Unit)
     }
 
     private suspend fun <T> answer(request: ApiRequest<T>, response: Response, url: HttpUrl): ApiResult<Answer<T>> {
@@ -111,7 +105,7 @@ internal class RequestExecutor(
     }
 
     private suspend fun failure(response: Response, url: HttpUrl): ApiResult.Failure {
-        val body = withContext(ioDispatcher) { response.body.string() }
+        val body = response.errorBody(ioDispatcher)
         val error =
             ApiError.from(response.code, errorMessage(body), body, response::header)
                 ?: ApiError.Server(response.code, body)

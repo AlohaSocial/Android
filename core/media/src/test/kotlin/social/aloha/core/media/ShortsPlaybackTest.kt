@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 Aloha Social contributors
 // SPDX-License-Identifier: MIT
 
-package social.aloha.feature.shorts
+package social.aloha.core.media
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider

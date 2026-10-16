@@ -6,7 +6,6 @@ package social.aloha.core.network
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
@@ -49,7 +48,7 @@ public class HttpExchange @Inject constructor(
         read: suspend (Response) -> ApiResult<T>,
     ): ApiResult<T> = when (val answer = exchange(request, label, untimed)) {
         is ApiResult.Failure -> answer
-        is ApiResult.Success -> answer.value.use { read(it) }
+        is ApiResult.Success -> readingBody { answer.value.use { read(it) } }
     }
 
     /**
@@ -57,7 +56,7 @@ public class HttpExchange @Inject constructor(
      * requests to the host for its `Retry-After`, as it does for an API call.
      */
     public suspend fun error(response: Response): ApiError {
-        val body = withContext(io) { response.use { it.body.string() } }
+        val body = response.use { it.errorBody(io) }
         val error = ApiError.from(response.code, errorMessage(body), body, response::header)
             ?: ApiError.Server(response.code, body)
         if (error is ApiError.RateLimited) rateLimiter.noteRateLimited(response.request.url.host, error.retryAfter)

@@ -38,6 +38,7 @@ include(":app")
 include(":benchmark")
 include(":widget")
 include(":wear")
+include(":tv")
 listOf(
     "model", "html", "network", "database", "datastore", "data", "sync", "media",
     "designsystem", "ui", "navigation", "nextcloud", "platform", "intelligence", "testing",

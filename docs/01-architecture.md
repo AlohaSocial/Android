@@ -4,13 +4,14 @@ How the Android app is put together: its modules and the rules between them, the
 
 ## Modules
 
-`settings.gradle.kts` includes four single modules, `:app`, `:widget`, `:wear` and `:benchmark`, plus a list of `:core:*` and `:feature:*` modules.
+`settings.gradle.kts` includes five single modules, `:app`, `:widget`, `:wear`, `:tv` and `:benchmark`, plus a list of `:core:*` and `:feature:*` modules.
 
 | Module | Holds |
 |---|---|
 | `:app` | `MainActivity`, `WindowActivity`, `OAuthRedirectActivity`, the application class, the navigation graph (`AlohaApp.kt`), the share target and shortcuts, the app lock, device translation; wires every feature together |
 | `:widget` | The four Glance home-screen widgets and their configure activity |
 | `:wear` | The Wear OS app, on Wear's Compose Material 3: its own sign-in, home, notifications, a post, the tile and the complication; see [15-wear.md](15-wear.md) |
+| `:tv` | The Android TV app, on Compose for TV's Material 3 over the phone's repositories: sign-in by code, the shelves, the watch page and Shorts on the D-pad; see [16-tv.md](16-tv.md) |
 | `:benchmark` | Macrobenchmarks and the baseline profile generator; see [benchmarking.md](benchmarking.md) |
 | `:core:model` | Pure Kotlin entities and value types (`Status`, `Account`, `ServerCapabilities`, `FeedMode`), no Android SDK |
 | `:core:html` | Pure Kotlin: post HTML to annotated text |
@@ -19,8 +20,8 @@ How the Android app is put together: its modules and the rules between them, the
 | `:core:datastore` | DataStore preferences, the per-account settings file and the encrypted `TokenVault` |
 | `:core:data` | Repositories over network, database and datastore: accounts, sign-in, timelines, compose and the outbox, notifications, moderation, the Nextcloud connection |
 | `:core:sync` | WorkManager workers, polling (`SyncEngine`), push, raised notifications, upload notifications |
-| `:core:media` | Coil image loading and the shared Media3 player session service |
-| `:core:designsystem` | Theme, colours, type, `@AlohaPreviews` |
+| `:core:media` | Coil image loading, the shared Media3 player session service, the source ladder (`LadderPlayback`) and the shorts' preloading player (`ShortsPlayback`) |
+| `:core:designsystem` | Theme, colours, type, `@AlohaPreviews`, the QR code (`QrCode`) |
 | `:core:ui` | Shared composables: the status card, `TroubleStrip`, settings sections |
 | `:core:navigation` | Navigation 3 keys (`TopLevelKeys.kt`, `DetailKeys.kt`), link routing, app intents |
 | `:core:intelligence` | The on-device features: availability, the open picture reader (LiteRT, Android's face detector), the model as an optional binding, `EntityShield`, alt-text assembly, prompts; see [10-intelligence.md](10-intelligence.md) |
@@ -35,6 +36,7 @@ How the Android app is put together: its modules and the rules between them, the
 - Nothing depends on a `:feature:*` module, and a feature depends only on `:core:*`. Two features that need the same thing get it from a core module.
 - `:widget` may use `:core:data`, `:core:navigation`, `:core:designsystem` and `:core:model`.
 - `:wear` may use `:core:model`, `:core:network`, `:core:datastore` and `:core:html`, none of the phone's UI.
+- `:tv` may use `:core:model`, `:core:data`, `:core:network`, `:core:html`, `:core:media` and `:core:designsystem` (the brand's colours and the QR code), not `:core:ui` nor any feature.
 - Each core module has a row naming what it may use. `:core:model` and `:core:designsystem` use nothing; `:core:data` uses network, database, datastore, html and model; `:core:sync` uses data, navigation and model. A module without a row fails the check, so adding a module means adding its row.
 - Any module's tests may use `:core:testing`.
 

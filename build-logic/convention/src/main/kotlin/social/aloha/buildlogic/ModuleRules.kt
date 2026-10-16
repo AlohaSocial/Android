@@ -33,6 +33,11 @@ object ModuleRules {
     /** The watch app: its own UI on Wear's Material, so none of the phone's UI modules. */
     private val wear = setOf(MODEL, ":core:network", ":core:datastore", ":core:html")
 
+    /** The TV app: its own UI on Compose for TV's Material, so none of the phone's UI modules. */
+    private val tv = setOf(
+        MODEL, ":core:data", ":core:network", ":core:html", ":core:media", ":core:designsystem",
+    )
+
     fun allows(from: String, to: String, testOnly: Boolean = false): Boolean = when {
         from == ":app" -> true
         testOnly && to == ":core:testing" -> true
@@ -41,6 +46,7 @@ object ModuleRules {
         from.startsWith(":feature:") -> to.startsWith(":core:")
         from == ":widget" -> to in widget
         from == ":wear" -> to in wear
+        from == ":tv" -> to in tv
         from == ":core:testing" -> to.startsWith(":core:") && to != from
         else -> core[from]?.contains(to) ?: throw IllegalStateException("$from has no row in ModuleRules")
     }
