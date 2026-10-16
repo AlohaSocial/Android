@@ -5,6 +5,7 @@ import com.android.build.api.dsl.ApplicationExtension
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
+import social.aloha.buildlogic.VersionSlots
 import social.aloha.buildlogic.configureAndroid
 import social.aloha.buildlogic.configureFlavors
 import social.aloha.buildlogic.configureStaticAnalysis
@@ -20,6 +21,10 @@ class AndroidApplicationConventionPlugin : Plugin<Project> {
             extensions.configure<ApplicationExtension> {
                 configureAndroid(this)
                 defaultConfig.targetSdk = libs.version("targetSdk").toInt()
+                // one release number for every app, each in its own form-factor slot
+                val base = providers.gradleProperty("aloha.versionBase").get().toInt()
+                defaultConfig.versionCode = VersionSlots.versionCode(path, base)
+                defaultConfig.versionName = providers.gradleProperty("aloha.versionName").get()
                 configureFlavors(this)
                 buildTypes.getByName("release") {
                     isMinifyEnabled = true

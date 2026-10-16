@@ -15,8 +15,6 @@ android {
     defaultConfig {
         // the phone app's, so Play lists the TV app with it
         applicationId = "social.aloha.android"
-        versionCode = 1
-        versionName = "0.1.0"
     }
     buildFeatures {
         compose = true

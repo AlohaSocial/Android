@@ -59,8 +59,29 @@ Each requirement, and where the app meets it:
 | `WAKE_LOCK` | Keeping playback (Media3) and background work (WorkManager) running with the screen off; both libraries declare it |
 | `RECEIVE_BOOT_COMPLETED` | WorkManager scheduling its work again after a restart: background refresh and the outbox |
 
+## Version codes
+
+The phone, TV and Wear OS apps are three artifacts under one application id, `social.aloha.android`, so Play lists them in one listing. Play needs a version code of its own for each of them. And where a device qualifies for two, it serves the one with the higher code. Every app's code therefore puts its form-factor slot in the leading digits and the release counter below:
+
+`versionCode = slot × 100,000,000 + aloha.versionBase`
+
+| Slot | App | Devices |
+|---|---|---|
+| 1 | `:app` | phones, tablets, foldables, Chromebooks |
+| 2 | `:tv` | Android TV, Google TV |
+| 3 | `:wear` | Wear OS |
+| 4–20 | free | a merged or new app |
+
+Play takes codes up to 2,100,000,000, so slot 20 is the last. The table lives in `build-logic` (`VersionSlots`), and CI's "Version codes" step (`scripts/check-version-codes.sh`) fails the build when two APKs of a flavour share a code, an APK is not in its slot, or the TV app does not outrank the phone app.
+
+**The rule: an app only ever moves to a higher slot, and a retired slot is never reused.** Play offers no update with a lower code than the one installed.
+- Chromebooks run the phone app and need no slot of their own. Once the phone app no longer requires a touchscreen, a TV qualifies for it too, and still gets the TV app, whose slot is higher in every release.
+- Moving TV support into the phone app means the merged app takes slot 4, above both 1 and 2, so phones, Chromebooks and TVs all update to it; slots 1 and 2 are then retired.
+
+**Cutting a release:** raise `aloha.versionBase` in `gradle.properties` by one and set `aloha.versionName` (the name every app shows). Name the release's changelog after the phone app's code (`fastlane/metadata/android/en-US/changelogs/1000000NN.txt`). F-Droid builds only the `generic` phone app; the TV and Wear apps are on Play only.
+
 ## F-Droid
 
 - `generic` is the F-Droid build: no Google library, no proprietary dependency.
 - Reproducible builds are what F-Droid checks, building from the tag and comparing with the signed APK; whether this build is byte for byte reproducible is checked when the first release is cut (two clean builds of the tag, compared).
-- Metadata: `fastlane/metadata/android/en-US` (title, short and full description, a changelog per `versionCode`). Screenshots and the icon go under `images/` when the release is cut.
+- Metadata: `fastlane/metadata/android/en-US` (title, short and full description, a changelog per `versionCode`, named after the phone app's code, e.g. `100000001.txt`). Screenshots and the icon go under `images/` when the release is cut.

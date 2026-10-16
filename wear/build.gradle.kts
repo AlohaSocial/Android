@@ -16,8 +16,6 @@ android {
         // the phone app's: Play lists the watch app with it, and the Data Layer pairs the two by it
         applicationId = "social.aloha.android"
         minSdk = libs.versions.wearMinSdk.get().toInt()
-        versionCode = 1
-        versionName = "0.1.0"
     }
     buildFeatures {
         compose = true

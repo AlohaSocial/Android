@@ -19,6 +19,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
@@ -44,6 +45,7 @@ import social.aloha.core.datastore.AppPreferences
 import social.aloha.core.datastore.NotificationPreferences
 import social.aloha.core.model.PollFrequency
 import social.aloha.core.model.ServerCapabilities
+import social.aloha.core.model.SignedInAccount
 import social.aloha.core.network.ApiError
 import social.aloha.core.network.streaming.StreamEvent
 import social.aloha.core.network.streaming.StreamListener
@@ -147,6 +149,16 @@ class SyncEngineTest {
         scope.cancel()
         fixture.close()
         server.close()
+    }
+
+    /**
+     * Signs in and waits until the account is the active one: the pace is the active account's only once the
+     * engine sees it as active, which the repository's state flow says a moment after the sign-in.
+     */
+    private suspend fun signInActive(): SignedInAccount {
+        val account = fixture.signIn(server.url("/"))
+        withTimeout(5.seconds) { fixture.accounts.activeAccount.first { it?.id == account.id } }
+        return account
     }
 
     @Test
@@ -256,7 +268,7 @@ class SyncEngineTest {
     @Test
     fun `a 429 with Retry-After waits it out`() = runBlocking {
         answers += Counts.Answer.Limited(retryAfterSeconds = 120)
-        val account = fixture.signIn(server.url("/"))
+        val account = signInActive()
         assertNull(engine.poll(account, PollScope.Full))
         val held = engine.waitBeforeNext(account)!!
         assertTrue("$held", held > 100.seconds && held <= 2.minutes)
@@ -264,7 +276,7 @@ class SyncEngineTest {
 
     @Test
     fun `a 429 without Retry-After halves the pace`() = runBlocking {
-        val account = fixture.signIn(server.url("/"))
+        val account = signInActive()
         engine.poll(account, PollScope.Full)
         engine.failed(account.id, ApiError.RateLimited(retryAfter = null))
         val slowed = engine.waitBeforeNext(account)!!
