@@ -20,8 +20,6 @@ android {
     namespace = "social.aloha.android"
     defaultConfig {
         applicationId = "social.aloha.android"
-        versionCode = 1
-        versionName = "0.1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         manifestPlaceholders["oauthScheme"] = "alohasocial"
         buildConfigField("String", "OAUTH_SCHEME", "\"alohasocial\"")

@@ -37,5 +37,7 @@ jobs:
         run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-37.0" "build-tools;37.0.0" > /dev/null
       - name: Assemble
         run: ./gradlew assembleGenericDebug assembleGplayDebug assembleGenericRelease assembleGplayRelease :benchmark:assemble
+      - name: Version codes
+        run: scripts/check-version-codes.sh
       - name: APK size
         run: scripts/check-apk-size.sh
