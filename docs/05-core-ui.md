@@ -261,7 +261,7 @@ exist undocumented.
   query, not by filtering a page), Add to list, Mention, Direct message,
   Block, Mute (with duration and "also mute notifications"), Report, Block
   domain, Add note.
-- Tabs: Posts · Posts & Replies · Media · Videos · Collections (where the
+- Tabs: Posts · Posts & Replies · Media · Videos · Albums (where the
   server has them) · Stories (where present and visible).
 - Own profile additionally: Edit profile (`PATCH /accounts/update_credentials`
   — name, avatar, header, note, fields, bot, locked, discoverable, and

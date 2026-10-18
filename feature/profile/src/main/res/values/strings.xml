@@ -80,8 +80,8 @@
     <string name="profile_featured_tags">Featured hashtags</string>
     <!-- Button under a Featured section that shows the rest of it -->
     <string name="profile_featured_view_all">View all</string>
-    <!-- Tab with the account's media collections -->
-    <string name="profile_tab_collections">Collections</string>
+    <!-- Profile tab with the account's albums, named sets of posts with pictures -->
+    <string name="profile_tab_albums">Albums</string>
     <!-- Tab with the account's current stories -->
     <string name="profile_tab_stories">Stories</string>
     <!-- Heading of the strip showing twelve weeks of posting -->
@@ -99,8 +99,8 @@
     <string name="profile_rhythm_slowing">Posting less lately</string>
     <!-- The account posts about as usual -->
     <string name="profile_rhythm_steady">Posting steadily</string>
-    <!-- A collection's size; %d is how many posts it holds -->
-    <plurals name="profile_collection_size">
+    <!-- Under an album in the profile's Albums tab; %d is how many posts the album holds -->
+    <plurals name="profile_album_size">
         <item quantity="one">%d post</item>
         <item quantity="other">%d posts</item>
     </plurals>
