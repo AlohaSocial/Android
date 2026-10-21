@@ -43,6 +43,7 @@ import social.aloha.core.data.sync.UserStream
 import social.aloha.core.datastore.AccountSettingsStore
 import social.aloha.core.datastore.AppPreferences
 import social.aloha.core.datastore.NotificationPreferences
+import social.aloha.core.datastore.PushRefusals
 import social.aloha.core.model.PollFrequency
 import social.aloha.core.model.ServerCapabilities
 import social.aloha.core.model.SignedInAccount
@@ -97,7 +98,12 @@ class SyncEngineTest {
     )
     private val signals = TimelineSignals()
     private val unread = fixture.unread
-    private val push = PushSubscriptions(fixture.clients, preferences, accountSettings)
+    private val push = PushSubscriptions(
+        fixture.clients,
+        preferences,
+        accountSettings,
+        PushRefusals(InMemoryDataStore(emptyPreferences())),
+    )
     private val heard = CopyOnWriteArrayList<Int>()
 
     // a server's streaming socket, opened by hand: the test says when it opens

@@ -20,6 +20,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import social.aloha.core.datastore.AccountSettingsStore
 import social.aloha.core.datastore.AppPreferences
+import social.aloha.core.datastore.PushRefusals
 import social.aloha.core.testing.InMemoryDataStore
 import social.aloha.core.testing.SignedInFixture
 
@@ -32,6 +33,7 @@ class PushSubscriptionsTest {
         fixture.clients,
         AppPreferences(InMemoryDataStore(emptyPreferences())),
         AccountSettingsStore(InMemoryDataStore(emptyMap())),
+        PushRefusals(InMemoryDataStore(emptyPreferences())),
     )
 
     @After
@@ -61,7 +63,7 @@ class PushSubscriptionsTest {
         ).forEach { assertTrue(it, it in body) }
         listOf(
             "mention", "status", "reblog", "follow", "follow_request", "favourite", "poll", "update",
-            "admin.sign_up", "admin.report",
+            "admin.sign_up", "admin.report", "quote", "quoted_update",
         ).forEach { assertTrue(it, "data%5Balerts%5D%5B$it%5D=true" in body) }
         assertTrue(push.isActive(account.id))
         ok()
@@ -86,10 +88,35 @@ class PushSubscriptionsTest {
     }
 
     @Test
-    fun `a refused subscription leaves the account polled`() = runBlocking {
+    fun `a refused subscription leaves the account polled, and is not asked for again until forgotten`() = runBlocking {
         val account = fixture.signIn(server.url("/"))
-        server.enqueue(MockResponse.Builder().code(422).body("""{"error":"Validation failed"}""").build())
-        assertTrue(push.subscribe(account, "https://ntfy.example/up123", "pub-key", "auth-secret") != null)
+        server.enqueue(
+            MockResponse.Builder().code(422)
+                .body("""{"error":"The push endpoint must be a reachable public HTTPS URL"}""").build(),
+        )
+        assertTrue(push.subscribe(account, "https://ntfy.lan/up123", "pub-key", "auth-secret") != null)
         assertFalse(push.isActive(account.id))
+        assertTrue(push.refused(account.id))
+        push.forgetRefusal(account.id)
+        assertFalse(push.refused(account.id))
+    }
+
+    @Test
+    fun `keys the server finds invalid are no refusal of the endpoint`() = runBlocking {
+        val account = fixture.signIn(server.url("/"))
+        server.enqueue(
+            MockResponse.Builder().code(422)
+                .body("""{"error":"The push subscription keys are invalid"}""").build(),
+        )
+        assertTrue(push.subscribe(account, "https://ntfy.example/up123", "pub-key", "auth-secret") != null)
+        assertFalse(push.refused(account.id))
+    }
+
+    @Test
+    fun `a server failing is no refusal`() = runBlocking {
+        val account = fixture.signIn(server.url("/"))
+        server.enqueue(MockResponse.Builder().code(503).build())
+        assertTrue(push.subscribe(account, "https://ntfy.example/up123", "pub-key", "auth-secret") != null)
+        assertFalse(push.refused(account.id))
     }
 }

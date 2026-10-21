@@ -38,6 +38,7 @@ import org.robolectric.annotation.Config
 import social.aloha.core.data.sync.PushSubscriptions
 import social.aloha.core.datastore.AccountSettingsStore
 import social.aloha.core.datastore.AppPreferences
+import social.aloha.core.datastore.PushRefusals
 import social.aloha.core.model.ServerCapabilities
 import social.aloha.core.sync.AccountSignOut
 import social.aloha.core.sync.AvatarSource
@@ -99,6 +100,7 @@ class DeleteAccountViewModelTest {
             fixture.clients,
             AppPreferences(InMemoryDataStore(emptyPreferences())),
             AccountSettingsStore(InMemoryDataStore(emptyMap())),
+            PushRefusals(InMemoryDataStore(emptyPreferences())),
         ),
         fixture.nextcloud,
     )

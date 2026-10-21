@@ -33,6 +33,7 @@ import social.aloha.core.data.sync.PushSubscriptions
 import social.aloha.core.datastore.AccountSettingsStore
 import social.aloha.core.datastore.AccountViewPreferences
 import social.aloha.core.datastore.AppPreferences
+import social.aloha.core.datastore.PushRefusals
 import social.aloha.core.model.AccessToken
 import social.aloha.core.model.ServerCapabilities
 import social.aloha.core.sync.AccountSignOut
@@ -60,6 +61,7 @@ class AccountsSettingsViewModelTest {
             fixture.clients,
             AppPreferences(InMemoryDataStore(emptyPreferences())),
             AccountSettingsStore(InMemoryDataStore(emptyMap())),
+            PushRefusals(InMemoryDataStore(emptyPreferences())),
         ),
         fixture.nextcloud,
     )

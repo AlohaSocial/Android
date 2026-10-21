@@ -30,6 +30,7 @@ import social.aloha.core.data.nextcloud.NextcloudConnection
 import social.aloha.core.data.sync.PushSubscriptions
 import social.aloha.core.model.LogArea
 import social.aloha.core.model.SignedInAccount
+import social.aloha.core.network.ApiError
 import timber.log.Timber
 
 /** A push distributor installed on the device: its package, and the name it shows. */
@@ -37,10 +38,11 @@ public data class Distributor(val packageName: String, val label: String)
 
 /**
  * Push through UnifiedPush: the person picks a distributor, such as ntfy, and each account whose server
- * offers Web Push (a `vapid_key`) registers with it. Nextcloud Social offers none: an account connected
- * to its Nextcloud registers with the Nextcloud's notifications app instead, where that pushes. Each
- * registration is named after its account, so a push says whose it is. An account without push is
- * polled as before.
+ * offers Web Push (a `vapid_key`) registers with it. Where the server offers none, or refuses the
+ * distributor's endpoint (Nextcloud Social takes only public HTTPS ones), an account connected to its
+ * Nextcloud registers with the Nextcloud's notifications app instead, where that pushes; an account is
+ * never pushed to by both. Each registration is named after its account, so a push says whose it is.
+ * An account without push is polled as before.
  */
 public class PushRegistrar @Inject constructor(
     @ApplicationContext private val context: Context,
@@ -65,6 +67,7 @@ public class PushRegistrar @Inject constructor(
     public suspend fun choose(packageName: String?) {
         val all = accounts.all()
         all.forEach {
+            subscriptions.forgetRefusal(it.id)
             UnifiedPush.unregister(context, it.id)
             UnifiedPush.unregister(context, PushInstance.nextcloud(it.id))
         }
@@ -86,9 +89,13 @@ public class PushRegistrar @Inject constructor(
         accounts.all().filterNot { it.needsReauth }.forEach { register(it) }
     }
 
-    /** With its server where that pushes, else with its Nextcloud where that does. */
+    /**
+     * With its server where that pushes and takes the distributor's endpoints, else with its Nextcloud
+     * where that pushes.
+     */
     private suspend fun register(account: SignedInAccount) {
-        val server = account.capabilities.webPushVapidKey?.takeIf { it.isNotEmpty() }
+        val refused = subscriptions.refused(account.id)
+        val server = account.capabilities.webPushVapidKey?.takeIf { it.isNotEmpty() && !refused }
         when {
             server != null -> register(account.id, server)
 
@@ -109,7 +116,30 @@ public class PushRegistrar @Inject constructor(
     /** Stops [account]'s push on its server, its Nextcloud and the device, before it signs out. */
     public suspend fun forget(account: SignedInAccount) {
         stopOnServer(account)
+        subscriptions.forgetRefusal(account.id)
         UnifiedPush.unregister(context, account.id)
+    }
+
+    /** [account]'s server refused the endpoint: its registration goes, and its Nextcloud is asked instead. */
+    internal suspend fun refusedByServer(account: SignedInAccount) {
+        Timber.tag(LogArea.Push.name).i("Endpoint of %s refused by its server, Nextcloud asked instead", account.id)
+        UnifiedPush.unregister(context, account.id)
+        // a subscription for an endpoint of an earlier distributor stops too
+        subscriptions.unsubscribe(account)
+        register(account)
+    }
+
+    /** [account] is pushed to through its Nextcloud, or else its server: the other route stops, so none comes twice. */
+    internal suspend fun subscribed(account: SignedInAccount, viaNextcloud: Boolean) {
+        if (viaNextcloud) {
+            if (subscriptions.endpoint(account.id) == null) return
+            UnifiedPush.unregister(context, account.id)
+            subscriptions.unsubscribe(account)
+        } else if (subscriptions.endpoint(PushInstance.nextcloud(account.id)) != null) {
+            UnifiedPush.unregister(context, PushInstance.nextcloud(account.id))
+            subscriptions.rememberEndpoint(PushInstance.nextcloud(account.id), null)
+            nextcloud.unregisterWebPush(account)
+        }
     }
 
     /** Whichever pushes to [account]: its server, its Nextcloud, or both, each told to stop. */
@@ -196,6 +226,7 @@ internal class PushWork @AssistedInject constructor(
     private val accounts: AccountRepository,
     private val subscriptions: PushSubscriptions,
     private val nextcloud: NextcloudConnection,
+    private val registrar: PushRegistrar,
     private val engine: SyncEngine,
 ) : CoroutineWorker(context, params) {
     enum class Job { Subscribe, SubscribeNextcloud, Activate, Poll, Lost }
@@ -244,13 +275,26 @@ internal class PushWork @AssistedInject constructor(
     }
 
     private suspend fun subscribe(account: SignedInAccount, job: Job): Boolean {
-        val error = if (job == Job.Subscribe) {
-            subscriptions.subscribe(account, input(ENDPOINT), input(P256DH), input(AUTH))
-        } else {
+        val viaNextcloud = job == Job.SubscribeNextcloud
+        val error = if (viaNextcloud) {
             nextcloud.registerWebPush(account, input(ENDPOINT), input(P256DH), input(AUTH))
+        } else {
+            subscriptions.subscribe(account, input(ENDPOINT), input(P256DH), input(AUTH))
         }
-        if (error == null) subscriptions.rememberEndpoint(input(INSTANCE), input(ENDPOINT))
-        return error != null
+        return when {
+            error == null -> {
+                subscriptions.rememberEndpoint(input(INSTANCE), input(ENDPOINT))
+                registrar.subscribed(account, viaNextcloud)
+                false
+            }
+
+            !viaNextcloud && error is ApiError.Unprocessable -> {
+                registrar.refusedByServer(account)
+                false
+            }
+
+            else -> true
+        }
     }
 
     private fun input(key: String): String = inputData.getString(key).orEmpty()

@@ -17,12 +17,12 @@ import social.aloha.core.network.unitRequest
  * [endpoint], encrypted for [p256dh] and [auth].
  */
 public object PushEndpoints {
-    // every kind a server can push, as the notifications name them
+    // every kind a server can push, as the notifications name them; a server ignores the ones it does not know
     private val ALERTS = listOf(
         NotificationKind.Mention, NotificationKind.Status, NotificationKind.Reblog, NotificationKind.Follow,
         NotificationKind.FollowRequest, NotificationKind.Favourite, NotificationKind.Poll, NotificationKind.Update,
         NotificationKind.AdminSignUp, NotificationKind.AdminReport,
-    ).map { it.wire }
+    ).map { it.wire } + listOf("quote", "quoted_update")
 
     /**
      * Subscribes, or replaces the token's subscription. `standard` asks for RFC 8291 encryption where
