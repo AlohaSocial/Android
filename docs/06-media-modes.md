@@ -85,8 +85,15 @@ For PeerTube-style long-form video.
 
 1. **Continue watching** — `GET /api/v1/videos/continue`, shown only when the
    capability is present and the list is non-empty. Excludes anything under 10 s
-   watched and anything past 95 % (the server drops those itself).
+   watched and anything past 95 % (the server drops those itself). Nextcloud
+   Social answers the posts themselves, each with its place in a nested
+   `watch_progress {position, duration, updated_at}`; other servers' top-level
+   `position` and `duration` still win where they are sent.
 2. The selected timeline.
+
+A video card draws its poster, view count and date from `video_card` (Nextcloud
+Social 0.26.278 on, on every video post) where it says, else from the
+attachment's preview, the `video` block's `views` and the post's `created_at`.
 
 ### Player
 
@@ -123,7 +130,18 @@ platforms where it suffices), with:
 - Mirror locally in `WatchPositionRecord` so the progress bar is right offline.
 - A video watched past 95 % is forgotten by the server; the client mirrors that
   and clears its local row too.
+- A video opened on its own (`GET /statuses/{nid}`) carries the reader's
+  `watch_progress`; it replaces the local row unless that moved later (compared
+  by `updated_at`; an undated place only fills a missing row), so the place
+  follows the reader across devices, and a video finished elsewhere after the
+  local row moved clears it. The same rules apply to what Continue watching
+  sends.
 - "Remove from Continue Watching" calls `DELETE /api/v1/statuses/{nid}/watched`.
+- A view is counted with `POST /api/v1/statuses/{nid}/view` once per playback,
+  after five seconds of play, only on Nextcloud Social 0.26.278 or later and
+  never for a post read from another server or one the server marks as not its
+  own (`local: false`). Fire-and-forget: a failure is not
+  shown.
 - This is per-reader, never federated, never shown to anyone else. The UI must
   not imply otherwise.
 

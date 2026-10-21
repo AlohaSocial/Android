@@ -104,6 +104,9 @@ public object WatchPositionRules {
     /** How often a playing video reports; the server allows 600 reports a minute. */
     public const val REPORT_INTERVAL_SECONDS: Double = 10.0
 
+    /** A view is counted once this many seconds have played, as Nextcloud Social's `VideoViewService` asks. */
+    public const val VIEW_AFTER_SECONDS: Int = 5
+
     public fun shouldReport(position: Double, duration: Double): Boolean =
         position >= MINIMUM_REPORTABLE_SECONDS && duration > 0
 

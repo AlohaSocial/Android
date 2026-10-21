@@ -35,6 +35,7 @@ import social.aloha.core.model.AttachmentKind
 import social.aloha.core.model.MediaAttachment
 import social.aloha.core.model.MediaDimensions
 import social.aloha.core.model.MediaMeta
+import social.aloha.core.model.VideoCardInfo
 import social.aloha.core.model.VideoChapter
 import social.aloha.core.model.VideoDetails
 import social.aloha.core.model.VideoSource
@@ -92,6 +93,7 @@ class WatchScreenshotTest {
             repliesCount = 1,
             mediaAttachments = listOf(clip),
             video = VideoDetails(title = "Harbour at dawn", views = 1_204, likes = 87, dislikes = 2),
+            videoCard = VideoCardInfo(views = 1_310, published = StatusSamples.NOW.minusSeconds(3 * 86_400)),
         )
         val comment = StatusSamples.reply.copy(id = "c1")
         return listOf(mapper.map(video, "1"), mapper.map(comment, "1"))

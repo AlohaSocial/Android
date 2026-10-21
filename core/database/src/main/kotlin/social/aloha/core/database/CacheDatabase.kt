@@ -278,6 +278,16 @@ public interface WatchPositionDao {
 
     @Query("DELETE FROM watch_position WHERE accountId = :accountId AND statusId = :statusId")
     public suspend fun forget(accountId: String, statusId: String)
+
+    /** Keeps [position], unless a place is kept already and [position] is not [dated] after it. */
+    @Transaction
+    public suspend fun keep(position: WatchPositionEntity, dated: Boolean) {
+        val kept = get(position.accountId, position.statusId)
+        if (kept == null || (dated && position.updatedAt > kept.updatedAt)) set(position)
+    }
+
+    @Query("DELETE FROM watch_position WHERE accountId = :accountId AND statusId = :statusId AND updatedAt < :before")
+    public suspend fun forgetBefore(accountId: String, statusId: String, before: Long)
 }
 
 /** Removing an account takes everything it cached with it, at once. */

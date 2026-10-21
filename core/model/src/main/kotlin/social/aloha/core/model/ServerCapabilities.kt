@@ -82,6 +82,12 @@ public data class ServerCapabilities(
      */
     val accountPagesWithToken: Boolean get() = isNextcloudSocial && atLeast(softwareVersion, ACCOUNT_PAGES_WITH_TOKEN)
 
+    /**
+     * Whether the server counts a view a player reports (`POST /statuses/{id}/view`): Nextcloud Social
+     * from 0.26.278 on. Nothing announces the route, so the version decides.
+     */
+    val videoViews: Boolean get() = isNextcloudSocial && atLeast(softwareVersion, VIDEO_VIEWS)
+
     /** How this server measures a post against its character limit. */
     val lengthRule: LengthRule get() = if (isNextcloudSocial) LengthRule.CodePoints else LengthRule.Mastodon
 
@@ -116,6 +122,7 @@ public data class ServerCapabilities(
         private const val APP_PREFIX = "index.php/apps/social/"
         private val REACTIONS_ON_STATUS = listOf(0, 26, 221)
         private val ACCOUNT_PAGES_WITH_TOKEN = listOf(0, 26, 220)
+        private val VIDEO_VIEWS = listOf(0, 26, 278)
 
         /** Raised whenever detection learns a new field: 1 added the live feeds, 2 the Shorts narrowing. */
         public const val CURRENT_FORMAT: Int = 2

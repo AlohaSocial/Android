@@ -10,8 +10,10 @@ import social.aloha.core.model.Card
 import social.aloha.core.model.Poll
 import social.aloha.core.model.PollOption
 import social.aloha.core.model.VideoCaption
+import social.aloha.core.model.VideoCardInfo
 import social.aloha.core.model.VideoChapter
 import social.aloha.core.model.VideoDetails
+import social.aloha.core.model.WatchProgress
 import social.aloha.core.network.decoding.ChapterStartSerializer
 import social.aloha.core.network.decoding.FlexibleIdSerializer
 import social.aloha.core.network.decoding.LabelledTextSerializer
@@ -22,6 +24,7 @@ import social.aloha.core.network.decoding.LenientTextSerializer
 import social.aloha.core.network.decoding.LenientUrlSerializer
 import social.aloha.core.network.decoding.LossyListSerializer
 import social.aloha.core.network.decoding.OptionalBoolSerializer
+import social.aloha.core.network.decoding.OptionalDoubleSerializer
 import social.aloha.core.network.decoding.OptionalIntSerializer
 
 @Serializable
@@ -138,3 +141,35 @@ internal fun VideoDetailsDto.toDomain(): VideoDetails = VideoDetails(
         VideoCaption(caption.language.orEmpty(), url)
     },
 )
+
+/** Nextcloud Social's `video_card`, on every video post it serves. */
+@Serializable
+internal data class VideoCardDto(
+    @Serializable(with = LenientTextSerializer::class) val title: String? = null,
+    @Serializable(with = OptionalDoubleSerializer::class) val duration: Double? = null,
+    @Serializable(with = LenientUrlSerializer::class) val thumbnail: String? = null,
+    @Serializable(with = OptionalIntSerializer::class) val views: Int? = null,
+    @Serializable(with = LenientBoolSerializer::class) val live: Boolean = false,
+    @Serializable(with = LenientTextSerializer::class) val category: String? = null,
+    @Serializable(with = LenientInstantSerializer::class) val published: Instant? = null,
+)
+
+internal fun VideoCardDto.toDomain(): VideoCardInfo = VideoCardInfo(
+    title = title.orEmpty(),
+    duration = duration?.takeIf { it > 0 },
+    thumbnail = thumbnail?.takeIf { it.isNotBlank() },
+    views = views?.coerceAtLeast(0),
+    live = live,
+    category = category?.takeIf { it.isNotBlank() },
+    published = published,
+)
+
+/** Nextcloud Social's `watch_progress`, on a status from "continue watching" or read on its own. */
+@Serializable
+internal data class WatchProgressDto(
+    @Serializable(with = OptionalDoubleSerializer::class) val position: Double? = null,
+    @Serializable(with = OptionalDoubleSerializer::class) val duration: Double? = null,
+    @SerialName("updated_at") @Serializable(with = LenientInstantSerializer::class) val updatedAt: Instant? = null,
+)
+
+internal fun WatchProgressDto.toDomain(): WatchProgress = WatchProgress(position ?: 0.0, duration ?: 0.0, updatedAt)

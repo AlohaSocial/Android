@@ -3,6 +3,7 @@
 
 package social.aloha.feature.video
 
+import androidx.annotation.PluralsRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -55,6 +56,7 @@ import social.aloha.core.navigation.WatchKey
 import social.aloha.core.ui.ListProgress
 import social.aloha.core.ui.LocalReadingStyle
 import social.aloha.core.ui.LocalSensitiveMediaPolicy
+import social.aloha.core.ui.PostAge
 import social.aloha.core.ui.PostDivider
 import social.aloha.core.ui.R as UiR
 import social.aloha.core.ui.RichTextColors
@@ -63,6 +65,7 @@ import social.aloha.core.ui.StatusCard
 import social.aloha.core.ui.StatusNavigation
 import social.aloha.core.ui.StatusRowUi
 import social.aloha.core.ui.minuteTicks
+import social.aloha.core.ui.spoken
 import social.aloha.core.ui.videoTitle
 
 @Composable
@@ -201,7 +204,7 @@ private fun Details(
         if (player != null) item(key = "player") { if (state.sources.isNotEmpty()) player() }
         when {
             video != null -> {
-                item(key = "about") { About(video, title, state.following, actions) }
+                item(key = "about") { About(video, title, now, state.following, actions) }
                 if (state.chapters.isNotEmpty()) {
                     item(key = "chapters") {
                         Chapters(state.chapters, actions.onChapter)
@@ -231,10 +234,10 @@ private fun Details(
 }
 
 @Composable
-private fun About(video: StatusRowUi, title: String, following: Boolean?, actions: WatchScreenActions) {
+private fun About(video: StatusRowUi, title: String, now: Instant, following: Boolean?, actions: WatchScreenActions) {
     Column(Modifier.padding(AlohaSpacing.m), verticalArrangement = Arrangement.spacedBy(AlohaSpacing.s)) {
         Text(title, style = MaterialTheme.typography.titleLarge, modifier = Modifier.semantics { heading() })
-        Counts(video)
+        Counts(video, now)
         Row(verticalAlignment = Alignment.CenterVertically) {
             TextButton(onClick = actions.onProfile, modifier = Modifier.weight(1f)) {
                 Text(video.author.plainName, maxLines = 1, modifier = Modifier.fillMaxWidth())
@@ -252,14 +255,17 @@ private fun About(video: StatusRowUi, title: String, following: Boolean?, action
     }
 }
 
+/** How often the video was watched, liked and disliked, where the reader shows counts; and when it was published. */
 @Composable
-private fun Counts(video: StatusRowUi) {
-    val details = video.video ?: return
-    if (!LocalReadingStyle.current.showCounts) return
+private fun Counts(video: StatusRowUi, now: Instant) {
+    val counted = LocalReadingStyle.current.showCounts
+    val details = video.video.takeIf { counted }
+    val views = (video.videoCard?.views ?: video.video?.views).takeIf { counted }
     val parts = listOfNotNull(
-        details.views.takeIf { it > 0 }?.let { pluralStringResource(UiR.plurals.video_views, it, it) },
-        details.likes.takeIf { it > 0 }?.let { pluralStringResource(R.plurals.watch_likes, it, it) },
-        details.dislikes.takeIf { it > 0 }?.let { pluralStringResource(R.plurals.watch_dislikes, it, it) },
+        count(views, UiR.plurals.video_views),
+        count(details?.likes, R.plurals.watch_likes),
+        count(details?.dislikes, R.plurals.watch_dislikes),
+        published(video, now),
     )
     if (parts.isEmpty()) return
     Text(
@@ -268,6 +274,16 @@ private fun Counts(video: StatusRowUi) {
         color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
 }
+
+@Composable
+private fun count(value: Int?, @PluralsRes words: Int): String? =
+    value?.takeIf { it > 0 }?.let { pluralStringResource(words, it, it) }
+
+/** When the video was published, as its age: the date its server gave it, else when it was posted. */
+@Composable
+private fun published(video: StatusRowUi, now: Instant): String? =
+    (video.videoCard?.published ?: video.createdAt).takeIf { it != Instant.EPOCH }
+        ?.let { PostAge.of(it, now).spoken(stringResource(UiR.string.status_age_now)) }
 
 @Composable
 private fun Chapters(chapters: List<VideoChapter>, onChapter: (VideoChapter) -> Unit) {

@@ -19,6 +19,7 @@ import social.aloha.core.network.endpoints.InterestEndpoints
 import social.aloha.core.network.endpoints.PlaceEndpoints
 import social.aloha.core.network.endpoints.PortfolioEndpoints
 import social.aloha.core.network.endpoints.ProfileEndpoints
+import social.aloha.core.network.endpoints.StatusEndpoints
 import social.aloha.core.network.endpoints.StoryEndpoints
 import social.aloha.core.network.endpoints.VideoEndpoints
 
@@ -82,6 +83,40 @@ class ExtensionDecodingTest {
         assertEquals("179", item.statusId)
         assertEquals(30.5, item.duration)
         assertNull(item.status)
+    }
+
+    @Test
+    fun `continue watching reads where a bare post was left in its watch progress`() {
+        val social = """[{"id": "179", "content": "", "visibility": "public", "video_card": null,
+            "watch_progress": {"position": 95, "duration": 600, "updated_at": "2026-10-20T08:00:00.000Z"}}]"""
+        val item = VideoEndpoints.continueWatching().value(social).single()
+        assertEquals(95.0, item.position)
+        assertEquals(600.0, item.duration)
+        assertEquals(Instant.parse("2026-10-20T08:00:00Z"), item.updatedAt)
+    }
+
+    @Test
+    fun `a video post carries its card and where the reader got to`() {
+        val post = """{"id": "179", "account": $ACCOUNT, "visibility": "public",
+            "video_card": {"title": "Sunrise", "duration": 600, "thumbnail": "https://nextcloud.local/p.jpg",
+            "views": 42, "live": false, "category": null, "published": "2026-09-01T10:00:00.000Z"},
+            "watch_progress": {"position": 95, "duration": 600, "updated_at": null}}"""
+        val status = StatusEndpoints.status("179").value(post)
+        val card = status.videoCard
+        assertEquals("Sunrise", card?.title)
+        assertEquals(42, card?.views)
+        assertEquals("https://nextcloud.local/p.jpg", card?.thumbnail)
+        assertEquals(Instant.parse("2026-09-01T10:00:00Z"), card?.published)
+        assertEquals(95.0, status.watchProgress?.position)
+        assertNull(status.watchProgress?.updatedAt)
+    }
+
+    @Test
+    fun `a post that is not a video has neither`() {
+        val post = """{"id": "1", "account": $ACCOUNT, "video_card": null, "watch_progress": null}"""
+        val status = StatusEndpoints.status("1").value(post)
+        assertNull(status.videoCard)
+        assertNull(status.watchProgress)
     }
 
     @Test

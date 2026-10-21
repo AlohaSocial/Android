@@ -5,6 +5,7 @@ package social.aloha.core.model
 
 import java.time.Instant
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 
 /**
  * A post.
@@ -22,6 +23,9 @@ import kotlinx.serialization.Serializable
  *   `unknown`), where the server answers for them, as Mastodon's `quote_approval.current_user`.
  * @property archived off the profile, not deleted; null when the server does not say.
  * @property video the PeerTube-shaped facts Nextcloud Social carries on a video post.
+ * @property videoCard the facts Nextcloud Social carries on every video post, `video_card`.
+ * @property watchProgress where the reader got to in the video, as the server sent it with this read;
+ *   never cached, since it is stale as soon as the reader plays on.
  */
 @Serializable
 public data class Status(
@@ -66,6 +70,8 @@ public data class Status(
     val archived: Boolean? = null,
     val place: StatusPlace? = null,
     val video: VideoDetails? = null,
+    val videoCard: VideoCardInfo? = null,
+    @Transient val watchProgress: WatchProgress? = null,
     /** Whether the post was made on the reader's server; null where the server did not say. */
     val local: Boolean? = null,
 ) {

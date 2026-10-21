@@ -99,6 +99,10 @@ internal object StatusPlaceOrNull : KSerializer<StatusPlaceDto?> by OrNullSerial
 
 internal object VideoDetailsOrNull : KSerializer<VideoDetailsDto?> by OrNullSerializer(VideoDetailsDto.serializer())
 
+internal object VideoCardOrNull : KSerializer<VideoCardDto?> by OrNullSerializer(VideoCardDto.serializer())
+
+internal object WatchProgressOrNull : KSerializer<WatchProgressDto?> by OrNullSerializer(WatchProgressDto.serializer())
+
 /**
  * A quote in either shape servers send: Mastodon 4.4's `{state, quoted_status}` wrapper, or the quoted
  * status itself. A quote that fits neither is absent rather than failing the status.
