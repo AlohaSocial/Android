@@ -83,6 +83,15 @@ public fun ProfileRoute(key: AccountKey, navigation: ProfileNavigation, modifier
                 nav.openPeople(id, if (followers) PeopleKind.Followers else PeopleKind.Following)
             }
 
+            override fun onFeaturedTag(name: String) {
+                val author = state.header?.author
+                if (author != null && state.featured?.byAccount == true) {
+                    nav.openAccountTag(name, author.id, author.handle)
+                } else {
+                    nav.openTag(name)
+                }
+            }
+
             override fun onOpenInBrowser(url: String) = openInBrowser(context, url)
 
             override val windows: Boolean get() = nav.newWindow != null

@@ -58,7 +58,10 @@ boosted in Home.
 Client-side filtering rules:
 
 - Over-fetching is capped: at most 5 upstream pages per user-visible page, and
-  the loop stops early if a page returns fewer than `limit` rows.
+  the loop stops early once a page names no `next` in its `Link` header. A page
+  shorter than `limit` is not the end while it does: a server may leave posts
+  out after choosing the page (Nextcloud Social's reply hiding, `hide`
+  filters). A `next` that names the page just fetched again counts as none.
 - A filtered-out status is still cached as a `StatusRecord` (it may be needed by
   Home) but gets no `TimelineEntry` in the mode's timeline.
 - The `Link` header cursor from the **last upstream page fetched** is what the

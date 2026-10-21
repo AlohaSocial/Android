@@ -416,7 +416,7 @@ internal class ProfileViewModel @AssistedInject constructor(
             lists = control.lists,
             familiar = control.familiar.map { Familiar(it.id, it.bestDisplayName, it.avatar) },
             knownHandle = key.acct?.let { if (it.startsWith('@')) it else "@$it" },
-            featured = ProfilePresentation.featured(control.pinned, control.featuredTags) {
+            featured = ProfilePresentation.featured(control.pinned, control.featuredTags, reader.capabilities) {
                 rows.rowFor(it, reader.serverAccountId, null)
             },
         )
@@ -424,7 +424,8 @@ internal class ProfileViewModel @AssistedInject constructor(
 
     private fun headerOf(account: Account, colors: RichTextColors, reader: SignedInAccount): ProfileHeader {
         header?.let { (built, with, shown) -> if (built === account && with == colors) return shown }
-        return ProfilePresentation.header(account, cache, colors, account.id == reader.serverAccountId).also {
+        val isSelf = account.id == reader.serverAccountId
+        return ProfilePresentation.header(account, cache, colors, isSelf, reader.capabilities.realFollowerCounts).also {
             header = Triple(account, colors, it)
         }
     }

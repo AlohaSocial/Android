@@ -124,10 +124,17 @@ public sealed interface TimelineSource {
         override val requiresViewer: Boolean get() = false
     }
 
+    /** An account's posts; with [tagged], only those carrying that hashtag. */
     @Serializable
-    public data class Account(val id: String, val includeReplies: Boolean, val onlyMedia: Boolean) : TimelineSource {
+    public data class Account(
+        val id: String,
+        val includeReplies: Boolean,
+        val onlyMedia: Boolean,
+        val tagged: String? = null,
+    ) : TimelineSource {
         override val storageKey: String
-            get() = "account:$id:${if (includeReplies) 1 else 0}:${if (onlyMedia) 1 else 0}"
+            get() = "account:$id:${if (includeReplies) 1 else 0}:${if (onlyMedia) 1 else 0}" +
+                tagged?.let { ":tag=${it.lowercase()}" }.orEmpty()
     }
 }
 

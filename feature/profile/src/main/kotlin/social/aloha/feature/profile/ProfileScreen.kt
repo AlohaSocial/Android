@@ -204,7 +204,7 @@ private fun LazyListScope.tabContent(
 
         ProfileTab.Stories -> listed(state.stories, Story::id) { StoryRow(it, actions) }
 
-        ProfileTab.Featured -> state.featured?.let { featured(it, state.now, rowActions) }
+        ProfileTab.Featured -> state.featured?.let { featured(it, state.now, rowActions, actions::onFeaturedTag) }
 
         else -> {
             val handle = state.header?.author?.handle.orEmpty()

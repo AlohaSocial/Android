@@ -88,6 +88,18 @@ public data class ServerCapabilities(
      */
     val videoViews: Boolean get() = isNextcloudSocial && atLeast(softwareVersion, VIDEO_VIEWS)
 
+    /**
+     * Whether `accounts/{id}/statuses` applies `exclude_replies` and `tagged`: every server but Nextcloud
+     * Social before 0.26.237, which ignored both and answered every post.
+     */
+    val accountPostsNarrowed: Boolean get() = !isNextcloudSocial || atLeast(softwareVersion, ACCOUNT_POSTS_NARROWED)
+
+    /**
+     * Whether an account's `followers_count` is real for every reader: every server but Nextcloud Social
+     * before 0.26.241, which sent 0 to a reader who hides the numbers (`/api/v1/social/counts`).
+     */
+    val realFollowerCounts: Boolean get() = !isNextcloudSocial || atLeast(softwareVersion, REAL_FOLLOWER_COUNTS)
+
     /** How this server measures a post against its character limit. */
     val lengthRule: LengthRule get() = if (isNextcloudSocial) LengthRule.CodePoints else LengthRule.Mastodon
 
@@ -123,6 +135,8 @@ public data class ServerCapabilities(
         private val REACTIONS_ON_STATUS = listOf(0, 26, 221)
         private val ACCOUNT_PAGES_WITH_TOKEN = listOf(0, 26, 220)
         private val VIDEO_VIEWS = listOf(0, 26, 278)
+        private val ACCOUNT_POSTS_NARROWED = listOf(0, 26, 237)
+        private val REAL_FOLLOWER_COUNTS = listOf(0, 26, 241)
 
         /** Raised whenever detection learns a new field: 1 added the live feeds, 2 the Shorts narrowing. */
         public const val CURRENT_FORMAT: Int = 2

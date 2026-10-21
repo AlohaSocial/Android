@@ -61,6 +61,10 @@ class TimelineAndCapabilitiesTest {
             "home:account:7:0:1",
             TimelineKey.home(TimelineSource.Account("7", includeReplies = false, onlyMedia = true)).storageKey,
         )
+        assertEquals(
+            "home:account:7:1:0:tag=surf",
+            TimelineKey.home(TimelineSource.Account("7", true, onlyMedia = false, tagged = "Surf")).storageKey,
+        )
     }
 
     @Test

@@ -153,7 +153,26 @@ public class TimelineRepository @Inject constructor(
         val anchor: PageAnchor,
         val cursor: HttpUrl?,
         val direction: TimelineMerge.Direction,
-    )
+    ) {
+        /**
+         * The account whose posts without replies come with them, the server having ignored
+         * `exclude_replies` (Nextcloud Social before 0.26.237), so the device leaves them out.
+         */
+        val withoutReplies: TimelineSource.Account?
+            get() = (key.source as? TimelineSource.Account)
+                ?.takeIf { !it.includeReplies && !account.capabilities.accountPostsNarrowed }
+
+        /** How many upstream pages one visible page may take. */
+        val budget: Int
+            get() = if (withoutReplies != null) {
+                OverFetch.MAXIMUM_UPSTREAM_PAGES
+            } else {
+                minOf(OverFetch.MAXIMUM_UPSTREAM_PAGES, OverFetch.multiplier(key.mode))
+            }
+
+        /** Whether the device keeps [status] in this timeline, whatever its mode. */
+        fun keeps(status: Status): Boolean = withoutReplies?.isNoReply(status) != false
+    }
 
     private suspend fun fetchAndMerge(fetch: Fetch): PageOutcome {
         val lock = inFlight.getOrPut(lockKey(fetch.account, fetch.key)) { Mutex() }
@@ -218,8 +237,11 @@ public class TimelineRepository @Inject constructor(
     }
 
     private data class Harvest(val statuses: List<Status>, val pageWasFull: Boolean, val nextCursor: HttpUrl?) {
-        /** A short page, or one without a way further down: the server has nothing more to over-fetch. */
-        val isLastUpstream: Boolean get() = !pageWasFull || nextCursor == null
+        /**
+         * A page without a way further down. A short page is not the end while the server names a next one:
+         * it may have left posts out after choosing the page (Nextcloud Social's reply hiding, `hide` filters).
+         */
+        val isLastUpstream: Boolean get() = nextCursor == null
 
         /** The page as read from [domain]: its ids kept apart from the reader's server's, its handles in full. */
         fun from(domain: String): Harvest = copy(statuses = statuses.map { it.elsewhere(domain) })
@@ -228,26 +250,27 @@ public class TimelineRepository @Inject constructor(
     /**
      * One visible page. A media mode keeps only what belongs in it, whatever the server narrowed, and
      * fetches on until the page is full: at most [OverFetch.MAXIMUM_UPSTREAM_PAGES] upstream pages,
-     * stopping at a short page so nothing is skipped. `pageWasFull` is about what the server sent, not
+     * stopping where the server names no next page. `pageWasFull` is about what the server sent, not
      * what survived the filter, and the cursor is the last upstream page's. A page asked for above a post
      * (`min_id`) goes on upwards, through `prev`: `next` would lead back down into the rows below it.
+     * An account's posts without replies leave the replies out on the device where the server ignored
+     * `exclude_replies` (Nextcloud Social before 0.26.237), paging on for them as a media mode does.
      */
     private suspend fun harvest(client: ApiClient, fetch: Fetch): ApiResult<Harvest> {
         val mode = fetch.key.mode
         val serverFilters = TimelineFilters.forMode(mode, fetch.account.capabilities)
         val onDevice = mode != FeedMode.Home
-        val budget = minOf(OverFetch.MAXIMUM_UPSTREAM_PAGES, OverFetch.multiplier(mode))
         val request = TimelineEndpoints.timeline(fetch.key.source, serverFilters, Paging.DEFAULT_LIMIT, fetch.anchor)
         val upwards = fetch.anchor is PageAnchor.NewerThan
         val kept = mutableListOf<Status>()
         var last = Harvest(emptyList(), pageWasFull = false, nextCursor = fetch.cursor)
-        for (page in 1..budget) {
+        for (page in 1..fetch.budget) {
             val fetched = when (val result = page(client, request, last.nextCursor, upwards)) {
                 is ApiResult.Failure -> return result
                 is ApiResult.Success -> result.value
             }
             val kinds = if (onDevice) statuses.kinds(fetch.account.id, fetched.statuses) else emptyMap()
-            kept += fetched.statuses.filter { !onDevice || kinds.getValue(it.id).belongs(mode) }
+            kept += fetched.statuses.filter { !onDevice || kinds.getValue(it.id).belongs(mode) }.filter(fetch::keeps)
             last = fetched
             if (fetched.isLastUpstream || kept.size >= Paging.DEFAULT_LIMIT) break
         }
@@ -265,10 +288,23 @@ public class TimelineRepository @Inject constructor(
             cursor?.let { client.page(it, request, Paging.DEFAULT_LIMIT) } ?: client.page(request, Paging.DEFAULT_LIMIT)
         return result.map {
             val further = if (upwards) it.link.previous else it.link.next
-            Harvest(it.items, pageWasFull = it.rawCount >= Paging.DEFAULT_LIMIT, nextCursor = further)
+            // a next page that is this one again leads nowhere: paging it would never end
+            Harvest(
+                it.items,
+                pageWasFull = it.rawCount >= Paging.DEFAULT_LIMIT,
+                nextCursor = further?.takeUnless { next -> next == cursor },
+            )
         }
     }
 }
+
+/**
+ * Whether [status] is what `exclude_replies` keeps of this account's posts: one that answers nobody, a
+ * boost, or a reply to the account itself (a thread). A reply whose parent the server does not know
+ * counts as one to another account, as on Nextcloud Social.
+ */
+internal fun TimelineSource.Account.isNoReply(status: Status): Boolean =
+    status.inReplyToId == null || status.inReplyToAccountId == id
 
 /**
  * [this] post, read from another server, [domain]: its ids, and its authors' and boosters', under

@@ -61,6 +61,8 @@ public data class AccountSettings(
     val explainedFeeds: Set<String> = emptySet(),
     /** Whose notifications this account gets, on the device and in what its server pushes. */
     val notificationsFrom: NotificationsFrom = NotificationsFrom.Anyone,
+    /** Whether this account's server last took the numbers as hidden; null until it took either. */
+    val countsHidden: Boolean? = null,
 )
 
 /**

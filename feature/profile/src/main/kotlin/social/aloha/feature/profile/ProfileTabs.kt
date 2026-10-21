@@ -39,7 +39,6 @@ import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.ui.LocalReadingStyle
 import social.aloha.core.ui.LocalSensitiveMediaPolicy
 import social.aloha.core.ui.PostDivider
-import social.aloha.core.ui.RichLinkTarget
 import social.aloha.core.ui.StatusActions
 import social.aloha.core.ui.StatusCard
 
@@ -105,8 +104,16 @@ private fun TimelineChips(tab: ProfileTab, onTab: (ProfileTab) -> Unit) {
     }
 }
 
-/** What the account features: its pinned posts and its hashtags, a few of each until "View all". */
-internal fun LazyListScope.featured(featured: FeaturedUi, now: Instant, rowActions: StatusActions) {
+/**
+ * What the account features: its pinned posts and its hashtags, a few of each until "View all". A hashtag
+ * goes to [onTag].
+ */
+internal fun LazyListScope.featured(
+    featured: FeaturedUi,
+    now: Instant,
+    rowActions: StatusActions,
+    onTag: (String) -> Unit,
+) {
     if (featured.posts.isNotEmpty()) {
         item(key = "pinned-title") { SectionTitle(R.string.profile_featured_pinned) }
         item(key = "pinned") {
@@ -124,7 +131,7 @@ internal fun LazyListScope.featured(featured: FeaturedUi, now: Instant, rowActio
             ViewAll(featured.tags, SHOWN) { tags ->
                 tags.forEach { tag ->
                     ListItem(
-                        modifier = Modifier.clickable { rowActions.onLink(RichLinkTarget.Hashtag(tag.name)) },
+                        modifier = Modifier.clickable { onTag(tag.name) },
                         headlineContent = { Text("#${tag.name}") },
                         supportingContent = if (LocalReadingStyle.current.showCounts) {
                             {

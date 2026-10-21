@@ -232,9 +232,10 @@ private fun Counts(header: ProfileHeader, actions: ProfileScreenActions) {
             )
         }
         TextButton(onClick = { actions.onPeople(followers = true) }) {
+            val followers = header.followers
             Text(
-                if (numbers) {
-                    pluralStringResource(R.plurals.profile_followers, header.followers, format.format(header.followers))
+                if (numbers && followers != null) {
+                    pluralStringResource(R.plurals.profile_followers, followers, format.format(followers))
                 } else {
                     stringResource(R.string.profile_followers_plain)
                 },

@@ -22,6 +22,7 @@ import social.aloha.core.network.dto.UnreadCountDto
 import social.aloha.core.network.dto.toDomain
 import social.aloha.core.network.flagQuery
 import social.aloha.core.network.listRequest
+import social.aloha.core.network.queryOf
 import social.aloha.core.network.repeatedQuery
 import social.aloha.core.network.request
 import social.aloha.core.network.unitRequest
@@ -41,7 +42,11 @@ public object TimelineEndpoints {
         if (source == TimelineSource.Notified) return notified(page)
         val items = when (source) {
             is TimelineSource.Account ->
-                page + flagQuery("exclude_replies", !source.includeReplies) + flagQuery("only_media", source.onlyMedia)
+                page + flagQuery(
+                    "exclude_replies",
+                    !source.includeReplies,
+                ) + flagQuery("only_media", source.onlyMedia) +
+                    queryOf("tagged", source.tagged)
 
             is TimelineSource.Hashtag -> page + tagItems(source) + filterItems(filters)
 

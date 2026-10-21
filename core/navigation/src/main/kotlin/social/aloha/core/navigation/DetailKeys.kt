@@ -20,9 +20,17 @@ public data class ThreadKey(val readerId: String, val statusId: String, val hist
 @Serializable
 public data class AccountKey(val readerId: String, val id: String? = null, val acct: String? = null) : NavKey
 
-/** The public timeline of one hashtag, as [readerId] sees it. */
+/**
+ * The public timeline of one hashtag, as [readerId] sees it; with [accountId], only that account's posts
+ * with it, the account known as [handle].
+ */
 @Serializable
-public data class TagKey(val readerId: String, val name: String) : NavKey
+public data class TagKey(
+    val readerId: String,
+    val name: String,
+    val accountId: String? = null,
+    val handle: String? = null,
+) : NavKey
 
 /** Who or what a post reached, each a list of its own. */
 public enum class StatusListKind { FavouritedBy, BoostedBy, Quotes, Reactions }

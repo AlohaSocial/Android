@@ -28,6 +28,8 @@
     <string name="timeline_title_news">News</string>
     <!-- Title of the timeline of posts with audio -->
     <string name="timeline_title_audio">Audio</string>
+    <!-- Title of one account's posts with a hashtag, opened from the hashtags it features on its profile. %1$s is the hashtag without its #, %2$s the account's handle with its @, such as @bob@example.social -->
+    <string name="timeline_title_account_tag">#%1$s by %2$s</string>
     <!-- Source switch: the people the reader follows -->
     <string name="timeline_source_home">Following</string>
     <!-- Source switch: everyone on the reader's own server -->
