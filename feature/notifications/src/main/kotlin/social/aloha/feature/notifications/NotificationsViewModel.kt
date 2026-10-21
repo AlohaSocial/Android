@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
@@ -39,6 +40,7 @@ import social.aloha.core.data.notifications.NotificationsRepository
 import social.aloha.core.data.notifications.preview
 import social.aloha.core.data.sync.SyncSettings
 import social.aloha.core.data.sync.UnreadCounts
+import social.aloha.core.data.sync.UserStream
 import social.aloha.core.data.timeline.StatusInteractions
 import social.aloha.core.data.timeline.Toggle
 import social.aloha.core.data.trouble
@@ -112,7 +114,8 @@ internal data class NotificationsUiState(
 /**
  * The notifications of the account in use, or of every account where they show together, newest first.
  * Coming on screen refreshes and marks what it shows read, each account on its own server; while on
- * screen, a poll that finds more refreshes it. Rows newer than the read marker the screen opened with
+ * screen, a poll that finds more refreshes it, and so do notifications the stream says were let in from
+ * requests, which can sit below the newest. Rows newer than the read marker the screen opened with
  * stay marked new until the next refresh, so the person sees what they had not read.
  */
 @HiltViewModel
@@ -121,6 +124,7 @@ internal class NotificationsViewModel @Inject constructor(
     private val repository: NotificationsRepository,
     private val filtering: NotificationFiltering,
     unread: UnreadCounts,
+    stream: UserStream,
     private val settings: SyncSettings,
     private val interactions: StatusInteractions,
     private val accountSettings: AccountSettingsStore,
@@ -254,6 +258,14 @@ internal class NotificationsViewModel @Inject constructor(
             combine(unread.all, accounts) { counts, accounts -> accounts.sumOf { counts[it.id] ?: 0 } }
                 .distinctUntilChanged()
                 .collect { if (it > 0 && shown) refresh() }
+        }
+        viewModelScope.launch {
+            stream.notificationsMerged.collect { id ->
+                if (!shown || accounts.value.none { it.id == id }) return@collect
+                // a refresh on its way may have asked before these were let in: another follows it
+                control.first { !it.refreshing }
+                if (shown) refresh()
+            }
         }
     }
 

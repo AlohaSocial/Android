@@ -32,7 +32,18 @@ class StreamingSocketsTest {
             """{"stream":["user"],"event":"status.update","payload":${quoted(status)}}""",
         ) as StreamEvent.Edited
         assertEquals("9", edited.status.id)
-        assertNull(streamEvent("""{"stream":["user"],"event":"conversation","payload":"{}"}"""))
+        assertEquals(
+            StreamEvent.NotificationsMerged,
+            streamEvent("""{"stream":["user"],"event":"notifications_merged","payload":""}"""),
+        )
+        val conversation = """{"id":"4","unread":true,"accounts":[],"last_status":$status}"""
+        val changed = streamEvent(
+            """{"stream":["direct"],"event":"conversation","payload":${quoted(conversation)}}""",
+        ) as StreamEvent.ConversationChanged
+        assertEquals("4", changed.conversation.id)
+        assertEquals("9", changed.conversation.lastStatus?.id)
+        assertNull(streamEvent("""{"stream":["direct"],"event":"conversation","payload":"{}"}"""))
+        assertNull(streamEvent("""{"stream":["user"],"event":"announcement","payload":"{}"}"""))
         assertNull(streamEvent("not a frame"))
         assertNull(streamEvent("""{"stream":["user"],"event":"status.update","payload":"{broken"}"""))
         assertNull(streamEvent("""{"stream":["user"],"event":"delete","payload":{"id":"9"}}"""))
@@ -40,12 +51,14 @@ class StreamingSocketsTest {
     }
 
     @Test
-    fun `the socket asks for the user stream with the token in its header, not its address`() {
+    fun `the socket asks for the user stream with the token in its header, not its address, and for direct`() {
         val server = MockWebServer()
+        val subscribed = CopyOnWriteArrayList<String>()
         server.enqueue(
             MockResponse.Builder().webSocketUpgrade(
                 object : WebSocketListener() {
-                    override fun onOpen(webSocket: WebSocket, response: Response) {
+                    override fun onMessage(webSocket: WebSocket, text: String) {
+                        subscribed += text
                         webSocket.send("""{"stream":["user"],"event":"delete","payload":"7"}""")
                         webSocket.close(1000, null)
                     }
@@ -75,6 +88,7 @@ class StreamingSocketsTest {
         val request = server.takeRequest()
         assertEquals("/api/v1/streaming?stream=user", request.target)
         assertEquals("Bearer secret", request.headers["Authorization"])
+        assertEquals(listOf("""{"type":"subscribe","stream":"direct"}"""), subscribed)
         assertTrue(opened)
         assertEquals(listOf<StreamEvent>(StreamEvent.Deleted("7")), events)
         server.close()

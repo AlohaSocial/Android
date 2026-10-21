@@ -21,6 +21,7 @@ import social.aloha.core.network.ApiError
 import social.aloha.core.network.ApiRequest
 import social.aloha.core.network.ApiResult
 import social.aloha.core.network.Authentication
+import social.aloha.core.network.Decoded
 import social.aloha.core.network.Endpoint
 import social.aloha.core.network.QueryItem
 import social.aloha.core.network.RateLimiter
@@ -42,8 +43,10 @@ import social.aloha.core.network.unitRequest
  * when NodeInfo names Nextcloud Social: Mastodon ignores unknown parameters, so their acceptance
  * proves nothing there. Pixelfed's `/api/v2/config` `features`, which Nextcloud Social serves
  * publicly, is taken at its word where it speaks; its `shorts`, Nextcloud Social's own from 0.26.222,
- * is the only word on `only_short`. `hls_url`, reactions and quotes have nothing
- * announcing them and are latched later, on first sighting in an entity.
+ * is the only word on `only_short`. Nextcloud Social announces its streaming address whether or not
+ * the administrator runs the stream daemon, so there the stream counts only when the daemon answers
+ * its health route. `hls_url`, reactions and quotes have nothing announcing them and are latched later,
+ * on first sighting in an entity.
  */
 public class CapabilityDetector internal constructor(executor: RequestExecutor, private val now: () -> Instant) {
     public constructor(
@@ -63,7 +66,7 @@ public class CapabilityDetector internal constructor(executor: RequestExecutor, 
         nodeInfo: NodeInfo?,
     ): ServerCapabilities {
         val nextcloud = nodeInfo?.isNextcloudSocial == true
-        val found = findings(apiBase, token, nextcloud)
+        val found = findings(apiBase, token, nextcloud, instance.streamingUrl)
         val announcesFourThree = (instance.mastodonApiVersion ?: 0) >= MASTODON_4_3_API ||
             listOf("4.3", "4.4", "4.5").any { instance.version.contains(it) }
         return ServerCapabilities(
@@ -71,7 +74,7 @@ public class CapabilityDetector internal constructor(executor: RequestExecutor, 
             softwareName = nodeInfo?.softwareName?.lowercase().orEmpty(),
             softwareVersion = nodeInfo?.softwareVersion ?: instance.version,
             mastodonApiVersion = instance.mastodonApiVersion,
-            streamingUrl = instance.streamingUrl,
+            streamingUrl = instance.streamingUrl?.takeIf { !nextcloud || found.streaming },
             webPushVapidKey = instance.vapidKey.takeIf { instance.hasWebPush },
             groupedNotifications = announcesFourThree && found.grouped,
             notificationPolicy = found.policy,
@@ -111,10 +114,16 @@ public class CapabilityDetector internal constructor(executor: RequestExecutor, 
         val onlyShort: Boolean,
         val languages: Map<String, List<String>>,
         val theme: NextcloudTheme?,
+        val streaming: Boolean,
     )
 
     /** Every probe at once; the server's Pixelfed `features` answer wins over a probe where it speaks. */
-    private suspend fun findings(apiBase: HttpUrl, token: AccessToken?, nextcloud: Boolean): Findings = coroutineScope {
+    private suspend fun findings(
+        apiBase: HttpUrl,
+        token: AccessToken?,
+        nextcloud: Boolean,
+        streamingUrl: String?,
+    ): Findings = coroutineScope {
         val probes = Probes(executor, apiBase, token?.let { "Bearer ${it.value}" }.orEmpty())
         val grouped = async { probes.exists("api/v2/notifications", LIMIT_ONE) }
         val policy = async { probes.exists("api/v2/notifications/policy") }
@@ -129,6 +138,7 @@ public class CapabilityDetector internal constructor(executor: RequestExecutor, 
         val video = async { nextcloud && probes.acceptsNarrowing("only_video") }
         val news = async { nextcloud && probes.acceptsNarrowing("only_news") }
         val media = async { nextcloud || probes.acceptsNarrowing("only_media") }
+        val streaming = async { nextcloud && streamingUrl != null && probes.streamAnswers(streamingUrl) }
         Findings(
             grouped = grouped.await(),
             policy = policy.await(),
@@ -143,6 +153,7 @@ public class CapabilityDetector internal constructor(executor: RequestExecutor, 
             onlyShort = features.await()?.shorts == true,
             languages = languages.await(),
             theme = theme.await(),
+            streaming = streaming.await(),
         )
     }
 
@@ -191,6 +202,16 @@ private class Probes(private val executor: RequestExecutor, private val apiBase:
         return executor.execute(request, request.endpoint.resolve(apiBase), bearer) is ApiResult.Success
     }
 
+    /** The stream daemon's health route answers `OK`; a host without the daemon answers anything else. */
+    suspend fun streamAnswers(streamingUrl: String): Boolean {
+        val endpoint = Endpoint("api/v1/streaming/health", authentication = Authentication.None)
+        val url = streamingUrl.replaceFirst(WEBSOCKET_SCHEME, "http").toHttpUrlOrNull()
+            ?.newBuilder()?.addPathSegments(endpoint.path)?.build() ?: return false
+        val request =
+            ApiRequest(endpoint) { _, body -> Decoded(body.trim() == "OK", rawCount = null, failures = emptyList()) }
+        return (executor.execute(request, url, authorization = "") as? ApiResult.Success)?.value?.decoded?.value == true
+    }
+
     suspend fun translationLanguages(): Map<String, List<String>> =
         fetch(InstanceEndpoints.translationLanguages()).orEmpty()
 
@@ -220,6 +241,7 @@ private fun ApiError.provesRouteExists(): Boolean = when (this) {
 }
 
 private const val METHOD_NOT_ALLOWED = 405
+private val WEBSOCKET_SCHEME = Regex("^ws(?=s?://)")
 
 @Serializable
 internal data class PixelfedFeaturesDto(val features: Features? = null) {

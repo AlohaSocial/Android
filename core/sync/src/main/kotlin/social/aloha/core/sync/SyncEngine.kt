@@ -50,8 +50,8 @@ import timber.log.Timber
 
 /**
  * Asks every signed-in account's server what is new while the app is open, at the pace [PollScheduler]
- * sets. Nextcloud Social has no streaming and no push of its own, so polling is the normal case here,
- * not a fallback.
+ * sets. Nextcloud Social streams only where its administrator runs the stream daemon, and has no push of
+ * its own, so polling is the normal case here, not a fallback.
  *
  * Each poll asks for the unread count first, the cheapest call there is. A timeline on screen is then
  * told through [TimelineSignals] that it is due; [PollListener]s hear when the count moved, and again on
