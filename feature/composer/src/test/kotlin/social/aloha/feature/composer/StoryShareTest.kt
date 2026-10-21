@@ -3,9 +3,12 @@
 
 package social.aloha.feature.composer
 
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import social.aloha.core.network.ApiError
+import social.aloha.core.network.Refusal
 
 class StoryShareTest {
     private val picture = Attachment("a", file = null, fileName = "beach.jpg", mimeType = "image/jpeg")
@@ -44,5 +47,16 @@ class StoryShareTest {
         assertTrue(ComposerUiState().fresh)
         assertFalse(ComposerUiState(editing = true).fresh)
         assertFalse(ComposerUiState(replaces = "9").fresh)
+    }
+
+    @Test
+    fun `stories at the server's limit say the limit, and any other refusal keeps the server's words`() {
+        val full = ApiError.Unprocessable("already has 3 live shorts", Refusal("shorts-full", mapOf("limit" to "3")))
+        assertEquals(PostFailure.StoriesFull(3), failureOf(full))
+        assertEquals(PostFailure.Refused("too long"), failureOf(ApiError.Unprocessable("too long")))
+        val noLimit = ApiError.Unprocessable("full", Refusal("shorts-full"))
+        assertEquals(PostFailure.Refused("full"), failureOf(noLimit))
+        val other = ApiError.Unprocessable("no", Refusal("something-new", mapOf("limit" to "3")))
+        assertEquals(PostFailure.Refused("no"), failureOf(other))
     }
 }

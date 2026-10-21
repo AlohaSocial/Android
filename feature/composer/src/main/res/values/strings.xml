@@ -150,6 +150,11 @@
     <string name="composer_refused">The server didn\'t take the post: %1$s</string>
     <!-- Error when the server refuses the post without saying why -->
     <string name="composer_refused_unknown">The server didn\'t take the post.</string>
+    <!-- Error when sharing a story while the account already has as many up as the server allows; the placeholder is that number -->
+    <plurals name="composer_stories_full">
+        <item quantity="one">You already have %1$d story up, the most this server allows. Try again once it has ended.</item>
+        <item quantity="other">You already have %1$d stories up, the most this server allows. Try again once one has ended.</item>
+    </plurals>
     <!-- Error when the server cannot be reached while posting -->
     <string name="composer_unreached">Couldn\'t reach the server. Nothing is lost; try again.</string>
     <!-- Error when the post being replied to cannot be found from the account chosen -->

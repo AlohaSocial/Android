@@ -109,6 +109,11 @@ internal class ThreadPoster(
 
 /** What a server's refusal means to the writer: a reason to fix, or a server to try again. */
 internal fun failureOf(error: ApiError): PostFailure = when (error) {
-    is ApiError.Unprocessable -> PostFailure.Refused(error.message)
+    is ApiError.Unprocessable -> error.refusal?.takeIf { it.code == SHORTS_FULL }?.number("limit")
+        ?.let(PostFailure::StoriesFull)
+        ?: PostFailure.Refused(error.message)
+
     else -> PostFailure.Unreached(error.trouble)
 }
+
+private const val SHORTS_FULL = "shorts-full"
