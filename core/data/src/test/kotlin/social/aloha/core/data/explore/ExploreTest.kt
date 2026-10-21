@@ -77,4 +77,26 @@ class ExploreTest {
         assertEquals(12, tags.single().history.single().usesCount)
         assertTrue(answers.asked.any { it.contains("/trends/tags") && it.contains("period=3d") })
     }
+
+    @Test
+    fun `a starter pack is followed when somebody in it was, or the server does not say`() = runBlocking {
+        val reader = fixture.signIn(server.url("/"))
+        val asked = mutableListOf<String>()
+        for ((body, done) in listOf(
+            """{"followed":[]}""" to false,
+            """{"followed":["a@b.example"]}""" to true,
+            "{}" to true,
+        )) {
+            server.dispatcher = object : Dispatcher() {
+                override fun dispatch(request: RecordedRequest): MockResponse {
+                    asked += "${request.method} ${request.url.encodedPath}"
+                    return MockResponse.Builder().code(
+                        200,
+                    ).body(body).addHeader("content-type", "application/json").build()
+                }
+            }
+            assertEquals(Answer.Got(done), explore.followAll(reader, "surf"))
+        }
+        assertEquals("POST /api/v1/starter_packs/surf/follow", asked.last())
+    }
 }

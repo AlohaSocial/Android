@@ -140,6 +140,29 @@ class ExtensionDecodingTest {
         val pack = DiscoveryEndpoints.starterPacks().value(body).single()
         assertEquals("photography", pack.slug)
         assertEquals(2, pack.size)
+        assertNull(pack.curator)
+    }
+
+    @Test
+    fun `a starter pack read in says where it came from, and a follow who was followed`() {
+        val body = """{"id": "surf", "name": "Surf", "source": "fediverse", "curator": "kai@waves.example",
+            "url": "https://waves.example/c/1", "topic": "surf", "language": "en", "size": 1, "accounts": [],
+            "unresolved": ["https://gone.example/u/a"]}"""
+        val pack = DiscoveryEndpoints.starterPack("surf").value(body)
+        assertEquals("fediverse", pack?.source)
+        assertEquals("kai@waves.example", pack?.curator)
+        assertEquals("https://waves.example/c/1", pack?.url)
+        assertEquals("surf", pack?.topic)
+        assertEquals(listOf("https://gone.example/u/a"), pack?.unresolved)
+        val plain = """{"id": "x", "curator": null, "url": "http://waves.example/c/1"}"""
+        assertNull(DiscoveryEndpoints.starterPack("x").value(plain)?.url)
+        val bluesky = """{"id": "b", "source": "bluesky", "curator": "did:plc:abc123"}"""
+        assertNull(DiscoveryEndpoints.starterPack("b").value(bluesky)?.curator)
+        assertEquals(
+            listOf("kai@waves.example"),
+            DiscoveryEndpoints.followStarterPack("surf").value("""{"followed": ["kai@waves.example"]}"""),
+        )
+        assertNull(DiscoveryEndpoints.followStarterPack("surf").value("{}"))
     }
 
     @Test

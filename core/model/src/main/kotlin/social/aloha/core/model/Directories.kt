@@ -17,6 +17,12 @@ import kotlinx.serialization.Serializable
  * @property handles the handles the pack names, before resolution.
  * @property size how many accounts the pack holds; the list route sends the number without resolving anybody.
  * @property accounts resolved on the single-pack route only.
+ * @property source `builtin`, `local`, `fediverse` or `bluesky`; empty from a server that does not say.
+ * @property curator who curated a pack read in from another server, as `user@host` or a Bluesky handle;
+ *   none where the server knows only the Bluesky DID.
+ * @property url where a pack read in can be seen on its own server; https only.
+ * @property topic the hashtag a pack read in is about, without the `#`.
+ * @property unresolved the handles the server could not reach, on the single-pack route.
  */
 @Serializable
 public data class StarterPack(
@@ -26,6 +32,12 @@ public data class StarterPack(
     val handles: List<String> = emptyList(),
     val size: Int = 0,
     val accounts: List<Account> = emptyList(),
+    val source: String = "",
+    val curator: String? = null,
+    val url: String? = null,
+    val topic: String? = null,
+    val language: String? = null,
+    val unresolved: List<String> = emptyList(),
 ) {
     val id: String get() = slug
 }

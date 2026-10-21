@@ -5,10 +5,12 @@ package social.aloha.core.network.dto
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import social.aloha.core.model.MigrationEntry
 import social.aloha.core.model.MigrationLine
+import social.aloha.core.model.NamedCount
 import social.aloha.core.network.AlohaJson
 import social.aloha.core.network.ApiRequest
 import social.aloha.core.network.endpoints.AuthorizedAppEndpoints
@@ -114,6 +116,20 @@ class ShapeDecodingTest {
         assertEquals(listOf("2026-01", "2026-02"), statistics.byMonth.sorted.map { it.first })
         assertEquals(30, statistics.window?.days)
         assertEquals(5, statistics.languages.single().count)
+        assertNull(statistics.engagementSources)
+    }
+
+    @Test
+    fun `statistics read where engagement came from`() {
+        val body = """{"engagement": {"quotes": 2, "quotes_per_post": 0.5},
+            "engagement_sources": {"servers": [{"host": "a.example", "count": "3"}, {"count": 1}],
+            "local_share": 25.0, "counted": 4}}"""
+        val statistics = StatisticsEndpoints.overview(30).value(body)
+        assertEquals(2.0, statistics.engagement["quotes"])
+        val sources = statistics.engagementSources
+        assertEquals(listOf(NamedCount("a.example", 3)), sources?.servers)
+        assertEquals(25.0, sources?.localShare)
+        assertEquals(4, sources?.counted)
     }
 
     @Test

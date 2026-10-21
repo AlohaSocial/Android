@@ -32,6 +32,7 @@ public data class AccountStatistics(
     val window: StatisticsWindow? = null,
     val posts: NumberMap = NumberMap(),
     val engagement: NumberMap = NumberMap(),
+    val engagementSources: EngagementSources? = null,
     val rates: NumberMap = NumberMap(),
     val visibility: NumberMap = NumberMap(),
     val consistency: NumberMap = NumberMap(),
@@ -51,6 +52,14 @@ public data class StatisticsAccount(val acct: String, val followers: Int = 0, va
 /** How much history the numbers cover, and whether the server stopped counting early. */
 @Serializable
 public data class StatisticsWindow(val days: Int = 0, val counted: Int = 0, val capped: Boolean = false)
+
+/** Where the responses came from: the servers of those who responded, the most first, and the share made here. */
+@Serializable
+public data class EngagementSources(
+    val servers: List<NamedCount> = emptyList(),
+    val localShare: Double? = null,
+    val counted: Int = 0,
+)
 
 @Serializable
 public data class StatisticsActivity(

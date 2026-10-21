@@ -8,6 +8,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import social.aloha.core.model.AccountStatistics
 import social.aloha.core.model.ConversationPartner
+import social.aloha.core.model.EngagementSources
 import social.aloha.core.model.NamedCount
 import social.aloha.core.model.NumberMap
 import social.aloha.core.model.StatisticsAccount
@@ -18,6 +19,7 @@ import social.aloha.core.network.decoding.LenientBoolSerializer
 import social.aloha.core.network.decoding.LenientIntSerializer
 import social.aloha.core.network.decoding.LossyListSerializer
 import social.aloha.core.network.decoding.NumberMapSerializer
+import social.aloha.core.network.decoding.OptionalDoubleSerializer
 import social.aloha.core.network.decoding.OrNullSerializer
 
 @Serializable
@@ -26,6 +28,8 @@ internal data class StatisticsDto(
     @Serializable(with = StatisticsWindowOrNull::class) val window: StatisticsWindowDto? = null,
     @Serializable(with = NumberMapSerializer::class) val posts: Map<String, Double> = emptyMap(),
     @Serializable(with = NumberMapSerializer::class) val engagement: Map<String, Double> = emptyMap(),
+    @SerialName("engagement_sources") @Serializable(with = EngagementSourcesOrNull::class)
+    val engagementSources: EngagementSourcesDto? = null,
     @Serializable(with = NumberMapSerializer::class) val rates: Map<String, Double> = emptyMap(),
     @Serializable(with = NumberMapSerializer::class) val visibility: Map<String, Double> = emptyMap(),
     @Serializable(with = NumberMapSerializer::class) val consistency: Map<String, Double> = emptyMap(),
@@ -69,6 +73,19 @@ internal data class StatisticsPartnersDto(
 )
 
 @Serializable
+internal data class EngagementSourcesDto(
+    @Serializable(with = LossyListSerializer::class) val servers: List<ServerCountDto> = emptyList(),
+    @SerialName("local_share") @Serializable(with = OptionalDoubleSerializer::class) val localShare: Double? = null,
+    @Serializable(with = LenientIntSerializer::class) val counted: Int = 0,
+)
+
+@Serializable
+internal data class ServerCountDto(
+    val host: String,
+    @Serializable(with = LenientIntSerializer::class) val count: Int = 0,
+)
+
+@Serializable
 internal data class NamedCountDto(
     val name: String,
     @Serializable(with = LenientIntSerializer::class) val count: Int = 0,
@@ -96,11 +113,18 @@ internal object StatisticsPartnersOrNull : KSerializer<StatisticsPartnersDto?> b
     StatisticsPartnersDto.serializer(),
 )
 
+internal object EngagementSourcesOrNull : KSerializer<EngagementSourcesDto?> by OrNullSerializer(
+    EngagementSourcesDto.serializer(),
+)
+
 internal fun StatisticsDto.toDomain(): AccountStatistics = AccountStatistics(
     account = account?.let { StatisticsAccount(it.acct, it.followers, it.following) },
     window = window?.let { StatisticsWindow(it.days, it.counted, it.capped) },
     posts = NumberMap(posts),
     engagement = NumberMap(engagement),
+    engagementSources = engagementSources?.let { sources ->
+        EngagementSources(sources.servers.map { NamedCount(it.host, it.count) }, sources.localShare, sources.counted)
+    },
     rates = NumberMap(rates),
     visibility = NumberMap(visibility),
     consistency = NumberMap(consistency),

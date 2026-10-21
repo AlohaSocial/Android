@@ -25,6 +25,7 @@ import social.aloha.core.network.dto.DiscoverCategoryDto
 import social.aloha.core.network.dto.FollowGraphSerializer
 import social.aloha.core.network.dto.FollowGraphStatusDto
 import social.aloha.core.network.dto.StarterPackDto
+import social.aloha.core.network.dto.StarterPackFollowedDto
 import social.aloha.core.network.dto.StatusDto
 import social.aloha.core.network.dto.TagDto
 import social.aloha.core.network.dto.toDomain
@@ -33,7 +34,6 @@ import social.aloha.core.network.dto.toSearchResults
 import social.aloha.core.network.listRequest
 import social.aloha.core.network.queryOf
 import social.aloha.core.network.request
-import social.aloha.core.network.unitRequest
 
 /** How a discover grid narrows its trending posts. */
 public enum class DiscoverMedia(public val wire: String) {
@@ -58,8 +58,11 @@ public object DiscoveryEndpoints {
     public fun starterPack(slug: String): ApiRequest<StarterPack?> =
         request(Endpoint("api/v1/starter_packs/$slug"), StarterPackDto.serializer()) { it.toDomain() }
 
-    public fun followStarterPack(slug: String): ApiRequest<Unit> =
-        unitRequest(Endpoint("api/v1/starter_packs/$slug/follow", HttpMethod.POST))
+    /** The handles actually followed; null where the server does not say. */
+    public fun followStarterPack(slug: String): ApiRequest<List<String>?> = request(
+        Endpoint("api/v1/starter_packs/$slug/follow", HttpMethod.POST),
+        StarterPackFollowedDto.serializer(),
+    ) { it.followed }
 
     /** The directories the server asks when searching beyond itself. */
     public fun directories(): ApiRequest<List<DirectorySource>> =

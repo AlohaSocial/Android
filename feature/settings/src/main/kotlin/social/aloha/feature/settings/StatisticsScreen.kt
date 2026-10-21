@@ -156,6 +156,7 @@ private fun Empty() {
 private fun Sections(statistics: AccountStatistics, handle: String) {
     Hero(statistics, handle)
     Engagement(statistics)
+    EngagementSources(statistics)
     PostsByMonth(statistics)
     EngagementByMonth(statistics)
     Activity(statistics)

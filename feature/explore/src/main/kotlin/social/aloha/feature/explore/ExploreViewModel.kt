@@ -80,6 +80,8 @@ internal data class ExploreUiState(
     val people: Load<People> = Load.Waiting,
     /** The starter packs followed here, which say so rather than offer it again. */
     val followed: Set<String> = emptySet(),
+    /** A starter pack could not be followed, said once. */
+    val followFailed: Boolean = false,
     val directory: Directory = Directory(),
     val viewer: String = "",
     /** Whether what is trending shows; off, Explore is its people and directory. */
@@ -200,9 +202,15 @@ internal class ExploreViewModel @AssistedInject constructor(
     fun onFollowAll(slug: String) {
         val account = reader ?: return
         viewModelScope.launch {
-            if (explore.followAll(account, slug) is Answer.Got) state.update { it.copy(followed = it.followed + slug) }
+            if (explore.followAll(account, slug) == Answer.Got(true)) {
+                state.update { it.copy(followed = it.followed + slug) }
+            } else {
+                state.update { it.copy(followFailed = true) }
+            }
         }
     }
+
+    fun onFollowFailedShown() = state.update { it.copy(followFailed = false) }
 
     private fun waiting(tab: ExploreTab): Boolean = when (tab) {
         ExploreTab.Posts -> state.value.posts !is Load.Loaded
