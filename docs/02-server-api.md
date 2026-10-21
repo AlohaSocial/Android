@@ -2,7 +2,7 @@
 
 ## On Android
 
-This is the Apple app's specification, carried over as the product contract for Android. Where it names an Apple mechanism, read its Android counterpart from the table below; where it states a server fact, the facts below, verified against a live Nextcloud Social 0.26.97 instance, and where a row names a later version against 0.26.126 (AlohaSocial/social `cdd847797`, on 2026-10-06), win.
+This is the Apple app's specification, carried over as the product contract for Android. Where it names an Apple mechanism, read its Android counterpart from the table below; where it states a server fact, the facts below, verified against a live Nextcloud Social 0.26.97 instance, and where a row names a later version against 0.26.126 (AlohaSocial/social `cdd847797`, on 2026-10-06), win. Rows naming 0.26.222 to 0.26.278, or builds after 0.26.278, are read from the server's code and its `docs/API.md` at `origin/master` on 2026-10-21, not yet from a live instance.
 
 | Topic | Android |
 |---|---|
@@ -11,13 +11,19 @@ This is the Apple app's specification, carried over as the product contract for 
 | Boosts | `reblog` is always `null`; a boost is not visible as a boost. |
 | Media | `POST /api/v2/media` answers 200 synchronously; `focus` is stored; `hls_url` and video `meta` are empty without ffmpeg on the server. Since 0.26.123 `image_size_limit` and `video_size_limit` are capped at what PHP accepts, which the composer's pre-flight checks against, and a refused upload says why: a `422` for a file too large (naming the limit) or an interrupted upload, which the attachment card shows; a `500` naming a server problem, retried like any server error. |
 | Pagination | `Link` headers point at the app path even through the root rules; `limit=0` answers 400. `min_id` answers with the posts immediately above the anchor and `since_id` with the newest above it, as on Mastodon, so a refresh asks with `since_id` and a full page leaves a gap between it and the cache. |
-| New accounts | Before 0.26.104 (seen on 0.26.97), `verify_credentials`, `accounts/lookup` and the first post answered 500 until the avatar cache job ran. On 0.26.119 an account created moments before answers `verify_credentials` and its first post with 200 (`accounts/lookup` not checked again). Sign-in still falls back to `/oauth/userinfo` on a 5xx, for older servers. A Nextcloud user without a Social account cannot authorize an app at all: the authorize page needs the account to exist. |
+| New accounts | Before 0.26.104 (seen on 0.26.97), `verify_credentials`, `accounts/lookup` and the first post answered 500 until the avatar cache job ran. On 0.26.119 an account created moments before answers `verify_credentials` and its first post with 200 (`accounts/lookup` not checked again). Sign-in still falls back to `/oauth/userinfo` on a 5xx, for older servers. Before 0.26.277 a Nextcloud user without a Social account cannot authorize an app at all: the authorize page needs the account to exist. From 0.26.277 the authorize page asks such a user for a handle and sets the account up before the consent, inside the sign-in tab. |
 | Pictures | Before 0.26.119 a local account had `avatar: ""` and its Nextcloud avatar as `header`; 0.26.119 stopped that fallback without repairing what it had stored. Since 0.26.125 a repair step clears those headers, the avatar is the same on every route, the header placeholder is `img/header-missing.png`, and every Account carries `avatar_default` and `header_default` ([AlohaSocial/social#2487](https://github.com/AlohaSocial/social/issues/2487)). The app reads a banner the Account marks with `header_default: true`, and Mastodon's `headers/…/missing.png` (Mastodon has no such field), as no header, and Edit profile offers no removal of an `avatar_default` avatar. |
 | Search and edits | Since 0.26.122 `api/v2/search` honours `account_id` and `offset`, so a profile's posts are searchable on Nextcloud Social as elsewhere; `/api/v2/instance` announces `api_versions.aloha_social: 1`. Since 0.26.121 each version in `statuses/{id}/history` carries its media, which the history sheet lists by description. |
 | Places and reactions | Before 0.26.221, `place_*` is never stored and reactions come only from `/statuses/{id}/reactions`. From 0.26.221 every status carries its reactions, place and tagged people wherever it is served, so the single post takes its reactions from the status and asks the route only of older servers (`ServerCapabilities.reactionsOnStatus`, by the version nodeinfo reports). |
+| Shorts | Since 0.26.222 the home, public, tag, list and account timelines and the interests feed (`/api/v1/timelines/interests`) take `only_short`: one attachment, a video of at most `limits.short_max_duration` seconds (180) and no wider than `limits.short_max_aspect_ratio` (1), read from its `meta`; `/api/v2/config` says `features.shorts: true`. |
+| Profiles | Since 0.26.237 `accounts/{id}/statuses` applies `exclude_replies` (ignored before), takes `tagged`, and lists the account's boosts unless `exclude_reblogs=true`. |
+| Counts | Since 0.26.241 an account's `followers_count`, `following_count` and `statuses_count` are real for every reader; a status's counts are 0 for a reader who hides numbers (`/api/v1/social/counts`, hidden by default). Before, a hiding reader saw 0 followers. |
+| Videos | Since 0.26.278 every video post carries `video_card` (`title`, `duration`, `thumbnail`, `views`, `live`, `category`, `published`; `views` is the server's own count for its uploads, `thumbnail` null where the preview is the video itself), `POST /statuses/{id}/view` counts a view after about five seconds of playback, and a status from `videos/continue` or `GET /statuses/{id}` carries the reader's `watch_progress` (`position`, `duration`, `updated_at`). |
+| Starter packs | Since 0.26.269 packs also come from the collections curators publish on Mastodon, with `source`, `curator`, `url`, `topic`, `language` and `unresolved`; since 0.26.272 following a pack answers `followed`, the handles actually followed. |
+| Statistics | Since 0.26.266 statistics add quotes (`engagement.quotes`, `quotes_per_post`, per post), the servers engagement came from (`engagement_sources`), starter-pack joins and the networks a post reached (`reach.networks`). |
 | Web-server rules | Show the server's own `contrib/webserver` files; the snippet described here is outdated. |
 | Client | Plain OkHttp with kotlinx.serialization, one `ApiClient` per account base. Decoding is lenient (ids, URLs, booleans and dates in any of the shapes servers send) and lossy (a malformed row in a list is dropped and recorded, the rest of the page stays). |
-| Errors | `ApiError` adds three cases to §6: `UntrustedCertificate` (the chain, for the person to decide), `ForeignCursor` (a `Link` cursor on another origin than the API base, never followed) and `UnsafePath` (a path segment from server data that would resolve as `.` or `..`, never sent). 404 and 410 are both `NotFound`. |
+| Errors | `ApiError` adds three cases to §6: `UntrustedCertificate` (the chain, for the person to decide), `ForeignCursor` (a `Link` cursor on another origin than the API base, never followed) and `UnsafePath` (a path segment from server data that would resolve as `.` or `..`, never sent). 404 and 410 are both `NotFound`. Since 0.26.276 a refusal that carries advice names it in `code` beside the English `error`, with fields such as `limit`, `max` or `field` (`featured-tags-full`, `shorts-full`, `banner-too-large`, the `handle-*` and migration codes). |
 | Rate limiting | A read answered 429 with a `Retry-After` of five seconds or less (or none) is retried once, after the per-host limiter has waited it out; a write never is. |
 | TLS | System CAs, plus certificates a person trusted for one host, kept in app-private storage and never system-wide. A client certificate is picked from the system KeyChain per host and presented to that host only. |
 | Video routes | `/media/playlist/{nid}` takes the **document** row id, which is the attachment's `id`, not the status's. A federated video's `video.captions` are addresses at its origin, not proxied. |
@@ -34,10 +40,12 @@ The probe for the API base and the OAuth sign-in are in [03-auth-and-accounts.md
 
 ---
 
-Everything in this document was verified against Nextcloud Social `master`
+Everything below this line was verified against Nextcloud Social `master`
 (app version 0.26.97, September 2026; 0.26.108 where a section says so) — its `docs/API.md`,
 `docs/Mastodon-Compatibility.md` and its controller route attributes — and
-against the Mastodon 4.3 client API.
+against the Mastodon 4.3 client API. The table above says where a live instance
+confirmed a row; its rows naming 0.26.222 or later were read from the server's
+code and `docs/API.md` on 2026-10-21 and not from a live instance.
 
 ## 1. What Nextcloud Social serves
 
@@ -48,8 +56,8 @@ Nextcloud Social announces `Mastodon 4.3.0` compatibility
 
 | Missing | Consequence for this app |
 |---|---|
-| `/api/v1/streaming` | No WebSocket. `instance.urls` is `{}`, which is how the server says so. **Poll.** |
-| `/api/v1/push/*` (Web Push) | No APNs via the server. `vapid_key` is `""`, which is how the server says so. **Poll + local notifications.** |
+| `/api/v1/streaming` | No WebSocket up to 0.26.278. Builds after 0.26.278 serve Mastodon's streams (WebSocket and SSE) from a daemon the admin runs (`occ social:mastodon:stream`) behind root proxy rules; `GET /api/v1/streaming/health` answers only when it runs. Since 0.26.251 `urls.streaming_api` (v1) and `configuration.urls.streaming` (v2) are `wss://<host>` whether the daemon runs or not, so the address alone does not say a stream is there. **Probe the health route; else poll.** |
+| `/api/v1/push/*` (Web Push) | Not served up to 0.26.278, with `vapid_key` `""`. Builds after 0.26.278 deliver Web Push: a `push`-scoped bearer token, a public HTTPS endpoint (else 422), the alerts of Mastodon plus `quote` and `quoted_update`, sent from a background job. A non-empty `vapid_key` is how the server says so. **Otherwise poll + local notifications.** |
 | `/api/v1/emails/confirmations` | Sign-up is not this app's job anyway. |
 
 Everything else Mastodon documents is implemented and does real work. The one
