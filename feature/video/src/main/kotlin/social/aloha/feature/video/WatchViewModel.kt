@@ -117,6 +117,7 @@ internal class WatchViewModel @AssistedInject constructor(
         val apiBase = reader.capabilities.apiBase
         val sources = attachment?.let { VideoSources.ladder(video, it, apiBase) }.orEmpty()
         val captions = VideoSources.captions(video, apiBase)
+        watching.adopt(reader.id, video)
         val resumeAt = watching.resumeAt(reader.id, video.id)
         playback.play(reader, video, resumeAt)
         state.update {

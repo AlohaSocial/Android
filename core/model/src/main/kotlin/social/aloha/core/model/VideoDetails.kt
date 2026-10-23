@@ -3,6 +3,7 @@
 
 package social.aloha.core.model
 
+import java.time.Instant
 import java.util.Locale
 import kotlinx.serialization.Serializable
 
@@ -31,6 +32,37 @@ public data class VideoDetails(
     val title: String? = null,
     val duration: Double? = null,
     val captions: List<VideoCaption> = emptyList(),
+)
+
+/**
+ * The facts Nextcloud Social gives about every video it serves (`video_card`), whether or not the post
+ * carries a `video` block: what a grid of videos draws. A fact nobody sent is null.
+ *
+ * @property duration seconds.
+ * @property thumbnail the poster frame; null where the only preview is the video itself.
+ * @property views how often it was watched: the server's own count for its uploads, else the origin's.
+ * @property published when the video was published, which for a PeerTube video can predate its post.
+ */
+@Serializable
+public data class VideoCardInfo(
+    val title: String = "",
+    val duration: Double? = null,
+    val thumbnail: String? = null,
+    val views: Int? = null,
+    val live: Boolean = false,
+    val category: String? = null,
+    @Serializable(with = InstantSerializer::class) val published: Instant? = null,
+)
+
+/**
+ * Where the reader got to in a video, as their server keeps it (`watch_progress`): seconds, and when
+ * they last moved it, where the server said.
+ */
+@Serializable
+public data class WatchProgress(
+    val position: Double,
+    val duration: Double,
+    @Serializable(with = InstantSerializer::class) val updatedAt: Instant? = null,
 )
 
 /** One subtitle file of a video: WebVTT at [url], in [language] (a BCP 47 tag, as PeerTube names them). */

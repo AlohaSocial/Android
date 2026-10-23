@@ -72,7 +72,7 @@ public fun VideoCard(row: StatusRowUi, watched: Double?, onOpen: () -> Unit, mod
             Modifier.fillMaxWidth().aspectRatio(WIDE).clip(RoundedCornerShape(CORNER))
                 .background(MaterialTheme.colorScheme.surfaceContainerHigh),
         ) {
-            Poster(video, row.sensitive)
+            Poster(video, row.videoCard?.thumbnail, row.sensitive)
             length?.let {
                 Text(
                     it,
@@ -105,21 +105,22 @@ public fun VideoCard(row: StatusRowUi, watched: Double?, onOpen: () -> Unit, mod
     }
 }
 
+/** The server's poster frame for the video, [thumbnail], where it named one; else the attachment's preview. */
 @Composable
-private fun Poster(video: MediaAttachment?, sensitive: Boolean) {
+private fun Poster(video: MediaAttachment?, thumbnail: String?, sensitive: Boolean) {
     val fill = Modifier.fillMaxSize()
     when {
-        video == null -> Unit
+        video == null && thumbnail == null -> Unit
 
         sensitive -> {
-            rememberBlurHashPainter(video.blurhash)?.let { Image(it, null, fill, contentScale = ContentScale.Crop) }
+            rememberBlurHashPainter(video?.blurhash)?.let { Image(it, null, fill, contentScale = ContentScale.Crop) }
             Box(fill, contentAlignment = Alignment.Center) { Icon(AlohaIcons.Sensitive, contentDescription = null) }
         }
 
         else -> AsyncImage(
-            model = video.previewUrl,
+            model = thumbnail ?: video?.previewUrl,
             contentDescription = null,
-            placeholder = rememberBlurHashPainter(video.blurhash),
+            placeholder = rememberBlurHashPainter(video?.blurhash),
             contentScale = ContentScale.Crop,
             modifier = fill,
         )
@@ -135,7 +136,7 @@ public fun videoTitle(row: StatusRowUi): String = row.video?.title
 
 /** "12 views", or null for none, or while the reader hides the numbers. */
 @Composable
-private fun viewsLabel(row: StatusRowUi): String? = row.video?.views
+private fun viewsLabel(row: StatusRowUi): String? = (row.videoCard?.views ?: row.video?.views)
     ?.takeIf { it > 0 && LocalReadingStyle.current.showCounts }
     ?.let { pluralStringResource(R.plurals.video_views, it, it) }
 

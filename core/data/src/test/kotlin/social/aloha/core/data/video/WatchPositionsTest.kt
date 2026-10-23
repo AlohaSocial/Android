@@ -23,8 +23,11 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import social.aloha.core.data.Answer
+import social.aloha.core.model.Account
 import social.aloha.core.model.ServerCapabilities
 import social.aloha.core.model.SignedInAccount
+import social.aloha.core.model.Status
+import social.aloha.core.model.WatchProgress
 import social.aloha.core.testing.SignedInFixture
 
 /** A clock a test moves by hand. */
@@ -43,17 +46,15 @@ private class HandClock(var now: Instant = Instant.parse("2026-09-30T12:00:00Z")
 private class Watched : Dispatcher() {
     val asked = CopyOnWriteArrayList<String>()
 
+    @Volatile var continued = """[{"status_id":"v1","position":120,"duration":600},""" +
+        """{"status_id":"v2","position":30,"duration":60,"status":$POST}]"""
+
     override fun dispatch(request: RecordedRequest): MockResponse {
         val path = request.url.encodedPath
         asked += "${request.method} $path ${request.body?.utf8().orEmpty()}".trim()
         return when {
-            path.endsWith("/videos/continue") -> json(
-                """[{"status_id":"v1","position":120,"duration":600},""" +
-                    """{"status_id":"v2","position":30,"duration":60,"status":$POST}]""",
-            )
-
+            path.endsWith("/videos/continue") -> json(continued)
             path.endsWith("/statuses/v1") -> json(POST.replace("\"v2\"", "\"v1\""))
-
             else -> json("{}")
         }
     }
@@ -84,9 +85,17 @@ class WatchPositionsTest {
         server.close()
     }
 
-    private suspend fun reader(watching: Boolean = true): SignedInAccount = fixture.signIn(
+    private suspend fun reader(watching: Boolean = true, version: String = ""): SignedInAccount = fixture.signIn(
         server.url("/"),
-        ServerCapabilities.minimal(server.url("/").toString()).copy(watchPositions = watching),
+        ServerCapabilities.minimal(server.url("/").toString())
+            .copy(watchPositions = watching, softwareName = "nextcloud-social", softwareVersion = version),
+    )
+
+    private fun video(id: String, position: Double, updatedAt: Instant?, local: Boolean? = null) = Status(
+        id = id,
+        account = Account("6", "alice", "alice"),
+        local = local,
+        watchProgress = WatchProgress(position, 600.0, updatedAt),
     )
 
     private fun reports() = answers.asked.filter { it.startsWith("POST") }
@@ -140,5 +149,65 @@ class WatchPositionsTest {
         positions.remove(reader, "v1")
         assertEquals("DELETE /api/v1/statuses/v1/watched", answers.asked.last())
         assertNull(positions.resumeAt(reader.id, "v1"))
+    }
+
+    @Test
+    fun `Nextcloud Social's bare posts say where they were left in their watch progress`() = runBlocking {
+        answers.continued = """[{"id":"v1","content":"","video_card":null,""" +
+            """"watch_progress":{"position":120,"duration":600,"updated_at":"2026-09-30T11:00:00.000Z"}}]"""
+        val reader = reader()
+        val watched = (positions.continueWatching(reader) as Answer.Got).value
+        assertEquals(listOf("v1"), watched.map { it.status.id })
+        assertEquals(120.0, positions.resumeAt(reader.id, "v1"))
+    }
+
+    @Test
+    fun `the server's place is taken where it moved later, and never moves a later one here back`() = runBlocking {
+        val reader = reader()
+        positions.adopt(reader.id, video("v", 200.0, clock.now.minusSeconds(60)))
+        assertEquals(200.0, positions.resumeAt(reader.id, "v"))
+        positions.report(reader, "v", positionSeconds = 300.0, durationSeconds = 600.0)
+        positions.adopt(reader.id, video("v", 250.0, clock.now.minusSeconds(1)))
+        assertEquals(300.0, positions.resumeAt(reader.id, "v"))
+        positions.adopt(reader.id, video("v", 400.0, clock.now.plusSeconds(60)))
+        assertEquals(400.0, positions.resumeAt(reader.id, "v"))
+        // finished elsewhere, or barely started: nothing to start from
+        positions.adopt(reader.id, video("w", 590.0, null))
+        positions.adopt(reader.id, video("w", 5.0, null))
+        assertNull(positions.resumeAt(reader.id, "w"))
+    }
+
+    @Test
+    fun `an undated place from the server fills an empty row and never replaces one kept here`() = runBlocking {
+        val reader = reader()
+        positions.adopt(reader.id, video("v", 200.0, null))
+        assertEquals(200.0, positions.resumeAt(reader.id, "v"))
+        positions.report(reader, "v", positionSeconds = 300.0, durationSeconds = 600.0)
+        positions.adopt(reader.id, video("v", 100.0, null))
+        assertEquals(300.0, positions.resumeAt(reader.id, "v"))
+    }
+
+    @Test
+    fun `a video finished elsewhere after the place kept here is forgotten here`() = runBlocking {
+        val reader = reader()
+        positions.report(reader, "v", positionSeconds = 200.0, durationSeconds = 600.0)
+        positions.adopt(reader.id, video("v", 590.0, null))
+        positions.adopt(reader.id, video("v", 590.0, clock.now.minusSeconds(60)))
+        assertEquals(200.0, positions.resumeAt(reader.id, "v"))
+        positions.adopt(reader.id, video("v", 590.0, clock.now.plusSeconds(60)))
+        assertNull(positions.resumeAt(reader.id, "v"))
+    }
+
+    @Test
+    fun `a view is counted only where the server counts them, and never for another server's post`() = runBlocking {
+        val reader = reader(version = "0.26.278")
+        val older = reader.copy(capabilities = reader.capabilities.copy(softwareVersion = "0.26.277"))
+        positions.countView(older, video("v", 0.0, null))
+        assertEquals(emptyList<String>(), reports())
+        positions.countView(reader, video("remote:example.org:v", 0.0, null))
+        positions.countView(reader, video("f", 0.0, null, local = false))
+        positions.countView(reader, video("v", 0.0, null, local = true))
+        positions.countView(reader, video("w", 0.0, null))
+        assertEquals(listOf("POST /api/v1/statuses/v/view", "POST /api/v1/statuses/w/view"), reports())
     }
 }

@@ -4,6 +4,7 @@
 package social.aloha.core.data.video
 
 import java.time.Clock
+import java.time.Instant
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -19,7 +20,9 @@ import social.aloha.core.database.WatchPositionEntity
 import social.aloha.core.model.ContinueWatchingItem
 import social.aloha.core.model.SignedInAccount
 import social.aloha.core.model.Status
+import social.aloha.core.model.TimelineSource
 import social.aloha.core.model.WatchPositionRules
+import social.aloha.core.model.WatchProgress
 import social.aloha.core.network.endpoints.StatusEndpoints
 import social.aloha.core.network.endpoints.VideoEndpoints
 
@@ -31,7 +34,7 @@ public data class PartWatched(val status: Status, val item: ContinueWatchingItem
  * federates it, and mirrored here so a progress bar is right offline. Nothing under ten seconds is told;
  * a video watched past 95 % is forgotten on both sides, as the server forgets it. Reports while playing
  * come at most every five seconds; one the screen forces (a pause, leaving) goes whenever the position
- * moved since the last.
+ * moved since the last. A place the server sends back is kept here unless the one kept here moved later.
  */
 @Singleton
 public class WatchPositions @Inject constructor(
@@ -91,6 +94,9 @@ public class WatchPositions @Inject constructor(
     public suspend fun continueWatching(reader: SignedInAccount): Answer<List<PartWatched>> {
         val answer = clients.answer(reader, VideoEndpoints.continueWatching())
         if (answer !is Answer.Got) return answer as Answer.Missed
+        answer.value.filter { WatchPositionRules.isComplete(it.position, it.duration) }.forEach {
+            forgetIfOlder(reader.id, it.statusId, it.updatedAt)
+        }
         val watched = answer.value.filterNot {
             WatchPositionRules.isComplete(it.position, it.duration) ||
                 it.position < WatchPositionRules.MINIMUM_REPORTABLE_SECONDS
@@ -100,12 +106,47 @@ public class WatchPositions @Inject constructor(
             status?.let { PartWatched(it, item) }
         }
         statuses.saveAll(reader.id, watched.map { it.status })
-        watched.forEach {
-            dao.set(
-                WatchPositionEntity(reader.id, it.status.id, it.item.position, it.item.duration, clock.millis()),
-            )
+        watched.forEach { (status, item) ->
+            keep(reader.id, status.id, WatchProgress(item.position, item.duration, item.updatedAt))
         }
         return Answer.Got(watched)
+    }
+
+    /**
+     * Takes where the server says the reader got to in [status] (`watch_progress`), so the place follows
+     * them from another device; a video finished there since the place kept here is forgotten here too.
+     */
+    public suspend fun adopt(accountId: String, status: Status) {
+        val progress = status.watchProgress ?: return
+        val (position, duration) = progress.position to progress.duration
+        when {
+            WatchPositionRules.isComplete(position, duration) -> forgetIfOlder(accountId, status.id, progress.updatedAt)
+            WatchPositionRules.shouldReport(position, duration) -> keep(accountId, status.id, progress)
+        }
+    }
+
+    /**
+     * Counts a view of [status] where the server counts them; a post the server marks as not its own is
+     * not counted there, so it is not asked. Nothing comes of a failure.
+     */
+    public suspend fun countView(reader: SignedInAccount, status: Status) {
+        if (!reader.capabilities.videoViews || status.local == false) return
+        if (status.id.startsWith(TimelineSource.Remote.ID_PREFIX)) return
+        clients.answer(reader, VideoEndpoints.countView(status.id))
+    }
+
+    /** Keeps [progress] here, unless a place is kept here already and [progress] is not dated after it. */
+    private suspend fun keep(accountId: String, statusId: String, progress: WatchProgress) {
+        val at = progress.updatedAt?.toEpochMilli()
+        dao.keep(
+            WatchPositionEntity(accountId, statusId, progress.position, progress.duration, at ?: clock.millis()),
+            dated = at != null,
+        )
+    }
+
+    /** Forgets the place kept here for [statusId] where the video was finished elsewhere after it moved. */
+    private suspend fun forgetIfOlder(accountId: String, statusId: String, finishedAt: Instant?) {
+        dao.forgetBefore(accountId, statusId, finishedAt?.toEpochMilli() ?: return)
     }
 
     private fun fraction(position: Double, duration: Double): Double =

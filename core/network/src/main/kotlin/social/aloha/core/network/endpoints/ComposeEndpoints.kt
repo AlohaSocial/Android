@@ -172,6 +172,10 @@ public object VideoEndpoints {
     public fun forgetWatched(statusId: String): ApiRequest<Unit> =
         unitRequest(Endpoint("api/v1/statuses/$statusId/watched", HttpMethod.DELETE))
 
+    /** Counts a view of [statusId], once the reader has played a few seconds of it; Nextcloud Social's own. */
+    public fun countView(statusId: String): ApiRequest<Unit> =
+        unitRequest(Endpoint("api/v1/statuses/$statusId/view", HttpMethod.POST))
+
     /** Where the reader got to in the videos they have not finished; an entry that names no post is dropped. */
     public fun continueWatching(limit: Int = Paging.DEFAULT_LIMIT): ApiRequest<List<ContinueWatchingItem>> = request(
         Endpoint("api/v1/videos/continue", query = listOf(Paging.limitItem(limit, CONTINUE_WATCHING_LIMIT))),

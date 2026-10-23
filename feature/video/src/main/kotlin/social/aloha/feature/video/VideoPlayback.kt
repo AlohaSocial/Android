@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import androidx.core.net.toUri
 import androidx.media3.common.C
 import androidx.media3.common.MediaMetadata
@@ -50,8 +51,9 @@ import social.aloha.core.model.WatchPositionRules
  * only heard, with the app in the background and its controls on the lock screen. It outlives a screen
  * so leaving the page for picture-in-picture, or turning the phone, does not start the video over. It
  * tells the server where the reader got to every ten seconds while playing, at once on a pause, and when
- * it stops; and what it sees of a clip the server did not describe settles whether it is a short. A
- * switch to another account stops it, as does signing its account out, which then reports nothing.
+ * it stops; it counts a view once five seconds have played; and what it sees of a clip the server did
+ * not describe settles whether it is a short. A switch to another account stops it, as does signing its
+ * account out, which then reports nothing.
  */
 @Singleton
 public class VideoPlayback @Inject internal constructor(
@@ -61,10 +63,14 @@ public class VideoPlayback @Inject internal constructor(
     private val accounts: AccountRepository,
     @param:ApplicationScope private val scope: CoroutineScope,
 ) {
-    private class Playing(val reader: SignedInAccount, val video: Status, val ladder: LadderPlayback)
+    private class Playing(val reader: SignedInAccount, val video: Status, val ladder: LadderPlayback) {
+        var viewCounted = false
+    }
 
     private var playing: Playing? = null
     private var ticker: Job? = null
+    private var playedMillis = 0L
+    private var playingSince: Long? = null
     private val pictureInPicture = MutableStateFlow(false)
 
     /** Whether leaving the app should shrink the video into a window of its own: while its page shows it playing. */
@@ -95,12 +101,21 @@ public class VideoPlayback @Inject internal constructor(
         if (playing?.let { it.video.id == video.id && it.reader.id == reader.id } == true) return@onPlayerThread
         stop()
         val ladder = ladderFor(reader, video)
-        playing = Playing(reader, video, ladder)
+        val now = Playing(reader, video, ladder)
+        playing = now
         ladder.start(((startAtSeconds ?: 0.0) * MILLIS).toLong())
         player.playWhenReady = true
         // the session, its notification and lock screen controls, for as long as there is something to play
         context.startService(Intent(context, VideoPlaybackService::class.java))
+        playedMillis = 0
+        playingSince = null
         ticker = scope.launch(Dispatchers.Main) {
+            launch {
+                while (!now.viewCounted) {
+                    delay(1.seconds)
+                    countViewIfEarned(now)
+                }
+            }
             while (isActive) {
                 delay(WatchPositionRules.REPORT_INTERVAL_SECONDS.seconds)
                 if (player.isPlaying) report(forced = false)
@@ -121,14 +136,17 @@ public class VideoPlayback @Inject internal constructor(
     private fun metadataOf(video: Status, attachment: MediaAttachment?): MediaMetadata = MediaMetadata.Builder()
         .setTitle(video.video?.title ?: StatusHtmlParser.firstLine(video.content))
         .setArtist(video.account.bestDisplayName)
-        .setArtworkUri(attachment?.previewUrl?.toUri())
+        .setArtworkUri((video.videoCard?.thumbnail ?: attachment?.previewUrl)?.toUri())
         .build()
 
     /** Stops [statusId], or whatever plays when none is named, telling the server where it got to when [report]. */
     internal fun stop(statusId: String? = null, report: Boolean = true): Unit = onPlayerThread {
         val now = playing ?: return@onPlayerThread
         if (statusId != null && now.video.id != statusId) return@onPlayerThread
-        if (report) report(forced = true)
+        if (report) {
+            report(forced = true)
+            countViewIfEarned(now)
+        }
         ticker?.cancel()
         // gone before the player stops, so the pause that stopping is reports nothing a second time
         playing = null
@@ -145,7 +163,13 @@ public class VideoPlayback @Inject internal constructor(
 
     private val listener = object : Player.Listener {
         override fun onIsPlayingChanged(isPlaying: Boolean) {
-            if (!isPlaying) report(forced = true)
+            if (isPlaying) {
+                playingSince = SystemClock.elapsedRealtime()
+            } else {
+                playedMillis = playedMillis()
+                playingSince = null
+                report(forced = true)
+            }
         }
 
         override fun onVideoSizeChanged(videoSize: VideoSize) {
@@ -162,6 +186,16 @@ public class VideoPlayback @Inject internal constructor(
     private fun onPlayerThread(block: () -> Unit) {
         val looper = player.applicationLooper
         if (Looper.myLooper() == looper) block() else Handler(looper).post(block)
+    }
+
+    /** How long the video playing has played since it started, not counting pauses and buffering. */
+    private fun playedMillis(): Long = playedMillis + (playingSince?.let { SystemClock.elapsedRealtime() - it } ?: 0)
+
+    /** Counts a view of [now] once, when it has played long enough; outside the ticker, which stopping cancels. */
+    private fun countViewIfEarned(now: Playing) {
+        if (now.viewCounted || playedMillis() < WatchPositionRules.VIEW_AFTER_SECONDS * MILLIS) return
+        now.viewCounted = true
+        scope.launch { watching.countView(now.reader, now.video) }
     }
 
     private fun report(forced: Boolean) {

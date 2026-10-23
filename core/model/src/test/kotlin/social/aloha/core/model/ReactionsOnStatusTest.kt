@@ -40,4 +40,14 @@ class ReactionsOnStatusTest {
         assertEquals(false, pages("nextcloud-social", "dev"))
         assertEquals(false, pages("mastodon", "4.5.0"))
     }
+
+    @Test
+    fun `views are counted from 0,26,278 on, and only on Nextcloud Social`() {
+        fun views(name: String, version: String) =
+            ServerCapabilities.minimal("https://x.test/").copy(softwareName = name, softwareVersion = version)
+                .videoViews
+        assertEquals(false, views("nextcloud-social", "0.26.277"))
+        assertEquals(true, views("nextcloud-social", "0.26.278"))
+        assertEquals(false, views("mastodon", "4.5.0"))
+    }
 }
