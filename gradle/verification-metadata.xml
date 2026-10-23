@@ -28,6 +28,7 @@
             <trusting group="androidx.annotation"/>
             <trusting group="androidx.benchmark"/>
             <trusting group="androidx.browser"/>
+            <trusting group="androidx.collection"/>
             <trusting group="androidx.core"/>
             <trusting group="androidx.databinding"/>
             <trusting group="androidx.datastore"/>
@@ -38,6 +39,7 @@
             <trusting group="androidx.navigation3"/>
             <trusting group="androidx.room"/>
             <trusting group="androidx.test.uiautomator"/>
+            <trusting group="androidx.tracing"/>
             <trusting group="androidx.work"/>
             <trusting group="^androidx[.]compose($|([.].*))" regex="true"/>
             <trusting group="^androidx[.]wear($|([.].*))" regex="true"/>
