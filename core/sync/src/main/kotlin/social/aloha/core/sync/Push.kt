@@ -288,8 +288,9 @@ internal class PushWork @AssistedInject constructor(
                 false
             }
 
+            // only a refused endpoint is remembered as one; a 422 about the keys is not worth asking again either
             !viaNextcloud && error is ApiError.Unprocessable -> {
-                registrar.refusedByServer(account)
+                if (subscriptions.refused(account.id)) registrar.refusedByServer(account)
                 false
             }
 
