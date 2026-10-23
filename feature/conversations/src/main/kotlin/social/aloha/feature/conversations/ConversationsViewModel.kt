@@ -14,12 +14,14 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import okhttp3.HttpUrl
 import social.aloha.core.data.AccountRepository
 import social.aloha.core.data.Answer
 import social.aloha.core.data.conversations.Conversations
+import social.aloha.core.data.sync.UserStream
 import social.aloha.core.model.Conversation
 import social.aloha.core.model.SignedInAccount
 
@@ -35,14 +37,16 @@ internal data class ConversationsUiState(
 
 /**
  * The reader's direct conversations, newest first, loaded afresh each time the screen comes back: a
- * reply sent from a thread moves its conversation up. Opening one marks it read; one taken off the
- * list, or everything marked read, is shown so at once and undone if the server refuses.
+ * reply sent from a thread moves its conversation up, as does one the stream says changed meanwhile.
+ * Opening one marks it read; one taken off the list, or everything marked read, is shown so at once
+ * and undone if the server refuses.
  */
 @HiltViewModel(assistedFactory = ConversationsViewModel.Factory::class)
 internal class ConversationsViewModel @AssistedInject constructor(
     @Assisted private val readerId: String,
     private val accounts: AccountRepository,
     private val conversations: Conversations,
+    stream: UserStream,
 ) : ViewModel() {
     @AssistedFactory
     interface Factory {
@@ -58,8 +62,26 @@ internal class ConversationsViewModel @AssistedInject constructor(
     // the page on its way: a refresh replaces it rather than racing it
     private var loading: Job? = null
 
+    // what the stream changed while the first page was on its way, which that page may predate
+    private var streamedMeanwhile: MutableList<Conversation>? = null
+
+    init {
+        viewModelScope.launch {
+            stream.conversations.filter { (id, _) -> id == readerId }.collect { (_, changed) ->
+                streamedMeanwhile?.add(changed)
+                state.update {
+                    it.copy(
+                        conversations =
+                            listOf(changed) + it.conversations.filter { c -> c.id != changed.id },
+                    )
+                }
+            }
+        }
+    }
+
     /** The first page again, in place of what is shown. */
     fun onRefresh() {
+        streamedMeanwhile = mutableListOf()
         loading?.cancel()
         loading = viewModelScope.launch {
             val account = reader ?: accounts.byId(readerId)?.also { reader = it } ?: return@launch
@@ -137,12 +159,15 @@ internal class ConversationsViewModel @AssistedInject constructor(
 
     private suspend fun load(account: SignedInAccount, after: HttpUrl?) {
         state.update { it.copy(loading = true, failed = false) }
-        when (val answer = conversations.page(account, after)) {
+        val answer = conversations.page(account, after)
+        val streamed = if (after == null) streamedMeanwhile.orEmpty().asReversed() else emptyList()
+        if (after == null) streamedMeanwhile = null
+        when (answer) {
             is Answer.Got -> {
                 next = answer.value.next
                 state.update { current ->
                     val page = answer.value.conversations
-                    val shown = if (after == null) page else current.conversations + page
+                    val shown = if (after == null) streamed + page else current.conversations + page
                     current.copy(conversations = shown.distinctBy { it.id }, loading = false, done = next == null)
                 }
             }

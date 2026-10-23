@@ -6,6 +6,7 @@ package social.aloha.feature.notifications
 import android.content.Context
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.test.core.app.ApplicationProvider
+import java.io.Closeable
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -34,6 +35,8 @@ import org.robolectric.RobolectricTestRunner
 import social.aloha.core.data.AllAccounts
 import social.aloha.core.data.notifications.NotificationFiltering
 import social.aloha.core.data.sync.SyncSettings
+import social.aloha.core.data.sync.TimelineSignals
+import social.aloha.core.data.sync.UserStream
 import social.aloha.core.data.timeline.StatusInteractions
 import social.aloha.core.datastore.AccountSettingsStore
 import social.aloha.core.datastore.AccountViewPreferences
@@ -121,6 +124,9 @@ class NotificationsViewModelTest {
             fixture.notifications,
             NotificationFiltering(fixture.clients),
             unread,
+            UserStream(fixture.accounts, { _, _, _ ->
+                Closeable {}
+            }, fixture.statuses, fixture.filters, TimelineSignals()),
             SyncSettings(
                 AccountSettingsStore(InMemoryDataStore(emptyMap())),
                 AppPreferences(InMemoryDataStore(emptyPreferences())),

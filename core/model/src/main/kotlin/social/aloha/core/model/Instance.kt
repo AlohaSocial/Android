@@ -10,7 +10,8 @@ import kotlinx.serialization.Serializable
  * A server's description of itself: `/api/v2/instance`, with `/api/v1/instance/` folded into the same
  * shape so one persisted type can be fed by either.
  *
- * @property streamingUrl null when there is no streaming; Nextcloud Social says so with an empty `urls`.
+ * @property streamingUrl null when there is no streaming. Nextcloud Social before 0.26.251 says so with an empty
+ *   `urls`; later ones announce it whether or not their stream daemon runs, which capability detection asks.
  * @property vapidKey `""` on Nextcloud Social, which is the server saying not to offer Web Push.
  * @property apiVersions `{"mastodon": 3}` on a 4.3-compatible server, read instead of a version string
  *   that says nothing on a fork.

@@ -8,8 +8,10 @@ import androidx.test.core.app.ApplicationProvider
 import java.io.Closeable
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,6 +27,7 @@ import org.junit.Assert.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import social.aloha.core.model.Conversation
 import social.aloha.core.model.ServerCapabilities
 import social.aloha.core.network.streaming.StreamEvent
 import social.aloha.core.network.streaming.StreamListener
@@ -86,6 +89,30 @@ class UserStreamTest {
         inFront.value = false
         withTimeout(5.seconds) { stream.openFor.first { it == null } }
         assertNull(stream.openFor.value)
+    }
+
+    @Test
+    fun `merged notifications ask for the list and the count, and a changed conversation is told on`() = runBlocking {
+        val base = "https://stream.test/"
+        val account = fixture.signIn(
+            base.toHttpUrl(),
+            ServerCapabilities.minimal(base).copy(streamingUrl = "wss://stream.test"),
+        )
+        scope.launch { stream.keepOpen(MutableStateFlow(true), MutableStateFlow(true)) }
+        withTimeout(5.seconds) { while (listener == null) yield() }
+        listener!!.onOpen()
+        val merged = scope.async(start = CoroutineStart.UNDISPATCHED) { stream.notificationsMerged.first() }
+        val counted = scope.async(start = CoroutineStart.UNDISPATCHED) { stream.notifications.first() }
+        val changed = scope.async(start = CoroutineStart.UNDISPATCHED) { stream.conversations.first() }
+        val conversation = Conversation("4", emptyList(), unread = true, lastStatus = StatusSamples.post())
+
+        listener!!.onEvent(StreamEvent.NotificationsMerged)
+        listener!!.onEvent(StreamEvent.ConversationChanged(conversation))
+        withTimeout(5.seconds) {
+            assertEquals(account.id, merged.await())
+            assertEquals(account.id, counted.await())
+            assertEquals(account.id to conversation, changed.await())
+        }
     }
 
     @Test

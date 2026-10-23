@@ -29,6 +29,7 @@ import kotlinx.coroutines.launch
 import social.aloha.core.data.AccountRepository
 import social.aloha.core.data.timeline.FilterRepository
 import social.aloha.core.data.timeline.StatusRepository
+import social.aloha.core.model.Conversation
 import social.aloha.core.model.LogArea
 import social.aloha.core.model.SignedInAccount
 import social.aloha.core.model.Status
@@ -41,8 +42,10 @@ import timber.log.Timber
 /**
  * The active account's own stream from its server's streaming socket, while the app is in front and
  * online: posts arriving mark Home due, a few seconds' worth at a time; edits and deletions reach the cache
- * at once; a notification asks for the count now; changed filters are fetched again. Only where the server
- * advertises streaming, which Mastodon does and Nextcloud Social does not. Five failures in a row, a socket
+ * at once; a notification, or notifications let in from requests, asks for the count now; changed filters
+ * are fetched again; a changed direct conversation is told to the list of them. Only where the server
+ * advertises streaming: Mastodon, and Nextcloud Social whose administrator runs its stream daemon, which
+ * capability detection asks. Five failures in a row, a socket
  * that drops within half a minute counting as one, and it gives up until the app comes back to the front,
  * the network comes back or the account changes; polling carries on meanwhile.
  */
@@ -56,12 +59,20 @@ public class UserStream @Inject constructor(
 ) {
     private val open = MutableStateFlow<String?>(null)
     private val notified = MutableSharedFlow<String>(extraBufferCapacity = NOTIFIED_BUFFER)
+    private val merged = MutableSharedFlow<String>(extraBufferCapacity = NOTIFIED_BUFFER)
+    private val conversation = MutableSharedFlow<Pair<String, Conversation>>(extraBufferCapacity = NOTIFIED_BUFFER)
 
     /** The account whose stream is open, which polling slows to a safety net for; null when none is. */
     public val openFor: StateFlow<String?> = open.asStateFlow()
 
     /** Accounts a notification just arrived for, to be asked for their count at once. */
     public val notifications: SharedFlow<String> = notified.asSharedFlow()
+
+    /** Accounts whose notifications list gained rows older than its newest, to be loaded again. */
+    public val notificationsMerged: SharedFlow<String> = merged.asSharedFlow()
+
+    /** Each account's direct conversation as it changed, newest on the list. */
+    public val conversations: SharedFlow<Pair<String, Conversation>> = conversation.asSharedFlow()
 
     /** Keeps the active account's stream open for as long as [inFront] and [online] both hold. */
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -129,6 +140,13 @@ public class UserStream @Inject constructor(
             StreamEvent.Notified -> notified.tryEmit(account.id)
 
             StreamEvent.FiltersChanged -> filters.refresh(account)
+
+            StreamEvent.NotificationsMerged -> {
+                merged.tryEmit(account.id)
+                notified.tryEmit(account.id)
+            }
+
+            is StreamEvent.ConversationChanged -> conversation.tryEmit(account.id to event.conversation)
 
             StreamEvent.Update -> timelines.markDue(account.id)
         }

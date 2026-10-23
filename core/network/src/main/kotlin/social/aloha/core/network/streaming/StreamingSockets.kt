@@ -20,8 +20,10 @@ import okhttp3.Request
 import okhttp3.Response
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
+import social.aloha.core.model.Conversation
 import social.aloha.core.model.Status
 import social.aloha.core.network.AlohaJson
+import social.aloha.core.network.dto.ConversationDto
 import social.aloha.core.network.dto.StatusDto
 import social.aloha.core.network.dto.toDomain
 
@@ -41,6 +43,12 @@ public sealed interface StreamEvent {
 
     /** The reader's filters changed on the server. */
     public data object FiltersChanged : StreamEvent
+
+    /** A direct conversation started or moved on, and now reads as [conversation]. */
+    public data class ConversationChanged(val conversation: Conversation) : StreamEvent
+
+    /** Notifications held back as requests were let in, so the list has rows it has not shown. */
+    public data object NotificationsMerged : StreamEvent
 }
 
 /** Hears one socket: that it opened, each event, and once that it ended, with why when it failed. */
@@ -54,13 +62,14 @@ public interface StreamListener {
 
 /** Opens a server's streaming socket for the reader's own stream. */
 public fun interface UserSockets {
-    /** Opens [streamingUrl]'s `user` stream with [token]; closing what it returns ends the socket. */
+    /** Opens [streamingUrl]'s `user` and `direct` streams with [token]; closing what it returns ends the socket. */
     public fun open(streamingUrl: String, token: String, listener: StreamListener): Closeable
 }
 
 /**
  * Mastodon's streaming socket, `/api/v1/streaming?stream=user`, with the token in the `Authorization`
- * header rather than the address, where access logs would keep it. The socket has no read or call
+ * header rather than the address, where access logs would keep it, and `direct` subscribed to on the same
+ * socket, the only stream that carries `conversation`. The socket has no read or call
  * timeout, as it is quiet for minutes at a time, and pings to keep it and the network's paths alive.
  */
 @Singleton
@@ -77,6 +86,7 @@ public class StreamingSockets @Inject constructor(http: OkHttpClient) : UserSock
             .header("Authorization", "Bearer $token")
             .build()
         val socket = sockets.newWebSocket(request, Relay(listener))
+        socket.send(SUBSCRIBE_DIRECT)
         return Closeable { socket.close(NORMAL, null) }
     }
 
@@ -99,13 +109,14 @@ public class StreamingSockets @Inject constructor(http: OkHttpClient) : UserSock
     private companion object {
         const val NORMAL = 1000
         const val PING_SECONDS = 30L
+        const val SUBSCRIBE_DIRECT = """{"type":"subscribe","stream":"direct"}"""
     }
 }
 
 /**
  * One frame of the stream as an event: `{"stream":[…],"event":…,"payload":…}`, the payload a JSON string
- * for an edited post and the bare id for a deletion. Null for what the reader's stream does not act on, or
- * a frame it cannot read.
+ * for an edited post or a conversation and the bare id for a deletion. Null for what the reader's stream
+ * does not act on, or a frame it cannot read.
  */
 internal fun streamEvent(text: String): StreamEvent? {
     val frame = runCatching { AlohaJson.parseToJsonElement(text).jsonObject }.getOrNull() ?: return null
@@ -122,6 +133,12 @@ internal fun streamEvent(text: String): StreamEvent? {
         "notification" -> StreamEvent.Notified
 
         "filters_changed" -> StreamEvent.FiltersChanged
+
+        "conversation" -> payload?.let { changed ->
+            runCatching { AlohaJson.decodeFromString<ConversationDto>(changed).toDomain() }.getOrNull()
+        }?.let(StreamEvent::ConversationChanged)
+
+        "notifications_merged" -> StreamEvent.NotificationsMerged
 
         else -> null
     }
