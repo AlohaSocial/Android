@@ -142,6 +142,11 @@ class SettingsScreenshotTest {
     }
 
     @Test
+    fun readingWithServerReplies() = capture("settings-reading-server-replies") {
+        ReadingContent(ReadingStyle(), onChange = {}, ServerReplies(hidden = true, refused = true))
+    }
+
+    @Test
     fun sound() = capture("settings-sound") { SoundContent(ReadingStyle(), onChange = {}, onNotificationSounds = {}) }
 
     @Test

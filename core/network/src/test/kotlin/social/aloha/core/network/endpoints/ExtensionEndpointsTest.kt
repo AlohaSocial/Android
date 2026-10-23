@@ -149,4 +149,16 @@ class ExtensionEndpointsTest {
         val picture = ProfilePicture(java.io.File("a.png"), "a.png", "image/png")
         assertTrue(CredentialEndpoints.update(CredentialsUpdate(avatar = picture)).endpoint.body is Body.Multipart)
     }
+
+    @Test
+    fun `the reply switch is read and patched on the viewer's token`() {
+        val read = FeedPreferenceEndpoints.hideReplies().endpoint
+        assertEquals("api/v1/social/feed_preferences", read.path)
+        assertEquals(HttpMethod.GET, read.method)
+        assertEquals(Authentication.Bearer, read.authentication)
+        val write = FeedPreferenceEndpoints.setHideReplies(true).endpoint
+        assertEquals("api/v1/social/feed_preferences", write.path)
+        assertEquals(HttpMethod.PATCH, write.method)
+        assertEquals(listOf(QueryItem("hide_replies", "true")), write.form())
+    }
 }

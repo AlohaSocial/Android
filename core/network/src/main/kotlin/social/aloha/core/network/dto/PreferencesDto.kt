@@ -31,6 +31,10 @@ internal data class PreferencesDto(
     val expandSpoilers: Boolean = false,
 )
 
+/** Nextcloud Social's own feed preferences; an answer without the switch says nothing about it. */
+@Serializable
+internal data class FeedPreferencesDto(@SerialName("hide_replies") val hideReplies: Boolean? = null)
+
 @Serializable
 internal data class NotificationPolicyDto(
     @SerialName("for_not_following") val forNotFollowing: String? = null,
