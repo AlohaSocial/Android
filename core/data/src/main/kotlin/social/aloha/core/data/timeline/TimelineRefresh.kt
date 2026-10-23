@@ -3,12 +3,27 @@
 
 package social.aloha.core.data.timeline
 
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 import social.aloha.core.model.TimelineKey
 import social.aloha.core.network.endpoints.PageAnchor
 
 /** What a refresh asks the server for, and how the answer merges. */
 public data class RefreshPlan(val anchor: PageAnchor, val direction: TimelineMerge.Direction) {
+    /**
+     * The same page once more, for a page the server said it was still filling in (counts, or posts read
+     * from elsewhere): merged as newer than the rows the first read left, so rows paged in meanwhile stay.
+     */
+    public val reread: RefreshPlan
+        get() = if (direction == TimelineMerge.Direction.Cold) copy(direction = TimelineMerge.Direction.Newer) else this
+
     public companion object {
+        /**
+         * How long after a page that is still filling ([PageOutcome.Loaded.filling]) it is read again, once:
+         * Nextcloud Social's web app asks again after the same.
+         */
+        public val FILLING_DELAY: Duration = 2.seconds
+
         /**
          * A timeline that has never fetched asks for the head, even when the cache handed it rows to draw:
          * "I have rows" is not "I have fetched". Deciding from the rows alone left a stale cache on screen
