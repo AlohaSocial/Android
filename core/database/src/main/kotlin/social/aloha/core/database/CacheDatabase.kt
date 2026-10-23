@@ -127,6 +127,10 @@ public interface TimelineDao {
     @Query("DELETE FROM timeline_entry WHERE accountId = :accountId AND timelineKey = :timelineKey")
     public suspend fun clear(accountId: String, timelineKey: String)
 
+    /** Every timeline the account has rows stored for. */
+    @Query("SELECT DISTINCT timelineKey FROM timeline_entry WHERE accountId = :accountId")
+    public suspend fun keys(accountId: String): List<String>
+
     @Upsert
     public suspend fun upsertEntries(entries: List<TimelineEntryEntity>)
 

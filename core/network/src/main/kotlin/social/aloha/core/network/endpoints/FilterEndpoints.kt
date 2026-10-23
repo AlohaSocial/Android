@@ -11,6 +11,7 @@ import social.aloha.core.network.Body
 import social.aloha.core.network.Endpoint
 import social.aloha.core.network.HttpMethod
 import social.aloha.core.network.QueryItem
+import social.aloha.core.network.dto.FeedPreferencesDto
 import social.aloha.core.network.dto.FilterDto
 import social.aloha.core.network.dto.toDomain
 import social.aloha.core.network.listRequest
@@ -93,4 +94,22 @@ public object FilterEndpoints {
             if (draft.destroy) add(QueryItem("$prefix[_destroy]", "1"))
         }
     }
+}
+
+/**
+ * Nextcloud Social's switch for leaving replies out of the reader's home, public and hashtag feeds,
+ * kept with the filters and under their scopes. 404 on a server without it; null when an answer does
+ * not carry it.
+ */
+public object FeedPreferenceEndpoints {
+    private const val PATH = "api/v1/social/feed_preferences"
+
+    public fun hideReplies(): ApiRequest<Boolean?> =
+        request(Endpoint(PATH), FeedPreferencesDto.serializer()) { it.hideReplies }
+
+    /** Turns the switch; the server answers with the state it then holds, and 422 for anything not a boolean. */
+    public fun setHideReplies(hide: Boolean): ApiRequest<Boolean?> = request(
+        Endpoint(PATH, HttpMethod.PATCH, body = Body.Form(listOf(QueryItem("hide_replies", "$hide")))),
+        FeedPreferencesDto.serializer(),
+    ) { it.hideReplies }
 }

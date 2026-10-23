@@ -6,10 +6,13 @@ package social.aloha.feature.settings
 import android.icu.text.NumberFormat
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
@@ -17,6 +20,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -26,26 +31,65 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlin.math.roundToInt
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import social.aloha.core.data.AccountRepository
+import social.aloha.core.data.reading.ReplyHiding
 import social.aloha.core.datastore.ReadingPreferences
 import social.aloha.core.designsystem.AlohaIcons
+import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.model.ReadingStyle
 import social.aloha.core.model.WarningReveal
 import social.aloha.core.ui.ChoiceRows
 import social.aloha.core.ui.SettingsSection
 import social.aloha.core.ui.SwitchRow
 
+/**
+ * The server's reply hiding for the account in use: [hidden] is null where the server has no such
+ * switch or did not say, and the row is not shown; [refused] after a change the server did not take.
+ */
+@Immutable
+internal data class ServerReplies(val hidden: Boolean? = null, val refused: Boolean = false)
+
 @HiltViewModel
-internal class ReadingViewModel @Inject constructor(private val reading: ReadingPreferences) : ViewModel() {
+internal class ReadingViewModel @Inject constructor(
+    private val reading: ReadingPreferences,
+    private val accounts: AccountRepository,
+    private val replyHiding: ReplyHiding,
+) : ViewModel() {
     val style: StateFlow<ReadingStyle> =
         reading.style.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_MILLIS), ReadingStyle())
 
+    private val serverReplies = MutableStateFlow(ServerReplies())
+    val replies: StateFlow<ServerReplies> = serverReplies.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            accounts.activeAccount.distinctUntilChangedBy { it?.id }.collectLatest { reader ->
+                serverReplies.value = ServerReplies()
+                if (reader != null) serverReplies.value = ServerReplies(replyHiding.hidden(reader))
+            }
+        }
+    }
+
     fun change(made: (ReadingStyle) -> ReadingStyle) {
         viewModelScope.launch { reading.setStyle(made(reading.style.first())) }
+    }
+
+    fun hideReplies(hide: Boolean) {
+        val reader = accounts.activeAccount.value ?: return
+        viewModelScope.launch {
+            val held = replyHiding.hide(reader, hide)
+            serverReplies.update { if (held == null) it.copy(refused = true) else ServerReplies(held) }
+        }
     }
 
     private companion object {
@@ -63,14 +107,41 @@ internal object ReadingSection : SettingsSection {
     override fun Content() {
         val viewModel: ReadingViewModel = hiltViewModel()
         val style by viewModel.style.collectAsStateWithLifecycle()
-        ReadingContent(style, viewModel::change)
+        val replies by viewModel.replies.collectAsStateWithLifecycle()
+        ReadingContent(style, viewModel::change, replies, viewModel::hideReplies)
     }
 }
 
-/** How posts read, each a switch, as every timeline then shows them. */
+/**
+ * How posts read, each a switch, as every timeline then shows them; first, where the account's server
+ * keeps one, whether its feeds leave replies out.
+ */
 @Composable
-internal fun ReadingContent(style: ReadingStyle, onChange: ((ReadingStyle) -> ReadingStyle) -> Unit) {
+internal fun ReadingContent(
+    style: ReadingStyle,
+    onChange: ((ReadingStyle) -> ReadingStyle) -> Unit,
+    replies: ServerReplies = ServerReplies(),
+    onHideReplies: (Boolean) -> Unit = {},
+) {
     Column {
+        replies.hidden?.let { hidden ->
+            SwitchRow(
+                stringResource(R.string.reading_hide_replies),
+                hidden,
+                onHideReplies,
+                stringResource(R.string.reading_hide_replies_summary),
+            )
+        }
+        if (replies.refused) {
+            Text(
+                stringResource(R.string.reading_hide_replies_refused),
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier
+                    .padding(horizontal = AlohaSpacing.m, vertical = AlohaSpacing.s)
+                    .semantics { liveRegion = LiveRegionMode.Polite },
+            )
+        }
         SwitchRow(stringResource(R.string.reading_compact), style.compact, { on ->
             onChange { it.copy(compact = on) }
         }, stringResource(R.string.reading_compact_summary))
