@@ -66,11 +66,16 @@ public class PushSubscriptions @Inject constructor(
         if (isActive(account.id)) clients.answer(account, PushEndpoints.policy(from.wire))
     }
 
-    /** Tells [account]'s server to stop, and stops counting on it; an unreachable server just stays unused. */
-    public suspend fun unsubscribe(account: SignedInAccount) {
+    /**
+     * Tells [account]'s server to stop, and stops counting on it. Its endpoint is kept until the server
+     * confirms, so one that could not be reached is asked again; whether it confirmed comes back.
+     */
+    public suspend fun unsubscribe(account: SignedInAccount): Boolean {
         app.setPush(account.id, active = false)
-        app.setPushEndpoint(account.id, null)
-        clients.answer(account, PushEndpoints.unsubscribe())
+        val answer = clients.answer(account, PushEndpoints.unsubscribe())
+        val gone = answer is Answer.Got || (answer as Answer.Missed).error is ApiError.NotFound
+        if (gone) app.setPushEndpoint(account.id, null)
+        return gone
     }
 
     /** Whether [accountId] is pushed to through [endpoint], the one its registration [instance] last took. */
