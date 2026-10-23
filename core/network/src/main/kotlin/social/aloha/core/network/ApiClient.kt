@@ -72,8 +72,14 @@ public class ApiClient internal constructor(
         return executor.download(endpoint, endpoint.resolve(apiBase), authorization, into)
     }
 
-    private fun <T> Answer<List<T>>.toPage(limit: Int) =
-        Paginated(decoded.value, link, rawCount = decoded.rawCount ?: decoded.value.size, requestedLimit = limit)
+    private fun <T> Answer<List<T>>.toPage(limit: Int) = Paginated(
+        decoded.value,
+        link,
+        rawCount = decoded.rawCount ?: decoded.value.size,
+        requestedLimit = limit,
+        filling = filling,
+        profileFilling = profileFilling,
+    )
 
     private suspend fun <T> perform(request: ApiRequest<T>, url: HttpUrl): ApiResult<Answer<T>> {
         val authorization = authorization(request.endpoint.authentication)

@@ -169,6 +169,12 @@ public class MergedPager(
         if (outcome is PageOutcome.Loaded && plan.direction == TimelineMerge.Direction.Cold) {
             outcome.nextCursor?.let { cursors[account.id] = it } ?: cursors.remove(account.id)
         }
+        // a page the server was still filling in is read once more; what that brings waits behind the pill
+        scope.launch {
+            val refilled = timelines.refill(account, key, plan, outcome) ?: return@launch
+            if (current().none { (shown, of) -> shown.id == account.id && of == key }) return@launch
+            state.update { it.copy(held = it.held + (account.id to it.held[account.id].orEmpty() + refilled.arrived)) }
+        }
         return outcome to plan
     }
 

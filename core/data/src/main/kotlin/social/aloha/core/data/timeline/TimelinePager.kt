@@ -166,6 +166,15 @@ public class TimelinePager(
                 PageOutcome.Busy -> now.copy(refreshing = false)
             }
         }
+        refill(account, key, plan, outcome)
+    }
+
+    /** A page the server was still filling in is read once more; what that brings waits behind the pill. */
+    private fun refill(account: SignedInAccount, key: TimelineKey, plan: RefreshPlan, outcome: PageOutcome) {
+        scope.launch {
+            val refilled = timelines.refill(account, key, plan, outcome) ?: return@launch
+            if (current().shows(account, key)) state.update { it.copy(held = it.held + refilled.arrived) }
+        }
     }
 
     private companion object {

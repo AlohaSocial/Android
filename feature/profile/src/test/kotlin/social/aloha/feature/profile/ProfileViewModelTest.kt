@@ -84,6 +84,9 @@ private class Bob : Dispatcher() {
 
     @Volatile var following = false
 
+    /** The next read of his posts is answered as still being filled in, three newer ones arriving meanwhile. */
+    @Volatile var fillingOnce = false
+
     /** What changed the relationship: method, path and form, in order. */
     val changes: MutableList<String> = java.util.concurrent.CopyOnWriteArrayList()
     val statusQueries: MutableList<String> = java.util.concurrent.CopyOnWriteArrayList()
@@ -91,10 +94,7 @@ private class Bob : Dispatcher() {
     override fun dispatch(request: RecordedRequest): MockResponse {
         val path = request.url.encodedPath
         return when {
-            path.endsWith("/accounts/7/statuses") -> statuses.dispatch(request).also {
-                statusQueries +=
-                    request.url.query.orEmpty()
-            }
+            path.endsWith("/accounts/7/statuses") -> posts(request)
 
             path.endsWith("/accounts/7/follow") -> json(relationship(following = true).also { following = true })
 
@@ -123,6 +123,15 @@ private class Bob : Dispatcher() {
 
             else -> MockResponse.Builder().code(404).body("{}").build()
         }
+    }
+
+    private fun posts(request: RecordedRequest): MockResponse {
+        statusQueries += request.url.query.orEmpty()
+        val answer = statuses.dispatch(request)
+        if (!fillingOnce || request.url.queryParameter("pinned") != null) return answer
+        fillingOnce = false
+        statuses.newest += 3
+        return answer.newBuilder().addHeader("X-Social-Filling", "1").build()
     }
 
     private fun relationship(following: Boolean) =
@@ -207,6 +216,13 @@ class ProfileViewModelTest {
         assertEquals(12, header.followers)
         assertEquals(Relation(followedBy = true), state.relation)
         assertEquals("30", (state.items.first() as ProfileItem.Post).row.statusId)
+    }
+
+    @Test
+    fun `posts the server was still filling in show after it is asked once more`() = runBlocking {
+        bob.fillingOnce = true
+        val state = open(id = "7").await { (it.items.firstOrNull() as? ProfileItem.Post)?.row?.statusId == "33" }
+        assertEquals(23, state.items.count { it is ProfileItem.Post })
     }
 
     @Test

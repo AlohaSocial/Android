@@ -19,7 +19,10 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.json.JsonPrimitive
+import mockwebserver3.Dispatcher
+import mockwebserver3.MockResponse
 import mockwebserver3.MockWebServer
+import mockwebserver3.RecordedRequest
 import okhttp3.OkHttpClient
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -95,7 +98,7 @@ class MergedPagerTest {
         "created_at" to JsonPrimitive(NOON.plusSeconds(post * 60L).toString()),
     )
 
-    private suspend fun signedIn(timeline: NumberedTimeline, remoteId: String): SignedInAccount {
+    private suspend fun signedIn(timeline: Dispatcher, remoteId: String): SignedInAccount {
         val server = MockWebServer().apply {
             dispatcher = timeline
             start()
@@ -181,6 +184,22 @@ class MergedPagerTest {
             reader.rowsWhere { rows -> rows[second].orEmpty().takeWhile { it !is TimelineRow.Gap }.size == 40 }
             assertTrue(reader.page().ids().containsAll((121 downTo 101).toList()))
         }
+
+    @Test
+    fun `what the second read of a page still filling brings waits behind the pill`() = runBlocking {
+        val filling = object : Dispatcher() {
+            override fun dispatch(request: RecordedRequest): MockResponse {
+                val answer = a.dispatch(request)
+                a.newest = 103
+                return answer.newBuilder().addHeader("X-Social-Filling", "1").build()
+            }
+        }
+        val shown = listOf(signedIn(filling, "6") to TimelineKey.home())
+        val pager = MergedPager(timelines, Clock.systemUTC(), scope) { shown }
+        pager.start(shown)
+        val held = withTimeout(TIMEOUT) { pager.states.first { it.held.isNotEmpty() } }.held
+        assertEquals((103 downTo 101).map(Int::toString).toSet(), held[shown.single().first.id])
+    }
 
     private fun MergedPost.number() = status.displayed.uri.substringAfterLast('/').toInt()
 

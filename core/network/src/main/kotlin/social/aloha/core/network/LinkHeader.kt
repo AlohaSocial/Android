@@ -67,8 +67,19 @@ public data class LinkHeader(val next: HttpUrl? = null, val previous: HttpUrl? =
  *
  * @property rawCount how many rows the server sent before lossy decoding dropped any, which is what
  *   decides "a page shorter than the limit is the last one" on routes that send no `Link` header.
+ * @property filling the server is still reading for this page in the background, counts or posts, and the
+ *   same page read again a little later brings them (Nextcloud Social's `X-Social-Filling: 1`).
+ * @property profileFilling an account's older posts are still being read from its server, so a short page
+ *   is not yet the end (Nextcloud Social's `X-Social-Profile-Filling: 1`).
  */
-public data class Paginated<T>(val items: List<T>, val link: LinkHeader, val rawCount: Int, val requestedLimit: Int) {
+public data class Paginated<T>(
+    val items: List<T>,
+    val link: LinkHeader,
+    val rawCount: Int,
+    val requestedLimit: Int,
+    val filling: Boolean = false,
+    val profileFilling: Boolean = false,
+) {
     /** Trust the header first; fall back to the count only where the server sends no header (`/blocks`, `/mutes`). */
     val mayHaveMore: Boolean get() = if (!link.isEmpty) link.next != null else rawCount >= requestedLimit
 }
