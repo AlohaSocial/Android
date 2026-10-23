@@ -66,6 +66,9 @@ internal sealed interface PostFailure {
     /** The server refused the post and said why; the text stays as it was for the writer to fix. */
     data class Refused(val message: String?) : PostFailure
 
+    /** The account already has as many stories up as the server allows, [limit]; one has to end first. */
+    data class StoriesFull(val limit: Int) : PostFailure
+
     /** The server could not be reached or failed; posting again resumes where it stopped. */
     data class Unreached(val trouble: Trouble) : PostFailure
 

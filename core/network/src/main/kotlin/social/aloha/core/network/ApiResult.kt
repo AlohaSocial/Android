@@ -7,6 +7,10 @@ import java.io.IOException
 import java.security.cert.X509Certificate
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 
 /**
  * The outcome of one request. Cancellation is not a result: it propagates as a
@@ -27,6 +31,32 @@ public fun <T> ApiResult<T>.valueOrNull(): T? = (this as? ApiResult.Success)?.va
 
 public fun <T> ApiResult<T>.errorOrNull(): ApiError? = (this as? ApiResult.Failure)?.error
 
+/**
+ * A refusal's stable [code] beside its English sentence, as Nextcloud Social names it from 0.26.276 on
+ * (`shorts-full`, `featured-tags-full`, …), with the [fields] its advice needs, such as `limit`, as text.
+ */
+public data class Refusal(val code: String, val fields: Map<String, String> = emptyMap()) {
+    public fun number(field: String): Int? = fields[field]?.toIntOrNull()
+
+    internal companion object {
+        private val MESSAGE_FIELDS = setOf("error", "error_description", "code")
+
+        /** Social's `{"error": …, "code": …, "limit": …}`: the code and the plain fields beside it; `null` without. */
+        fun of(body: String): Refusal? = try {
+            val payload = AlohaJson.parseToJsonElement(body) as? JsonObject
+            val code = (payload?.get("code") as? JsonPrimitive)?.takeIf { it.isString }?.content
+            code?.takeIf { it.isNotBlank() }?.let {
+                val fields = payload.filterKeys { key -> key !in MESSAGE_FIELDS }.mapNotNull { (key, value) ->
+                    (value as? JsonPrimitive)?.takeUnless { it is JsonNull }?.let { key to it.content }
+                }
+                Refusal(it, fields.toMap())
+            }
+        } catch (_: SerializationException) {
+            null
+        }
+    }
+}
+
 /** Why a request failed. The one place an HTTP response becomes a typed error is [ApiError.from]. */
 public sealed interface ApiError {
     /**
@@ -37,19 +67,23 @@ public sealed interface ApiError {
     public data class Unauthorised(val message: String?) : ApiError
 
     /** 403; [insufficientScope] when the server said so in `WWW-Authenticate`. */
-    public data class Forbidden(val message: String?, val insufficientScope: Boolean) : ApiError
+    public data class Forbidden(
+        val message: String?,
+        val insufficientScope: Boolean,
+        override val refusal: Refusal? = null,
+    ) : ApiError
 
     /** 404 or 410. */
     public data object NotFound : ApiError
 
     /** 422: validation; [message] is written for a person and is shown verbatim when present. */
-    public data class Unprocessable(val message: String?) : ApiError
+    public data class Unprocessable(val message: String?, override val refusal: Refusal? = null) : ApiError
 
     /** 429; [retryAfter] from `Retry-After` when the server sent one. */
     public data class RateLimited(val retryAfter: Duration?) : ApiError
 
     /** Any other non-2xx answer, including a non-JSON body from a PHP upload limit. */
-    public data class Server(val status: Int, val body: String?) : ApiError
+    public data class Server(val status: Int, val body: String?, override val refusal: Refusal? = null) : ApiError
 
     /** The body did not have the shape of the route's entity. */
     public data class Decoding(val context: String, val reason: String) : ApiError
@@ -65,6 +99,9 @@ public sealed interface ApiError {
 
     /** No answer: DNS, connection, TLS or timeout. */
     public data class Transport(val cause: IOException) : ApiError
+
+    /** The refusal's code and fields where the server named them; `null` from a server that does not. */
+    public val refusal: Refusal? get() = null
 
     /** Whether retrying the identical request could plausibly succeed. Writes are never retried automatically. */
     public val isTransient: Boolean
@@ -89,18 +126,19 @@ public sealed interface ApiError {
 
         internal fun from(status: Int, message: String?, rawBody: String?, headers: (String) -> String?): ApiError? {
             if (status in SUCCESS) return null
+            val refusal = rawBody?.let(Refusal::of)
             return when (status) {
                 UNAUTHORISED -> Unauthorised(message)
-                FORBIDDEN -> forbidden(message, headers("WWW-Authenticate"))
+                FORBIDDEN -> forbidden(message, headers("WWW-Authenticate"), refusal)
                 NOT_FOUND, GONE -> NotFound
-                UNPROCESSABLE -> Unprocessable(message ?: rawBody?.takeIf { it.isNotBlank() })
+                UNPROCESSABLE -> Unprocessable(message ?: rawBody?.takeIf { it.isNotBlank() }, refusal)
                 TOO_MANY_REQUESTS -> RateLimited(headers("Retry-After")?.let(::parseRetryAfter))
-                else -> Server(status, message ?: rawBody)
+                else -> Server(status, message ?: rawBody, refusal)
             }
         }
 
-        private fun forbidden(message: String?, authenticate: String?) =
-            Forbidden(message, insufficientScope = authenticate?.contains("insufficient_scope") == true)
+        private fun forbidden(message: String?, authenticate: String?, refusal: Refusal?) =
+            Forbidden(message, insufficientScope = authenticate?.contains("insufficient_scope") == true, refusal)
 
         private fun parseRetryAfter(raw: String): Duration? = raw.trim().toLongOrNull()?.seconds
     }

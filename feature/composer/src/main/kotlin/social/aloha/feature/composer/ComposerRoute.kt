@@ -34,6 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draganddrop.toAndroidDragEvent
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.core.content.ContextCompat
@@ -607,6 +608,8 @@ private fun editMessage(failure: EditFailure?): String? = when (failure) {
 private fun postMessage(failure: PostFailure?): String? = when (failure) {
     is PostFailure.Refused -> failure.message?.let { stringResource(R.string.composer_refused, it) }
         ?: stringResource(R.string.composer_refused_unknown)
+
+    is PostFailure.StoriesFull -> pluralStringResource(R.plurals.composer_stories_full, failure.limit, failure.limit)
 
     is PostFailure.Unreached -> stringResource(R.string.composer_unreached)
 

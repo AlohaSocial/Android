@@ -31,6 +31,40 @@ class ApiErrorTest {
     }
 
     @Test
+    fun `a refusal's code and the fields of its advice are kept beside the sentence`() {
+        val body = """{"error":"this account already has 3 live 24-hour shorts","code":"shorts-full","limit":3}"""
+        val error = from(422, body)
+        assertEquals(
+            ApiError.Unprocessable(
+                "this account already has 3 live 24-hour shorts",
+                Refusal("shorts-full", mapOf("limit" to "3")),
+            ),
+            error,
+        )
+        assertEquals(3, error?.refusal?.number("limit"))
+    }
+
+    @Test
+    fun `a refusal on another status keeps its code and text fields`() {
+        val body = """{"error":"request failed","code":"banner-too-large","limit":"10 MB","extra":null,"list":[1]}"""
+        assertEquals(Refusal("banner-too-large", mapOf("limit" to "10 MB")), from(400, body)?.refusal)
+        val notSetUp = """{"error":"not set up","code":"account-not-set-up","setup_url":"https://cloud.example/"}"""
+        assertEquals(
+            Refusal("account-not-set-up", mapOf("setup_url" to "https://cloud.example/")),
+            from(403, notSetUp)?.refusal,
+        )
+    }
+
+    @Test
+    fun `an answer without a code, or with one that is not text, carries no refusal`() {
+        assertNull(from(422, """{"error":"Validation failed"}""")?.refusal)
+        assertNull(from(422, """{"error":"x","code":422}""")?.refusal)
+        assertNull(from(422, """{"error":"x","code":""}""")?.refusal)
+        assertNull(from(413, "<html>too large</html>")?.refusal)
+        assertNull(from(422, "[]")?.refusal)
+    }
+
+    @Test
     fun `error_description wins over error`() {
         assertEquals(
             ApiError.Forbidden("nope", insufficientScope = false),
