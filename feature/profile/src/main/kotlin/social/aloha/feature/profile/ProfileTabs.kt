@@ -177,7 +177,7 @@ internal val ProfileTab.label: Int
         ProfileTab.Media -> R.string.profile_tab_media
         ProfileTab.Featured -> R.string.profile_tab_featured
         ProfileTab.Videos -> R.string.profile_tab_videos
-        ProfileTab.Collections -> R.string.profile_tab_collections
+        ProfileTab.Collections -> R.string.profile_tab_albums
         ProfileTab.Stories -> R.string.profile_tab_stories
     }
 

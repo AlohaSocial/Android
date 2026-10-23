@@ -147,11 +147,12 @@ internal fun AlbumScreen(
     snackbars: SnackbarHostState,
     modifier: Modifier = Modifier,
 ) {
+    val name = title.ifBlank { stringResource(R.string.albums_untitled) }
     Scaffold(
-        modifier = modifier.semantics { paneTitle = title },
+        modifier = modifier.semantics { paneTitle = name },
         topBar = {
             TopAppBar(
-                title = { Text(title) },
+                title = { Text(name) },
                 navigationIcon = {
                     IconButton(onClick = onBack) { Icon(AlohaIcons.Back, stringResource(R.string.photos_back)) }
                 },
