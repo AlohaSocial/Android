@@ -32,6 +32,7 @@ import social.aloha.core.model.Status
 import social.aloha.core.model.TimelineKey
 import social.aloha.core.network.endpoints.AccountEndpoints
 import social.aloha.core.network.endpoints.ComposeEndpoints
+import social.aloha.core.network.endpoints.CountRefresh
 import social.aloha.core.network.endpoints.GifEndpoints
 import social.aloha.core.network.endpoints.InstanceEndpoints
 import social.aloha.core.network.endpoints.MediaEndpoints
@@ -78,7 +79,8 @@ public class ComposeRepository @Inject constructor(
 
     /** The post a reply answers: the stored copy where there is one, else the server's. */
     public suspend fun status(reader: SignedInAccount, id: String): Answer<Status> =
-        statuses.get(reader.id, id)?.let { Answer.Got(it) } ?: clients.answer(reader, StatusEndpoints.status(id))
+        statuses.get(reader.id, id)?.let { Answer.Got(it) }
+            ?: clients.answer(reader, StatusEndpoints.status(id, CountRefresh.Skipped))
 
     /** Accounts for a `@` completion; `accounts/search`, the route a composer is meant to use. */
     public suspend fun accounts(reader: SignedInAccount, query: String): Answer<List<Account>> =

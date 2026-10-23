@@ -23,6 +23,7 @@ import social.aloha.core.model.Status
 import social.aloha.core.model.TimelineSource
 import social.aloha.core.model.WatchPositionRules
 import social.aloha.core.model.WatchProgress
+import social.aloha.core.network.endpoints.CountRefresh
 import social.aloha.core.network.endpoints.StatusEndpoints
 import social.aloha.core.network.endpoints.VideoEndpoints
 
@@ -102,7 +103,8 @@ public class WatchPositions @Inject constructor(
                 it.position < WatchPositionRules.MINIMUM_REPORTABLE_SECONDS
         }.mapNotNull { item ->
             val status = item.status ?: statuses.get(reader.id, item.statusId)
-                ?: (clients.answer(reader, StatusEndpoints.status(item.statusId)) as? Answer.Got)?.value
+                ?: (clients.answer(reader, StatusEndpoints.status(item.statusId, CountRefresh.Skipped)) as? Answer.Got)
+                    ?.value
             status?.let { PartWatched(it, item) }
         }
         statuses.saveAll(reader.id, watched.map { it.status })

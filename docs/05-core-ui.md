@@ -241,6 +241,8 @@ exist undocumented.
 
 ## 4. Thread view
 
+- Reads the post with `force_counts=true`, so Nextcloud Social asks its origin
+  for current counts even right after a timeline did.
 - Fetches `/api/v1/statuses/{id}/context` and renders ancestors above, the
   focused status enlarged in the middle, and descendants below as an indented
   tree.
