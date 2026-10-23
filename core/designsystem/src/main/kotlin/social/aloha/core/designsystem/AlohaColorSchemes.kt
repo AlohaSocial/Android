@@ -6,6 +6,7 @@ package social.aloha.core.designsystem
 import androidx.annotation.ColorInt
 import androidx.compose.material3.ColorScheme
 import androidx.compose.ui.graphics.Color
+import com.materialkolor.dynamiccolor.ColorSpec
 import com.materialkolor.hct.Hct
 import com.materialkolor.scheme.SchemeTonalSpot
 
@@ -25,7 +26,7 @@ public enum class ContrastLevel(internal val level: Double) {
  * [ALOHA_SEED]) the way Nextcloud's Android apps generate theirs: tonal spot.
  */
 public fun seededColorScheme(@ColorInt seed: Int, dark: Boolean, contrast: ContrastLevel): ColorScheme =
-    SchemeTonalSpot(Hct.fromInt(seed), dark, contrast.level).toColorScheme()
+    SchemeTonalSpot(Hct.fromInt(seed), dark, contrast.level, ColorSpec.SpecVersion.SPEC_2021).toColorScheme()
 
 /**
  * The Black option: a dark scheme whose surfaces start at pure black and step up for containers, its
