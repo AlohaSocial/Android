@@ -79,6 +79,16 @@ class EndpointsTest {
     }
 
     @Test
+    fun `a status opened forces its counts, one read in the background leaves them alone`() {
+        assertEquals(emptyList<QueryItem>(), StatusEndpoints.status("42").endpoint.query)
+        val opened = StatusEndpoints.status("42", CountRefresh.Forced).endpoint
+        assertEquals(listOf(QueryItem("force_counts", "true")), opened.query)
+        val background = StatusEndpoints.status("42", CountRefresh.Skipped).endpoint
+        assertEquals(listOf(QueryItem("refresh_counts", "false")), background.query)
+        assertEquals("api/v1/statuses/42", background.path)
+    }
+
+    @Test
     fun `a status's link preview is a detail-screen request`() {
         assertEquals("api/v1/statuses/42/card", StatusEndpoints.card("42").endpoint.path)
     }
