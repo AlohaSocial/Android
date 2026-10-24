@@ -42,14 +42,15 @@ public class FollowedAuthors @Inject constructor(private val clients: ClientFact
 
     /**
      * Asks about the [authors] not known or being asked about already. One the server leaves out of its
-     * answer is taken as not followed; one whose ask fails is asked again after a while.
+     * answer is taken as not followed; one whose ask fails is asked again after a while. With [again],
+     * those known are asked about too, after a change the app made without learning who it touched.
      */
-    public suspend fun ask(reader: SignedInAccount, authors: Collection<String>) {
+    public suspend fun ask(reader: SignedInAccount, authors: Collection<String>, again: Boolean = false) {
         val have = known.value[reader.id].orEmpty()
         val now = System.nanoTime()
         val unknown = authors.filter {
             val key = reader.id + "/" + it
-            it !in have && (waiting[key] ?: Long.MIN_VALUE) <= now && asking.add(key)
+            (again || it !in have) && (waiting[key] ?: Long.MIN_VALUE) <= now && asking.add(key)
         }
         unknown.chunked(BATCH).forEach { batch -> askBatch(reader, batch) }
     }
