@@ -22,6 +22,8 @@ import social.aloha.core.data.Answer
 import social.aloha.core.data.Trouble
 import social.aloha.core.data.explore.Explore
 import social.aloha.core.data.explore.People
+import social.aloha.core.data.profile.FollowedAuthors
+import social.aloha.core.data.profile.ProfileRepository
 import social.aloha.core.data.trouble
 import social.aloha.core.datastore.ReadingPreferences
 import social.aloha.core.html.RichTextCache
@@ -82,6 +84,12 @@ internal data class ExploreUiState(
     val followed: Set<String> = emptySet(),
     /** A starter pack could not be followed, said once. */
     val followFailed: Boolean = false,
+    /** The starter pack open in its sheet. */
+    val sheet: PackSheet? = null,
+    /** Whether the reader follows each account asked about, by id. */
+    val following: Map<String, Boolean> = emptyMap(),
+    /** The name of a member of a starter pack who could not be followed, said once. */
+    val memberFailed: String? = null,
     val directory: Directory = Directory(),
     val viewer: String = "",
     /** Whether what is trending shows; off, Explore is its people and directory. */
@@ -90,7 +98,8 @@ internal data class ExploreUiState(
 
 /**
  * Explore as one account: each tab loads the first time it is shown, and again on a retry. A
- * suggestion dismissed goes at once, and comes back if the server would not forget it.
+ * suggestion dismissed goes at once, and comes back if the server would not forget it. A starter pack
+ * opens with its members, each saying whether the reader follows them.
  */
 @HiltViewModel(assistedFactory = ExploreViewModel.Factory::class)
 internal class ExploreViewModel @AssistedInject constructor(
@@ -99,6 +108,8 @@ internal class ExploreViewModel @AssistedInject constructor(
     private val explore: Explore,
     private val cache: RichTextCache,
     reading: ReadingPreferences,
+    private val profiles: ProfileRepository,
+    private val follows: FollowedAuthors,
 ) : ViewModel() {
     @AssistedFactory
     interface Factory {
@@ -128,6 +139,9 @@ internal class ExploreViewModel @AssistedInject constructor(
                 }
                 if (reader != null && waiting(state.value.tab)) load(state.value.tab)
             }
+        }
+        viewModelScope.launch {
+            follows.observe(readerId).collect { following -> state.update { it.copy(following = following) } }
         }
     }
 
@@ -199,18 +213,12 @@ internal class ExploreViewModel @AssistedInject constructor(
         now.copy(people = Load.Loaded(change(loaded)))
     }
 
-    fun onFollowAll(slug: String) {
-        val account = reader ?: return
-        viewModelScope.launch {
-            if (explore.followAll(account, slug) == Answer.Got(true)) {
-                state.update { it.copy(followed = it.followed + slug) }
-            } else {
-                state.update { it.copy(followFailed = true) }
-            }
-        }
-    }
+    /** The starter pack sheet, and following a pack whole, from it or from its row. */
+    val packs = PackSheets(state, viewModelScope, explore, profiles, follows) { reader }
 
-    fun onFollowFailedShown() = state.update { it.copy(followFailed = false) }
+    fun onFollowAll(slug: String) = packs.followAll(slug)
+
+    fun onFollowFailedShown() = state.update { it.copy(followFailed = false, memberFailed = null) }
 
     private fun waiting(tab: ExploreTab): Boolean = when (tab) {
         ExploreTab.Posts -> state.value.posts !is Load.Loaded
@@ -243,7 +251,7 @@ internal class ExploreViewModel @AssistedInject constructor(
     }
 }
 
-private fun <T> Answer<T>.load(): Load<T> = when (this) {
+internal fun <T> Answer<T>.load(): Load<T> = when (this) {
     is Answer.Got -> Load.Loaded(value)
     is Answer.Missed -> Load.Failed(error.trouble)
 }

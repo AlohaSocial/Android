@@ -56,6 +56,8 @@ class FollowedAuthorsTest {
         assertEquals(mapOf("1" to true, "2" to false), followed.observe(reader.id).first())
         followed.ask(reader, listOf("1", "2"))
         assertEquals(1, answers.asked.get())
+        followed.ask(reader, listOf("1", "2"), again = true)
+        assertEquals(2, answers.asked.get())
     }
 
     @Test
