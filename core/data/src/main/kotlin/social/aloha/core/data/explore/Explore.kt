@@ -10,6 +10,7 @@ import kotlinx.coroutines.coroutineScope
 import social.aloha.core.data.Answer
 import social.aloha.core.data.ClientFactory
 import social.aloha.core.data.answer
+import social.aloha.core.data.map
 import social.aloha.core.data.timeline.StatusRepository
 import social.aloha.core.model.Account
 import social.aloha.core.model.Card
@@ -91,9 +92,13 @@ public class Explore @Inject constructor(private val clients: ClientFactory, pri
     public suspend fun dismiss(reader: SignedInAccount, accountId: String): Answer<Unit> =
         clients.answer(reader, SearchEndpoints.dismissSuggestion(accountId))
 
-    /** Follows everybody in the starter pack [slug]. */
-    public suspend fun followAll(reader: SignedInAccount, slug: String): Answer<Unit> =
-        clients.answer(reader, DiscoveryEndpoints.followStarterPack(slug))
+    /**
+     * Follows everybody in the starter pack [slug] who can be reached: whether anybody was. The
+     * server skips a member it cannot reach, so an empty `followed` means nobody in it was followed;
+     * a server that does not say is taken at its word.
+     */
+    public suspend fun followAll(reader: SignedInAccount, slug: String): Answer<Boolean> =
+        clients.answer(reader, DiscoveryEndpoints.followStarterPack(slug)).map { it == null || it.isNotEmpty() }
 
     public companion object {
         private const val DIRECTORY_PAGE = 40

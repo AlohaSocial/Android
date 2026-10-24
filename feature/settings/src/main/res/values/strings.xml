@@ -612,6 +612,12 @@
     <string name="statistics_boosts">Boosts</string>
     <!-- Statistics number: replies received -->
     <string name="statistics_replies">Replies</string>
+    <!-- Statistics number: quote posts received -->
+    <string name="statistics_quotes">Quotes</string>
+    <!-- Statistics section: the servers of the accounts that responded to the reader's posts -->
+    <string name="statistics_engagement_sources">Where engagement came from</string>
+    <!-- Statistics row in "Where engagement came from": the share made by accounts on the reader's own server -->
+    <string name="statistics_engagement_local">Your server</string>
     <!-- Statistics number: responses per post -->
     <string name="statistics_per_post">Per post</string>
     <!-- Statistics number: the responses a post gets, against the number of followers, as a percentage -->

@@ -6,6 +6,7 @@ package social.aloha.feature.explore
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -182,7 +183,16 @@ internal fun PeopleTab(
         AlertDialog(
             onDismissRequest = { asking = null },
             title = { Text(stringResource(R.string.explore_follow_all_title, pack.name)) },
-            text = { Text(pluralStringResource(R.plurals.explore_follow_all_body, pack.size, pack.size)) },
+            text = {
+                Column {
+                    Text(pluralStringResource(R.plurals.explore_follow_all_body, pack.size, pack.size))
+                    pack.url?.let { url ->
+                        TextButton(onClick = { actions.onWeb(url) }) {
+                            Text(stringResource(R.string.explore_pack_source))
+                        }
+                    }
+                }
+            },
             confirmButton = {
                 TextButton(onClick = {
                     asking = null
@@ -203,6 +213,7 @@ private fun Pack(pack: StarterPack, followed: Boolean, onFollowAll: () -> Unit) 
         supportingContent = {
             Text(
                 listOfNotNull(
+                    pack.curator?.let { stringResource(R.string.explore_pack_curator, "@$it") },
                     pack.description.takeIf { it.isNotBlank() },
                     pluralStringResource(R.plurals.explore_pack_size, pack.size, pack.size),
                 ).joinToString(" · "),

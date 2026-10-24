@@ -24,6 +24,7 @@ import social.aloha.core.model.StarterPack
 import social.aloha.core.model.Tag
 import social.aloha.core.network.decoding.LenientIntSerializer
 import social.aloha.core.network.decoding.LenientTextSerializer
+import social.aloha.core.network.decoding.LenientUrlSerializer
 import social.aloha.core.network.decoding.LossyListSerializer
 import social.aloha.core.network.decoding.OptionalBoolSerializer
 import social.aloha.core.network.decoding.OptionalIdSerializer
@@ -41,6 +42,18 @@ internal data class StarterPackDto(
     @Serializable(with = LossyListSerializer::class) val handles: List<String> = emptyList(),
     @Serializable(with = OptionalIntSerializer::class) val size: Int? = null,
     @Serializable(with = LossyListSerializer::class) val accounts: List<AccountDto> = emptyList(),
+    @Serializable(with = LenientTextSerializer::class) val source: String? = null,
+    @Serializable(with = LenientTextSerializer::class) val curator: String? = null,
+    @Serializable(with = LenientUrlSerializer::class) val url: String? = null,
+    @Serializable(with = LenientTextSerializer::class) val topic: String? = null,
+    @Serializable(with = LenientTextSerializer::class) val language: String? = null,
+    @Serializable(with = LossyListSerializer::class) val unresolved: List<String> = emptyList(),
+)
+
+/** `POST /api/v1/starter_packs/{slug}/follow`: the handles actually followed. */
+@Serializable
+internal data class StarterPackFollowedDto(
+    @Serializable(with = LossyListSerializer::class) val followed: List<String>? = null,
 )
 
 /** Null when the pack has no name to address it by. */
@@ -53,6 +66,13 @@ internal fun StarterPackDto.toDomain(): StarterPack? {
         handles = handles,
         size = size?.takeIf { it > 0 } ?: maxOf(handles.size, accounts.size),
         accounts = accounts.map { it.toDomain() },
+        source = source.orEmpty(),
+        // Nextcloud Social sends a Bluesky curator's bare DID where its handle is missing or invalid
+        curator = curator?.removePrefix("@")?.takeUnless { it.startsWith("did:") },
+        url = url?.takeIf { it.startsWith("https://") },
+        topic = topic?.removePrefix("#"),
+        language = language,
+        unresolved = unresolved,
     )
 }
 

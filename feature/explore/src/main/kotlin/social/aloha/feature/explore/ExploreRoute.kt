@@ -3,13 +3,17 @@
 
 package social.aloha.feature.explore
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -62,6 +66,8 @@ public fun ExploreRoute(readerId: String, navigation: StatusNavigation, modifier
 
             override fun onFollowAll(slug: String) = viewModel.onFollowAll(slug)
 
+            override fun onFollowFailedShown() = viewModel.onFollowFailedShown()
+
             override fun onWeb(url: String) = nav.openWeb(url)
         }
     }
@@ -84,10 +90,11 @@ internal interface ExploreActions {
 
     fun onFollowAll(slug: String)
 
+    fun onFollowFailedShown()
+
     fun onWeb(url: String)
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun ExploreScreen(
     state: ExploreUiState,
@@ -96,12 +103,32 @@ internal fun ExploreScreen(
     rowActions: StatusActions,
     modifier: Modifier = Modifier,
 ) {
+    val snackbars = remember { SnackbarHostState() }
+    val followFailed = stringResource(R.string.explore_follow_all_failed)
+    // said first and cleared after: clearing it first would end the effect, and the snackbar with it
+    LaunchedEffect(state.followFailed) {
+        if (!state.followFailed) return@LaunchedEffect
+        try {
+            snackbars.showSnackbar(followFailed)
+        } finally {
+            actions.onFollowFailedShown()
+        }
+    }
+    Box(modifier.fillMaxSize()) {
+        Pager(state, mapper, actions, rowActions)
+        SnackbarHost(snackbars, Modifier.align(Alignment.BottomCenter))
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun Pager(state: ExploreUiState, mapper: StatusRowMapper, actions: ExploreActions, rowActions: StatusActions) {
     TabPager(
         ExploreTab.entries.filter { state.trends || !it.trending },
         state.tab,
         actions::onTab,
         { stringResource(tabName(it)) },
-        modifier.fillMaxSize(),
+        Modifier.fillMaxSize(),
     ) { tab ->
         when (tab) {
             ExploreTab.Posts -> Loading(state.posts, actions::onRetry) {

@@ -78,6 +78,10 @@ class ExploreScreenTest {
             asked += "follow:$slug"
         }
 
+        override fun onFollowFailedShown() {
+            asked += "followFailedShown"
+        }
+
         override fun onWeb(url: String) {
             asked += "web:$url"
         }
@@ -127,6 +131,28 @@ class ExploreScreenTest {
         assertEquals(listOf("dismiss:2"), asked)
         compose.onAllNodesWithText("Follow all").onLast().performClick()
         assertEquals(listOf("dismiss:2", "follow:surfers"), asked)
+    }
+
+    @Test
+    fun `a starter pack read in says who curated it and links to where it lives`() {
+        val pack =
+            StarterPack("surf", "Surf", size = 3, curator = "kai@waves.example", url = "https://waves.example/c/1")
+        show(ExploreUiState(tab = ExploreTab.People, people = Load.Loaded(People(packs = listOf(pack)))))
+        compose.onNodeWithText("By @kai@waves.example · 3 accounts").assertExists()
+        compose.onNodeWithText("Follow all").performClick()
+        compose.onNodeWithText("See it on its server").performClick()
+        assertEquals(listOf("web:https://waves.example/c/1"), asked)
+    }
+
+    @Test
+    fun `a starter pack that could not be followed says so`() {
+        show(ExploreUiState(tab = ExploreTab.People, people = Load.Loaded(people), followFailed = true))
+        compose.onNodeWithText("Couldn’t follow anyone in that pack. Try again later.").assertExists()
+        // cleared once it was said, not before
+        assertEquals(emptyList<String>(), asked)
+        compose.mainClock.advanceTimeBy(SNACKBAR_MILLIS)
+        compose.waitForIdle()
+        assertEquals(listOf("followFailedShown"), asked)
     }
 
     // one bucket, as Nextcloud Social keeps, a week, as Mastodon does, and none
@@ -184,3 +210,5 @@ class ExploreScreenTest {
         compose.onRoot().captureRoboImage("src/test/screenshots/explore-directory.png")
     }
 }
+
+private const val SNACKBAR_MILLIS = 10_000L

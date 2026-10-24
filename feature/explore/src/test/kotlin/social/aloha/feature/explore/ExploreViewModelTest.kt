@@ -99,4 +99,24 @@ class ExploreViewModelTest {
         }
         assertEquals(listOf("7"), (after.people as Load.Loaded).value.suggestions.map { it.id })
     }
+
+    @Test
+    fun `a starter pack that could not be followed says so once, and is not marked followed`() = runBlocking {
+        Dispatchers.setMain(Dispatchers.Unconfined)
+        val reader = fixture.signIn(server.url("/"))
+        val explore =
+            ExploreViewModel(
+                reader.id,
+                fixture.accounts,
+                Explore(fixture.clients, fixture.statuses),
+                RichTextCache(),
+                ReadingPreferences(InMemoryDataStore(emptyPreferences())),
+            )
+        withTimeout(10.seconds) { explore.uiState.first { it.viewer.isNotEmpty() } }
+        explore.onFollowAll("surfers")
+        val failed = withTimeout(10.seconds) { explore.uiState.first { it.followFailed } }
+        assertEquals(emptySet<String>(), failed.followed)
+        explore.onFollowFailedShown()
+        assertEquals(false, explore.uiState.value.followFailed)
+    }
 }

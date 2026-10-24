@@ -46,10 +46,20 @@ internal fun Engagement(statistics: AccountStatistics) {
             }
             engagement["boosts"]?.let { Tile(whole(it), stringResource(R.string.statistics_boosts)) }
             engagement["replies"]?.let { Tile(whole(it), stringResource(R.string.statistics_replies)) }
+            engagement["quotes"]?.let { Tile(whole(it), stringResource(R.string.statistics_quotes)) }
             rates["per_post"]?.let { Tile(oneDecimal(it), stringResource(R.string.statistics_per_post)) }
             rates["per_follower"]?.let { Tile(percent(it), stringResource(R.string.statistics_per_follower)) }
             rates["silent"]?.let { Tile(whole(it), stringResource(R.string.statistics_silent)) }
         }
+    }
+}
+
+@Composable
+internal fun EngagementSources(statistics: AccountStatistics) {
+    val sources = statistics.engagementSources?.takeIf { it.servers.isNotEmpty() } ?: return
+    StatisticsCard(stringResource(R.string.statistics_engagement_sources)) {
+        sources.localShare?.let { ValueRow(stringResource(R.string.statistics_engagement_local), percent(it)) }
+        CountRows(sources.servers)
     }
 }
 

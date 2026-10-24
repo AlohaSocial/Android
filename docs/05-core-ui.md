@@ -329,6 +329,12 @@ One screen, segmented.
   `accounts` is always `0` — the UI draws no sparkline from one point and
   claims no participant count. Show uses only. Reading's Trends switch, and
   focus mode, leave Explore its people and directory alone.
+- **Starter packs** (`/api/v1/starter_packs`), in People, each followed whole
+  after a confirmation (`POST /starter_packs/{slug}/follow`). A pack read in
+  from another server names its curator in its row, and the confirmation links
+  to the pack on its own server (https only). The follow answers `followed`,
+  the handles actually followed: an empty one, like a failed request, leaves
+  the pack unfollowed and says so; an answer without it counts as followed.
 - **Other servers' directories** (`/api/v1/directories`, `/directories/search`)
   appear as an extra section where the capability is present.
 - **The directory** — this instance's own, the accounts here that opted in,
