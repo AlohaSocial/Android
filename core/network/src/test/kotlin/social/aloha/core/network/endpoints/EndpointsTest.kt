@@ -269,4 +269,14 @@ class EndpointsTest {
         assertEquals("mention", endpoint.queryValue("types[]"))
         assertEquals("follow", endpoint.queryValue("exclude_types[]"))
     }
+
+    @Test
+    fun `the grouped unread count asks for its types, the flat one counts every kind`() {
+        val grouped = NotificationEndpoints.unreadCount(grouped = true, types = listOf("mention")).endpoint
+        assertEquals("api/v2/notifications/unread_count", grouped.path)
+        assertEquals("mention", grouped.queryValue("types[]"))
+        val flat = NotificationEndpoints.unreadCount(grouped = false, types = listOf("mention")).endpoint
+        assertEquals("api/v1/notifications/unread_count", flat.path)
+        assertFalse("types[]" in flat.queryNames())
+    }
 }

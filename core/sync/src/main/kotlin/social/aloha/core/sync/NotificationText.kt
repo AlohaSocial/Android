@@ -42,6 +42,7 @@ public object NotificationText {
             NotificationKind.AdminSignUp -> resources.getString(R.string.notifications_admin_sign_up, who)
             NotificationKind.AdminReport -> resources.getString(R.string.notifications_admin_report, who)
             NotificationKind.AnnualReport -> resources.getString(R.string.notifications_annual_report)
+            NotificationKind.StarterPackJoined -> resources.getString(R.string.notifications_starter_pack_joined, who)
             NotificationKind.Unknown -> who
         }
     }

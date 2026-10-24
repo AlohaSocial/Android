@@ -139,6 +139,19 @@ class NotificationsRepositoryTest {
     }
 
     @Test
+    fun `every kind on Nextcloud Social names each, the starter pack's included, and none elsewhere`() = runBlocking {
+        val nextcloud = ServerCapabilities.minimal(server.url("/").toString())
+            .copy(softwareName = "nextcloud-social")
+        repository.page(fixture.signIn(server.url("/"), nextcloud), emptySet())
+        val asked = answers.asked.single()
+        assertTrue(asked, "types%5B%5D=bluesky%3Astarterpack_joined" in asked && "types%5B%5D=mention" in asked)
+        assertFalse(asked, "__unknown" in asked)
+        answers.asked.clear()
+        repository.page(signIn(grouped = false), emptySet())
+        assertFalse(answers.asked.single().contains("types"))
+    }
+
+    @Test
     fun `the read marker only moves forwards, and reading clears the badge at once`() = runBlocking {
         val account = signIn(grouped = true)
         unread.set(account.id, 7)

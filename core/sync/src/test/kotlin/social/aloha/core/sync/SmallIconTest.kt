@@ -32,4 +32,15 @@ class SmallIconTest {
         assertEquals(kinds.size, icons.toSet().size)
         icons.forEach { assertNotNull(ContextCompat.getDrawable(context, it)) }
     }
+
+    @Test
+    fun `someone joining Bluesky with the starter pack is told like a follow, on the follows channel`() {
+        val kind = NotificationKind.StarterPackJoined
+        assertEquals(smallIcon(NotificationKind.Follow), smallIcon(kind))
+        assertEquals(NoticeChannel.Follows, NoticeChannel.of(kind))
+        assertEquals(
+            "Bob joined Bluesky through your starter pack",
+            NotificationText.summary(context.resources, kind, "Bob", others = 0),
+        )
+    }
 }
