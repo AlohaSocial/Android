@@ -100,6 +100,18 @@ public data class ServerCapabilities(
      */
     val realFollowerCounts: Boolean get() = !isNextcloudSocial || atLeast(softwareVersion, REAL_FOLLOWER_COUNTS)
 
+    /**
+     * The `types[]` a notifications request names to have every kind this app shows. Nextcloud Social leaves
+     * its own kinds out of a page asked for with a token unless they are named, so there it names them all;
+     * elsewhere none, which means every kind.
+     */
+    val allNotificationTypes: List<String>
+        get() = if (isNextcloudSocial) {
+            NotificationKind.entries.filterNot { it.isUnknown }.map { it.wire }
+        } else {
+            emptyList()
+        }
+
     /** How this server measures a post against its character limit. */
     val lengthRule: LengthRule get() = if (isNextcloudSocial) LengthRule.CodePoints else LengthRule.Mastodon
 

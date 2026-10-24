@@ -379,6 +379,18 @@ Grouped by the feature that needs it. `{base}` is the resolved API base.
 `GET/PATCH /api/v2/notifications/policy` (v1 fallback) ·
 `GET /api/v1/notifications/requests…` · `GET/POST /api/v1/markers`
 
+Nextcloud Social has notification types of its own (`story:react`,
+`story:comment`, `tagged`, `bluesky:…`) and, from 0.26.251, leaves them out of a
+page asked for with a token unless `types[]` names them, on v1, v2 and the v2
+`unread_count` alike (v1 `unread_count` counts every type; the stream sends
+every type). Of these the app shows `bluesky:starterpack_joined` (since
+0.26.171): someone joined Bluesky with the reader's starter pack; `account` is
+who, `status` is null, nothing else is carried, and it never groups. So on
+Nextcloud Social a request for every kind names each kind the app shows in
+`types[]`, the v2 unread count too; an older server ignores a type it does not
+know. Elsewhere no `types[]` is sent. Nextcloud Social's Web Push has no title
+for it and sends none; the app raises it from its poll.
+
 **Link previews** — `GET /api/v1/statuses/{id}/card`, on the **detail screen
 only**. The card is inlined in the status entity everywhere else; asking makes
 the server build and cache one for a post that had none, so a timeline that

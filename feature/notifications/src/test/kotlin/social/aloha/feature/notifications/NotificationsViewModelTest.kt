@@ -212,7 +212,7 @@ class NotificationsViewModelTest {
     }
 
     @Test
-    fun `a chip asks the server for that kind, and follows bring follow requests too`() = runBlocking {
+    fun `a chip asks the server for that kind, and follows bring requests and starter pack joins too`() = runBlocking {
         viewModel.onShown(isShown = true)
         await { it.loadedOnce }
         viewModel.onKind(NotificationKind.Follow)
@@ -222,6 +222,7 @@ class NotificationsViewModelTest {
             notifications.asked.last { "types%5B%5D=follow" in it }
         }
         assertTrue(asked, asked.startsWith("GET /api/v2/notifications?") && "types%5B%5D=follow_request" in asked)
+        assertTrue(asked, "types%5B%5D=bluesky%3Astarterpack_joined" in asked)
     }
 
     @Test
