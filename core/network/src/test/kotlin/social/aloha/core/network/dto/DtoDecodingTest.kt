@@ -237,6 +237,17 @@ class DtoDecodingTest {
     }
 
     @Test
+    fun `someone joining Bluesky with the reader's starter pack names who, and no post`() {
+        val body = """[{"id": "9", "type": "bluesky:starterpack_joined", "created_at": "2026-10-20T10:00:00.000Z",
+            "status": null, "account": $ACCOUNT}]"""
+        val notification = NotificationEndpoints.flat().decode(body).value.single()
+        assertEquals(NotificationKind.StarterPackJoined, notification.type)
+        assertEquals("1790000000000000001", notification.account.id)
+        assertNull(notification.status)
+        assertFalse(notification.type.groups)
+    }
+
+    @Test
     fun `a group says why follows were cut, and what a moderator warned about`() {
         val severed = """{"group_key": "s", "type": "severed_relationships", "most_recent_notification_id": "9",
             "event": {"id": "1", "type": "domain_block", "target_name": "spam.example"}}"""

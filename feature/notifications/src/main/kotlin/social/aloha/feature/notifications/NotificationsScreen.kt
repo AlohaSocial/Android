@@ -372,6 +372,7 @@ private val NotificationKind.icon: ImageVector
         NotificationKind.Update -> AlohaIcons.Edited
         NotificationKind.ModerationWarning, NotificationKind.SeveredRelationships -> AlohaIcons.ContentWarning
         NotificationKind.AdminReport -> AlohaIcons.Report
+        NotificationKind.StarterPackJoined -> AlohaIcons.Group
         else -> AlohaIcons.Notifications
     }
 

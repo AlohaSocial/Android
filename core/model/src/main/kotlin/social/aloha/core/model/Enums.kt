@@ -60,7 +60,10 @@ public enum class AttachmentKind(override val wire: String) : WireValue {
     }
 }
 
-/** The notification types Nextcloud Social serves, plus the rest of Mastodon's. */
+/**
+ * The notification types Nextcloud Social serves, plus the rest of Mastodon's. [StarterPackJoined] is Nextcloud
+ * Social's own: someone joined Bluesky with the reader's starter pack.
+ */
 @Serializable
 public enum class NotificationKind(override val wire: String) : WireValue {
     Mention("mention"),
@@ -76,6 +79,7 @@ public enum class NotificationKind(override val wire: String) : WireValue {
     AdminSignUp("admin.sign_up"),
     AdminReport("admin.report"),
     AnnualReport("annual_report"),
+    StarterPackJoined("bluesky:starterpack_joined"),
     Unknown("__unknown"),
     ;
 

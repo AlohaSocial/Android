@@ -57,8 +57,13 @@ public object NotificationEndpoints {
     private fun filtered(limit: Int, anchor: PageAnchor, types: List<String>, excludeTypes: List<String>) =
         Paging.pageItems(limit, anchor) + repeatedQuery("types", types) + repeatedQuery("exclude_types", excludeTypes)
 
-    public fun unreadCount(grouped: Boolean): ApiRequest<UnreadCount> = request(
-        Endpoint(if (grouped) "api/v2/notifications/unread_count" else "api/v1/notifications/unread_count"),
+    /** [types] are counted where the server takes them (v2); v1 counts every kind. */
+    public fun unreadCount(grouped: Boolean, types: List<String> = emptyList()): ApiRequest<UnreadCount> = request(
+        if (grouped) {
+            Endpoint("api/v2/notifications/unread_count", query = repeatedQuery("types", types))
+        } else {
+            Endpoint("api/v1/notifications/unread_count")
+        },
         UnreadCountDto.serializer(),
     ) { it.toDomain() }
 

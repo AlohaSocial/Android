@@ -307,8 +307,9 @@ internal fun smallIcon(kind: NotificationKind): Int = when (kind) {
 
     NotificationKind.Reblog -> R.drawable.ic_notification_boost
 
-    NotificationKind.Follow, NotificationKind.FollowRequest, NotificationKind.AdminSignUp ->
-        R.drawable.ic_notification_follow
+    NotificationKind.Follow, NotificationKind.FollowRequest, NotificationKind.AdminSignUp,
+    NotificationKind.StarterPackJoined,
+    -> R.drawable.ic_notification_follow
 
     NotificationKind.Mention -> R.drawable.ic_notification_mention
 
