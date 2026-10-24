@@ -65,6 +65,28 @@
     <string name="explore_pack_curator">By %s</string>
     <!-- Opens a starter pack read in from another server on that server's website -->
     <string name="explore_pack_source">See it on its server</string>
+    <!-- Read out for tapping a starter pack: opens it to show who is in it -->
+    <string name="explore_pack_open">Show who’s in it</string>
+    <!-- Follows those in an open starter pack the reader does not follow yet, when they follow some already -->
+    <string name="explore_follow_rest">Follow the rest</string>
+    <!-- Said in an open starter pack in place of following it, when the reader follows everyone in it -->
+    <string name="explore_pack_all_followed">You follow everyone in it</string>
+    <!-- Said in an open starter pack in place of following it, when the reader follows everyone in it but some have yet to approve the follow -->
+    <string name="explore_pack_all_asked">You follow or asked to follow everyone in it</string>
+    <!-- Beside a member of a starter pack the reader follows -->
+    <string name="explore_member_following">Following</string>
+    <!-- Beside a member of a starter pack whose approval of the reader's follow is awaited -->
+    <string name="explore_member_requested">Requested</string>
+    <!-- Follows one member of a starter pack -->
+    <string name="explore_member_follow">Follow</string>
+    <!-- Read out for the follow button beside a member of a starter pack: %s is their name -->
+    <string name="explore_member_follow_label">Follow %s</string>
+    <!-- Said when following one member of a starter pack failed: %s is their name -->
+    <string name="explore_member_failed">Couldn’t follow %s. Try again later.</string>
+    <!-- Heading over the handles in a starter pack the reader's server could not reach yet -->
+    <string name="explore_pack_unreachable">Not reachable yet</string>
+    <!-- Explains the handles in a starter pack the reader's server could not reach yet -->
+    <string name="explore_pack_unreachable_why">Their servers haven’t answered yet. Often they’re only busy for a moment.</string>
     <!-- Heading over the accounts popular on the reader's server -->
     <string name="explore_popular">Popular here</string>
     <!-- The directory, most recently active first -->

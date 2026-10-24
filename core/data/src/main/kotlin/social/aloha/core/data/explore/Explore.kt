@@ -93,6 +93,16 @@ public class Explore @Inject constructor(private val clients: ClientFactory, pri
         clients.answer(reader, SearchEndpoints.dismissSuggestion(accountId))
 
     /**
+     * The starter pack [slug] with its members as the server holds them. Nobody is fetched from another
+     * server to answer: those it does not hold yet are its `unresolved` handles, fetched in the background.
+     */
+    public suspend fun pack(reader: SignedInAccount, slug: String): Answer<StarterPack> =
+        when (val answer = clients.answer(reader, DiscoveryEndpoints.starterPack(slug))) {
+            is Answer.Got -> answer.value?.let { Answer.Got(it) } ?: Answer.Missed(ApiError.NotFound)
+            is Answer.Missed -> answer
+        }
+
+    /**
      * Follows everybody in the starter pack [slug] who can be reached: whether anybody was. The
      * server skips a member it cannot reach, so an empty `followed` means nobody in it was followed;
      * a server that does not say is taken at its word.

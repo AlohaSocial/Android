@@ -17,6 +17,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import social.aloha.core.data.Answer
+import social.aloha.core.network.ApiError
 import social.aloha.core.testing.SignedInFixture
 
 /** Suggestions only: the starter packs and popular accounts routes are not served. */
@@ -99,4 +100,28 @@ class ExploreTest {
         }
         assertEquals("POST /api/v1/starter_packs/surf/follow", asked.last())
     }
+
+    @Test
+    fun `a starter pack opens with its members and those not reached yet, and one without a name is missing`() =
+        runBlocking {
+            val reader = fixture.signIn(server.url("/"))
+            var body = """{"id":"surf","name":"Surf","size":2,
+                "accounts":[{"id":"7","username":"kai","acct":"kai@waves.example"}],
+                "unresolved":["lani@gone.example"]}"""
+            server.dispatcher = object : Dispatcher() {
+                override fun dispatch(request: RecordedRequest): MockResponse =
+                    if (request.url.encodedPath.endsWith("/api/v1/starter_packs/surf")) {
+                        MockResponse.Builder().code(200).body(body).addHeader("content-type", "application/json")
+                            .build()
+                    } else {
+                        MockResponse.Builder().code(404).body("{}").build()
+                    }
+            }
+            val pack = (explore.pack(reader, "surf") as Answer.Got).value
+            assertEquals(listOf("kai@waves.example"), pack.accounts.map { it.acct })
+            assertEquals(listOf("lani@gone.example"), pack.unresolved)
+            body = """{"name":"Surf"}"""
+            assertEquals(Answer.Missed(ApiError.NotFound), explore.pack(reader, "surf"))
+            assertEquals(Answer.Missed(ApiError.NotFound), explore.pack(reader, "reef"))
+        }
 }

@@ -17,9 +17,16 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import social.aloha.core.model.Relationship
 import social.aloha.core.testing.SignedInFixture
 
-/** Says the reader follows account 1, says nothing of anyone else, and refuses once [refusing]. */
+private const val FOLLOWED = """[{"id":"1","following":true}]"""
+private const val WAITING = """[{"id":"4","requested":true}]"""
+
+/**
+ * Says the reader follows account 1 and waits on account 4's approval, says nothing of anyone else, and
+ * refuses once [refusing].
+ */
 private class Relationships : Dispatcher() {
     val asked = AtomicInteger()
 
@@ -29,7 +36,7 @@ private class Relationships : Dispatcher() {
         asked.incrementAndGet()
         if (refusing) return MockResponse.Builder().code(503).build()
         return MockResponse.Builder().code(200).addHeader("content-type", "application/json")
-            .body("""[{"id":"1","following":true}]""").build()
+            .body(if (request.url.queryParameterValues("id[]").contains("4")) WAITING else FOLLOWED).build()
     }
 }
 
@@ -56,6 +63,18 @@ class FollowedAuthorsTest {
         assertEquals(mapOf("1" to true, "2" to false), followed.observe(reader.id).first())
         followed.ask(reader, listOf("1", "2"))
         assertEquals(1, answers.asked.get())
+        followed.ask(reader, listOf("1", "2"), again = true)
+        assertEquals(2, answers.asked.get())
+    }
+
+    @Test
+    fun `a follow request still waiting is no follow, and is known as a request until it is answered`() = runBlocking {
+        val reader = fixture.signIn(server.url("/"))
+        followed.ask(reader, listOf("4"))
+        assertEquals(mapOf("4" to false), followed.observe(reader.id).first())
+        assertEquals(setOf("4"), followed.observeRequested(reader.id).first())
+        followed.learn(reader.id, Relationship("4", following = true))
+        assertEquals(emptySet<String>(), followed.observeRequested(reader.id).first())
     }
 
     @Test
