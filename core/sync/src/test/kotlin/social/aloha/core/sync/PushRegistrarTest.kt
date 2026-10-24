@@ -79,6 +79,46 @@ class PushRegistrarTest {
     }
 
     @Test
+    fun `a server that could not be told keeps its endpoint until it confirms`() = runBlocking {
+        val account = connected()
+        push.rememberEndpoint(account.id, "https://ntfy.example/up1")
+        server.enqueue(MockResponse.Builder().code(503).build())
+        registrar.subscribed(account, viaNextcloud = true)
+        assertEquals("https://ntfy.example/up1", push.endpoint(account.id))
+        assertFalse(push.isActive(account.id))
+        ok()
+        registrar.subscribed(account, viaNextcloud = true)
+        assertNull(push.endpoint(account.id))
+    }
+
+    @Test
+    fun `a Nextcloud that could not be told keeps its endpoint until it confirms`() = runBlocking {
+        val account = connected()
+        push.rememberEndpoint(PushInstance.nextcloud(account.id), "https://ntfy.lan/up1")
+        server.enqueue(MockResponse.Builder().code(503).build())
+        registrar.subscribed(account, viaNextcloud = false)
+        assertEquals("https://ntfy.lan/up1", push.endpoint(PushInstance.nextcloud(account.id)))
+        server.enqueue(MockResponse.Builder().code(404).build())
+        registrar.subscribed(account, viaNextcloud = false)
+        assertNull(push.endpoint(PushInstance.nextcloud(account.id)))
+    }
+
+    @Test
+    fun `registering again asks once more for a route whose removal failed`() = runBlocking {
+        // no VAPID key: its Nextcloud is the account's route, confirmed by the endpoint recorded for it
+        val account = connected()
+        push.rememberEndpoint(PushInstance.nextcloud(account.id), "https://ntfy.lan/up1")
+        push.rememberEndpoint(account.id, "https://ntfy.example/up1")
+        ok()
+        // the Nextcloud's push types, which end this registration before the distributor is asked
+        server.enqueue(MockResponse.Builder().code(404).build())
+        registrar.register(account)
+        val sent = server.takeRequest(1, TimeUnit.SECONDS)!!
+        assertEquals("DELETE /api/v1/push/subscription", "${sent.method} ${sent.url.encodedPath}")
+        assertNull(push.endpoint(account.id))
+    }
+
+    @Test
     fun `with no other route registered, nothing is sent`() = runBlocking {
         val account = connected()
         registrar.subscribed(account, viaNextcloud = false)

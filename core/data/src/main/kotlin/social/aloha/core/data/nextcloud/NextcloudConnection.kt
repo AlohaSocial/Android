@@ -126,10 +126,9 @@ public class NextcloudConnection @Inject constructor(
     public suspend fun activateWebPush(account: SignedInAccount, token: String): ApiError? =
         execute(account, NextcloudEndpoints.activateWebPush(token))
 
-    /** Removes this device's registration; the Nextcloud stops pushing to it. */
-    public suspend fun unregisterWebPush(account: SignedInAccount) {
-        execute(account, NextcloudEndpoints.unregisterWebPush())
-    }
+    /** Removes this device's registration; the Nextcloud stops pushing to it. Whether it confirmed comes back. */
+    public suspend fun unregisterWebPush(account: SignedInAccount): Boolean =
+        execute(account, NextcloudEndpoints.unregisterWebPush()).let { it == null || it is ApiError.NotFound }
 
     /**
      * Forgets the app password on the device, then gives it back to the Nextcloud, after removing the

@@ -93,9 +93,14 @@ public class PushRegistrar @Inject constructor(
      * With its server where that pushes and takes the distributor's endpoints, else with its Nextcloud
      * where that pushes.
      */
-    private suspend fun register(account: SignedInAccount) {
+    internal suspend fun register(account: SignedInAccount) {
         val refused = subscriptions.refused(account.id)
         val server = account.capabilities.webPushVapidKey?.takeIf { it.isNotEmpty() && !refused }
+        // the route chosen is confirmed: one competing with it whose removal failed before is asked again
+        val viaNextcloud = server == null
+        if (subscriptions.endpoint(if (viaNextcloud) PushInstance.nextcloud(account.id) else account.id) != null) {
+            subscribed(account, viaNextcloud)
+        }
         when {
             server != null -> register(account.id, server)
 
@@ -116,6 +121,8 @@ public class PushRegistrar @Inject constructor(
     /** Stops [account]'s push on its server, its Nextcloud and the device, before it signs out. */
     public suspend fun forget(account: SignedInAccount) {
         stopOnServer(account)
+        // nothing asks again for an account gone, whatever its server answered
+        subscriptions.rememberEndpoint(account.id, null)
         subscriptions.forgetRefusal(account.id)
         UnifiedPush.unregister(context, account.id)
     }
@@ -137,8 +144,10 @@ public class PushRegistrar @Inject constructor(
             subscriptions.unsubscribe(account)
         } else if (subscriptions.endpoint(PushInstance.nextcloud(account.id)) != null) {
             UnifiedPush.unregister(context, PushInstance.nextcloud(account.id))
-            subscriptions.rememberEndpoint(PushInstance.nextcloud(account.id), null)
-            nextcloud.unregisterWebPush(account)
+            // kept until the Nextcloud confirms, so the next registration asks it again
+            if (nextcloud.unregisterWebPush(account)) {
+                subscriptions.rememberEndpoint(PushInstance.nextcloud(account.id), null)
+            }
         }
     }
 
