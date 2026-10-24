@@ -218,6 +218,9 @@ Rules:
 - Infinite scroll pages on `next` from the `Link` header, triggered 10 rows from
   the end, one request in flight at a time. The timeline ends where a page names
   no `next`, not where a page is shorter than `limit`.
+- A refresh Nextcloud Social answers with `X-Social-Filling` (counts still being
+  fetched, or posts read from elsewhere) reads the same page once more two
+  seconds later; new posts it brings wait behind the pill. Never more than once.
 - **Remember position across launches** per timeline, restored only if the
   cached entry is still present.
 
@@ -240,6 +243,8 @@ exist undocumented.
 
 ## 4. Thread view
 
+- Reads the post with `force_counts=true`, so Nextcloud Social asks its origin
+  for current counts even right after a timeline did.
 - Fetches `/api/v1/statuses/{id}/context` and renders ancestors above, the
   focused status enlarged in the middle, and descendants below as an indented
   tree.
@@ -270,6 +275,10 @@ exist undocumented.
   (`accounts/{id}/statuses?tagged=`), titled "#tag by @handle"; on Nextcloud
   Social before 0.26.237, which ignores `tagged`, it opens the hashtag's
   timeline instead.
+- Scrolling an account's posts does not stop where Nextcloud Social is still
+  reading older ones from the account's server or Bluesky
+  (`X-Social-Profile-Filling`): the page is read again after two seconds, at
+  most twice, and the next scroll asks again while the server still says so.
 - Followers: Nextcloud Social before 0.26.241 sends 0 followers to a reader who
   hides the numbers, so there a 0 shows as "Followers" without a number.
 - Own profile additionally: Edit profile (`PATCH /accounts/update_credentials`

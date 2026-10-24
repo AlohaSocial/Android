@@ -148,6 +148,19 @@ class ApiClientTest {
     }
 
     @Test
+    fun `a page says whether the server is still filling it in, and an account's posts apart`() = runTest {
+        respond("[]", headers = mapOf("X-Social-Filling" to "1", "X-Social-Profile-Filling" to "1"))
+        respond("[]", headers = mapOf("X-Social-Filling" to "1"))
+        respond("[]")
+        val both = client().page(emojis(), limit = 20).valueOrNull()
+        val filling = client().page(emojis(), limit = 20).valueOrNull()
+        val plain = client().page(emojis(), limit = 20).valueOrNull()
+        assertEquals(true to true, both?.filling to both?.profileFilling)
+        assertEquals(true to false, filling?.filling to filling?.profileFilling)
+        assertEquals(false to false, plain?.filling to plain?.profileFilling)
+    }
+
+    @Test
     fun `a cursor on another host is never followed`() = runTest {
         val result = client().page("https://attacker.example/steal".toHttpUrl(), emojis(), limit = 20)
         assertEquals(ApiResult.Failure(ApiError.ForeignCursor("attacker.example")), result)

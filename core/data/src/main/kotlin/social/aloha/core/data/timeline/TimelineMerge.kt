@@ -85,8 +85,15 @@ public object TimelineMerge {
         val top = existing.firstOrNull()?.position ?: 0
         val slots = numbered(fresh, from = top + fresh.size + 1).toMutableList()
         // A full page from a since_id fetch means there may be more between what arrived and what was
-        // cached: a gap, rather than joining two ranges that may not touch.
-        val gap = if (pageWasFull && existing.isNotEmpty()) Slot.gap(fresh.last(), slots.last().position - 1) else null
+        // cached: a gap, rather than joining two ranges that may not touch. A page that reaches a cached
+        // row (the head read again) touches them already.
+        val cached = existing.mapTo(HashSet()) { it.statusId }
+        val reaches = page.any { it in cached }
+        val gap = if (pageWasFull && existing.isNotEmpty() && !reaches) {
+            Slot.gap(fresh.last(), slots.last().position - 1)
+        } else {
+            null
+        }
         gap?.let(slots::add)
         return Plan(slots + existing, inserted = fresh, openedGaps = listOfNotNull(gap?.statusId))
     }

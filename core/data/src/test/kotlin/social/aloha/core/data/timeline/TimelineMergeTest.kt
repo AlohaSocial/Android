@@ -44,6 +44,15 @@ class TimelineMergeTest {
     }
 
     @Test
+    fun `a full refresh that reaches a cached row joins it, with no gap`() {
+        val plan =
+            TimelineMerge.plan(slots("3", "2", "1"), listOf("5", "4", "3"), Direction.Newer, pageWasFull = true)
+        assertEquals(listOf("5", "4", "3", "2", "1"), plan.slots.ids())
+        assertTrue(plan.openedGaps.isEmpty())
+        assertTrue(TimelineMerge.isWellFormed(plan.slots))
+    }
+
+    @Test
     fun `a refresh into an empty timeline never opens a gap`() {
         val plan = TimelineMerge.plan(emptyList(), listOf("3", "2", "1"), Direction.Newer, pageWasFull = true)
         assertTrue(plan.openedGaps.isEmpty())

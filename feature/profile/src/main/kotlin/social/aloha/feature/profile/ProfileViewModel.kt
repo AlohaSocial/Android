@@ -372,10 +372,12 @@ internal class ProfileViewModel @AssistedInject constructor(
         val last = timelines.lastFetched(reader, key)
         if (!force && last != null && clock.millis() - last < STALE_MILLIS) return
         val newest = timelines.observe(reader, key).first().firstOrNull { it is TimelineRow.Post }?.id
-        when (val outcome = timelines.refresh(reader, key, RefreshPlan.of(last != null, newest))) {
+        val plan = RefreshPlan.of(last != null, newest)
+        when (val outcome = timelines.refresh(reader, key, plan)) {
             is PageOutcome.Loaded -> {
                 if (last == null) cursors[tab] = outcome.nextCursor
                 if (last == null && outcome.reachedEnd) control.update { it.copy(reachedEnd = it.reachedEnd + tab) }
+                viewModelScope.launch { timelines.refill(reader, key, plan, outcome) }
             }
 
             is PageOutcome.Failed -> control.update { it.copy(trouble = outcome.error.trouble) }

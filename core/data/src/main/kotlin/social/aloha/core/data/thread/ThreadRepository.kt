@@ -21,6 +21,7 @@ import social.aloha.core.model.StatusEdit
 import social.aloha.core.network.ApiError
 import social.aloha.core.network.ApiRequest
 import social.aloha.core.network.ApiResult
+import social.aloha.core.network.endpoints.CountRefresh
 import social.aloha.core.network.endpoints.Paging
 import social.aloha.core.network.endpoints.StatusEndpoints
 import social.aloha.core.network.endpoints.StatusExtraEndpoints
@@ -43,7 +44,9 @@ public class ThreadRepository @Inject constructor(
         statuses.observe(account.id, statusIds)
 
     public suspend fun load(account: SignedInAccount, statusId: String): Answer<Conversation> {
-        val focused = when (val answer = clients.answer(account, StatusEndpoints.status(statusId))) {
+        // the person opened it: its counts are asked of where it lives now, however recently they were
+        val opened = StatusEndpoints.status(statusId, CountRefresh.Forced)
+        val focused = when (val answer = clients.answer(account, opened)) {
             is Answer.Got -> answer.value
 
             is Answer.Missed -> return answer.also {
