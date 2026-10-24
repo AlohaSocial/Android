@@ -19,9 +19,16 @@ import social.aloha.core.ui.StatusRowUi
 /** The profile's tabs; Featured only where the account features something, the last two where the server has them. */
 internal enum class ProfileTab { Posts, Replies, Media, Featured, Videos, Collections, Stories }
 
-/** What an account features at the top of its profile: pinned posts and hashtags. */
+/**
+ * What an account features at the top of its profile: pinned posts and hashtags. [byAccount] where a
+ * hashtag can open the account's own posts with it, as `tagged` asks.
+ */
 @Immutable
-internal data class FeaturedUi(val posts: List<StatusRowUi>, val tags: List<FeaturedTag>)
+internal data class FeaturedUi(
+    val posts: List<StatusRowUi>,
+    val tags: List<FeaturedTag>,
+    val byAccount: Boolean = true,
+)
 
 /** What the header shows: who, what they say about themselves, and how many. */
 @Immutable
@@ -33,7 +40,8 @@ internal data class ProfileHeader(
     val fields: List<Field>,
     val posts: Int,
     val following: Int,
-    val followers: Int,
+    /** Null where the server may have said 0 for a number it hid. */
+    val followers: Int?,
     val locked: Boolean,
     val url: String?,
     val isSelf: Boolean,
@@ -145,6 +153,9 @@ internal interface ProfileScreenActions : ProfileActions {
     fun onNewWindow() {}
 
     fun onPeople(followers: Boolean)
+
+    /** A hashtag the account features: its posts with it, or everyone's where the server cannot narrow them. */
+    fun onFeaturedTag(name: String)
 
     fun onOpenInBrowser(url: String)
 

@@ -214,6 +214,21 @@ class EndpointsTest {
         assertEquals("api/v1/accounts/7/statuses", endpoint.path)
         assertEquals("true", endpoint.queryValue("exclude_replies"))
         assertEquals("true", endpoint.queryValue("only_media"))
+        assertNull(endpoint.queryValue("tagged"))
+    }
+
+    @Test
+    fun `an account's posts with a hashtag ask for it with tagged`() {
+        val source = TimelineSource.Account("7", includeReplies = true, onlyMedia = false, tagged = "surf")
+        assertEquals("surf", TimelineEndpoints.timeline(source).endpoint.queryValue("tagged"))
+    }
+
+    @Test
+    fun `the numbers switch is a form with hide as a flag`() {
+        val endpoint = CountsEndpoints.hide(false).endpoint
+        assertEquals("api/v1/social/counts", endpoint.path)
+        assertEquals(HttpMethod.PATCH, endpoint.method)
+        assertEquals(listOf(QueryItem("hide", "0")), endpoint.form())
     }
 
     @Test

@@ -450,10 +450,16 @@ internal class TimelineViewModel @AssistedInject constructor(
      * it no longer serves falling back to Following.
      */
     private fun sourceOf(account: SignedInAccount, settings: AccountSettings): TimelineSource = when (feed) {
-        is TimelineFeed.Tag -> TimelineSource.Hashtag(feed.name)
+        is TimelineFeed.Tag -> feed.accountId?.let {
+            TimelineSource.Account(it, includeReplies = true, onlyMedia = false, tagged = feed.name)
+        } ?: TimelineSource.Hashtag(feed.name)
+
         is TimelineFeed.List -> TimelineSource.List(feed.id)
+
         TimelineFeed.Home -> settings.homeSource.served(account)
+
         is TimelineFeed.Mode -> settings.modeSources[feed.mode.key].served(account)
+
         is TimelineFeed.Pinned -> feed.source
     }
 

@@ -73,6 +73,7 @@ class ProfileTabsTest {
         override fun onEditProfile() = Unit
         override fun onReport() = Unit
         override fun onPeople(followers: Boolean) = Unit
+        override fun onFeaturedTag(name: String) = Unit
         override fun onOpenInBrowser(url: String) = Unit
         override fun onAlbum(album: MediaCollection) = Unit
     }

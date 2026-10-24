@@ -50,7 +50,17 @@ internal object ProfilePresentation {
         ProfileTab.Featured, ProfileTab.Collections, ProfileTab.Stories -> null
     }
 
-    fun header(account: Account, cache: RichTextCache, colors: RichTextColors, isSelf: Boolean): ProfileHeader {
+    /**
+     * [realFollowers] false where the server sent a reader who hides the numbers 0 followers whatever the
+     * account had (see [ServerCapabilities.realFollowerCounts]): a 0 there is not known.
+     */
+    fun header(
+        account: Account,
+        cache: RichTextCache,
+        colors: RichTextColors,
+        isSelf: Boolean,
+        realFollowers: Boolean = true,
+    ): ProfileHeader {
         val mapper = StatusRowMapper(cache, colors)
         return ProfileHeader(
             author = mapper.author(account),
@@ -66,7 +76,7 @@ internal object ProfilePresentation {
             },
             posts = account.statusesCount,
             following = account.followingCount,
-            followers = account.followersCount,
+            followers = account.followersCount.takeIf { it > 0 || realFollowers },
             locked = account.locked,
             url = account.url,
             isSelf = isSelf,
@@ -87,9 +97,19 @@ internal object ProfilePresentation {
         if (capabilities.stories) add(ProfileTab.Stories)
     }
 
-    /** What the account features, its posts drawn by [row]; none when it features nothing. */
-    fun featured(pinned: List<Status>, tags: List<FeaturedTag>, row: (Status) -> StatusRowUi): FeaturedUi? =
-        FeaturedUi(pinned.map(row), tags).takeIf { it.posts.isNotEmpty() || it.tags.isNotEmpty() }
+    /**
+     * What the account features, its posts drawn by [row]; none when it features nothing. A hashtag opens
+     * the account's posts with it where the server narrows them (see [ServerCapabilities.accountPostsNarrowed]).
+     */
+    fun featured(
+        pinned: List<Status>,
+        tags: List<FeaturedTag>,
+        capabilities: ServerCapabilities,
+        row: (Status) -> StatusRowUi,
+    ): FeaturedUi? = FeaturedUi(pinned.map(row), tags, capabilities.accountPostsNarrowed).takeIf {
+        it.posts.isNotEmpty() ||
+            it.tags.isNotEmpty()
+    }
 
     fun relation(relationship: Relationship): Relation = Relation(
         following = relationship.following,

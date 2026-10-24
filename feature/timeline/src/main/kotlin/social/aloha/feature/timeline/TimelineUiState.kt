@@ -26,7 +26,8 @@ public sealed interface TimelineFeed {
     /** A media mode's timeline, from the source chosen for that mode. */
     public data class Mode(override val mode: FeedMode) : TimelineFeed
 
-    public data class Tag(val name: String) : TimelineFeed
+    /** A hashtag's posts; with [accountId], only that account's, the account known as [handle]. */
+    public data class Tag(val name: String, val accountId: String? = null, val handle: String? = null) : TimelineFeed
 
     /** One of the reader's lists, by its [id], called [title]. */
     public data class List(val id: String, val title: String) : TimelineFeed

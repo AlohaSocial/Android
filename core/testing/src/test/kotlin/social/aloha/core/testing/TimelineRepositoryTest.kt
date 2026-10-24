@@ -14,11 +14,16 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.json.JsonPrimitive
+import mockwebserver3.Dispatcher
+import mockwebserver3.MockResponse
 import mockwebserver3.MockWebServer
+import mockwebserver3.RecordedRequest
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -169,7 +174,66 @@ class TimelineRepositoryTest {
         val first = timelines.refresh(account, home, RefreshPlan.of(false, null)) as PageOutcome.Loaded
         val second = timelines.older(account, home, first.nextCursor, oldestId = "11") as PageOutcome.Loaded
         assertEquals((30 downTo 1).map(Int::toString), rows(account).ids())
-        assertTrue(second.reachedEnd)
+        // a short page is not the end while the server names a next one; the empty page after it is
+        assertFalse(second.reachedEnd)
+        val third = timelines.older(account, home, second.nextCursor, oldestId = "1") as PageOutcome.Loaded
+        assertTrue(third.reachedEnd)
+    }
+
+    @Test
+    fun `an empty page whose next page is itself again ends the paging`() = runBlocking {
+        val server = MockWebServer().apply {
+            dispatcher = object : Dispatcher() {
+                override fun dispatch(request: RecordedRequest) = MockResponse.Builder().code(200).body("[]")
+                    .addHeader("content-type", "application/json")
+                    .addHeader("link", "<${request.url}>; rel=\"next\"")
+                    .build()
+            }
+            start()
+        }.also { servers += it }
+        val account = signedInAt(server.url("/"))
+        val photos = TimelineKey(FeedMode.Photos, TimelineSource.Home)
+        val cursor = server.url("/api/v1/timelines/home?limit=20&max_id=5")
+        val outcome = timelines.older(account, photos, cursor, oldestId = "5") as PageOutcome.Loaded
+        assertTrue(outcome.reachedEnd)
+        assertNull(outcome.nextCursor)
+        assertEquals(1, server.requestCount)
+    }
+
+    /** Bob's posts, the odd ones replies: one in four to Bob himself, a thread, the rest to someone else. */
+    private fun bobsPostsAndReplies() = numbered {
+        newest = 40
+        fields = { id ->
+            if (id % 2 == 0) {
+                emptyMap()
+            } else {
+                mapOf(
+                    "in_reply_to_id" to JsonPrimitive("p$id"),
+                    "in_reply_to_account_id" to JsonPrimitive(if (id % 4 == 1) "7" else "99"),
+                )
+            }
+        }
+    }
+
+    private val bobsPosts = TimelineKey.home(TimelineSource.Account("7", includeReplies = false, onlyMedia = false))
+
+    private fun social(server: MockWebServer, version: String) = ServerCapabilities.minimal(server.url("/").toString())
+        .copy(softwareName = "nextcloud-social", softwareVersion = version)
+
+    @Test
+    fun `posts leave replies to others out on the device where Social ignored exclude_replies`() = runBlocking {
+        val server = bobsPostsAndReplies()
+        val account = signedInAt(server.url("/"), social(server, "0.26.236"))
+        timelines.refresh(account, bobsPosts, RefreshPlan.of(false, null))
+        assertEquals((40 downTo 1).filter { it % 4 != 3 }.map(Int::toString), rows(account, bobsPosts).ids())
+    }
+
+    @Test
+    fun `posts keep what a server that applies exclude_replies sends`() = runBlocking {
+        val server = bobsPostsAndReplies()
+        val account = signedInAt(server.url("/"), social(server, "0.26.237"))
+        timelines.refresh(account, bobsPosts, RefreshPlan.of(false, null))
+        assertEquals((40 downTo 21).map(Int::toString), rows(account, bobsPosts).ids())
     }
 
     @Test

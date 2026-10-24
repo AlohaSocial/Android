@@ -19,7 +19,7 @@ This is the Apple app's specification, carried over as the product contract for 
 | Your year (§9) | A section of its own in Settings, not under an account. |
 | Deleting the account | Settings → Delete account. On Nextcloud Social, once the Nextcloud is connected, after the handle is typed out (the server's own confirmation, never a password); elsewhere the server's website does it. |
 | Caught-up line | Home draws "You’re caught up" above the newest post read before this visit, the newer of the position this device stored and the server's home read marker; it stays for the visit while the marker moves on, and a tap returns to the newest posts. Notifications draws the same line between the rows newer than the notifications marker and the rest; a long press on a mention or reply row mutes its conversation. |
-| Show numbers | Settings → Reading → Show numbers hides every popularity number at once: the counts beside reply, boost, favourite and reactions, a video's views and likes, the favourites and boosts buttons under an open post, a profile's posts, following and followers, "and 34 others" in a grouped notification, the year's followers. Poll results, unread counts and limits always show. |
+| Show numbers | Settings → Reading → Show numbers hides every popularity number at once: the counts beside reply, boost, favourite and reactions, a video's views and likes, the favourites and boosts buttons under an open post, a profile's posts, following and followers, "and 34 others" in a grouped notification, the year's followers. Poll results, unread counts and limits always show. On Nextcloud Social the switch also sets the account's own preference (`PATCH /api/v1/social/counts` with `hide`), since that server sends 0 for the numbers to a reader who hides them, and hides them unless told otherwise: the stored value goes to every Social account on the device when it changes, when an account is signed in and when its capabilities are detected again, to each account whose server has not yet taken it (remembered per account; a failure is sent again next time). |
 | Post header | Two lines instead of one: the name with its marks (bot, edited, visibility), then "age · @handle" with the handle always in full, host included. It costs about 16 dp a post; the trade is open for review. The age is "now" under a minute and for a post dated ahead of the phone. |
 | Motion | Settings → Reading → Reduce motion, as well as the system's animation scale at 0, makes every animation jump to its end rather than cross-fade. Screens move along a shared x axis, mirrored right to left, and a back gesture shrinks the screen being left (predictive back). |
 | Reading extras | Settings → Reading adds a text size (80–150 %, on top of the system font size), "Times instead of ages" ("14:32", "3 Oct"; a tap on any age shows the full date), and "Fold boosts in a row" (off by default): three or more boosts in a row on Home become one row of cards to swipe through. |
@@ -216,7 +216,8 @@ Rules:
   inserts. This is a hard requirement.
 - "Load more" gap rows as described in [04-data-model.md](04-data-model.md).
 - Infinite scroll pages on `next` from the `Link` header, triggered 10 rows from
-  the end, one request in flight at a time.
+  the end, one request in flight at a time. The timeline ends where a page names
+  no `next`, not where a page is shorter than `limit`.
 - **Remember position across launches** per timeline, restored only if the
   cached entry is still present.
 
@@ -261,8 +262,16 @@ exist undocumented.
   query, not by filtering a page), Add to list, Mention, Direct message,
   Block, Mute (with duration and "also mute notifications"), Report, Block
   domain, Add note.
-- Tabs: Posts · Posts & Replies · Media · Videos · Albums (where the
-  server has them) · Stories (where present and visible).
+- Tabs: Posts · Posts & Replies · Media · Featured · Videos · Albums (where the
+  server has them) · Stories (where present and visible). Nextcloud Social
+  before 0.26.237 ignores `exclude_replies`, so Posts leaves replies to other
+  accounts out on the device (a thread of the account's own stays), paging on
+  to fill the page. A featured hashtag opens the account's own posts with it
+  (`accounts/{id}/statuses?tagged=`), titled "#tag by @handle"; on Nextcloud
+  Social before 0.26.237, which ignores `tagged`, it opens the hashtag's
+  timeline instead.
+- Followers: Nextcloud Social before 0.26.241 sends 0 followers to a reader who
+  hides the numbers, so there a 0 shows as "Followers" without a number.
 - Own profile additionally: Edit profile (`PATCH /accounts/update_credentials`
   — name, avatar, header, note, fields, bot, locked, discoverable, and
   `source[privacy]`). **A Nextcloud with an external identity backend (LDAP,

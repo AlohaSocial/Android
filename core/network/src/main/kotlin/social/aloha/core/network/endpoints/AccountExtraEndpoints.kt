@@ -140,6 +140,13 @@ public object SocialAccountEndpoints {
     )
 }
 
+/** Nextcloud Social's switch for the numbers it zeroes on every post for a reader who hides them. */
+public object CountsEndpoints {
+    public fun hide(hide: Boolean): ApiRequest<Unit> = unitRequest(
+        Endpoint("api/v1/social/counts", HttpMethod.PATCH, body = Body.Form(listOf(QueryItem("hide", hide.asFlag())))),
+    )
+}
+
 /**
  * Applications that hold a token for the reader's account. Session or token, but through the token
  * the server lets an app sign out only itself: every other id answers 403.

@@ -42,6 +42,7 @@ import java.util.UUID
 import javax.inject.Inject
 import kotlinx.coroutines.launch
 import social.aloha.core.data.AppLockSettings
+import social.aloha.core.data.ServerCounts
 import social.aloha.core.datastore.ReadingPreferences
 import social.aloha.core.designsystem.AlohaTheme
 import social.aloha.core.designsystem.ThemeSettings
@@ -59,6 +60,8 @@ open class MainActivity : ComponentActivity() {
     private val app: AppViewModel by viewModels()
 
     @Inject lateinit var sync: SyncEngine
+
+    @Inject lateinit var counts: ServerCounts
 
     @Inject lateinit var playback: VideoPlayback
 
@@ -83,6 +86,7 @@ open class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         if (savedInstanceState == null) deliver(intent)
+        counts.start()
         // while the lock is on, the recents screen shows no picture of the app, and nothing can capture it
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.CREATED) {

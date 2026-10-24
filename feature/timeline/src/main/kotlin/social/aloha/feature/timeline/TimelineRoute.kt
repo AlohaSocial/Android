@@ -114,18 +114,7 @@ public fun TimelineRoute(
         modifier,
         snackbars,
         listState,
-        title = when (feed) {
-            TimelineFeed.Home -> stringResource(R.string.timeline_title)
-
-            is TimelineFeed.Mode -> stringResource(modeTitle(feed.mode))
-
-            is TimelineFeed.Tag -> "#${feed.name}"
-
-            is TimelineFeed.List -> feed.title
-
-            // Home's own bar names a pinned feed; its page has none
-            is TimelineFeed.Pinned -> ""
-        },
+        title = titleOf(feed),
         navigationIcon = navigationIcon,
         showOptions = false,
         bar = feed !is TimelineFeed.Pinned,
@@ -148,6 +137,22 @@ public fun TimelineRoute(
             onDismiss = { deleting = null },
         )
     }
+}
+
+@Composable
+private fun titleOf(feed: TimelineFeed): String = when (feed) {
+    TimelineFeed.Home -> stringResource(R.string.timeline_title)
+
+    is TimelineFeed.Mode -> stringResource(modeTitle(feed.mode))
+
+    is TimelineFeed.Tag -> feed.handle?.let {
+        stringResource(R.string.timeline_title_account_tag, feed.name, it)
+    } ?: "#${feed.name}"
+
+    is TimelineFeed.List -> feed.title
+
+    // Home's own bar names a pinned feed; its page has none
+    is TimelineFeed.Pinned -> ""
 }
 
 /** Every account's timeline together where [allAccounts], else [feed] of the account in use. */
@@ -218,16 +223,26 @@ internal fun modeTitle(mode: FeedMode): Int = when (mode) {
     FeedMode.Audio -> R.string.timeline_title_audio
 }
 
-/** One hashtag's public posts, read like home, with a way back, and above them a way to follow it. */
+/**
+ * One hashtag's public posts, read like home, with a way back, and above them a way to follow it; with
+ * [accountId], only that account's posts with it, known as [handle], and nothing above them.
+ */
 @Composable
-public fun TagRoute(name: String, navigation: StatusNavigation, onBack: () -> Unit, modifier: Modifier = Modifier) {
+public fun TagRoute(
+    name: String,
+    navigation: StatusNavigation,
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
+    accountId: String? = null,
+    handle: String? = null,
+) {
     TimelineRoute(
         navigation,
         modifier,
-        feed = TimelineFeed.Tag(name),
+        feed = TimelineFeed.Tag(name, accountId, handle),
         navigationIcon = {
             IconButton(onClick = onBack) { Icon(AlohaIcons.Back, stringResource(R.string.timeline_back)) }
         },
-        header = { TagHeader(name, onTag = navigation::openTag) },
+        header = { if (accountId == null) TagHeader(name, onTag = navigation::openTag) },
     )
 }

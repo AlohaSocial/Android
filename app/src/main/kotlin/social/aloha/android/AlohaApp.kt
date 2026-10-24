@@ -334,6 +334,10 @@ fun AlohaApp(
                 backStack.push(TagKey(readerId, name))
             }
 
+            override fun openAccountTag(name: String, accountId: String, handle: String) {
+                backStack.push(TagKey(readerId, name, accountId, handle))
+            }
+
             override fun openWeb(url: String) = open(url, true)
 
             override fun openComposer(replyToId: String?) {
@@ -756,7 +760,13 @@ fun AlohaApp(
                                 PeopleRoute(it, statusNavigation)
                             }
                             entry<TagKey>(metadata = ListDetailSceneStrategy.detailPane()) {
-                                TagRoute(it.name, statusNavigation, onBack = statusNavigation::back)
+                                TagRoute(
+                                    it.name,
+                                    statusNavigation,
+                                    onBack = statusNavigation::back,
+                                    accountId = it.accountId,
+                                    handle = it.handle,
+                                )
                             }
                         },
                     )
