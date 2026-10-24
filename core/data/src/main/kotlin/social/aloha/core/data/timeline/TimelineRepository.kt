@@ -107,6 +107,17 @@ public class TimelineRepository @Inject constructor(
         }
     }.flowOn(ioDispatcher)
 
+    /**
+     * Forgets [account]'s home, local, federated and hashtag timelines in every mode, rows and fetch
+     * alike, so each loads afresh the next time it is shown: these are the feeds Nextcloud Social's
+     * reply hiding narrows, and rows stored before a change to it would otherwise stay.
+     */
+    public suspend fun dropFeeds(account: SignedInAccount): Unit = withContext(ioDispatcher) {
+        val prefix = "${account.id}|"
+        fetchedAt.keys.removeIf { it.startsWith(prefix) && isFeed(it.removePrefix(prefix)) }
+        dao.keys(account.id).filter(::isFeed).forEach { dao.clear(account.id, it) }
+    }
+
     /** The head of the timeline, or what is newer than its top row, as [plan] says. */
     public suspend fun refresh(account: SignedInAccount, key: TimelineKey, plan: RefreshPlan): PageOutcome =
         fetchAndMerge(Fetch(account, key, plan.anchor, cursor = null, plan.direction))
@@ -296,6 +307,20 @@ public class TimelineRepository @Inject constructor(
             )
         }
     }
+}
+
+private val FEED_SOURCES = setOf(
+    TimelineSource.Home.storageKey,
+    TimelineSource.Local.storageKey,
+    TimelineSource.Federated.storageKey,
+)
+
+// every hashtag source's storage key, whatever tags it adds or leaves out
+private const val HASHTAG_PREFIX = "tag:"
+
+/** Whether a [TimelineKey.storageKey], `mode:source`, names a feed reply hiding narrows. */
+private fun isFeed(storageKey: String): Boolean = storageKey.substringAfter(':').let {
+    it in FEED_SOURCES || it.startsWith(HASHTAG_PREFIX)
 }
 
 /**
