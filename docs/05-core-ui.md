@@ -336,6 +336,15 @@ One screen, segmented.
   to the pack on its own server (https only). The follow answers `followed`,
   the handles actually followed: an empty one, like a failed request, leaves
   the pack unfollowed and says so; an answer without it counts as followed.
+  Tapping a pack opens it in a sheet (`GET /starter_packs/{slug}`): its name
+  and curator line at once, then its members, each marked Following or
+  Requested from `/api/v1/accounts/relationships` (batched through
+  `FollowedAuthors`, as the web app does) or with a Follow of their own, the
+  same follow a profile makes. The handles the server could not reach yet are
+  listed as not reachable, with a retry. The sheet's Follow all, Follow the
+  rest once some are followed, is the same pack follow, after which the
+  members' relationships are asked again, since `followed` names handles, not
+  ids; once everyone is followed it says so instead.
 - **Other servers' directories** (`/api/v1/directories`, `/directories/search`)
   appear as an extra section where the capability is present.
 - **The directory** — this instance's own, the accounts here that opted in,

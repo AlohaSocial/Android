@@ -172,7 +172,7 @@ internal fun PeopleTab(
         }
         section(R.string.explore_packs, people.packs.isNotEmpty()) {
             items(people.packs, key = { "k:${it.slug}" }) { pack ->
-                Pack(pack, followed = pack.slug in state.followed) { asking = pack }
+                Pack(pack, followed = pack.slug in state.followed, { actions.onOpenPack(pack) }) { asking = pack }
             }
         }
         section(R.string.explore_popular, people.popular.isNotEmpty()) {
@@ -207,20 +207,10 @@ internal fun PeopleTab(
 }
 
 @Composable
-private fun Pack(pack: StarterPack, followed: Boolean, onFollowAll: () -> Unit) {
+private fun Pack(pack: StarterPack, followed: Boolean, onOpen: () -> Unit, onFollowAll: () -> Unit) {
     ListItem(
         headlineContent = { Text(pack.name) },
-        supportingContent = {
-            Text(
-                listOfNotNull(
-                    pack.curator?.let { stringResource(R.string.explore_pack_curator, "@$it") },
-                    pack.description.takeIf { it.isNotBlank() },
-                    pluralStringResource(R.plurals.explore_pack_size, pack.size, pack.size),
-                ).joinToString(" · "),
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
-        },
+        supportingContent = { Text(packLine(pack), maxLines = 2, overflow = TextOverflow.Ellipsis) },
         trailingContent = {
             if (followed) {
                 Text(stringResource(R.string.explore_pack_followed), style = MaterialTheme.typography.labelLarge)
@@ -228,8 +218,17 @@ private fun Pack(pack: StarterPack, followed: Boolean, onFollowAll: () -> Unit) 
                 OutlinedButton(onClick = onFollowAll) { Text(stringResource(R.string.explore_follow_all)) }
             }
         },
+        modifier = Modifier.clickable(onClickLabel = stringResource(R.string.explore_pack_open), onClick = onOpen),
     )
 }
+
+/** Who curated [pack], where it says, what it is about and how many it holds. */
+@Composable
+internal fun packLine(pack: StarterPack): String = listOfNotNull(
+    pack.curator?.let { stringResource(R.string.explore_pack_curator, "@$it") },
+    pack.description.takeIf { it.isNotBlank() },
+    pluralStringResource(R.plurals.explore_pack_size, pack.size, pack.size),
+).joinToString(" · ")
 
 /**
  * The server's own directory: only the accounts here that chose to be found, by most recently active
@@ -262,7 +261,7 @@ internal fun DirectoryTab(
 @Composable
 private fun DirectoryFooter(directory: Directory, actions: ExploreActions) {
     when {
-        directory.trouble != null -> Failed(directory.trouble, actions::onMoreDirectory)
+        directory.trouble != null -> Failed(directory.trouble, actions::onMoreDirectory, Modifier.fillMaxSize())
 
         !directory.end && !directory.loading -> TextButton(
             onClick = actions::onMoreDirectory,
@@ -280,7 +279,7 @@ private fun DirectoryFooter(directory: Directory, actions: ExploreActions) {
 }
 
 @Composable
-private fun Person(
+internal fun Person(
     account: Account,
     mapper: StatusRowMapper,
     rowActions: StatusActions,

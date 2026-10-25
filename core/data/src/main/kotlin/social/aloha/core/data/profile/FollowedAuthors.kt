@@ -31,6 +31,9 @@ import social.aloha.core.network.endpoints.AccountEndpoints
 public class FollowedAuthors @Inject constructor(private val clients: ClientFactory) {
     // reader -> author -> whether the reader follows them
     private val known = MutableStateFlow<Map<String, Map<String, Boolean>>>(emptyMap())
+
+    // reader -> the authors whose approval a follow request of theirs waits on
+    private val requests = MutableStateFlow<Map<String, Set<String>>>(emptyMap())
     private val asking = ConcurrentHashMap.newKeySet<String>()
 
     // reader/author -> when they may be asked about again, after a failed ask, so a timeline that keeps
@@ -40,16 +43,21 @@ public class FollowedAuthors @Inject constructor(private val clients: ClientFact
     public fun observe(readerId: String): Flow<Map<String, Boolean>> =
         known.map { it[readerId].orEmpty() }.distinctUntilChanged()
 
+    /** Those [readerId] asked to follow who have not approved it yet. */
+    public fun observeRequested(readerId: String): Flow<Set<String>> =
+        requests.map { it[readerId].orEmpty() }.distinctUntilChanged()
+
     /**
      * Asks about the [authors] not known or being asked about already. One the server leaves out of its
-     * answer is taken as not followed; one whose ask fails is asked again after a while.
+     * answer is taken as not followed; one whose ask fails is asked again after a while. With [again],
+     * those known are asked about too, after a change the app made without learning who it touched.
      */
-    public suspend fun ask(reader: SignedInAccount, authors: Collection<String>) {
+    public suspend fun ask(reader: SignedInAccount, authors: Collection<String>, again: Boolean = false) {
         val have = known.value[reader.id].orEmpty()
         val now = System.nanoTime()
         val unknown = authors.filter {
             val key = reader.id + "/" + it
-            it !in have && (waiting[key] ?: Long.MIN_VALUE) <= now && asking.add(key)
+            (again || it !in have) && (waiting[key] ?: Long.MIN_VALUE) <= now && asking.add(key)
         }
         unknown.chunked(BATCH).forEach { batch -> askBatch(reader, batch) }
     }
@@ -83,6 +91,10 @@ public class FollowedAuthors @Inject constructor(private val clients: ClientFact
         // a follow request still waiting is no follow yet
         known.update { all ->
             all + (readerId to (all[readerId].orEmpty() + (relationship.id to relationship.following)))
+        }
+        requests.update { all ->
+            val waiting = all[readerId].orEmpty()
+            all + (readerId to if (relationship.requested) waiting + relationship.id else waiting - relationship.id)
         }
     }
 

@@ -24,6 +24,8 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import social.aloha.core.data.Trouble
 import social.aloha.core.designsystem.AlohaSpacing
+import social.aloha.core.model.Account
+import social.aloha.core.model.StarterPack
 import social.aloha.core.network.endpoints.DirectoryOrder
 import social.aloha.core.ui.EmptyState
 import social.aloha.core.ui.RichTextColors
@@ -69,6 +71,14 @@ public fun ExploreRoute(readerId: String, navigation: StatusNavigation, modifier
             override fun onFollowFailedShown() = viewModel.onFollowFailedShown()
 
             override fun onWeb(url: String) = nav.openWeb(url)
+
+            override fun onOpenPack(pack: StarterPack) = viewModel.packs.open(pack)
+
+            override fun onClosePack() = viewModel.packs.close()
+
+            override fun onRetryPack() = viewModel.packs.retry()
+
+            override fun onFollowMember(member: Account) = viewModel.packs.followMember(member)
         }
     }
     ExploreScreen(state, mapper, actions, rowActions, modifier)
@@ -93,6 +103,14 @@ internal interface ExploreActions {
     fun onFollowFailedShown()
 
     fun onWeb(url: String)
+
+    fun onOpenPack(pack: StarterPack)
+
+    fun onClosePack()
+
+    fun onRetryPack()
+
+    fun onFollowMember(member: Account)
 }
 
 @Composable
@@ -105,19 +123,22 @@ internal fun ExploreScreen(
 ) {
     val snackbars = remember { SnackbarHostState() }
     val followFailed = stringResource(R.string.explore_follow_all_failed)
+    val memberFailed = state.memberFailed?.let { stringResource(R.string.explore_member_failed, it) }
     // said first and cleared after: clearing it first would end the effect, and the snackbar with it
-    LaunchedEffect(state.followFailed) {
-        if (!state.followFailed) return@LaunchedEffect
+    LaunchedEffect(state.followFailed, memberFailed) {
+        val said = memberFailed ?: followFailed.takeIf { state.followFailed } ?: return@LaunchedEffect
         try {
-            snackbars.showSnackbar(followFailed)
+            snackbars.showSnackbar(said)
         } finally {
             actions.onFollowFailedShown()
         }
     }
     Box(modifier.fillMaxSize()) {
         Pager(state, mapper, actions, rowActions)
-        SnackbarHost(snackbars, Modifier.align(Alignment.BottomCenter))
+        // an open sheet is a window above this one, so it shows what is said itself
+        if (state.sheet == null) SnackbarHost(snackbars, Modifier.align(Alignment.BottomCenter))
     }
+    state.sheet?.let { StarterPackSheet(it, state, mapper, actions, rowActions, snackbars) }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -155,14 +176,14 @@ private fun Pager(state: ExploreUiState, mapper: StatusRowMapper, actions: Explo
 private fun <T> Loading(load: Load<T>, onRetry: () -> Unit, content: @Composable (T) -> Unit) {
     when (load) {
         Load.Waiting -> Skeleton()
-        is Load.Failed -> Failed(load.trouble, onRetry)
+        is Load.Failed -> Failed(load.trouble, onRetry, Modifier.fillMaxSize())
         is Load.Loaded -> content(load.value)
     }
 }
 
 @Composable
-internal fun Failed(trouble: Trouble, onRetry: () -> Unit) {
-    Column(Modifier.fillMaxSize().padding(AlohaSpacing.l), horizontalAlignment = Alignment.CenterHorizontally) {
+internal fun Failed(trouble: Trouble, onRetry: () -> Unit, modifier: Modifier = Modifier) {
+    Column(modifier.padding(AlohaSpacing.l), horizontalAlignment = Alignment.CenterHorizontally) {
         TroubleStrip(
             stringResource(if (trouble == Trouble.Offline) R.string.explore_offline else R.string.explore_error),
         )

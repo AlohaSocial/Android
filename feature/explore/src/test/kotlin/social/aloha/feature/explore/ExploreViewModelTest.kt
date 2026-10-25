@@ -8,6 +8,7 @@ import androidx.datastore.preferences.core.emptyPreferences
 import androidx.test.core.app.ApplicationProvider
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -16,6 +17,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.yield
 import mockwebserver3.Dispatcher
 import mockwebserver3.MockResponse
 import mockwebserver3.MockWebServer
@@ -26,8 +28,12 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import social.aloha.core.data.explore.Explore
+import social.aloha.core.data.profile.FollowedAuthors
+import social.aloha.core.data.profile.ProfileRepository
 import social.aloha.core.datastore.ReadingPreferences
 import social.aloha.core.html.RichTextCache
+import social.aloha.core.model.Account
+import social.aloha.core.model.StarterPack
 import social.aloha.core.testing.InMemoryDataStore
 import social.aloha.core.testing.SignedInFixture
 
@@ -64,6 +70,19 @@ class ExploreViewModelTest {
         start()
     }
 
+    private fun viewModel(readerId: String): ExploreViewModel {
+        val followed = FollowedAuthors(fixture.clients)
+        return ExploreViewModel(
+            readerId,
+            fixture.accounts,
+            Explore(fixture.clients, fixture.statuses),
+            RichTextCache(),
+            ReadingPreferences(InMemoryDataStore(emptyPreferences())),
+            ProfileRepository(fixture.clients, fixture.statuses, followed),
+            followed,
+        )
+    }
+
     @After
     fun close() {
         Dispatchers.resetMain()
@@ -75,14 +94,7 @@ class ExploreViewModelTest {
     fun `a suggestion dismissed goes at once, and comes back where the server would not forget it`() = runBlocking {
         Dispatchers.setMain(Dispatchers.Unconfined)
         val reader = fixture.signIn(server.url("/"))
-        val explore =
-            ExploreViewModel(
-                reader.id,
-                fixture.accounts,
-                Explore(fixture.clients, fixture.statuses),
-                RichTextCache(),
-                ReadingPreferences(InMemoryDataStore(emptyPreferences())),
-            )
+        val explore = viewModel(reader.id)
         // the account is looked up off the test's thread; picking the tab meanwhile loads People twice, and
         // the second answer could bring the dismissed suggestion back before the server refused
         withTimeout(10.seconds) { explore.uiState.first { it.viewer.isNotEmpty() } }
@@ -104,14 +116,7 @@ class ExploreViewModelTest {
     fun `a starter pack that could not be followed says so once, and is not marked followed`() = runBlocking {
         Dispatchers.setMain(Dispatchers.Unconfined)
         val reader = fixture.signIn(server.url("/"))
-        val explore =
-            ExploreViewModel(
-                reader.id,
-                fixture.accounts,
-                Explore(fixture.clients, fixture.statuses),
-                RichTextCache(),
-                ReadingPreferences(InMemoryDataStore(emptyPreferences())),
-            )
+        val explore = viewModel(reader.id)
         withTimeout(10.seconds) { explore.uiState.first { it.viewer.isNotEmpty() } }
         explore.onFollowAll("surfers")
         val failed = withTimeout(10.seconds) { explore.uiState.first { it.followFailed } }
@@ -119,4 +124,69 @@ class ExploreViewModelTest {
         explore.onFollowFailedShown()
         assertEquals(false, explore.uiState.value.followFailed)
     }
+
+    @Test
+    fun `an open starter pack says whom the reader follows, and learns it again once the pack is followed`() =
+        runBlocking {
+            Dispatchers.setMain(Dispatchers.Unconfined)
+            val pack = PackServer()
+            server.dispatcher = pack
+            val reader = fixture.signIn(server.url("/"))
+            val explore = viewModel(reader.id)
+            withTimeout(10.seconds) { explore.uiState.first { it.viewer.isNotEmpty() } }
+            explore.packs.open(StarterPack("surf", "Surf"))
+            val open = withTimeout(10.seconds) { explore.uiState.first { it.following.isNotEmpty() } }
+            assertEquals(listOf("1", "7"), (open.sheet?.members as Load.Loaded).value.accounts.map { it.id })
+            assertEquals(mapOf("1" to true, "7" to false), open.following)
+            explore.packs.followMember(Account("7", "kai", "kai@waves.example"))
+            val requested = withTimeout(10.seconds) { explore.uiState.first { it.requested == setOf("7") } }
+            assertEquals(emptySet<String>(), requested.sheet?.pending)
+            explore.onFollowAll("surf")
+            withTimeout(10.seconds) { explore.uiState.first { "surf" in it.followed } }
+            withTimeout(10.seconds) { explore.uiState.first { it.following["7"] == true } }
+            explore.packs.close()
+            // a pack may have been followed with its sheet closed, so opening it asks again
+            val asked = pack.relationships.get()
+            explore.packs.open(StarterPack("surf", "Surf"))
+            withTimeout(10.seconds) { while (pack.relationships.get() == asked) yield() }
+            explore.packs.close()
+            assertEquals(null, explore.uiState.value.sheet)
+        }
+}
+
+/**
+ * The pack Surf holding accounts 1 and 7, the reader following 1, and follows that wait on approval;
+ * once the pack is followed, 7 is followed too.
+ */
+private class PackServer : Dispatcher() {
+    val relationships = AtomicInteger()
+
+    @Volatile private var packFollowed = false
+
+    override fun dispatch(request: RecordedRequest): MockResponse {
+        val path = request.url.encodedPath
+        return when {
+            path.endsWith("/api/v1/starter_packs/surf") -> json(
+                """{"id":"surf","name":"Surf","accounts":[{"id":"1","username":"alice","acct":"alice"},
+                    {"id":"7","username":"kai","acct":"kai@waves.example"}]}""",
+            )
+
+            path.endsWith("/api/v1/accounts/relationships") -> {
+                relationships.incrementAndGet()
+                json("""[{"id":"1","following":true},{"id":"7","following":$packFollowed}]""")
+            }
+
+            path.endsWith("/api/v1/accounts/7/follow") -> json("""{"id":"7","following":false,"requested":true}""")
+
+            path.endsWith("/api/v1/starter_packs/surf/follow") -> {
+                packFollowed = true
+                json("""{"followed":["alice","kai@waves.example"]}""")
+            }
+
+            else -> MockResponse.Builder().code(404).body("{}").build()
+        }
+    }
+
+    private fun json(body: String) =
+        MockResponse.Builder().code(200).body(body).addHeader("content-type", "application/json").build()
 }
