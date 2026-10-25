@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 Aloha Social contributors
 // SPDX-License-Identifier: MIT
 
-package social.aloha.feature.timeline
+package social.aloha.core.ui
 
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -9,7 +9,7 @@ import social.aloha.core.model.Account
 import social.aloha.core.model.Mention
 import social.aloha.core.model.Status
 
-class MergedRowsTest {
+class HeldRowsTest {
     private val author = Account("9", "bob", "bob", displayName = "Bob")
 
     @Test

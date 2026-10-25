@@ -207,11 +207,6 @@ public fun StatusCard(
     }
 }
 
-/** Which of the reader's accounts see the post, said for a screen reader; null where none is marked. */
-@Composable
-private fun seenByText(seenBy: List<SeenBy>): String? = seenBy.takeIf { it.isNotEmpty() }
-    ?.let { stringResource(R.string.status_seen_by, it.joinToString(", ") { account -> account.handle }) }
-
 /**
  * The avatar beside the header, and the content under the name, so text, media, poll and cards hang in
  * one column; a focused post, and one whose pictures come first, take the full width under the header
@@ -232,13 +227,8 @@ private fun CardLayout(
         Box {
             Avatar(row.author.avatarUrl, AVATAR, Modifier.clickable { actions.onProfile(row.author.id) })
             if (seenBy.isNotEmpty()) {
-                val outline = MaterialTheme.colorScheme.outline
-                StackedAvatars(
-                    seenBy.map { it.avatarUrl },
-                    SEEN_BY,
-                    Modifier.align(Alignment.BottomEnd).offset(x = SEEN_BY_OUT, y = SEEN_BY_OUT),
-                    rings = seenBy.map { account -> account.colour?.let(::Color) ?: outline },
-                )
+                val corner = Modifier.align(Alignment.BottomEnd).offset(x = SEEN_BY_OUT, y = SEEN_BY_OUT)
+                SeenByMark(seenBy, SEEN_BY, corner)
             }
         }
     }

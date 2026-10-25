@@ -113,9 +113,12 @@ private class ThreadRoutedActions(context: Context, private val navigation: () -
     override fun onVote(row: StatusRowUi, choices: List<Int>) = navigation().openThread(row.statusId)
 }
 
-/** Where a link in rich text leads: a profile, a hashtag, or a web address. */
+/**
+ * Where a link in rich text leads: a profile, a hashtag, or a web address. Someone named under another
+ * server's name ([namingFrom]) opens by their handle, never by that server's id.
+ */
 public fun StatusNavigation.openLink(target: RichLinkTarget): Unit = when (target) {
-    is RichLinkTarget.Mention -> openProfile(target.accountId, target.acct)
+    is RichLinkTarget.Mention -> openProfile(target.accountId?.takeUnless(::isElsewhere), target.acct)
     is RichLinkTarget.Hashtag -> openTag(target.name)
     is RichLinkTarget.Web -> openWeb(target.url)
 }
