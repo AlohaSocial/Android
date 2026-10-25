@@ -15,6 +15,9 @@ import social.aloha.core.model.TimelineSource
 /** Whether [id] is shown under another server's name ([heldBy]), never one of the server in use. */
 public fun isElsewhere(id: String): Boolean = id.startsWith(TimelineSource.Remote.ID_PREFIX)
 
+/** [id], an id of the server [host], under that server's name, as [heldBy] shows a row's. */
+public fun heldId(host: String, id: String): String = TimelineSource.Remote.ID_PREFIX + host + ":" + id
+
 /** [acct], a handle on [host] or elsewhere, in full. */
 private fun fullHandle(acct: String, host: String): String =
     acct.removePrefix("@").let { if ('@' in it) it else "$it@$host" }
@@ -38,16 +41,15 @@ public fun Status.namingFrom(host: String): Status = copy(
  * never the reader's own here: what only its own account can do to it is done there.
  */
 public fun StatusRowUi.heldBy(host: String): StatusRowUi {
-    val prefix = TimelineSource.Remote.ID_PREFIX + host + ":"
     fun StatusRowUi.AuthorUi.there(): StatusRowUi.AuthorUi {
         val full = fullHandle(handle, host)
         return copy(id = TimelineSource.Remote.ID_PREFIX + full, handle = "@$full")
     }
     return copy(
-        rowId = prefix + rowId,
-        statusId = prefix + statusId,
+        rowId = heldId(host, rowId),
+        statusId = heldId(host, statusId),
         author = author.there(),
-        quote = quote?.let { it.copy(statusId = prefix + it.statusId, author = it.author.there()) },
+        quote = quote?.let { it.copy(statusId = heldId(host, it.statusId), author = it.author.there()) },
         isOwn = false,
     )
 }

@@ -29,14 +29,20 @@ import social.aloha.core.data.AccountRepository
 import social.aloha.core.data.di.ApplicationScope
 import social.aloha.core.media.Sound
 import social.aloha.core.media.mediaPlayer
+import social.aloha.core.ui.SeenBy
 
-/** One post's sound, as the queue holds it and the lock screen names it. */
+/**
+ * One post's sound, as the queue holds it and the lock screen names it: [statusId] the id the post shows
+ * under, [link] its address; where every account shows together, the accounts that see it.
+ */
 public data class AudioItem(
     val statusId: String,
     val url: String,
     val title: String,
     val artist: String,
     val artwork: String?,
+    val link: String? = null,
+    val seenBy: List<SeenBy> = emptyList(),
 )
 
 /** What plays now, and whether it is playing or paused. */

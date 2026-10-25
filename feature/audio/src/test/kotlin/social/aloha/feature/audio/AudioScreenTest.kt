@@ -4,6 +4,7 @@
 package social.aloha.feature.audio
 
 import android.app.Application
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.accessibility.enableAccessibilityChecks
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -22,6 +23,7 @@ import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import social.aloha.core.designsystem.AlohaTheme
 import social.aloha.core.model.TimelineSource
+import social.aloha.core.ui.SeenBy
 
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
@@ -44,7 +46,7 @@ class AudioScreenTest {
 
     private val actions = AudioScreenActions(
         onPlay = { asked += "play:$it" },
-        onOpen = { asked += "open:$it" },
+        onOpen = { asked += "open:${it.statusId}" },
         onSource = { asked += "source:$it" },
         onNearEnd = {},
     )
@@ -77,15 +79,34 @@ class AudioScreenTest {
     }
 
     @Test
+    fun audioTogether() {
+        val held = waves.copy(
+            statusId = "remote:two.example:2",
+            seenBy = listOf(SeenBy("@alice@two.example", null, PINK)),
+        )
+        val both = swim.copy(seenBy = listOf(SeenBy("@alice@one.example", null, null), held.seenBy.single()))
+        compose.enableAccessibilityChecks()
+        val together = state.copy(posts = listOf(both, held), sources = emptyList())
+        compose.setContent { AlohaTheme { AudioScreen(together, actions, {}) } }
+        compose.onRoot().tryPerformAccessibilityChecks()
+        compose.onNodeWithContentDescription("Seen by @alice@two.example").assertIsDisplayed()
+        compose.onRoot().captureRoboImage("src/test/screenshots/audio-together.png")
+    }
+
+    @Test
     fun miniPlayer() {
         compose.enableAccessibilityChecks()
         compose.setContent {
-            AlohaTheme { MiniPlayer(NowPlaying(waves, playing = false), { asked += "open:$it" }, {}, {}) }
+            AlohaTheme { MiniPlayer(NowPlaying(waves, playing = false), { asked += "open:${it.statusId}" }, {}, {}) }
         }
         compose.onRoot().tryPerformAccessibilityChecks()
         compose.onNodeWithContentDescription("Resume Waves at the point").performClick()
         compose.onNodeWithText("Waves at the point").performClick()
         assertEquals(listOf("open:2"), asked)
         compose.onRoot().captureRoboImage("src/test/screenshots/audio-mini-player.png")
+    }
+
+    private companion object {
+        const val PINK = 0xFFE91E63.toInt()
     }
 }
