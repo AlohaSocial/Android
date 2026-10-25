@@ -33,6 +33,7 @@ public fun Status.namingFrom(host: String): Status = copy(
         it.copy(id = TimelineSource.Remote.ID_PREFIX + full, acct = full)
     },
     reblog = reblog?.namingFrom(host),
+    quote = quote?.let { it.copy(quotedStatus = it.quotedStatus?.namingFrom(host)) },
 )
 
 /**
