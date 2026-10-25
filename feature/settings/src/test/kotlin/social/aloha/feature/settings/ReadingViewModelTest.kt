@@ -18,12 +18,14 @@ import kotlinx.coroutines.test.setMain
 import kotlinx.coroutines.withTimeout
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import social.aloha.core.data.reading.ReplyHiding
 import social.aloha.core.datastore.ReadingPreferences
+import social.aloha.core.model.ServerCapabilities
 import social.aloha.core.testing.InMemoryDataStore
 import social.aloha.core.testing.MockServerConfiguration
 import social.aloha.core.testing.MockSocialServer
@@ -52,8 +54,8 @@ class ReadingViewModelTest {
         server.close()
     }
 
-    private fun open(): ReadingViewModel = runBlocking {
-        fixture.signIn(server.apiBase)
+    private fun open(socialName: String = "nextcloud-social"): ReadingViewModel = runBlocking {
+        fixture.signIn(server.apiBase, ServerCapabilities.minimal("${server.apiBase}").copy(softwareName = socialName))
         ReadingViewModel(
             ReadingPreferences(InMemoryDataStore(emptyPreferences())),
             fixture.accounts,
@@ -63,6 +65,14 @@ class ReadingViewModelTest {
 
     private fun ReadingViewModel.settled(check: (ServerReplies) -> Boolean): ServerReplies =
         runBlocking { withTimeout(WAIT_MILLIS) { replies.first(check) } }
+
+    @Test
+    fun `an account not on Nextcloud Social asks nothing and shows no switch`() {
+        server.pin("GET", ROUTE, 200, """{"hide_replies":true}""")
+        val reading = open(socialName = "mastodon")
+        assertEquals(ServerReplies(), reading.replies.value)
+        assertTrue(server.requests.none { it.url.encodedPath.endsWith(ROUTE) })
+    }
 
     @Test
     fun `the switch shows as the server holds it, and a change taken shows the new state`() {

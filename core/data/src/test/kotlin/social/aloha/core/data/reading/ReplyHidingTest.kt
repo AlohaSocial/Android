@@ -17,6 +17,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import social.aloha.core.data.timeline.RefreshPlan
+import social.aloha.core.model.ServerCapabilities
 import social.aloha.core.model.SignedInAccount
 import social.aloha.core.model.TimelineKey
 import social.aloha.core.model.TimelineSource
@@ -47,16 +48,29 @@ class ReplyHidingTest {
 
     private suspend fun rows(reader: SignedInAccount, key: TimelineKey) = fixture.timelines.observe(reader, key).first()
 
+    private suspend fun signIn() = fixture.signIn(
+        server.apiBase,
+        ServerCapabilities.minimal(server.apiBase.toString()).copy(softwareName = "nextcloud-social"),
+    )
+
     @Test
-    fun `a server without the switch answers 404, and the switch is unknown`() = runBlocking {
+    fun `a server that is not Nextcloud Social is not asked, and the switch is unknown`() = runBlocking {
         val reader = fixture.signIn(server.apiBase)
+        server.pin("GET", ROUTE, 200, """{"hide_replies":true}""")
+        assertNull(hiding.hidden(reader))
+        assertTrue(server.requests.none { it.url.encodedPath.endsWith(ROUTE) })
+    }
+
+    @Test
+    fun `a Social without the switch answers 404, and the switch is unknown`() = runBlocking {
+        val reader = signIn()
         assertNull(hiding.hidden(reader))
         assertNull(hiding.hide(reader, true))
     }
 
     @Test
     fun `the switch reads as the server holds it`() = runBlocking {
-        val reader = fixture.signIn(server.apiBase)
+        val reader = signIn()
         server.pin("GET", ROUTE, 200, """{"hide_replies":true}""")
         assertEquals(true, hiding.hidden(reader))
         server.pin("GET", ROUTE, 200, "{}")
@@ -65,7 +79,7 @@ class ReplyHidingTest {
 
     @Test
     fun `a change taken goes out as a PATCH and drops the feeds it narrows, and no other`() = runBlocking {
-        val reader = fixture.signIn(server.apiBase)
+        val reader = signIn()
         server.pin("GET", "/api/v1/timelines/list/1", "api/timeline-home.json")
         load(reader, home, tag, list)
         listOf(home, tag, list).forEach { assertTrue("$it is empty", rows(reader, it).isNotEmpty()) }
@@ -84,7 +98,7 @@ class ReplyHidingTest {
 
     @Test
     fun `a change refused keeps the feeds`() = runBlocking {
-        val reader = fixture.signIn(server.apiBase)
+        val reader = signIn()
         load(reader, home)
         server.pin("PATCH", ROUTE, 422, """{"error":"hide_replies must be a boolean"}""")
         assertNull(hiding.hide(reader, false))
