@@ -60,7 +60,7 @@ public class NotificationsRepository @Inject constructor(
         olderThan: String? = null,
     ): Answer<NotificationPage> {
         val anchor = olderThan?.let(PageAnchor::OlderThan) ?: PageAnchor.Cold
-        val types = kinds.map { it.wire }
+        val types = kinds.map { it.wire }.ifEmpty { account.capabilities.allNotificationTypes }
         val answer = if (account.capabilities.groupedNotifications) {
             clients.answer(account, NotificationEndpoints.grouped(PAGE, anchor, types)).map { page ->
                 // a group's page_min_id is the oldest notification it covers, where the next page starts

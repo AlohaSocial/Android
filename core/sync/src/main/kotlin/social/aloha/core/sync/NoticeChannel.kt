@@ -29,7 +29,7 @@ internal enum class NoticeChannel(val suffix: String, val title: Int, val import
     companion object {
         fun of(kind: NotificationKind): NoticeChannel = when (kind) {
             NotificationKind.Mention -> Mentions
-            NotificationKind.Follow, NotificationKind.FollowRequest -> Follows
+            NotificationKind.Follow, NotificationKind.FollowRequest, NotificationKind.StarterPackJoined -> Follows
             NotificationKind.Favourite -> Favourites
             NotificationKind.Reblog -> Boosts
             NotificationKind.Poll -> Polls

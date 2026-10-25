@@ -55,6 +55,8 @@
     <string name="notifications_favourite">%s favourited your post</string>
     <!-- %s is who did it, one name or "Alice and 3 others" -->
     <string name="notifications_follow">%s followed you</string>
+    <!-- %s is who joined Bluesky through a Bluesky starter pack the person made (a shared list of accounts to follow) -->
+    <string name="notifications_starter_pack_joined">%s joined Bluesky through your starter pack</string>
     <!-- %s is who asked -->
     <string name="notifications_follow_request">%s asked to follow you</string>
     <!-- A poll the person voted in or wrote has ended -->

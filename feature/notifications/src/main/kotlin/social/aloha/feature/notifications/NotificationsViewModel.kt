@@ -545,5 +545,8 @@ private fun OwnedNotification.toRow(accounts: List<SignedInAccount>, marker: Str
     )
 }
 
-private fun Set<NotificationKind>.expanded(): Set<NotificationKind> =
-    if (NotificationKind.Follow in this) this + NotificationKind.FollowRequest else this
+private fun Set<NotificationKind>.expanded(): Set<NotificationKind> = if (NotificationKind.Follow in this) {
+    this + NotificationKind.FollowRequest + NotificationKind.StarterPackJoined
+} else {
+    this
+}

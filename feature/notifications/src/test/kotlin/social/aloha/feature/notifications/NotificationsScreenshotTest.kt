@@ -219,6 +219,7 @@ class NotificationsScreenshotTest {
     fun notices() = capture("notifications-notices") {
         val rows = listOf(
             row(NotificationKind.FollowRequest, "request", minutes = 2).copy(preview = null),
+            row(NotificationKind.StarterPackJoined, "pack", minutes = 30).copy(preview = null, statusId = null),
             row(NotificationKind.SeveredRelationships, "severed", minutes = 60).copy(
                 preview = null,
                 severance = SeveranceEvent("domain_block", "spam.example"),

@@ -201,7 +201,10 @@ public class SyncEngine @Inject internal constructor(
         if (account.needsReauth) return null
         return locks.getOrPut(account.id) { Mutex() }.withLock {
             lastPoll[account.id] = clock.millis()
-            val request = NotificationEndpoints.unreadCount(account.capabilities.groupedNotifications)
+            val request = NotificationEndpoints.unreadCount(
+                account.capabilities.groupedNotifications,
+                account.capabilities.allNotificationTypes,
+            )
             when (val answer = clients.answer(account, request)) {
                 is Answer.Got -> answer.value.count.also {
                     Timber.tag(LogArea.Sync.name).d("Poll of %s: %d unread", account.id, it)
