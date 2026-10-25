@@ -119,8 +119,8 @@ public fun AlbumRoute(
     val failed = stringResource(R.string.albums_change_failed)
     LaunchedEffect(state.changeFailed) {
         if (state.changeFailed) {
-            viewModel.onChangeFailedShown()
             snackbars.showSnackbar(failed)
+            viewModel.onChangeFailedShown()
         }
     }
     AlbumScreen(

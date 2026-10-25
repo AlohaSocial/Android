@@ -75,8 +75,8 @@ public fun ShortsRoute(
     val scope = rememberCoroutineScope()
     LaunchedEffect(state.actionFailed) {
         if (state.actionFailed) {
-            viewModel.onActionFailureShown()
             snackbars.showSnackbar(failed)
+            viewModel.onActionFailureShown()
         }
     }
     val shorts by rememberUpdatedState(state.shorts)

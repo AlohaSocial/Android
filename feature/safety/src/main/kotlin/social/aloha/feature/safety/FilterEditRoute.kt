@@ -100,8 +100,8 @@ internal fun FilterEditScreen(
     }
     LaunchedEffect(state.refused) {
         if (refused != null) {
-            actions.onFailureShown()
             snackbars.showSnackbar(refused)
+            actions.onFailureShown()
         }
     }
     var deleting by rememberSaveable { mutableStateOf(false) }

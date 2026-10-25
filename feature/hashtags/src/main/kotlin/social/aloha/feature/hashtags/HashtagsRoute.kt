@@ -100,8 +100,8 @@ internal fun HashtagsScreen(
     val notice = state.notice?.let { stringResource(it.text) }
     LaunchedEffect(state.notice) {
         if (notice != null) {
-            onNoticeShown()
             snackbars.showSnackbar(notice)
+            onNoticeShown()
         }
     }
     // the group being edited, or a new one ("") being made

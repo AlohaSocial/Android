@@ -96,8 +96,8 @@ internal fun SavedPostsScreen(
     val refused = stringResource(R.string.saved_unarchive_failed)
     LaunchedEffect(state.unarchiveFailed) {
         if (state.unarchiveFailed) {
-            actions.onUnarchiveFailureShown()
             snackbars.showSnackbar(refused)
+            actions.onUnarchiveFailureShown()
         }
     }
     Scaffold(

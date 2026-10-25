@@ -47,8 +47,8 @@ public fun ProfileRoute(key: AccountKey, navigation: ProfileNavigation, modifier
     LaunchedEffect(colors) { viewModel.onColors(colors) }
     LaunchedEffect(state.actionFailed) {
         if (state.actionFailed) {
-            viewModel.onActionFailureShown()
             snackbars.showSnackbar(failed)
+            viewModel.onActionFailureShown()
         }
     }
 

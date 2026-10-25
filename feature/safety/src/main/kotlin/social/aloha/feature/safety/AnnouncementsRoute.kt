@@ -83,8 +83,8 @@ internal fun AnnouncementsScreen(
     val refused = stringResource(R.string.announcements_reaction_failed)
     LaunchedEffect(state.reactionFailed) {
         if (state.reactionFailed) {
-            onReactionFailureShown()
             snackbars.showSnackbar(refused)
+            onReactionFailureShown()
         }
     }
     Scaffold(

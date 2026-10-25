@@ -48,16 +48,16 @@ public fun ThreadRoute(key: ThreadKey, navigation: ThreadNavigation, modifier: M
     val archived = stringResource(R.string.thread_archived)
     LaunchedEffect(state.archived) {
         if (state.archived) {
-            viewModel.onNoticeShown(archived = true)
             snackbars.showSnackbar(archived)
+            viewModel.onNoticeShown(archived = true)
         }
     }
     var shakes by remember { mutableIntStateOf(0) }
     LaunchedEffect(state.actionFailed) {
         if (state.actionFailed) {
             shakes++
-            viewModel.onNoticeShown(archived = false)
             snackbars.showSnackbar(failed)
+            viewModel.onNoticeShown(archived = false)
         }
     }
 

@@ -566,8 +566,8 @@ private fun FailureSnackbar(state: ComposerUiState, snackbars: SnackbarHostState
     val message = attachMessage(state.attachFailure) ?: editMessage(state.editFailure) ?: postMessage(state.failure)
     LaunchedEffect(state.failure, state.attachFailure, state.editFailure) {
         if (message != null) {
-            onShown()
             snackbars.showSnackbar(message)
+            onShown()
         }
     }
 }
