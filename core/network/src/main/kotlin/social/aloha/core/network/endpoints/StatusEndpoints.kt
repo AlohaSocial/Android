@@ -45,9 +45,24 @@ public enum class StatusAction(public val wire: String) {
     Unmute("unmute"),
 }
 
+/**
+ * What Nextcloud Social (after 0.26.278) does about a status's counts when it is read on its own; other
+ * servers ignore both parameters.
+ */
+public enum class CountRefresh(internal val query: List<QueryItem>) {
+    /** The server's default: counts older than five seconds are asked of the post's origin before it answers. */
+    Due(emptyList()),
+
+    /** `force_counts=true`: asked of the origin even when just asked, for a post the person opens. */
+    Forced(listOf(QueryItem("force_counts", "true"))),
+
+    /** `refresh_counts=false`: neither asked of the origin nor queued, for a post read in the background. */
+    Skipped(listOf(QueryItem("refresh_counts", "false"))),
+}
+
 public object StatusEndpoints {
-    public fun status(id: String): ApiRequest<Status> =
-        request(Endpoint("api/v1/statuses/$id"), StatusDto.serializer()) { it.toDomain() }
+    public fun status(id: String, counts: CountRefresh = CountRefresh.Due): ApiRequest<Status> =
+        request(Endpoint("api/v1/statuses/$id", query = counts.query), StatusDto.serializer()) { it.toDomain() }
 
     /**
      * The link preview of one status. The card is inlined in the status entity, which every list reads;

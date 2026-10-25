@@ -7,7 +7,9 @@ import java.time.Clock
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
@@ -52,10 +54,16 @@ public sealed interface TimelineRow {
 
 /**
  * How a fetch went. [arrived] are the ids new to the timeline; [nextCursor] continues paging older;
- * [reachedEnd] when the server has nothing further down.
+ * [reachedEnd] when the server has nothing further down; [filling] when it said it is still filling the
+ * page in, so the same page read again a little later ([RefreshPlan.reread]) brings more.
  */
 public sealed interface PageOutcome {
-    public data class Loaded(val arrived: List<String>, val nextCursor: HttpUrl?, val reachedEnd: Boolean) : PageOutcome
+    public data class Loaded(
+        val arrived: List<String>,
+        val nextCursor: HttpUrl?,
+        val reachedEnd: Boolean,
+        val filling: Boolean = false,
+    ) : PageOutcome
 
     public data class Failed(val error: ApiError) : PageOutcome
 
@@ -85,8 +93,6 @@ public class TimelineRepository @Inject constructor(
      * that has rows but no fetch yet still asks for the head (see [RefreshPlan]).
      */
     public fun lastFetched(account: SignedInAccount, key: TimelineKey): Long? = fetchedAt[lockKey(account, key)]
-
-    private fun lockKey(account: SignedInAccount, key: TimelineKey) = "${account.id}|${key.storageKey}"
 
     /**
      * The stored rows, newest first, up to the timeline's cap, or up to [limit] where fewer are wanted.
@@ -128,6 +134,23 @@ public class TimelineRepository @Inject constructor(
     /** The head of the timeline, or what is newer than its top row, as [plan] says. */
     public suspend fun refresh(account: SignedInAccount, key: TimelineKey, plan: RefreshPlan): PageOutcome =
         fetchAndMerge(Fetch(account, key, plan.anchor, cursor = null, plan.direction))
+
+    /**
+     * [plan]'s page read once more, [RefreshPlan.FILLING_DELAY] after [outcome], the refresh it made, said the
+     * server was still filling it in (`X-Social-Filling`: counts, or posts read from elsewhere). Only once, and
+     * not for a [TimelineSource.keptOrder] timeline, whose head replaces its rows; null when there is nothing to
+     * read again or the read brought nothing.
+     */
+    public suspend fun refill(
+        account: SignedInAccount,
+        key: TimelineKey,
+        plan: RefreshPlan,
+        outcome: PageOutcome,
+    ): PageOutcome.Loaded? {
+        if ((outcome as? PageOutcome.Loaded)?.filling != true || key.source.keptOrder) return null
+        delay(RefreshPlan.FILLING_DELAY)
+        return refresh(account, key, plan.reread) as? PageOutcome.Loaded
+    }
 
     /**
      * Further down: the server's `next` cursor where it gave one, else older than [oldestId]; a
@@ -246,7 +269,8 @@ public class TimelineRepository @Inject constructor(
         val arrived = plan.inserted.filter { it in keptIds }
         val droppedAll =
             fetch.direction == TimelineMerge.Direction.Older && plan.inserted.isNotEmpty() && arrived.isEmpty()
-        return PageOutcome.Loaded(arrived, harvest.nextCursor, reachedEnd = harvest.isLastUpstream || droppedAll)
+        val ended = harvest.isLastUpstream && !harvest.profileFilling
+        return PageOutcome.Loaded(arrived, harvest.nextCursor, reachedEnd = ended || droppedAll, harvest.filling)
     }
 
     private suspend fun latchCapabilities(account: SignedInAccount, seen: List<Status>) {
@@ -254,7 +278,17 @@ public class TimelineRepository @Inject constructor(
         if (latched != account.capabilities) accounts.updateCapabilities(account.id, latched)
     }
 
-    private data class Harvest(val statuses: List<Status>, val pageWasFull: Boolean, val nextCursor: HttpUrl?) {
+    /**
+     * [filling] and [profileFilling] are the server's `X-Social-Filling` and `X-Social-Profile-Filling` on
+     * the page: an account's posts still being read from its server are no end, even without a next page.
+     */
+    private data class Harvest(
+        val statuses: List<Status>,
+        val pageWasFull: Boolean,
+        val nextCursor: HttpUrl?,
+        val filling: Boolean = false,
+        val profileFilling: Boolean = false,
+    ) {
         /**
          * A page without a way further down. A short page is not the end while the server names a next one:
          * it may have left posts out after choosing the page (Nextcloud Social's reply hiding, `hide` filters).
@@ -282,6 +316,7 @@ public class TimelineRepository @Inject constructor(
         val upwards = fetch.anchor is PageAnchor.NewerThan
         val kept = mutableListOf<Status>()
         var last = Harvest(emptyList(), pageWasFull = false, nextCursor = fetch.cursor)
+        var filling = false
         for (page in 1..fetch.budget) {
             val fetched = when (val result = page(client, request, last.nextCursor, upwards)) {
                 is ApiResult.Failure -> return result
@@ -289,30 +324,52 @@ public class TimelineRepository @Inject constructor(
             }
             val kinds = if (onDevice) statuses.kinds(fetch.account.id, fetched.statuses) else emptyMap()
             kept += fetched.statuses.filter { !onDevice || kinds.getValue(it.id).belongs(mode) }.filter(fetch::keeps)
+            filling = filling || fetched.filling
             last = fetched
             if (fetched.isLastUpstream || kept.size >= Paging.DEFAULT_LIMIT) break
         }
-        return ApiResult.Success(last.copy(statuses = kept))
+        return ApiResult.Success(last.copy(statuses = kept, filling = filling))
     }
 
-    /** One upstream page: the request, or the cursor that continues it, down or [upwards]. */
+    /**
+     * One upstream page: the request, or the cursor that continues it, down or [upwards]. A page that ends
+     * an account's posts while its server says it is still reading older ones (`X-Social-Profile-Filling`)
+     * is read again after [PROFILE_FILLING_DELAY], at most [PROFILE_FILLING_READS] times.
+     */
     private suspend fun page(
         client: ApiClient,
         request: ApiRequest<List<Status>>,
         cursor: HttpUrl?,
         upwards: Boolean,
     ): ApiResult<Harvest> {
-        val result =
-            cursor?.let { client.page(it, request, Paging.DEFAULT_LIMIT) } ?: client.page(request, Paging.DEFAULT_LIMIT)
-        return result.map {
-            val further = if (upwards) it.link.previous else it.link.next
-            // a next page that is this one again leads nowhere: paging it would never end
-            Harvest(
-                it.items,
-                pageWasFull = it.rawCount >= Paging.DEFAULT_LIMIT,
-                nextCursor = further?.takeUnless { next -> next == cursor },
-            )
+        suspend fun read(): ApiResult<Harvest> {
+            val result = cursor?.let { client.page(it, request, Paging.DEFAULT_LIMIT) }
+                ?: client.page(request, Paging.DEFAULT_LIMIT)
+            return result.map {
+                val further = if (upwards) it.link.previous else it.link.next
+                // a next page that is this one again leads nowhere: paging it would never end
+                Harvest(
+                    it.items,
+                    pageWasFull = it.rawCount >= Paging.DEFAULT_LIMIT,
+                    nextCursor = further?.takeUnless { next -> next == cursor },
+                    filling = it.filling,
+                    profileFilling = it.profileFilling,
+                )
+            }
         }
+        repeat(PROFILE_FILLING_READS) {
+            val harvest = read()
+            val read = (harvest as? ApiResult.Success)?.value
+            if (read == null || !read.profileFilling || !read.isLastUpstream) return harvest
+            delay(PROFILE_FILLING_DELAY)
+        }
+        return read()
+    }
+
+    private companion object {
+        /** Nextcloud Social's web app reads a profile that is still filling every two seconds. */
+        val PROFILE_FILLING_DELAY = 2.seconds
+        const val PROFILE_FILLING_READS = 2
     }
 }
 
@@ -324,6 +381,8 @@ private val FEED_SOURCES = setOf(
 
 // every hashtag source's storage key, whatever tags it adds or leaves out
 private const val HASHTAG_PREFIX = "tag:"
+
+private fun lockKey(account: SignedInAccount, key: TimelineKey) = "${account.id}|${key.storageKey}"
 
 /** Whether a [TimelineKey.storageKey], `mode:source`, names a feed reply hiding narrows. */
 private fun isFeed(storageKey: String): Boolean = storageKey.substringAfter(':').let {

@@ -34,7 +34,7 @@ A timeline is the rows of `timeline_entry` for one account and one timeline key,
 
 `TimelineMerge` (`core/data/.../timeline/TimelineMerge.kt`) decides every change, as pure logic with its own tests:
 
-- A refresh asks with `since_id` from the newest cached row ([02-server-api.md](02-server-api.md) explains why). A full page leaves a gap under the new rows, because more may lie between them and the cache; a short page joins.
+- A refresh asks with `since_id` from the newest cached row ([02-server-api.md](02-server-api.md) explains why). A full page leaves a gap under the new rows, because more may lie between them and the cache; a short page joins, and so does a full one that reaches a cached row (the head read again, as a page still filling is).
 - Scrolling down asks with `max_id` from the oldest row and appends.
 - A cold load replaces the timeline and closes every gap.
 - Filling a gap asks for what is older than the row above it. The gap closes when the page is empty, short, or reaches a row already cached below it; a full page moves the gap down under what it brought.

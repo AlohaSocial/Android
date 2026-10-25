@@ -23,8 +23,13 @@ internal sealed interface HttpOutcome {
     class Failed(val error: ApiError) : HttpOutcome
 }
 
-/** A decoded answer and the cursor that came with it. */
-internal class Answer<T>(val decoded: Decoded<T>, val link: LinkHeader)
+/** A decoded answer, the cursor that came with it and whether the server said it is still filling it in. */
+internal class Answer<T>(
+    val decoded: Decoded<T>,
+    val link: LinkHeader,
+    val filling: Boolean = false,
+    val profileFilling: Boolean = false,
+)
 
 /**
  * Sends one request and turns the answer into an [ApiResult]: the rate limiter first, then the
@@ -101,8 +106,12 @@ internal class RequestExecutor(
     private suspend fun <T> answer(request: ApiRequest<T>, response: Response, url: HttpUrl): ApiResult<Answer<T>> {
         if (!response.isSuccessful) return failure(response, url)
         val body = withContext(ioDispatcher) { response.body.string() }
-        return decode(request, body, LinkHeader.parse(response.header("Link")))
+        return decode(request, body, LinkHeader.parse(response.header("Link"))).map {
+            Answer(it.decoded, it.link, response.flag("X-Social-Filling"), response.flag("X-Social-Profile-Filling"))
+        }
     }
+
+    private fun Response.flag(name: String): Boolean = header(name)?.trim() == "1"
 
     private suspend fun failure(response: Response, url: HttpUrl): ApiResult.Failure {
         val body = response.errorBody(ioDispatcher)
