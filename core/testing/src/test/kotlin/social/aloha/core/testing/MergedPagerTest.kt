@@ -8,6 +8,7 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import java.time.Clock
 import java.time.Instant
+import java.util.concurrent.atomic.AtomicInteger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -38,6 +39,7 @@ import social.aloha.core.data.timeline.MergedPage
 import social.aloha.core.data.timeline.MergedPager
 import social.aloha.core.data.timeline.MergedPost
 import social.aloha.core.data.timeline.MergedTimeline
+import social.aloha.core.data.timeline.RefreshPlan
 import social.aloha.core.data.timeline.StatusRepository
 import social.aloha.core.data.timeline.TimelineRepository
 import social.aloha.core.data.timeline.TimelineRow
@@ -187,18 +189,22 @@ class MergedPagerTest {
 
     @Test
     fun `what the second read of a page still filling brings waits behind the pill`() = runBlocking {
+        val reads = AtomicInteger()
         val filling = object : Dispatcher() {
             override fun dispatch(request: RecordedRequest): MockResponse {
                 val answer = a.dispatch(request)
-                a.newest = 103
+                if (reads.incrementAndGet() > 1) a.newest = 103
                 return answer.newBuilder().addHeader("X-Social-Filling", "1").build()
             }
         }
         val shown = listOf(signedIn(filling, "6") to TimelineKey.home())
+        val (account, key) = shown.single()
+        timelines.refresh(account, key, RefreshPlan.of(hasFetchedBefore = false, newestRowId = null))
         val pager = MergedPager(timelines, Clock.systemUTC(), scope) { shown }
-        pager.start(shown)
-        val held = withTimeout(TIMEOUT) { pager.states.first { it.held.isNotEmpty() } }.held
-        assertEquals((103 downTo 101).map(Int::toString).toSet(), held[shown.single().first.id])
+        pager.observe(shown).first { it.values.single().isNotEmpty() }
+        pager.refresh()
+        val held = withTimeout(TIMEOUT) { pager.states.first { !it.held[account.id].isNullOrEmpty() } }.held
+        assertEquals((103 downTo 101).map(Int::toString).toSet(), held[account.id])
     }
 
     private fun MergedPost.number() = status.displayed.uri.substringAfterLast('/').toInt()

@@ -143,16 +143,11 @@ public class TimelinePager(
                 is PageOutcome.Loaded -> {
                     if (plan.direction == TimelineMerge.Direction.Cold) cursor = outcome.nextCursor
                     // a refresh over rows being read holds what it brought behind the pill
-                    val held = if (hadRows && plan.direction != TimelineMerge.Direction.Cold) {
-                        now.held + outcome.arrived
-                    } else {
-                        now.held
-                    }
                     now.copy(
                         refreshing = false,
                         loadedOnce = true,
                         trouble = null,
-                        held = held,
+                        held = if (plan.holds(hadRows)) now.held + outcome.arrived else now.held,
                         reachedEnd = now.reachedEnd || (!hadRows && outcome.reachedEnd),
                     )
                 }
@@ -166,14 +161,30 @@ public class TimelinePager(
                 PageOutcome.Busy -> now.copy(refreshing = false)
             }
         }
-        refill(account, key, plan, outcome)
+        refill(account to key, plan, outcome, hadRows)
     }
 
-    /** A page the server was still filling in is read once more; what that brings waits behind the pill. */
-    private fun refill(account: SignedInAccount, key: TimelineKey, plan: RefreshPlan, outcome: PageOutcome) {
+    /**
+     * A page the server was still filling in is read once more. What that brings over rows being read waits
+     * behind the pill; a timeline that had none goes on further down as the second read says.
+     */
+    private fun refill(
+        shown: Pair<SignedInAccount, TimelineKey>,
+        plan: RefreshPlan,
+        outcome: PageOutcome,
+        hadRows: Boolean,
+    ) {
+        val (account, key) = shown
         scope.launch {
             val refilled = timelines.refill(account, key, plan, outcome) ?: return@launch
-            if (current().shows(account, key)) state.update { it.copy(held = it.held + refilled.arrived) }
+            if (!current().shows(account, key)) return@launch
+            if (plan.direction == TimelineMerge.Direction.Cold) cursor = refilled.nextCursor
+            state.update { now ->
+                now.copy(
+                    held = if (plan.holds(hadRows)) now.held + refilled.arrived else now.held,
+                    reachedEnd = if (hadRows) now.reachedEnd else refilled.reachedEnd,
+                )
+            }
         }
     }
 

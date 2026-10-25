@@ -55,7 +55,7 @@ public sealed interface TimelineRow {
 /**
  * How a fetch went. [arrived] are the ids new to the timeline; [nextCursor] continues paging older;
  * [reachedEnd] when the server has nothing further down; [filling] when it said it is still filling the
- * page in, so the same page read again a little later ([RefreshPlan.reread]) brings more.
+ * page in, so the same page read again a little later ([TimelineRepository.refill]) brings more.
  */
 public sealed interface PageOutcome {
     public data class Loaded(
@@ -139,7 +139,12 @@ public class TimelineRepository @Inject constructor(
      * [plan]'s page read once more, [RefreshPlan.FILLING_DELAY] after [outcome], the refresh it made, said the
      * server was still filling it in (`X-Social-Filling`: counts, or posts read from elsewhere). Only once, and
      * not for a [TimelineSource.keptOrder] timeline, whose head replaces its rows; null when there is nothing to
-     * read again or the read brought nothing.
+     * read again or the read was not made.
+     *
+     * It waits for a fetch of the timeline in flight rather than being lost to it. A cold page merges cold
+     * again, replacing the first read's rows: Nextcloud Social numbers a post it read from elsewhere by when
+     * it was published, so the second read's posts may sit anywhere in the page, not only above it. It is
+     * read only while the rows are still the first read's alone.
      */
     public suspend fun refill(
         account: SignedInAccount,
@@ -147,9 +152,17 @@ public class TimelineRepository @Inject constructor(
         plan: RefreshPlan,
         outcome: PageOutcome,
     ): PageOutcome.Loaded? {
-        if ((outcome as? PageOutcome.Loaded)?.filling != true || key.source.keptOrder) return null
+        val first = outcome as? PageOutcome.Loaded
+        if (first?.filling != true || key.source.keptOrder) return null
         delay(RefreshPlan.FILLING_DELAY)
-        return refresh(account, key, plan.reread) as? PageOutcome.Loaded
+        val fetch = Fetch(account, key, plan.anchor, cursor = null, plan.direction)
+        return inFlight.getOrPut(lockKey(account, key)) { Mutex() }.withLock {
+            withContext(ioDispatcher) {
+                val unchanged = plan.direction != TimelineMerge.Direction.Cold ||
+                    dao.entries(account.id, key.storageKey).mapTo(HashSet()) { it.statusId } == first.arrived.toSet()
+                if (unchanged) fetchLocked(fetch) as? PageOutcome.Loaded else null
+            }
+        }
     }
 
     /**
