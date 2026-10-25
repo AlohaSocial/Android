@@ -312,7 +312,7 @@ internal fun RefusalSnackbar(refusal: Refusal?, snackbars: SnackbarHostState, on
             Refusal.Failed -> failed
             null -> return@LaunchedEffect
         }
-        onShown()
         snackbars.showSnackbar(text)
+        onShown()
     }
 }

@@ -71,9 +71,9 @@ public fun TimelineRoute(
     var shakes by remember { mutableIntStateOf(0) }
     LaunchedEffect(state.actionFailed) {
         if (state.actionFailed) {
-            viewModel.onActionFailureShown()
             shakes++
             snackbars.showSnackbar(failed)
+            viewModel.onActionFailureShown()
         }
     }
 

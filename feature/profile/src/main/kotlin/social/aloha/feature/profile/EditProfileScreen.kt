@@ -72,8 +72,8 @@ public fun EditProfileRoute(key: EditProfileKey, onDone: () -> Unit, modifier: M
     LaunchedEffect(state.saved) { if (state.saved) done() }
     LaunchedEffect(state.failure) {
         if (message != null) {
-            viewModel.onFailureShown()
             snackbars.showSnackbar(message)
+            viewModel.onFailureShown()
         }
     }
     EditProfileScreen(state, viewModel::onForm, viewModel::onSave, viewModel::onRetry, { done() }, modifier, snackbars)

@@ -72,8 +72,8 @@ internal fun InterestsScreen(
     val refused = stringResource(R.string.interests_change_failed)
     LaunchedEffect(state.changeFailed) {
         if (state.changeFailed) {
-            actions.onChangeFailureShown()
             snackbars.showSnackbar(refused)
+            actions.onChangeFailureShown()
         }
     }
     var resetting by rememberSaveable { mutableStateOf(false) }

@@ -82,8 +82,8 @@ public fun WatchRoute(key: WatchKey, navigation: StatusNavigation, onBack: () ->
     LaunchedEffect(colors) { viewModel.onColors(colors) }
     LaunchedEffect(state.actionFailed) {
         if (state.actionFailed) {
-            viewModel.onActionFailureShown()
             snackbars.showSnackbar(failed)
+            viewModel.onActionFailureShown()
         }
     }
     val rowActions = remember(viewModel, context) {

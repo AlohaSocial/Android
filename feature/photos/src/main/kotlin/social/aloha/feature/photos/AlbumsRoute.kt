@@ -154,8 +154,8 @@ public fun AlbumsRoute(
     val failed = stringResource(R.string.albums_change_failed)
     LaunchedEffect(state.changeFailed) {
         if (state.changeFailed) {
-            viewModel.onChangeFailedShown()
             snackbars.showSnackbar(failed)
+            viewModel.onChangeFailedShown()
         }
     }
     var creating by rememberSaveable { mutableStateOf(false) }

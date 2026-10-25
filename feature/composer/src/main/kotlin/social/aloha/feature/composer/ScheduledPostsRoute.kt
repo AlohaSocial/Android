@@ -142,8 +142,8 @@ public fun ScheduledPostsRoute(key: ScheduledPostsKey, onBack: () -> Unit, modif
     val failed = stringResource(R.string.scheduled_change_failed)
     LaunchedEffect(state.changeFailed) {
         if (state.changeFailed) {
-            viewModel.onChangeFailedShown()
             snackbars.showSnackbar(failed)
+            viewModel.onChangeFailedShown()
         }
     }
     var moving by rememberSaveable { mutableStateOf<String?>(null) }

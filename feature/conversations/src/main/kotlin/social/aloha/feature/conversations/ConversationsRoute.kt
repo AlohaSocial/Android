@@ -113,8 +113,8 @@ internal fun ConversationsScreen(
     val refused = stringResource(R.string.conversations_change_failed)
     LaunchedEffect(state.changeFailed) {
         if (state.changeFailed) {
-            onChangeFailureShown()
             snackbars.showSnackbar(refused)
+            onChangeFailureShown()
         }
     }
     var deleting by rememberSaveable { mutableStateOf<String?>(null) }
