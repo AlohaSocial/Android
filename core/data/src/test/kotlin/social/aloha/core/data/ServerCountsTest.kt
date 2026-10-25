@@ -9,12 +9,14 @@ import androidx.datastore.preferences.core.emptyPreferences
 import androidx.test.core.app.ApplicationProvider
 import java.io.IOException
 import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import mockwebserver3.MockResponse
 import mockwebserver3.MockWebServer
 import org.junit.After
@@ -86,7 +88,7 @@ class ServerCountsTest {
     }
 
     @Test
-    fun `storage that fails once does not stop the switch being told`() = runBlocking {
+    fun `storage that fails once does not stop the switch being told`() = runBlocking<Unit> {
         stored.failing = true
         answer(200)
         answer(200)
@@ -94,7 +96,9 @@ class ServerCountsTest {
         signIn()
         assertEquals("PATCH", social.takeRequest(10, TimeUnit.SECONDS)?.method)
         assertEquals("PATCH", social.takeRequest(10, TimeUnit.SECONDS)?.method)
-        assertEquals(false, settings.settings(fixture.accounts.all().first().id).first().countsHidden)
+        // the server has the request before the answer is stored
+        val id = fixture.accounts.all().first().id
+        withTimeout(10.seconds) { settings.settings(id).first { it.countsHidden == false } }
     }
 }
 
