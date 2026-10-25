@@ -4,18 +4,25 @@
 package social.aloha.feature.shorts
 
 import android.app.Application
+import androidx.compose.foundation.pager.PagerState
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.accessibility.enableAccessibilityChecks
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.longClick
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.tryPerformAccessibilityChecks
+import androidx.test.core.app.ApplicationProvider
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.captureRoboImage
 import org.junit.Assert.assertEquals
@@ -30,11 +37,14 @@ import social.aloha.core.designsystem.ThemeMode
 import social.aloha.core.designsystem.ThemeSettings
 import social.aloha.core.html.RichTextCache
 import social.aloha.core.media.ShortSource
+import social.aloha.core.media.ShortsPlayback
 import social.aloha.core.model.AttachmentKind
 import social.aloha.core.model.MediaAttachment
 import social.aloha.core.testing.StatusSamples
 import social.aloha.core.ui.RichTextColors
+import social.aloha.core.ui.SeenBy
 import social.aloha.core.ui.StatusRowMapper
+import social.aloha.core.ui.heldBy
 
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
@@ -88,20 +98,26 @@ class ShortsScreenTest {
         )
 
     @Composable
-    private fun short(sensitive: Boolean = false): ShortUi {
+    private fun short(sensitive: Boolean = false, id: String = "s1"): ShortUi {
         val post = StatusSamples.post("<p>Waves at the point #surf</p>").copy(
-            id = "s1",
+            id = id,
             sensitive = sensitive,
             mediaAttachments = listOf(clip),
         )
         val row = StatusRowMapper(RichTextCache(), RichTextColors.fromTheme()).map(post, "2")
-        return ShortUi(row, ShortSource("s1", emptyList()), clip)
+        return ShortUi(row, ShortSource(id, emptyList()), clip)
     }
 
-    private fun show(sensitive: Boolean = false) {
+    /** A short the second of two accounts shown together holds, which only it sees. */
+    @Composable
+    private fun held(): ShortUi = short(id = "s1").let {
+        it.copy(row = it.row.heldBy("two.example"), seenBy = listOf(SeenBy("@alice@two.example", null, PINK)))
+    }
+
+    private fun show(sensitive: Boolean = false, short: @Composable () -> ShortUi = { short(sensitive) }) {
         compose.setContent {
             AlohaTheme(ThemeSettings(mode = ThemeMode.Dark)) {
-                ShortPage(short(sensitive), player = null, muted = true, actions = actions)
+                ShortPage(short(), player = null, muted = true, actions = actions)
             }
         }
     }
@@ -132,6 +148,39 @@ class ShortsScreenTest {
     }
 
     @Test
+    fun `a short another account holds says which, and is not reported to the server in use`() {
+        show { held() }
+        compose.onNodeWithContentDescription("Seen by @alice@two.example", substring = true).assertIsDisplayed()
+        compose.onNodeWithContentDescription("More").performClick()
+        assertEquals(0, compose.onAllNodesWithText("Report").fetchSemanticsNodes().size)
+    }
+
+    @Test
+    fun `the short in view stays in view when newer shorts arrive above it`() {
+        val player = ShortsPlayback(ApplicationProvider.getApplicationContext()).player
+        var ids by mutableStateOf(listOf("a", "b"))
+        lateinit var pager: PagerState
+        compose.setContent {
+            AlohaTheme(ThemeSettings(mode = ThemeMode.Dark)) {
+                val shorts = ids.map { short(id = it) }
+                pager = rememberPagerState(initialPage = 1) { shorts.size }
+                ShortsPager(ShortsUiState(shorts = shorts), pager, player, actions)
+            }
+        }
+        compose.runOnIdle { ids = listOf("new") + ids }
+        compose.runOnIdle { assertEquals(2, pager.settledPage) }
+        player.release()
+    }
+
+    @Test
+    fun heldShort() {
+        compose.enableAccessibilityChecks()
+        show { held() }
+        compose.onRoot().tryPerformAccessibilityChecks()
+        compose.onRoot().captureRoboImage("src/test/screenshots/shorts-page-held.png")
+    }
+
+    @Test
     fun short() {
         compose.enableAccessibilityChecks()
         show()
@@ -152,5 +201,9 @@ class ShortsScreenTest {
     fun sensitiveShort() {
         show(sensitive = true)
         compose.onRoot().captureRoboImage("src/test/screenshots/shorts-sensitive.png")
+    }
+
+    private companion object {
+        const val PINK = 0xFFE91E63.toInt()
     }
 }

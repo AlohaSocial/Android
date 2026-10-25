@@ -75,8 +75,11 @@ import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.ui.LocalSensitiveMediaPolicy
 import social.aloha.core.ui.PressableIcon
 import social.aloha.core.ui.R as UiR
+import social.aloha.core.ui.SeenByMark
+import social.aloha.core.ui.isElsewhere
 import social.aloha.core.ui.rememberBlurHashPainter
 import social.aloha.core.ui.rememberReducedMotion
+import social.aloha.core.ui.seenByText
 
 /**
  * One short, edge to edge. A double tap favourites it, with a heart that skips its burst where motion
@@ -166,7 +169,10 @@ private class Spoken(val label: String, val favourite: String, val pause: String
 
 @Composable
 private fun spoken(short: ShortUi, page: PageState): Spoken = Spoken(
-    label = stringResource(R.string.shorts_page, short.row.author.plainName, short.row.plainText),
+    label = listOfNotNull(
+        stringResource(R.string.shorts_page, short.row.author.plainName, short.row.plainText),
+        seenByText(short.seenBy),
+    ).joinToString(". "),
     favourite = stringResource(
         if (short.row.state.favourited) R.string.shorts_unfavourite else R.string.shorts_favourite,
     ),
@@ -331,12 +337,16 @@ private fun Rail(short: ShortUi, paused: Boolean, onPause: () -> Unit, actions: 
         verticalArrangement = Arrangement.spacedBy(AlohaSpacing.s),
     ) {
         IconButton(onClick = { actions.onProfile(short) }) {
-            AsyncImage(
-                model = row.author.avatarUrl,
-                contentDescription = stringResource(R.string.shorts_profile, row.author.plainName),
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.size(AVATAR).clip(CircleShape).background(Color.DarkGray),
-            )
+            // which of the reader's accounts see the short sits on its author's picture, at its corner
+            Box {
+                AsyncImage(
+                    model = row.author.avatarUrl,
+                    contentDescription = stringResource(R.string.shorts_profile, row.author.plainName),
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.size(AVATAR).clip(CircleShape).background(Color.DarkGray),
+                )
+                if (short.seenBy.isNotEmpty()) SeenByMark(short.seenBy, SEEN_BY, Modifier.align(Alignment.BottomEnd))
+            }
         }
         RailButton(
             if (row.state.favourited) AlohaIcons.Favourited else AlohaIcons.Favourite,
@@ -411,7 +421,8 @@ private fun Menu(short: ShortUi, paused: Boolean, onPause: () -> Unit, actions: 
                     actions.onComments(short)
                 },
             )
-            if (!short.row.isOwn) {
+            // a short another account holds is reported where it opens, not to the server in use
+            if (!short.row.isOwn && !isElsewhere(short.row.statusId)) {
                 DropdownMenuItem(
                     text = { Text(stringResource(R.string.shorts_report)) },
                     onClick = {
@@ -462,6 +473,7 @@ private val EDGE = 24.dp
 private const val EDGE_SHARE = 5
 private val HEART = 96.dp
 private val AVATAR = 40.dp
+private val SEEN_BY = 16.dp
 private const val HEART_MILLIS = 700L
 private const val SCRUB_TICK = 250L
 private const val CAPTION_LINES = 2

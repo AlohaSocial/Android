@@ -814,7 +814,7 @@ private fun ModeTimeline(
     accountButton: @Composable () -> Unit,
 ) {
     // Shorts is a pager of its own rather than a timeline of rows
-    if (feed.mode == FeedMode.Shorts) return ShortsRoute(navigation, accountButton)
+    if (feed.mode == FeedMode.Shorts) return ShortsRoute(navigation, accountButton, allAccounts = links.allAccounts)
     // and Audio a list to play from
     if (feed.mode == FeedMode.Audio) return AudioRoute(navigation, accountButton)
     // Home is the reader's pinned feeds, a page each

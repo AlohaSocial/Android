@@ -6,26 +6,23 @@ package social.aloha.feature.shorts
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
-import java.time.Clock
-import javax.inject.Inject
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import social.aloha.core.data.Trouble
+import social.aloha.core.data.timeline.ModeFeed
+import social.aloha.core.data.timeline.ModeFeeds
 import social.aloha.core.data.timeline.ModeSources
-import social.aloha.core.data.timeline.ModeTimeline
 import social.aloha.core.data.timeline.StatusInteractions
-import social.aloha.core.data.timeline.TimelinePager
-import social.aloha.core.data.timeline.TimelineRepository
-import social.aloha.core.data.timeline.TimelineRow
 import social.aloha.core.data.timeline.Toggle
 import social.aloha.core.datastore.ModePreferences
 import social.aloha.core.html.RichTextCache
@@ -33,17 +30,27 @@ import social.aloha.core.media.ShortSource
 import social.aloha.core.model.AttachmentKind
 import social.aloha.core.model.FeedMode
 import social.aloha.core.model.MediaAttachment
-import social.aloha.core.model.SignedInAccount
 import social.aloha.core.model.TimelineSource
 import social.aloha.core.model.VideoSources
 import social.aloha.core.sync.DeviceConditions
 import social.aloha.core.ui.RichTextColors
+import social.aloha.core.ui.SeenBy
 import social.aloha.core.ui.StatusRowMapper
 import social.aloha.core.ui.StatusRowUi
+import social.aloha.core.ui.heldBy
+import social.aloha.core.ui.namingFrom
 
-/** One short: its post as a row (caption, author, counts), where it plays from and its still. */
+/**
+ * One short: its post as a row (caption, author, counts), where it plays from and its still; where every
+ * account shows together, the accounts that see it.
+ */
 @Immutable
-internal data class ShortUi(val row: StatusRowUi, val source: ShortSource, val clip: MediaAttachment)
+internal data class ShortUi(
+    val row: StatusRowUi,
+    val source: ShortSource,
+    val clip: MediaAttachment,
+    val seenBy: List<SeenBy> = emptyList(),
+)
 
 @Immutable
 internal data class ShortsUiState(
@@ -62,40 +69,43 @@ internal data class ShortsUiState(
 
 /**
  * Shorts: the Shorts timeline of the source chosen for the mode, one short per page, newest first and
- * older ones below. Sound stays off until the person turns it on, and that choice holds across sessions
- * and modes.
+ * older ones below; with [together], every account's merged, each short acting as the account that holds
+ * it. Sound stays off until the person turns it on, and that choice holds across sessions and modes.
  */
-@OptIn(ExperimentalCoroutinesApi::class)
-@HiltViewModel
-internal class ShortsViewModel @Inject constructor(
-    timelines: TimelineRepository,
+@HiltViewModel(assistedFactory = ShortsViewModel.Factory::class)
+internal class ShortsViewModel @AssistedInject constructor(
+    @Assisted together: Boolean,
+    feeds: ModeFeeds,
     private val modes: ModeSources,
     private val preferences: ModePreferences,
     private val interactions: StatusInteractions,
     private val cache: RichTextCache,
     private val conditions: DeviceConditions,
-    clock: Clock,
 ) : ViewModel() {
-    private val timeline: StateFlow<ModeTimeline?> =
-        modes.timeline(FeedMode.Shorts).stateIn(viewModelScope, SharingStarted.Eagerly, null)
+    @AssistedFactory
+    interface Factory {
+        fun create(together: Boolean): ShortsViewModel
+    }
 
-    private val pager = TimelinePager(timelines, clock, viewModelScope) { timeline.value?.let { it.reader to it.key } }
+    private val feed = feeds.of(viewModelScope, FeedMode.Shorts, together)
     private val colors = MutableStateFlow<RichTextColors?>(null)
     private val failed = MutableStateFlow(false)
 
-    val uiState: StateFlow<ShortsUiState> = timeline.filterNotNull()
-        .flatMapLatest { (reader, key, sources) ->
-            combine(pager.observe(reader, key), colors.filterNotNull(), pager.states) { rows, colors, paging ->
-                val mapper = StatusRowMapper(cache, colors)
-                ShortsUiState(
-                    shorts = rows.mapNotNull { short(reader, mapper, it) },
-                    source = key.source,
-                    sources = sources,
-                    loadedOnce = paging.loadedOnce,
-                    trouble = paging.trouble,
-                )
-            }
-        }
+    /** Each short shown, by the id it shows under, as the account it acts as holds it. */
+    @Volatile private var owners: Map<String, ModeFeed.Post> = emptyMap()
+
+    val uiState: StateFlow<ShortsUiState> = combine(feed.pages, colors.filterNotNull()) { page, colors ->
+        val mapper = StatusRowMapper(cache, colors)
+        val shorts = page.posts.mapNotNull { post -> short(mapper, post)?.let { it to post } }
+        owners = shorts.associate { (short, post) -> short.row.statusId to post }
+        ShortsUiState(
+            shorts = shorts.map { it.first },
+            source = page.source,
+            sources = page.sources,
+            loadedOnce = page.loadedOnce,
+            trouble = page.trouble,
+        )
+    }
         .combine(preferences.videosMuted) { state, muted -> state.copy(muted = muted) }
         .combine(preferences.loopShorts) { state, loop -> state.copy(loop = loop) }
         // ponytail: the network as the choice is read; a move to mobile data counts from the next change
@@ -105,16 +115,12 @@ internal class ShortsViewModel @Inject constructor(
         .combine(failed) { state, failed -> state.copy(actionFailed = failed) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_MILLIS), ShortsUiState())
 
-    init {
-        viewModelScope.launch { timeline.filterNotNull().collect { pager.start(it.reader, it.key) } }
-    }
-
     fun onColors(value: RichTextColors) {
         colors.value = value
     }
 
     /** The pager neared the last short it holds: the next page below. */
-    fun onNearEnd() = pager.older()
+    fun onNearEnd() = feed.older()
 
     fun onSource(source: TimelineSource) {
         viewModelScope.launch { modes.choose(FeedMode.Shorts, source) }
@@ -124,25 +130,32 @@ internal class ShortsViewModel @Inject constructor(
         viewModelScope.launch { preferences.setVideosMuted(muted) }
     }
 
+    /** [toggle] on the short shown as [statusId], as the account that holds it, on its own id there. */
     fun onToggle(statusId: String, toggle: Toggle) {
+        val post = owners[statusId] ?: return
         viewModelScope.launch {
-            val reader = timeline.value?.reader ?: return@launch
-            val status = pager.stored.filterIsInstance<TimelineRow.Post>().map { it.status }
-                .firstOrNull { it.displayed.id == statusId }?.displayed ?: return@launch
-            if (interactions.toggle(reader, status, toggle) != null) failed.value = true
+            if (interactions.toggle(post.account, post.status.displayed, toggle) != null) failed.value = true
         }
     }
 
     fun onActionFailureShown() = failed.update { false }
 
-    private fun short(reader: SignedInAccount, mapper: StatusRowMapper, row: TimelineRow): ShortUi? {
-        val post = (row as? TimelineRow.Post)?.status ?: return null
-        val shown = post.displayed
-        val clip =
-            shown.mediaAttachments.firstOrNull { it.type == AttachmentKind.Video || it.type == AttachmentKind.Gifv }
-                ?: return null
-        val sources = VideoSources.ladder(post, clip, reader.capabilities.apiBase)
-        return ShortUi(mapper.map(post, reader.serverAccountId), ShortSource(shown.id, sources), clip)
+    /**
+     * [post] as a short, with its owner's ids, or, held by another account than the one in use, under that
+     * account's server's name; none for a post without a video.
+     */
+    private fun short(mapper: StatusRowMapper, post: ModeFeed.Post): ShortUi? {
+        val (account, status) = post
+        val clip = status.displayed.mediaAttachments
+            .firstOrNull { it.type == AttachmentKind.Video || it.type == AttachmentKind.Gifv } ?: return null
+        val row = if (post.inUse) {
+            mapper.map(status, account.serverAccountId)
+        } else {
+            mapper.map(status.namingFrom(account.host), account.serverAccountId).heldBy(account.host)
+        }
+        val sources = VideoSources.ladder(status, clip, account.capabilities.apiBase)
+        val seenBy = post.seenBy.map { SeenBy(it.reader.qualifiedHandle, it.reader.avatarUrl, it.colour) }
+        return ShortUi(row, ShortSource(row.statusId, sources), clip, seenBy)
     }
 
     private companion object {

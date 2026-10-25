@@ -59,6 +59,15 @@ public fun StatusNavigation.openAuthor(accountId: String): Unit = if (isElsewher
     openProfile(accountId, null)
 }
 
+/**
+ * The thread of [statusId], or, shown under another server's name, the post by its [url], which the server
+ * in use finds.
+ */
+public fun StatusNavigation.openPost(statusId: String, url: String?) {
+    if (!isElsewhere(statusId)) return openThread(statusId)
+    url?.let(::openWeb)
+}
+
 /** Which of the reader's accounts see a post, said for a screen reader; null where none is marked. */
 @Composable
 public fun seenByText(seenBy: List<SeenBy>): String? = seenBy.takeIf { it.isNotEmpty() }
