@@ -38,11 +38,12 @@ import social.aloha.core.model.SignedInAccount
 class AllAccountsTest {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+    private val app = AppPreferences(InMemoryDataStore(emptyPreferences()))
     private val accountsDb = Room.inMemoryDatabaseBuilder(context, AccountsDatabase::class.java).build()
     private val accounts = AccountRepository(
         accountsDb.accountDao(),
         TokenVault(InMemoryDataStore(ByteArray(0)), FakeSecretCipher(), Dispatchers.IO),
-        AppPreferences(InMemoryDataStore(emptyPreferences())),
+        app,
         Clock.systemUTC(),
         scope,
     )
@@ -79,6 +80,9 @@ class AllAccountsTest {
         val keeping = scope.launch { all.keepFirstInUse() }
         // a new sign-in makes the new account the one in use; together, the first takes over again
         val second = signedIn("two.example")
+        // the stored choice, not activeAccount, which may not have seen the sign-in yet: once it is the first
+        // again, keepFirstInUse has acted and will not race the pick below
+        withTimeout(TIMEOUT) { app.activeAccountId.first { it == first.id } }
         inUse(first.id)
 
         all.show(second.id)
