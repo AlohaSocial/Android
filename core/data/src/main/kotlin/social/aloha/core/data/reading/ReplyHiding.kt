@@ -24,9 +24,14 @@ public class ReplyHiding @Inject constructor(
     private val clients: ClientFactory,
     private val timelines: TimelineRepository,
 ) {
-    /** The switch as [reader]'s server holds it; null where the server has none (404) or did not answer. */
-    public suspend fun hidden(reader: SignedInAccount): Boolean? =
-        (clients.answer(reader, FeedPreferenceEndpoints.hideReplies()) as? Answer.Got)?.value
+    /**
+     * The switch as [reader]'s server holds it; null where the server has none or did not answer. Only
+     * Nextcloud Social is asked; one from before the switch answers 404, and no version tells them apart.
+     */
+    public suspend fun hidden(reader: SignedInAccount): Boolean? {
+        if (!reader.capabilities.isNextcloudSocial) return null
+        return (clients.answer(reader, FeedPreferenceEndpoints.hideReplies()) as? Answer.Got)?.value
+    }
 
     /**
      * Turns the switch on [reader]'s server and answers with the state it then holds; null when it did
