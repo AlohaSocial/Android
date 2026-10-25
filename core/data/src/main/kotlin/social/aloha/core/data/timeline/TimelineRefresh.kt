@@ -10,12 +10,8 @@ import social.aloha.core.network.endpoints.PageAnchor
 
 /** What a refresh asks the server for, and how the answer merges. */
 public data class RefreshPlan(val anchor: PageAnchor, val direction: TimelineMerge.Direction) {
-    /**
-     * The same page once more, for a page the server said it was still filling in (counts, or posts read
-     * from elsewhere): merged as newer than the rows the first read left, so rows paged in meanwhile stay.
-     */
-    public val reread: RefreshPlan
-        get() = if (direction == TimelineMerge.Direction.Cold) copy(direction = TimelineMerge.Direction.Newer) else this
+    /** Whether what this refresh brings over a timeline that [hadRows] waits behind the pill. */
+    public fun holds(hadRows: Boolean): Boolean = hadRows && direction != TimelineMerge.Direction.Cold
 
     public companion object {
         /**

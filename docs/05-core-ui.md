@@ -221,7 +221,8 @@ Rules:
   no `next`, not where a page is shorter than `limit`.
 - A refresh Nextcloud Social answers with `X-Social-Filling` (counts still being
   fetched, or posts read from elsewhere) reads the same page once more two
-  seconds later; new posts it brings wait behind the pill. Never more than once.
+  seconds later; over rows being read, new posts it brings wait behind the pill,
+  and on a timeline that was empty they show at once. Never more than once.
 - **Remember position across launches** per timeline, restored only if the
   cached entry is still present.
 

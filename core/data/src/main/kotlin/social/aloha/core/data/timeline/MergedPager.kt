@@ -150,7 +150,7 @@ public class MergedPager(
         val outcomes = coroutineScope {
             shown.map { (account, key) ->
                 val before = rowsOf(account)
-                async { Triple(account.id, refreshed(account, key), before) }
+                async { Triple(account.id, refreshed(account, key, before.isNotEmpty()), before) }
             }.awaitAll()
         }
         val still = current().map { it.first.id }.toSet()
@@ -162,34 +162,52 @@ public class MergedPager(
         }
     }
 
-    private suspend fun refreshed(account: SignedInAccount, key: TimelineKey): Pair<PageOutcome, RefreshPlan> {
+    private suspend fun refreshed(
+        account: SignedInAccount,
+        key: TimelineKey,
+        hadRows: Boolean,
+    ): Pair<PageOutcome, RefreshPlan> {
+        val id = account.id
         val newest = rowsOf(account).firstOrNull { it is TimelineRow.Post }?.id
         val plan = RefreshPlan.of(timelines.lastFetched(account, key) != null, newest, key.source.keptOrder)
         val outcome = timelines.refresh(account, key, plan)
-        if (outcome is PageOutcome.Loaded && plan.direction == TimelineMerge.Direction.Cold) {
-            outcome.nextCursor?.let { cursors[account.id] = it } ?: cursors.remove(account.id)
-        }
-        // a page the server was still filling in is read once more; what that brings waits behind the pill
+        keepCursor(id, plan, outcome)
+        // a page the server was still filling in is read once more: what that brings over rows being read
+        // waits behind the pill, and an account that had none goes on further down as the second read says
         scope.launch {
             val refilled = timelines.refill(account, key, plan, outcome) ?: return@launch
-            if (current().none { (shown, of) -> shown.id == account.id && of == key }) return@launch
-            state.update { it.copy(held = it.held + (account.id to it.held[account.id].orEmpty() + refilled.arrived)) }
+            if (current().none { (shown, of) -> shown.id == id && of == key }) return@launch
+            keepCursor(id, plan, refilled)
+            val holds = plan.holds(hadRows)
+            state.update { now ->
+                now.copy(
+                    held = if (holds) now.held + (id to now.held[id].orEmpty() + refilled.arrived) else now.held,
+                    ended = when {
+                        hadRows -> now.ended
+                        refilled.reachedEnd -> now.ended + id
+                        else -> now.ended - id
+                    },
+                )
+            }
         }
         return outcome to plan
+    }
+
+    private fun keepCursor(id: String, plan: RefreshPlan, outcome: PageOutcome) {
+        if (outcome is PageOutcome.Loaded && plan.direction == TimelineMerge.Direction.Cold) {
+            outcome.nextCursor?.let { cursors[id] = it } ?: cursors.remove(id)
+        }
     }
 
     /** [id]'s refresh as it ended: what it brought over rows being read waits behind the pill. */
     private fun State.after(id: String, result: Pair<PageOutcome, RefreshPlan>, hadRows: Boolean): State {
         val (outcome, plan) = result
         return when (outcome) {
-            is PageOutcome.Loaded -> {
-                val holds = hadRows && plan.direction != TimelineMerge.Direction.Cold
-                copy(
-                    troubles = troubles - id,
-                    held = if (holds) held + (id to held[id].orEmpty() + outcome.arrived) else held,
-                    ended = if (!hadRows && outcome.reachedEnd) ended + id else ended,
-                )
-            }
+            is PageOutcome.Loaded -> copy(
+                troubles = troubles - id,
+                held = if (plan.holds(hadRows)) held + (id to held[id].orEmpty() + outcome.arrived) else held,
+                ended = if (!hadRows && outcome.reachedEnd) ended + id else ended,
+            )
 
             is PageOutcome.Failed -> copy(troubles = troubles + (id to outcome.error.trouble))
 

@@ -222,7 +222,7 @@ class ProfileViewModelTest {
     fun `posts the server was still filling in show after it is asked once more`() = runBlocking {
         bob.fillingOnce = true
         val state = open(id = "7").await { (it.items.firstOrNull() as? ProfileItem.Post)?.row?.statusId == "33" }
-        assertEquals(23, state.items.count { it is ProfileItem.Post })
+        assertEquals(20, state.items.count { it is ProfileItem.Post })
     }
 
     @Test
