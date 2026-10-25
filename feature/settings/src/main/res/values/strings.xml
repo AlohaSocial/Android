@@ -248,6 +248,12 @@
     <string name="reading_relaxed">More space between lines</string>
     <!-- Reading switch: avatars as rounded squares instead of circles -->
     <string name="reading_rounded">Rounded square avatars</string>
+    <!-- Reading switch, kept by the account's server: replies left out of Home, Local, Federated and hashtag feeds -->
+    <string name="reading_hide_replies">Hide replies in feeds</string>
+    <!-- Summary of the Hide replies in feeds switch -->
+    <string name="reading_hide_replies_summary">Kept by your server for this account, and the same in its web app. Replies stay in their conversations.</string>
+    <!-- Shown when the server did not take a change to the Hide replies in feeds switch -->
+    <string name="reading_hide_replies_refused">Your server didn’t take the change. Try again later.</string>
     <!-- Reading switch: every popularity number in the app -->
     <string name="reading_counts">Show numbers</string>
     <!-- Summary of the Show numbers switch -->

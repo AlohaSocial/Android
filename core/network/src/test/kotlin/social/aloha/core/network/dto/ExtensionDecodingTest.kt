@@ -15,6 +15,7 @@ import social.aloha.core.network.AlohaJson
 import social.aloha.core.network.ApiRequest
 import social.aloha.core.network.endpoints.CollectionEndpoints
 import social.aloha.core.network.endpoints.DiscoveryEndpoints
+import social.aloha.core.network.endpoints.FeedPreferenceEndpoints
 import social.aloha.core.network.endpoints.InterestEndpoints
 import social.aloha.core.network.endpoints.PlaceEndpoints
 import social.aloha.core.network.endpoints.PortfolioEndpoints
@@ -208,5 +209,12 @@ class ExtensionDecodingTest {
         assertEquals(PortfolioLayout.Rows, settings.layout)
         assertFalse(settings.showCaptions)
         assertTrue(PortfolioEndpoints.page("alice").value(body).showCaptions)
+    }
+
+    @Test
+    fun `the feed preferences carry the reply switch, and an answer without it says nothing`() {
+        assertEquals(true, FeedPreferenceEndpoints.hideReplies().value("""{"hide_replies": true}"""))
+        assertEquals(false, FeedPreferenceEndpoints.setHideReplies(false).value("""{"hide_replies": false}"""))
+        assertNull(FeedPreferenceEndpoints.hideReplies().value("{}"))
     }
 }
