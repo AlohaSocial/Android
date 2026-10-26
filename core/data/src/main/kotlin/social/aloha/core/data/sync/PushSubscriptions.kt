@@ -44,9 +44,10 @@ public class PushSubscriptions @Inject constructor(
             }
 
             is Answer.Missed -> answer.error.also {
-                // Nextcloud Social refuses an endpoint not on the public internet, such as a self-hosted ntfy,
-                // with a 422 that carries no code, only this error; its other 422s here are about the keys
-                if (it is ApiError.Unprocessable && it.message == ENDPOINT_REFUSED) {
+                // Nextcloud Social refuses an endpoint not on the public internet, such as a self-hosted ntfy, and
+                // a twenty-first subscription of one account; asking again would be refused the same way. Its
+                // other 422s here are about the keys. Older builds said which by the message alone
+                if (it.refusal?.code in REFUSING || (it is ApiError.Unprocessable && it.message == ENDPOINT_REFUSED)) {
                     refusals.set(account.id, refused = true)
                 }
             }
@@ -102,5 +103,6 @@ public class PushSubscriptions @Inject constructor(
 
     private companion object {
         const val ENDPOINT_REFUSED = "The push endpoint must be a reachable public HTTPS URL"
+        val REFUSING = setOf("push-endpoint-unreachable", "push-subscriptions-full")
     }
 }

@@ -102,11 +102,37 @@ class PushSubscriptionsTest {
     }
 
     @Test
+    fun `a refusal is known by its code, whatever its message says`() = runBlocking {
+        val account = fixture.signIn(server.url("/"))
+        server.enqueue(
+            MockResponse.Builder().code(422)
+                .body("""{"error":"Der Push-Endpunkt ist nicht erreichbar","code":"push-endpoint-unreachable"}""")
+                .build(),
+        )
+        assertTrue(push.subscribe(account, "https://ntfy.lan/up123", "pub-key", "auth-secret") != null)
+        assertTrue(push.refused(account.id))
+    }
+
+    @Test
+    fun `an account with all the subscriptions its server allows is not asked for another`() = runBlocking {
+        val account = fixture.signIn(server.url("/"))
+        server.enqueue(
+            MockResponse.Builder().code(422).body(
+                """{"error":"This account already has the maximum number of push subscriptions",""" +
+                    """"code":"push-subscriptions-full","limit":20}""",
+            ).build(),
+        )
+        assertTrue(push.subscribe(account, "https://ntfy.example/up123", "pub-key", "auth-secret") != null)
+        assertFalse(push.isActive(account.id))
+        assertTrue(push.refused(account.id))
+    }
+
+    @Test
     fun `keys the server finds invalid are no refusal of the endpoint`() = runBlocking {
         val account = fixture.signIn(server.url("/"))
         server.enqueue(
             MockResponse.Builder().code(422)
-                .body("""{"error":"The push subscription keys are invalid"}""").build(),
+                .body("""{"error":"The push subscription keys are invalid","code":"push-keys-invalid"}""").build(),
         )
         assertTrue(push.subscribe(account, "https://ntfy.example/up123", "pub-key", "auth-secret") != null)
         assertFalse(push.refused(account.id))
