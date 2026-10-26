@@ -13,27 +13,17 @@ import social.aloha.core.model.SignedInAccount
 import social.aloha.core.network.endpoints.InterestEndpoints
 
 /**
- * The hashtags Nextcloud Social has learnt the reader cares about, from what they read: seen, added
- * to, pinned so they stay, taken out, or all forgotten; and whether it learns at all. A server
- * without interests answers 404, which the screen takes as nothing to show. Every change answers
- * with the whole state as it then is.
+ * The hashtags Nextcloud Social has learnt the reader cares about, from what they read and the
+ * hashtags they follow: seen, or all forgotten; and whether it learns at all. The server alone
+ * decides which they are. A server without interests answers 404, which the screen takes as nothing
+ * to show. Every change answers with the whole state as it then is.
  */
 @Singleton
 public class Interests @Inject constructor(private val clients: ClientFactory) {
     public suspend fun state(reader: SignedInAccount): Answer<InterestsState> =
         clients.answer(reader, InterestEndpoints.state())
 
-    public suspend fun add(reader: SignedInAccount, tag: String): Answer<InterestsState> =
-        clients.answer(reader, InterestEndpoints.add(tag.trim().removePrefix("#")))
-
-    public suspend fun remove(reader: SignedInAccount, tag: String): Answer<InterestsState> =
-        clients.answer(reader, InterestEndpoints.remove(tag))
-
-    /** Pins [tag] so learning never drops it, or lets it go again unless [pin]. */
-    public suspend fun pin(reader: SignedInAccount, tag: String, pin: Boolean): Answer<InterestsState> =
-        clients.answer(reader, if (pin) InterestEndpoints.pin(tag) else InterestEndpoints.unpin(tag))
-
-    /** Forgets everything learnt; what was pinned goes too. */
+    /** Forgets everything learnt. */
     public suspend fun reset(reader: SignedInAccount): Answer<InterestsState> =
         clients.answer(reader, InterestEndpoints.reset())
 

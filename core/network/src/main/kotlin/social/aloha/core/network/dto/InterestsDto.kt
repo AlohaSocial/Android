@@ -54,7 +54,6 @@ internal data class InterestTagDto(
     @Serializable(with = LenientTextSerializer::class) val tag: String? = null,
     @Serializable(with = LenientTextSerializer::class) val name: String? = null,
     @Serializable(with = OptionalDoubleSerializer::class) val score: Double? = null,
-    @Serializable(with = LenientBoolSerializer::class) val pinned: Boolean = false,
 )
 
 internal fun InterestsStateDto.toDomain(): InterestsState = InterestsState(
@@ -64,7 +63,7 @@ internal fun InterestsStateDto.toDomain(): InterestsState = InterestsState(
     thin = thin,
 )
 
-internal fun InterestTagDto.toDomain(): InterestTag = InterestTag(tag ?: name.orEmpty(), score ?: 0.0, pinned)
+internal fun InterestTagDto.toDomain(): InterestTag = InterestTag(tag ?: name.orEmpty(), score ?: 0.0)
 
 /** A feed's home page arrives as `site_url` or `link`, its count as `entry_count` or `entries`. */
 @Serializable
