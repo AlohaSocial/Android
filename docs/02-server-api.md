@@ -6,8 +6,9 @@ This is the Apple app's specification, carried over as the product contract for 
 
 | Topic | Android |
 |---|---|
+| Unread count | Before 0.26.276 v2 `notifications/unread_count` counted the groups among the newest 50 notifications and ignored the marker; from then on it counts the groups past it and takes `types[]`, `exclude_types[]`, `account_id` and `grouped_types[]`. v1 counted past the marker all along, so the poll asks v1 below 0.26.276. |
 | Credentials | A Social OAuth token, or a Nextcloud app password over HTTP Basic with `OCS-APIRequest: true`; the second also reaches the held posts and account deletion, and before 0.26.220 memories, statistics, channels, the exports and the authorized apps, which take either from then on. |
-| Caching | Nextcloud Social 0.26.97 sends no `ETag` on the polling routes (`Cache-Control: no-store`). |
+| Caching | Nextcloud Social answers `ETag` and `304` on the head of the home timeline, v1 `notifications/unread_count`, the instance, custom emoji, lists, followed tags and trends, and since 0.26.276 also on v2 `notifications/unread_count`, `conversations/unread_count` and `notifications/policy`; the HTTP cache revalidates them. |
 | Boosts | `reblog` is always `null`; a boost is not visible as a boost. |
 | Media | `POST /api/v2/media` answers 200 synchronously; `focus` is stored; `hls_url` and video `meta` are empty without ffmpeg on the server. Since 0.26.123 `image_size_limit` and `video_size_limit` are capped at what PHP accepts, which the composer's pre-flight checks against, and a refused upload says why: a `422` for a file too large (naming the limit) or an interrupted upload, which the attachment card shows; a `500` naming a server problem, retried like any server error. |
 | Pagination | `Link` headers point at the app path even through the root rules; `limit=0` answers 400. `min_id` answers with the posts immediately above the anchor and `since_id` with the newest above it, as on Mastodon, so a refresh asks with `since_id` and a full page leaves a gap between it and the cache. |

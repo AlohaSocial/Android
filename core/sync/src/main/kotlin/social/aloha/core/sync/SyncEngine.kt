@@ -202,7 +202,7 @@ public class SyncEngine @Inject internal constructor(
         return locks.getOrPut(account.id) { Mutex() }.withLock {
             lastPoll[account.id] = clock.millis()
             val request = NotificationEndpoints.unreadCount(
-                account.capabilities.groupedNotifications,
+                account.capabilities.groupedUnreadCount,
                 account.capabilities.allNotificationTypes,
             )
             when (val answer = clients.answer(account, request)) {
