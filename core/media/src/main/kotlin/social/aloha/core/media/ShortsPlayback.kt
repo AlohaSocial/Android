@@ -95,11 +95,21 @@ public class ShortsPlayback(private val context: Context) {
         preload.invalidate()
     }
 
-    /** Plays short [index], from what was loaded ahead where it was. */
+    /**
+     * Plays short [index], from what was loaded ahead where it was. The short already playing goes on where
+     * it is, though the shorts above it changed and moved it to another index.
+     */
     public fun show(index: Int, muted: Boolean) {
         val short = items.getOrNull(index) ?: return
         val item = mediaItems[short.id] ?: return
-        if (current == index && player.currentMediaItem?.mediaId == short.id) return
+        if (player.currentMediaItem?.mediaId == short.id) {
+            if (current != index) {
+                current = index
+                preload.setCurrentPlayingIndex(index)
+                preload.invalidate()
+            }
+            return
+        }
         current = index
         rung = 0
         preload.setCurrentPlayingIndex(index)

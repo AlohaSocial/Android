@@ -282,7 +282,7 @@ fun AlohaApp(
         HomeLinks,
         accountButton: @Composable () -> Unit,
     ) -> Unit = { feed, navigation, links, button -> ModeTimeline(feed, navigation, links, button) },
-    nowPlaying: @Composable (onOpen: (statusId: String) -> Unit) -> Unit = { MiniPlayer(onOpen = it) },
+    nowPlaying: @Composable (navigation: StatusNavigation) -> Unit = { MiniPlayer(it) },
 ) {
     val backStack = rememberNavBackStack(HomeKey)
     // a detail opened from a destination keeps that destination selected
@@ -772,7 +772,7 @@ fun AlohaApp(
                     )
                 }
                 // the sound playing, docked above the navigation wherever the reader goes
-                nowPlaying(statusNavigation::openThread)
+                nowPlaying(statusNavigation)
             }
         }
         OpenViewer(viewing, statusNavigation) { viewing = null }
@@ -814,9 +814,9 @@ private fun ModeTimeline(
     accountButton: @Composable () -> Unit,
 ) {
     // Shorts is a pager of its own rather than a timeline of rows
-    if (feed.mode == FeedMode.Shorts) return ShortsRoute(navigation, accountButton)
+    if (feed.mode == FeedMode.Shorts) return ShortsRoute(navigation, accountButton, allAccounts = links.allAccounts)
     // and Audio a list to play from
-    if (feed.mode == FeedMode.Audio) return AudioRoute(navigation, accountButton)
+    if (feed.mode == FeedMode.Audio) return AudioRoute(navigation, accountButton, allAccounts = links.allAccounts)
     // Home is the reader's pinned feeds, a page each
     if (feed == TimelineFeed.Home) {
         HomeRoute(

@@ -15,6 +15,7 @@ import okio.Buffer
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertSame
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -80,6 +81,20 @@ class ShortsPlaybackTest {
         ShadowLooper.idleMainLooper(1, TimeUnit.SECONDS)
         assertEquals(setOf("s3", "s4", "s5", "s6", "s7"), clips.asked.toSet())
         assertEquals(0f, playback.player.volume)
+    }
+
+    @Test
+    fun `the short playing goes on where it is when newer shorts arrive above it`() {
+        val shorts = (0 until 3).map {
+            ShortSource("s$it", listOf(VideoSource(server.url("/s$it.mp4").toString(), hls = false)))
+        }
+        playback.setItems(shorts)
+        playback.show(0, muted = true)
+        val playing = playback.player.currentMediaItem
+        val newer = ShortSource("n", listOf(VideoSource(server.url("/n.mp4").toString(), hls = false)))
+        playback.setItems(listOf(newer) + shorts)
+        playback.show(1, muted = true)
+        assertSame(playing, playback.player.currentMediaItem)
     }
 
     private companion object {

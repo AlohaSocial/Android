@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -39,6 +40,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.paneTitle
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
@@ -50,21 +52,35 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.model.TimelineSource
+import social.aloha.core.ui.SeenByMark
 import social.aloha.core.ui.StatusNavigation
+import social.aloha.core.ui.openPost
+import social.aloha.core.ui.seenByText
 import social.aloha.core.ui.sourceName
 
-/** Audio as a mode: its posts with sound, each played from the list, the rest of the row opening the post. */
+/**
+ * Audio as a mode: its posts with sound, each played from the list, the rest of the row opening the post.
+ * With [allAccounts], every account's posts show together.
+ */
 @Composable
 public fun AudioRoute(
     navigation: StatusNavigation,
     accountButton: @Composable () -> Unit,
     modifier: Modifier = Modifier,
+    allAccounts: Boolean = false,
 ) {
-    val viewModel = hiltViewModel<AudioViewModel>()
+    val viewModel = hiltViewModel<AudioViewModel, AudioViewModel.Factory>(
+        key = if (allAccounts) "audio-all" else "audio",
+    ) { it.create(allAccounts) }
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     AudioScreen(
         state,
-        AudioScreenActions(viewModel::onPlay, navigation::openThread, viewModel::onSource, viewModel::onNearEnd),
+        AudioScreenActions(
+            viewModel::onPlay,
+            { navigation.openPost(it.statusId, it.link) },
+            viewModel::onSource,
+            viewModel::onNearEnd,
+        ),
         accountButton,
         modifier,
     )
@@ -137,10 +153,24 @@ private fun Sources(source: TimelineSource, sources: List<TimelineSource>, onSou
 @Composable
 private fun AudioRow(item: AudioItem, playing: Boolean, current: Boolean, actions: AudioScreenActions) {
     val id = item.statusId
+    val seenBy = seenByText(item.seenBy)
     ListItem(
         headlineContent = { Text(item.title, maxLines = 2, overflow = TextOverflow.Ellipsis) },
         supportingContent = { Text(item.artist, maxLines = 1, overflow = TextOverflow.Ellipsis) },
-        leadingContent = { Artwork(item.artwork, Modifier.size(ARTWORK).clip(RoundedCornerShape(CORNER))) },
+        leadingContent = {
+            // which of the reader's accounts see the post sits on its picture, at its corner
+            Box {
+                Artwork(item.artwork, Modifier.size(ARTWORK).clip(RoundedCornerShape(CORNER)))
+                if (seenBy != null) {
+                    SeenByMark(
+                        item.seenBy,
+                        SEEN_BY,
+                        Modifier.align(Alignment.BottomEnd).offset(x = SEEN_BY_OUT, y = SEEN_BY_OUT)
+                            .semantics { contentDescription = seenBy },
+                    )
+                }
+            }
+        },
         trailingContent = {
             FilledTonalIconButton(onClick = { actions.onPlay(id) }) {
                 if (playing) {
@@ -151,14 +181,14 @@ private fun AudioRow(item: AudioItem, playing: Boolean, current: Boolean, action
                 }
             }
         },
-        modifier = Modifier.clickable { actions.onOpen(id) },
+        modifier = Modifier.clickable { actions.onOpen(item) },
     )
 }
 
 /** What the Audio list does: play [onPlay] or open [onOpen] a post, switch [onSource], page on [onNearEnd]. */
 internal class AudioScreenActions(
     val onPlay: (String) -> Unit,
-    val onOpen: (String) -> Unit,
+    val onOpen: (AudioItem) -> Unit,
     val onSource: (TimelineSource) -> Unit,
     val onNearEnd: () -> Unit,
 )
@@ -181,4 +211,6 @@ internal fun Artwork(url: String?, modifier: Modifier = Modifier) {
 
 private val ARTWORK = 56.dp
 private val CORNER = 8.dp
+private val SEEN_BY = 20.dp
+private val SEEN_BY_OUT = 4.dp
 private const val NEAR_END = 5

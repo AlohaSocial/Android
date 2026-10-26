@@ -22,7 +22,7 @@ How the Android app is put together: its modules and the rules between them, the
 | `:core:sync` | WorkManager workers, polling (`SyncEngine`), push, raised notifications, upload notifications |
 | `:core:media` | Coil image loading, the shared Media3 player session service, the source ladder (`LadderPlayback`) and the shorts' preloading player (`ShortsPlayback`) |
 | `:core:designsystem` | Theme, colours, type, `@AlohaPreviews`, the QR code (`QrCode`) |
-| `:core:ui` | Shared composables: the status card, `TroubleStrip`, settings sections |
+| `:core:ui` | Shared composables: the status card, `TroubleStrip`, settings sections; how a row another account holds is shown and acted on when every account shows together |
 | `:core:navigation` | Navigation 3 keys (`TopLevelKeys.kt`, `DetailKeys.kt`), link routing, app intents |
 | `:core:intelligence` | The on-device features: availability, the open picture reader (LiteRT, Android's face detector), the model as an optional binding, `EntityShield`, alt-text assembly, prompts; see [10-intelligence.md](10-intelligence.md) |
 | `:core:testing` | `MockSocialServer` and the fixture corpus, for every module's tests; see [12-conventions-quality.md](12-conventions-quality.md) |

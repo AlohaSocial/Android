@@ -1,16 +1,7 @@
 // SPDX-FileCopyrightText: 2026 Aloha Social contributors
 // SPDX-License-Identifier: MIT
 
-package social.aloha.feature.timeline
-
-import social.aloha.core.model.TimelineSource
-import social.aloha.core.ui.ActAs
-import social.aloha.core.ui.PostAct
-import social.aloha.core.ui.RichLinkTarget
-import social.aloha.core.ui.StatusActions
-import social.aloha.core.ui.StatusMenuItem
-import social.aloha.core.ui.StatusNavigation
-import social.aloha.core.ui.StatusRowUi
+package social.aloha.core.ui
 
 /**
  * A post read from another server, whose ids there mean nothing on the reader's own: it opens by its
@@ -19,7 +10,7 @@ import social.aloha.core.ui.StatusRowUi
  * is voted in, and a post reacted to, where it opens; its menu shares it and opens it in the browser,
  * nothing that asks the reader's server about it. Its author opens by their handle.
  */
-internal class Elsewhere(
+public class Elsewhere(
     private val base: StatusActions,
     private val actAs: ActAs?,
     private val navigation: () -> StatusNavigation,
@@ -36,32 +27,23 @@ internal class Elsewhere(
         urlOf(statusId)?.let(navigation()::openWeb)
     }
 
-    override fun onVote(row: StatusRowUi, choices: List<Int>) = onOpen(row.statusId)
+    override fun onVote(row: StatusRowUi, choices: List<Int>): Unit = onOpen(row.statusId)
 
-    override fun onReact(row: StatusRowUi, name: String, add: Boolean) = onOpen(row.statusId)
+    override fun onReact(row: StatusRowUi, name: String, add: Boolean): Unit = onOpen(row.statusId)
 
-    override fun onReply(row: StatusRowUi) = act(row, PostAct.Reply)
+    override fun onReply(row: StatusRowUi): Unit = act(row, PostAct.Reply)
 
-    override fun onBoost(row: StatusRowUi) = act(row, PostAct.Boost())
+    override fun onBoost(row: StatusRowUi): Unit = act(row, PostAct.Boost())
 
-    override fun onFavourite(row: StatusRowUi) = act(row, PostAct.Favourite)
+    override fun onFavourite(row: StatusRowUi): Unit = act(row, PostAct.Favourite)
 
-    override fun onBookmark(row: StatusRowUi) = act(row, PostAct.Bookmark)
+    override fun onBookmark(row: StatusRowUi): Unit = act(row, PostAct.Bookmark)
 
-    override fun onProfile(accountId: String) =
-        navigation().openProfile(null, accountId.removePrefix(TimelineSource.Remote.ID_PREFIX))
+    override fun onProfile(accountId: String): Unit = navigation().openAuthor(accountId)
 
     /** The media viewer on [statusId]'s [index]th attachment as [accountId], which holds the post. */
-    fun openMediaAs(accountId: String, statusId: String, index: Int) =
+    public fun openMediaAs(accountId: String, statusId: String, index: Int): Unit =
         navigation().openMedia(statusId, index, accountId)
-
-    // someone the post names under another server's name opens by their handle, like its author
-    override fun onLink(target: RichLinkTarget) =
-        if (target is RichLinkTarget.Mention && target.accountId?.startsWith(TimelineSource.Remote.ID_PREFIX) == true) {
-            navigation().openProfile(null, target.acct)
-        } else {
-            base.onLink(target)
-        }
 
     private fun act(row: StatusRowUi, act: PostAct) {
         val url = row.url ?: return
@@ -77,39 +59,37 @@ internal class Elsewhere(
  * the post's id there), with no server asked. Boosting, favouriting and bookmarking stay with [base], whose
  * screen acts as the account the post belongs to, on its own ids there.
  */
-internal class MergedActions(
+public class MergedActions(
     private val base: StatusActions,
     private val elsewhere: Elsewhere,
     private val heldAs: (statusId: String) -> Pair<String, String>? = { null },
 ) : StatusActions by base {
-    private fun of(id: String): StatusActions = if (id.startsWith(TimelineSource.Remote.ID_PREFIX)) elsewhere else base
+    private fun of(id: String): StatusActions = if (isElsewhere(id)) elsewhere else base
 
-    private fun StatusRowUi.held() = statusId.startsWith(TimelineSource.Remote.ID_PREFIX)
+    private fun StatusRowUi.held() = isElsewhere(statusId)
 
     override fun menuFor(row: StatusRowUi): Set<StatusMenuItem> = of(row.statusId).menuFor(row)
 
-    override fun onOpen(statusId: String) = of(statusId).onOpen(statusId)
+    override fun onOpen(statusId: String): Unit = of(statusId).onOpen(statusId)
 
-    override fun onLink(target: RichLinkTarget) = elsewhere.onLink(target)
-
-    override fun onProfile(accountId: String) = of(accountId).onProfile(accountId)
+    override fun onProfile(accountId: String): Unit = of(accountId).onProfile(accountId)
 
     override fun onMedia(row: StatusRowUi, index: Int) {
         if (!row.held()) return base.onMedia(row, index)
         heldAs(row.statusId)?.let { (account, id) -> elsewhere.openMediaAs(account, id, index) } ?: onOpen(row.statusId)
     }
 
-    override fun onQuote(row: StatusRowUi) = if (row.held()) onOpen(row.statusId) else base.onQuote(row)
+    override fun onQuote(row: StatusRowUi): Unit = if (row.held()) onOpen(row.statusId) else base.onQuote(row)
 
-    override fun onReply(row: StatusRowUi) = of(row.statusId).onReply(row)
+    override fun onReply(row: StatusRowUi): Unit = of(row.statusId).onReply(row)
 
-    override fun onVote(row: StatusRowUi, choices: List<Int>) = of(row.statusId).onVote(row, choices)
+    override fun onVote(row: StatusRowUi, choices: List<Int>): Unit = of(row.statusId).onVote(row, choices)
 
-    override fun onReact(row: StatusRowUi, name: String, add: Boolean) = of(row.statusId).onReact(row, name, add)
+    override fun onReact(row: StatusRowUi, name: String, add: Boolean): Unit = of(row.statusId).onReact(row, name, add)
 
-    override fun onMenu(row: StatusRowUi, item: StatusMenuItem) = of(row.statusId).onMenu(row, item)
+    override fun onMenu(row: StatusRowUi, item: StatusMenuItem): Unit = of(row.statusId).onMenu(row, item)
 
-    override fun onHistory(row: StatusRowUi) = if (row.held()) onOpen(row.statusId) else base.onHistory(row)
+    override fun onHistory(row: StatusRowUi): Unit = if (row.held()) onOpen(row.statusId) else base.onHistory(row)
 }
 
 private val MENU = setOf(StatusMenuItem.Share, StatusMenuItem.CopyLink, StatusMenuItem.OpenInBrowser)

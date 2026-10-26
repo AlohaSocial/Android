@@ -19,7 +19,8 @@ import social.aloha.core.model.Status
 import social.aloha.core.model.TimelineSource
 import social.aloha.core.ui.RichTextColors
 import social.aloha.core.ui.SeenBy
-import social.aloha.core.ui.StatusRowUi
+import social.aloha.core.ui.heldBy
+import social.aloha.core.ui.namingFrom
 
 /** How one account reads its home timeline, and the colour it is marked in. */
 internal data class AccountLook(val settings: AccountSettings, val filters: List<Filter>, val colour: Int?)
@@ -124,48 +125,4 @@ internal class MergedRows @Inject constructor(private val builders: Provider<Tim
         return builder(account.id).build(account, source, stored, shape)
             .filterIsInstance<TimelineItem.Post>().associateBy { it.row.rowId }
     }
-}
-
-/** [acct], a handle on [host] or elsewhere, in full. */
-private fun fullHandle(acct: String, host: String): String = acct.removePrefix("@").let {
-    if ('@' in
-        it
-    ) {
-        it
-    } else {
-        "$it@$host"
-    }
-}
-
-/**
- * [this] post, as shown by an account on [host] other than the one in use: the people it mentions under that
- * server's name with their handles in full, so a tap on one opens them by handle, never by an id of [host]'s
- * taken for one on the server in use. Shown only, never stored.
- */
-internal fun Status.namingFrom(host: String): Status = copy(
-    mentions = mentions.map {
-        val full = fullHandle(it.acct, host)
-        it.copy(id = TimelineSource.Remote.ID_PREFIX + full, acct = full)
-    },
-    reblog = reblog?.namingFrom(host),
-)
-
-/**
- * [this] row as an account other than the one in use holds it, on [host]: its ids, and its author's, under
- * that server's name, as a post read from another server is shown, and its author's handle in full. It is
- * never the reader's own here: what only its own account can do to it is done there.
- */
-internal fun StatusRowUi.heldBy(host: String): StatusRowUi {
-    val prefix = TimelineSource.Remote.ID_PREFIX + host + ":"
-    fun StatusRowUi.AuthorUi.there(): StatusRowUi.AuthorUi {
-        val full = fullHandle(handle, host)
-        return copy(id = TimelineSource.Remote.ID_PREFIX + full, handle = "@$full")
-    }
-    return copy(
-        rowId = prefix + rowId,
-        statusId = prefix + statusId,
-        author = author.there(),
-        quote = quote?.let { it.copy(statusId = prefix + it.statusId, author = it.author.there()) },
-        isOwn = false,
-    )
 }

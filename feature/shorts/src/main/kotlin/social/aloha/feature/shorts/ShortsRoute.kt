@@ -47,21 +47,27 @@ import social.aloha.core.ui.R as UiR
 import social.aloha.core.ui.RichTextColors
 import social.aloha.core.ui.StatusNavigation
 import social.aloha.core.ui.copyLink
+import social.aloha.core.ui.openAuthor
 import social.aloha.core.ui.openLink
+import social.aloha.core.ui.openPost
 import social.aloha.core.ui.shareLink
 import social.aloha.core.ui.sourceName
 
 /**
  * Shorts as a mode: the pager edge to edge, the account button and the choice of source over it. The
- * short at rest plays, looping, muted until the person turns sound on; leaving the app pauses it.
+ * short at rest plays, looping, muted until the person turns sound on; leaving the app pauses it. With
+ * [allAccounts], every account's shorts show together, each acting as the account that holds it.
  */
 @Composable
 public fun ShortsRoute(
     navigation: StatusNavigation,
     accountButton: @Composable () -> Unit,
     modifier: Modifier = Modifier,
+    allAccounts: Boolean = false,
 ) {
-    val viewModel = hiltViewModel<ShortsViewModel>()
+    val viewModel = hiltViewModel<ShortsViewModel, ShortsViewModel.Factory>(
+        key = if (allAccounts) "shorts-all" else "shorts",
+    ) { it.create(allAccounts) }
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val nav by rememberUpdatedState(navigation)
@@ -105,7 +111,7 @@ public fun ShortsRoute(
 
             override fun onBoost(short: ShortUi) = viewModel.onToggle(short.row.statusId, Toggle.Boost)
 
-            override fun onComments(short: ShortUi) = nav.openThread(short.row.statusId)
+            override fun onComments(short: ShortUi) = nav.openPost(short.row.statusId, short.row.url)
 
             override fun onShare(short: ShortUi) {
                 short.row.url?.let { shareLink(context, it) }
@@ -117,7 +123,7 @@ public fun ShortsRoute(
                 scope.launch { snackbars.showSnackbar(copied) }
             }
 
-            override fun onProfile(short: ShortUi) = nav.openProfile(short.row.author.id, null)
+            override fun onProfile(short: ShortUi) = nav.openAuthor(short.row.author.id)
 
             override fun onMuted(muted: Boolean) = viewModel.onMuted(muted)
 

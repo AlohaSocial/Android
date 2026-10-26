@@ -18,7 +18,14 @@ class AudioItemTest {
         val post = StatusSamples.post("<p>Night swim</p><p>recorded at the reef</p>")
             .copy(mediaAttachments = listOf(StatusSamples.image("i1"), sound))
         assertEquals(
-            AudioItem("10", "https://cloud.example/m/a1.mp3", "Night swim", "Alice Example", null),
+            AudioItem(
+                "10",
+                "https://cloud.example/m/a1.mp3",
+                "Night swim",
+                "Alice Example",
+                null,
+                "https://cloud.example/@alice/10",
+            ),
             audioItemOf(post),
         )
     }

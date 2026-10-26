@@ -1,15 +1,16 @@
 // SPDX-FileCopyrightText: 2026 Aloha Social contributors
 // SPDX-License-Identifier: MIT
 
-package social.aloha.feature.timeline
+package social.aloha.core.ui
 
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import social.aloha.core.model.Account
 import social.aloha.core.model.Mention
+import social.aloha.core.model.QuotedStatus
 import social.aloha.core.model.Status
 
-class MergedRowsTest {
+class HeldRowsTest {
     private val author = Account("9", "bob", "bob", displayName = "Bob")
 
     @Test
@@ -25,5 +26,15 @@ class MergedRowsTest {
 
         assertEquals(listOf("carol@two.example", "dan@third.social"), named.map { it.acct })
         assertEquals(listOf("remote:carol@two.example", "remote:dan@third.social"), named.map { it.id })
+    }
+
+    @Test
+    fun `the people a quoted post names on another account's server are named in full too`() {
+        val quoted = Status(id = "1", account = author, mentions = listOf(Mention("12", "carol", "carol")))
+        val post = Status(id = "2", account = author, quote = QuotedStatus("accepted", quoted))
+
+        val named = checkNotNull(post.namingFrom("two.example").quote?.quotedStatus).mentions
+
+        assertEquals(listOf("remote:carol@two.example"), named.map { it.id })
     }
 }
