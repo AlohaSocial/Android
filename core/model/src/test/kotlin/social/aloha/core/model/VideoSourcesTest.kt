@@ -13,8 +13,13 @@ class VideoSourcesTest {
     private fun video(hls: String? = null) =
         MediaAttachment("m", AttachmentKind.Video, url = "https://cloud.example/media/m.mp4", hlsUrl = hls)
 
-    private fun post(local: Boolean?, video: VideoDetails? = null, hls: String? = null) =
-        Status("9", author, mediaAttachments = listOf(video(hls)), local = local, video = video)
+    private fun post(
+        local: Boolean?,
+        video: VideoDetails? = null,
+        hls: String? = null,
+        visibility: Visibility = Visibility.Public,
+    ) = Status("9", author, mediaAttachments = listOf(video(hls)), local = local, video = video)
+        .copy(visibility = visibility)
 
     @Test
     fun `a local video plays its ladder first and its file after`() {
@@ -64,5 +69,15 @@ class VideoSourcesTest {
                 it.language
             },
         )
+    }
+
+    @Test
+    fun `a post not everybody may see offers no captions, which the player could not fetch`() {
+        val caption = VideoCaption("en", "https://cloud.example/media/captions/9/0.vtt")
+        val details = VideoDetails(captions = listOf(caption))
+        val offered = Visibility.entries.filter {
+            VideoSources.captions(post(local = false, video = details, visibility = it), apiBase).isNotEmpty()
+        }
+        assertEquals(listOf(Visibility.Public, Visibility.Unlisted), offered)
     }
 }

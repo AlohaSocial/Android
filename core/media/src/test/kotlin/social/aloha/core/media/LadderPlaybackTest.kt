@@ -4,7 +4,10 @@
 package social.aloha.core.media
 
 import android.content.Context
+import androidx.media3.common.Player
 import androidx.test.core.app.ApplicationProvider
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.TimeUnit
 import mockwebserver3.Dispatcher
@@ -14,6 +17,7 @@ import mockwebserver3.RecordedRequest
 import okio.Buffer
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -23,7 +27,9 @@ import social.aloha.core.model.Account
 import social.aloha.core.model.AttachmentKind
 import social.aloha.core.model.MediaAttachment
 import social.aloha.core.model.Status
+import social.aloha.core.model.VideoCaption
 import social.aloha.core.model.VideoDetails
+import social.aloha.core.model.VideoSource
 import social.aloha.core.model.VideoSources
 
 /** A Nextcloud with no ladder and no proxied playlist for this video: only the file answers. */
@@ -46,6 +52,41 @@ private class NoLadder : Dispatcher() {
 
     companion object {
         const val BYTES = 1024
+    }
+}
+
+/**
+ * Serves two copies of a short, silent WAV and refuses every caption, as the server does for a post the
+ * player may not see.
+ */
+private class CaptionsRefused : Dispatcher() {
+    val asked = CopyOnWriteArrayList<String>()
+
+    override fun dispatch(request: RecordedRequest): MockResponse {
+        val path = request.url.encodedPath
+        asked += path
+        return if (path.endsWith(".wav")) {
+            MockResponse.Builder().code(200).body(Buffer().write(silence())).addHeader("content-type", "audio/wav")
+                .build()
+        } else {
+            MockResponse.Builder().code(404).body("").build()
+        }
+    }
+
+    // a second of 8 kHz, 8-bit mono silence
+    private fun silence(): ByteArray {
+        val rate = 8000
+        val header = ByteBuffer.allocate(WAV_HEADER).order(ByteOrder.LITTLE_ENDIAN)
+            .put("RIFF".toByteArray()).putInt(WAV_HEADER - 8 + rate).put("WAVE".toByteArray())
+            .put("fmt ".toByteArray()).putInt(16).putShort(1).putShort(1).putInt(rate).putInt(rate)
+            .putShort(1).putShort(8)
+            .put("data".toByteArray()).putInt(rate)
+        return header.array() + ByteArray(rate) { SILENT }
+    }
+
+    companion object {
+        const val WAV_HEADER = 44
+        const val SILENT: Byte = -128
     }
 }
 
@@ -109,6 +150,27 @@ class LadderPlaybackTest {
         )
         assertTrue(ladder.current?.url?.endsWith(".mp4") == true)
         assertEquals(0, origin.requestCount)
+    }
+
+    @Test
+    fun `a caption the server refuses leaves the video playing from the same source`() {
+        val refusing = CaptionsRefused()
+        server.dispatcher = refusing
+        val sources = listOf("/first.wav", "/second.wav").map { VideoSource(server.url(it).toString(), hls = false) }
+        val caption = VideoCaption("en", server.url("/media/captions/9/0.vtt").toString())
+        val ladder = LadderPlayback(player, sources, listOf(caption))
+        ladder.start()
+        waitFor { player.playbackState == Player.STATE_READY }
+        player.play()
+        // the reader turns the captions on
+        player.trackSelectionParameters =
+            player.trackSelectionParameters.buildUpon().setPreferredTextLanguage("en").build()
+        waitFor { player.playbackState == Player.STATE_ENDED || "/second.wav" in refusing.asked }
+        assertTrue("/media/captions/9/0.vtt" in refusing.asked)
+        assertEquals(sources.first(), ladder.current)
+        assertTrue("/second.wav" !in refusing.asked)
+        assertEquals(Player.STATE_ENDED, player.playbackState)
+        assertNull(player.playerError)
     }
 }
 
