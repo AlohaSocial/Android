@@ -6,6 +6,10 @@ package social.aloha.core.network.endpoints
 import java.io.File
 import java.time.Instant
 import java.util.Locale
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.jsonPrimitive
 import social.aloha.core.model.Announcement
 import social.aloha.core.model.ContinueWatchingItem
 import social.aloha.core.model.MediaAttachment
@@ -20,7 +24,7 @@ import social.aloha.core.network.Part
 import social.aloha.core.network.QueryItem
 import social.aloha.core.network.decoding.LossyListSerializer
 import social.aloha.core.network.dto.AnnouncementDto
-import social.aloha.core.network.dto.ContinueWatchingItemDto
+import social.aloha.core.network.dto.ContinueWatchingEntry
 import social.aloha.core.network.dto.MediaAttachmentDto
 import social.aloha.core.network.dto.ScheduledStatusDto
 import social.aloha.core.network.dto.StatusDto
@@ -160,8 +164,12 @@ public object MediaEndpoints {
 
 /** Nextcloud Social's watch positions: never federated, never shown to anybody else. */
 public object VideoEndpoints {
-    public fun reportWatched(statusId: String, positionSeconds: Double, durationSeconds: Double): ApiRequest<Unit> =
-        unitRequest(
+    /**
+     * Whether the server holds the place now: Nextcloud Social says `stored: false` where it could not write
+     * it, and answered `[]` before it said either.
+     */
+    public fun reportWatched(statusId: String, positionSeconds: Double, durationSeconds: Double): ApiRequest<Boolean> =
+        request(
             Endpoint(
                 "api/v1/statuses/$statusId/watched",
                 HttpMethod.POST,
@@ -172,7 +180,8 @@ public object VideoEndpoints {
                     ),
                 ),
             ),
-        )
+            JsonElement.serializer(),
+        ) { (it as? JsonObject)?.get("stored")?.jsonPrimitive?.booleanOrNull != false }
 
     public fun forgetWatched(statusId: String): ApiRequest<Unit> =
         unitRequest(Endpoint("api/v1/statuses/$statusId/watched", HttpMethod.DELETE))
@@ -184,7 +193,7 @@ public object VideoEndpoints {
     /** Where the reader got to in the videos they have not finished; an entry that names no post is dropped. */
     public fun continueWatching(limit: Int = Paging.DEFAULT_LIMIT): ApiRequest<List<ContinueWatchingItem>> = request(
         Endpoint("api/v1/videos/continue", query = listOf(Paging.limitItem(limit, CONTINUE_WATCHING_LIMIT))),
-        LossyListSerializer(ContinueWatchingItemDto.serializer()),
+        LossyListSerializer(ContinueWatchingEntry),
     ) { items -> items.mapNotNull { it.toDomain() } }
 
     private const val CONTINUE_WATCHING_LIMIT = 40

@@ -102,9 +102,9 @@ and filtering client-side, over-fetching to fill a page. See
 | `GET /media/hls/{uuid}/master.m3u8` | What `hls_url` points at. Served as `application/vnd.apple.mpegurl`. **404 when no ladder** — that 404 is the signal to play `url` instead. |
 | `GET /media/playlist/{nid}` | HLS playlist for a **federated** PeerTube video, rewritten so every segment is proxied back through the Nextcloud. Use for remote video; never point `AVPlayer` at the origin directly. |
 | `GET /media/stream/{nid}` | Range-capable passthrough of a federated non-HLS video. |
-| `POST /api/v1/statuses/{nid}/watched` | Body `position`, `duration` in seconds. Report playback position. Never federated, never shown to anyone else. A video past 95 % is forgotten, not bookmarked. Rate limit 600/min. |
+| `POST /api/v1/statuses/{nid}/watched` | Body `position`, `duration` in seconds. Report playback position. Never federated, never shown to anyone else. A video past 95 % is forgotten, not bookmarked. Rate limit 600/min. Answers `{"stored": bool}` on builds after 0.26.278 (`[]` before); on `false` the app tells the place again on its next report instead of waiting out the five-second gap. |
 | `DELETE /api/v1/statuses/{nid}/watched` | Remove from continue-watching. |
-| `GET /api/v1/videos/continue` | `limit` (20, max 40). The reader's continue-watching row. Excludes anything under 10 s watched and anything finished. |
+| `GET /api/v1/videos/continue` | `limit` (20, max 40). The reader's continue-watching row. Excludes anything under 10 s watched and anything finished. Nextcloud Social answers each entry as the post itself, with the place in `watch_progress`; up to 0.26.278 without its `account`, so the app fetched every post again, and with it on later builds, which the app takes as it is. |
 
 `GET /media/{uuid}` honours `Range` and always sends `Accept-Ranges: bytes`, so
 seeking works on plain files too. The resized copy of a video is its poster
