@@ -19,8 +19,8 @@ public object AlohaHttp {
     private const val CALL_TIMEOUT_SECONDS = 120L
 
     /**
-     * @param cacheDirectory the HTTP cache. Nextcloud Social sends `no-store` on its polling routes,
-     *   so the cache only helps where a server sends validators; it revalidates by itself then.
+     * @param cacheDirectory the HTTP cache, which revalidates by itself where a server sends validators, as
+     *   Nextcloud Social does on the routes a client polls.
      * @param keyManager presents a client certificate where the person chose one.
      */
     public fun client(

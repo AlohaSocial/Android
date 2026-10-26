@@ -50,4 +50,17 @@ class ReactionsOnStatusTest {
         assertEquals(true, views("nextcloud-social", "0.26.278"))
         assertEquals(false, views("mastodon", "4.5.0"))
     }
+
+    @Test
+    fun `the unread count is asked of v2 where notifications are grouped, on Nextcloud Social from 0,26,276 on`() {
+        fun grouped(name: String, version: String, groups: Boolean = true) =
+            ServerCapabilities.minimal("https://x.test/")
+                .copy(softwareName = name, softwareVersion = version, groupedNotifications = groups)
+                .groupedUnreadCount
+        assertEquals(false, grouped("nextcloud-social", "0.26.275"))
+        assertEquals(true, grouped("nextcloud-social", "0.26.276"))
+        assertEquals(false, grouped("nextcloud-social", "0.26.276", groups = false))
+        assertEquals(true, grouped("mastodon", "4.5.0"))
+        assertEquals(false, grouped("mastodon", "4.5.0", groups = false))
+    }
 }

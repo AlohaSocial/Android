@@ -178,6 +178,15 @@ class SyncEngineTest {
     }
 
     @Test
+    fun `a Social whose v2 count ignored the marker is asked v1, a later one v2`() = runBlocking {
+        fun social(version: String) = ServerCapabilities.minimal(server.url("/").toString())
+            .copy(softwareName = "nextcloud-social", softwareVersion = version, groupedNotifications = true)
+        engine.poll(fixture.signIn(server.url("/"), social("0.26.275"), remoteId = "6"), PollScope.Full)
+        engine.poll(fixture.signIn(server.url("/"), social("0.26.276"), remoteId = "7"), PollScope.Full)
+        assertEquals(listOf("/api/v1/notifications/unread_count", "/api/v2/notifications/unread_count"), counts.asked)
+    }
+
+    @Test
     fun `a listener that could not finish is told again on the next poll, even if the count stays`() = runBlocking {
         answers += listOf(Counts.Answer.Count(2), Counts.Answer.Count(2), Counts.Answer.Count(2))
         val account = fixture.signIn(server.url("/"))

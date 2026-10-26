@@ -101,6 +101,14 @@ public data class ServerCapabilities(
     val realFollowerCounts: Boolean get() = !isNextcloudSocial || atLeast(softwareVersion, REAL_FOLLOWER_COUNTS)
 
     /**
+     * Whether the unread count is asked of v2, which counts groups: where the server groups notifications, but
+     * not on Nextcloud Social before 0.26.276, whose v2 count grouped the newest 50 and ignored the marker. v1
+     * counts past the marker everywhere.
+     */
+    val groupedUnreadCount: Boolean
+        get() = groupedNotifications && (!isNextcloudSocial || atLeast(softwareVersion, GROUPED_UNREAD_COUNT))
+
+    /**
      * The `types[]` a notifications request names to have every kind this app shows. Nextcloud Social leaves
      * its own kinds out of a page asked for with a token unless they are named, so there it names them all;
      * elsewhere none, which means every kind.
@@ -149,6 +157,7 @@ public data class ServerCapabilities(
         private val VIDEO_VIEWS = listOf(0, 26, 278)
         private val ACCOUNT_POSTS_NARROWED = listOf(0, 26, 237)
         private val REAL_FOLLOWER_COUNTS = listOf(0, 26, 241)
+        private val GROUPED_UNREAD_COUNT = listOf(0, 26, 276)
 
         /** Raised whenever detection learns a new field: 1 added the live feeds, 2 the Shorts narrowing. */
         public const val CURRENT_FORMAT: Int = 2
