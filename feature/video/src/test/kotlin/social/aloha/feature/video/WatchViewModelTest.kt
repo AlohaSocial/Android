@@ -102,6 +102,8 @@ class WatchViewModelTest {
             server.url("/"),
             ServerCapabilities.minimal(server.url("/").toString()).copy(watchPositions = true),
         )
+        // the playback stops a video once the active account is another, as a still unread one would be
+        withTimeout(10.seconds) { fixture.accounts.activeAccount.first { it?.id == reader.id } }
         watch = WatchViewModel(
             WatchKey(reader.id, "v1"),
             fixture.accounts,
