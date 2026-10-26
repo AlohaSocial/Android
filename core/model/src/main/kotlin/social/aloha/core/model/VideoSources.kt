@@ -29,12 +29,16 @@ public object VideoSources {
     }
 
     /**
-     * The subtitles a video names that the reader's own server serves. A federated video's captions are
-     * addresses on its origin, which the server does not proxy, so they are left out rather than fetched.
+     * The subtitles a video names that the reader's own server serves, on a post anybody may see. Nextcloud
+     * Social serves a federated video's captions itself from 0.26.278 on; before, they were addresses on its
+     * origin, which are left out rather than fetched. The player asks without the reader's token, which the
+     * server answers with a 404 for a post not everybody may see, so those offer none.
      */
     public fun captions(status: Status, apiBase: String): List<VideoCaption> {
         val home = hostOf(apiBase) ?: return emptyList()
-        return status.displayed.video?.captions.orEmpty().filter { hostOf(it.url) == home }
+        val shown = status.displayed
+        if (shown.visibility != Visibility.Public && shown.visibility != Visibility.Unlisted) return emptyList()
+        return shown.video?.captions.orEmpty().filter { hostOf(it.url) == home }
     }
 
     private fun hostOf(url: String): String? = try {
