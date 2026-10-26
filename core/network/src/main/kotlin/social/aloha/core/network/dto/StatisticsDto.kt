@@ -43,6 +43,26 @@ internal data class StatisticsDto(
     @Serializable(with = LossyListSerializer::class) val languages: List<NamedCountDto> = emptyList(),
     @Serializable(with = LossyListSerializer::class) val domains: List<NamedCountDto> = emptyList(),
     @Serializable(with = LossyListSerializer::class) val hashtags: List<NamedCountDto> = emptyList(),
+    @Serializable(with = StatisticsAudienceOrNull::class) val audience: StatisticsAudienceDto? = null,
+    @Serializable(with = StatisticsReachOrNull::class) val reach: StatisticsReachDto? = null,
+)
+
+@Serializable
+internal data class StatisticsAudienceDto(
+    @Serializable(with = LossyListSerializer::class) val instances: List<ServerCountDto> = emptyList(),
+    @SerialName("starter_pack_joins") @Serializable(with = LenientIntSerializer::class)
+    val starterPackJoins: Int = 0,
+)
+
+@Serializable
+internal data class StatisticsReachDto(
+    @Serializable(with = LossyListSerializer::class) val networks: List<NetworkCountDto> = emptyList(),
+)
+
+@Serializable
+internal data class NetworkCountDto(
+    val network: String,
+    @Serializable(with = LenientIntSerializer::class) val posts: Int = 0,
 )
 
 @Serializable
@@ -113,6 +133,14 @@ internal object StatisticsPartnersOrNull : KSerializer<StatisticsPartnersDto?> b
     StatisticsPartnersDto.serializer(),
 )
 
+internal object StatisticsAudienceOrNull : KSerializer<StatisticsAudienceDto?> by OrNullSerializer(
+    StatisticsAudienceDto.serializer(),
+)
+
+internal object StatisticsReachOrNull : KSerializer<StatisticsReachDto?> by OrNullSerializer(
+    StatisticsReachDto.serializer(),
+)
+
 internal object EngagementSourcesOrNull : KSerializer<EngagementSourcesDto?> by OrNullSerializer(
     EngagementSourcesDto.serializer(),
 )
@@ -143,4 +171,7 @@ internal fun StatisticsDto.toDomain(): AccountStatistics = AccountStatistics(
     languages = languages.map { NamedCount(it.name, it.count) },
     domains = domains.map { NamedCount(it.name, it.count) },
     hashtags = hashtags.map { NamedCount(it.name, it.count) },
+    followerServers = audience?.instances.orEmpty().filter { it.count > 0 }.map { NamedCount(it.host, it.count) },
+    starterPackJoins = audience?.starterPackJoins ?: 0,
+    networksReached = reach?.networks.orEmpty().filter { it.posts > 0 }.map { NamedCount(it.network, it.posts) },
 )

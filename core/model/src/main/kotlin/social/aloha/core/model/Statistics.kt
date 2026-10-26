@@ -44,6 +44,12 @@ public data class AccountStatistics(
     val languages: List<NamedCount> = emptyList(),
     val domains: List<NamedCount> = emptyList(),
     val hashtags: List<NamedCount> = emptyList(),
+    /** The servers the followers are on, the most first; a Bluesky follower's is their PDS. */
+    val followerServers: List<NamedCount> = emptyList(),
+    /** Who followed through one of the account's Bluesky starter packs. */
+    val starterPackJoins: Int = 0,
+    /** The other networks the account's posts also went out on, each with how many posts. */
+    val networksReached: List<NamedCount> = emptyList(),
 )
 
 @Serializable

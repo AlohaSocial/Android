@@ -157,6 +157,7 @@ private fun Sections(statistics: AccountStatistics, handle: String) {
     Hero(statistics, handle)
     Engagement(statistics)
     EngagementSources(statistics)
+    Reach(statistics)
     PostsByMonth(statistics)
     EngagementByMonth(statistics)
     Activity(statistics)
