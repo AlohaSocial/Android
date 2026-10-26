@@ -14,6 +14,7 @@ import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import social.aloha.core.data.AccountRepository
 import social.aloha.core.data.Answer
 import social.aloha.core.data.ClientFactory
+import social.aloha.core.data.map
 import social.aloha.core.data.toAnswer
 import social.aloha.core.database.AccountDao
 import social.aloha.core.datastore.TokenVault
@@ -104,13 +105,16 @@ public class NextcloudConnection @Inject constructor(
 
     /**
      * The key a Web Push registration is made for, where the notifications app pushes to this person;
-     * null where it does not (no `webpush` in its push kinds, `webpush_enabled` unset).
+     * null where it does not (no `webpush` in its push kinds, `webpush_enabled` unset), missed where the
+     * Nextcloud could not be asked.
      */
-    public suspend fun webPushVapid(account: SignedInAccount): String? {
-        val kinds = (pushTypes(account) as? Answer.Got)?.value.orEmpty()
-        if ("webpush" !in kinds) return null
-        return (root(account)?.execute(NextcloudEndpoints.webPushVapid()) as? ApiResult.Success)?.value?.ifEmpty {
-            null
+    public suspend fun webPushVapid(account: SignedInAccount): Answer<String?> = when (val kinds = pushTypes(account)) {
+        is Answer.Missed -> kinds
+
+        is Answer.Got -> if ("webpush" !in kinds.value) {
+            Answer.Got(null)
+        } else {
+            root(account)?.execute(NextcloudEndpoints.webPushVapid()).toAnswer().map { it.ifEmpty { null } }
         }
     }
 

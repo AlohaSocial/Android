@@ -197,7 +197,7 @@ class NextcloudConnectionTest {
         runBlocking {
             val account = signIn()
             connection.await(account, (connection.begin(account) as ConnectStart.Opened).start)
-            assertEquals(Nextcloud.VAPID, connection.webPushVapid(account))
+            assertEquals(Answer.Got(Nextcloud.VAPID), connection.webPushVapid(account))
             assertNull(connection.registerWebPush(account, "https://ntfy.example/up1", "pub", "secret"))
             val registered = nextcloud.bodies.last()
             listOf("endpoint=https%3A%2F%2Fntfy.example%2Fup1", "uaPublicKey=pub", "auth=secret", "appTypes=social")

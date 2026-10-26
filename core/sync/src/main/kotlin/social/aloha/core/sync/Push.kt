@@ -26,6 +26,7 @@ import org.unifiedpush.android.connector.UnifiedPush
 import org.unifiedpush.android.connector.data.PushEndpoint
 import org.unifiedpush.android.connector.data.PushMessage
 import social.aloha.core.data.AccountRepository
+import social.aloha.core.data.Answer
 import social.aloha.core.data.nextcloud.NextcloudConnection
 import social.aloha.core.data.sync.PushSubscriptions
 import social.aloha.core.model.LogArea
@@ -37,11 +38,11 @@ import timber.log.Timber
 public data class Distributor(val packageName: String, val label: String)
 
 /**
- * Push through UnifiedPush: the person picks a distributor, such as ntfy, and each account whose server
- * offers Web Push (a `vapid_key`) registers with it. Where the server offers none, or refuses the
- * distributor's endpoint (Nextcloud Social takes only public HTTPS ones), an account connected to its
- * Nextcloud registers with the Nextcloud's notifications app instead, where that pushes; an account is
- * never pushed to by both. Each registration is named after its account, so a push says whose it is.
+ * Push through UnifiedPush: the person picks a distributor, such as ntfy, and each account connected to
+ * its Nextcloud registers with the Nextcloud's notifications app, where that pushes. Any other account
+ * whose server offers Web Push (a `vapid_key`) and takes the distributor's endpoint (Nextcloud Social
+ * takes only public HTTPS ones) registers with its server; an account is never pushed to by both. Each
+ * registration is named after its account, so a push says whose it is.
  * An account without push is polled as before.
  */
 public class PushRegistrar @Inject constructor(
@@ -90,25 +91,30 @@ public class PushRegistrar @Inject constructor(
     }
 
     /**
-     * With its server where that pushes and takes the distributor's endpoints, else with its Nextcloud
-     * where that pushes.
+     * With its Nextcloud where that pushes, else with its server where that pushes and takes the
+     * distributor's endpoints. The Nextcloud comes first: it pushes while the notification is raised,
+     * Nextcloud Social only from a background job, which waits for the next cron run.
      */
     internal suspend fun register(account: SignedInAccount) {
+        val lookup = if (account.nextcloudConnected) nextcloud.webPushVapid(account) else Answer.Got(null)
         val refused = subscriptions.refused(account.id)
         val server = account.capabilities.webPushVapidKey?.takeIf { it.isNotEmpty() && !refused }
+        if (keepsNextcloud(account, lookup, server)) return
+        val viaNextcloudKey = (lookup as? Answer.Got)?.value
         // the route chosen is confirmed: one competing with it whose removal failed before is asked again
-        val viaNextcloud = server == null
+        val viaNextcloud = viaNextcloudKey != null || server == null
         if (subscriptions.endpoint(if (viaNextcloud) PushInstance.nextcloud(account.id) else account.id) != null) {
             subscribed(account, viaNextcloud)
         }
         when {
+            viaNextcloudKey != null -> register(PushInstance.nextcloud(account.id), viaNextcloudKey)
             server != null -> register(account.id, server)
-
-            account.nextcloudConnected -> nextcloud.webPushVapid(account)?.let {
-                register(PushInstance.nextcloud(account.id), it)
-            }
         }
     }
+
+    /** A Nextcloud not reached keeps the route it has, not the server's; the next registration asks it again. */
+    private suspend fun keepsNextcloud(account: SignedInAccount, lookup: Answer<String?>, server: String?): Boolean =
+        lookup is Answer.Missed && server != null && subscriptions.endpoint(PushInstance.nextcloud(account.id)) != null
 
     private fun register(instance: String, vapid: String) {
         try {
