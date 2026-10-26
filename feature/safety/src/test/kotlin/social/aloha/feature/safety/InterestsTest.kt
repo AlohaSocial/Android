@@ -7,7 +7,6 @@ import android.app.Application
 import android.content.Context
 import androidx.compose.ui.test.junit4.accessibility.enableAccessibilityChecks
 import androidx.compose.ui.test.junit4.v2.createComposeRule
-import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
@@ -51,18 +50,6 @@ class InterestsTest {
     private val asked = mutableListOf<String>()
 
     private val actions = object : InterestsActions {
-        override fun onAdd(tag: String) {
-            asked += "add:$tag"
-        }
-
-        override fun onRemove(tag: String) {
-            asked += "remove:$tag"
-        }
-
-        override fun onPin(tag: String, pin: Boolean) {
-            asked += "pin:$tag:$pin"
-        }
-
         override fun onLearning(learning: Boolean) {
             asked += "learning:$learning"
         }
@@ -80,7 +67,7 @@ class InterestsTest {
 
     private val state = InterestsUiState(
         InterestsState(
-            interests = listOf(InterestTag("surf", pinned = true), InterestTag("nextcloud")),
+            interests = listOf(InterestTag("surf"), InterestTag("nextcloud")),
             candidates = listOf(InterestTag("reef")),
         ),
         loading = false,
@@ -90,16 +77,17 @@ class InterestsTest {
     fun close() = Dispatchers.resetMain()
 
     @Test
-    fun `interests are kept, taken out and added, and learning is paused`() {
+    fun `the interests the server learnt are shown as it decides them, and learning is paused`() {
         compose.enableAccessibilityChecks()
         compose.setContent { AlohaTheme { InterestsScreen(state, actions, {}) } }
         compose.onRoot().tryPerformAccessibilityChecks()
         compose.onRoot().captureRoboImage("src/test/screenshots/interests.png")
-        compose.onNodeWithContentDescription("Keep #nextcloud").performClick()
-        compose.onNodeWithContentDescription("Remove #surf").performClick()
-        compose.onNodeWithText("Pause learning").performClick()
+        compose.onNodeWithText("#surf").assertExists()
         compose.onNodeWithText("#reef").assertExists()
-        assertEquals(listOf("pin:nextcloud:true", "remove:surf", "paused:true"), asked)
+        compose.onNodeWithText("Pause learning").performClick()
+        compose.onNodeWithText("Forget all interests").performClick()
+        compose.onNodeWithText("Forget all interests?").assertExists()
+        assertEquals(listOf("paused:true"), asked)
     }
 
     @Test

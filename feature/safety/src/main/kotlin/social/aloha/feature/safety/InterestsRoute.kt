@@ -4,7 +4,6 @@
 package social.aloha.feature.safety
 
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -15,7 +14,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -47,8 +45,8 @@ import social.aloha.core.navigation.InterestsKey
 import social.aloha.core.ui.SwitchRow
 
 /**
- * The hashtags Nextcloud Social has learnt the reader cares about, and those it is still weighing;
- * each pinned so it stays, or taken out; and whether it learns at all.
+ * The hashtags Nextcloud Social has learnt the reader cares about, and those it is still weighing,
+ * as the server alone decides them; whether it learns at all; and forgetting them all.
  */
 @Composable
 public fun InterestsRoute(key: InterestsKey, onBack: () -> Unit, modifier: Modifier = Modifier) {
@@ -147,9 +145,11 @@ private fun LazyListScope.interestsContent(state: InterestsState, actions: Inter
     }
     heading(R.string.interests_yours)
     if (state.thin) item(key = "thin") { Note(stringResource(R.string.interests_thin)) }
-    items(state.interests, key = { "i:${it.id}" }) { tag -> Interest(tag, actions) }
-    item(key = "add") { AddField(R.string.interests_hashtag, R.string.interests_add, actions::onAdd) }
-    candidates(state.candidates, actions::onAdd)
+    tags(state.interests, "i")
+    if (state.candidates.isNotEmpty()) {
+        heading(R.string.interests_candidates)
+        tags(state.candidates, "c")
+    }
     item(key = "reset") {
         TextButton(onClick = onReset, modifier = Modifier.padding(AlohaSpacing.s)) {
             Text(stringResource(R.string.interests_reset))
@@ -157,37 +157,8 @@ private fun LazyListScope.interestsContent(state: InterestsState, actions: Inter
     }
 }
 
-/** What the server is still weighing, each added with a tap. */
-private fun LazyListScope.candidates(candidates: List<InterestTag>, onAdd: (String) -> Unit) {
-    if (candidates.isEmpty()) return
-    heading(R.string.interests_candidates)
-    items(candidates, key = { "c:${it.id}" }) { tag ->
-        ListItem(
-            headlineContent = { Text("#${tag.tag}") },
-            trailingContent = {
-                TextButton(onClick = { onAdd(tag.tag) }) { Text(stringResource(R.string.interests_add)) }
-            },
-        )
-    }
-}
-
-/** One interest: pinned so learning never drops it, which it says in words too, or not; and taken out. */
-@Composable
-private fun Interest(tag: InterestTag, actions: InterestsActions) {
-    ListItem(
-        headlineContent = { Text("#${tag.tag}") },
-        supportingContent = if (tag.pinned) ({ Text(stringResource(R.string.interests_kept)) }) else null,
-        trailingContent = {
-            Row {
-                IconToggleButton(checked = tag.pinned, onCheckedChange = { actions.onPin(tag.tag, it) }) {
-                    Icon(AlohaIcons.Pinned, stringResource(R.string.interests_pin, tag.tag))
-                }
-                IconButton(onClick = { actions.onRemove(tag.tag) }) {
-                    Icon(AlohaIcons.Remove, stringResource(R.string.interests_remove, tag.tag))
-                }
-            }
-        },
-    )
+private fun LazyListScope.tags(tags: List<InterestTag>, section: String) {
+    items(tags, key = { "$section:${it.id}" }) { tag -> ListItem(headlineContent = { Text("#${tag.tag}") }) }
 }
 
 @Composable

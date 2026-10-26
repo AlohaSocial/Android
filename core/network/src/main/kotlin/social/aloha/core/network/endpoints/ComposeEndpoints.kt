@@ -59,7 +59,12 @@ public object ComposeEndpoints {
 
     /** Edits a known status; it cannot duplicate, so no idempotency key is sent. */
     public fun edit(id: String, draft: StatusPost): ApiRequest<Status> = request(
-        Endpoint("api/v1/statuses/$id", HttpMethod.PUT, body = Body.Form(draft.formItems())),
+        // a warning left out is kept as it was; only an empty one takes it off
+        Endpoint(
+            "api/v1/statuses/$id",
+            HttpMethod.PUT,
+            body = Body.Form(draft.copy(spoilerText = draft.spoilerText.orEmpty()).formItems()),
+        ),
         StatusDto.serializer(),
     ) {
         it.toDomain()

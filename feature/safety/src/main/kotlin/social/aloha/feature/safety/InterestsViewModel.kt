@@ -34,12 +34,6 @@ internal data class InterestsUiState(
 
 /** What the interests screen asks for. */
 internal interface InterestsActions {
-    fun onAdd(tag: String)
-
-    fun onRemove(tag: String)
-
-    fun onPin(tag: String, pin: Boolean)
-
     fun onLearning(learning: Boolean)
 
     fun onPaused(paused: Boolean)
@@ -80,12 +74,6 @@ internal class InterestsViewModel @AssistedInject constructor(
             }
         }
     }
-
-    override fun onAdd(tag: String) = change { interests.add(it, tag) }
-
-    override fun onRemove(tag: String) = change { interests.remove(it, tag) }
-
-    override fun onPin(tag: String, pin: Boolean) = change { interests.pin(it, tag, pin) }
 
     override fun onLearning(learning: Boolean) = change { interests.learn(it, learning) }
 

@@ -138,22 +138,12 @@
     <string name="interests_thin">Still learning: there is little to go on yet.</string>
     <!-- Heading of hashtags the server is still weighing -->
     <string name="interests_candidates">Maybe interesting</string>
-    <!-- Adds a hashtag to the reader's interests -->
-    <string name="interests_add">Add</string>
-    <!-- Label of the field where a hashtag to add is typed -->
-    <string name="interests_hashtag">Hashtag to add</string>
-    <!-- Pins an interest so learning never drops it; %1$s is the hashtag -->
-    <string name="interests_pin">Keep #%1$s</string>
-    <!-- Under an interest pinned so learning never drops it -->
-    <string name="interests_kept">Kept</string>
-    <!-- Removes an interest; %1$s is the hashtag -->
-    <string name="interests_remove">Remove #%1$s</string>
     <!-- Forgets all interests -->
     <string name="interests_reset">Forget all interests</string>
     <!-- Title of the dialog asking before all interests are forgotten -->
     <string name="interests_reset_title">Forget all interests?</string>
     <!-- Body of the dialog asking before all interests are forgotten -->
-    <string name="interests_reset_body">Everything your server learnt and every hashtag you chose or kept goes. It starts learning again from what you read next.</string>
+    <string name="interests_reset_body">Everything your server learnt from your reading goes. Hashtags you follow stay among your interests.</string>
     <!-- Title of the screen listing who the reader blocked and muted, and its entry in Settings -->
     <string name="blocked_title">Muted and blocked</string>
     <!-- Content description of the back button -->

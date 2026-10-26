@@ -256,6 +256,15 @@ class EndpointsTest {
     }
 
     @Test
+    fun `an edit without a content warning says so, which a new post without one need not`() {
+        val post = StatusPost(text = "Hello")
+        val edited = (ComposeEndpoints.edit("9", post).endpoint.body as Body.Form).fields
+        assertEquals("", edited.single { it.name == "spoiler_text" }.value)
+        val posted = (ComposeEndpoints.post(post).endpoint.body as Body.Form).fields
+        assertTrue(posted.none { it.name == "spoiler_text" })
+    }
+
+    @Test
     fun `a poll is dropped when media is attached`() {
         val withMedia = StatusPost(text = "x", mediaIds = listOf("m1"), pollOptions = listOf("a", "b"))
         val names = withMedia.formItems().map { it.name }

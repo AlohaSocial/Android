@@ -29,7 +29,7 @@ public data class InterestSettings(
 
 /** One hashtag the server ranks, with how strongly. */
 @Serializable
-public data class InterestTag(val tag: String, val score: Double = 0.0, val pinned: Boolean = false) {
+public data class InterestTag(val tag: String, val score: Double = 0.0) {
     val id: String get() = tag.lowercase()
 }
 

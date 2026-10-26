@@ -41,26 +41,6 @@ public object InterestEndpoints {
 
     public fun state(): ApiRequest<InterestsState> = state(Endpoint("api/v1/interests"))
 
-    public fun add(tag: String): ApiRequest<InterestsState> =
-        state(Endpoint("api/v1/interests", HttpMethod.POST, body = Body.Form(listOf(QueryItem("tag", tag)))))
-
-    public fun remove(tag: String): ApiRequest<InterestsState> =
-        state(Endpoint("api/v1/interests/$tag", HttpMethod.DELETE))
-
-    public fun move(tag: String, position: Int): ApiRequest<InterestsState> = state(
-        Endpoint(
-            "api/v1/interests/$tag/move",
-            HttpMethod.POST,
-            body = Body.Form(listOf(QueryItem("position", position.toString()))),
-        ),
-    )
-
-    public fun pin(tag: String): ApiRequest<InterestsState> =
-        state(Endpoint("api/v1/interests/$tag/pin", HttpMethod.POST))
-
-    public fun unpin(tag: String): ApiRequest<InterestsState> =
-        state(Endpoint("api/v1/interests/$tag/unpin", HttpMethod.POST))
-
     public fun reset(): ApiRequest<InterestsState> = state(Endpoint("api/v1/interests/reset", HttpMethod.POST))
 
     /**
