@@ -624,6 +624,14 @@
     <string name="statistics_engagement_sources">Where engagement came from</string>
     <!-- Statistics row in "Where engagement came from": the share made by accounts on the reader's own server -->
     <string name="statistics_engagement_local">Your server</string>
+    <!-- Statistics section: who the reader's posts and account reach beyond their own server -->
+    <string name="statistics_reach">Reach</string>
+    <!-- Statistics number in "Reach": accounts that followed the reader through one of their Bluesky starter packs -->
+    <string name="statistics_starter_pack_joins">Joined from your starter packs</string>
+    <!-- Statistics list in "Reach": the servers the reader's followers are on, each with how many followers -->
+    <string name="statistics_follower_servers">Followers by server</string>
+    <!-- Statistics list in "Reach": other networks, such as Bluesky, the reader's posts also went out on, each with how many posts -->
+    <string name="statistics_networks_reached">Posts also on</string>
     <!-- Statistics number: responses per post -->
     <string name="statistics_per_post">Per post</string>
     <!-- Statistics number: the responses a post gets, against the number of followers, as a percentage -->

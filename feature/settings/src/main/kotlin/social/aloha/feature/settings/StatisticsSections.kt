@@ -64,6 +64,26 @@ internal fun EngagementSources(statistics: AccountStatistics) {
 }
 
 @Composable
+internal fun Reach(statistics: AccountStatistics) {
+    val joins = statistics.starterPackJoins
+    if (joins < 1 && statistics.followerServers.isEmpty() && statistics.networksReached.isEmpty()) return
+    StatisticsCard(stringResource(R.string.statistics_reach)) {
+        if (joins > 0) Tiles { Tile(whole(joins.toDouble()), stringResource(R.string.statistics_starter_pack_joins)) }
+        listOf(
+            R.string.statistics_follower_servers to statistics.followerServers,
+            R.string.statistics_networks_reached to statistics.networksReached,
+        ).filter { it.second.isNotEmpty() }.forEach { (title, rows) ->
+            Text(
+                stringResource(title),
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            CountRows(rows)
+        }
+    }
+}
+
+@Composable
 internal fun PostsByMonth(statistics: AccountStatistics) {
     val months = statistics.byMonth.sorted.map { it.first }.takeIf { it.isNotEmpty() } ?: return
     val title = stringResource(R.string.statistics_posts_by_month)

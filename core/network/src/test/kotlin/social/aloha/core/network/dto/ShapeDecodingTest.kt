@@ -133,6 +133,26 @@ class ShapeDecodingTest {
     }
 
     @Test
+    fun `statistics read the follower servers, starter-pack joins and the networks reached`() {
+        val body = """{"audience": {"instances": [{"host": "bsky.social", "count": "4"}, {"count": 1},
+            {"host": "z.example", "count": "none"}],
+            "starter_pack_joins": "3"}, "reach": {"followers": 9, "networks": [{"network": "Bluesky", "posts": 12},
+            {"network": "Other", "posts": 0}]}}"""
+        val statistics = StatisticsEndpoints.overview(30).value(body)
+        assertEquals(listOf(NamedCount("bsky.social", 4)), statistics.followerServers)
+        assertEquals(3, statistics.starterPackJoins)
+        assertEquals(listOf(NamedCount("Bluesky", 12)), statistics.networksReached)
+    }
+
+    @Test
+    fun `statistics without the audience or the reach read as none`() {
+        val older = StatisticsEndpoints.overview(30).value("""{"audience": [], "reach": null}""")
+        assertEquals(emptyList<NamedCount>(), older.followerServers)
+        assertEquals(0, older.starterPackJoins)
+        assertEquals(emptyList<NamedCount>(), older.networksReached)
+    }
+
+    @Test
     fun `an authorised app's scopes arrive as an array or one string`() {
         val body = """[{"id": 1, "name": "A", "scopes": "read write"}, {"id": 2, "scopes": ["push"]}]"""
         assertEquals(
