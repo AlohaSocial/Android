@@ -4,8 +4,15 @@
 package social.aloha.core.network.dto
 
 import java.time.Instant
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.JsonDecoder
+import kotlinx.serialization.json.JsonObject
 import social.aloha.core.model.ContinueWatchingItem
 import social.aloha.core.model.MediaCollection
 import social.aloha.core.model.WatchProgress
@@ -45,8 +52,8 @@ internal fun CollectionDto.toDomain(): MediaCollection = MediaCollection(
 
 /**
  * A continue-watching entry: the documented `{status_id, position, duration, status}`, or, as
- * Nextcloud Social answers, the post itself without its `account`, the place in its `watch_progress`.
- * The post is kept only when it decodes as a status.
+ * Nextcloud Social answers, the post itself with the place in its `watch_progress`; without its
+ * `account` up to 0.26.278, with it on later builds. The post is kept only when it decodes as a status.
  */
 @Serializable
 internal data class ContinueWatchingItemDto(
@@ -61,6 +68,27 @@ internal data class ContinueWatchingItemDto(
     @SerialName("media_attachments") @Serializable(with = LossyListSerializer::class)
     val mediaAttachments: List<MediaAttachmentDto> = emptyList(),
 )
+
+/**
+ * Reads an entry, and where it is the post itself with its author, as Nextcloud Social sends it, keeps
+ * that post too, so it needs no second request.
+ */
+internal object ContinueWatchingEntry : KSerializer<ContinueWatchingItemDto> {
+    override val descriptor: SerialDescriptor = ContinueWatchingItemDto.serializer().descriptor
+
+    override fun deserialize(decoder: Decoder): ContinueWatchingItemDto {
+        val json = decoder as? JsonDecoder ?: throw SerializationException("JSON only")
+        val element = json.decodeJsonElement()
+        val item = json.json.decodeFromJsonElement(ContinueWatchingItemDto.serializer(), element)
+        if (item.status != null || item.statusId != null || (element as? JsonObject)?.get("account") == null) {
+            return item
+        }
+        return item.copy(status = json.json.decodeFromJsonElement(StatusOrNull, element))
+    }
+
+    override fun serialize(encoder: Encoder, value: ContinueWatchingItemDto): Unit =
+        throw SerializationException("wire DTOs are decode-only")
+}
 
 /** Null when the entry names no post at all. */
 internal fun ContinueWatchingItemDto.toDomain(): ContinueWatchingItem? {

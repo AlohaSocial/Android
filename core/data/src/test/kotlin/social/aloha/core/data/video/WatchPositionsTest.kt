@@ -49,12 +49,16 @@ private class Watched : Dispatcher() {
     @Volatile var continued = """[{"status_id":"v1","position":120,"duration":600},""" +
         """{"status_id":"v2","position":30,"duration":60,"status":$POST}]"""
 
+    // what a report of the place answers: Nextcloud Social's `[]` before it said whether it stored it
+    @Volatile var placeAnswer = "[]"
+
     override fun dispatch(request: RecordedRequest): MockResponse {
         val path = request.url.encodedPath
         asked += "${request.method} $path ${request.body?.utf8().orEmpty()}".trim()
         return when {
             path.endsWith("/videos/continue") -> json(continued)
             path.endsWith("/statuses/v1") -> json(POST.replace("\"v2\"", "\"v1\""))
+            path.endsWith("/watched") && request.method == "POST" -> json(placeAnswer)
             else -> json("{}")
         }
     }
@@ -62,7 +66,7 @@ private class Watched : Dispatcher() {
     private fun json(body: String) =
         MockResponse.Builder().code(200).body(body).addHeader("content-type", "application/json").build()
 
-    private companion object {
+    companion object {
         const val POST = """{"id":"v2","content":"","account":{"id":"6","username":"alice","acct":"alice"},""" +
             """"media_attachments":[{"id":"m","type":"video","url":"https://media.example/v.mp4"}]}"""
     }
@@ -159,6 +163,36 @@ class WatchPositionsTest {
         val watched = (positions.continueWatching(reader) as Answer.Got).value
         assertEquals(listOf("v1"), watched.map { it.status.id })
         assertEquals(120.0, positions.resumeAt(reader.id, "v1"))
+    }
+
+    @Test
+    fun `a bare post that comes with its author is taken as it is, with no second request`() = runBlocking {
+        answers.continued = "[" + Watched.POST.replace("\"v2\"", "\"v1\"").dropLast(1) +
+            ""","watch_progress":{"position":120,"duration":600}}]"""
+        val reader = reader()
+        val watched = (positions.continueWatching(reader) as Answer.Got).value
+        assertEquals(listOf("v1"), watched.map { it.status.id })
+        assertEquals("alice", watched.single().status.account.username)
+        assertEquals(listOf("GET /api/v1/videos/continue"), answers.asked.filter { it.startsWith("GET") })
+    }
+
+    @Test
+    fun `a place the server could not keep is told again without waiting five seconds`() = runBlocking {
+        val reader = reader()
+        answers.placeAnswer = """{"stored":false}"""
+        positions.report(reader, "v", positionSeconds = 20.0, durationSeconds = 600.0)
+        answers.placeAnswer = """{"stored":true}"""
+        clock.now = clock.now.plusSeconds(1)
+        positions.report(reader, "v", positionSeconds = 21.0, durationSeconds = 600.0)
+        clock.now = clock.now.plusSeconds(1)
+        positions.report(reader, "v", positionSeconds = 22.0, durationSeconds = 600.0)
+        assertEquals(
+            listOf(
+                "POST /api/v1/statuses/v/watched position=20&duration=600",
+                "POST /api/v1/statuses/v/watched position=21&duration=600",
+            ),
+            reports(),
+        )
     }
 
     @Test

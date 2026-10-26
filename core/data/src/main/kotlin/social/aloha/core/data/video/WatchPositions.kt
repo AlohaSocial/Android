@@ -77,9 +77,13 @@ public class WatchPositions @Inject constructor(
         } else {
             dao.set(WatchPositionEntity(reader.id, statusId, positionSeconds, durationSeconds, now))
         }
-        if (reader.capabilities.watchPositions) {
-            clients.answer(reader, VideoEndpoints.reportWatched(statusId, positionSeconds, durationSeconds))
-        }
+        if (reader.capabilities.watchPositions) tell(reader, statusId, positionSeconds, durationSeconds)
+    }
+
+    /** Tells the server; a place it did not keep is told again on the next report, not five seconds later. */
+    private suspend fun tell(reader: SignedInAccount, statusId: String, position: Double, duration: Double) {
+        val stored = clients.answer(reader, VideoEndpoints.reportWatched(statusId, position, duration))
+        if (stored is Answer.Got && !stored.value) reported.remove("${reader.id}|$statusId")
     }
 
     /** Takes [statusId] off the videos to carry on with, here and on the server. */
@@ -90,7 +94,7 @@ public class WatchPositions @Inject constructor(
 
     /**
      * The videos to carry on with, as the server keeps them, each with its post: fetched where the server
-     * sent it without its author, which Nextcloud Social does, and dropped where it is gone.
+     * sent it without its author, as Nextcloud Social did up to 0.26.278, and dropped where it is gone.
      */
     public suspend fun continueWatching(reader: SignedInAccount): Answer<List<PartWatched>> {
         val answer = clients.answer(reader, VideoEndpoints.continueWatching())
