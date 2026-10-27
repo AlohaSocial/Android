@@ -23,6 +23,7 @@ import mockwebserver3.Dispatcher
 import mockwebserver3.MockResponse
 import mockwebserver3.MockWebServer
 import mockwebserver3.RecordedRequest
+import mockwebserver3.SocketEffect
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -44,7 +45,8 @@ import social.aloha.core.ui.RichTextColors
 
 /**
  * A federated PeerTube video by bob, undescribed, with chapters in its description and one comment;
- * bob is not followed until asked; every request is remembered.
+ * bob is not followed until asked; every request is remembered. The playlist never answers, so the
+ * player keeps its first source: an answer it could not read would hand the video to the next one.
  */
 private class VideoServer : Dispatcher() {
     val asked = CopyOnWriteArrayList<String>()
@@ -57,6 +59,7 @@ private class VideoServer : Dispatcher() {
             path.endsWith("/statuses/v1") -> json(VIDEO)
             path.endsWith("/relationships") -> json("""[{"id":"2","following":false}]""")
             path.endsWith("/accounts/2/follow") -> json("""{"id":"2","following":true}""")
+            path.startsWith("/media/playlist/") -> MockResponse.Builder().onResponseStart(SocketEffect.Stall).build()
             else -> json("{}")
         }
     }

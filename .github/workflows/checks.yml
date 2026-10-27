@@ -66,6 +66,13 @@ jobs:
         run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-37.0" "build-tools;37.0.0" > /dev/null
       - name: Unit tests
         run: ./gradlew alohaUnitTests
+      - name: Keep the test results
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: unit-test-results
+          path: "**/build/test-results/**/*.xml"
+          retention-days: 5
 
   screenshot:
     name: Screenshot comparison
@@ -93,4 +100,12 @@ jobs:
         with:
           name: screenshot-diffs
           path: "**/build/outputs/roborazzi"
+          retention-days: 5
+      # the screenshot run executes its modules' unit tests too, so a failure may be one of them
+      - name: Keep the test results
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: screenshot-test-results
+          path: "**/build/test-results/**/*.xml"
           retention-days: 5
