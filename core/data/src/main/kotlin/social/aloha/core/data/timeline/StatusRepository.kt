@@ -230,4 +230,7 @@ private fun Status.keeping(toggled: Status): Status = copy(
     bookmarked = toggled.bookmarked,
     pinned = toggled.pinned,
     muted = toggled.muted,
+    disliked = toggled.disliked,
+    dislikesCount = toggled.dislikesCount,
+    video = video?.let { video -> toggled.video?.let { video.copy(dislikes = it.dislikes) } ?: video },
 )

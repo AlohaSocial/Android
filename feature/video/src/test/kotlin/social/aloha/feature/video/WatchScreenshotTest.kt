@@ -113,7 +113,7 @@ class WatchScreenshotTest {
     private val none = WatchScreenActions({}, {}, {}, {}, {}, {})
 
     @Composable
-    private fun Watch(tabletop: Boolean) {
+    private fun Watch(tabletop: Boolean, disliked: Boolean = false) {
         val (video, comment) = rows()
         WatchScreen(
             WatchUiState(
@@ -122,6 +122,8 @@ class WatchScreenshotTest {
                 chapters = listOf(VideoChapter(0.0, "Start"), VideoChapter(90.0, "The harbour")),
                 comments = listOf(comment),
                 following = false,
+                canDislike = disliked,
+                disliked = disliked,
                 loading = false,
             ),
             StatusSamples.NOW,
@@ -143,6 +145,9 @@ class WatchScreenshotTest {
     fun watchLargeFont() = capture("watch-font200") { Watch(tabletop = false) }
 
     // a foldable half open like a laptop: the video above the fold, the rest scrolling below it
+    @Test
+    fun watchDisliked() = capture("watch-disliked") { Watch(tabletop = false, disliked = true) }
+
     @Test
     fun watchTabletop() = capture("watch-tabletop") { Watch(tabletop = true) }
 

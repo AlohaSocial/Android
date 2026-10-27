@@ -52,6 +52,16 @@ class ReactionsOnStatusTest {
     }
 
     @Test
+    fun `a dislike is offered on Nextcloud Social after 0,26,278 alone`() {
+        fun dislikes(name: String, version: String) =
+            ServerCapabilities.minimal("https://x.test/").copy(softwareName = name, softwareVersion = version).dislikes
+        assertEquals(false, dislikes("nextcloud-social", "0.26.278"))
+        assertEquals(true, dislikes("nextcloud-social", "0.26.279"))
+        assertEquals(true, dislikes("nextcloud-social", "0.27.0"))
+        assertEquals(false, dislikes("mastodon", "4.5.0"))
+    }
+
+    @Test
     fun `the unread count is asked of v2 where notifications are grouped, on Nextcloud Social from 0,26,276 on`() {
         fun grouped(name: String, version: String, groups: Boolean = true) =
             ServerCapabilities.minimal("https://x.test/")

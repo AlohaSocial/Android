@@ -23,6 +23,7 @@ import social.aloha.core.model.ContentKind
 import social.aloha.core.model.MediaAttachment
 import social.aloha.core.model.MediaDimensions
 import social.aloha.core.model.Status
+import social.aloha.core.model.VideoDetails
 import social.aloha.core.testing.StatusSamples
 
 @RunWith(RobolectricTestRunner::class)
@@ -49,6 +50,19 @@ class StatusRepositoryTest {
         clock.now += StatusRepository.TOGGLE_HOLD
         store.saveAll("a", listOf(post))
         assertFalse(store.get("a", post.id)!!.favourited)
+    }
+
+    @Test
+    fun `a page fetched around a dislike cannot take it back`() = runBlocking {
+        val store = StatusRepository(database.statusDao(), SteppedClock())
+        val clip = StatusSamples.post().copy(dislikesCount = 1, video = VideoDetails(views = 12, dislikes = 1))
+        store.saveToggled("a", StatusInteractions.flipped(clip, Toggle.Dislike).first)
+        store.saveAll("a", listOf(clip))
+        val kept = store.get("a", clip.id)!!
+        assertTrue(kept.disliked)
+        assertEquals(2, kept.dislikesCount)
+        assertEquals(2, kept.video?.dislikes)
+        assertEquals(12, kept.video?.views)
     }
 
     @Test

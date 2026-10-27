@@ -8,6 +8,8 @@ import android.os.Looper
 import androidx.compose.ui.graphics.Color
 import androidx.test.core.app.ApplicationProvider
 import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -26,6 +28,7 @@ import mockwebserver3.RecordedRequest
 import mockwebserver3.SocketEffect
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -36,6 +39,7 @@ import social.aloha.core.data.profile.FollowedAuthors
 import social.aloha.core.data.profile.ProfileRepository
 import social.aloha.core.data.thread.ThreadRepository
 import social.aloha.core.data.timeline.StatusInteractions
+import social.aloha.core.data.timeline.Toggle
 import social.aloha.core.html.RichTextCache
 import social.aloha.core.model.ServerCapabilities
 import social.aloha.core.model.SignedInAccount
@@ -51,15 +55,36 @@ import social.aloha.core.ui.RichTextColors
 private class VideoServer : Dispatcher() {
     val asked = CopyOnWriteArrayList<String>()
 
+    /** Whether a dislike is taken; a 422 otherwise, as for a post that is no video. */
+    @Volatile var dislikeTaken = true
+
+    /** Holds a taken dislike's answer until counted down, so the guess can be seen first. */
+    val dislikeHeld = CountDownLatch(1)
+
     override fun dispatch(request: RecordedRequest): MockResponse {
         val path = request.url.encodedPath
         asked += "${request.method} $path"
         return when {
+            path.endsWith("/statuses/v1/dislike") -> if (dislikeTaken) {
+                dislikeHeld.await(10, TimeUnit.SECONDS)
+                json(
+                    VIDEO.replace("\"local\":false", "\"local\":false,\"disliked\":true,\"dislikes_count\":3")
+                        .replace("\"dislikes\":1", "\"dislikes\":3"),
+                )
+            } else {
+                MockResponse.Builder().code(422).body("""{"error":"Only videos can be disliked"}""").build()
+            }
+
             path.endsWith("/statuses/v1/context") -> json("""{"ancestors":[],"descendants":[$COMMENT]}""")
+
             path.endsWith("/statuses/v1") -> json(VIDEO)
+
             path.endsWith("/relationships") -> json("""[{"id":"2","following":false}]""")
+
             path.endsWith("/accounts/2/follow") -> json("""{"id":"2","following":true}""")
+
             path.startsWith("/media/playlist/") -> MockResponse.Builder().onResponseStart(SocketEffect.Stall).build()
+
             else -> json("{}")
         }
     }
@@ -103,7 +128,9 @@ class WatchViewModelTest {
         Dispatchers.setMain(Dispatchers.Unconfined)
         reader = fixture.signIn(
             server.url("/"),
-            ServerCapabilities.minimal(server.url("/").toString()).copy(watchPositions = true),
+            // a Nextcloud Social whose statuses say whose dislike they carry
+            ServerCapabilities.minimal(server.url("/").toString())
+                .copy(watchPositions = true, softwareName = "nextcloud-social", softwareVersion = "0.26.279"),
         )
         // the playback stops a video once the active account is another, as a still unread one would be
         withTimeout(10.seconds) { fixture.accounts.activeAccount.first { it?.id == reader.id } }
@@ -172,5 +199,29 @@ class WatchViewModelTest {
         playback.stop("v1")
         shadowOf(Looper.getMainLooper()).idle()
         assertEquals(0, playback.player.mediaItemCount)
+    }
+
+    @Test
+    fun `a dislike shows at once and stays once the server takes it`() = runBlocking {
+        val state = loaded()
+        assertTrue(state.canDislike)
+        assertFalse(state.disliked)
+        watch.onToggle("v1", Toggle.Dislike)
+        // the guess, while the server's answer is held back
+        assertEquals(2, withTimeout(10.seconds) { watch.uiState.first { it.disliked } }.video?.video?.dislikes)
+        answers.dislikeHeld.countDown()
+        // the server's answer, whose count differs from the guess
+        val kept = withTimeout(10.seconds) { watch.uiState.first { it.video?.video?.dislikes == 3 } }
+        assertTrue(kept.disliked)
+        assertFalse(kept.actionFailed)
+    }
+
+    @Test
+    fun `a dislike the server refuses is taken back, and said`() = runBlocking {
+        answers.dislikeTaken = false
+        loaded()
+        watch.onToggle("v1", Toggle.Dislike)
+        val refused = withTimeout(10.seconds) { watch.uiState.first { it.actionFailed && !it.disliked } }
+        assertEquals(1, refused.video?.video?.dislikes)
     }
 }

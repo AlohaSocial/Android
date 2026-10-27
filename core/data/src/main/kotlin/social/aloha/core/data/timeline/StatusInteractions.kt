@@ -21,7 +21,7 @@ import social.aloha.core.network.endpoints.StatusExtraEndpoints
 import social.aloha.core.network.endpoints.StatusPost
 
 /** A toggle a person can flip on a post. */
-public enum class Toggle { Favourite, Boost, Bookmark, Pin, MuteConversation }
+public enum class Toggle { Favourite, Boost, Bookmark, Pin, MuteConversation, Dislike }
 
 /**
  * What a person does to a post. A toggle shows at once: the stored copy changes first, the server is
@@ -100,9 +100,9 @@ public class StatusInteractions @Inject constructor(
             if (answer is Answer.Got) statuses.delete(account.id, id)
         }
 
-    internal companion object {
+    public companion object {
         /** The post as it will be once the server agrees, and the route that asks it to. */
-        fun flipped(status: Status, toggle: Toggle): Pair<Status, StatusAction> = when (toggle) {
+        public fun flipped(status: Status, toggle: Toggle): Pair<Status, StatusAction> = when (toggle) {
             Toggle.Favourite -> status.copy(
                 favourited = !status.favourited,
                 favouritesCount = counted(status.favouritesCount, !status.favourited),
@@ -123,6 +123,14 @@ public class StatusInteractions @Inject constructor(
 
             Toggle.MuteConversation -> status.copy(muted = !status.muted) to
                 if (status.muted) StatusAction.Unmute else StatusAction.Mute
+
+            // a video post counts its dislikes twice, as the status's and as its video's
+            Toggle.Dislike -> status.copy(
+                disliked = !status.disliked,
+                dislikesCount = counted(status.dislikesCount, !status.disliked),
+                video = status.video?.let { it.copy(dislikes = counted(it.dislikes, !status.disliked)) },
+            ) to
+                if (status.disliked) StatusAction.Undislike else StatusAction.Dislike
         }
 
         private fun counted(count: Int, on: Boolean) = if (on) count + 1 else maxOf(0, count - 1)
