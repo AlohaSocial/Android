@@ -36,6 +36,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import java.time.Instant
 import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.model.Card
@@ -44,6 +45,7 @@ import social.aloha.core.model.SensitiveMediaPolicy
 @Composable
 internal fun StatusBody(
     row: StatusRowUi,
+    now: Instant,
     policy: SensitiveMediaPolicy,
     actions: StatusActions,
     canReact: Boolean,
@@ -72,7 +74,7 @@ internal fun StatusBody(
             LinkCard(card) { openCard(context, card, actions) }
         }
         row.quote?.let { QuoteCard(it) { actions.onOpen(it.statusId) } }
-        row.event?.let { EventCard(it, row.url) }
+        row.event?.let { EventCard(it, row.url, now, actions) }
         StatusExtras(row, canReact, actions)
     }
 }

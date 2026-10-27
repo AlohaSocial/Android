@@ -152,6 +152,8 @@ public data class QuotedStatus(val state: String? = null, val quotedStatus: Stat
  * @property startsAt null where the server could read no start, which leaves nothing to put in a calendar.
  * @property endsAt null where none was given, or none after the start.
  * @property location the venue's name or address; empty where none was given.
+ * @property status what the organiser says of it, where they said something the server knows; a cancelled
+ *   event stays a post, shown as cancelled.
  */
 @Serializable
 public data class StatusEvent(
@@ -159,7 +161,11 @@ public data class StatusEvent(
     @Serializable(with = InstantSerializer::class) val startsAt: Instant? = null,
     @Serializable(with = InstantSerializer::class) val endsAt: Instant? = null,
     val location: String = "",
-)
+    val status: Status? = null,
+) {
+    @Serializable
+    public enum class Status { Confirmed, Tentative, Cancelled }
+}
 
 /** A place a post was tagged with. */
 @Serializable

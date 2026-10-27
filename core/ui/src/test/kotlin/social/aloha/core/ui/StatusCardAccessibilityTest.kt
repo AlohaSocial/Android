@@ -112,6 +112,21 @@ class StatusCardAccessibilityTest {
     }
 
     @Test
+    fun `a cancelled event is read out as cancelled, with no calendar but its page`() {
+        val event = StatusEvent(
+            "Harbour clean-up",
+            Instant.parse("2026-11-02T18:00:00Z"),
+            null,
+            "Pier 4",
+            StatusEvent.Status.Cancelled,
+        )
+        show(StatusSamples.post().copy(url = "https://events.example/e/1", event = event))
+        compose.onNodeWithContentDescription("Harbour clean-up, Cancelled", substring = true).assertExists()
+        assertTrue("Add to calendar" !in labels())
+        assertTrue("Open event page" in labels())
+    }
+
+    @Test
     fun `an event with no start offers no calendar`() {
         show(StatusSamples.post().copy(event = StatusEvent("Someday", null, null, "Pier 4")))
         assertTrue("Add to calendar" !in labels())

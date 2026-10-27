@@ -16,6 +16,7 @@ import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -42,10 +43,12 @@ import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.model.StatusEvent
 
-/** An event post's event: its name, when and where, and a way into the reader's calendar once it has a start. */
+/**
+ * An event post's event: its name, whether it is called off, tentative, going on or over, when and where,
+ * and the ways on: into the reader's calendar while it is still to come, and to its own page.
+ */
 @Composable
-internal fun EventCard(event: StatusEvent, url: String?) {
-    val context = LocalContext.current
+internal fun EventCard(event: StatusEvent, url: String?, now: Instant, actions: StatusActions) {
     Surface(
         shape = MaterialTheme.shapes.medium,
         border = BorderStroke(Dp.Hairline, MaterialTheme.colorScheme.outline),
@@ -56,6 +59,7 @@ internal fun EventCard(event: StatusEvent, url: String?) {
             verticalArrangement = Arrangement.spacedBy(AlohaSpacing.xs),
         ) {
             if (event.name.isNotEmpty()) Text(event.name, style = MaterialTheme.typography.titleSmall)
+            eventState(event, now)?.let { EventState(it, cancelled = event.status == StatusEvent.Status.Cancelled) }
             event.startsAt?.let { start ->
                 // a new time zone does not recreate the activity
                 val zone = ZoneId.systemDefault()
@@ -63,13 +67,76 @@ internal fun EventCard(event: StatusEvent, url: String?) {
                 EventLine(AlohaIcons.Event, time)
             }
             if (event.location.isNotEmpty()) EventLine(AlohaIcons.Place, event.location)
-            if (event.startsAt != null) {
-                TextButton(onClick = { addToCalendar(context, event, url) }) {
-                    Text(stringResource(R.string.status_event_add_to_calendar))
-                }
+            EventButtons(event, url, offersCalendar(event, now), actions)
+        }
+    }
+}
+
+/** Where the event stands, in the error colour once it is called off. */
+@Composable
+private fun EventState(text: String, cancelled: Boolean) {
+    val colors = MaterialTheme.colorScheme
+    Text(
+        text,
+        style = MaterialTheme.typography.labelLarge,
+        color = if (cancelled) colors.error else colors.onSurfaceVariant,
+    )
+}
+
+/** Into the calendar where [calendar] says it is worth it, and to the event's own page where it has a web one. */
+@Composable
+private fun EventButtons(event: StatusEvent, url: String?, calendar: Boolean, actions: StatusActions) {
+    val page = url?.takeIf { isEventPage(it) }
+    if (!calendar && page == null) return
+    val context = LocalContext.current
+    FlowRow {
+        if (calendar) {
+            TextButton(onClick = { addToCalendar(context, event, url) }) {
+                Text(stringResource(R.string.status_event_add_to_calendar))
+            }
+        }
+        page?.let {
+            TextButton(onClick = { actions.onLink(RichLinkTarget.Web(it)) }) {
+                Text(stringResource(R.string.status_event_page))
             }
         }
     }
+}
+
+/** Where an event stands at [now]: still to come, going on, begun with no end given, or over. */
+internal enum class EventPhase { Upcoming, Ongoing, Started, Ended }
+
+internal fun eventPhase(event: StatusEvent, now: Instant): EventPhase? {
+    val start = event.startsAt ?: return null
+    val end = event.endsAt
+    return when {
+        now < start -> EventPhase.Upcoming
+        end == null -> EventPhase.Started
+        now < end -> EventPhase.Ongoing
+        else -> EventPhase.Ended
+    }
+}
+
+/** A calendar entry is worth making for an event that still happens and is not over. */
+internal fun offersCalendar(event: StatusEvent, now: Instant): Boolean =
+    event.status != StatusEvent.Status.Cancelled && eventPhase(event, now).let { it != null && it != EventPhase.Ended }
+
+/** Only a web page is opened as the event's own; anything else in the post's address is left alone. */
+internal fun isEventPage(url: String): Boolean = url.startsWith("https://") || url.startsWith("http://")
+
+/** "Cancelled", or "Tentative" and where it stands once it has begun: what the card says above the time. */
+@Composable
+internal fun eventState(event: StatusEvent, now: Instant): String? {
+    if (event.status == StatusEvent.Status.Cancelled) return stringResource(R.string.status_event_cancelled)
+    val tentative = stringResource(R.string.status_event_tentative)
+        .takeIf { event.status == StatusEvent.Status.Tentative }
+    val phase = when (eventPhase(event, now)) {
+        EventPhase.Ongoing -> stringResource(R.string.status_event_ongoing)
+        EventPhase.Started -> stringResource(R.string.status_event_started)
+        EventPhase.Ended -> stringResource(R.string.status_event_ended)
+        EventPhase.Upcoming, null -> null
+    }
+    return listOfNotNull(tentative, phase).joinToString(" · ").ifEmpty { null }
 }
 
 @Composable
@@ -80,9 +147,10 @@ private fun EventLine(icon: ImageVector, text: String) {
     }
 }
 
-/** The event as a screen reader says it, the row being one stop: its name, when it runs and where. */
-internal fun spokenEvent(event: StatusEvent): String = listOfNotNull(
+/** The event as a screen reader says it, the row being one stop: its name, where it stands, when and where. */
+internal fun spokenEvent(event: StatusEvent, state: String?): String = listOfNotNull(
     event.name.ifEmpty { null },
+    state,
     event.startsAt?.let { eventTime(it, event.endsAt) },
     event.location.ifEmpty { null },
 ).joinToString(", ")

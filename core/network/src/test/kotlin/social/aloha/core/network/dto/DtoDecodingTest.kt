@@ -106,6 +106,17 @@ class DtoDecodingTest {
     }
 
     @Test
+    fun `an event's status is read, and one the app does not know is left out`() {
+        fun eventStatus(value: String): StatusEvent.Status? = decodeStatus(
+            status(""", "event": {"name": "x", "start_time": null, "location": "", "status": "$value"}"""),
+        ).event?.status
+        assertEquals(StatusEvent.Status.Cancelled, eventStatus("cancelled"))
+        assertEquals(StatusEvent.Status.Tentative, eventStatus("tentative"))
+        assertEquals(StatusEvent.Status.Confirmed, eventStatus("confirmed"))
+        assertNull(eventStatus("postponed"))
+    }
+
+    @Test
     fun `media meta from a fork as an empty array leaves the dimensions absent`() {
         val s = decodeStatus(media("""{"id": 5, "type": "video", "url": "https://x/v.mp4", "meta": []}"""))
         val attachment = s.mediaAttachments.single()

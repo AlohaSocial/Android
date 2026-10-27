@@ -90,6 +90,7 @@ internal data class StatusEventDto(
     @SerialName("start_time") @Serializable(with = LenientInstantSerializer::class) val startTime: Instant? = null,
     @SerialName("end_time") @Serializable(with = LenientInstantSerializer::class) val endTime: Instant? = null,
     val location: String = "",
+    val status: String? = null,
 )
 
 /** Who may quote a post, and what quoting it comes to for the reader. */
@@ -157,6 +158,13 @@ internal fun ApplicationSummaryDto.toDomain(): ApplicationSummary = ApplicationS
 internal fun QuotedStatusDto.toDomain(): QuotedStatus = QuotedStatus(state, quotedStatus?.toDomain())
 
 /** Nextcloud Social spells the longitude `long` in place search and `lon` on a status; both are read. */
-internal fun StatusEventDto.toDomain(): StatusEvent = StatusEvent(name, startTime, endTime, location)
+internal fun StatusEventDto.toDomain(): StatusEvent = StatusEvent(
+    name,
+    startTime,
+    endTime,
+    location,
+    // a status the app does not know says nothing it could show
+    StatusEvent.Status.entries.firstOrNull { it.name.equals(status, ignoreCase = true) },
+)
 
 internal fun StatusPlaceDto.toDomain(): StatusPlace = StatusPlace(id, name, country, latitude, longitude ?: long)

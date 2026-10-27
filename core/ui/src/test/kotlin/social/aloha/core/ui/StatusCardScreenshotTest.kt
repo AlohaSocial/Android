@@ -141,7 +141,17 @@ class StatusCardScreenshotTest {
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
         try {
             capture("status-event") {
-                Rows(listOf(StatusSamples.post("<p>Bring gloves, we bring the bags</p>").copy(event = event)))
+                Rows(
+                    listOf(
+                        StatusSamples.post("<p>Bring gloves, we bring the bags</p>")
+                            .copy(url = "https://events.example/e/1", event = event),
+                        StatusSamples.post("<p>Too much swell, see you next month</p>").copy(
+                            id = "e2",
+                            url = "https://events.example/e/2",
+                            event = event.copy(name = "Reef dive", status = StatusEvent.Status.Cancelled),
+                        ),
+                    ),
+                )
             }
         } finally {
             TimeZone.setDefault(zone)

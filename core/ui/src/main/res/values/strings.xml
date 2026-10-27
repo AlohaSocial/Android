@@ -130,6 +130,20 @@
     <string name="status_event_add_to_calendar">Add to calendar</string>
     <!-- Shown instead of opening the calendar when no calendar app is installed -->
     <string name="status_event_no_calendar">No calendar app to add it to</string>
+    <!-- Button under an event post that opens the event's own page, such as on Mobilizon, in the browser -->
+    <string name="status_event_page">Event page</string>
+    <!-- Screen reader action on an event post that opens the event's own page -->
+    <string name="status_event_open_page">Open event page</string>
+    <!-- On an event its organiser called off; the post stays, the event will not happen -->
+    <string name="status_event_cancelled">Cancelled</string>
+    <!-- On an event its organiser has not confirmed yet -->
+    <string name="status_event_tentative">Tentative</string>
+    <!-- On an event that has started and not ended yet -->
+    <string name="status_event_ongoing">Happening now</string>
+    <!-- On an event that has started and whose end was not given, so it may still be going on -->
+    <string name="status_event_started">Started</string>
+    <!-- On an event that is over -->
+    <string name="status_event_ended">Ended</string>
     <!-- Read aloud for a reaction; %1$s is the emoji, %2$d how many reacted with it -->
     <string name="status_reaction">%1$s, %2$d</string>
     <!-- Action: reply to a post -->

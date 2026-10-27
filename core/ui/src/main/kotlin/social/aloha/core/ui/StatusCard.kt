@@ -180,7 +180,7 @@ public fun StatusCard(
         hiding.rehide(row),
     )
     var askedAs by remember { mutableStateOf<AskedAs?>(null) }
-    val customActions = customActions(row, actions, controls) + actAsActions(row) { askedAs = it }
+    val customActions = customActions(row, actions, controls, now) + actAsActions(row) { askedAs = it }
     askedAs?.let { ActAsPicker(row, it) { askedAs = null } }
     val compact = LocalReadingStyle.current.compact
     ProvideLinkRouting(onLink = actions::onLink) {
@@ -237,13 +237,13 @@ private fun CardLayout(
             avatar()
             StatusHeader(row, now, flags.animateEmoji, { actions.onHistory(row) }, controls, Modifier.weight(1f))
         }
-        StatusContent(row, policy, actions, flags, controls)
+        StatusContent(row, now, policy, actions, flags, controls)
     } else {
         Row(horizontalArrangement = Arrangement.spacedBy(AlohaSpacing.s)) {
             avatar()
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(AlohaSpacing.xs)) {
                 StatusHeader(row, now, flags.animateEmoji, { actions.onHistory(row) }, controls)
-                StatusContent(row, policy, actions, flags, controls)
+                StatusContent(row, now, policy, actions, flags, controls)
             }
         }
     }
@@ -273,6 +273,7 @@ private data class Flags(
 @Composable
 private fun StatusContent(
     row: StatusRowUi,
+    now: Instant,
     policy: SensitiveMediaPolicy,
     actions: StatusActions,
     flags: Flags,
@@ -287,6 +288,7 @@ private fun StatusContent(
         if (shown) {
             StatusBody(
                 row,
+                now,
                 policy,
                 actions,
                 flags.canReact,
