@@ -22,6 +22,7 @@ import social.aloha.core.data.sync.PushSubscriptions
 import social.aloha.core.datastore.AccountSettingsStore
 import social.aloha.core.datastore.AppPreferences
 import social.aloha.core.datastore.PushRefusals
+import social.aloha.core.model.ServerCapabilities
 import social.aloha.core.testing.InMemoryDataStore
 import social.aloha.core.testing.SignedInFixture
 
@@ -48,7 +49,20 @@ class PushRegistrarTest {
         MockResponse.Builder().code(200).body("{}").addHeader("content-type", "application/json").build(),
     )
 
-    private suspend fun connected() = fixture.signIn(server.url("/")).also {
+    private fun json(body: String) = server.enqueue(
+        MockResponse.Builder().code(200).body(body).addHeader("content-type", "application/json").build(),
+    )
+
+    private fun nextcloudPushes(vararg kinds: String) {
+        val push = kinds.joinToString(prefix = "[", postfix = "]") { "\"$it\"" }
+        json("""{"ocs":{"data":{"capabilities":{"notifications":{"push":$push}}}}}""")
+        if ("webpush" in kinds) json("""{"ocs":{"data":{"vapid":"$VAPID"}}}""")
+    }
+
+    private suspend fun connected(vapid: String? = null) = fixture.signIn(
+        server.url("/"),
+        capabilities = ServerCapabilities.minimal(server.url("/").toString()).copy(webPushVapidKey = vapid),
+    ).also {
         fixture.connectNextcloud(it.id, "Basic YWxpY2U6YXBwLXBhc3N3b3Jk")
     }.let { fixture.accounts.byId(it.id)!! }
 
@@ -109,13 +123,52 @@ class PushRegistrarTest {
         val account = connected()
         push.rememberEndpoint(PushInstance.nextcloud(account.id), "https://ntfy.lan/up1")
         push.rememberEndpoint(account.id, "https://ntfy.example/up1")
-        ok()
         // the Nextcloud's push types, which end this registration before the distributor is asked
         server.enqueue(MockResponse.Builder().code(404).build())
+        ok()
         registrar.register(account)
+        server.takeRequest(1, TimeUnit.SECONDS)
         val sent = server.takeRequest(1, TimeUnit.SECONDS)!!
         assertEquals("DELETE /api/v1/push/subscription", "${sent.method} ${sent.url.encodedPath}")
         assertNull(push.endpoint(account.id))
+    }
+
+    @Test
+    fun `a Nextcloud that pushes is the route even where the server offers Web Push`() = runBlocking {
+        val account = connected(vapid = VAPID)
+        push.rememberEndpoint(PushInstance.nextcloud(account.id), "https://ntfy.lan/up1")
+        push.rememberEndpoint(account.id, "https://ntfy.example/up1")
+        nextcloudPushes("devices", "webpush")
+        ok()
+        // the distributor's keys live in the AndroidKeyStore, which Robolectric lacks; the route is chosen before
+        runCatching { registrar.register(account) }
+        val sent = List(3) { server.takeRequest(1, TimeUnit.SECONDS)!! }.last()
+        assertEquals("DELETE /api/v1/push/subscription", "${sent.method} ${sent.url.encodedPath}")
+        assertNull(push.endpoint(account.id))
+    }
+
+    @Test
+    fun `a Nextcloud not reached keeps its route, the server's is not taken instead`() = runBlocking {
+        val account = connected(vapid = VAPID)
+        push.rememberEndpoint(PushInstance.nextcloud(account.id), "https://ntfy.lan/up1")
+        push.rememberEndpoint(account.id, "https://ntfy.example/up1")
+        server.enqueue(MockResponse.Builder().code(503).build())
+        registrar.register(account)
+        assertEquals(1, server.requestCount)
+        assertEquals("https://ntfy.lan/up1", push.endpoint(PushInstance.nextcloud(account.id)))
+    }
+
+    @Test
+    fun `a Nextcloud without Web Push leaves the route to the server`() = runBlocking {
+        val account = connected(vapid = VAPID)
+        push.rememberEndpoint(PushInstance.nextcloud(account.id), "https://ntfy.lan/up1")
+        push.rememberEndpoint(account.id, "https://ntfy.example/up1")
+        nextcloudPushes("devices")
+        ok()
+        runCatching { registrar.register(account) }
+        val sent = List(2) { server.takeRequest(1, TimeUnit.SECONDS)!! }.last()
+        assertEquals("DELETE /ocs/v2.php/apps/notifications/api/v2/webpush", "${sent.method} ${sent.url.encodedPath}")
+        assertNull(push.endpoint(PushInstance.nextcloud(account.id)))
     }
 
     @Test
@@ -141,5 +194,9 @@ class PushRegistrarTest {
         assertTrue(push.refused(account.id))
         registrar.choose(null)
         assertFalse(push.refused(account.id))
+    }
+
+    private companion object {
+        const val VAPID = "BNcRdreALRFXTkOOUHK1EtK2wtaz5Ry4YfYCA_0QTpQtUbVlUls0VJXg7A8u-Ts1XbjhazAkj7I99e8QcYP7DkM"
     }
 }
