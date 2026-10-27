@@ -4,22 +4,27 @@
 package social.aloha.core.ui
 
 import android.app.Application
+import android.content.Intent
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.test.core.app.ApplicationProvider
+import java.time.Instant
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import social.aloha.core.designsystem.AlohaTheme
 import social.aloha.core.html.RichTextCache
 import social.aloha.core.model.SensitiveMediaPolicy
 import social.aloha.core.model.Status
+import social.aloha.core.model.StatusEvent
 import social.aloha.core.testing.StatusSamples
 
 /** What a screen reader can do on a card: whatever a tap on the card's own controls can. */
@@ -93,6 +98,23 @@ class StatusCardAccessibilityTest {
         assertTrue(labels().contains("Vote"))
         perform("Vote")
         assertEquals(listOf(listOf(1)), votes)
+    }
+
+    @Test
+    fun `an event is read out with the post, and goes into the calendar from the row`() {
+        val event = StatusEvent("Harbour clean-up", Instant.parse("2026-11-02T18:00:00Z"), null, "Pier 4")
+        show(StatusSamples.post().copy(event = event))
+        compose.onNodeWithContentDescription("Harbour clean-up", substring = true).assertExists()
+        compose.onNodeWithContentDescription("Pier 4", substring = true).assertExists()
+        perform("Add to calendar")
+        val sent = shadowOf(ApplicationProvider.getApplicationContext<Application>()).nextStartedActivity
+        assertEquals(Intent.ACTION_INSERT, sent.action)
+    }
+
+    @Test
+    fun `an event with no start offers no calendar`() {
+        show(StatusSamples.post().copy(event = StatusEvent("Someday", null, null, "Pier 4")))
+        assertTrue("Add to calendar" !in labels())
     }
 
     @Test

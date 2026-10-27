@@ -58,6 +58,7 @@ import androidx.compose.material.icons.outlined.DragHandle
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.EditNote
 import androidx.compose.material.icons.outlined.EmojiEmotions
+import androidx.compose.material.icons.outlined.Event
 import androidx.compose.material.icons.outlined.ExpandLess
 import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material.icons.outlined.Explore
@@ -166,6 +167,7 @@ public object AlohaIcons {
     public val ExpandMore: ImageVector = Icons.Outlined.ExpandMore
     public val ExpandLess: ImageVector = Icons.Outlined.ExpandLess
     public val Place: ImageVector = Icons.Outlined.Place
+    public val Event: ImageVector = Icons.Outlined.Event
     public val Archived: ImageVector = Icons.Outlined.Inventory2
     public val Dislike: ImageVector = Icons.Outlined.ThumbDown
     public val Play: ImageVector = Icons.Filled.PlayArrow

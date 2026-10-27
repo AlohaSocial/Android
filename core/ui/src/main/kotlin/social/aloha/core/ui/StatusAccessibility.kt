@@ -4,6 +4,7 @@
 package social.aloha.core.ui
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
@@ -65,6 +66,7 @@ internal fun accessibilityLabel(row: StatusRowUi, now: Instant, bodyShown: Boole
     val poll = if (row.poll != null) stringResource(R.string.status_poll) else null
     val quote = row.quote?.let { stringResource(R.string.status_quote, it.author.plainName) + ": " + it.excerpt.text }
     val card = row.card?.let { it.title.ifBlank { it.url.orEmpty() } }?.takeIf { it.isNotBlank() }
+    val event = row.event?.let { remember(it) { spokenEvent(it) } }?.takeIf { it.isNotBlank() }
     return listOfNotNull(
         context,
         stringResource(R.string.status_accessibility_header, row.author.plainName, age),
@@ -75,6 +77,7 @@ internal fun accessibilityLabel(row: StatusRowUi, now: Instant, bodyShown: Boole
         poll,
         quote,
         card,
+        event,
     )
         .joinToString(". ")
 }
@@ -184,7 +187,7 @@ private fun pollActions(
     return choices + vote
 }
 
-/** The quoted post and the link card, each opened as a tap on it would. */
+/** The quoted post and the link card, each opened as a tap on it would, and an event put in the calendar. */
 @Composable
 private fun attachedActions(row: StatusRowUi, actions: StatusActions): List<CustomAccessibilityAction> = listOfNotNull(
     row.quote?.let { quote ->
@@ -198,6 +201,12 @@ private fun attachedActions(row: StatusRowUi, actions: StatusActions): List<Cust
         val context = LocalContext.current
         CustomAccessibilityAction(stringResource(label, title)) {
             true.also { openCard(context, row.card, actions) }
+        }
+    },
+    row.event?.takeIf { it.startsAt != null }?.let { event ->
+        val context = LocalContext.current
+        CustomAccessibilityAction(stringResource(R.string.status_event_add_to_calendar)) {
+            true.also { addToCalendar(context, event, row.url) }
         }
     },
 )

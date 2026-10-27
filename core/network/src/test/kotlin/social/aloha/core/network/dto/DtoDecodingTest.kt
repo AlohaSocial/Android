@@ -3,6 +3,7 @@
 
 package social.aloha.core.network.dto
 
+import java.time.Instant
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -14,6 +15,7 @@ import social.aloha.core.model.ModerationWarning
 import social.aloha.core.model.NotificationKind
 import social.aloha.core.model.SeveranceEvent
 import social.aloha.core.model.Status
+import social.aloha.core.model.StatusEvent
 import social.aloha.core.model.TimelineSource
 import social.aloha.core.model.Visibility
 import social.aloha.core.network.AlohaJson
@@ -87,6 +89,20 @@ class DtoDecodingTest {
         assertNull(s.reblog)
         assertEquals(emptyList<Any>(), s.reactions)
         assertNull(s.place)
+    }
+
+    @Test
+    fun `an event post carries when and where, and a start the app cannot read is left out`() {
+        val s = decodeStatus(
+            status(
+                """, "event": {"name": "Harbour clean-up", "start_time": "2026-11-02T18:00:00Z",""" +
+                    """ "end_time": null, "location": "Pier 4"}""",
+            ),
+        )
+        assertEquals(StatusEvent("Harbour clean-up", Instant.parse("2026-11-02T18:00:00Z"), null, "Pier 4"), s.event)
+        assertNull(decodeStatus(status()).event)
+        val unread = decodeStatus(status(""", "event": {"name": "Later", "start_time": "soon", "location": ""}"""))
+        assertEquals(StatusEvent("Later", null, null, ""), unread.event)
     }
 
     @Test

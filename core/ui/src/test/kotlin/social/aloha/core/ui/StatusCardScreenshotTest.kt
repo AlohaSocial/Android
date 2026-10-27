@@ -19,6 +19,8 @@ import androidx.compose.ui.test.tryPerformAccessibilityChecks
 import androidx.compose.ui.unit.LayoutDirection
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.captureRoboImage
+import java.time.Instant
+import java.util.TimeZone
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -34,6 +36,7 @@ import social.aloha.core.model.Card
 import social.aloha.core.model.ReadingStyle
 import social.aloha.core.model.SensitiveMediaPolicy
 import social.aloha.core.model.Status
+import social.aloha.core.model.StatusEvent
 import social.aloha.core.testing.StatusSamples
 
 /**
@@ -123,6 +126,26 @@ class StatusCardScreenshotTest {
             image = "https://cloud.example/cache/preview_cards/abc.jpg",
         )
         Rows(listOf(StatusSamples.post("<p>Worth the early start</p>").copy(card = card)))
+    }
+
+    @Test
+    fun event() {
+        val event = StatusEvent(
+            "Harbour clean-up",
+            Instant.parse("2026-11-02T18:00:00Z"),
+            Instant.parse("2026-11-02T21:00:00Z"),
+            "Pier 4, Honolulu Harbor",
+        )
+        // the time is drawn in the device's zone, which the machine running the test would otherwise decide
+        val zone = TimeZone.getDefault()
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
+        try {
+            capture("status-event") {
+                Rows(listOf(StatusSamples.post("<p>Bring gloves, we bring the bags</p>").copy(event = event)))
+            }
+        } finally {
+            TimeZone.setDefault(zone)
+        }
     }
 
     @Test

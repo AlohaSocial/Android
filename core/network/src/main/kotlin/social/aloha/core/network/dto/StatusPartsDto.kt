@@ -3,6 +3,7 @@
 
 package social.aloha.core.network.dto
 
+import java.time.Instant
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -20,10 +21,12 @@ import social.aloha.core.model.FilterResult
 import social.aloha.core.model.Mention
 import social.aloha.core.model.QuotedStatus
 import social.aloha.core.model.Reaction
+import social.aloha.core.model.StatusEvent
 import social.aloha.core.model.StatusPlace
 import social.aloha.core.model.StatusTag
 import social.aloha.core.network.decoding.FlexibleIdSerializer
 import social.aloha.core.network.decoding.LenientBoolSerializer
+import social.aloha.core.network.decoding.LenientInstantSerializer
 import social.aloha.core.network.decoding.LenientIntSerializer
 import social.aloha.core.network.decoding.LenientUrlSerializer
 import social.aloha.core.network.decoding.LossyListSerializer
@@ -81,6 +84,14 @@ internal data class StatusPlaceDto(
     @SerialName("long") @Serializable(with = OptionalDoubleSerializer::class) val long: Double? = null,
 )
 
+@Serializable
+internal data class StatusEventDto(
+    val name: String = "",
+    @SerialName("start_time") @Serializable(with = LenientInstantSerializer::class) val startTime: Instant? = null,
+    @SerialName("end_time") @Serializable(with = LenientInstantSerializer::class) val endTime: Instant? = null,
+    val location: String = "",
+)
+
 /** Who may quote a post, and what quoting it comes to for the reader. */
 @Serializable
 internal data class QuoteApprovalDto(@SerialName("current_user") val currentUser: String? = null)
@@ -96,6 +107,8 @@ internal object ApplicationOrNull : KSerializer<ApplicationSummaryDto?> by OrNul
 )
 
 internal object StatusPlaceOrNull : KSerializer<StatusPlaceDto?> by OrNullSerializer(StatusPlaceDto.serializer())
+
+internal object StatusEventOrNull : KSerializer<StatusEventDto?> by OrNullSerializer(StatusEventDto.serializer())
 
 internal object VideoDetailsOrNull : KSerializer<VideoDetailsDto?> by OrNullSerializer(VideoDetailsDto.serializer())
 
@@ -144,4 +157,6 @@ internal fun ApplicationSummaryDto.toDomain(): ApplicationSummary = ApplicationS
 internal fun QuotedStatusDto.toDomain(): QuotedStatus = QuotedStatus(state, quotedStatus?.toDomain())
 
 /** Nextcloud Social spells the longitude `long` in place search and `lon` on a status; both are read. */
+internal fun StatusEventDto.toDomain(): StatusEvent = StatusEvent(name, startTime, endTime, location)
+
 internal fun StatusPlaceDto.toDomain(): StatusPlace = StatusPlace(id, name, country, latitude, longitude ?: long)

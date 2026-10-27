@@ -72,6 +72,7 @@ internal fun StatusBody(
             LinkCard(card) { openCard(context, card, actions) }
         }
         row.quote?.let { QuoteCard(it) { actions.onOpen(it.statusId) } }
+        row.event?.let { EventCard(it, row.url) }
         StatusExtras(row, canReact, actions)
     }
 }

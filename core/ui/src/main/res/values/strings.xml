@@ -126,6 +126,10 @@
     <string name="status_place">Place: %s</string>
     <!-- Badge on a post its author archived off their profile -->
     <string name="status_archived">Archived</string>
+    <!-- Button under an event post (a meetup, concert, …) that opens the device's calendar with the event filled in -->
+    <string name="status_event_add_to_calendar">Add to calendar</string>
+    <!-- Shown instead of opening the calendar when no calendar app is installed -->
+    <string name="status_event_no_calendar">No calendar app to add it to</string>
     <!-- Read aloud for a reaction; %1$s is the emoji, %2$d how many reacted with it -->
     <string name="status_reaction">%1$s, %2$d</string>
     <!-- Action: reply to a post -->

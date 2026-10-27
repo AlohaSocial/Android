@@ -24,6 +24,7 @@ import kotlinx.serialization.Transient
  * @property archived off the profile, not deleted; null when the server does not say.
  * @property video the PeerTube-shaped facts Nextcloud Social carries on a video post.
  * @property videoCard the facts Nextcloud Social carries on every video post, `video_card`.
+ * @property event when and where, on a post for an event; Nextcloud Social sends it on those alone.
  * @property watchProgress where the reader got to in the video, as the server sent it with this read;
  *   never cached, since it is stale as soon as the reader plays on.
  */
@@ -71,6 +72,7 @@ public data class Status(
     val place: StatusPlace? = null,
     val video: VideoDetails? = null,
     val videoCard: VideoCardInfo? = null,
+    val event: StatusEvent? = null,
     @Transient val watchProgress: WatchProgress? = null,
     /** Whether the post was made on the reader's server; null where the server did not say. */
     val local: Boolean? = null,
@@ -143,6 +145,21 @@ public data class ApplicationSummary(val name: String, val website: String? = nu
  */
 @Serializable
 public data class QuotedStatus(val state: String? = null, val quotedStatus: Status? = null)
+
+/**
+ * An event a post is about, such as one from Mobilizon or Gancio.
+ *
+ * @property startsAt null where the server could read no start, which leaves nothing to put in a calendar.
+ * @property endsAt null where none was given, or none after the start.
+ * @property location the venue's name or address; empty where none was given.
+ */
+@Serializable
+public data class StatusEvent(
+    val name: String = "",
+    @Serializable(with = InstantSerializer::class) val startsAt: Instant? = null,
+    @Serializable(with = InstantSerializer::class) val endsAt: Instant? = null,
+    val location: String = "",
+)
 
 /** A place a post was tagged with. */
 @Serializable
