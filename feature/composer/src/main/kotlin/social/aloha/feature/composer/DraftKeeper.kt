@@ -118,6 +118,7 @@ internal fun ComposerUiState.draft(
     poll = poll?.let { DraftPoll(it.choices, it.seconds, it.multiple, it.hideTotals) },
     scheduledAt = scheduledAt,
     replaces = replaces,
+    mediaAsPosted = mediaAsPosted,
 )
 
 /**
@@ -133,6 +134,7 @@ internal fun ComposerUiState.restored(draft: DraftPost, entry: OutboxEntry?, edi
     failure = PostFailure.Refused(entry?.error).takeIf { entry?.state == OutboxState.Failed },
     editing = editing,
     replaces = draft.replaces,
+    mediaAsPosted = draft.mediaAsPosted,
 )
 
 /**

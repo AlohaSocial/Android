@@ -10,9 +10,14 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -325,10 +330,26 @@ internal class ComposerViewModelTest : ComposerTestSetup() {
         viewModel.await { it.canPost }
         viewModel.onPost()
         viewModel.await { it.done }
-        val form = posts.sent.single().second
-        assertEquals("As I meant it", form["status"])
-        assertEquals("m1", form["media_attributes[][id]"])
-        assertEquals("New words", form["media_attributes[][description]"])
+        val edit = posts.edits.single()
+        assertEquals("As I meant it", edit["status"]?.jsonPrimitive?.content)
+        // the picture kept as it was: left out, as Social serves media an edit named without their ids
+        assertNull(edit["media_ids"])
+        val attribute = edit["media_attributes"]!!.jsonArray.single().jsonObject
+        assertEquals("m1", attribute["id"]?.jsonPrimitive?.content)
+        assertEquals("New words", attribute["description"]?.jsonPrimitive?.content)
+    }
+
+    @Test
+    fun `an edit that takes the only picture off says so, with an empty list`() = runBlocking {
+        val viewModel = open(key = { ComposerKey(it, editId = "mine") })
+        val state = viewModel.await { it.ready && it.attachments.first().isNotEmpty() }
+        viewModel.attachments.remove(state.attachments.first().single().id)
+        // the text restored into the field reaches the state once the snapshot is applied
+        Snapshot.sendApplyNotifications()
+        viewModel.await { it.attachments.first().isEmpty() && it.canPost }
+        viewModel.onPost()
+        viewModel.await { it.done }
+        assertEquals(JsonArray(emptyList()), posts.edits.single()["media_ids"])
     }
 
     @Test

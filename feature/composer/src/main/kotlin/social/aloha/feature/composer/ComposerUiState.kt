@@ -192,6 +192,8 @@ internal data class ComposerUiState(
     val editing: Boolean = false,
     /** The writer's own post this one writes again, deleted once this one is out. */
     val replaces: String? = null,
+    /** The media of the post being edited as it was, by id, which an edit that keeps them does not send. */
+    val mediaAsPosted: List<String>? = null,
 ) {
     val canPost: Boolean
         get() = ready && author != null && !posting && !empty && remaining.all { it >= 0 } && (uploaded || canWait) &&
