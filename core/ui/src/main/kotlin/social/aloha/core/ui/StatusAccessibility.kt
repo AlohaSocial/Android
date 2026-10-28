@@ -4,6 +4,7 @@
 package social.aloha.core.ui
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
@@ -11,6 +12,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.text.LinkAnnotation
 import java.time.Instant
+import java.time.ZoneId
 import social.aloha.core.designsystem.AlohaIcons
 
 internal fun menuItems(
@@ -65,6 +67,10 @@ internal fun accessibilityLabel(row: StatusRowUi, now: Instant, bodyShown: Boole
     val poll = if (row.poll != null) stringResource(R.string.status_poll) else null
     val quote = row.quote?.let { stringResource(R.string.status_quote, it.author.plainName) + ": " + it.excerpt.text }
     val card = row.card?.let { it.title.ifBlank { it.url.orEmpty() } }?.takeIf { it.isNotBlank() }
+    val event = row.event?.let { event ->
+        val state = eventState(event, now)
+        remember(event, state, ZoneId.systemDefault()) { spokenEvent(event, state) }
+    }?.takeIf { it.isNotBlank() }
     return listOfNotNull(
         context,
         stringResource(R.string.status_accessibility_header, row.author.plainName, age),
@@ -75,6 +81,7 @@ internal fun accessibilityLabel(row: StatusRowUi, now: Instant, bodyShown: Boole
         poll,
         quote,
         card,
+        event,
     )
         .joinToString(". ")
 }
@@ -127,6 +134,7 @@ internal fun customActions(
     row: StatusRowUi,
     actions: StatusActions,
     controls: CardControls,
+    now: Instant,
 ): List<CustomAccessibilityAction> {
     fun action(label: String, block: () -> Unit) = CustomAccessibilityAction(label) { block().let { true } }
     val base = toggleActions(row, actions)
@@ -153,7 +161,7 @@ internal fun customActions(
     // behind a closed content warning, only opening it is offered: the rest is not on screen
     if (row.spoiler != null && !controls.spoilerRevealed) return spoiler + base + history + menu
     return spoiler + base + links + media + pollActions(row, actions, controls) + attachedActions(row, actions) +
-        history + menu
+        eventActions(row, now, actions) + history + menu
 }
 
 /** Choosing each option, then voting, while the poll takes votes. */
@@ -201,6 +209,27 @@ private fun attachedActions(row: StatusRowUi, actions: StatusActions): List<Cust
         }
     },
 )
+
+/** An event's calendar entry while it is still to come, and its own page, as its buttons offer them. */
+@Composable
+private fun eventActions(row: StatusRowUi, now: Instant, actions: StatusActions): List<CustomAccessibilityAction> {
+    val event = row.event ?: return emptyList()
+    val context = LocalContext.current
+    return listOfNotNull(
+        if (offersCalendar(event, now)) {
+            CustomAccessibilityAction(stringResource(R.string.status_event_add_to_calendar)) {
+                true.also { addToCalendar(context, event, row.url) }
+            }
+        } else {
+            null
+        },
+        row.url?.takeIf { isEventPage(it) }?.let { page ->
+            CustomAccessibilityAction(stringResource(R.string.status_event_open_page)) {
+                true.also { actions.onLink(RichLinkTarget.Web(page)) }
+            }
+        },
+    )
+}
 
 @Composable
 private fun countLabel(action: String, count: Int): String = if (count >

@@ -15,6 +15,7 @@ import social.aloha.core.model.MediaAttachment
 import social.aloha.core.model.Poll
 import social.aloha.core.model.Reaction
 import social.aloha.core.model.Status
+import social.aloha.core.model.StatusEvent
 import social.aloha.core.model.StatusPlace
 import social.aloha.core.model.VideoCardInfo
 import social.aloha.core.model.VideoDetails
@@ -57,6 +58,8 @@ public data class StatusRowUi(
     val video: VideoDetails? = null,
     /** What the server tells of every video post: its poster, views and publishing date. */
     val videoCard: VideoCardInfo? = null,
+    /** When and where, on a post for an event. */
+    val event: StatusEvent? = null,
     /** What a quote of this post comes to: one, a request, nothing, or a link where quotes are unknown. */
     val quoteAccess: QuoteAccess = QuoteAccess.Link,
     /** The words a filter matched, painted once the reader shows the filtered post anyway. */
@@ -161,6 +164,7 @@ public class StatusRowMapper(private val cache: RichTextCache, private val color
             language = shown.language,
             video = shown.video,
             videoCard = shown.videoCard,
+            event = shown.event,
             filterMatches = filterMatches,
             quoteAccess = quoteAccess(shown, viewerAccountId != null && shown.account.id == viewerAccountId),
         )
