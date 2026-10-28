@@ -3,8 +3,13 @@
 
 package social.aloha.core.data.timeline
 
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import social.aloha.core.data.Answer
 import social.aloha.core.data.ClientFactory
 import social.aloha.core.data.answer
@@ -25,14 +30,28 @@ public enum class Toggle { Favourite, Boost, Bookmark, Pin, MuteConversation, Di
 
 /**
  * What a person does to a post. A toggle shows at once: the stored copy changes first, the server is
- * asked after, and its answer replaces the guess, or the original comes back if it refused. Nothing
- * here is retried by itself, so a tap never lands twice.
+ * asked after, and its answer replaces the guess, or the original comes back if it refused. Taps on
+ * one post each start from the guess before, reach the server in the order made, and only once none
+ * is left waiting is an answer stored, or, where the last was refused or never sent, the post as the
+ * server last had it. Nothing here is retried by itself, so a tap never lands twice.
  */
 @Singleton
 public class StatusInteractions @Inject constructor(
     private val statuses: StatusRepository,
     private val clients: ClientFactory,
 ) {
+    /** One post's taps: how many were made and finished, and the post as the server last had it. */
+    private class Taps {
+        val guessing = Mutex()
+        val sending = Mutex()
+        var made = 0L
+        var finished = 0L
+        var settled: Status? = null
+    }
+
+    // ponytail: one entry per post toggled while the app runs, never dropped; small next to the cache
+    private val taps = ConcurrentHashMap<String, Taps>()
+
     /**
      * Flips [toggle] on [shown], the post shown (a boost's target), from its stored copy where there is
      * one, which a toggle just before may already have changed; null when the server agreed. A boost
@@ -45,16 +64,40 @@ public class StatusInteractions @Inject constructor(
         visibility: Visibility? = null,
     ): ApiError? {
         val client = clients.forAccount(account) ?: return ApiError.NotFound
-        val status = statuses.get(account.id, shown.id) ?: shown
-        val (guess, action) = flipped(status, toggle)
-        statuses.saveToggled(account.id, guess)
+        val post = taps.computeIfAbsent("${account.id}/${shown.id}") { Taps() }
         val seenBy = visibility?.takeIf { toggle == Toggle.Boost }?.wire
-        return when (val answer = client.execute(StatusEndpoints.action(status.id, action, seenBy))) {
-            // boosting answers with the new boost, which carries the post as the server now has it
-            is ApiResult.Success -> null.also { statuses.saveToggled(account.id, answer.value.reblog ?: answer.value) }
-
-            is ApiResult.Failure -> answer.error.also { statuses.saveToggled(account.id, status) }
+        var counted = false
+        var answer: ApiResult<Status>? = null
+        try {
+            val (status, action) = post.guessing.withLock {
+                val status = statuses.get(account.id, shown.id) ?: shown
+                val (guess, action) = flipped(status, toggle)
+                synchronized(post) {
+                    // with no tap waiting, the stored copy is what the server has
+                    if (post.made == post.finished) post.settled = status
+                    post.made++
+                }
+                counted = true
+                statuses.saveToggled(account.id, guess)
+                status to action
+            }
+            answer = post.sending.withLock { client.execute(StatusEndpoints.action(status.id, action, seenBy)) }
+        } finally {
+            // a tap left unsent, the page gone, counts as refused
+            if (counted) settle(account, post, answer)
         }
+        return (answer as? ApiResult.Failure)?.error
+    }
+
+    private suspend fun settle(account: SignedInAccount, post: Taps, answer: ApiResult<Status>?) {
+        val kept = synchronized(post) {
+            post.finished++
+            // boosting answers with the new boost, which carries the post as the server now has it
+            if (answer is ApiResult.Success) post.settled = answer.value.reblog ?: answer.value
+            // a later tap's guess stands until it finishes too
+            post.settled.takeIf { post.finished == post.made }
+        }
+        if (kept != null) withContext(NonCancellable) { statuses.saveToggled(account.id, kept) }
     }
 
     /** Reacts to post [statusId] with emoji [name], or takes the reaction back unless [add]. */

@@ -12,6 +12,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
@@ -31,6 +33,9 @@ import social.aloha.core.model.Status
 public class StatusRepository @Inject constructor(private val dao: StatusDao, private val clock: Clock) {
     private val decoded = DecodedStatuses()
     private val toggles = Toggles(clock)
+
+    /** Held from working out a page's rows to writing them, so a toggle saved meanwhile is not undone. */
+    private val saves = Mutex()
 
     public fun observe(accountId: String, statusId: String): Flow<Status?> = dao.observe(accountId, statusId).map {
         it?.let { entity -> decoded.of(accountId, entity.serverId, entity.payloadJson, entity.cachedAt) }
@@ -53,17 +58,20 @@ public class StatusRepository @Inject constructor(private val dao: StatusDao, pr
      */
     public suspend fun saveAll(accountId: String, statuses: List<Status>) {
         if (statuses.isEmpty()) return
-        val rows = withContext(Dispatchers.Default) {
-            val byId = statuses.associateBy { it.id }
-            val boosts = byId.keys.chunked(MAXIMUM_BOUND_IDS).flatMap { dao.boostsOfAny(accountId, it) }
-                .filter { it.serverId !in byId }
-                .mapNotNull { boost ->
-                    val boosted = byId[boost.reblogOfId] ?: return@mapNotNull null
-                    decoded.of(accountId, boost.serverId, boost.payloadJson, boost.cachedAt)?.copy(reblog = boosted)
-                }
-            entities(accountId, byId.values + boosts)
+        saves.withLock {
+            val rows = withContext(Dispatchers.Default) {
+                val byId = statuses.associateBy { it.id }
+                val boosts = byId.keys.chunked(MAXIMUM_BOUND_IDS).flatMap { dao.boostsOfAny(accountId, it) }
+                    .filter { it.serverId !in byId }
+                    .mapNotNull { boost ->
+                        val boosted = byId[boost.reblogOfId] ?: return@mapNotNull null
+                        decoded.of(accountId, boost.serverId, boost.payloadJson, boost.cachedAt)
+                            ?.copy(reblog = boosted)
+                    }
+                entities(accountId, byId.values + boosts)
+            }
+            dao.upsertAll(rows)
         }
-        dao.upsertAll(rows)
     }
 
     public suspend fun get(accountId: String, statusId: String): Status? =
@@ -87,8 +95,10 @@ public class StatusRepository @Inject constructor(private val dao: StatusDao, pr
      * back: what was toggled is kept on any copy stored meanwhile.
      */
     public suspend fun saveToggled(accountId: String, status: Status) {
-        toggles.remember(accountId, status)
-        save(accountId, status)
+        saves.withLock {
+            toggles.remember(accountId, status)
+            save(accountId, status)
+        }
     }
 
     /**
