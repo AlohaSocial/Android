@@ -88,6 +88,9 @@ public class TimelineRepository @Inject constructor(
     private val inFlight = ConcurrentHashMap<String, Mutex>()
     private val fetchedAt = ConcurrentHashMap<String, Long>()
 
+    /** Where a gap's last fill stopped, read through to the ceiling with nothing kept: the next fill goes on. */
+    private val gapCursors = ConcurrentHashMap<String, HttpUrl>()
+
     /**
      * When [key] last got an answer from the server in this process, or null before it did: a timeline
      * that has rows but no fetch yet still asks for the head (see [RefreshPlan]).
@@ -197,7 +200,8 @@ public class TimelineRepository @Inject constructor(
             else -> PageAnchor.Cold
         }
         val direction = TimelineMerge.Direction.FillingGap(gapId, fromBelow = belowId != null)
-        return fetchAndMerge(Fetch(account, key, anchor, cursor = null, direction))
+        val cursor = gapCursors[gapKey(account, key, direction)]
+        return fetchAndMerge(Fetch(account, key, anchor, cursor, direction))
     }
 
     /** One fetch of one timeline: where it starts, and how its page merges. */
@@ -223,6 +227,41 @@ public class TimelineRepository @Inject constructor(
             } else {
                 minOf(OverFetch.MAXIMUM_UPSTREAM_PAGES, OverFetch.multiplier(key.mode))
             }
+
+        /**
+         * Whether [kept] posts after [pages] upstream pages make a visible page: a full one, or any once
+         * the budget is spent. A page that kept nothing reads on: Nextcloud Social leaves posts out of home
+         * after choosing the page, and one that adds no rows leaves the list nothing to page on from.
+         */
+        fun hasEnough(pages: Int, kept: Int): Boolean =
+            kept >= Paging.DEFAULT_LIMIT || (pages >= budget && (kept > 0 || readsAboveOnly))
+
+        /**
+         * A refresh asks for what is newer than the top row, and the server's `next` leads down and drops
+         * that bound: reading on would bring rows from below the top as if new, with no gap between.
+         */
+        private val readsAboveOnly: Boolean get() = direction == TimelineMerge.Direction.Newer
+
+        /**
+         * The merge of [page]. A short gap page that names one beyond it may have been emptied after paging,
+         * so the gap stays open; one that kept nothing at all leaves its cursor in [gapCursors] for the gap's
+         * next fill to go on from.
+         */
+        fun plan(
+            harvest: Harvest,
+            existing: List<TimelineMerge.Slot>,
+            page: List<String>,
+            gapCursors: MutableMap<String, HttpUrl>,
+        ): TimelineMerge.Plan {
+            val gap = direction as? TimelineMerge.Direction.FillingGap
+            val moreBeyond = harvest.pageWasFull || (gap != null && !harvest.isLastUpstream)
+            if (gap != null) {
+                val stopped = gapKey(account, key, gap)
+                val stuck = harvest.nextCursor?.takeIf { page.isEmpty() }
+                if (stuck != null) gapCursors[stopped] = stuck else gapCursors.remove(stopped)
+            }
+            return TimelineMerge.plan(existing, page, direction, moreBeyond)
+        }
 
         /** Whether the device keeps [status] in this timeline, whatever its mode. */
         fun keeps(status: Status): Boolean = withoutReplies?.isNoReply(status) != false
@@ -264,7 +303,7 @@ public class TimelineRepository @Inject constructor(
         val fromBelow = (fetch.direction as? TimelineMerge.Direction.FillingGap)?.fromBelow == true
         val ordered = if (fromBelow) harvest.statuses.sortedByDescending { it.createdAt } else harvest.statuses
         val page = ordered.map { it.id }
-        val plan = TimelineMerge.plan(existing, page, fetch.direction, harvest.pageWasFull)
+        val plan = fetch.plan(harvest, existing, page, gapCursors)
         val kept = plan.slots.take(CachePolicy.rowsFor(key.storageKey))
         val now = clock.millis()
         // every status on the page is written, not only the new ones: a cached one may have been edited
@@ -315,7 +354,8 @@ public class TimelineRepository @Inject constructor(
     /**
      * One visible page. A media mode keeps only what belongs in it, whatever the server narrowed, and
      * fetches on until the page is full: at most [OverFetch.MAXIMUM_UPSTREAM_PAGES] upstream pages,
-     * stopping where the server names no next page. `pageWasFull` is about what the server sent, not
+     * stopping where the server names no next page; past [Fetch.budget] only while nothing was kept
+     * (see [Fetch.hasEnough]). `pageWasFull` is about what the server sent, not
      * what survived the filter, and the cursor is the last upstream page's. A page asked for above a post
      * (`min_id`) goes on upwards, through `prev`: `next` would lead back down into the rows below it.
      * An account's posts without replies leave the replies out on the device where the server ignored
@@ -330,7 +370,7 @@ public class TimelineRepository @Inject constructor(
         val kept = mutableListOf<Status>()
         var last = Harvest(emptyList(), pageWasFull = false, nextCursor = fetch.cursor)
         var filling = false
-        for (page in 1..fetch.budget) {
+        for (page in 1..OverFetch.MAXIMUM_UPSTREAM_PAGES) {
             val fetched = when (val result = page(client, request, last.nextCursor, upwards)) {
                 is ApiResult.Failure -> return result
                 is ApiResult.Success -> result.value
@@ -339,7 +379,7 @@ public class TimelineRepository @Inject constructor(
             kept += fetched.statuses.filter { !onDevice || kinds.getValue(it.id).belongs(mode) }.filter(fetch::keeps)
             filling = filling || fetched.filling
             last = fetched
-            if (fetched.isLastUpstream || kept.size >= Paging.DEFAULT_LIMIT) break
+            if (fetched.isLastUpstream || fetch.hasEnough(page, kept.size)) break
         }
         return ApiResult.Success(last.copy(statuses = kept, filling = filling))
     }
@@ -396,6 +436,9 @@ private val FEED_SOURCES = setOf(
 private const val HASHTAG_PREFIX = "tag:"
 
 private fun lockKey(account: SignedInAccount, key: TimelineKey) = "${account.id}|${key.storageKey}"
+
+private fun gapKey(account: SignedInAccount, key: TimelineKey, gap: TimelineMerge.Direction.FillingGap) =
+    "${lockKey(account, key)}|${gap.id}|${gap.fromBelow}"
 
 /** Whether a [TimelineKey.storageKey], `mode:source`, names a feed reply hiding narrows. */
 private fun isFeed(storageKey: String): Boolean = storageKey.substringAfter(':').let {
