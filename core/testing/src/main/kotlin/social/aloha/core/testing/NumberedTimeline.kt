@@ -24,6 +24,8 @@ import okhttp3.HttpUrl
  * as the server would, or with a server error while [failActions] is set; filters and markers answer empty.
  * [media] gives a status its attachments; with [narrows] set the server honours `only_media`,
  * `only_video` and `only_short` as Nextcloud Social does, leaving out what does not match before it pages.
+ * What is [hidden] is left out after paging, as Nextcloud Social's home leaves out what the reader's Bluesky
+ * preferences hide: a page can come back short, or empty, and still name the next one.
  */
 public class NumberedTimeline(template: JsonObject = homeTemplate()) : Dispatcher() {
     @Volatile public var newest: Int = 0
@@ -33,6 +35,8 @@ public class NumberedTimeline(template: JsonObject = homeTemplate()) : Dispatche
     @Volatile public var media: (Int) -> List<JsonObject> = { emptyList() }
 
     @Volatile public var narrows: Boolean = false
+
+    @Volatile public var hidden: (Int) -> Boolean = { false }
 
     /** Fields a status has beyond the template's, such as its own `uri` and `created_at`. */
     @Volatile public var fields: (Int) -> Map<String, JsonPrimitive> = { emptyMap() }
@@ -56,7 +60,7 @@ public class NumberedTimeline(template: JsonObject = homeTemplate()) : Dispatche
 
     private fun page(url: HttpUrl): MockResponse {
         val ids = pick(url, url.queryParameter("limit")?.toInt() ?: DEFAULT_LIMIT)
-        val body = JsonArray(ids.map { status(it) })
+        val body = JsonArray(ids.filterNot(hidden).map { status(it) })
         val builder = MockResponse.Builder().code(
             OK,
         ).body(body.toString()).addHeader("content-type", "application/json")
