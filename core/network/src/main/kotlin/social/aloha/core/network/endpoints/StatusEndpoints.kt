@@ -43,6 +43,10 @@ public enum class StatusAction(public val wire: String) {
     Unpin("unpin"),
     Mute("mute"),
     Unmute("unmute"),
+
+    /** PeerTube's thumbs-down on a video post, which Nextcloud Social takes; a 422 on any other post. */
+    Dislike("dislike"),
+    Undislike("undislike"),
 }
 
 /**

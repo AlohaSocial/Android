@@ -52,6 +52,9 @@ internal data class WatchUiState(
     val comments: List<StatusRowUi> = emptyList(),
     /** Whether the reader follows who posted it; null for their own video, or before it is known. */
     val following: Boolean? = null,
+    /** Whether the reader can dislike the video, and whether they do. */
+    val canDislike: Boolean = false,
+    val disliked: Boolean = false,
     val loading: Boolean = true,
     val failed: Boolean = false,
     /** A change the server did not take; said once. */
@@ -151,10 +154,14 @@ internal class WatchViewModel @AssistedInject constructor(
         posts.firstOrNull()?.let { playback.stop(it.id) }
     }
 
+    /** Flips [toggle] on [statusId], shown at once; the server's answer, or the post as it was, replaces the guess. */
     fun onToggle(statusId: String, toggle: Toggle) {
         viewModelScope.launch {
             val reader = reader() ?: return@launch
             val status = statuses.get(reader.id, statusId) ?: return@launch
+            val guess = StatusInteractions.flipped(status, toggle).first
+            posts = posts.map { if (it.id == statusId) guess else it }
+            redraw()
             if (interactions.toggle(reader, status, toggle) != null) state.update { it.copy(actionFailed = true) }
             posts = posts.map { statuses.get(reader.id, it.id) ?: it }
             redraw()
@@ -187,7 +194,14 @@ internal class WatchViewModel @AssistedInject constructor(
         val reader = reader() ?: return
         val mapper = StatusRowMapper(cache, colors ?: return)
         val rows = posts.map { mapper.map(it, reader.serverAccountId) }
-        state.update { it.copy(video = rows.firstOrNull(), comments = rows.drop(1)) }
+        state.update {
+            it.copy(
+                video = rows.firstOrNull(),
+                comments = rows.drop(1),
+                canDislike = reader.capabilities.dislikes,
+                disliked = posts.firstOrNull()?.disliked == true,
+            )
+        }
     }
 
     private suspend fun reader() = accounts.byId(key.readerId)

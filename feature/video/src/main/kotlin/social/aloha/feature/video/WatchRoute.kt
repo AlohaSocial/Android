@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -120,6 +121,7 @@ public fun WatchRoute(key: WatchKey, navigation: StatusNavigation, onBack: () ->
             onComment = { nav.openComposer(key.statusId) },
             onChapter = { viewModel.onSeek(it.start) },
             onRetry = viewModel::onRetry,
+            onDislike = { viewModel.onToggle(key.statusId, Toggle.Dislike) },
         ),
         rowActions,
         snackbars,
@@ -137,11 +139,12 @@ internal class WatchScreenActions(
     val onComment: () -> Unit,
     val onChapter: (VideoChapter) -> Unit,
     val onRetry: () -> Unit,
+    val onDislike: () -> Unit = {},
 )
 
 /**
  * The watch page: the video, its title, who posted it with the way to follow them, how often it was
- * watched and liked (dislikes are shown, never given: the server takes none), its description and
+ * watched, liked and disliked, a dislike to give where the server keeps whose it is, its description and
  * chapters, then its comments, each an ordinary reply. On a foldable half open like a laptop the video
  * keeps the upper half to itself and the rest scrolls below the fold.
  */
@@ -204,7 +207,7 @@ private fun Details(
         if (player != null) item(key = "player") { if (state.sources.isNotEmpty()) player() }
         when {
             video != null -> {
-                item(key = "about") { About(video, title, now, state.following, actions) }
+                item(key = "about") { About(video, title, now, state, actions) }
                 if (state.chapters.isNotEmpty()) {
                     item(key = "chapters") {
                         Chapters(state.chapters, actions.onChapter)
@@ -234,10 +237,19 @@ private fun Details(
 }
 
 @Composable
-private fun About(video: StatusRowUi, title: String, now: Instant, following: Boolean?, actions: WatchScreenActions) {
+private fun About(video: StatusRowUi, title: String, now: Instant, state: WatchUiState, actions: WatchScreenActions) {
+    val following = state.following
     Column(Modifier.padding(AlohaSpacing.m), verticalArrangement = Arrangement.spacedBy(AlohaSpacing.s)) {
         Text(title, style = MaterialTheme.typography.titleLarge, modifier = Modifier.semantics { heading() })
         Counts(video, now)
+        if (state.canDislike) {
+            FilterChip(
+                selected = state.disliked,
+                onClick = actions.onDislike,
+                label = { Text(stringResource(R.string.watch_dislike)) },
+                leadingIcon = { Icon(AlohaIcons.Dislike, contentDescription = null) },
+            )
+        }
         Row(verticalAlignment = Alignment.CenterVertically) {
             TextButton(onClick = actions.onProfile, modifier = Modifier.weight(1f)) {
                 Text(video.author.plainName, maxLines = 1, modifier = Modifier.fillMaxWidth())

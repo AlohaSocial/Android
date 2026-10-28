@@ -464,10 +464,12 @@ and two code paths over one set of posts is how the two drift.
   a provider, which is strictly less than `/api/v1/statuses/{id}` already gives.
 - `GET /api/saved_searches/list.json` — returns a hardcoded `[]`. Recent
   searches are kept on the device, which is the feature it looks like.
-- `POST /api/v1/statuses/{id}/dislike`, `/undislike` — **no route exists.** The
-  server serialises `dislikes_count` and `disliked` on a video status and
-  federates what PeerTube sends, but `DislikeService` is wired to no controller.
-  The row shows the count read-only until that changes.
+- `POST /api/v1/statuses/{id}/dislike`, `/undislike` — PeerTube's thumbs-down,
+  through the same action route as favourite, answering with the status; 422
+  on a post that is no video. Up to 0.26.278 `disliked` read false on every
+  status, so a dislike could not be seen or taken back after the next read; the
+  watch page offers the toggle only on later builds
+  (`ServerCapabilities.dislikes`) and shows the count on every build.
 
 **Moderation** *(Nextcloud administrator only, checked per route)* —
 `GET /api/v1/admin/reports[/{id}]` ·

@@ -21,7 +21,9 @@
         <item quantity="one">%d like</item>
         <item quantity="other">%d likes</item>
     </plurals>
-    <!-- How many disliked a video, which is shown but cannot be given -->
+    <!-- Toggle on the watch page that dislikes the video (PeerTube's thumbs-down), or takes the dislike back -->
+    <string name="watch_dislike">Dislike</string>
+    <!-- How many disliked a video -->
     <plurals name="watch_dislikes">
         <item quantity="one">%d dislike</item>
         <item quantity="other">%d dislikes</item>

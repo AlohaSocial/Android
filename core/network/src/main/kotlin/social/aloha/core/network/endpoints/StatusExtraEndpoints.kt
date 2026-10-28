@@ -32,7 +32,7 @@ private fun statusList(endpoint: Endpoint): ApiRequest<List<Status>> =
     listRequest(endpoint, StatusDto.serializer()) { it.toDomain() }
 
 /**
- * Nextcloud Social's per-status extras: archive, delivery, quotes and dislikes. A stock Mastodon
+ * Nextcloud Social's per-status extras: archive, delivery and quotes. A stock Mastodon
  * answers 404 to all of them, so each sits behind a capability.
  */
 public object StatusExtraEndpoints {
@@ -79,16 +79,6 @@ public object StatusExtraEndpoints {
     /** Withdraws a quote already made; the quoting post stays, shown as withdrawn on its own server. */
     public fun revokeQuote(id: String, quotingId: String): ApiRequest<Unit> =
         unitRequest(Endpoint("api/v1/statuses/$id/quotes/$quotingId/revoke", HttpMethod.POST))
-
-    /**
-     * PeerTube's thumbs-down. The server publishes `dislikes_count` and `disliked` on a video but
-     * wires no route to them yet, so this answers 404 until it does.
-     */
-    public fun dislike(id: String): ApiRequest<Unit> =
-        unitRequest(Endpoint("api/v1/statuses/$id/dislike", HttpMethod.POST))
-
-    public fun undislike(id: String): ApiRequest<Unit> =
-        unitRequest(Endpoint("api/v1/statuses/$id/undislike", HttpMethod.POST))
 }
 
 /** Places a post can be tagged with: names only, no map service on either side. */
