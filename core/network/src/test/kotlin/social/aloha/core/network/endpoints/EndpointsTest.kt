@@ -3,6 +3,12 @@
 
 package social.aloha.core.network.endpoints
 
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.boolean
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.long
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNull
@@ -258,11 +264,43 @@ class EndpointsTest {
     @Test
     fun `an edit without a content warning says so, which a new post without one need not`() {
         val post = StatusPost(text = "Hello")
-        val edited = (ComposeEndpoints.edit("9", post).endpoint.body as Body.Form).fields
-        assertEquals("", edited.single { it.name == "spoiler_text" }.value)
+        assertEquals("", edited(post)["spoiler_text"]?.jsonPrimitive?.content)
         val posted = (ComposeEndpoints.post(post).endpoint.body as Body.Form).fields
         assertTrue(posted.none { it.name == "spoiler_text" })
     }
+
+    @Test
+    fun `an edit sends the post's whole attachment list in order, and an empty one to take them all off`() {
+        fun mediaIds(ids: List<String>) =
+            edited(StatusPost(text = "x", mediaIds = ids))["media_ids"]!!.jsonArray.map { it.jsonPrimitive.content }
+        assertEquals(listOf("21", "22", "23"), mediaIds(listOf("21", "22", "23")))
+        assertEquals(listOf("23", "21"), mediaIds(listOf("23", "21")))
+        // present and empty: a form could not say it, and leaving the field out would keep them all
+        assertEquals(emptyList<String>(), mediaIds(emptyList()))
+        assertNull(edited(StatusPost(text = "x", mediaIds = listOf("21"), keepsMedia = true))["media_ids"])
+    }
+
+    @Test
+    fun `an edit keeps its types and carries the media's descriptions`() {
+        val post = StatusPost(
+            text = "x",
+            sensitive = true,
+            mediaIds = listOf("21"),
+            mediaAttributes = listOf(MediaAttribute("21", "A harbour", 0.5 to -0.25)),
+        )
+        val body = edited(post)
+        assertEquals(true, body["sensitive"]?.jsonPrimitive?.boolean)
+        val attribute = body["media_attributes"]!!.jsonArray.single().jsonObject
+        assertEquals("21", attribute["id"]?.jsonPrimitive?.content)
+        assertEquals("A harbour", attribute["description"]?.jsonPrimitive?.content)
+        assertEquals("0.50,-0.25", attribute["focus"]?.jsonPrimitive?.content)
+        val poll = edited(StatusPost(text = "x", pollOptions = listOf("a", "b")))["poll"]!!.jsonObject
+        assertEquals(86_400L, poll["expires_in"]?.jsonPrimitive?.long)
+    }
+
+    private fun edited(post: StatusPost) = Json.parseToJsonElement(
+        (ComposeEndpoints.edit("9", post).endpoint.body as Body.Json).text,
+    ).jsonObject
 
     @Test
     fun `a poll is dropped when media is attached`() {

@@ -256,8 +256,13 @@ mobile connection this is the difference between possible and not.
 
 ## 8. Editing
 
-- `PUT /api/v1/statuses/{id}` with the same fields, plus `media_attributes` for
-  alt-text-only changes.
+- `PUT /api/v1/statuses/{id}` with the same fields as JSON, plus
+  `media_attributes` for alt-text-only changes. `media_ids` is always the post's
+  whole attachment list in order, and an empty list when the writer took every
+  attachment off: a form cannot send an empty list, and a left-out `media_ids`
+  keeps the attachments as they were. An edit that leaves the media as the post
+  had them leaves `media_ids` out (see the edited-media row of
+  [02-server-api.md](02-server-api.md)).
 - The composer in edit mode fetches `/api/v1/statuses/{id}/source` for the
   original plain text and spoiler — never the rendered HTML.
 - Editing shows a note that followers will see the post was edited, and the

@@ -25,10 +25,12 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import kotlinx.coroutines.withTimeout
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.jsonObject
 import mockwebserver3.Dispatcher
 import mockwebserver3.MockResponse
 import mockwebserver3.MockWebServer
@@ -77,6 +79,9 @@ import social.aloha.core.testing.NumberedTimeline
  */
 internal class Posts(private val script: MutableList<Int>) : Dispatcher() {
     val sent = CopyOnWriteArrayList<Pair<String?, Map<String, String>>>()
+
+    /** The edits sent, as the JSON they are. */
+    val edits = CopyOnWriteArrayList<JsonObject>()
     val stories = CopyOnWriteArrayList<Map<String, String>>()
     val deleted = CopyOnWriteArrayList<String>()
     private val made = HashMap<String, String>()
@@ -125,7 +130,7 @@ internal class Posts(private val script: MutableList<Int>) : Dispatcher() {
                 json("""{"id":"x","text":"As I wrote it","spoiler_text":""}""")
 
             request.method == "PUT" && path.endsWith("/statuses/mine") -> {
-                sent += null to form(request)
+                edits += Json.parseToJsonElement(request.body?.utf8().orEmpty()).jsonObject
                 json(own("mine", null).toString())
             }
 

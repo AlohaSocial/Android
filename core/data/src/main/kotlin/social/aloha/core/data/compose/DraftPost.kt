@@ -39,6 +39,8 @@ public data class DraftPost(
     val postedIds: List<String> = emptyList(),
     /** The writer's own post this one writes again, deleted only once this one is out. */
     val replaces: String? = null,
+    /** The media the post carried as it was, by id and in order, which an edit that keeps them leaves alone. */
+    val mediaAsPosted: List<String>? = null,
 ) {
     /**
      * Segment [index] as the server takes it, answering [inReplyToId]; the poll and time go with the
@@ -66,6 +68,7 @@ public data class DraftPost(
             quotePolicy = quotePolicy.takeIf { index == 0 },
             quotedId = quotedId.takeIf { index == 0 },
             mediaAttributes = if (editing) segment.media.mapNotNull(DraftMedia::attribute) else emptyList(),
+            keepsMedia = editing && mediaIds == mediaAsPosted,
         )
     }
 
@@ -140,6 +143,7 @@ public fun draftOf(status: Status, text: String, spoiler: String): DraftPost = D
         ),
     ),
     replyToId = status.inReplyToId,
+    mediaAsPosted = status.mediaAttachments.map { it.id },
     spoiler = spoiler.takeIf { it.isNotBlank() },
     visibility = status.visibility,
     language = status.language,

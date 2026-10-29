@@ -61,14 +61,9 @@ public object ComposeEndpoints {
         ScheduledStatusDto.serializer(),
     ) { it.toDomain() }
 
-    /** Edits a known status; it cannot duplicate, so no idempotency key is sent. */
+    /** Edits a known status, as [StatusPost.editJson] says; it cannot duplicate, so no idempotency key is sent. */
     public fun edit(id: String, draft: StatusPost): ApiRequest<Status> = request(
-        // a warning left out is kept as it was; only an empty one takes it off
-        Endpoint(
-            "api/v1/statuses/$id",
-            HttpMethod.PUT,
-            body = Body.Form(draft.copy(spoilerText = draft.spoilerText.orEmpty()).formItems()),
-        ),
+        Endpoint("api/v1/statuses/$id", HttpMethod.PUT, body = Body.Json(draft.editJson().toString())),
         StatusDto.serializer(),
     ) {
         it.toDomain()
