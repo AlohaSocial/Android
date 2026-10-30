@@ -57,6 +57,7 @@ import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.navigation.StatusListKind
 import social.aloha.core.ui.EmptyState
+import social.aloha.core.ui.LocalReactionEmoji
 import social.aloha.core.ui.LocalReadingStyle
 import social.aloha.core.ui.LocalSensitiveMediaPolicy
 import social.aloha.core.ui.LocalWarningReveals
@@ -145,7 +146,7 @@ private fun Posts(
     val links = remember(state.items) { connections(state.items) }
     val revealMode = LocalReadingStyle.current.revealWarnings
     val reveals = remember(revealMode) { WarningReveals(revealMode) }
-    CompositionLocalProvider(LocalWarningReveals provides reveals) {
+    CompositionLocalProvider(LocalWarningReveals provides reveals, LocalReactionEmoji provides state.reactionEmoji) {
         LazyColumn(
             state = listState,
             modifier = Modifier.readingColumn(),

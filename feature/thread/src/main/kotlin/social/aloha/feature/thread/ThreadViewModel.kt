@@ -37,6 +37,7 @@ import social.aloha.core.data.timeline.Toggle
 import social.aloha.core.data.trouble
 import social.aloha.core.html.RichTextCache
 import social.aloha.core.model.Card
+import social.aloha.core.model.CustomEmoji
 import social.aloha.core.model.Reaction
 import social.aloha.core.model.SignedInAccount
 import social.aloha.core.model.Status
@@ -74,6 +75,7 @@ internal class ThreadViewModel @AssistedInject constructor(
         val gone: Boolean = false,
         val card: Card? = null,
         val reactions: List<Reaction>? = null,
+        val reactionEmoji: List<CustomEmoji> = emptyList(),
         val history: List<EditVersion>? = null,
         val actionFailed: Boolean = false,
         val archived: Boolean = false,
@@ -127,6 +129,14 @@ internal class ThreadViewModel @AssistedInject constructor(
 
     init {
         viewModelScope.launch { load(account.filterNotNull().first()) }
+        viewModelScope.launch {
+            val account = account.filterNotNull().first()
+            // ponytail: asked again on every thread opened; share the composer's daily cache if it shows
+            if (account.capabilities.customEmojiReactions) {
+                val emoji = threads.reactionEmoji(account)
+                control.update { it.copy(reactionEmoji = emoji) }
+            }
+        }
         if (key.history) onHistory(open = true)
     }
 
@@ -146,7 +156,8 @@ internal class ThreadViewModel @AssistedInject constructor(
     /** Reacts to the focused post, shown at once and taken back if the server refuses. */
     fun onReact(name: String, add: Boolean) {
         val before = control.value.reactions.orEmpty()
-        control.update { it.copy(reactions = ThreadPresentation.reacted(before, name, add)) }
+        val image = control.value.reactionEmoji.firstOrNull { ":${it.shortcode}:" == name }?.url
+        control.update { it.copy(reactions = ThreadPresentation.reacted(before, name, add, image)) }
         act(key.statusId) { account, status ->
             interactions.react(account, status.displayed.id, name, add)?.also {
                 control.update { state -> state.copy(reactions = before) }
@@ -299,6 +310,7 @@ internal class ThreadViewModel @AssistedInject constructor(
             lists = focused?.let { ThreadPresentation.lists(it.displayed, account.capabilities) }.orEmpty(),
             edited = focused?.displayed?.isEdited == true,
             canReact = account.capabilities.let { it.emojiReactions || it.isNextcloudSocial },
+            reactionEmoji = control.reactionEmoji,
             albums = account.capabilities.collections,
             archive = account.capabilities.isNextcloudSocial,
             archived = control.archived,
