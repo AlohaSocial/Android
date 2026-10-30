@@ -20,9 +20,15 @@ public data class NodeInfo(
     val protocols: List<String> = emptyList(),
     val openRegistrations: Boolean = false,
 ) {
-    /** Nextcloud Social identifies as `nextcloud-social`; older releases as `Nextcloud Social`. */
-    val isNextcloudSocial: Boolean
-        get() = softwareName.lowercase().let { it.contains("nextcloud") && it.contains("social") }
+    val isNextcloudSocial: Boolean get() = isSocialName(softwareName)
+}
+
+/**
+ * Whether a NodeInfo software name is Nextcloud Social's: `aloha-social` from 0.26.280, `nextcloud-social`
+ * before, and `Nextcloud Social` on older releases.
+ */
+internal fun isSocialName(name: String): Boolean = name.lowercase().let {
+    it == "aloha-social" || ("nextcloud" in it && "social" in it)
 }
 
 /**
