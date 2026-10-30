@@ -36,11 +36,14 @@ class StatusCardAccessibilityTest {
 
     private val votes = mutableListOf<List<Int>>()
     private val histories = mutableListOf<String>()
+    private val links = mutableListOf<RichLinkTarget>()
 
     private val actions = object : StatusActions {
         override fun onOpen(statusId: String) = Unit
         override fun onProfile(accountId: String) = Unit
-        override fun onLink(target: RichLinkTarget) = Unit
+        override fun onLink(target: RichLinkTarget) {
+            links += target
+        }
         override fun onMedia(row: StatusRowUi, index: Int) = Unit
         override fun onReply(row: StatusRowUi) = Unit
         override fun onBoost(row: StatusRowUi) = Unit
@@ -124,6 +127,15 @@ class StatusCardAccessibilityTest {
         compose.onNodeWithContentDescription("Harbour clean-up, Cancelled", substring = true).assertExists()
         assertTrue("Add to calendar" !in labels())
         assertTrue("Open event page" in labels())
+    }
+
+    @Test
+    fun `an event's sign-up is taken part in from the row`() {
+        val join = "https://mobilizon.example/events/1/join"
+        val event = StatusEvent("Harbour clean-up", Instant.parse("2099-11-02T18:00:00Z"), participationUrl = join)
+        show(StatusSamples.post().copy(event = event))
+        perform("Take part")
+        assertEquals(listOf<RichLinkTarget>(RichLinkTarget.Web(join)), links)
     }
 
     @Test

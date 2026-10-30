@@ -117,6 +117,24 @@ class DtoDecodingTest {
     }
 
     @Test
+    fun `an event's sign-up page is read trimmed, and an empty or odd one is none`() {
+        fun participation(json: String): String? = decodeStatus(
+            status(""", "event": {"name": "x", "location": "", "participation_url": $json}"""),
+        ).event?.participationUrl
+        assertEquals(
+            "https://mobilizon.example/events/1/join",
+            participation("\"https://mobilizon.example/events/1/join\""),
+        )
+        assertEquals("https://mobilizon.example/join", participation("\" https://mobilizon.example/join \""))
+        assertNull(participation("\"\""))
+        // a value that is no string drops the link, not the event
+        val odd = decodeStatus(status(""", "event": {"name": "x", "location": "", "participation_url": []}"""))
+        assertEquals("x", odd.event?.name)
+        assertNull(odd.event?.participationUrl)
+        assertNull(decodeStatus(status(""", "event": {"name": "x", "location": ""}""")).event?.participationUrl)
+    }
+
+    @Test
     fun `media meta from a fork as an empty array leaves the dimensions absent`() {
         val s = decodeStatus(media("""{"id": 5, "type": "video", "url": "https://x/v.mp4", "meta": []}"""))
         val attachment = s.mediaAttachments.single()

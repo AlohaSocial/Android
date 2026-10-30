@@ -45,7 +45,8 @@ import social.aloha.core.model.StatusEvent
 
 /**
  * An event post's event: its name, whether it is called off, tentative, going on or over, when and where,
- * and the ways on: into the reader's calendar while it is still to come, and to its own page.
+ * and the ways on: into the reader's calendar and to the organiser's sign-up while it is still to come, and
+ * to its own page.
  */
 @Composable
 internal fun EventCard(event: StatusEvent, url: String?, now: Instant, actions: StatusActions) {
@@ -83,13 +84,22 @@ private fun EventState(text: String, cancelled: Boolean) {
     )
 }
 
-/** Into the calendar where [calendar] says it is worth it, and to the event's own page where it has a web one. */
+/**
+ * Into the calendar and to the organiser's sign-up where [calendar] says it is worth it, and to the event's own
+ * page where it has a web one.
+ */
 @Composable
 private fun EventButtons(event: StatusEvent, url: String?, calendar: Boolean, actions: StatusActions) {
     val page = url?.takeIf { isEventPage(it) }
+    val takePart = signUpPage(event).takeIf { calendar }
     if (!calendar && page == null) return
     val context = LocalContext.current
     FlowRow {
+        takePart?.let {
+            TextButton(onClick = { actions.onLink(RichLinkTarget.Web(it)) }) {
+                Text(stringResource(R.string.status_event_take_part))
+            }
+        }
         if (calendar) {
             TextButton(onClick = { addToCalendar(context, event, url) }) {
                 Text(stringResource(R.string.status_event_add_to_calendar))
@@ -123,6 +133,9 @@ internal fun offersCalendar(event: StatusEvent, now: Instant): Boolean =
 
 /** Only a web page is opened as the event's own; anything else in the post's address is left alone. */
 internal fun isEventPage(url: String): Boolean = url.startsWith("https://") || url.startsWith("http://")
+
+/** The organiser's sign-up page, where it is a web page. */
+internal fun signUpPage(event: StatusEvent): String? = event.participationUrl?.takeIf { isEventPage(it) }
 
 /** "Cancelled", or "Tentative" and where it stands once it has begun: what the card says above the time. */
 @Composable

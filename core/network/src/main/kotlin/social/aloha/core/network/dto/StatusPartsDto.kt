@@ -91,6 +91,8 @@ internal data class StatusEventDto(
     @SerialName("end_time") @Serializable(with = LenientInstantSerializer::class) val endTime: Instant? = null,
     val location: String = "",
     val status: String? = null,
+    @SerialName("participation_url") @Serializable(with = LenientUrlSerializer::class)
+    val participationUrl: String? = null,
 )
 
 /** Who may quote a post, and what quoting it comes to for the reader. */
@@ -165,6 +167,7 @@ internal fun StatusEventDto.toDomain(): StatusEvent = StatusEvent(
     location,
     // a status the app does not know says nothing it could show
     StatusEvent.Status.entries.firstOrNull { it.name.equals(status, ignoreCase = true) },
+    participationUrl,
 )
 
 internal fun StatusPlaceDto.toDomain(): StatusPlace = StatusPlace(id, name, country, latitude, longitude ?: long)
