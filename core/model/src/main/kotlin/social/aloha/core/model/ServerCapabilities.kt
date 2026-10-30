@@ -122,6 +122,12 @@ public data class ServerCapabilities(
     val editsMedia: Boolean get() = !isNextcloudSocial || atLeast(softwareVersion, EDITS_MEDIA)
 
     /**
+     * Whether a reaction can be one of the server's own custom emoji, sent as `:shortcode:`: Nextcloud Social
+     * from 0.26.280 on. Before, it took Unicode emoji alone.
+     */
+    val customEmojiReactions: Boolean get() = isNextcloudSocial && atLeast(softwareVersion, CUSTOM_EMOJI_REACTIONS)
+
+    /**
      * The `types[]` a notifications request names to have every kind this app shows. Nextcloud Social leaves
      * its own kinds out of a page asked for with a token unless they are named, so there it names them all;
      * elsewhere none, which means every kind.
@@ -173,6 +179,7 @@ public data class ServerCapabilities(
         private val GROUPED_UNREAD_COUNT = listOf(0, 26, 276)
         private val DISLIKE_STATE = listOf(0, 26, 279)
         private val EDITS_MEDIA = listOf(0, 26, 279)
+        private val CUSTOM_EMOJI_REACTIONS = listOf(0, 26, 280)
 
         /** Raised whenever detection learns a new field: 1 added the live feeds, 2 the Shorts narrowing. */
         public const val CURRENT_FORMAT: Int = 2

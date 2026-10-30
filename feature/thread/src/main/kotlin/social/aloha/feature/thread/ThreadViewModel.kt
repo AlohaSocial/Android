@@ -37,6 +37,7 @@ import social.aloha.core.data.timeline.Toggle
 import social.aloha.core.data.trouble
 import social.aloha.core.html.RichTextCache
 import social.aloha.core.model.Card
+import social.aloha.core.model.CustomEmoji
 import social.aloha.core.model.Reaction
 import social.aloha.core.model.SignedInAccount
 import social.aloha.core.model.Status
@@ -74,6 +75,7 @@ internal class ThreadViewModel @AssistedInject constructor(
         val gone: Boolean = false,
         val card: Card? = null,
         val reactions: List<Reaction>? = null,
+        val reactionEmoji: List<CustomEmoji>? = null,
         val history: List<EditVersion>? = null,
         val actionFailed: Boolean = false,
         val archived: Boolean = false,
@@ -146,7 +148,9 @@ internal class ThreadViewModel @AssistedInject constructor(
     /** Reacts to the focused post, shown at once and taken back if the server refuses. */
     fun onReact(name: String, add: Boolean) {
         val before = control.value.reactions.orEmpty()
-        control.update { it.copy(reactions = ThreadPresentation.reacted(before, name, add)) }
+        val image = control.value.reactionEmoji.orEmpty().firstOrNull { ":${it.shortcode}:" == name }
+            ?.let { it.url ?: it.staticUrl }
+        control.update { it.copy(reactions = ThreadPresentation.reacted(before, name, add, image)) }
         act(key.statusId) { account, status ->
             interactions.react(account, status.displayed.id, name, add)?.also {
                 control.update { state -> state.copy(reactions = before) }
@@ -230,6 +234,10 @@ internal class ThreadViewModel @AssistedInject constructor(
                 it.copy(loading = false, gone = answer.error == ApiError.NotFound, trouble = answer.error.trouble)
             }
         }
+        // the server's own emoji to react with, asked again on a refresh until the server has answered;
+        // ponytail: asked again on every thread opened; share the composer's daily cache if it shows
+        if (!account.capabilities.customEmojiReactions || control.value.reactionEmoji != null) return
+        threads.reactionEmoji(account)?.let { emoji -> control.update { it.copy(reactionEmoji = emoji) } }
     }
 
     /** What only the focused post shows: its card when the post carries none, who liked it, its reactions. */
@@ -299,6 +307,7 @@ internal class ThreadViewModel @AssistedInject constructor(
             lists = focused?.let { ThreadPresentation.lists(it.displayed, account.capabilities) }.orEmpty(),
             edited = focused?.displayed?.isEdited == true,
             canReact = account.capabilities.let { it.emojiReactions || it.isNextcloudSocial },
+            reactionEmoji = control.reactionEmoji.orEmpty(),
             albums = account.capabilities.collections,
             archive = account.capabilities.isNextcloudSocial,
             archived = control.archived,

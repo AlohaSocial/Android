@@ -40,6 +40,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -57,6 +58,7 @@ import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.navigation.StatusListKind
 import social.aloha.core.ui.EmptyState
+import social.aloha.core.ui.LocalReactionEmoji
 import social.aloha.core.ui.LocalReadingStyle
 import social.aloha.core.ui.LocalSensitiveMediaPolicy
 import social.aloha.core.ui.LocalWarningReveals
@@ -145,7 +147,8 @@ private fun Posts(
     val links = remember(state.items) { connections(state.items) }
     val revealMode = LocalReadingStyle.current.revealWarnings
     val reveals = remember(revealMode) { WarningReveals(revealMode) }
-    CompositionLocalProvider(LocalWarningReveals provides reveals) {
+    val reactionEmoji = rememberUpdatedState(state.reactionEmoji)
+    CompositionLocalProvider(LocalWarningReveals provides reveals, LocalReactionEmoji provides reactionEmoji) {
         LazyColumn(
             state = listState,
             modifier = Modifier.readingColumn(),

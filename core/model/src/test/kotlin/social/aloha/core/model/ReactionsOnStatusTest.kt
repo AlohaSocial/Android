@@ -72,6 +72,15 @@ class ReactionsOnStatusTest {
     }
 
     @Test
+    fun `a reaction can be a custom emoji on Nextcloud Social from 0,26,280 alone`() {
+        fun custom(name: String, version: String) = ServerCapabilities.minimal("https://x.test/")
+            .copy(softwareName = name, softwareVersion = version).customEmojiReactions
+        assertEquals(false, custom("nextcloud-social", "0.26.279"))
+        assertEquals(true, custom("nextcloud-social", "0.26.280"))
+        assertEquals(false, custom("mastodon", "4.5.0"))
+    }
+
+    @Test
     fun `the unread count is asked of v2 where notifications are grouped, on Nextcloud Social from 0,26,276 on`() {
         fun grouped(name: String, version: String, groups: Boolean = true) =
             ServerCapabilities.minimal("https://x.test/")

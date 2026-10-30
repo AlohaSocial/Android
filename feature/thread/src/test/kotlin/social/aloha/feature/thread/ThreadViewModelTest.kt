@@ -9,12 +9,15 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import java.time.Clock
 import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.atomic.AtomicInteger
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.resetMain
@@ -79,6 +82,9 @@ private class Conversation : Dispatcher() {
     /** Whether the focused post leaves the reactions out altogether. */
     @Volatile var reactionsLeftOut = false
 
+    /** How many more times asking for the custom emoji fails. */
+    val emojiFailures = AtomicInteger()
+
     private val template = JsonObject(NumberedTimeline.homeTemplate() + ("reblog" to JsonNull))
 
     private fun status(id: String, replyTo: String?, vararg extra: Pair<String, JsonPrimitive>) = JsonObject(
@@ -127,6 +133,13 @@ private class Conversation : Dispatcher() {
         ).toString()
 
         path.endsWith("/reactions") -> """[{"name":"🎉","count":2,"me":false}]"""
+
+        path.endsWith("/react") -> "{}"
+
+        path.endsWith("/custom_emojis") && emojiFailures.getAndDecrement() <= 0 ->
+            """[{"shortcode":"blobwave","url":"https://x.test/e/blobwave.png","visible_in_picker":true},""" +
+                """{"shortcode":"stillwave","static_url":"https://x.test/e/still.png","visible_in_picker":true},""" +
+                """{"shortcode":"hidden","url":"https://x.test/e/hidden.png","visible_in_picker":false}]"""
 
         path.endsWith("/history") -> history().toString()
 
@@ -262,6 +275,41 @@ class ThreadViewModelTest {
         val state = open("f").await { StatusListKind.Reactions in it.lists }
         assertEquals(2, state.lists[StatusListKind.Reactions])
         assertEquals(listOf("🎉"), state.posts().single { it.focused }.row.reactions.map { it.name })
+    }
+
+    @Test
+    fun `from Social 0,26,280 the server's own emoji are offered, and one picked shows with its picture`() =
+        runBlocking {
+            val viewModel = open("f", version = "0.26.280")
+            val state = viewModel.await { it.reactionEmoji.isNotEmpty() && it.posts().isNotEmpty() }
+            assertEquals(listOf("blobwave", "stillwave"), state.reactionEmoji.map { it.shortcode })
+            viewModel.onReact(":blobwave:", add = true)
+            val reacted = viewModel.await { s -> s.posts().single { it.focused }.row.reactions.any { it.me } }
+            val mine = reacted.posts().single { it.focused }.row.reactions.single { it.me }
+            assertEquals(":blobwave:" to "https://x.test/e/blobwave.png", mine.name to mine.url)
+        }
+
+    @Test
+    fun `custom emoji the server failed to give are asked again on a refresh, a still picture will do`() = runBlocking {
+        conversation.emojiFailures.set(1)
+        val viewModel = open("f", version = "0.26.280")
+        withTimeout(10.seconds) {
+            while (conversation.asked.none { it.endsWith("/custom_emojis") }) delay(10.milliseconds)
+        }
+        viewModel.await { !it.loading }
+        viewModel.onRefresh()
+        viewModel.await { it.reactionEmoji.isNotEmpty() }
+        assertEquals(2, conversation.asked.count { it.endsWith("/custom_emojis") })
+        viewModel.onReact(":stillwave:", add = true)
+        val reacted = viewModel.await { s -> s.posts().single { it.focused }.row.reactions.any { it.me } }
+        val mine = reacted.posts().single { it.focused }.row.reactions.single { it.me }
+        assertEquals("https://x.test/e/still.png", mine.url)
+    }
+
+    @Test
+    fun `before Social 0,26,280 no custom emoji are asked for`() = runBlocking {
+        open("f", version = "0.26.279").await { !it.loading && it.posts().isNotEmpty() }
+        assertTrue(conversation.asked.none { it.endsWith("/custom_emojis") })
     }
 
     @Test

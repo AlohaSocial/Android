@@ -14,6 +14,7 @@ import social.aloha.core.data.answer
 import social.aloha.core.data.timeline.StatusRepository
 import social.aloha.core.model.Account
 import social.aloha.core.model.Card
+import social.aloha.core.model.CustomEmoji
 import social.aloha.core.model.Reaction
 import social.aloha.core.model.SignedInAccount
 import social.aloha.core.model.Status
@@ -22,6 +23,7 @@ import social.aloha.core.network.ApiError
 import social.aloha.core.network.ApiRequest
 import social.aloha.core.network.ApiResult
 import social.aloha.core.network.endpoints.CountRefresh
+import social.aloha.core.network.endpoints.InstanceEndpoints
 import social.aloha.core.network.endpoints.Paging
 import social.aloha.core.network.endpoints.StatusEndpoints
 import social.aloha.core.network.endpoints.StatusExtraEndpoints
@@ -71,6 +73,11 @@ public class ThreadRepository @Inject constructor(
     /** Reactions, which Nextcloud Social serves only here: its statuses always carry an empty list. */
     public suspend fun reactions(account: SignedInAccount, statusId: String): Answer<List<Reaction>> =
         clients.answer(account, StatusExtraEndpoints.reactions(statusId))
+
+    /** The server's custom emoji a reader may pick, to react with; `null` when the request failed. */
+    public suspend fun reactionEmoji(account: SignedInAccount): List<CustomEmoji>? =
+        (clients.answer(account, InstanceEndpoints.customEmojis()) as? Answer.Got)?.value
+            ?.filter { it.visibleInPicker }
 
     public suspend fun history(account: SignedInAccount, statusId: String): Answer<List<StatusEdit>> =
         clients.answer(account, StatusEndpoints.history(statusId))

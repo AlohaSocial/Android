@@ -168,7 +168,7 @@ not the same thing as sensitive media.
 
 | Route | Use |
 |---|---|
-| `POST /api/v1/statuses/{nid}/react`, `/unreact`, `GET /reactions` | Emoji reactions (`EmojiReact`). A Misskey/Pleroma extension; Mastodon itself has none. Show the reaction row only when capability-detected. |
+| `POST /api/v1/statuses/{nid}/react`, `/unreact`, `GET /reactions` | Emoji reactions (`EmojiReact`). A Misskey/Pleroma extension; Mastodon itself has none. Show the reaction row only when capability-detected. Before 0.26.280 Nextcloud Social takes Unicode emoji only; from 0.26.280 also `:shortcode:` for a custom emoji it publishes, whose reactions then carry its local `url` (a remote one stays a label without `url`). There the add-reaction menu offers the server's picker-visible custom emoji (`/api/v1/custom_emojis`, asked once per thread opened) after the Unicode ones. |
 | `GET /api/v1/statuses/{nid}/quotes` | Quote posts of a status. |
 | `PUT /api/v1/statuses/{nid}/interaction_policy` | Who may reply/boost/quote. |
 
