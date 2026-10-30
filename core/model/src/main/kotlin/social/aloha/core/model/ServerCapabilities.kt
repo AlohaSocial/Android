@@ -13,7 +13,7 @@ import kotlinx.serialization.Serializable
  * the app is fully usable with every flag false.
  *
  * @property apiBase the resolved prefix Mastodon routes hang off, ending in `/`; not always the root.
- * @property softwareName lowercased, from NodeInfo: `nextcloud-social`, `mastodon`, …
+ * @property softwareName lowercased, from NodeInfo: `aloha-social`, `nextcloud-social`, `mastodon`, …
  * @property theme the colour this Nextcloud wears; null on Mastodon and with Theming disabled.
  * @property localFeed whether the server lets a signed-in reader read its local live feed; Mastodon
  *   4.5 lets an administrator disable it, and the federated one ([federatedFeed]), as mastodon.social does.
@@ -65,7 +65,7 @@ public data class ServerCapabilities(
             return if (index < 0) apiBase else apiBase.substring(0, index)
         }
 
-    val isNextcloudSocial: Boolean get() = "nextcloud" in softwareName && "social" in softwareName
+    val isNextcloudSocial: Boolean get() = isSocialName(softwareName)
 
     /**
      * Whether a post this server serves carries its reactions, so the single post needs no second request

@@ -124,9 +124,16 @@ class TimelineAndCapabilitiesTest {
     }
 
     @Test
-    fun `nextcloud social is recognised by its software name`() {
-        assertTrue(ServerCapabilities(apiBase = "https://x.test/", softwareName = "nextcloud-social").isNextcloudSocial)
-        assertFalse(ServerCapabilities(apiBase = "https://x.test/", softwareName = "mastodon").isNextcloudSocial)
+    fun `nextcloud social is recognised by its software name, the one from 0,26,280 too`() {
+        fun social(name: String) =
+            ServerCapabilities(apiBase = "https://x.test/", softwareName = name).isNextcloudSocial
+        assertTrue(social("nextcloud-social"))
+        assertTrue(social("aloha-social"))
+        assertFalse(social("mastodon"))
+        assertFalse(social("social"))
+        val nodeInfo = NodeInfo(version = "2.0", softwareName = "aloha-social", softwareVersion = "0.26.280")
+        assertTrue(nodeInfo.isNextcloudSocial)
+        assertTrue(nodeInfo.copy(softwareName = "Nextcloud Social").isNextcloudSocial)
     }
 
     @Test

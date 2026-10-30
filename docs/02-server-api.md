@@ -258,7 +258,9 @@ Detection order, all of it tolerant of failure:
 
 1. `GET /.well-known/nodeinfo/2.1`, falling back to `2.0`, for
    `software.name` / `software.version`. This is served at the **domain root**
-   on Nextcloud Social even when the API is not.
+   on Nextcloud Social even when the API is not. Social names itself
+   `aloha-social` from 0.26.280 and `nextcloud-social` before (`Nextcloud
+   Social` on old releases); all three are Nextcloud Social to the app.
 2. `GET {apiBase}/api/v2/instance`, falling back to `/api/v1/instance`. Gives
    limits, `urls`, `configuration`, `api_versions`, `vapid_key`.
 3. Cheap `HEAD`/`GET` probes with `limit=1` for the extension routes that have
