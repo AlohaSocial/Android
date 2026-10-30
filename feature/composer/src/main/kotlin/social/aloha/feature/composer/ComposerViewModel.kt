@@ -233,7 +233,9 @@ internal class ComposerViewModel @AssistedInject constructor(
         val cw = if (state.spoilerShown) text.spoiler else ""
         // the card is an attachment only to the server; the strip shows what the writer attached
         val attached = media.attachments.map { list -> list.filterNot { it.id == cards.attachmentId } }
-        val cardFits = poll == null && TextCards.fits(text.segments.first(), text.segments.size, attached.first().size)
+        // a card goes out as a picture, which an edit with its media locked cannot add
+        val cardFits = !state.mediaLocked && poll == null &&
+            TextCards.fits(text.segments.first(), text.segments.size, attached.first().size)
         val numbers = text.segments.indices.map { numbering(media.writing.numberThreads, it, text.segments.size) }
         val fits = { index: Int, segment: String ->
             CharacterCount.remaining(segment + numbers[index], cw, limits, rule)
@@ -400,13 +402,20 @@ internal class ComposerViewModel @AssistedInject constructor(
         if (tagShort && uris.isNotEmpty()) segments.getOrNull(focused)?.let { segments[focused] = tagged(it) }
     }
 
-    /** How many more attachments the post in focus has room for; a poll takes the opening post's place for media. */
+    /**
+     * How many more attachments the post in focus has room for; a poll takes the opening post's place for media,
+     * and media locked in an edit take none, however they come, a drop from another app included. An edit
+     * takes none until it is loaded, as only then is it known whether its media are locked.
+     */
     val room: Int
-        get() = if (focused == 0 && poll.value != null) {
+        get() = if ((focused == 0 && poll.value != null) || mediaClosed) {
             0
         } else {
             uiState.value.maxAttachments - uiState.value.attachments.getOrElse(focused) { emptyList() }.size
         }
+
+    private val mediaClosed: Boolean
+        get() = uiState.value.mediaLocked || (key.editId != null && !uiState.value.ready)
 
     /** Writes as another signed-in account; a reply is looked up on that account's server first. */
     fun onAuthor(id: String) {
@@ -542,6 +551,7 @@ internal class ComposerViewModel @AssistedInject constructor(
                 gifLibrary = account.capabilities.isNextcloudSocial,
                 nextcloudFiles = account.capabilities.mediaFromNextcloudFiles,
                 nextcloudConnected = account.nextcloudConnected,
+                editsMedia = account.capabilities.editsMedia,
             )
         }
         emojiList = compose.emojis(account)

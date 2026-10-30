@@ -263,6 +263,10 @@ mobile connection this is the difference between possible and not.
   keeps the attachments as they were. An edit that leaves the media as the post
   had them leaves `media_ids` out (see the edited-media row of
   [02-server-api.md](02-server-api.md)).
+- On Nextcloud Social before 0.26.279, which ignores `media_ids` on an edit, the
+  media are locked while editing: nothing can be attached, taken off or moved,
+  only described, and a line under the edit note says so. Otherwise a picture
+  the writer took off would stay published.
 - The composer in edit mode fetches `/api/v1/statuses/{id}/source` for the
   original plain text and spoiler — never the rendered HTML.
 - Editing shows a note that followers will see the post was edited, and the

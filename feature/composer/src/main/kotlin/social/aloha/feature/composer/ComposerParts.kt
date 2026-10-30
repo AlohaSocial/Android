@@ -142,7 +142,7 @@ internal fun SegmentField(
         if (index == 0) QuoteParts(state, actions)
         state.attachments.getOrNull(index)?.takeIf {
             it.isNotEmpty()
-        }?.let { MediaStrip(it, actions, drafts = state.draftsAltText) }
+        }?.let { MediaStrip(it, actions, drafts = state.draftsAltText, locked = state.mediaLocked) }
         if (index == 0) OpeningExtras(state, actions)
         if (count > 1) SegmentFooter(index, posted, state, actions)
     }

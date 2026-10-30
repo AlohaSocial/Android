@@ -116,6 +116,12 @@ public data class ServerCapabilities(
     val dislikes: Boolean get() = isNextcloudSocial && atLeast(softwareVersion, DISLIKE_STATE)
 
     /**
+     * Whether an edit changes the post's media, as `media_ids` says: every server but Nextcloud Social
+     * before 0.26.279, which ignored the list and kept the media as posted.
+     */
+    val editsMedia: Boolean get() = !isNextcloudSocial || atLeast(softwareVersion, EDITS_MEDIA)
+
+    /**
      * The `types[]` a notifications request names to have every kind this app shows. Nextcloud Social leaves
      * its own kinds out of a page asked for with a token unless they are named, so there it names them all;
      * elsewhere none, which means every kind.
@@ -166,6 +172,7 @@ public data class ServerCapabilities(
         private val REAL_FOLLOWER_COUNTS = listOf(0, 26, 241)
         private val GROUPED_UNREAD_COUNT = listOf(0, 26, 276)
         private val DISLIKE_STATE = listOf(0, 26, 279)
+        private val EDITS_MEDIA = listOf(0, 26, 279)
 
         /** Raised whenever detection learns a new field: 1 added the live feeds, 2 the Shorts narrowing. */
         public const val CURRENT_FORMAT: Int = 2

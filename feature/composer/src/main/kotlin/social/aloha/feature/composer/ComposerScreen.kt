@@ -133,6 +133,13 @@ private fun Writing(state: ComposerUiState, segments: List<TextFieldValue>, spoi
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
+    if (state.mediaLocked) {
+        Text(
+            stringResource(R.string.composer_edit_media_locked),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
     if (state.spoilerShown) SpoilerField(spoiler) { actions.onSpoiler(true, it) }
     segments.forEachIndexed { index, value ->
         SegmentField(index, segments.size, value, state, actions)
