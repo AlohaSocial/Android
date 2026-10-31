@@ -9,6 +9,7 @@ import com.google.mlkit.genai.common.DownloadStatus
 import com.google.mlkit.genai.common.FeatureStatus
 import com.google.mlkit.genai.common.GenAiException
 import com.google.mlkit.genai.prompt.Candidate
+import com.google.mlkit.genai.prompt.Feature
 import com.google.mlkit.genai.prompt.GenerateContentRequest
 import com.google.mlkit.genai.prompt.Generation
 import com.google.mlkit.genai.prompt.SystemInstruction
@@ -76,7 +77,7 @@ internal class GeminiNano @Inject constructor(
     }
 
     override suspend fun generate(instructions: String, prompt: String): Drafted = try {
-        val request = if (client.isSystemPromptAvailable()) {
+        val request = if (Feature.SYSTEM_PROMPT in client.getAvailableFeatures()) {
             GenerateContentRequest.Builder(SystemInstruction(instructions), TextPart(prompt)).build()
         } else {
             GenerateContentRequest.Builder(TextPart(instructions + "\n\n" + prompt)).build()
