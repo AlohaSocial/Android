@@ -62,6 +62,16 @@ class ReactionsOnStatusTest {
     }
 
     @Test
+    fun `an edit changes the media everywhere but on Nextcloud Social before 0,26,279`() {
+        fun edits(name: String, version: String) = ServerCapabilities.minimal(
+            "https://x.test/",
+        ).copy(softwareName = name, softwareVersion = version).editsMedia
+        assertEquals(false, edits("nextcloud-social", "0.26.278"))
+        assertEquals(true, edits("nextcloud-social", "0.26.279"))
+        assertEquals(true, edits("mastodon", "4.5.0"))
+    }
+
+    @Test
     fun `the unread count is asked of v2 where notifications are grouped, on Nextcloud Social from 0,26,276 on`() {
         fun grouped(name: String, version: String, groups: Boolean = true) =
             ServerCapabilities.minimal("https://x.test/")

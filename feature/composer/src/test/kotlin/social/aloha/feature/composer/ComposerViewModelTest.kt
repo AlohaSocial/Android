@@ -4,6 +4,7 @@
 package social.aloha.feature.composer
 
 import androidx.compose.runtime.snapshots.Snapshot
+import java.util.concurrent.CountDownLatch
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
@@ -350,6 +351,45 @@ internal class ComposerViewModelTest : ComposerTestSetup() {
         viewModel.onPost()
         viewModel.await { it.done }
         assertEquals(JsonArray(emptyList()), posts.edits.single()["media_ids"])
+    }
+
+    @Test
+    fun `an edit locks the media where the server keeps them as posted`() = runBlocking {
+        // the test server names no version: a Nextcloud Social from before edits changed media
+        val viewModel = open(key = { ComposerKey(it, editId = "mine") })
+        assertEquals(true, viewModel.await { it.ready && it.attachments.first().isNotEmpty() }.mediaLocked)
+        // a picture dropped in from another app is turned away like one picked
+        assertEquals(0, viewModel.room)
+    }
+
+    @Test
+    fun `an edit leaves the media free on a server that changes them`() = runBlocking {
+        val viewModel = open(key = { ComposerKey(it, editId = "mine") }, software = "mastodon")
+        assertEquals(false, viewModel.await { it.ready && it.attachments.first().isNotEmpty() }.mediaLocked)
+        viewModel.attachments.remove(viewModel.uiState.value.attachments.first().single().id)
+        Snapshot.sendApplyNotifications()
+        // the words alone fit a card, which goes out as a picture
+        assertEquals(true, viewModel.await { it.attachments.first().isEmpty() && it.cardFits }.cardFits)
+    }
+
+    @Test
+    fun `an edit takes no media before it is loaded, when its lock is not known yet`() = runBlocking {
+        posts.sourceHeld = CountDownLatch(1)
+        val viewModel = open(key = { ComposerKey(it, editId = "mine") }, software = "mastodon")
+        assertEquals(0, viewModel.room)
+        posts.sourceHeld?.countDown()
+        viewModel.await { it.ready && it.attachments.first().isNotEmpty() }
+        // on a server that changes an edit's media, there is room once it is loaded
+        assertEquals(true, viewModel.room > 0)
+    }
+
+    @Test
+    fun `an edit with its media locked offers no card, which would go out as a picture`() = runBlocking {
+        val viewModel = open(key = { ComposerKey(it, editId = "mine") })
+        viewModel.await { it.ready && it.attachments.first().isNotEmpty() }
+        viewModel.attachments.remove(viewModel.uiState.value.attachments.first().single().id)
+        Snapshot.sendApplyNotifications()
+        assertEquals(false, viewModel.await { it.attachments.first().isEmpty() && it.canPost }.cardFits)
     }
 
     @Test

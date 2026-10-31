@@ -54,7 +54,7 @@ private data class Source(val icon: ImageVector, val label: String, val onPick: 
 @Composable
 internal fun AttachButton(state: ComposerUiState, actions: ComposerActions) {
     var open by remember { mutableStateOf(false) }
-    val room = state.poll == null && state.attachments.any { it.size < state.maxAttachments }
+    val room = state.poll == null && !state.mediaLocked && state.attachments.any { it.size < state.maxAttachments }
     IconButton(onClick = { open = true }, enabled = room && !state.posting) {
         Icon(AlohaIcons.AttachFile, stringResource(R.string.composer_attach))
     }

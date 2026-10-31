@@ -15,6 +15,8 @@ import java.net.URLDecoder
 import java.time.Clock
 import java.util.Optional
 import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -117,6 +119,9 @@ internal class Posts(private val script: MutableList<Int>) : Dispatcher() {
 
     var parent: JsonObject? = null
 
+    /** Holds the edited post's source back until counted down, as a slow server would. */
+    @Volatile var sourceHeld: CountDownLatch? = null
+
     override fun dispatch(request: RecordedRequest): MockResponse {
         val path = request.url.encodedPath
         return when {
@@ -126,8 +131,10 @@ internal class Posts(private val script: MutableList<Int>) : Dispatcher() {
 
             path.endsWith("/search") -> json("""{"accounts":[],"hashtags":[],"statuses":[$parent]}""")
 
-            path.endsWith("/statuses/mine/source") || path.endsWith("/statuses/gone/source") ->
+            path.endsWith("/statuses/mine/source") || path.endsWith("/statuses/gone/source") -> {
+                sourceHeld?.await(HELD_SECONDS, TimeUnit.SECONDS)
                 json("""{"id":"x","text":"As I wrote it","spoiler_text":""}""")
+            }
 
             request.method == "PUT" && path.endsWith("/statuses/mine") -> {
                 edits += Json.parseToJsonElement(request.body?.utf8().orEmpty()).jsonObject
@@ -230,6 +237,7 @@ internal class Posts(private val script: MutableList<Int>) : Dispatcher() {
     private companion object {
         const val GIFS = 85
         const val PAGE = 40
+        const val HELD_SECONDS = 10L
     }
 }
 

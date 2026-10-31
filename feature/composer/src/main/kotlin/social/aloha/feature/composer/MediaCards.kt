@@ -53,10 +53,16 @@ import social.aloha.core.ui.reorderItem
 
 /**
  * The attachments of one post, a card each, which opens its description and focal point; a long press drags
- * a card to another place, and a screen reader moves it with the card's actions.
+ * a card to another place, and a screen reader moves it with the card's actions. [locked] media keep their
+ * place and cannot be taken off, only described.
  */
 @Composable
-internal fun MediaStrip(attachments: List<Attachment>, actions: ComposerActions, drafts: Boolean = false) {
+internal fun MediaStrip(
+    attachments: List<Attachment>,
+    actions: ComposerActions,
+    drafts: Boolean = false,
+    locked: Boolean = false,
+) {
     val reordering = rememberReordering(attachments, key = { it.id }, gap = AlohaSpacing.s) { order ->
         actions.onOrderMedia(order.map { it.id })
     }
@@ -67,8 +73,10 @@ internal fun MediaStrip(attachments: List<Attachment>, actions: ComposerActions,
                     attachment,
                     actions,
                     drafts && attachment.isPicture && attachment.source != null,
-                    reordering.moves(index),
-                    Modifier.reorderItem(reordering, attachment).longPressDrag(reordering, attachment),
+                    if (locked) emptyList() else reordering.moves(index),
+                    Modifier.reorderItem(reordering, attachment)
+                        .let { if (locked) it else it.longPressDrag(reordering, attachment) },
+                    removable = !locked,
                 )
             }
         }
@@ -87,6 +95,7 @@ private fun MediaCard(
     draftable: Boolean,
     moves: List<CustomAccessibilityAction>,
     modifier: Modifier,
+    removable: Boolean,
 ) {
     val colors = MaterialTheme.colorScheme
     val failed = attachment.upload is UploadState.Refused ||
@@ -119,7 +128,7 @@ private fun MediaCard(
                 }
                 .padding(AlohaSpacing.s),
         ) {
-            CardRow(attachment, if (failed) couldNot else status, failed, draftable, actions, described)
+            CardRow(attachment, if (failed) couldNot else status, failed, draftable, removable, actions, described)
             if (failed) Failure(status.takeIf { it != couldNot }) { actions.onRetryMedia(attachment.id) }
         }
     }
@@ -132,6 +141,7 @@ private fun CardRow(
     status: String?,
     failed: Boolean,
     draftable: Boolean,
+    removable: Boolean,
     actions: ComposerActions,
     described: Boolean,
 ) {
@@ -144,8 +154,10 @@ private fun CardRow(
                 Icon(AlohaIcons.Intelligence, stringResource(R.string.composer_alt_draft_for, attachment.fileName))
             }
         }
-        IconButton(onClick = { actions.onRemoveMedia(attachment.id) }) {
-            Icon(AlohaIcons.Close, stringResource(R.string.composer_media_remove, attachment.fileName))
+        if (removable) {
+            IconButton(onClick = { actions.onRemoveMedia(attachment.id) }) {
+                Icon(AlohaIcons.Close, stringResource(R.string.composer_media_remove, attachment.fileName))
+            }
         }
     }
 }

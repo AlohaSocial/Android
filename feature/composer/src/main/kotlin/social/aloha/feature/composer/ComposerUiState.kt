@@ -156,6 +156,8 @@ internal data class ComposerUiState(
     val nextcloudFiles: Boolean = false,
     /** Whether the writer's Nextcloud is connected, so its Files can be browsed rather than typed a path into. */
     val nextcloudConnected: Boolean = false,
+    /** Whether an edit can change the post's media; where not, they stay as posted. */
+    val editsMedia: Boolean = true,
     val attachFailure: AttachFailure? = null,
     val editFailure: EditFailure? = null,
     val card: CardUi = CardUi(),
@@ -198,6 +200,9 @@ internal data class ComposerUiState(
     val canPost: Boolean
         get() = ready && author != null && !posting && !empty && remaining.all { it >= 0 } && (uploaded || canWait) &&
             poll?.ready(maxPollOptionCharacters) != false
+
+    /** The post's media stay as posted: an edit, on a server that keeps them whatever it is sent. */
+    val mediaLocked: Boolean get() = editing && !editsMedia
 
     /** Another post can join the thread: an edit changes one post, and a scheduled one cannot be answered yet. */
     val threadable: Boolean get() = !posting && scheduledAt == null && !editing

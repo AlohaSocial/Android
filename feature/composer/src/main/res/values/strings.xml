@@ -138,6 +138,8 @@
     <string name="composer_leave_edit_title">Discard your changes?</string>
     <!-- Shown above the text while editing a post that is out already -->
     <string name="composer_edit_note">Followers will see that this post was edited, and what it said before.</string>
+    <!-- Shown under the edit note while editing a post on a server that keeps its pictures and videos as posted -->
+    <string name="composer_edit_media_locked">This server can’t change the pictures and videos of a post that’s out. Their descriptions can still be changed.</string>
     <!-- Post button label when editing a post that is out already -->
     <string name="composer_save">Save</string>
     <!-- Button that keeps the post as a draft and leaves the composer -->
