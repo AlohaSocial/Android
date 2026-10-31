@@ -9,6 +9,7 @@
 val floors = mapOf(
     "ch.qos.logback:logback-classic" to "1.5.34", // GHSA-jhq6-gfmj-v8fx, GHSA-p47f-322f-whfh, GHSA-qqpg-mvqg-649v
     "ch.qos.logback:logback-core" to "1.5.34",
+    "com.google.guava:guava" to "33.7.2-jre", // GHSA-xxph-c9ww-hj94
     "com.squareup.okio:okio" to "3.4.0", // GHSA-w33c-445m-f8w7
     "com.squareup.wire:wire-runtime" to "6.4.5", // GHSA-9rm7-3qhh-h2mc
     "com.squareup.wire:wire-runtime-jvm" to "6.4.5",
