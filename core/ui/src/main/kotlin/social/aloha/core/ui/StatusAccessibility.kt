@@ -210,13 +210,19 @@ private fun attachedActions(row: StatusRowUi, actions: StatusActions): List<Cust
     },
 )
 
-/** An event's calendar entry while it is still to come, and its own page, as its buttons offer them. */
+/** An event's sign-up and calendar entry while it is still to come, and its own page, as its buttons offer them. */
 @Composable
 private fun eventActions(row: StatusRowUi, now: Instant, actions: StatusActions): List<CustomAccessibilityAction> {
     val event = row.event ?: return emptyList()
     val context = LocalContext.current
+    val upcoming = offersCalendar(event, now)
     return listOfNotNull(
-        if (offersCalendar(event, now)) {
+        signUpPage(event)?.takeIf { upcoming }?.let { page ->
+            CustomAccessibilityAction(stringResource(R.string.status_event_take_part)) {
+                true.also { actions.onLink(RichLinkTarget.Web(page)) }
+            }
+        },
+        if (upcoming) {
             CustomAccessibilityAction(stringResource(R.string.status_event_add_to_calendar)) {
                 true.also { addToCalendar(context, event, row.url) }
             }

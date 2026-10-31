@@ -18,6 +18,7 @@ import java.time.Instant
 import java.time.ZoneOffset
 import java.util.TimeZone
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -146,6 +147,30 @@ class EventCardTest {
         show(StatusEvent("Harbour clean-up", start, null), now = end)
         compose.onNodeWithText("Started").assertExists()
         compose.onNodeWithText("Add to calendar").assertExists()
+    }
+
+    @Test
+    fun `take part opens the organiser's sign-up page while the event is still on`() {
+        val join = "https://mobilizon.example/events/1/join"
+        show(StatusEvent("Harbour clean-up", start, end, "Pier 4", participationUrl = join))
+        compose.onNodeWithText("Take part").performClick()
+        assertEquals(listOf<RichLinkTarget>(RichLinkTarget.Web(join)), links)
+    }
+
+    @Test
+    fun `an event that is over offers no sign-up`() {
+        show(StatusEvent("Harbour clean-up", start, end, participationUrl = "https://mobilizon.example/e/1"), now = end)
+        compose.onNodeWithText("Take part").assertDoesNotExist()
+    }
+
+    @Test
+    fun `only a web address is offered as the sign-up page`() {
+        assertNull(signUpPage(StatusEvent("x", participationUrl = "intent://join")))
+        assertNull(signUpPage(StatusEvent("x")))
+        assertEquals(
+            "http://gancio.example/e/1",
+            signUpPage(StatusEvent("x", participationUrl = "http://gancio.example/e/1")),
+        )
     }
 
     @Test
