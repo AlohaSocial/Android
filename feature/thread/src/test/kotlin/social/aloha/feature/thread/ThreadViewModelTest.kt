@@ -128,6 +128,12 @@ private class Conversation : Dispatcher() {
 
         path.endsWith("/reactions") -> """[{"name":"🎉","count":2,"me":false}]"""
 
+        path.endsWith("/react") -> "{}"
+
+        path.endsWith("/custom_emojis") ->
+            """[{"shortcode":"blobwave","url":"https://x.test/e/blobwave.png","visible_in_picker":true},""" +
+                """{"shortcode":"hidden","url":"https://x.test/e/hidden.png","visible_in_picker":false}]"""
+
         path.endsWith("/history") -> history().toString()
 
         else -> null
@@ -262,6 +268,24 @@ class ThreadViewModelTest {
         val state = open("f").await { StatusListKind.Reactions in it.lists }
         assertEquals(2, state.lists[StatusListKind.Reactions])
         assertEquals(listOf("🎉"), state.posts().single { it.focused }.row.reactions.map { it.name })
+    }
+
+    @Test
+    fun `from Social 0,26,280 the server's own emoji are offered, and one picked shows with its picture`() =
+        runBlocking {
+            val viewModel = open("f", version = "0.26.280")
+            val state = viewModel.await { it.reactionEmoji.isNotEmpty() && it.posts().isNotEmpty() }
+            assertEquals(listOf("blobwave"), state.reactionEmoji.map { it.shortcode })
+            viewModel.onReact(":blobwave:", add = true)
+            val reacted = viewModel.await { s -> s.posts().single { it.focused }.row.reactions.any { it.me } }
+            val mine = reacted.posts().single { it.focused }.row.reactions.single { it.me }
+            assertEquals(":blobwave:" to "https://x.test/e/blobwave.png", mine.name to mine.url)
+        }
+
+    @Test
+    fun `before Social 0,26,280 no custom emoji are asked for`() = runBlocking {
+        open("f", version = "0.26.279").await { !it.loading && it.posts().isNotEmpty() }
+        assertTrue(conversation.asked.none { it.endsWith("/custom_emojis") })
     }
 
     @Test
