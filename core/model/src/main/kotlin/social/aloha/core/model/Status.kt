@@ -154,6 +154,8 @@ public data class QuotedStatus(val state: String? = null, val quotedStatus: Stat
  * @property location the venue's name or address; empty where none was given.
  * @property status what the organiser says of it, where they said something the server knows; a cancelled
  *   event stays a post, shown as cancelled.
+ * @property participationUrl the organiser's own page to take part on, where they take sign-ups there: a
+ *   link only, nothing is sent to the event's server.
  */
 @Serializable
 public data class StatusEvent(
@@ -162,6 +164,7 @@ public data class StatusEvent(
     @Serializable(with = InstantSerializer::class) val endsAt: Instant? = null,
     val location: String = "",
     val status: Status? = null,
+    val participationUrl: String? = null,
 ) {
     @Serializable
     public enum class Status { Confirmed, Tentative, Cancelled }

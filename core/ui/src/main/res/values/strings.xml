@@ -128,6 +128,8 @@
     <string name="status_archived">Archived</string>
     <!-- Button under an event post (a meetup, concert, …) that opens the device's calendar with the event filled in -->
     <string name="status_event_add_to_calendar">Add to calendar</string>
+    <!-- Button under an event post that opens the organiser's own sign-up page for it, such as on Mobilizon, in the browser -->
+    <string name="status_event_take_part">Take part</string>
     <!-- Shown instead of opening the calendar when no calendar app is installed -->
     <string name="status_event_no_calendar">No calendar app to add it to</string>
     <!-- Button under an event post that opens the event's own page, such as on Mobilizon, in the browser -->
