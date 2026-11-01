@@ -79,6 +79,7 @@ public class ApiClient internal constructor(
         requestedLimit = limit,
         filling = filling,
         profileFilling = profileFilling,
+        profileSyncFailed = profileSyncFailed,
     )
 
     private suspend fun <T> perform(request: ApiRequest<T>, url: HttpUrl): ApiResult<Answer<T>> {

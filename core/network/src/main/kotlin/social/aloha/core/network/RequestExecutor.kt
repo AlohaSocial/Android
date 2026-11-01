@@ -29,6 +29,7 @@ internal class Answer<T>(
     val link: LinkHeader,
     val filling: Boolean = false,
     val profileFilling: Boolean = false,
+    val profileSyncFailed: Boolean = false,
 )
 
 /**
@@ -107,7 +108,13 @@ internal class RequestExecutor(
         if (!response.isSuccessful) return failure(response, url)
         val body = withContext(ioDispatcher) { response.body.string() }
         return decode(request, body, LinkHeader.parse(response.header("Link"))).map {
-            Answer(it.decoded, it.link, response.flag("X-Social-Filling"), response.flag("X-Social-Profile-Filling"))
+            Answer(
+                it.decoded,
+                it.link,
+                response.flag("X-Social-Filling"),
+                response.flag("X-Social-Profile-Filling"),
+                response.header("X-Social-Profile-Sync-State")?.trim() == "failed",
+            )
         }
     }
 

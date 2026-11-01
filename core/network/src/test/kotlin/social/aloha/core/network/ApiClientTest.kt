@@ -161,6 +161,16 @@ class ApiClientTest {
     }
 
     @Test
+    fun `a page says when reading an account's posts from its server failed`() = runTest {
+        respond("[]", headers = mapOf("X-Social-Profile-Sync-State" to "failed"))
+        respond("[]", headers = mapOf("X-Social-Profile-Sync-State" to "pending"))
+        val failed = client().page(emojis(), limit = 20).valueOrNull()
+        val pending = client().page(emojis(), limit = 20).valueOrNull()
+        assertEquals(true, failed?.profileSyncFailed)
+        assertEquals(false, pending?.profileSyncFailed)
+    }
+
+    @Test
     fun `a cursor on another host is never followed`() = runTest {
         val result = client().page("https://attacker.example/steal".toHttpUrl(), emojis(), limit = 20)
         assertEquals(ApiResult.Failure(ApiError.ForeignCursor("attacker.example")), result)

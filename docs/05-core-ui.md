@@ -281,6 +281,14 @@ exist undocumented.
   reading older ones from the account's server or Bluesky
   (`X-Social-Profile-Filling`): the page is read again after two seconds, at
   most twice, and the next scroll asks again while the server still says so.
+- A remote account's profile says when Nextcloud Social (0.26.279 on) is
+  still reading its posts from the account's server, and when that read
+  failed, showing only the posts the reader's server already has
+  (`X-Social-Profile-Sync-State: pending` or `failed`). While pending, each
+  tab opened is read afresh every two seconds, at most ten times, whichever
+  tab is shown, and no longer once the reader pages further down in it. An
+  attachment whose media the server has not cached yet comes with an empty
+  `url` and draws its blurhash.
 - Followers: Nextcloud Social before 0.26.241 sends 0 followers to a reader who
   hides the numbers, so there a 0 shows as "Followers" without a number.
 - Own profile additionally: Edit profile (`PATCH /accounts/update_credentials`
