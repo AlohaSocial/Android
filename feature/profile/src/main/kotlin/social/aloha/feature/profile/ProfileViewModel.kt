@@ -14,6 +14,8 @@ import java.time.Duration
 import java.time.Instant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -25,9 +27,13 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 import okhttp3.HttpUrl
 import social.aloha.core.data.AccountRepository
@@ -40,11 +46,13 @@ import social.aloha.core.data.profile.RelationshipChange
 import social.aloha.core.data.search.Searches
 import social.aloha.core.data.timeline.FilterRepository
 import social.aloha.core.data.timeline.PageOutcome
+import social.aloha.core.data.timeline.ProfileSync
 import social.aloha.core.data.timeline.RefreshPlan
 import social.aloha.core.data.timeline.StatusInteractions
 import social.aloha.core.data.timeline.TimelineRepository
 import social.aloha.core.data.timeline.TimelineRow
 import social.aloha.core.data.timeline.Toggle
+import social.aloha.core.data.timeline.followProfileSync
 import social.aloha.core.data.trouble
 import social.aloha.core.html.RichTextCache
 import social.aloha.core.model.Account
@@ -106,6 +114,7 @@ internal class ProfileViewModel @AssistedInject constructor(
         val familiar: List<Account> = emptyList(),
         val pinned: List<Status> = emptyList(),
         val featuredTags: List<FeaturedTag> = emptyList(),
+        val profileSync: ProfileSync? = null,
     )
 
     /** What is drawn, as opposed to what the screen is doing. */
@@ -125,6 +134,9 @@ internal class ProfileViewModel @AssistedInject constructor(
     private val control = MutableStateFlow(Control())
     private val rows = StatusRowCache(cache)
     private val cursors = HashMap<ProfileTab, HttpUrl?>()
+
+    /** A remote account's tabs read afresh while its server is still reading its posts, one job per timeline. */
+    private val syncPolls = HashMap<TimelineKey, Job>()
 
     @Volatile private var storedRows: List<TimelineRow> = emptyList()
 
@@ -205,12 +217,15 @@ internal class ProfileViewModel @AssistedInject constructor(
         val older = older() ?: return
         val tab = older.tab
         control.update { it.copy(loadingOlder = true) }
+        // a fresh read of the tab would replace the rows paged in
+        syncPolls.remove(older.key)?.cancel()
         viewModelScope.launch {
             val outcome = timelines.older(older.reader, older.key, cursors[tab], older.oldest)
             control.update { it.copy(loadingOlder = false) }
             when (outcome) {
                 is PageOutcome.Loaded -> {
                     cursors[tab] = outcome.nextCursor
+                    control.update { it.copy(profileSync = outcome.profileSync) }
                     if (outcome.reachedEnd) control.update { it.copy(reachedEnd = it.reachedEnd + tab) }
                 }
 
@@ -377,7 +392,16 @@ internal class ProfileViewModel @AssistedInject constructor(
             is PageOutcome.Loaded -> {
                 if (last == null) cursors[tab] = outcome.nextCursor
                 if (last == null && outcome.reachedEnd) control.update { it.copy(reachedEnd = it.reachedEnd + tab) }
+                control.update { it.copy(profileSync = outcome.profileSync) }
                 viewModelScope.launch { timelines.refill(reader, key, plan, outcome) }
+                if (outcome.profileSync == ProfileSync.Pending) {
+                    syncPolls.getOrPut(key) {
+                        timelines.followProfileSync(reader, key)
+                            .onEach { sync -> control.update { it.copy(profileSync = sync) } }
+                            .onCompletion { syncPolls.remove(key, currentCoroutineContext().job) }
+                            .launchIn(viewModelScope)
+                    }
+                }
             }
 
             is PageOutcome.Failed -> control.update { it.copy(trouble = outcome.error.trouble) }
@@ -413,6 +437,7 @@ internal class ProfileViewModel @AssistedInject constructor(
             changing = control.changing,
             trouble = control.trouble,
             gone = control.gone,
+            profileSync = control.profileSync,
             now = now,
             actionFailed = control.actionFailed,
             lists = control.lists,

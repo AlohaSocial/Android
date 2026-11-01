@@ -9,6 +9,7 @@ import java.time.Instant
 import social.aloha.core.data.Trouble
 import social.aloha.core.data.profile.ListChoice
 import social.aloha.core.data.profile.RelationshipChange
+import social.aloha.core.data.timeline.ProfileSync
 import social.aloha.core.model.CustomEmoji
 import social.aloha.core.model.FeaturedTag
 import social.aloha.core.model.MediaCollection
@@ -110,6 +111,8 @@ internal data class ProfileUiState(
     val changing: Boolean = false,
     val trouble: Trouble? = null,
     val gone: Boolean = false,
+    /** Where reading a remote account's posts from its own server stands, when it is not simply done. */
+    val profileSync: ProfileSync? = null,
     val now: Instant = Instant.EPOCH,
     val actionFailed: Boolean = false,
     /** The reader's lists, once asked for, each saying whether the account is on it. */

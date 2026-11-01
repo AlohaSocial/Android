@@ -45,6 +45,7 @@ import social.aloha.core.data.profile.ProfileRepository
 import social.aloha.core.data.profile.RelationshipChange
 import social.aloha.core.data.search.Searches
 import social.aloha.core.data.timeline.FilterRepository
+import social.aloha.core.data.timeline.ProfileSync
 import social.aloha.core.data.timeline.StatusInteractions
 import social.aloha.core.data.timeline.StatusRepository
 import social.aloha.core.data.timeline.TimelineRepository
@@ -87,6 +88,12 @@ private class Bob : Dispatcher() {
     /** The next read of his posts is answered as still being filled in, three newer ones arriving meanwhile. */
     @Volatile var fillingOnce = false
 
+    /** How many more reads of his posts say his own server is still being read; then the read is over. */
+    val syncingReads = java.util.concurrent.atomic.AtomicInteger()
+
+    /** Whether reading his posts from his own server failed. */
+    @Volatile var syncFailed = false
+
     /** What changed the relationship: method, path and form, in order. */
     val changes: MutableList<String> = java.util.concurrent.CopyOnWriteArrayList()
     val statusQueries: MutableList<String> = java.util.concurrent.CopyOnWriteArrayList()
@@ -127,11 +134,17 @@ private class Bob : Dispatcher() {
 
     private fun posts(request: RecordedRequest): MockResponse {
         statusQueries += request.url.query.orEmpty()
-        val answer = statuses.dispatch(request)
-        if (!fillingOnce || request.url.queryParameter("pinned") != null) return answer
+        val answer = statuses.dispatch(request).newBuilder()
+        if (syncFailed) answer.addHeader("X-Social-Profile-Sync-State", "failed")
+        if (request.url.queryParameter("pinned") == null && syncingReads.getAndDecrement() > 0) {
+            answer.addHeader("X-Social-Filling", "1")
+                .addHeader("X-Social-Profile-Filling", "1")
+                .addHeader("X-Social-Profile-Sync-State", "pending")
+        }
+        if (!fillingOnce || request.url.queryParameter("pinned") != null) return answer.build()
         fillingOnce = false
         statuses.newest += 3
-        return answer.newBuilder().addHeader("X-Social-Filling", "1").build()
+        return answer.addHeader("X-Social-Filling", "1").build()
     }
 
     private fun relationship(following: Boolean) =
@@ -223,6 +236,49 @@ class ProfileViewModelTest {
         bob.fillingOnce = true
         val state = open(id = "7").await { (it.items.firstOrNull() as? ProfileItem.Post)?.row?.statusId == "33" }
         assertEquals(20, state.items.count { it is ProfileItem.Post })
+    }
+
+    @Test
+    fun `a remote account still being read says so, and is read again until the read is over`() = runBlocking {
+        bob.syncingReads.set(3)
+        val viewModel = open(id = "7")
+        viewModel.await { it.items.isNotEmpty() && it.profileSync == ProfileSync.Pending }
+        viewModel.await { it.profileSync == null }
+        // three reads still syncing and one over; the second read of the first page may make it one more
+        assertTrue(bob.statusQueries.count { "pinned" !in it } >= 4)
+    }
+
+    @Test
+    fun `a remote account's tab is no longer read afresh once the reader pages further down`() = runBlocking {
+        bob.syncingReads.set(Int.MAX_VALUE)
+        val viewModel = open(id = "7")
+        viewModel.await { it.items.isNotEmpty() && it.profileSync == ProfileSync.Pending }
+        viewModel.onNearEnd()
+        viewModel.await { state -> state.items.count { it is ProfileItem.Post } > 20 && !state.loadingOlder }
+        val fresh = { bob.statusQueries.count { "pinned" !in it && "max_id" !in it } }
+        val before = fresh()
+        delay(5.seconds)
+        assertEquals(before, fresh())
+        assertEquals(30, viewModel.uiState.value.items.count { it is ProfileItem.Post })
+    }
+
+    @Test
+    fun `a remote account's posts are still read afresh after the reader opens another tab`() = runBlocking {
+        bob.syncingReads.set(Int.MAX_VALUE)
+        val viewModel = open(id = "7")
+        viewModel.await { it.items.isNotEmpty() && it.profileSync == ProfileSync.Pending }
+        val posts = { bob.statusQueries.count { "pinned" !in it && "max_id" !in it && "only_media" !in it } }
+        viewModel.onTab(ProfileTab.Media)
+        val before = posts()
+        delay(5.seconds)
+        assertTrue(posts() > before)
+    }
+
+    @Test
+    fun `a remote account whose server could not be read says so`() = runBlocking {
+        bob.syncFailed = true
+        open(id = "7").await { it.items.isNotEmpty() && it.profileSync == ProfileSync.Failed }
+        assertEquals(1, bob.statusQueries.count { "pinned" !in it })
     }
 
     @Test

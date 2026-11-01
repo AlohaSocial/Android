@@ -50,6 +50,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import java.text.NumberFormat
 import social.aloha.core.data.Trouble
+import social.aloha.core.data.timeline.ProfileSync
 import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.model.MediaCollection
@@ -113,6 +114,7 @@ internal fun ProfileScreen(
     ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize()) {
             state.trouble?.takeIf { !state.gone }?.let { TroubleStrip(it) }
+            SyncStrip(state)
             RefreshBox(refreshing = state.loading && state.header != null, onRefresh = actions::onRefresh) {
                 when {
                     state.gone -> EmptyState(stringResource(R.string.profile_gone))
@@ -304,6 +306,16 @@ private fun Menu(state: ProfileUiState, actions: ProfileScreenActions, ask: (Ask
 @Composable
 private fun TroubleStrip(trouble: Trouble) {
     TroubleStrip(stringResource(if (trouble == Trouble.Offline) R.string.profile_offline else R.string.profile_error))
+}
+
+/** A remote account's posts still being read from its own server, or that read having failed. */
+@Composable
+private fun SyncStrip(state: ProfileUiState) {
+    val sync = state.profileSync ?: return
+    if (state.trouble != null || state.gone) return
+    TroubleStrip(
+        stringResource(if (sync == ProfileSync.Failed) R.string.profile_sync_failed else R.string.profile_sync_pending),
+    )
 }
 
 /**

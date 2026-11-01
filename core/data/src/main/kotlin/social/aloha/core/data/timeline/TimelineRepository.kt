@@ -55,7 +55,8 @@ public sealed interface TimelineRow {
 /**
  * How a fetch went. [arrived] are the ids new to the timeline; [nextCursor] continues paging older;
  * [reachedEnd] when the server has nothing further down; [filling] when it said it is still filling the
- * page in, so the same page read again a little later ([TimelineRepository.refill]) brings more.
+ * page in, so the same page read again a little later ([TimelineRepository.refill]) brings more;
+ * [profileSync] when an account's posts are still being read from its server, or that read failed.
  */
 public sealed interface PageOutcome {
     public data class Loaded(
@@ -63,6 +64,7 @@ public sealed interface PageOutcome {
         val nextCursor: HttpUrl?,
         val reachedEnd: Boolean,
         val filling: Boolean = false,
+        val profileSync: ProfileSync? = null,
     ) : PageOutcome
 
     public data class Failed(val error: ApiError) : PageOutcome
@@ -322,7 +324,12 @@ public class TimelineRepository @Inject constructor(
         val droppedAll =
             fetch.direction == TimelineMerge.Direction.Older && plan.inserted.isNotEmpty() && arrived.isEmpty()
         val ended = harvest.isLastUpstream && !harvest.profileFilling
-        return PageOutcome.Loaded(arrived, harvest.nextCursor, reachedEnd = ended || droppedAll, harvest.filling)
+        val sync = when {
+            harvest.profileSyncFailed -> ProfileSync.Failed
+            harvest.profileFilling -> ProfileSync.Pending
+            else -> null
+        }
+        return PageOutcome.Loaded(arrived, harvest.nextCursor, ended || droppedAll, harvest.filling, sync)
     }
 
     private suspend fun latchCapabilities(account: SignedInAccount, seen: List<Status>) {
@@ -333,6 +340,7 @@ public class TimelineRepository @Inject constructor(
     /**
      * [filling] and [profileFilling] are the server's `X-Social-Filling` and `X-Social-Profile-Filling` on
      * the page: an account's posts still being read from its server are no end, even without a next page.
+     * [profileSyncFailed] is its `X-Social-Profile-Sync-State: failed`.
      */
     private data class Harvest(
         val statuses: List<Status>,
@@ -340,6 +348,7 @@ public class TimelineRepository @Inject constructor(
         val nextCursor: HttpUrl?,
         val filling: Boolean = false,
         val profileFilling: Boolean = false,
+        val profileSyncFailed: Boolean = false,
     ) {
         /**
          * A page without a way further down. A short page is not the end while the server names a next one:
@@ -407,6 +416,7 @@ public class TimelineRepository @Inject constructor(
                     nextCursor = further?.takeUnless { next -> next == cursor },
                     filling = it.filling,
                     profileFilling = it.profileFilling,
+                    profileSyncFailed = it.profileSyncFailed,
                 )
             }
         }

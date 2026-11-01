@@ -41,6 +41,7 @@ import social.aloha.core.data.ClientFactory
 import social.aloha.core.data.NewAccount
 import social.aloha.core.data.timeline.MergedPager
 import social.aloha.core.data.timeline.PageOutcome
+import social.aloha.core.data.timeline.ProfileSync
 import social.aloha.core.data.timeline.RefreshPlan
 import social.aloha.core.data.timeline.StatusRepository
 import social.aloha.core.data.timeline.TimelinePager
@@ -201,6 +202,24 @@ class TimelineFillingTest {
         assertFalse(outcome.reachedEnd)
         assertNull(outcome.nextCursor)
         assertEquals(3, server.requestCount)
+        assertEquals(ProfileSync.Pending, outcome.profileSync)
+    }
+
+    @Test
+    fun `an account whose server could not be read ends where this server's posts do, and says so`() = runBlocking {
+        val server = served(
+            object : Dispatcher() {
+                override fun dispatch(request: RecordedRequest) = MockResponse.Builder().code(200).body("[]")
+                    .addHeader("content-type", "application/json")
+                    .addHeader("X-Social-Profile-Sync-State", "failed")
+                    .build()
+            },
+        )
+        val account = signedInAt(server.url("/"))
+        val outcome = timelines.older(account, bobsPosts, cursor = null, oldestId = "11") as PageOutcome.Loaded
+        assertTrue(outcome.reachedEnd)
+        assertEquals(ProfileSync.Failed, outcome.profileSync)
+        assertEquals(1, server.requestCount)
     }
 
     @Test

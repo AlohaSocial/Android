@@ -114,6 +114,10 @@
     <string name="profile_offline">You\'re offline. Showing what is saved on this device.</string>
     <!-- Strip shown when the profile could not be loaded -->
     <string name="profile_error">Couldn\'t load this profile. Pull down to try again.</string>
+    <!-- Strip shown while the reader's server is still fetching a remote account's posts from that account's server -->
+    <string name="profile_sync_pending">Still loading their posts from their server…</string>
+    <!-- Strip shown when the reader's server could not fetch a remote account's posts from that account's server -->
+    <string name="profile_sync_failed">Couldn’t reach their server. Showing the posts this server already has.</string>
     <!-- Button that fills a gap of posts not loaded yet -->
     <string name="profile_gap">Load missing posts</string>
     <!-- Read aloud while the profile loads -->
