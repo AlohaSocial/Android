@@ -107,6 +107,13 @@ public object FeedPreferenceEndpoints {
     public fun hideReplies(): ApiRequest<Boolean?> =
         request(Endpoint(PATH), FeedPreferencesDto.serializer()) { it.hideReplies }
 
+    /**
+     * How the server orders a thread's replies for the reader (`oldest`, `newest`, `most-likes`, `random`),
+     * from their Bluesky thread preference; null where the answer does not say.
+     */
+    public fun threadSort(): ApiRequest<String?> =
+        request(Endpoint(PATH), FeedPreferencesDto.serializer()) { it.threadSort }
+
     /** Turns the switch; the server answers with the state it then holds, and 422 for anything not a boolean. */
     public fun setHideReplies(hide: Boolean): ApiRequest<Boolean?> = request(
         Endpoint(PATH, HttpMethod.PATCH, body = Body.Form(listOf(QueryItem("hide_replies", "$hide")))),
