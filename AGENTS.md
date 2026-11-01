@@ -38,6 +38,26 @@ Guidance for coding agents working in this repository. Humans: see
   never flips a state the app cannot see.
 - A request that failed answers `null`, not an empty list or set. Nothing is
   marked done, dropped or filtered on an answer that may have been a failure.
+  A lookup that failed keeps what was known before (a route, a capability), and
+  a 4xx is stored as a lasting refusal only where the server documents it as one.
+- A result that arrives after a suspension is applied only while what it was
+  asked for still holds: the same account, filter, tab and request, compared
+  with what was captured when it was asked. A job that replaces another cancels
+  it; work per timeline or per item keeps one job per key, so starting one never
+  cancels another.
+- Read, decide and write on shared state (positions, optimistic toggles, tokens,
+  the device-search index) run under one `Mutex` per key or as one conditional
+  write ("remove if still this token"); never check, suspend, then act.
+- An optimistic change looks as the server's answer will (the same fallbacks,
+  `url` then `staticUrl`); a refusal returns to the state the server last
+  confirmed, not to the screen as it was before the tap.
+- Teardown with several steps (sign-out, revocation, export cleanup) runs every
+  step even when one before it throws, and once begun runs under
+  `NonCancellable`. A caught `Throwable` rethrows `CancellationException`. An
+  observer that must outlive errors catches its source's failure and observes on.
+- An HTTP path outside `RequestExecutor` (WebDAV, downloads) behaves as it does:
+  a 429 reaches the rate limiter, the status survives an unreadable error body,
+  cancellation propagates.
 - A change to stored settings is made inside the store's `update`, from what is
   stored then, not from a `StateFlow` snapshot; a change across several stores
   holds a `Mutex`.
@@ -56,7 +76,19 @@ Guidance for coding agents working in this repository. Humans: see
 - An object put into a `CompositionLocal` is made once and reads its values
   through `State`, so a value changing recomposes only what reads it.
 - Every animation goes through `motion()` or checks `rememberReducedMotion()`.
+- A flag that shows a snackbar or message is cleared after `showSnackbar`
+  returns, never before: clearing it first cancels the message.
+- What reaches a system surface (tile, complication, notification, device
+  search) leaves out text behind a content warning, and is removed when its
+  account signs out, the removal serialized with any refresh in flight.
 - Every long press, drag and swipe has a custom accessibility action that does
   the same; a handle carries no label of its own; a live region says a result,
   not every keystroke; a card shown only for its looks has its semantics cleared.
+- A new part of a status card joins the card's merged accessibility label and
+  its actions (`StatusAccessibility`); a screen's title is a heading.
 - A screen that replaces another removes the code paths only the old one used.
+- Tests use `checkNotNull` or `requireNotNull`, never `!!`: detekt skips test
+  sources, so only review catches it.
+- A server claim in `docs/` names the Social version it holds from and whether
+  it was checked live or read from source; a change of behaviour updates every
+  doc that states the old one (search `docs/` for it).
