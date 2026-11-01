@@ -122,6 +122,12 @@ public data class ServerCapabilities(
     val editsMedia: Boolean get() = !isNextcloudSocial || atLeast(softwareVersion, EDITS_MEDIA)
 
     /**
+     * Whether timelines narrow to one kind of media before paging, `media_type=image`, or to photos, videos
+     * and animated images together, `visual`: Nextcloud Social from 0.26.279 on.
+     */
+    val mediaTypeFilter: Boolean get() = isNextcloudSocial && atLeast(softwareVersion, MEDIA_TYPE)
+
+    /**
      * Whether a reaction can be one of the server's own custom emoji, sent as `:shortcode:`: Nextcloud Social
      * from 0.26.280 on. Before, it took Unicode emoji alone.
      */
@@ -180,6 +186,7 @@ public data class ServerCapabilities(
         private val DISLIKE_STATE = listOf(0, 26, 279)
         private val EDITS_MEDIA = listOf(0, 26, 279)
         private val CUSTOM_EMOJI_REACTIONS = listOf(0, 26, 280)
+        private val MEDIA_TYPE = listOf(0, 26, 279)
 
         /** Raised whenever detection learns a new field: 1 added the live feeds, 2 the Shorts narrowing. */
         public const val CURRENT_FORMAT: Int = 2

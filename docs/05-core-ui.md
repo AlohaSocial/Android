@@ -270,7 +270,9 @@ exist undocumented.
   Block, Mute (with duration and "also mute notifications"), Report, Block
   domain, Add note.
 - Tabs: Posts · Posts & Replies · Media · Featured · Videos · Albums (where the
-  server has them) · Stories (where present and visible). Nextcloud Social
+  server has them) · Stories (where present and visible). Media is the
+  account's photos, videos and animated images on Nextcloud Social 0.26.279 on
+  (`media_type=visual`), every post with an attachment elsewhere. Nextcloud Social
   before 0.26.237 ignores `exclude_replies`, so Posts leaves replies to other
   accounts out on the device (a thread of the account's own stays), paging on
   to fill the page. A featured hashtag opens the account's own posts with it

@@ -31,6 +31,7 @@ public object TimelineEndpoints {
     /**
      * A page of [source]. The [filters] are Nextcloud Social's narrowings; `only_short` wins over
      * `only_video`, and that over `only_media`, since every short is a video and every video is media.
+     * An account's posts take only its [TimelineFilters.mediaType], in place of `only_media`.
      */
     public fun timeline(
         source: TimelineSource,
@@ -45,8 +46,8 @@ public object TimelineEndpoints {
                 page + flagQuery(
                     "exclude_replies",
                     !source.includeReplies,
-                ) + flagQuery("only_media", source.onlyMedia) +
-                    queryOf("tagged", source.tagged)
+                ) + flagQuery("only_media", source.onlyMedia && filters.mediaType == null) +
+                    queryOf("media_type", filters.mediaType) + queryOf("tagged", source.tagged)
 
             is TimelineSource.Hashtag -> page + tagItems(source) + filterItems(filters)
 
@@ -84,6 +85,7 @@ public object TimelineEndpoints {
     private fun filterItems(filters: TimelineFilters): List<QueryItem> = when {
         filters.onlyShort -> flagQuery("only_short", true)
         filters.onlyVideo -> flagQuery("only_video", true)
+        filters.mediaType != null -> queryOf("media_type", filters.mediaType)
         else -> flagQuery("only_media", filters.onlyMedia) + flagQuery("only_news", filters.onlyNews)
     }
 

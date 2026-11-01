@@ -372,7 +372,7 @@ public class TimelineRepository @Inject constructor(
      */
     private suspend fun harvest(client: ApiClient, fetch: Fetch): ApiResult<Harvest> {
         val mode = fetch.key.mode
-        val serverFilters = TimelineFilters.forMode(mode, fetch.account.capabilities)
+        val serverFilters = TimelineFilters.forKey(fetch.key, fetch.account.capabilities)
         val onDevice = mode != FeedMode.Home
         val request = TimelineEndpoints.timeline(fetch.key.source, serverFilters, Paging.DEFAULT_LIMIT, fetch.anchor)
         val upwards = fetch.anchor is PageAnchor.NewerThan

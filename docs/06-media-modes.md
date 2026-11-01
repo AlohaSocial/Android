@@ -49,7 +49,7 @@ boosted in Home.
 | Mode | Nextcloud Social | Any other server |
 |---|---|---|
 | Home | `/timelines/{home,public}` | same |
-| Photos | `+ only_media=true` | fetch normally, filter to statuses whose attachments are all images, over-fetch ×3 to fill a page |
+| Photos | `+ media_type=image` from 0.26.279, `+ only_media=true` before; still filtered to photos on the device | fetch normally, filter to statuses whose attachments are all images, over-fetch ×3 to fill a page |
 | Video | `+ only_video=true` | filter to statuses carrying a `video` attachment, over-fetch ×5 |
 | Shorts | `+ only_short=true` where `/api/v2/config` `features.shorts` says so (0.26.222 on), `+ only_video=true` before; client-side short classification either way | as Video, then classification, over-fetch ×8 |
 | News | `+ only_news=true` | **mode hidden** — there is no client-side equivalent worth faking |
