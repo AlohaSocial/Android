@@ -74,7 +74,9 @@ class CacheDaoTest {
         timelines.apply("a", "public:local", emptyList(), listOf(entry("1", 5, key = "public:local")))
         database.statusDao().upsert(status("1").copy(payloadJson = """{"id":"1","favourited":true}"""))
         for (key in listOf("home:home", "public:local")) {
-            assertTrue(timelines.observeRows("a", key, 10).first().single().payloadJson!!.contains("favourited"))
+            assertTrue(
+                checkNotNull(timelines.observeRows("a", key, 10).first().single().payloadJson).contains("favourited"),
+            )
         }
     }
 

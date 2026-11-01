@@ -44,12 +44,12 @@ class StatusRepositoryTest {
         val post = StatusSamples.post()
         store.saveToggled("a", post.copy(favourited = true, favouritesCount = post.favouritesCount + 1))
         store.saveAll("a", listOf(post, StatusSamples.boost))
-        assertTrue(store.get("a", post.id)!!.favourited)
-        assertEquals(post.favouritesCount + 1, store.get("a", post.id)!!.favouritesCount)
-        assertTrue(store.get("a", StatusSamples.boost.id)!!.reblog!!.favourited)
+        assertTrue(checkNotNull(store.get("a", post.id)).favourited)
+        assertEquals(post.favouritesCount + 1, checkNotNull(store.get("a", post.id)).favouritesCount)
+        assertTrue(checkNotNull(checkNotNull(store.get("a", StatusSamples.boost.id)).reblog).favourited)
         clock.now += StatusRepository.TOGGLE_HOLD
         store.saveAll("a", listOf(post))
-        assertFalse(store.get("a", post.id)!!.favourited)
+        assertFalse(checkNotNull(store.get("a", post.id)).favourited)
     }
 
     @Test
@@ -58,7 +58,7 @@ class StatusRepositoryTest {
         val clip = StatusSamples.post().copy(dislikesCount = 1, video = VideoDetails(views = 12, dislikes = 1))
         store.saveToggled("a", StatusInteractions.flipped(clip, Toggle.Dislike).first)
         store.saveAll("a", listOf(clip))
-        val kept = store.get("a", clip.id)!!
+        val kept = checkNotNull(store.get("a", clip.id))
         assertTrue(kept.disliked)
         assertEquals(2, kept.dislikesCount)
         assertEquals(2, kept.video?.dislikes)
@@ -70,7 +70,7 @@ class StatusRepositoryTest {
         statuses.save("a", StatusSamples.boost)
         val favourited = StatusSamples.post().copy(favourited = true)
         statuses.saveAll("a", listOf(favourited, StatusSamples.reply))
-        assertTrue(statuses.get("a", StatusSamples.boost.id)!!.reblog!!.favourited)
+        assertTrue(checkNotNull(checkNotNull(statuses.get("a", StatusSamples.boost.id)).reblog).favourited)
         assertEquals(StatusSamples.reply.id, statuses.get("a", StatusSamples.reply.id)?.id)
     }
 

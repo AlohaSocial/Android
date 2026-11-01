@@ -68,7 +68,7 @@ class StatusInteractionsTest {
         val shown = StatusSamples.post()
         tapTwice(reader, shown)
         assertEquals(listOf("/api/v1/statuses/10/favourite", "/api/v1/statuses/10/unfavourite"), asked)
-        assertFalse(fixture.statuses.get(reader.id, shown.id)!!.favourited)
+        assertFalse(checkNotNull(fixture.statuses.get(reader.id, shown.id)).favourited)
     }
 
     @Test
@@ -77,7 +77,7 @@ class StatusInteractionsTest {
         val reader = fixture.signIn(server.url("/"))
         val shown = StatusSamples.post().copy(favourited = true, favouritesCount = 4)
         tapTwice(reader, shown)
-        val kept = fixture.statuses.get(reader.id, shown.id)!!
+        val kept = checkNotNull(fixture.statuses.get(reader.id, shown.id))
         assertTrue(kept.favourited)
         assertEquals(4, kept.favouritesCount)
     }
@@ -96,7 +96,7 @@ class StatusInteractionsTest {
                 it.substringAfterLast('/')
             },
         )
-        assertFalse(fixture.statuses.get(reader.id, shown.id)!!.favourited)
+        assertFalse(checkNotNull(fixture.statuses.get(reader.id, shown.id)).favourited)
     }
 
     @Test
@@ -107,12 +107,12 @@ class StatusInteractionsTest {
         val first = async(Dispatchers.IO) { interactions.toggle(reader, shown, Toggle.Favourite) }
         withTimeout(10.seconds) { while (asked.isEmpty()) delay(10) }
         val second = async(Dispatchers.IO) { interactions.toggle(reader, shown, Toggle.Favourite) }
-        withTimeout(10.seconds) { while (fixture.statuses.get(reader.id, shown.id)!!.favourited) delay(10) }
+        withTimeout(10.seconds) { while (checkNotNull(fixture.statuses.get(reader.id, shown.id)).favourited) delay(10) }
         second.cancelAndJoin()
         firstHeld.countDown()
         first.await()
         assertEquals(1, asked.size)
-        assertTrue(fixture.statuses.get(reader.id, shown.id)!!.favourited)
+        assertTrue(checkNotNull(fixture.statuses.get(reader.id, shown.id)).favourited)
     }
 
     /** Favourite taps twice on [shown], the second while the first is still unanswered. */
@@ -123,7 +123,7 @@ class StatusInteractionsTest {
         val second = async(Dispatchers.IO) { interactions.toggle(reader, shown, Toggle.Favourite) }
         // the second guess shows while the first is unanswered, and the second waits to be sent
         withTimeout(10.seconds) {
-            while (fixture.statuses.get(reader.id, shown.id)!!.favourited != shown.favourited) delay(10)
+            while (checkNotNull(fixture.statuses.get(reader.id, shown.id)).favourited != shown.favourited) delay(10)
         }
         assertEquals(1, asked.size)
         firstHeld.countDown()

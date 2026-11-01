@@ -41,7 +41,7 @@ class WatchSignInTest {
             opened += url
             if (!approve) return PhoneAnswer.Returned("$redirectUri?error=access_denied&state=" + url.state())
             val page = http.newCall(Request.Builder().url(url).build()).execute().use { it.body.string() }
-            return PhoneAnswer.Returned(LINK.find(page)!!.groupValues[1].replace("&amp;", "&"))
+            return PhoneAnswer.Returned(checkNotNull(LINK.find(page)).groupValues[1].replace("&amp;", "&"))
         }
 
         private fun HttpUrl.state() = queryParameter("state").orEmpty()
@@ -109,7 +109,7 @@ class WatchSignInTest {
         val handed = HandedOverAccount(mock.origin.toString(), "alice", "phone-token")
         val watch = signIn(ConsentingPhone(), PhoneApp(handed))
 
-        val account = watch.fromPhone()!!
+        val account = checkNotNull(watch.fromPhone())
         assertEquals("phone-token", account.token)
         assertTrue(account.shared)
         watch.signOut()

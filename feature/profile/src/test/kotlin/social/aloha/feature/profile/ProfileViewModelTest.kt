@@ -21,6 +21,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import kotlinx.coroutines.withTimeout
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -32,6 +33,7 @@ import mockwebserver3.RecordedRequest
 import okhttp3.OkHttpClient
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -85,6 +87,9 @@ private class Bob : Dispatcher() {
 
     @Volatile var following = false
 
+    /** His profile layout as his server sends it, raw JSON; none when null. */
+    @Volatile var profileLayout: String? = null
+
     /** The next read of his posts is answered as still being filled in, three newer ones arriving meanwhile. */
     @Volatile var fillingOnce = false
 
@@ -124,7 +129,7 @@ private class Bob : Dispatcher() {
 
             path.endsWith("/accounts/search") -> json(JsonArray(listOf(account)).toString())
 
-            path.endsWith("/accounts/7") -> json(account.toString())
+            path.endsWith("/accounts/7") -> json(withLayout())
 
             path.endsWith("/filters") -> json("[]")
 
@@ -145,6 +150,11 @@ private class Bob : Dispatcher() {
         fillingOnce = false
         statuses.newest += 3
         return answer.addHeader("X-Social-Filling", "1").build()
+    }
+
+    private fun withLayout(): String {
+        val layout = profileLayout ?: return account.toString()
+        return JsonObject(account + ("profile_layout" to Json.parseToJsonElement(layout))).toString()
     }
 
     private fun relationship(following: Boolean) =
@@ -223,7 +233,7 @@ class ProfileViewModelTest {
     @Test
     fun `a profile opens with its header, how the reader relates to it, and its posts`() = runBlocking {
         val state = open(id = "7").await { it.header != null && it.relation != null && it.items.isNotEmpty() }
-        val header = state.header!!
+        val header = checkNotNull(state.header)
         assertEquals("Bob", header.author.plainName)
         assertEquals("Surfs at dawn", header.note.text.trim())
         assertEquals(12, header.followers)
@@ -282,11 +292,39 @@ class ProfileViewModelTest {
     }
 
     @Test
+    fun `a profile opens on the tab its account chose and leaves out the ones it turned off`() = runBlocking {
+        bob.profileLayout = """{"default_tab": "videos", "tabs": ["posts", "videos"]}"""
+        val viewModel = open(id = "7")
+        val state = viewModel.await { it.header != null }
+        assertEquals(ProfileTab.Videos, state.tab)
+        assertFalse(ProfileTab.Media in state.tabs)
+        viewModel.onTab(ProfileTab.Posts)
+        // a refresh that answers with another choice, so the state after it is told from the one before
+        bob.profileLayout = """{"default_tab": "photos", "tabs": ["posts", "photos"]}"""
+        viewModel.onRefresh()
+        val refreshed = viewModel.await { ProfileTab.Media in it.tabs }
+        assertEquals(ProfileTab.Posts, refreshed.tab)
+    }
+
+    @Test
+    fun `a refresh keeps the tab the reader is on although the account now hides it`() = runBlocking {
+        bob.profileLayout = """{"default_tab": "posts", "tabs": ["posts", "videos"]}"""
+        val viewModel = open(id = "7")
+        viewModel.await { it.header != null }
+        viewModel.onTab(ProfileTab.Videos)
+        bob.profileLayout = """{"default_tab": "photos", "tabs": ["posts", "photos"]}"""
+        viewModel.onRefresh()
+        val refreshed = viewModel.await { ProfileTab.Media in it.tabs }
+        assertEquals(ProfileTab.Videos, refreshed.tab)
+        assertTrue(ProfileTab.Videos in refreshed.tabs)
+    }
+
+    @Test
     fun `following shows once the server agrees`() = runBlocking {
         val viewModel = open(id = "7")
         viewModel.await { it.relation != null }
         viewModel.onChange(RelationshipChange.Follow())
-        assertTrue(viewModel.await { it.relation?.following == true && !it.changing }.relation!!.following)
+        assertTrue(checkNotNull(viewModel.await { it.relation?.following == true && !it.changing }.relation).following)
     }
 
     @Test
@@ -298,7 +336,7 @@ class ProfileViewModelTest {
     @Test
     fun `Nextcloud Social's twelve weeks of posting show with their reading`() = runBlocking {
         val state = open(id = "7").await { it.highlights != null }
-        assertEquals(32, state.highlights!!.total)
+        assertEquals(32, checkNotNull(state.highlights).total)
     }
 
     @Test
@@ -334,10 +372,16 @@ class ProfileViewModelTest {
         val viewModel = open(id = "7")
         viewModel.await { it.relation != null }
         viewModel.onLists()
-        val lists = viewModel.await { it.lists != null }.lists!!
+        val lists = checkNotNull(viewModel.await { it.lists != null }.lists)
         assertEquals(listOf("Surf" to true, "Friends" to false), lists.map { it.list.title to it.member })
         viewModel.onListed("l2", add = true)
-        assertTrue(viewModel.await { state -> state.lists?.all { it.member } == true }.lists!!.all { it.member })
+        assertTrue(
+            checkNotNull(
+                viewModel.await { state ->
+                    state.lists?.all { it.member } == true
+                }.lists,
+            ).all { it.member },
+        )
         withTimeout(10.seconds) { while (bob.changes.isEmpty()) delay(10) }
         assertEquals("POST /api/v1/lists/l2/accounts account_ids%5B%5D=7", bob.changes.single())
     }

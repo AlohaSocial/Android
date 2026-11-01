@@ -13,6 +13,7 @@ import social.aloha.core.model.FeaturedTag
 import social.aloha.core.model.FeedMode
 import social.aloha.core.model.Filter
 import social.aloha.core.model.FilterContext
+import social.aloha.core.model.ProfileLayout
 import social.aloha.core.model.Relationship
 import social.aloha.core.model.ServerCapabilities
 import social.aloha.core.model.Status
@@ -88,13 +89,33 @@ internal object ProfilePresentation {
         )
     }
 
-    /** The three timelines, Featured where the account features something, Videos, then what the server has. */
-    fun tabs(capabilities: ServerCapabilities, featured: Boolean): List<ProfileTab> = buildList {
-        addAll(listOf(ProfileTab.Posts, ProfileTab.Replies, ProfileTab.Media))
+    /**
+     * The three timelines, Featured where the account features something, Videos, then what the server has;
+     * Media, Videos and Collections only where the account's [layout] offers them or the reader is on them
+     * ([current]), as Nextcloud Social's web app keeps the tab open when a refreshed layout hides it.
+     */
+    fun tabs(
+        capabilities: ServerCapabilities,
+        featured: Boolean,
+        layout: ProfileLayout?,
+        current: ProfileTab,
+    ): List<ProfileTab> = buildList {
+        fun offered(tab: ProfileTab, name: String) = tab == current || layout?.shows(name) != false
+        addAll(listOf(ProfileTab.Posts, ProfileTab.Replies))
+        if (offered(ProfileTab.Media, ProfileLayout.PHOTOS)) add(ProfileTab.Media)
         if (featured) add(ProfileTab.Featured)
-        add(ProfileTab.Videos)
-        if (capabilities.collections) add(ProfileTab.Collections)
+        if (offered(ProfileTab.Videos, ProfileLayout.VIDEOS)) add(ProfileTab.Videos)
+        if (capabilities.collections && offered(ProfileTab.Collections, ProfileLayout.COLLECTIONS)) {
+            add(ProfileTab.Collections)
+        }
         if (capabilities.stories) add(ProfileTab.Stories)
+    }
+
+    /** The tab the account's profile opens on: its photos are the Media timeline. */
+    fun firstTab(layout: ProfileLayout?): ProfileTab = when (layout?.defaultTab) {
+        ProfileLayout.PHOTOS -> ProfileTab.Media
+        ProfileLayout.VIDEOS -> ProfileTab.Videos
+        else -> ProfileTab.Posts
     }
 
     /**

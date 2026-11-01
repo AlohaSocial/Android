@@ -182,7 +182,7 @@ class TimelineViewModelTest {
     fun `a timeline on screen refreshes when a poll says it is due, and holds what came behind the pill`() =
         runBlocking {
             await { it.loadedOnce && it.items.isNotEmpty() }
-            val account = accounts.activeAccount.value!!
+            val account = checkNotNull(accounts.activeAccount.value)
             viewModel.onShown(isShown = true)
             assertTrue(signals.onScreen(account.id))
             timeline.newest = 102
@@ -198,7 +198,7 @@ class TimelineViewModelTest {
         await { it.loadedOnce && it.items.isNotEmpty() }
         // nothing read before: no line
         assertFalse(await { it.loadedOnce }.items.any { it is TimelineItem.CaughtUp })
-        val account = accounts.activeAccount.value!!
+        val account = checkNotNull(accounts.activeAccount.value)
         // the previous visit on this device ended at 95, and the process started over
         TimelinePositions(cache.positionDao(), clients).save(account, TimelineKey.home(), TimelinePosition("95", 0))
         viewModel = create(TimelineFeed.Home)
@@ -249,14 +249,14 @@ class TimelineViewModelTest {
         viewModel.onSource(TimelineSource.Local)
         val state = await { it.source == TimelineSource.Local && it.loadedOnce && it.items.isNotEmpty() }
         assertEquals("100", state.postIds().first())
-        val account = accounts.activeAccount.value!!
+        val account = checkNotNull(accounts.activeAccount.value)
         assertEquals(TimelineSource.Local, settings.settings(account.id).first().homeSource)
     }
 
     @Test
     fun `a server that disables its live feeds offers only Following, whatever was chosen before`() = runBlocking {
         await { it.loadedOnce && it.items.isNotEmpty() }
-        val account = accounts.activeAccount.value!!
+        val account = checkNotNull(accounts.activeAccount.value)
         settings.update(account.id) { it.copy(homeSource = TimelineSource.Local) }
         await { it.source == TimelineSource.Local }
         accounts.updateCapabilities(account.id, account.capabilities.copy(localFeed = false, federatedFeed = false))
@@ -271,7 +271,7 @@ class TimelineViewModelTest {
         assertEquals(TimelineSource.Hashtag("surf"), state.source)
         assertEquals(emptyList<TimelineSource>(), state.sources)
         // stored under the hashtag's own timeline, apart from home's
-        val reader = accounts.activeAccount.value!!
+        val reader = checkNotNull(accounts.activeAccount.value)
         assertTrue(
             cache.timelineDao().entries(
                 reader.id,

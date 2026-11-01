@@ -138,7 +138,7 @@ internal class ComposerViewModelTest : ComposerTestSetup() {
         viewModel.await { it.done }
         val (first, second) = posts.sent
         assertEquals(first.second["status"], second.second["status"])
-        assertTrue(first.second["status"]!!.startsWith("🪙 "))
+        assertTrue(checkNotNull(first.second["status"]).startsWith("🪙 "))
         assertEquals(first.first, second.first)
     }
 
@@ -335,7 +335,7 @@ internal class ComposerViewModelTest : ComposerTestSetup() {
         assertEquals("As I meant it", edit["status"]?.jsonPrimitive?.content)
         // the picture kept as it was: left out, as Social serves media an edit named without their ids
         assertNull(edit["media_ids"])
-        val attribute = edit["media_attributes"]!!.jsonArray.single().jsonObject
+        val attribute = checkNotNull(edit["media_attributes"]).jsonArray.single().jsonObject
         assertEquals("m1", attribute["id"]?.jsonPrimitive?.content)
         assertEquals("New words", attribute["description"]?.jsonPrimitive?.content)
     }

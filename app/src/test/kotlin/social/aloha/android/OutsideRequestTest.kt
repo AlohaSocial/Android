@@ -69,7 +69,10 @@ class OutsideRequestTest {
         )
         assertNull(OutsideRequest.of(send("no address here").setComponent(alias), own))
         // the same text through the app's own share target is a new post, not a link
-        assertEquals(OutsideRequest.Share::class, OutsideRequest.of(send("https://x.example/a"), own)!!::class)
+        assertEquals(
+            OutsideRequest.Share::class,
+            checkNotNull(OutsideRequest.of(send("https://x.example/a"), own))::class,
+        )
     }
 
     @Test

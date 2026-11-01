@@ -175,9 +175,9 @@ public class NumberedTimeline(template: JsonObject = homeTemplate()) : Dispatche
 
         /** The first status of the recorded Nextcloud Social home timeline, as every numbered status's shape. */
         public fun homeTemplate(): JsonObject {
-            val fixture = NumberedTimeline::class.java.classLoader!!
-                .getResource("fixtures/nextcloud-social-0.26.97/api/timeline-home.json")!!
-                .readText()
+            val fixture = checkNotNull(
+                NumberedTimeline::class.java.getResource("/fixtures/nextcloud-social-0.26.97/api/timeline-home.json"),
+            ).readText()
             return Json.parseToJsonElement(fixture).jsonObject.getValue("body").jsonArray.first().jsonObject
         }
     }

@@ -11,6 +11,7 @@ import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import social.aloha.core.model.Account
 import social.aloha.core.model.AccountField
 import social.aloha.core.model.AccountSource
+import social.aloha.core.model.ProfileLayout
 import social.aloha.core.model.Visibility
 import social.aloha.core.network.decoding.FlexibleIdSerializer
 import social.aloha.core.network.decoding.LenientBoolSerializer
@@ -55,7 +56,26 @@ internal data class AccountDto(
     @Serializable(with = AccountSourceOrNull::class) val source: AccountSourceDto? = null,
     @Serializable(with = AccountOrNull::class) val moved: AccountDto? = null,
     @Serializable(with = LenientBoolSerializer::class) val memorial: Boolean = false,
+    @SerialName("profile_layout") @Serializable(with = ProfileLayoutOrNull::class)
+    val profileLayout: ProfileLayoutDto? = null,
 )
+
+@Serializable
+internal data class ProfileLayoutDto(
+    @SerialName("default_tab") val defaultTab: String? = null,
+    val tabs: List<String>? = null,
+)
+
+internal object ProfileLayoutOrNull : KSerializer<ProfileLayoutDto?> by OrNullSerializer(ProfileLayoutDto.serializer())
+
+/**
+ * A layout that hides Posts or opens on a tab it hides is no layout, as on Nextcloud Social, which only ever
+ * sends one it has checked; a tab name the app does not know is kept, for a server that adds one.
+ */
+internal fun ProfileLayoutDto.toDomain(): ProfileLayout? {
+    val layout = ProfileLayout(defaultTab ?: ProfileLayout.POSTS, tabs ?: ProfileLayout.ALL)
+    return layout.takeIf { it.shows(ProfileLayout.POSTS) && it.shows(it.defaultTab) }
+}
 
 @Serializable
 internal data class AccountFieldDto(
@@ -110,6 +130,7 @@ internal fun AccountDto.toDomain(): Account {
         source = source?.toDomain(),
         moved = moved?.toDomain(),
         memorial = memorial,
+        profileLayout = profileLayout?.toDomain(),
     )
 }
 

@@ -80,7 +80,7 @@ class MediaUploadsTest {
         val account = fixture.signIn("https://up.test/".toHttpUrl())
         val name = uploads.enqueue(account, media)
         val sent = ids(name).single()
-        WorkManagerTestInitHelper.getTestDriver(context)!!.setAllConstraintsMet(sent)
+        checkNotNull(WorkManagerTestInitHelper.getTestDriver(context)).setAllConstraintsMet(sent)
         assertEquals(UploadState.Done("m1", null), uploads.observe(name).first { it is UploadState.Done })
         uploads.enqueue(account, media, join = true)
         assertEquals(listOf(sent), ids(name))

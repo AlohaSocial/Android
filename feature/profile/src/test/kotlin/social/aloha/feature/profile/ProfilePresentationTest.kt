@@ -13,6 +13,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import social.aloha.core.html.RichTextCache
 import social.aloha.core.model.FeaturedTag
+import social.aloha.core.model.ProfileLayout
 import social.aloha.core.model.ServerCapabilities
 import social.aloha.core.testing.StatusSamples
 import social.aloha.core.ui.RichTextColors
@@ -37,7 +38,7 @@ class ProfilePresentationTest {
         emptyList(),
         listOf(FeaturedTag(id = "1", name = "surf", statusesCount = 3)),
         capabilities,
-    ) { error("no posts") }!!.byAccount
+    ) { error("no posts") }.let { checkNotNull(it) { "a featured hashtag is something featured" } }.byAccount
 
     @Test
     fun `a server that hid the followers says nothing for 0, and a real count still shows`() {
@@ -51,6 +52,28 @@ class ProfilePresentationTest {
         assertFalse(social("0.26.240").realFollowerCounts)
         assertTrue(social("0.26.241").realFollowerCounts)
         assertTrue(ServerCapabilities.minimal("https://mastodon.example/").realFollowerCounts)
+    }
+
+    @Test
+    fun `a profile leaves out the tabs its account turned off, and opens on the one it chose`() {
+        val everything = ServerCapabilities.minimal("https://cloud.example/").copy(collections = true)
+        val all = ProfilePresentation.tabs(everything, featured = false, layout = null, current = ProfileTab.Posts)
+        assertEquals(
+            listOf(ProfileTab.Posts, ProfileTab.Replies, ProfileTab.Media, ProfileTab.Videos, ProfileTab.Collections),
+            all,
+        )
+        val postsOnly = ProfileLayout(tabs = listOf("posts"))
+        assertEquals(
+            listOf(ProfileTab.Posts, ProfileTab.Replies),
+            ProfilePresentation.tabs(everything, featured = false, layout = postsOnly, current = ProfileTab.Posts),
+        )
+        assertEquals(
+            listOf(ProfileTab.Posts, ProfileTab.Replies, ProfileTab.Videos),
+            ProfilePresentation.tabs(everything, featured = false, layout = postsOnly, current = ProfileTab.Videos),
+        )
+        assertEquals(ProfileTab.Posts, ProfilePresentation.firstTab(null))
+        assertEquals(ProfileTab.Media, ProfilePresentation.firstTab(ProfileLayout(defaultTab = "photos")))
+        assertEquals(ProfileTab.Videos, ProfilePresentation.firstTab(ProfileLayout(defaultTab = "videos")))
     }
 
     @Test

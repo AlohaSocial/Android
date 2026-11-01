@@ -22,7 +22,7 @@ class BlurHashTest {
 
     @Test
     fun `a single-component hash decodes to its colour everywhere`() {
-        val pixels = BlurHash.decode(uniform(0x3366CC), 8, 4)!!
+        val pixels = checkNotNull(BlurHash.decode(uniform(0x3366CC), 8, 4))
         assertEquals(32, pixels.size)
         // one step of rounding through linear light and back
         pixels.forEach { pixel ->
@@ -45,7 +45,7 @@ class BlurHashTest {
     fun `a real hash decodes to a varied, opaque image of the asked size`() {
         val pixels = BlurHash.decode("LEHV6nWB2yk8pyo0adR*.7kCMdnj", 32, 32)
         assertNotNull(pixels)
-        assertEquals(32 * 32, pixels!!.size)
+        assertEquals(32 * 32, checkNotNull(pixels).size)
         assertTrue(pixels.all { it ushr 24 == 0xFF })
         assertTrue(pixels.toSet().size > 10)
     }

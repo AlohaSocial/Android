@@ -56,9 +56,10 @@ issue link, and CI fails any pull request that grows a baseline.
 
 ## Code conventions
 
-- Kotlin only. No `!!`, no `runBlocking` outside tests, no `GlobalScope`, no
-  hard-coded dispatchers, no `System.currentTimeMillis` (inject a `Clock`).
-  detekt enforces these.
+- Kotlin only. No `!!`, tests included (use `checkNotNull`), no `runBlocking`
+  outside tests, no `GlobalScope`, no hard-coded dispatchers, no
+  `System.currentTimeMillis` (inject a `Clock`). detekt enforces these, and
+  `alohaNotNullCheck` (run with `alohaArchitectureCheck`) the `!!`.
 - Log through Timber, tagged with a `LogArea`; detekt forbids `android.util.Log`
   and `println`. A line carries ids, paths without their query, status codes,
   exception class names and durations, never a token, password, post text,

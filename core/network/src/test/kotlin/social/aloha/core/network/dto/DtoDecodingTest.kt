@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test
 import social.aloha.core.model.AttachmentKind
 import social.aloha.core.model.ModerationWarning
 import social.aloha.core.model.NotificationKind
+import social.aloha.core.model.ProfileLayout
 import social.aloha.core.model.SeveranceEvent
 import social.aloha.core.model.Status
 import social.aloha.core.model.StatusEvent
@@ -74,6 +75,19 @@ class DtoDecodingTest {
         assertEquals(route, generated.avatar)
         assertTrue(generated.avatarDefault)
         assertFalse(account(""""avatar": "https://mastodon.example/a.png"""").avatarDefault)
+    }
+
+    @Test
+    fun `an account's profile layout is read as Nextcloud Social reads it, and a broken one shows it all`() {
+        fun layout(json: String) =
+            decodeStatus("""{"id": "1", "account": {"id": "2", "username": "alice", $json}}""").account.profileLayout
+        val chosen = layout(""""profile_layout": {"default_tab": "videos", "tabs": ["posts", "videos"]}""")
+        assertEquals(ProfileLayout("videos", listOf("posts", "videos")), chosen)
+        assertNull(layout(""""bot": false"""))
+        assertNull(layout(""""profile_layout": {"default_tab": "photos", "tabs": ["posts"]}"""))
+        assertNull(layout(""""profile_layout": {"default_tab": "posts", "tabs": ["videos"]}"""))
+        assertNull(layout(""""profile_layout": "posts""""))
+        assertNull(layout(""""profile_layout": {"default_tab": "posts", "tabs": ["posts", 1]}"""))
     }
 
     @Test

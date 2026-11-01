@@ -45,12 +45,22 @@ class ArchitectureConventionPlugin : Plugin<Project> {
                 },
             )
         }
+        val notNull = target.tasks.register("alohaNotNullCheck", NotNullCheckTask::class.java) {
+            group = "verification"
+            description = "Fails on a `!!` in any Kotlin source, tests included."
+            files.from(
+                target.fileTree(target.rootDir) {
+                    include("**/*.kt", "**/*.kts")
+                    exclude("**/build/**", ".gradle/**")
+                },
+            )
+        }
         target.tasks.register("alohaArchitectureCheck", ArchitectureCheckTask::class.java) {
             group = "verification"
             description = "Fails on a module dependency the module graph does not allow."
             this.edges.set(edges)
             // run with it, so CI's architecture step holds the strings to their comments too
-            dependsOn(strings)
+            dependsOn(strings, notNull)
         }
     }
 }
@@ -107,5 +117,33 @@ abstract class StringsCheckTask : DefaultTask() {
             )
         }
         logger.lifecycle("Strings: every one has its translator comment and a name no other module uses")
+    }
+}
+
+/**
+ * `alohaNotNullCheck`: no `!!` anywhere, tests included; `checkNotNull` or `requireNotNull` say what was
+ * missing. detekt's `UnsafeCallOnNullableType` needs type resolution, which the plain `detekt` task CI runs
+ * does not have, so the rule never ran. This reads the text: a `!!` in a string literal or a line comment
+ * is left alone.
+ */
+abstract class NotNullCheckTask : DefaultTask() {
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val files: ConfigurableFileCollection
+
+    @TaskAction
+    fun check() {
+        val literal = Regex("\"(?:\\\\.|[^\"\\\\])*\"")
+        val assertion = Regex("""[\w)\]}>]!!""")
+        val found = files.files.sortedBy { it.path }.flatMap { file ->
+            file.readLines().withIndex().mapNotNull { (index, line) ->
+                val code = line.replace(literal, "\"\"").substringBefore("//")
+                "${file.path}:${index + 1}: ${line.trim()}".takeIf { assertion.containsMatchIn(code) }
+            }
+        }
+        if (found.isNotEmpty()) {
+            throw GradleException("`!!` found; use checkNotNull or requireNotNull:\n" + found.joinToString("\n"))
+        }
+        logger.lifecycle("Not-null assertions: none in ${files.files.size} Kotlin files")
     }
 }

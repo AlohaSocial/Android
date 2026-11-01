@@ -52,8 +52,8 @@ class PushSubscriptionsTest {
         val account = fixture.signIn(server.url("/"))
         ok()
         assertNull(push.subscribe(account, "https://ntfy.example/up123", "pub-key", "auth-secret"))
-        val sent = server.takeRequest(1, TimeUnit.SECONDS)!!
-        val body = sent.body!!.utf8()
+        val sent = checkNotNull(server.takeRequest(1, TimeUnit.SECONDS))
+        val body = checkNotNull(sent.body).utf8()
         assertEquals("POST /api/v1/push/subscription", "${sent.method} ${sent.url.encodedPath}")
         listOf(
             "subscription%5Bendpoint%5D=https%3A%2F%2Fntfy.example%2Fup123",
@@ -68,7 +68,7 @@ class PushSubscriptionsTest {
         assertTrue(push.isActive(account.id))
         ok()
         push.unsubscribe(account)
-        assertEquals("DELETE", server.takeRequest(1, TimeUnit.SECONDS)!!.method)
+        assertEquals("DELETE", checkNotNull(server.takeRequest(1, TimeUnit.SECONDS)).method)
         assertFalse(push.isActive(account.id))
     }
 
