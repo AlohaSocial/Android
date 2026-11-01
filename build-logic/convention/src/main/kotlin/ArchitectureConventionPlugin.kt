@@ -45,9 +45,9 @@ class ArchitectureConventionPlugin : Plugin<Project> {
                 },
             )
         }
-        val notNull = target.tasks.register("alohaNotNullCheck", NotNullCheckTask::class.java) {
+        val banned = target.tasks.register("alohaBannedCodeCheck", BannedCodeCheckTask::class.java) {
             group = "verification"
-            description = "Fails on a `!!` in any Kotlin source, tests included."
+            description = "Fails on a `!!` anywhere, or a call detekt bans but cannot see, in production code."
             files.from(
                 target.fileTree(target.rootDir) {
                     include("**/*.kt", "**/*.kts")
@@ -60,7 +60,7 @@ class ArchitectureConventionPlugin : Plugin<Project> {
             description = "Fails on a module dependency the module graph does not allow."
             this.edges.set(edges)
             // run with it, so CI's architecture step holds the strings to their comments too
-            dependsOn(strings, notNull)
+            dependsOn(strings, banned)
         }
     }
 }
@@ -121,29 +121,92 @@ abstract class StringsCheckTask : DefaultTask() {
 }
 
 /**
- * `alohaNotNullCheck`: no `!!` anywhere, tests included; `checkNotNull` or `requireNotNull` say what was
- * missing. detekt's `UnsafeCallOnNullableType` needs type resolution, which the plain `detekt` task CI runs
- * does not have, so the rule never ran. This reads the text: a `!!` in a string literal or a line comment
- * is left alone.
+ * `alohaBannedCodeCheck`: what `config/detekt/detekt.yml` forbids but detekt cannot see. Its
+ * `UnsafeCallOnNullableType` and `ForbiddenMethodCall` need type resolution, which the plain `detekt` task
+ * does not have, so they never ran. This reads the text instead: `!!` anywhere, tests included, and in
+ * production code (every source set but `test*` and `androidTest*`) the calls detekt lists. Comments and
+ * string literals are left alone.
  */
-abstract class NotNullCheckTask : DefaultTask() {
+abstract class BannedCodeCheckTask : DefaultTask() {
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val files: ConfigurableFileCollection
 
+    private class Ban(val pattern: Regex, val reason: String, val testsToo: Boolean = false)
+
     @TaskAction
     fun check() {
-        val literal = Regex("\"(?:\\\\.|[^\"\\\\])*\"")
-        val assertion = Regex("""[\w)\]}>]!!""")
+        val bans = listOf(
+            Ban(Regex("""[\w)\]}>]!!"""), "`!!`: use checkNotNull or requireNotNull", testsToo = true),
+            Ban(Regex("""\brunBlocking\b"""), "runBlocking: blocking bridges only in tests"),
+            Ban(Regex("""\bprintln\s*\("""), "println: use Timber, tagged with a LogArea"),
+            Ban(Regex("""\bSystem\.currentTimeMillis\b"""), "System.currentTimeMillis: inject a Clock"),
+            Ban(
+                Regex("""\ballowMainThreadQueries\b"""),
+                "allowMainThreadQueries: no database access on the main thread",
+            ),
+        )
+        // every source set of the app but its tests: main, the flavours, the build types
+        val tests = Regex("/src/(test|androidTest)[^/]*/")
         val found = files.files.sortedBy { it.path }.flatMap { file ->
-            file.readLines().withIndex().mapNotNull { (index, line) ->
-                val code = line.replace(literal, "\"\"").substringBefore("//")
-                "${file.path}:${index + 1}: ${line.trim()}".takeIf { assertion.containsMatchIn(code) }
+            val path = file.invariantSeparatorsPath
+            val production = "/src/" in path && !tests.containsMatchIn(path)
+            codeOf(file.readText()).lines().withIndex().flatMap { (index, code) ->
+                bans.filter { (production || it.testsToo) && it.pattern.containsMatchIn(code) }
+                    .map { "${file.path}:${index + 1}: ${it.reason}" }
             }
         }
-        if (found.isNotEmpty()) {
-            throw GradleException("`!!` found; use checkNotNull or requireNotNull:\n" + found.joinToString("\n"))
-        }
-        logger.lifecycle("Not-null assertions: none in ${files.files.size} Kotlin files")
+        if (found.isNotEmpty()) throw GradleException("Banned code:\n" + found.joinToString("\n"))
+        logger.lifecycle("Banned code: none in ${files.files.size} Kotlin files")
     }
+}
+
+/**
+ * [text] with its comments and literals blanked out, its line breaks kept so lines still count: block
+ * comments nest, as Kotlin's do, and a raw string runs over lines. A string's `${…}` template goes with it.
+ */
+private fun codeOf(text: String): String {
+    val out = StringBuilder(text.length)
+    var i = 0
+    fun blankTo(end: Int) {
+        while (i < end && i < text.length) out.append(if (text[i] == '\n') '\n' else ' ').also { i++ }
+    }
+    fun quoted(quote: Char): Int {
+        var j = i + 1
+        while (j < text.length && text[j] != quote && text[j] != '\n') j += if (text[j] == '\\') 2 else 1
+        return j + 1
+    }
+    while (i < text.length) {
+        when {
+            text.startsWith("/*", i) -> {
+                var depth = 0
+                var j = i
+                do {
+                    when {
+                        text.startsWith("/*", j) -> {
+                            depth++
+                            j += 2
+                        }
+                        text.startsWith("*/", j) -> {
+                            depth--
+                            j += 2
+                        }
+                        else -> j++
+                    }
+                } while (depth > 0 && j < text.length)
+                blankTo(j)
+            }
+            text.startsWith("//", i) -> blankTo(text.indexOf('\n', i).takeIf { it >= 0 } ?: text.length)
+            text.startsWith("\"\"\"", i) -> {
+                val close = text.indexOf("\"\"\"", i + 3).takeIf { it >= 0 } ?: text.length
+                var end = close + 3
+                while (end < text.length && text[end] == '"') end++
+                blankTo(end)
+            }
+            text[i] == '"' -> blankTo(quoted('"'))
+            text[i] == '\'' -> blankTo(quoted('\''))
+            else -> out.append(text[i]).also { i++ }
+        }
+    }
+    return out.toString()
 }

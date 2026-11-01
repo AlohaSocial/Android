@@ -7,6 +7,9 @@
 build:
   maxIssues: 0
 
+# UnsafeCallOnNullableType and ForbiddenMethodCall need type resolution, which the plain detekt task
+# does not have (and detekt 1.23 cannot give the Android modules on AGP 9): alohaBannedCodeCheck enforces
+# them meanwhile. They stay listed for the detekt that can.
 potential-bugs:
   UnsafeCallOnNullableType:
     active: true
