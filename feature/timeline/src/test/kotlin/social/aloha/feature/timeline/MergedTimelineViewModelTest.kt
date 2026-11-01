@@ -32,6 +32,7 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -64,6 +65,7 @@ import social.aloha.core.model.TimelineSource
 import social.aloha.core.network.RateLimiter
 import social.aloha.core.testing.FakeSecretCipher
 import social.aloha.core.testing.InMemoryDataStore
+import social.aloha.core.testing.MainDispatcherRule
 import social.aloha.core.testing.MockCredentials
 import social.aloha.core.testing.NumberedTimeline
 import social.aloha.core.ui.RichTextColors
@@ -72,6 +74,9 @@ import social.aloha.core.ui.RichTextColors
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
 class MergedTimelineViewModelTest {
+    @get:Rule
+    val main = MainDispatcherRule()
+
     private val clock = Clock.systemUTC()
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val context = ApplicationProvider.getApplicationContext<android.content.Context>()
@@ -117,7 +122,6 @@ class MergedTimelineViewModelTest {
 
     @Before
     fun create() = runBlocking {
-        Dispatchers.setMain(Dispatchers.Unconfined)
         firstServer.start()
         secondServer.start()
         signIn(firstServer, "6")
@@ -126,27 +130,29 @@ class MergedTimelineViewModelTest {
         viewModel = create(TimelineFeed.Pinned(TimelineSource.Home))
     }
 
-    private fun create(feed: TimelineFeed) = MergedTimelineViewModel(
-        feed,
-        AllAccounts(accounts, AccountViewPreferences(InMemoryDataStore(emptyPreferences()))),
-        TimelineRepository(cache.timelineDao(), statuses, clients, accounts, clock, Dispatchers.IO),
-        MergedRows {
-            TimelineRowBuilder(
-                RichTextCache(),
-                FilterRepository(cache.filterDao(), clients),
-                FollowedAuthors(clients),
-                clock,
-            )
-        },
-        StatusInteractions(statuses, clients),
-        TimelinePositions(cache.positionDao(), clients),
-        AccountSettingsStore(InMemoryDataStore(emptyMap())),
-        AppPreferences(InMemoryDataStore(emptyPreferences())),
-        ReadingPreferences(InMemoryDataStore(emptyPreferences())),
-        ModePreferences(InMemoryDataStore(emptyPreferences())),
-        WatchPositions(clients, cache.watchPositionDao(), statuses, clock),
-        clock,
-        TimelineSignals(),
+    private fun create(feed: TimelineFeed) = main.keep(
+        MergedTimelineViewModel(
+            feed,
+            AllAccounts(accounts, AccountViewPreferences(InMemoryDataStore(emptyPreferences()))),
+            TimelineRepository(cache.timelineDao(), statuses, clients, accounts, clock, Dispatchers.IO),
+            MergedRows {
+                TimelineRowBuilder(
+                    RichTextCache(),
+                    FilterRepository(cache.filterDao(), clients),
+                    FollowedAuthors(clients),
+                    clock,
+                )
+            },
+            StatusInteractions(statuses, clients),
+            TimelinePositions(cache.positionDao(), clients),
+            AccountSettingsStore(InMemoryDataStore(emptyMap())),
+            AppPreferences(InMemoryDataStore(emptyPreferences())),
+            ReadingPreferences(InMemoryDataStore(emptyPreferences())),
+            ModePreferences(InMemoryDataStore(emptyPreferences())),
+            WatchPositions(clients, cache.watchPositionDao(), statuses, clock),
+            clock,
+            TimelineSignals(),
+        ),
     ).apply { onColors(RichTextColors(Color.Blue, Color.Gray, Color.LightGray)) }
 
     private suspend fun signIn(server: MockWebServer, remoteId: String) {
@@ -168,7 +174,7 @@ class MergedTimelineViewModelTest {
 
     @After
     fun close() {
-        Dispatchers.resetMain()
+        main.clear()
         scope.cancel()
         accountsDb.close()
         cache.close()

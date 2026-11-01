@@ -18,6 +18,7 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -29,6 +30,7 @@ import social.aloha.core.intelligence.Intelligence
 import social.aloha.core.intelligence.LanguageModel
 import social.aloha.core.intelligence.ModelAvailability
 import social.aloha.core.testing.InMemoryDataStore
+import social.aloha.core.testing.MainDispatcherRule
 import social.aloha.core.testing.StatusSamples
 import social.aloha.core.ui.RichTextColors
 import social.aloha.core.ui.StatusRowMapper
@@ -37,6 +39,9 @@ import social.aloha.core.ui.StatusRowMapper
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36], application = Application::class)
 class SummaryViewModelTest {
+    @get:Rule
+    val main = MainDispatcherRule()
+
     private val context = ApplicationProvider.getApplicationContext<Application>()
     private val mapper = StatusRowMapper(RichTextCache(), RichTextColors(Color.Blue, Color.Gray, Color.LightGray))
     private var read: String? = null
@@ -52,11 +57,8 @@ class SummaryViewModelTest {
         }
     }
 
-    @Before
-    fun main() = Dispatchers.setMain(Dispatchers.Unconfined)
-
     @After
-    fun done() = Dispatchers.resetMain()
+    fun done() = main.clear()
 
     private fun post(id: String, text: String, warning: String = "") = ThreadItem.Post(
         mapper.map(StatusSamples.post(text).copy(id = id, spoilerText = warning), "1", showContext = false),
@@ -67,7 +69,7 @@ class SummaryViewModelTest {
     private suspend fun summaries(on: Boolean): SummaryViewModel {
         val preferences = IntelligencePreferences(InMemoryDataStore(emptyPreferences()))
         preferences.update { it.copy(summary = on) }
-        return SummaryViewModel(Intelligence(context, Optional.of(model), Optional.empty()), preferences)
+        return main.keep(SummaryViewModel(Intelligence(context, Optional.of(model), Optional.empty()), preferences))
     }
 
     @Test

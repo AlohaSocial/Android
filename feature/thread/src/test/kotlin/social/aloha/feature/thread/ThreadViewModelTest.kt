@@ -36,6 +36,7 @@ import okhttp3.OkHttpClient
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -60,6 +61,7 @@ import social.aloha.core.navigation.ThreadKey
 import social.aloha.core.network.RateLimiter
 import social.aloha.core.testing.FakeSecretCipher
 import social.aloha.core.testing.InMemoryDataStore
+import social.aloha.core.testing.MainDispatcherRule
 import social.aloha.core.testing.MockCredentials
 import social.aloha.core.testing.NumberedTimeline
 import social.aloha.core.ui.RichTextColors
@@ -170,6 +172,9 @@ private class Conversation : Dispatcher() {
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
 class ThreadViewModelTest {
+    @get:Rule
+    val main = MainDispatcherRule()
+
     private val clock = Clock.systemUTC()
     private val conversation = Conversation()
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -193,7 +198,7 @@ class ThreadViewModelTest {
 
     @After
     fun close() {
-        Dispatchers.resetMain()
+        main.clear()
         scope.cancel()
         accountsDb.close()
         cache.close()
@@ -201,7 +206,6 @@ class ThreadViewModelTest {
     }
 
     private suspend fun open(statusId: String, history: Boolean = false, version: String = ""): ThreadViewModel {
-        Dispatchers.setMain(Dispatchers.Unconfined)
         val apiBase = server.url("/")
         val capabilities = ServerCapabilities.minimal(apiBase.toString())
             .copy(softwareName = "nextcloud-social", softwareVersion = version)
@@ -209,18 +213,20 @@ class ThreadViewModelTest {
             NewAccount(apiBase.host, "6", "alice", "Alice", null, null, capabilities, profilePending = false),
             AccessToken(MockCredentials.ACCESS_TOKEN, ""),
         )
-        return ThreadViewModel(
-            ThreadKey(account.id, statusId, history),
-            accounts,
-            ThreadRepository(statuses, clients),
-            StatusInteractions(statuses, clients),
-            RichTextCache(),
-            clock,
-            ReplyNudges(
-                AppPreferences(InMemoryDataStore(emptyPreferences())),
-                AccountSettingsStore(InMemoryDataStore(emptyMap())),
-                clients,
+        return main.keep(
+            ThreadViewModel(
+                ThreadKey(account.id, statusId, history),
+                accounts,
+                ThreadRepository(statuses, clients),
+                StatusInteractions(statuses, clients),
+                RichTextCache(),
                 clock,
+                ReplyNudges(
+                    AppPreferences(InMemoryDataStore(emptyPreferences())),
+                    AccountSettingsStore(InMemoryDataStore(emptyMap())),
+                    clients,
+                    clock,
+                ),
             ),
         ).apply { onColors(RichTextColors(Color.Blue, Color.Gray, Color.LightGray)) }
     }

@@ -23,6 +23,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -36,6 +37,7 @@ import social.aloha.core.network.oauth.OAuthIdentity
 import social.aloha.core.network.probe.ServerProbe
 import social.aloha.core.network.tls.ClientCertificateAliases
 import social.aloha.core.network.tls.UserTrustStore
+import social.aloha.core.testing.MainDispatcherRule
 import social.aloha.core.testing.MockCredentials
 import social.aloha.core.testing.MockServerConfiguration
 import social.aloha.core.testing.MockSocialServer
@@ -45,13 +47,15 @@ import social.aloha.core.testing.SignedInFixture
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
 class TvSignInViewModelTest {
+    @get:Rule
+    val main = MainDispatcherRule()
+
     private val fixture = SignedInFixture(ApplicationProvider.getApplicationContext<Context>())
     private val mock = MockSocialServer(MockServerConfiguration.NextcloudWithoutRewrite).start()
     private lateinit var viewModel: TvSignInViewModel
 
     @Before
     fun create() {
-        Dispatchers.setMain(Dispatchers.Unconfined)
         val http = OkHttpClient()
         val limiter = RateLimiter(nowMillis = fixture.clock::millis)
         val outOfBand = object : RedirectUriProvider {
@@ -59,28 +63,30 @@ class TvSignInViewModelTest {
 
             override fun registeredRedirects() = OAuthIdentity.OUT_OF_BAND_REDIRECT
         }
-        viewModel = TvSignInViewModel(
-            ServerFinder(
-                ServerProbe(http, limiter, Dispatchers.IO),
-                UserTrustStore(File.createTempFile("trust", ".p12").apply { delete() }),
-                ClientCertificateAliases(File.createTempFile("aliases", ".properties").apply { delete() }),
-                cleartextAllowed = true,
-                ioDispatcher = Dispatchers.IO,
-            ),
-            SignInCoordinator(
-                fixture.accounts,
-                fixture.vault,
-                OAuthClient(http, limiter, Dispatchers.IO),
-                CapabilityDetector(http, limiter, Dispatchers.IO) { Instant.now() },
-                outOfBand,
-                fixture.clients,
+        viewModel = main.keep(
+            TvSignInViewModel(
+                ServerFinder(
+                    ServerProbe(http, limiter, Dispatchers.IO),
+                    UserTrustStore(File.createTempFile("trust", ".p12").apply { delete() }),
+                    ClientCertificateAliases(File.createTempFile("aliases", ".properties").apply { delete() }),
+                    cleartextAllowed = true,
+                    ioDispatcher = Dispatchers.IO,
+                ),
+                SignInCoordinator(
+                    fixture.accounts,
+                    fixture.vault,
+                    OAuthClient(http, limiter, Dispatchers.IO),
+                    CapabilityDetector(http, limiter, Dispatchers.IO) { Instant.now() },
+                    outOfBand,
+                    fixture.clients,
+                ),
             ),
         )
     }
 
     @After
     fun close() {
-        Dispatchers.resetMain()
+        main.clear()
         fixture.close()
         mock.close()
     }

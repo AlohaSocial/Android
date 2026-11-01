@@ -24,12 +24,14 @@ import mockwebserver3.RecordedRequest
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import social.aloha.core.data.nextcloud.NextcloudExtras
 import social.aloha.core.model.WeeklyRecap
+import social.aloha.core.testing.MainDispatcherRule
 import social.aloha.core.testing.SignedInFixture
 
 /** On this day as Social sends it: the reader's own posts, any order. */
@@ -76,9 +78,8 @@ private class Memories(private val refuse: Boolean, private val refuseCounts: Bo
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36], application = Application::class)
 class LookingBackViewModelTest {
-    init {
-        Dispatchers.setMain(UnconfinedTestDispatcher())
-    }
+    @get:Rule
+    val main = MainDispatcherRule(UnconfinedTestDispatcher())
 
     private val fixture = SignedInFixture(ApplicationProvider.getApplicationContext<Context>())
     private val store = ViewModelStore()
@@ -88,7 +89,6 @@ class LookingBackViewModelTest {
     fun close() {
         // before resetMain: clearing a ViewModel cancels its work on the main dispatcher
         store.clear()
-        Dispatchers.resetMain()
         fixture.close()
         server.close()
     }

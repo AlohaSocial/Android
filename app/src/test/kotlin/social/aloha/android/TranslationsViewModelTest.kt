@@ -20,6 +20,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -27,6 +28,7 @@ import org.robolectric.annotation.Config
 import social.aloha.core.data.translation.TranslationRepository
 import social.aloha.core.html.RichTextCache
 import social.aloha.core.model.ServerCapabilities
+import social.aloha.core.testing.MainDispatcherRule
 import social.aloha.core.testing.SignedInFixture
 import social.aloha.core.testing.StatusSamples
 import social.aloha.core.ui.RichTextColors
@@ -37,6 +39,9 @@ import social.aloha.core.ui.TranslationUi
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class TranslationsViewModelTest {
+    @get:Rule
+    val main = MainDispatcherRule()
+
     private val fixture = SignedInFixture(ApplicationProvider.getApplicationContext<Context>())
     private val server = MockWebServer().apply { start() }
     private val colors = RichTextColors(
@@ -47,12 +52,9 @@ class TranslationsViewModelTest {
     private val row = StatusRowMapper(RichTextCache(), colors)
         .map(StatusSamples.linked.copy(language = "de"), "1")
 
-    @Before
-    fun main() = Dispatchers.setMain(Dispatchers.Unconfined)
-
     @After
     fun close() {
-        Dispatchers.resetMain()
+        main.clear()
         fixture.close()
         server.close()
     }
@@ -79,7 +81,7 @@ class TranslationsViewModelTest {
             val capabilities = ServerCapabilities.minimal(server.url("/").toString()).copy(translation = translates)
             fixture.signIn(server.url("/"), capabilities)
             fixture.accounts.activeAccount.filterNotNull().first()
-            TranslationsViewModel(fixture.accounts, TranslationRepository(fixture.clients), device).apply {
+            main.keep(TranslationsViewModel(fixture.accounts, TranslationRepository(fixture.clients), device)).apply {
                 readerLanguages = { listOf("en-GB") }
             }
         }

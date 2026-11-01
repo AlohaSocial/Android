@@ -28,6 +28,7 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -49,6 +50,7 @@ import social.aloha.core.network.tls.ClientCertificateAliases
 import social.aloha.core.network.tls.UserTrustStore
 import social.aloha.core.testing.FakeSecretCipher
 import social.aloha.core.testing.InMemoryDataStore
+import social.aloha.core.testing.MainDispatcherRule
 import social.aloha.core.testing.MockServerConfiguration
 import social.aloha.core.testing.MockSocialServer
 
@@ -56,6 +58,9 @@ import social.aloha.core.testing.MockSocialServer
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
 class SignInViewModelTest {
+    @get:Rule
+    val main = MainDispatcherRule()
+
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val mock = MockSocialServer(MockServerConfiguration.NextcloudWithoutRewrite).start()
     private val database = Room.inMemoryDatabaseBuilder(
@@ -75,33 +80,34 @@ class SignInViewModelTest {
 
     @Before
     fun create() {
-        Dispatchers.setMain(Dispatchers.Unconfined)
         val http = OkHttpClient()
         val limiter = RateLimiter(nowMillis = Clock.systemUTC()::millis)
-        viewModel = SignInViewModel(
-            finder = ServerFinder(
-                ServerProbe(http, limiter, Dispatchers.IO),
-                UserTrustStore(File.createTempFile("trust", ".p12").apply { delete() }),
-                ClientCertificateAliases(File.createTempFile("aliases", ".properties").apply { delete() }),
-                cleartextAllowed = true,
-                ioDispatcher = Dispatchers.IO,
+        viewModel = main.keep(
+            SignInViewModel(
+                finder = ServerFinder(
+                    ServerProbe(http, limiter, Dispatchers.IO),
+                    UserTrustStore(File.createTempFile("trust", ".p12").apply { delete() }),
+                    ClientCertificateAliases(File.createTempFile("aliases", ".properties").apply { delete() }),
+                    cleartextAllowed = true,
+                    ioDispatcher = Dispatchers.IO,
+                ),
+                coordinator = SignInCoordinator(
+                    accounts,
+                    vault,
+                    OAuthClient(http, limiter, Dispatchers.IO),
+                    CapabilityDetector(http, limiter, Dispatchers.IO) { Instant.now() },
+                    { OAuthIdentity.SCHEME_REDIRECT },
+                    ClientFactory(http, limiter, Dispatchers.IO, accounts),
+                ),
+                inbox = inbox,
+                savedState = SavedStateHandle(),
             ),
-            coordinator = SignInCoordinator(
-                accounts,
-                vault,
-                OAuthClient(http, limiter, Dispatchers.IO),
-                CapabilityDetector(http, limiter, Dispatchers.IO) { Instant.now() },
-                { OAuthIdentity.SCHEME_REDIRECT },
-                ClientFactory(http, limiter, Dispatchers.IO, accounts),
-            ),
-            inbox = inbox,
-            savedState = SavedStateHandle(),
         )
     }
 
     @After
     fun close() {
-        Dispatchers.resetMain()
+        main.clear()
         scope.cancel()
         database.close()
         mock.close()

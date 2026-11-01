@@ -24,11 +24,13 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import social.aloha.core.data.safety.Blocking
+import social.aloha.core.testing.MainDispatcherRule
 import social.aloha.core.testing.SignedInFixture
 
 /** One blocked account, one muted, one blocked server; unmuting is refused. */
@@ -56,9 +58,8 @@ private class Lists : Dispatcher() {
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36], application = Application::class)
 class BlockedViewModelTest {
-    init {
-        Dispatchers.setMain(UnconfinedTestDispatcher())
-    }
+    @get:Rule
+    val main = MainDispatcherRule(UnconfinedTestDispatcher())
 
     private val fixture = SignedInFixture(ApplicationProvider.getApplicationContext<Context>())
     private val answers = Lists()
@@ -72,7 +73,6 @@ class BlockedViewModelTest {
     fun close() {
         // before resetMain: clearing a ViewModel cancels its work on the main dispatcher
         store.clear()
-        Dispatchers.resetMain()
         fixture.close()
         server.close()
     }

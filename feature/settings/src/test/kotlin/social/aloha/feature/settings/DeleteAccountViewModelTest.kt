@@ -31,6 +31,7 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -45,6 +46,7 @@ import social.aloha.core.sync.AvatarSource
 import social.aloha.core.sync.LocalNotifications
 import social.aloha.core.sync.PushRegistrar
 import social.aloha.core.testing.InMemoryDataStore
+import social.aloha.core.testing.MainDispatcherRule
 import social.aloha.core.testing.SignedInFixture
 
 /** Nextcloud Social's self-service deletion: 200 for the right handle, 422 naming it for anything else. */
@@ -80,9 +82,11 @@ private class Deleting : Dispatcher() {
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36], application = Application::class)
 class DeleteAccountViewModelTest {
+    @get:Rule
+    val main = MainDispatcherRule(UnconfinedTestDispatcher())
+
     init {
         // the screen's state is shared in the ViewModel's scope, on Main, which nothing runs while a test blocks
-        Dispatchers.setMain(UnconfinedTestDispatcher())
     }
 
     private val context = ApplicationProvider.getApplicationContext<Context>()
@@ -115,7 +119,6 @@ class DeleteAccountViewModelTest {
     fun close() {
         // before resetMain: clearing a ViewModel cancels its work on the main dispatcher
         store.clear()
-        Dispatchers.resetMain()
         scope.cancel()
         fixture.close()
         web.close()

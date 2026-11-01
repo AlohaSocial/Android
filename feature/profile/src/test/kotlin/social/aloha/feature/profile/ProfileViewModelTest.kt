@@ -35,6 +35,7 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -63,6 +64,7 @@ import social.aloha.core.navigation.AccountKey
 import social.aloha.core.network.RateLimiter
 import social.aloha.core.testing.FakeSecretCipher
 import social.aloha.core.testing.InMemoryDataStore
+import social.aloha.core.testing.MainDispatcherRule
 import social.aloha.core.testing.MockCredentials
 import social.aloha.core.testing.NumberedTimeline
 import social.aloha.core.ui.RichTextColors
@@ -168,6 +170,9 @@ private class Bob : Dispatcher() {
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
 class ProfileViewModelTest {
+    @get:Rule
+    val main = MainDispatcherRule()
+
     private val clock = Clock.systemUTC()
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val context = ApplicationProvider.getApplicationContext<android.content.Context>()
@@ -195,7 +200,6 @@ class ProfileViewModelTest {
     fun close() {
         // before resetMain: clearing a ViewModel cancels its work on the main dispatcher
         store.clear()
-        Dispatchers.resetMain()
         scope.cancel()
         accountsDb.close()
         cache.close()
@@ -203,7 +207,6 @@ class ProfileViewModelTest {
     }
 
     private suspend fun open(id: String? = null, acct: String? = null): ProfileViewModel {
-        Dispatchers.setMain(Dispatchers.Unconfined)
         val apiBase = server.url("/")
         val capabilities = ServerCapabilities.minimal(apiBase.toString()).copy(softwareName = "nextcloud-social")
         val reader = accounts.signedIn(

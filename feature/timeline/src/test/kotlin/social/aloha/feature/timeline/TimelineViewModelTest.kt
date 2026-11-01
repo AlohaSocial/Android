@@ -29,6 +29,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -63,6 +64,7 @@ import social.aloha.core.model.TimelineSource
 import social.aloha.core.network.RateLimiter
 import social.aloha.core.testing.FakeSecretCipher
 import social.aloha.core.testing.InMemoryDataStore
+import social.aloha.core.testing.MainDispatcherRule
 import social.aloha.core.testing.MockCredentials
 import social.aloha.core.testing.NumberedTimeline
 import social.aloha.core.ui.RichTextColors
@@ -71,6 +73,9 @@ import social.aloha.core.ui.RichTextColors
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
 class TimelineViewModelTest {
+    @get:Rule
+    val main = MainDispatcherRule()
+
     private val clock = Clock.systemUTC()
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val context = ApplicationProvider.getApplicationContext<android.content.Context>()
@@ -96,7 +101,6 @@ class TimelineViewModelTest {
 
     @Before
     fun create() = runBlocking {
-        Dispatchers.setMain(Dispatchers.Unconfined)
         server.start()
         val apiBase = server.url("/")
         accounts.signedIn(
@@ -115,31 +119,33 @@ class TimelineViewModelTest {
         viewModel = create(TimelineFeed.Home)
     }
 
-    private fun create(feed: TimelineFeed) = TimelineViewModel(
-        feed,
-        accounts,
-        TimelineRepository(cache.timelineDao(), statuses, clients, accounts, clock, Dispatchers.IO),
-        TimelineRowBuilder(
-            RichTextCache(),
-            FilterRepository(cache.filterDao(), clients),
-            FollowedAuthors(clients),
+    private fun create(feed: TimelineFeed) = main.keep(
+        TimelineViewModel(
+            feed,
+            accounts,
+            TimelineRepository(cache.timelineDao(), statuses, clients, accounts, clock, Dispatchers.IO),
+            TimelineRowBuilder(
+                RichTextCache(),
+                FilterRepository(cache.filterDao(), clients),
+                FollowedAuthors(clients),
+                clock,
+            ),
+            StatusInteractions(statuses, clients),
+            TimelinePositions(cache.positionDao(), clients),
+            settings,
+            preferences,
+            ReadingPreferences(InMemoryDataStore(emptyPreferences())),
+            modes,
             clock,
+            ApplicationProvider.getApplicationContext<Context>().let { ImagePrefetcher(it, ImageLoader(it)) },
+            signals,
+            WatchPositions(clients, cache.watchPositionDao(), statuses, clock),
         ),
-        StatusInteractions(statuses, clients),
-        TimelinePositions(cache.positionDao(), clients),
-        settings,
-        preferences,
-        ReadingPreferences(InMemoryDataStore(emptyPreferences())),
-        modes,
-        clock,
-        ApplicationProvider.getApplicationContext<Context>().let { ImagePrefetcher(it, ImageLoader(it)) },
-        signals,
-        WatchPositions(clients, cache.watchPositionDao(), statuses, clock),
     ).apply { onColors(RichTextColors(Color.Blue, Color.Gray, Color.LightGray)) }
 
     @After
     fun close() {
-        Dispatchers.resetMain()
+        main.clear()
         scope.cancel()
         accountsDb.close()
         cache.close()
