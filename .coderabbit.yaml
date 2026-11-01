@@ -1,0 +1,40 @@
+# SPDX-FileCopyrightText: 2026 Aloha Social contributors
+# SPDX-License-Identifier: MIT
+#
+# CodeRabbit reads AGENTS.md as the project's guidelines. What is here are
+# decisions its reviews kept questioning after they were settled.
+
+language: en-GB
+
+reviews:
+  profile: chill
+  pre_merge_checks:
+    # public declarations are named to say what they are; a KDoc is written
+    # where the name cannot say it, not for coverage
+    docstrings:
+      mode: "off"
+  path_instructions:
+    - path: "**/*.kt"
+      instructions: >-
+        Do not ask for KDoc on a declaration whose name already says what it
+        is, such as an icon or a constant in a set documented as a whole.
+        Repository calls (TimelineRepository, NotificationsRepository and the
+        like) return failures as values (ApiResult, Answer, PageOutcome) and do
+        not throw for network, HTTP or decoding failures; do not ask to wrap
+        each account's call in a merged view in try/catch.
+    - path: "feature/**/*.kt"
+      instructions: >-
+        Feature modules do not depend on core:network, where the @IoDispatcher
+        qualifier lives; Dispatchers.IO used directly in a feature module is
+        intended.
+    - path: "**/src/test/**/*.kt"
+      instructions: >-
+        Responses written inline in a MockWebServer dispatcher are fine where
+        a test models a sequence no single recording holds; server behaviour
+        itself comes from the fixture corpus and the dev instance, as AGENTS.md
+        says. Still flag every `!!`.
+    - path: "gradle/security-floors.settings.gradle.kts"
+      instructions: >-
+        The floors are an inline map on purpose: the script is applied from
+        both the root and the build-logic settings, where the version catalog
+        is not available. Do not ask to move a floor into the catalog.
