@@ -78,7 +78,7 @@ class IntelligenceTest {
         val draft = "hi @alice@example.social #waves"
         val rewritten = intelligence(model).rewrite(draft, RewriteStyle.Rephrase, 500) { true }
         assertEquals(Drafted.Text("Hello @alice@example.social #waves"), rewritten)
-        assertFalse(model.asked!!.contains("@alice"))
+        assertFalse(checkNotNull(model.asked).contains("@alice"))
     }
 
     @Test
@@ -100,7 +100,7 @@ class IntelligenceTest {
         val model = Model { Drafted.Text("A summary.") }
         val passages = (1..400).map { "@someone: post number $it, with some words in it" }
         intelligence(model).summarise(passages)
-        assertTrue(model.asked!!.startsWith("@someone: post number 1,"))
-        assertTrue(model.asked!!.length <= 6_000)
+        assertTrue(checkNotNull(model.asked).startsWith("@someone: post number 1,"))
+        assertTrue(checkNotNull(model.asked).length <= 6_000)
     }
 }

@@ -72,12 +72,12 @@ class UserStreamTest {
         scope.launch { stream.keepOpen(inFront, MutableStateFlow(true)) }
         withTimeout(5.seconds) { while (listener == null) yield() }
         assertEquals("wss://stream.test", asked?.first)
-        listener!!.onOpen()
+        checkNotNull(listener).onOpen()
         withTimeout(5.seconds) { stream.openFor.first { it == account.id } }
 
-        listener!!.onEvent(StreamEvent.Edited(StatusSamples.post("<p>Edited</p>").copy(id = "9")))
-        listener!!.onEvent(StreamEvent.Edited(StatusSamples.post("<p>Never here</p>").copy(id = "11")))
-        listener!!.onEvent(StreamEvent.Deleted("10"))
+        checkNotNull(listener).onEvent(StreamEvent.Edited(StatusSamples.post("<p>Edited</p>").copy(id = "9")))
+        checkNotNull(listener).onEvent(StreamEvent.Edited(StatusSamples.post("<p>Never here</p>").copy(id = "11")))
+        checkNotNull(listener).onEvent(StreamEvent.Deleted("10"))
         withTimeout(5.seconds) {
             while (fixture.statuses.get(account.id, "10") != null) yield()
             while (fixture.statuses.get(account.id, "9")?.content != "<p>Edited</p>") yield()
@@ -100,14 +100,14 @@ class UserStreamTest {
         )
         scope.launch { stream.keepOpen(MutableStateFlow(true), MutableStateFlow(true)) }
         withTimeout(5.seconds) { while (listener == null) yield() }
-        listener!!.onOpen()
+        checkNotNull(listener).onOpen()
         val merged = scope.async(start = CoroutineStart.UNDISPATCHED) { stream.notificationsMerged.first() }
         val counted = scope.async(start = CoroutineStart.UNDISPATCHED) { stream.notifications.first() }
         val changed = scope.async(start = CoroutineStart.UNDISPATCHED) { stream.conversations.first() }
         val conversation = Conversation("4", emptyList(), unread = true, lastStatus = StatusSamples.post())
 
-        listener!!.onEvent(StreamEvent.NotificationsMerged)
-        listener!!.onEvent(StreamEvent.ConversationChanged(conversation))
+        checkNotNull(listener).onEvent(StreamEvent.NotificationsMerged)
+        checkNotNull(listener).onEvent(StreamEvent.ConversationChanged(conversation))
         withTimeout(5.seconds) {
             assertEquals(account.id, merged.await())
             assertEquals(account.id, counted.await())

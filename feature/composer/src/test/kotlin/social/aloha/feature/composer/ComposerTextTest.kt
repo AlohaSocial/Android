@@ -37,12 +37,15 @@ class ComposerTextTest {
     @Test
     fun `a completion replaces the word and leaves the cursor after one space`() {
         val value = at("hi @bo")
-        val done = ComposerText.complete(value, ComposerText.completing(value)!!, "@bob@remote.example")
+        val done = ComposerText.complete(value, checkNotNull(ComposerText.completing(value)), "@bob@remote.example")
         assertEquals("hi @bob@remote.example ", done.text)
         assertEquals(TextRange(done.text.length), done.selection)
         // the space already there is kept, not doubled
         val middle = at("@bo there", cursor = 3)
-        assertEquals("@bob there", ComposerText.complete(middle, ComposerText.completing(middle)!!, "@bob").text)
+        assertEquals(
+            "@bob there",
+            ComposerText.complete(middle, checkNotNull(ComposerText.completing(middle)), "@bob").text,
+        )
     }
 
     @Test

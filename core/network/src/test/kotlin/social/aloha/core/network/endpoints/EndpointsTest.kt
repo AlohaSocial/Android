@@ -272,7 +272,9 @@ class EndpointsTest {
     @Test
     fun `an edit sends the post's whole attachment list in order, and an empty one to take them all off`() {
         fun mediaIds(ids: List<String>) =
-            edited(StatusPost(text = "x", mediaIds = ids))["media_ids"]!!.jsonArray.map { it.jsonPrimitive.content }
+            checkNotNull(edited(StatusPost(text = "x", mediaIds = ids))["media_ids"]).jsonArray.map {
+                it.jsonPrimitive.content
+            }
         assertEquals(listOf("21", "22", "23"), mediaIds(listOf("21", "22", "23")))
         assertEquals(listOf("23", "21"), mediaIds(listOf("23", "21")))
         // present and empty: a form could not say it, and leaving the field out would keep them all
@@ -290,11 +292,11 @@ class EndpointsTest {
         )
         val body = edited(post)
         assertEquals(true, body["sensitive"]?.jsonPrimitive?.boolean)
-        val attribute = body["media_attributes"]!!.jsonArray.single().jsonObject
+        val attribute = checkNotNull(body["media_attributes"]).jsonArray.single().jsonObject
         assertEquals("21", attribute["id"]?.jsonPrimitive?.content)
         assertEquals("A harbour", attribute["description"]?.jsonPrimitive?.content)
         assertEquals("0.50,-0.25", attribute["focus"]?.jsonPrimitive?.content)
-        val poll = edited(StatusPost(text = "x", pollOptions = listOf("a", "b")))["poll"]!!.jsonObject
+        val poll = checkNotNull(edited(StatusPost(text = "x", pollOptions = listOf("a", "b")))["poll"]).jsonObject
         assertEquals(86_400L, poll["expires_in"]?.jsonPrimitive?.long)
     }
 

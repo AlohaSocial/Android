@@ -46,7 +46,7 @@ class WatchSocialTest {
     @Test
     fun `home is the newest twenty posts, as plain text, asked for with the watch's own token`() = runBlocking {
         signIn()
-        val posts = social.home()!!
+        val posts = checkNotNull(social.home())
 
         assertEquals(20, posts.size)
         assertEquals("30", posts.first().id)
@@ -59,11 +59,11 @@ class WatchSocialTest {
     @Test
     fun `a favourite set from the watch is set on the server, and taken back the same way`() = runBlocking {
         signIn()
-        val post = social.home()!!.first()
+        val post = checkNotNull(social.home()).first()
 
-        val favourited = social.toggle(post, WatchSocial.Mark.Favourite)!!
+        val favourited = checkNotNull(social.toggle(post, WatchSocial.Mark.Favourite))
         assertTrue(favourited.favourited)
-        val back = social.toggle(favourited, WatchSocial.Mark.Favourite)!!
+        val back = checkNotNull(social.toggle(favourited, WatchSocial.Mark.Favourite))
         assertFalse(back.favourited)
         val paths = generateSequence { server.takeRequest(0, java.util.concurrent.TimeUnit.SECONDS) }
             .map { it.url.encodedPath }.toList()
@@ -76,7 +76,7 @@ class WatchSocialTest {
     @Test
     fun `a reply goes to the post's author, and to nobody on the reader's own post`() = runBlocking {
         signIn()
-        val theirs = social.home()!!.first().copy(authorHandle = "kai")
+        val theirs = checkNotNull(social.home()).first().copy(authorHandle = "kai")
         server.takeRequest()
 
         social.reply(theirs, "Shaka")

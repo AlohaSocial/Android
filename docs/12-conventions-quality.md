@@ -84,7 +84,8 @@ The QA build is the generic debug build with `-Paloha.qa=true`: application ID `
 
 ### Static analysis
 
-- **detekt** with zero findings (`config/detekt/detekt.yml`): no `!!`, no `runBlocking` outside tests, no `GlobalScope`, no `System.currentTimeMillis` (inject a `Clock`), no `allowMainThreadQueries`, no WebView, no `android.util.Log` or `println`, no Jetpack Security crypto (secrets go to the vault), no RxJava, Glide or `AsyncTask`; a `TODO` carries an issue link.
+- **No `!!`**, tests included: `alohaNotNullCheck`, run with `alohaArchitectureCheck`, reads every Kotlin file for one outside a string or comment (detekt's own rule needs type resolution, which the `detekt` task does not have). Use `checkNotNull` or `requireNotNull`.
+- **detekt** with zero findings (`config/detekt/detekt.yml`): no `runBlocking` outside tests, no `GlobalScope`, no `System.currentTimeMillis` (inject a `Clock`), no `allowMainThreadQueries`, no WebView, no `android.util.Log` or `println`, no Jetpack Security crypto (secrets go to the vault), no RxJava, Glide or `AsyncTask`; a `TODO` carries an issue link.
 - **ktlint**, android_studio style, 120 columns (`.editorconfig`).
 - **Android Lint** with warnings as errors, and Kotlin compiler warnings as errors. Version-drift checks are off: that is Renovate's job.
 - **`alohaArchitectureCheck`**: the module graph ([01-architecture.md](01-architecture.md)). It also runs **`alohaStringsCheck`**: every translatable string and plural has a comment for translators on the line directly above it, and no string name is defined in two modules.

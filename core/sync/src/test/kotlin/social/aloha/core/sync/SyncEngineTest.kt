@@ -231,7 +231,7 @@ class SyncEngineTest {
         val account = fixture.signIn(server.url("/"))
         val started = TimeSource.Monotonic.markNow()
         engine.poll(account, PollScope.Full)
-        val wait = engine.waitBeforeNext(account)!!
+        val wait = checkNotNull(engine.waitBeforeNext(account))
         // what is left of 30 s after however long a loaded run took to get here, never 60 s or 10 min
         val taken = started.elapsedNow()
         assertTrue("$wait after $taken", wait <= 30.seconds && wait >= 30.seconds - taken - 1.seconds)
@@ -244,7 +244,7 @@ class SyncEngineTest {
         val account = fixture.signIn(server.url("/"))
         preferences.setPush(account.id, active = true)
         engine.poll(account, PollScope.Full)
-        val wait = engine.waitBeforeNext(account)!!
+        val wait = checkNotNull(engine.waitBeforeNext(account))
         assertTrue("$wait", wait > 9.minutes && wait <= 10.minutes)
     }
 
@@ -257,10 +257,10 @@ class SyncEngineTest {
             val account = fixture.signIn(server.url("/"), streamed)
             engine.setForeground(true)
             withTimeout(5.seconds) { while (streamListener == null) yield() }
-            streamListener!!.onOpen()
+            checkNotNull(streamListener).onOpen()
             withTimeout(5.seconds) { while (stream.openFor.value != account.id) yield() }
             engine.poll(account, PollScope.Full)
-            val wait = engine.waitBeforeNext(account)!!
+            val wait = checkNotNull(engine.waitBeforeNext(account))
             assertTrue("$wait", wait > 4.minutes && wait <= 5.minutes)
             engine.setForeground(false)
             withTimeout(5.seconds) { while (stream.openFor.value != null) yield() }
@@ -272,11 +272,11 @@ class SyncEngineTest {
         fixture.signIn(server.url("/"), streamed)
         engine.setForeground(true)
         withTimeout(5.seconds) { while (streamListener == null || server.requestCount == 0) yield() }
-        streamListener!!.onOpen()
+        checkNotNull(streamListener).onOpen()
         // the timed polls are minutes away now: a request is the stream's doing
         delay(QUIET)
         val before = server.requestCount
-        streamListener!!.onEvent(StreamEvent.Notified)
+        checkNotNull(streamListener).onEvent(StreamEvent.Notified)
         withTimeout(5.seconds) { while (server.requestCount == before) yield() }
     }
 
@@ -285,7 +285,7 @@ class SyncEngineTest {
         answers += Counts.Answer.Limited(retryAfterSeconds = 120)
         val account = signInActive()
         assertNull(engine.poll(account, PollScope.Full))
-        val held = engine.waitBeforeNext(account)!!
+        val held = checkNotNull(engine.waitBeforeNext(account))
         assertTrue("$held", held > 100.seconds && held <= 2.minutes)
     }
 
@@ -294,7 +294,7 @@ class SyncEngineTest {
         val account = signInActive()
         engine.poll(account, PollScope.Full)
         engine.failed(account.id, ApiError.RateLimited(retryAfter = null))
-        val slowed = engine.waitBeforeNext(account)!!
+        val slowed = checkNotNull(engine.waitBeforeNext(account))
         assertTrue("$slowed", slowed > 45.seconds && slowed <= 60.seconds)
     }
 
@@ -302,7 +302,7 @@ class SyncEngineTest {
     fun `an account that needs a new sign-in is not asked at all`() = runBlocking {
         val account = fixture.signIn(server.url("/"))
         fixture.accounts.markNeedsReauth(account.id)
-        assertNull(engine.poll(fixture.accounts.byId(account.id)!!, PollScope.Full))
+        assertNull(engine.poll(checkNotNull(fixture.accounts.byId(account.id)), PollScope.Full))
         engine.refreshInBackground()
         assertEquals(emptyList<String>(), counts.asked)
     }

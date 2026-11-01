@@ -157,7 +157,7 @@ class NextcloudConnectionTest {
         assertEquals(ConnectResult.Connected, connection.await(account, start.start))
         val basic = "Basic YWxpY2U6YXBwLXBhc3N3b3Jk"
         assertEquals(basic, accounts.credentials(account.id).nextcloudBasic)
-        assertTrue(accounts.byId(account.id)!!.nextcloudConnected)
+        assertTrue(checkNotNull(accounts.byId(account.id)).nextcloudConnected)
         // the flow itself never carries a credential
         assertTrue(nextcloud.authorizations.all { it == null })
 
@@ -168,7 +168,7 @@ class NextcloudConnectionTest {
         assertEquals("DELETE /ocs/v2.php/core/apppassword", nextcloud.asked.last())
         assertEquals(basic, nextcloud.authorizations.last())
         assertNull(accounts.credentials(account.id).nextcloudBasic)
-        assertFalse(accounts.byId(account.id)!!.nextcloudConnected)
+        assertFalse(checkNotNull(accounts.byId(account.id)).nextcloudConnected)
     }
 
     @Test

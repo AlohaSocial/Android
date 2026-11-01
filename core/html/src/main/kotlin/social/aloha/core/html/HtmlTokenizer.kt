@@ -68,7 +68,7 @@ internal class HtmlTokenizer(private val source: String) {
         var selfClosing = false
         while (!atEnd && peek() != '>') {
             if (peek() == '/') selfClosing = true
-            if (peek() == '/' || peek()!!.isWhitespace()) index++ else readAttributeInto(attributes)
+            if (peek() == '/' || peek()?.isWhitespace() == true) index++ else readAttributeInto(attributes)
         }
         if (!atEnd) index++
         return attributes to selfClosing

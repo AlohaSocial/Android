@@ -191,7 +191,7 @@ class NotificationsRepositoryTest {
         assertEquals(emptyList<String>(), hidden.items.map { it.key })
         answers.filterAction = "warn"
         fixture.filters.refresh(account)
-        val warned = (repository.page(account, emptySet()) as Answer.Got).value.items.first().status!!
+        val warned = checkNotNull((repository.page(account, emptySet()) as Answer.Got).value.items.first().status)
         assertEquals(listOf("Greetings", ""), listOf(warned.spoilerText, warned.content))
     }
 

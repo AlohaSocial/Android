@@ -329,7 +329,7 @@ class ThreadViewModelTest {
         val viewModel = open("f")
         viewModel.await { !it.loading && it.posts().size == 4 }
         viewModel.onHistory(open = true)
-        val history = viewModel.await { it.history != null }.history!!
+        val history = checkNotNull(viewModel.await { it.history != null }.history)
         assertEquals(listOf("Edited"), history.drop(1).map { it.body.text.trim() })
         viewModel.onHistory(open = false)
         assertEquals(null, viewModel.await { it.history == null }.history)
@@ -337,7 +337,7 @@ class ThreadViewModelTest {
 
     @Test
     fun `a thread opened from an edited mark opens with the post's edits`() = runBlocking {
-        val history = open("f", history = true).await { it.history != null }.history!!
+        val history = checkNotNull(open("f", history = true).await { it.history != null }.history)
         assertEquals(listOf("Edited"), history.drop(1).map { it.body.text.trim() })
     }
 

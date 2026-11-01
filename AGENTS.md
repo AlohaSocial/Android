@@ -87,8 +87,8 @@ Guidance for coding agents working in this repository. Humans: see
 - A new part of a status card joins the card's merged accessibility label and
   its actions (`StatusAccessibility`); a screen's title is a heading.
 - A screen that replaces another removes the code paths only the old one used.
-- Tests use `checkNotNull` or `requireNotNull`, never `!!`: detekt skips test
-  sources, so only review catches it.
+- No `!!`, in tests either: `checkNotNull` or `requireNotNull` say what was
+  missing. `alohaNotNullCheck`, part of `alohaArchitectureCheck`, fails on one.
 - A server claim in `docs/` names the Social version it holds from and whether
   it was checked live or read from source; a change of behaviour updates every
   doc that states the old one (search `docs/` for it).

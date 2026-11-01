@@ -233,7 +233,7 @@ class ProfileViewModelTest {
     @Test
     fun `a profile opens with its header, how the reader relates to it, and its posts`() = runBlocking {
         val state = open(id = "7").await { it.header != null && it.relation != null && it.items.isNotEmpty() }
-        val header = state.header!!
+        val header = checkNotNull(state.header)
         assertEquals("Bob", header.author.plainName)
         assertEquals("Surfs at dawn", header.note.text.trim())
         assertEquals(12, header.followers)
@@ -324,7 +324,7 @@ class ProfileViewModelTest {
         val viewModel = open(id = "7")
         viewModel.await { it.relation != null }
         viewModel.onChange(RelationshipChange.Follow())
-        assertTrue(viewModel.await { it.relation?.following == true && !it.changing }.relation!!.following)
+        assertTrue(checkNotNull(viewModel.await { it.relation?.following == true && !it.changing }.relation).following)
     }
 
     @Test
@@ -336,7 +336,7 @@ class ProfileViewModelTest {
     @Test
     fun `Nextcloud Social's twelve weeks of posting show with their reading`() = runBlocking {
         val state = open(id = "7").await { it.highlights != null }
-        assertEquals(32, state.highlights!!.total)
+        assertEquals(32, checkNotNull(state.highlights).total)
     }
 
     @Test
@@ -372,10 +372,16 @@ class ProfileViewModelTest {
         val viewModel = open(id = "7")
         viewModel.await { it.relation != null }
         viewModel.onLists()
-        val lists = viewModel.await { it.lists != null }.lists!!
+        val lists = checkNotNull(viewModel.await { it.lists != null }.lists)
         assertEquals(listOf("Surf" to true, "Friends" to false), lists.map { it.list.title to it.member })
         viewModel.onListed("l2", add = true)
-        assertTrue(viewModel.await { state -> state.lists?.all { it.member } == true }.lists!!.all { it.member })
+        assertTrue(
+            checkNotNull(
+                viewModel.await { state ->
+                    state.lists?.all { it.member } == true
+                }.lists,
+            ).all { it.member },
+        )
         withTimeout(10.seconds) { while (bob.changes.isEmpty()) delay(10) }
         assertEquals("POST /api/v1/lists/l2/accounts account_ids%5B%5D=7", bob.changes.single())
     }

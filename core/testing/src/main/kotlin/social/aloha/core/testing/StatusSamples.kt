@@ -77,7 +77,10 @@ public object StatusSamples {
         ),
     )
 
-    public val pollResults: Status = poll.copy(id = "17", poll = poll.poll!!.copy(voted = true, ownVotes = listOf(1)))
+    public val pollResults: Status = poll.copy(
+        id = "17",
+        poll = checkNotNull(poll.poll).copy(voted = true, ownVotes = listOf(1)),
+    )
 
     public val linked: Status = post().copy(
         id = "18",

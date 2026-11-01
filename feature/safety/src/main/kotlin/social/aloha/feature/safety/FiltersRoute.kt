@@ -134,9 +134,10 @@ private fun FilterRow(filter: Filter, now: Instant, onOpen: () -> Unit) {
     val action = stringResource(if (hides) R.string.filters_hides else R.string.filters_warns)
     val places = filter.context.filter { it != FilterContext.Unknown }.map { stringResource(it.label) }
     val words = pluralStringResource(R.plurals.filters_keywords, filter.keywords.size, filter.keywords.size)
+    val expiresAt = filter.expiresAt
     val until = when {
         filter.isExpired(now) -> stringResource(R.string.filters_expired)
-        filter.expiresAt != null -> stringResource(R.string.filters_until, fullDate(filter.expiresAt!!))
+        expiresAt != null -> stringResource(R.string.filters_until, fullDate(expiresAt))
         else -> null
     }
     ListItem(

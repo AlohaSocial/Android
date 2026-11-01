@@ -64,7 +64,7 @@ class PushRegistrarTest {
         capabilities = ServerCapabilities.minimal(server.url("/").toString()).copy(webPushVapidKey = vapid),
     ).also {
         fixture.connectNextcloud(it.id, "Basic YWxpY2U6YXBwLXBhc3N3b3Jk")
-    }.let { fixture.accounts.byId(it.id)!! }
+    }.let { checkNotNull(fixture.accounts.byId(it.id)) }
 
     @Test
     fun `pushed by its server, the account's Nextcloud registration goes`() = runBlocking {
@@ -72,7 +72,7 @@ class PushRegistrarTest {
         push.rememberEndpoint(PushInstance.nextcloud(account.id), "https://ntfy.lan/up1")
         ok()
         registrar.subscribed(account, viaNextcloud = false)
-        val sent = server.takeRequest(1, TimeUnit.SECONDS)!!
+        val sent = checkNotNull(server.takeRequest(1, TimeUnit.SECONDS))
         assertEquals("DELETE /ocs/v2.php/apps/notifications/api/v2/webpush", "${sent.method} ${sent.url.encodedPath}")
         assertNull(push.endpoint(PushInstance.nextcloud(account.id)))
     }
@@ -86,7 +86,7 @@ class PushRegistrarTest {
         push.rememberEndpoint(account.id, "https://ntfy.example/up1")
         ok()
         registrar.subscribed(account, viaNextcloud = true)
-        val sent = server.takeRequest(1, TimeUnit.SECONDS)!!
+        val sent = checkNotNull(server.takeRequest(1, TimeUnit.SECONDS))
         assertEquals("DELETE /api/v1/push/subscription", "${sent.method} ${sent.url.encodedPath}")
         assertNull(push.endpoint(account.id))
         assertFalse(push.isActive(account.id))
@@ -128,7 +128,7 @@ class PushRegistrarTest {
         ok()
         registrar.register(account)
         server.takeRequest(1, TimeUnit.SECONDS)
-        val sent = server.takeRequest(1, TimeUnit.SECONDS)!!
+        val sent = checkNotNull(server.takeRequest(1, TimeUnit.SECONDS))
         assertEquals("DELETE /api/v1/push/subscription", "${sent.method} ${sent.url.encodedPath}")
         assertNull(push.endpoint(account.id))
     }
@@ -142,7 +142,7 @@ class PushRegistrarTest {
         ok()
         // the distributor's keys live in the AndroidKeyStore, which Robolectric lacks; the route is chosen before
         runCatching { registrar.register(account) }
-        val sent = List(3) { server.takeRequest(1, TimeUnit.SECONDS)!! }.last()
+        val sent = List(3) { checkNotNull(server.takeRequest(1, TimeUnit.SECONDS)) }.last()
         assertEquals("DELETE /api/v1/push/subscription", "${sent.method} ${sent.url.encodedPath}")
         assertNull(push.endpoint(account.id))
     }
@@ -166,7 +166,7 @@ class PushRegistrarTest {
         nextcloudPushes("devices")
         ok()
         runCatching { registrar.register(account) }
-        val sent = List(2) { server.takeRequest(1, TimeUnit.SECONDS)!! }.last()
+        val sent = List(2) { checkNotNull(server.takeRequest(1, TimeUnit.SECONDS)) }.last()
         assertEquals("DELETE /ocs/v2.php/apps/notifications/api/v2/webpush", "${sent.method} ${sent.url.encodedPath}")
         assertNull(push.endpoint(PushInstance.nextcloud(account.id)))
     }
@@ -190,7 +190,7 @@ class PushRegistrarTest {
         server.takeRequest(1, TimeUnit.SECONDS)
         ok()
         registrar.refusedByServer(account)
-        assertEquals("DELETE", server.takeRequest(1, TimeUnit.SECONDS)!!.method)
+        assertEquals("DELETE", checkNotNull(server.takeRequest(1, TimeUnit.SECONDS)).method)
         assertTrue(push.refused(account.id))
         registrar.choose(null)
         assertFalse(push.refused(account.id))

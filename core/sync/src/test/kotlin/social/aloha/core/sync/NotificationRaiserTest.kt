@@ -173,13 +173,13 @@ class NotificationRaiserTest {
     fun `a mention reads as a message from its author, and can be answered from the shade`() = runBlocking {
         raiser().onUnreadChanged(signIn(), count = 2)
         val mention = raised().single { it.channelId.endsWith(":mentions") }
-        val style = NotificationCompat.MessagingStyle.extractMessagingStyleFromNotification(mention)!!
+        val style = checkNotNull(NotificationCompat.MessagingStyle.extractMessagingStyleFromNotification(mention))
         assertEquals("Surf is up", style.messages.single().text)
         assertEquals("Alice", style.messages.single().person?.name)
         val actions = (0 until NotificationCompat.getActionCount(mention)).map {
-            NotificationCompat.getAction(mention, it)!!
+            checkNotNull(NotificationCompat.getAction(mention, it))
         }
-        assertTrue(actions.first().remoteInputs!!.isNotEmpty())
+        assertTrue(checkNotNull(actions.first().remoteInputs).isNotEmpty())
         // a mention's third button mutes the thread rather than boosting it
         assertEquals(listOf("Reply", "Favourite", "Mute conversation"), actions.map { it.title.toString() })
         // nothing is done from a locked phone

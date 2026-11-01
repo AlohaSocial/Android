@@ -169,7 +169,7 @@ class ModerationViewModelTest {
             val loaded = viewModel.await { it.reports != null }
             assertEquals(listOf(ModerationTab.Reports), loaded.tabs)
             assertNull(loaded.accounts)
-            viewModel.actOnReport(loaded.reports!!.single(), AdminAccountAction.Silence)
+            viewModel.actOnReport(checkNotNull(loaded.reports).single(), AdminAccountAction.Silence)
             withTimeout(WAIT_MILLIS) { while (answers.sent.isEmpty()) kotlinx.coroutines.delay(POLL_MILLIS) }
             assertEquals("POST /api/v1/admin/accounts/9/action type=silence&report_id=1", answers.sent.single())
             assertEquals(emptyList<Any>(), viewModel.state.value.reports)
@@ -189,7 +189,7 @@ class ModerationViewModelTest {
         val loaded = viewModel.await { it.reports?.size == 2 }
         // resolving answers 500 here, acting answers 200
         viewModel.resolve("1", resolved = true)
-        viewModel.actOnReport(loaded.reports!!.last(), AdminAccountAction.Silence)
+        viewModel.actOnReport(checkNotNull(loaded.reports).last(), AdminAccountAction.Silence)
         // the refused one back in its place, the other still gone
         viewModel.await { state -> state.reports?.map { it.id } == listOf("1") }
         Unit
@@ -227,7 +227,7 @@ class ModerationViewModelTest {
         val viewModel = open(answers)
         viewModel.await { it.consent }
         viewModel.allow()
-        val url = viewModel.await { it.open != null }.open!!.toHttpUrl()
+        val url = checkNotNull(viewModel.await { it.open != null }.open).toHttpUrl()
         assertEquals("read write follow push admin:read admin:write", url.queryParameter("scope"))
         assertTrue(answers.sent.any { it.startsWith("POST /api/v1/apps") && "admin%3Awrite" in it })
         viewModel.onOpened()

@@ -205,8 +205,8 @@ class NotificationsViewModelTest {
         val row = await { state -> state.rows.any { it.groupKey == "favourite-s1" } }
             .rows.single { it.groupKey == "favourite-s1" }
         viewModel.onOthers(row.key)
-        val group = await { it.group?.accounts != null }.group!!
-        assertEquals(listOf("Alice", "Bob", "Carol"), group.accounts!!.map { it.displayName })
+        val group = checkNotNull(await { it.group?.accounts != null }.group)
+        assertEquals(listOf("Alice", "Bob", "Carol"), checkNotNull(group.accounts).map { it.displayName })
         viewModel.onGroupClosed()
         assertEquals(null, await { it.group == null }.group)
     }
