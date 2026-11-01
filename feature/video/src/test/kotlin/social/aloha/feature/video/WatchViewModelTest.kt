@@ -31,6 +31,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -44,6 +45,7 @@ import social.aloha.core.html.RichTextCache
 import social.aloha.core.model.ServerCapabilities
 import social.aloha.core.model.SignedInAccount
 import social.aloha.core.navigation.WatchKey
+import social.aloha.core.testing.MainDispatcherRule
 import social.aloha.core.testing.SignedInFixture
 import social.aloha.core.ui.RichTextColors
 
@@ -106,6 +108,9 @@ private class VideoServer : Dispatcher() {
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
 class WatchViewModelTest {
+    @get:Rule
+    val main = MainDispatcherRule()
+
     private val fixture = SignedInFixture(ApplicationProvider.getApplicationContext<Context>())
     private val answers = VideoServer()
     private val server = MockWebServer().apply {
@@ -125,7 +130,6 @@ class WatchViewModelTest {
 
     @Before
     fun open() = runBlocking {
-        Dispatchers.setMain(Dispatchers.Unconfined)
         reader = fixture.signIn(
             server.url("/"),
             // a Nextcloud Social whose statuses say whose dislike they carry
@@ -134,26 +138,28 @@ class WatchViewModelTest {
         )
         // the playback stops a video once the active account is another, as a still unread one would be
         withTimeout(10.seconds) { fixture.accounts.activeAccount.first { it?.id == reader.id } }
-        watch = WatchViewModel(
-            WatchKey(reader.id, "v1"),
-            fixture.accounts,
-            ThreadRepository(fixture.statuses, fixture.clients),
-            fixture.statuses,
-            StatusInteractions(fixture.statuses, fixture.clients),
-            ProfileRepository(fixture.clients, fixture.statuses, FollowedAuthors(fixture.clients)),
-            fixture.watchPositions(),
-            RichTextCache(),
-            playback,
+        watch = main.keep(
+            WatchViewModel(
+                WatchKey(reader.id, "v1"),
+                fixture.accounts,
+                ThreadRepository(fixture.statuses, fixture.clients),
+                fixture.statuses,
+                StatusInteractions(fixture.statuses, fixture.clients),
+                ProfileRepository(fixture.clients, fixture.statuses, FollowedAuthors(fixture.clients)),
+                fixture.watchPositions(),
+                RichTextCache(),
+                playback,
+            ),
         )
         watch.onColors(RichTextColors(Color.Blue, Color.Gray, Color.LightGray))
     }
 
     @After
     fun close() {
+        main.clear()
         playback.stop()
         playback.player.release()
         scope.cancel()
-        Dispatchers.resetMain()
         fixture.close()
         server.close()
     }

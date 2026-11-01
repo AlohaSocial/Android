@@ -32,6 +32,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -42,6 +43,7 @@ import social.aloha.core.data.profile.Reports
 import social.aloha.core.data.reading.SensitiveMedia
 import social.aloha.core.data.thread.ThreadRepository
 import social.aloha.core.model.ServerCapabilities
+import social.aloha.core.testing.MainDispatcherRule
 import social.aloha.core.testing.SignedInFixture
 
 /** Bob's video v1, marked sensitive, with chapters in its description and one comment; bob is not followed. */
@@ -78,6 +80,11 @@ private class WatchServer : Dispatcher() {
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
 class TvWatchViewModelTest {
+    @get:Rule
+    val main = MainDispatcherRule(Handler(Looper.getMainLooper()).asCoroutineDispatcher()) {
+        shadowOf(Looper.getMainLooper()).idle()
+    }
+
     private val fixture = SignedInFixture(ApplicationProvider.getApplicationContext<Context>())
     private val answers = WatchServer()
     private val server = MockWebServer().apply {
@@ -90,29 +97,30 @@ class TvWatchViewModelTest {
     @Before
     fun open() = runBlocking {
         // the player is touched on the main looper only, as in the app
-        Dispatchers.setMain(Handler(Looper.getMainLooper()).asCoroutineDispatcher())
         val base = server.url("/")
         fixture.signIn(base, ServerCapabilities.minimal(base.toString()).copy(watchPositions = true))
         // as in the app, where a video opens from a signed-in home: the accounts are read before the page
         withTimeout(15.seconds) { fixture.accounts.activeOnceRead.first { it != null } }
-        watch = TvWatchViewModel(
-            "v1",
-            ApplicationProvider.getApplicationContext(),
-            fixture.accounts,
-            ThreadRepository(fixture.statuses, fixture.clients),
-            fixture.watchPositions(),
-            ProfileRepository(fixture.clients, fixture.statuses, FollowedAuthors(fixture.clients)),
-            Reports(fixture.clients),
-            SensitiveMedia(fixture.clients),
-            scope,
+        watch = main.keep(
+            TvWatchViewModel(
+                "v1",
+                ApplicationProvider.getApplicationContext(),
+                fixture.accounts,
+                ThreadRepository(fixture.statuses, fixture.clients),
+                fixture.watchPositions(),
+                ProfileRepository(fixture.clients, fixture.statuses, FollowedAuthors(fixture.clients)),
+                Reports(fixture.clients),
+                SensitiveMedia(fixture.clients),
+                scope,
+            ),
         )
     }
 
     @After
     fun close() {
+        main.clear()
         watch.player.release()
         scope.cancel()
-        Dispatchers.resetMain()
         fixture.close()
         server.close()
     }

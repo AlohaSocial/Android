@@ -23,6 +23,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -31,6 +32,7 @@ import social.aloha.core.data.profile.FollowedAuthors
 import social.aloha.core.data.profile.ProfileRepository
 import social.aloha.core.data.reading.SensitiveMedia
 import social.aloha.core.model.ServerCapabilities
+import social.aloha.core.testing.MainDispatcherRule
 import social.aloha.core.testing.SignedInFixture
 
 /**
@@ -76,6 +78,9 @@ private class ShelvesServer : Dispatcher() {
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
 class HomeViewModelTest {
+    @get:Rule
+    val main = MainDispatcherRule()
+
     private val fixture = SignedInFixture(ApplicationProvider.getApplicationContext<Context>())
     private val server = MockWebServer().apply {
         dispatcher = ShelvesServer()
@@ -85,23 +90,24 @@ class HomeViewModelTest {
 
     @Before
     fun open() = runBlocking {
-        Dispatchers.setMain(Dispatchers.Unconfined)
         val base = server.url("/")
         fixture.signIn(base, ServerCapabilities.minimal(base.toString()).copy(watchPositions = true))
-        home = HomeViewModel(
-            fixture.accounts,
-            fixture.timelines,
-            fixture.watchPositions(),
-            Explore(fixture.clients, fixture.statuses),
-            ProfileRepository(fixture.clients, fixture.statuses, FollowedAuthors(fixture.clients)),
-            SensitiveMedia(fixture.clients),
-            fixture.clock,
+        home = main.keep(
+            HomeViewModel(
+                fixture.accounts,
+                fixture.timelines,
+                fixture.watchPositions(),
+                Explore(fixture.clients, fixture.statuses),
+                ProfileRepository(fixture.clients, fixture.statuses, FollowedAuthors(fixture.clients)),
+                SensitiveMedia(fixture.clients),
+                fixture.clock,
+            ),
         )
     }
 
     @After
     fun close() {
-        Dispatchers.resetMain()
+        main.clear()
         fixture.close()
         server.close()
     }

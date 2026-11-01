@@ -37,6 +37,7 @@ import social.aloha.core.data.interests.Interests
 import social.aloha.core.designsystem.AlohaTheme
 import social.aloha.core.model.InterestTag
 import social.aloha.core.model.InterestsState
+import social.aloha.core.testing.MainDispatcherRule
 import social.aloha.core.testing.SignedInFixture
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -44,6 +45,9 @@ import social.aloha.core.testing.SignedInFixture
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(sdk = [36], application = Application::class, qualifiers = RobolectricDeviceQualifiers.Pixel7)
 class InterestsTest {
+    @get:Rule
+    val main = MainDispatcherRule()
+
     @get:Rule
     val compose = createComposeRule()
 
@@ -74,7 +78,7 @@ class InterestsTest {
     )
 
     @After
-    fun close() = Dispatchers.resetMain()
+    fun close() = main.clear()
 
     @Test
     fun `the interests the server learnt are shown as it decides them, and learning is paused`() {
@@ -92,7 +96,6 @@ class InterestsTest {
 
     @Test
     fun `a server that keeps no interests says so, rather than failing`() = runBlocking {
-        Dispatchers.setMain(Dispatchers.Unconfined)
         val fixture = SignedInFixture(ApplicationProvider.getApplicationContext<Context>())
         val server = MockWebServer().apply {
             enqueue(MockResponse.Builder().code(404).build())
@@ -100,7 +103,7 @@ class InterestsTest {
         }
         try {
             val reader = fixture.signIn(server.url("/"))
-            val model = InterestsViewModel(reader.id, fixture.accounts, Interests(fixture.clients))
+            val model = main.keep(InterestsViewModel(reader.id, fixture.accounts, Interests(fixture.clients)))
             val shown = withTimeout(10.seconds) { model.uiState.first { !it.loading } }
             assertTrue(shown.unavailable)
         } finally {

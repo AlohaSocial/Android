@@ -24,6 +24,7 @@ import mockwebserver3.MockWebServer
 import mockwebserver3.RecordedRequest
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -35,6 +36,7 @@ import social.aloha.core.html.RichTextCache
 import social.aloha.core.model.Account
 import social.aloha.core.model.StarterPack
 import social.aloha.core.testing.InMemoryDataStore
+import social.aloha.core.testing.MainDispatcherRule
 import social.aloha.core.testing.SignedInFixture
 
 /** Suggests account 7, and refuses to forget it once [release] lets the refusal go. */
@@ -63,6 +65,9 @@ private class Stubborn : Dispatcher() {
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
 class ExploreViewModelTest {
+    @get:Rule
+    val main = MainDispatcherRule()
+
     private val fixture = SignedInFixture(ApplicationProvider.getApplicationContext<Context>())
     private val answers = Stubborn()
     private val server = MockWebServer().apply {
@@ -72,27 +77,28 @@ class ExploreViewModelTest {
 
     private fun viewModel(readerId: String): ExploreViewModel {
         val followed = FollowedAuthors(fixture.clients)
-        return ExploreViewModel(
-            readerId,
-            fixture.accounts,
-            Explore(fixture.clients, fixture.statuses),
-            RichTextCache(),
-            ReadingPreferences(InMemoryDataStore(emptyPreferences())),
-            ProfileRepository(fixture.clients, fixture.statuses, followed),
-            followed,
+        return main.keep(
+            ExploreViewModel(
+                readerId,
+                fixture.accounts,
+                Explore(fixture.clients, fixture.statuses),
+                RichTextCache(),
+                ReadingPreferences(InMemoryDataStore(emptyPreferences())),
+                ProfileRepository(fixture.clients, fixture.statuses, followed),
+                followed,
+            ),
         )
     }
 
     @After
     fun close() {
-        Dispatchers.resetMain()
+        main.clear()
         fixture.close()
         server.close()
     }
 
     @Test
     fun `a suggestion dismissed goes at once, and comes back where the server would not forget it`() = runBlocking {
-        Dispatchers.setMain(Dispatchers.Unconfined)
         val reader = fixture.signIn(server.url("/"))
         val explore = viewModel(reader.id)
         // the account is looked up off the test's thread; picking the tab meanwhile loads People twice, and
@@ -114,7 +120,6 @@ class ExploreViewModelTest {
 
     @Test
     fun `a starter pack that could not be followed says so once, and is not marked followed`() = runBlocking {
-        Dispatchers.setMain(Dispatchers.Unconfined)
         val reader = fixture.signIn(server.url("/"))
         val explore = viewModel(reader.id)
         withTimeout(10.seconds) { explore.uiState.first { it.viewer.isNotEmpty() } }
@@ -128,7 +133,6 @@ class ExploreViewModelTest {
     @Test
     fun `an open starter pack says whom the reader follows, and learns it again once the pack is followed`() =
         runBlocking {
-            Dispatchers.setMain(Dispatchers.Unconfined)
             val pack = PackServer()
             server.dispatcher = pack
             val reader = fixture.signIn(server.url("/"))

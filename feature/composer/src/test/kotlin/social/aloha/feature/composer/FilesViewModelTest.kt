@@ -23,6 +23,7 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -34,15 +35,15 @@ import social.aloha.core.nextcloud.NextcloudFile
 import social.aloha.core.nextcloud.NextcloudFiles
 import social.aloha.core.sync.FilesUploads
 import social.aloha.core.testing.DavServer
+import social.aloha.core.testing.MainDispatcherRule
 import social.aloha.core.testing.SignedInFixture
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36], application = Application::class)
 class FilesViewModelTest {
-    init {
-        Dispatchers.setMain(UnconfinedTestDispatcher())
-    }
+    @get:Rule
+    val main = MainDispatcherRule(UnconfinedTestDispatcher())
 
     private val context = ApplicationProvider.getApplicationContext<Context>()
     private val fixture = SignedInFixture(context)
@@ -61,7 +62,6 @@ class FilesViewModelTest {
     fun close() {
         // before resetMain: clearing a ViewModel cancels its work on the main dispatcher
         store.clear()
-        Dispatchers.resetMain()
         fixture.close()
         server.close()
     }

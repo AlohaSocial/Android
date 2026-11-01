@@ -28,6 +28,7 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -50,6 +51,7 @@ import social.aloha.core.model.ServerCapabilities
 import social.aloha.core.network.RateLimiter
 import social.aloha.core.testing.FakeSecretCipher
 import social.aloha.core.testing.InMemoryDataStore
+import social.aloha.core.testing.MainDispatcherRule
 import social.aloha.core.testing.MockCredentials
 import social.aloha.core.testing.NumberedTimeline
 import social.aloha.core.ui.isElsewhere
@@ -58,6 +60,9 @@ import social.aloha.core.ui.isElsewhere
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
 class MergedAudioTest {
+    @get:Rule
+    val main = MainDispatcherRule()
+
     private val clock = Clock.systemUTC()
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val context = ApplicationProvider.getApplicationContext<android.content.Context>()
@@ -105,7 +110,6 @@ class MergedAudioTest {
 
     @Before
     fun create() = runBlocking {
-        Dispatchers.setMain(Dispatchers.Unconfined)
         firstServer.start()
         secondServer.start()
         signIn(firstServer, "6")
@@ -117,11 +121,13 @@ class MergedAudioTest {
         val modes = ModeSources(accounts, AccountSettingsStore(InMemoryDataStore(emptyMap())), allAccounts)
         val statuses = StatusRepository(cache.statusDao(), clock)
         val timelines = TimelineRepository(cache.timelineDao(), statuses, clients, accounts, clock, Dispatchers.IO)
-        viewModel = AudioViewModel(
-            together = true,
-            ModeFeeds(timelines, modes, clock),
-            modes,
-            AudioPlayback(context, accounts, scope),
+        viewModel = main.keep(
+            AudioViewModel(
+                together = true,
+                ModeFeeds(timelines, modes, clock),
+                modes,
+                AudioPlayback(context, accounts, scope),
+            ),
         )
     }
 
@@ -144,7 +150,7 @@ class MergedAudioTest {
 
     @After
     fun close() {
-        Dispatchers.resetMain()
+        main.clear()
         scope.cancel()
         accountsDb.close()
         cache.close()

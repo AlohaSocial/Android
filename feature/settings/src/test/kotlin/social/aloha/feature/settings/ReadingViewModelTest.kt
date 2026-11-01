@@ -19,6 +19,7 @@ import kotlinx.coroutines.withTimeout
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -27,6 +28,7 @@ import social.aloha.core.data.reading.ReplyHiding
 import social.aloha.core.datastore.ReadingPreferences
 import social.aloha.core.model.ServerCapabilities
 import social.aloha.core.testing.InMemoryDataStore
+import social.aloha.core.testing.MainDispatcherRule
 import social.aloha.core.testing.MockServerConfiguration
 import social.aloha.core.testing.MockSocialServer
 import social.aloha.core.testing.SignedInFixture
@@ -37,9 +39,8 @@ private const val ROUTE = "/api/v1/social/feed_preferences"
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36], application = Application::class)
 class ReadingViewModelTest {
-    init {
-        Dispatchers.setMain(UnconfinedTestDispatcher())
-    }
+    @get:Rule
+    val main = MainDispatcherRule(UnconfinedTestDispatcher())
 
     private val fixture = SignedInFixture(ApplicationProvider.getApplicationContext<Context>())
     private val server = MockSocialServer(MockServerConfiguration.NextcloudWithRewrite).start()
@@ -49,7 +50,6 @@ class ReadingViewModelTest {
     fun close() {
         // before resetMain: clearing a ViewModel cancels its work on the main dispatcher
         store.clear()
-        Dispatchers.resetMain()
         fixture.close()
         server.close()
     }

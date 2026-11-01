@@ -22,12 +22,14 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import social.aloha.core.model.SignedInAccount
 import social.aloha.core.navigation.AddToAlbumKey
 import social.aloha.core.navigation.AlbumsKey
+import social.aloha.core.testing.MainDispatcherRule
 import social.aloha.core.testing.SignedInFixture
 
 /** Two albums of the reader's; a new one made on request; [refuse] turns every change down. */
@@ -52,6 +54,9 @@ private class Albums : Dispatcher() {
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
 class AlbumsViewModelTest {
+    @get:Rule
+    val main = MainDispatcherRule()
+
     private val fixture = SignedInFixture(ApplicationProvider.getApplicationContext<Context>())
     private val answers = Albums()
     private val server = MockWebServer().apply {
@@ -62,20 +67,19 @@ class AlbumsViewModelTest {
 
     @Before
     fun signIn() = runBlocking {
-        Dispatchers.setMain(Dispatchers.Unconfined)
         reader = fixture.signIn(server.url("/"))
     }
 
     @After
     fun close() {
-        Dispatchers.resetMain()
+        main.clear()
         fixture.close()
         server.close()
     }
 
     @Test
     fun `the reader's own albums are theirs to make and delete, and a refusal is said once`() = runBlocking {
-        val albums = AlbumsViewModel(AlbumsKey(reader.id), fixture.accounts, fixture.albums)
+        val albums = main.keep(AlbumsViewModel(AlbumsKey(reader.id), fixture.accounts, fixture.albums))
         val loaded = withTimeout(10.seconds) { albums.uiState.first { !it.loading } }
         assertTrue(loaded.own)
         assertEquals(listOf("1", "2"), loaded.albums.map { it.id })
@@ -94,13 +98,15 @@ class AlbumsViewModelTest {
 
     @Test
     fun `someone else's albums are only to look at`() = runBlocking {
-        val albums = AlbumsViewModel(AlbumsKey(reader.id, ownerId = "someone-else"), fixture.accounts, fixture.albums)
+        val albums = main.keep(
+            AlbumsViewModel(AlbumsKey(reader.id, ownerId = "someone-else"), fixture.accounts, fixture.albums),
+        )
         assertFalse(withTimeout(10.seconds) { albums.uiState.first { !it.loading } }.own)
     }
 
     @Test
     fun `a post goes into an album once, or into one made for it`() = runBlocking {
-        val adding = AddToAlbumViewModel(AddToAlbumKey(reader.id, "p1"), fixture.accounts, fixture.albums)
+        val adding = main.keep(AddToAlbumViewModel(AddToAlbumKey(reader.id, "p1"), fixture.accounts, fixture.albums))
         val loaded = withTimeout(10.seconds) { adding.uiState.first { !it.loading } }
         adding.onAdd(loaded.albums.first())
         withTimeout(10.seconds) { adding.uiState.first { "1" in it.added } }

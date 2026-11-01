@@ -26,6 +26,7 @@ import mockwebserver3.RecordedRequest
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -33,6 +34,7 @@ import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import social.aloha.core.data.nextcloud.NextcloudExtras
 import social.aloha.core.sync.Exports
+import social.aloha.core.testing.MainDispatcherRule
 import social.aloha.core.testing.SignedInFixture
 
 /** Statistics as Social 0.26.181 answers them, trimmed; a fresh count is refused when [refuseFresh]. */
@@ -59,9 +61,8 @@ private class Counts(private val refuseFresh: Boolean, private val refuseYear: B
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36], application = Application::class)
 class StatisticsViewModelTest {
-    init {
-        Dispatchers.setMain(UnconfinedTestDispatcher())
-    }
+    @get:Rule
+    val main = MainDispatcherRule(UnconfinedTestDispatcher())
 
     private val context = ApplicationProvider.getApplicationContext<Context>()
     private val fixture = SignedInFixture(context)
@@ -76,7 +77,6 @@ class StatisticsViewModelTest {
     fun close() {
         // before resetMain: clearing a ViewModel cancels its work on the main dispatcher
         store.clear()
-        Dispatchers.resetMain()
         fixture.close()
         server.close()
     }

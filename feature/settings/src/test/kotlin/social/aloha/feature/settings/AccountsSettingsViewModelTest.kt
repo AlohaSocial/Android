@@ -22,6 +22,7 @@ import kotlinx.coroutines.withTimeout
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -41,15 +42,15 @@ import social.aloha.core.sync.AvatarSource
 import social.aloha.core.sync.LocalNotifications
 import social.aloha.core.sync.PushRegistrar
 import social.aloha.core.testing.InMemoryDataStore
+import social.aloha.core.testing.MainDispatcherRule
 import social.aloha.core.testing.SignedInFixture
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36], application = Application::class)
 class AccountsSettingsViewModelTest {
-    init {
-        Dispatchers.setMain(UnconfinedTestDispatcher())
-    }
+    @get:Rule
+    val main = MainDispatcherRule(UnconfinedTestDispatcher())
 
     private val context = ApplicationProvider.getApplicationContext<Context>()
     private val fixture = SignedInFixture(context)
@@ -79,7 +80,6 @@ class AccountsSettingsViewModelTest {
     fun close() {
         // before resetMain: clearing a ViewModel cancels its work on the main dispatcher
         store.clear()
-        Dispatchers.resetMain()
         scope.cancel()
         fixture.close()
     }

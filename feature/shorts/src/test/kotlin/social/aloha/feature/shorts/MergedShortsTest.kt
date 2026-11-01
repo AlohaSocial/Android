@@ -35,6 +35,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -62,6 +63,7 @@ import social.aloha.core.network.RateLimiter
 import social.aloha.core.sync.DeviceConditions
 import social.aloha.core.testing.FakeSecretCipher
 import social.aloha.core.testing.InMemoryDataStore
+import social.aloha.core.testing.MainDispatcherRule
 import social.aloha.core.testing.MockCredentials
 import social.aloha.core.testing.NumberedTimeline
 import social.aloha.core.ui.RichTextColors
@@ -71,6 +73,9 @@ import social.aloha.core.ui.isElsewhere
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
 class MergedShortsTest {
+    @get:Rule
+    val main = MainDispatcherRule()
+
     private val clock = Clock.systemUTC()
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val context = ApplicationProvider.getApplicationContext<android.content.Context>()
@@ -124,7 +129,6 @@ class MergedShortsTest {
 
     @Before
     fun create() = runBlocking {
-        Dispatchers.setMain(Dispatchers.Unconfined)
         firstServer.start()
         secondServer.start()
         signIn(firstServer, "6", onlyShort = true)
@@ -135,14 +139,16 @@ class MergedShortsTest {
         val allAccounts = AllAccounts(accounts, AccountViewPreferences(InMemoryDataStore(emptyPreferences())))
         val modes = ModeSources(accounts, AccountSettingsStore(InMemoryDataStore(emptyMap())), allAccounts)
         val timelines = TimelineRepository(cache.timelineDao(), statuses, clients, accounts, clock, Dispatchers.IO)
-        viewModel = ShortsViewModel(
-            together = true,
-            ModeFeeds(timelines, modes, clock),
-            modes,
-            ModePreferences(InMemoryDataStore(emptyPreferences())),
-            StatusInteractions(statuses, clients),
-            RichTextCache(),
-            Unmetered,
+        viewModel = main.keep(
+            ShortsViewModel(
+                together = true,
+                ModeFeeds(timelines, modes, clock),
+                modes,
+                ModePreferences(InMemoryDataStore(emptyPreferences())),
+                StatusInteractions(statuses, clients),
+                RichTextCache(),
+                Unmetered,
+            ),
         ).apply { onColors(RichTextColors(Color.Blue, Color.Gray, Color.LightGray)) }
     }
 
@@ -165,7 +171,7 @@ class MergedShortsTest {
 
     @After
     fun close() {
-        Dispatchers.resetMain()
+        main.clear()
         scope.cancel()
         accountsDb.close()
         cache.close()

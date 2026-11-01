@@ -22,6 +22,7 @@ import mockwebserver3.MockWebServer
 import mockwebserver3.RecordedRequest
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -31,6 +32,7 @@ import social.aloha.core.datastore.AccountSettingsStore
 import social.aloha.core.html.RichTextCache
 import social.aloha.core.navigation.SearchKey
 import social.aloha.core.testing.InMemoryDataStore
+import social.aloha.core.testing.MainDispatcherRule
 import social.aloha.core.testing.SignedInFixture
 import social.aloha.core.ui.RichTextColors
 
@@ -53,6 +55,9 @@ private class OnePost : Dispatcher() {
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
 class SearchViewModelTest {
+    @get:Rule
+    val main = MainDispatcherRule()
+
     private val fixture = SignedInFixture(ApplicationProvider.getApplicationContext<Context>())
     private val answers = OnePost()
     private val server = MockWebServer().apply {
@@ -62,22 +67,23 @@ class SearchViewModelTest {
 
     @After
     fun close() {
-        Dispatchers.resetMain()
+        main.clear()
         fixture.close()
         server.close()
     }
 
     @Test
     fun `an address submitted opens the one post it names, searched once`() = runBlocking {
-        Dispatchers.setMain(Dispatchers.Unconfined)
         val reader = fixture.signIn(server.url("/"))
         val settings = AccountSettingsStore(InMemoryDataStore(emptyMap()))
-        val model = SearchViewModel(
-            SearchKey(reader.id),
-            fixture.accounts,
-            Searches(fixture.clients, fixture.statuses, settings),
-            RemoteLookup(fixture.clients, fixture.statuses),
-            RichTextCache(),
+        val model = main.keep(
+            SearchViewModel(
+                SearchKey(reader.id),
+                fixture.accounts,
+                Searches(fixture.clients, fixture.statuses, settings),
+                RemoteLookup(fixture.clients, fixture.statuses),
+                RichTextCache(),
+            ),
         )
         model.onColors(RichTextColors(Color.Blue, Color.Gray, Color.LightGray))
         val watching = launch { model.uiState.collect {} }

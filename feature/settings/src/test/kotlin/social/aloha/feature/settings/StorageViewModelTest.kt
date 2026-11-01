@@ -10,14 +10,15 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Rule
 import org.junit.Test
 import social.aloha.core.data.DeviceStorage
+import social.aloha.core.testing.MainDispatcherRule
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class StorageViewModelTest {
-    init {
-        Dispatchers.setMain(UnconfinedTestDispatcher())
-    }
+    @get:Rule
+    val main = MainDispatcherRule(UnconfinedTestDispatcher())
 
     private class Caches : DeviceStorage {
         var bytes = 42_000L
@@ -32,12 +33,12 @@ class StorageViewModelTest {
     }
 
     @After
-    fun close() = Dispatchers.resetMain()
+    fun close() = main.clear()
 
     @Test
     fun `the caches are measured, and cleared on asking`() {
         val caches = Caches()
-        val storage = StorageViewModel(caches)
+        val storage = main.keep(StorageViewModel(caches))
         assertEquals(StorageState(42_000L), storage.state.value)
         storage.clear()
         assertEquals(StorageState(0L, cleared = true), storage.state.value)

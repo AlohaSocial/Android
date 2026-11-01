@@ -25,11 +25,13 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import social.aloha.core.data.nextcloud.NextcloudExtras
+import social.aloha.core.testing.MainDispatcherRule
 import social.aloha.core.testing.SignedInFixture
 
 /**
@@ -69,9 +71,8 @@ private class Channels : Dispatcher() {
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36], application = Application::class)
 class ChannelsViewModelTest {
-    init {
-        Dispatchers.setMain(UnconfinedTestDispatcher())
-    }
+    @get:Rule
+    val main = MainDispatcherRule(UnconfinedTestDispatcher())
 
     private val fixture = SignedInFixture(ApplicationProvider.getApplicationContext<Context>())
     private val store = ViewModelStore()
@@ -85,7 +86,6 @@ class ChannelsViewModelTest {
     fun close() {
         // before resetMain: clearing a ViewModel cancels its work on the main dispatcher
         store.clear()
-        Dispatchers.resetMain()
         fixture.close()
         server.close()
     }

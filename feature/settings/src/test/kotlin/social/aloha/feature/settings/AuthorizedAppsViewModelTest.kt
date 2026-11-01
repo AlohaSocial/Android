@@ -24,12 +24,14 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import social.aloha.core.data.nextcloud.NextcloudExtras
 import social.aloha.core.model.ServerCapabilities
+import social.aloha.core.testing.MainDispatcherRule
 import social.aloha.core.testing.SignedInFixture
 
 /** Two apps as Social 0.26.181 lists them: `created_at` in seconds, `signed_in` a flag. */
@@ -41,9 +43,8 @@ private const val APPS = """[{"id":37,"name":"Aloha Social","website":"https://a
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36], application = Application::class)
 class AuthorizedAppsViewModelTest {
-    init {
-        Dispatchers.setMain(UnconfinedTestDispatcher())
-    }
+    @get:Rule
+    val main = MainDispatcherRule(UnconfinedTestDispatcher())
 
     private val fixture = SignedInFixture(ApplicationProvider.getApplicationContext<Context>())
     private val store = ViewModelStore()
@@ -65,7 +66,6 @@ class AuthorizedAppsViewModelTest {
     fun close() {
         // before resetMain: clearing a ViewModel cancels its work on the main dispatcher
         store.clear()
-        Dispatchers.resetMain()
         fixture.close()
         server.close()
     }

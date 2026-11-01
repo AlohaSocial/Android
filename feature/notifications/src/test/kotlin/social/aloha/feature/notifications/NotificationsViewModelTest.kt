@@ -29,6 +29,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -45,6 +46,7 @@ import social.aloha.core.datastore.NotificationPreferences
 import social.aloha.core.model.NotificationKind
 import social.aloha.core.model.ServerCapabilities
 import social.aloha.core.testing.InMemoryDataStore
+import social.aloha.core.testing.MainDispatcherRule
 import social.aloha.core.testing.SignedInFixture
 
 private class Notifications : Dispatcher() {
@@ -102,6 +104,9 @@ private class Notifications : Dispatcher() {
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
 class NotificationsViewModelTest {
+    @get:Rule
+    val main = MainDispatcherRule()
+
     private val context = ApplicationProvider.getApplicationContext<Context>()
     private val fixture = SignedInFixture(context)
     private val notifications = Notifications()
@@ -114,33 +119,34 @@ class NotificationsViewModelTest {
 
     @Before
     fun create() = runBlocking {
-        Dispatchers.setMain(Dispatchers.Unconfined)
         val capabilities = ServerCapabilities.minimal(server.url("/").toString())
             .copy(groupedNotifications = true, notificationPolicy = true)
         val account = fixture.signIn(server.url("/"), capabilities)
         unread.set(account.id, 2)
-        viewModel = NotificationsViewModel(
-            AllAccounts(fixture.accounts, AccountViewPreferences(InMemoryDataStore(emptyPreferences()))),
-            fixture.notifications,
-            NotificationFiltering(fixture.clients),
-            unread,
-            UserStream(fixture.accounts, { _, _, _ ->
-                Closeable {}
-            }, fixture.statuses, fixture.filters, TimelineSignals()),
-            SyncSettings(
+        viewModel = main.keep(
+            NotificationsViewModel(
+                AllAccounts(fixture.accounts, AccountViewPreferences(InMemoryDataStore(emptyPreferences()))),
+                fixture.notifications,
+                NotificationFiltering(fixture.clients),
+                unread,
+                UserStream(fixture.accounts, { _, _, _ ->
+                    Closeable {}
+                }, fixture.statuses, fixture.filters, TimelineSignals()),
+                SyncSettings(
+                    AccountSettingsStore(InMemoryDataStore(emptyMap())),
+                    AppPreferences(InMemoryDataStore(emptyPreferences())),
+                    NotificationPreferences(InMemoryDataStore(emptyPreferences())),
+                ),
+                StatusInteractions(fixture.statuses, fixture.clients),
                 AccountSettingsStore(InMemoryDataStore(emptyMap())),
-                AppPreferences(InMemoryDataStore(emptyPreferences())),
-                NotificationPreferences(InMemoryDataStore(emptyPreferences())),
+                fixture.clock,
             ),
-            StatusInteractions(fixture.statuses, fixture.clients),
-            AccountSettingsStore(InMemoryDataStore(emptyMap())),
-            fixture.clock,
         )
     }
 
     @After
     fun close() {
-        Dispatchers.resetMain()
+        main.clear()
         fixture.close()
         server.close()
     }

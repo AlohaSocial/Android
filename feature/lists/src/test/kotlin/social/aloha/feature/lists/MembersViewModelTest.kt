@@ -21,12 +21,14 @@ import mockwebserver3.RecordedRequest
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import social.aloha.core.data.lists.Lists
 import social.aloha.core.model.Account
 import social.aloha.core.navigation.ListMembersKey
+import social.aloha.core.testing.MainDispatcherRule
 import social.aloha.core.testing.SignedInFixture
 
 /**
@@ -69,6 +71,9 @@ private class ListServer : Dispatcher() {
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
 class MembersViewModelTest {
+    @get:Rule
+    val main = MainDispatcherRule()
+
     private val fixture = SignedInFixture(ApplicationProvider.getApplicationContext<Context>())
     private val answers = ListServer()
     private val server = MockWebServer().apply {
@@ -78,15 +83,16 @@ class MembersViewModelTest {
 
     @After
     fun close() {
-        Dispatchers.resetMain()
+        main.clear()
         fixture.close()
         server.close()
     }
 
     private suspend fun open(listId: String): MembersViewModel {
-        Dispatchers.setMain(Dispatchers.Unconfined)
         val reader = fixture.signIn(server.url("/"))
-        return MembersViewModel(ListMembersKey(reader.id, listId, "List"), fixture.accounts, Lists(fixture.clients))
+        return main.keep(
+            MembersViewModel(ListMembersKey(reader.id, listId, "List"), fixture.accounts, Lists(fixture.clients)),
+        )
     }
 
     private suspend fun MembersViewModel.await(predicate: (MembersUiState) -> Boolean): MembersUiState =
