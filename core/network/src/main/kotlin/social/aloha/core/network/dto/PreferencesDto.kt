@@ -31,9 +31,15 @@ internal data class PreferencesDto(
     val expandSpoilers: Boolean = false,
 )
 
-/** Nextcloud Social's own feed preferences; an answer without the switch says nothing about it. */
+/**
+ * Nextcloud Social's own feed preferences; an answer without the switch says nothing about it. [threadSort]
+ * is how it orders a thread's replies for the reader, read-only (0.26.279 on).
+ */
 @Serializable
-internal data class FeedPreferencesDto(@SerialName("hide_replies") val hideReplies: Boolean? = null)
+internal data class FeedPreferencesDto(
+    @SerialName("hide_replies") val hideReplies: Boolean? = null,
+    @SerialName("thread_sort") val threadSort: String? = null,
+)
 
 @Serializable
 internal data class NotificationPolicyDto(

@@ -8,6 +8,7 @@ import androidx.compose.ui.text.AnnotatedString
 import java.time.Instant
 import social.aloha.core.data.Trouble
 import social.aloha.core.data.thread.ReplyNudge
+import social.aloha.core.data.thread.ThreadOrder
 import social.aloha.core.model.ApplicationSummary
 import social.aloha.core.model.CustomEmoji
 import social.aloha.core.model.Reaction
@@ -76,6 +77,8 @@ internal data class ThreadUiState(
     val replyTo: String? = null,
     /** Replies a refresh found, held back until the reader asks for them, so the list stays put. */
     val pendingReplies: Int = 0,
+    /** How the server ordered the replies, where that is not oldest first, the order it otherwise keeps. */
+    val threadOrder: ThreadOrder? = null,
 )
 
 /** What a pushed list of the focused post shows. */

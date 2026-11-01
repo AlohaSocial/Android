@@ -35,6 +35,7 @@ import mockwebserver3.RecordedRequest
 import okhttp3.OkHttpClient
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -44,6 +45,7 @@ import social.aloha.core.data.AccountRepository
 import social.aloha.core.data.ClientFactory
 import social.aloha.core.data.NewAccount
 import social.aloha.core.data.thread.ReplyNudges
+import social.aloha.core.data.thread.ThreadOrder
 import social.aloha.core.data.thread.ThreadRepository
 import social.aloha.core.data.timeline.StatusInteractions
 import social.aloha.core.data.timeline.StatusRepository
@@ -86,6 +88,9 @@ private class Conversation : Dispatcher() {
 
     /** How many more times asking for the custom emoji fails. */
     val emojiFailures = AtomicInteger()
+
+    /** The reader's thread order as the server reports it, `thread_sort`; none sent when null. */
+    @Volatile var threadSort: String? = null
 
     private val template = JsonObject(NumberedTimeline.homeTemplate() + ("reblog" to JsonNull))
 
@@ -144,6 +149,9 @@ private class Conversation : Dispatcher() {
                 """{"shortcode":"hidden","url":"https://x.test/e/hidden.png","visible_in_picker":false}]"""
 
         path.endsWith("/history") -> history().toString()
+
+        path.endsWith("/social/feed_preferences") ->
+            """{"hide_replies":false${threadSort?.let { ",\"thread_sort\":\"$it\"" }.orEmpty()}}"""
 
         else -> null
     }
@@ -294,6 +302,35 @@ class ThreadViewModelTest {
             val mine = reacted.posts().single { it.focused }.row.reactions.single { it.me }
             assertEquals(":blobwave:" to "https://x.test/e/blobwave.png", mine.name to mine.url)
         }
+
+    @Test
+    fun `replies the server ordered otherwise than oldest first say so, the order asked once per account`() =
+        runBlocking {
+            conversation.threadSort = "newest"
+            val viewModel = open("f")
+            viewModel.await { !it.loading && it.threadOrder == ThreadOrder.Newest }
+            viewModel.onRefresh()
+            viewModel.await { !it.loading }
+            assertEquals(1, conversation.asked.count { it.endsWith("/social/feed_preferences") })
+            conversation.threadSort = "oldest"
+            val oldest = open("f")
+            preferencesAsked(2)
+            assertNull(oldest.await { !it.loading }.threadOrder)
+        }
+
+    @Test
+    fun `a Social too old to report its thread order is asked again on a refresh`() = runBlocking {
+        val viewModel = open("f")
+        preferencesAsked(1)
+        viewModel.onRefresh()
+        preferencesAsked(2)
+        assertNull(viewModel.await { !it.loading }.threadOrder)
+    }
+
+    /** Waits until `feed_preferences` was asked [times] times; asking it changes no state when nothing differs. */
+    private suspend fun preferencesAsked(times: Int) = withTimeout(10.seconds) {
+        while (conversation.asked.count { it.endsWith("/social/feed_preferences") } < times) delay(10.milliseconds)
+    }
 
     @Test
     fun `custom emoji the server failed to give are asked again on a refresh, a still picture will do`() = runBlocking {

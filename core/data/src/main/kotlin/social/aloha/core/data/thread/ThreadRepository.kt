@@ -4,10 +4,13 @@
 package social.aloha.core.data.thread
 
 import android.util.LruCache
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import social.aloha.core.data.Answer
 import social.aloha.core.data.ClientFactory
 import social.aloha.core.data.answer
@@ -23,6 +26,7 @@ import social.aloha.core.network.ApiError
 import social.aloha.core.network.ApiRequest
 import social.aloha.core.network.ApiResult
 import social.aloha.core.network.endpoints.CountRefresh
+import social.aloha.core.network.endpoints.FeedPreferenceEndpoints
 import social.aloha.core.network.endpoints.InstanceEndpoints
 import social.aloha.core.network.endpoints.Paging
 import social.aloha.core.network.endpoints.StatusEndpoints
@@ -30,6 +34,28 @@ import social.aloha.core.network.endpoints.StatusExtraEndpoints
 
 /** A conversation as the server sent it: the posts above the one asked for, and every reply below. */
 public data class Conversation(val focused: Status, val ancestors: List<Status>, val descendants: List<Status>)
+
+/**
+ * How Nextcloud Social orders a thread's replies for its reader, each among the replies to the same post:
+ * the reader's Bluesky thread preference. [Random] differs on every read.
+ */
+public enum class ThreadOrder {
+    Oldest,
+    Newest,
+    MostLikes,
+    Random,
+    ;
+
+    public companion object {
+        /** The server's word for it; anything else, or none, is [Oldest], the server's own default. */
+        public fun of(sort: String?): ThreadOrder = when (sort) {
+            "newest" -> Newest
+            "most-likes" -> MostLikes
+            "random" -> Random
+            else -> Oldest
+        }
+    }
+}
 
 /**
  * A post and the conversation around it. Every post the server sends is stored with the rest, so an
@@ -111,6 +137,21 @@ public class ThreadRepository @Inject constructor(
 
     // ponytail: in memory only, the last posts opened; a table in cache.db if they should outlive the process
     private val known = LruCache<String, List<Account>>(KNOWN)
+    private val orders = ConcurrentHashMap<String, ThreadOrder>()
+    private val orderLocks = ConcurrentHashMap<String, Mutex>()
+
+    /**
+     * How [account]'s Nextcloud Social orders thread replies for it, asked once per account and kept: it is
+     * set in a Bluesky app and seldom changes. Null elsewhere, while the server has not answered, and from a
+     * Social too old to say.
+     */
+    public suspend fun threadOrder(account: SignedInAccount): ThreadOrder? {
+        if (!account.capabilities.isNextcloudSocial) return null
+        return orderLocks.getOrPut(account.id) { Mutex() }.withLock {
+            orders[account.id] ?: (clients.answer(account, FeedPreferenceEndpoints.threadSort()) as? Answer.Got)
+                ?.value?.let { sort -> ThreadOrder.of(sort).also { orders[account.id] = it } }
+        }
+    }
 
     public suspend fun quotes(account: SignedInAccount, statusId: String): Answer<List<Status>> =
         when (val answer = clients.answer(account, StatusExtraEndpoints.quotes(statusId))) {

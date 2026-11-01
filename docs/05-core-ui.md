@@ -249,7 +249,13 @@ exist undocumented.
   for current counts even right after a timeline did.
 - Fetches `/api/v1/statuses/{id}/context` and renders ancestors above, the
   focused status enlarged in the middle, and descendants below as an indented
-  tree.
+  tree, in the order the server sent them and never re-sorted. From 0.26.279
+  (read from source, `StreamThreads::getDescendants`; `thread_sort` checked
+  live) Nextcloud Social orders the replies by the reader's Bluesky thread
+  setting; where that is not the oldest first, a line above the replies
+  says so ("Newest replies first", "Most-liked replies first", "Replies in
+  random order"). Lines are keyed by post id, so a `random` order that changes
+  on a refresh moves no reply's identity.
 - The focused status scrolls to a stable position on open, with ancestors
   already laid out above it — no jump.
 - Indentation is capped at 5 levels with a thread line; deeper replies collapse
