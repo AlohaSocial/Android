@@ -336,6 +336,10 @@ internal class ProfileViewModel @AssistedInject constructor(
         when (val answer = profiles.resolve(reader, key.id, key.acct)) {
             is Answer.Got -> {
                 val account = answer.value
+                // the tab the account chose to open on, once and before it draws: a refresh keeps the reader's
+                if (target.value == null) {
+                    control.update { it.copy(tab = ProfilePresentation.firstTab(account.profileLayout)) }
+                }
                 target.value = account
                 control.update { it.copy(loading = false, trouble = null) }
                 if (account.id != reader.serverAccountId) {
@@ -418,15 +422,16 @@ internal class ProfileViewModel @AssistedInject constructor(
         storedRows = stored
         rows.use(inputs.colors)
         val decide = ProfilePresentation.decider(inputs.filters, now, cache)
+        val featured = ProfilePresentation.featured(control.pinned, control.featuredTags, reader.capabilities) {
+            rows.rowFor(it, reader.serverAccountId, null)
+        }
         return ProfileUiState(
             header = account?.let { headerOf(it, inputs.colors, reader) },
             relation = control.relationship?.let(ProfilePresentation::relation),
             highlights = control.highlights,
-            tabs = ProfilePresentation.tabs(
-                reader.capabilities,
-                control.pinned.isNotEmpty() || control.featuredTags.isNotEmpty(),
-            ),
+            tabs = ProfilePresentation.tabs(reader.capabilities, featured != null, account?.profileLayout, control.tab),
             tab = control.tab,
+            albums = reader.capabilities.collections,
             items = ProfilePresentation.items(stored, decide, { status, warning ->
                 rows.rowFor(status, reader.serverAccountId, warning?.titles, warning?.keywords.orEmpty())
             }, control.loadingGaps),
@@ -443,9 +448,7 @@ internal class ProfileViewModel @AssistedInject constructor(
             lists = control.lists,
             familiar = control.familiar.map { Familiar(it.id, it.bestDisplayName, it.avatar) },
             knownHandle = key.acct?.let { if (it.startsWith('@')) it else "@$it" },
-            featured = ProfilePresentation.featured(control.pinned, control.featuredTags, reader.capabilities) {
-                rows.rowFor(it, reader.serverAccountId, null)
-            },
+            featured = featured,
         )
     }
 

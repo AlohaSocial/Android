@@ -277,6 +277,14 @@ exist undocumented.
   (`accounts/{id}/statuses?tagged=`), titled "#tag by @handle"; on Nextcloud
   Social before 0.26.237, which ignores `tagged`, it opens the hashtag's
   timeline instead.
+- An account's `profile_layout` (Nextcloud Social 0.26.279 on, read from its
+  source; the app only reads it, as the route that writes it takes a session,
+  not a token) chooses the tab its profile opens on, `posts`, `photos` (Media)
+  or `videos`, and leaves out the Media chip, Videos and Albums where it
+  turned `photos`, `videos` or `collections` off; `tagged` has no tab here. A
+  refresh keeps the tab the reader is on, even one the layout now hides, as
+  the web app does. A layout that hides Posts or opens on a tab it hides is
+  none, as on the server, and none shows every tab.
 - Scrolling an account's posts does not stop where Nextcloud Social is still
   reading older ones from the account's server or Bluesky
   (`X-Social-Profile-Filling`): the page is read again after two seconds, at

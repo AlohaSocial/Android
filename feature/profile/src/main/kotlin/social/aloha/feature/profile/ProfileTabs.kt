@@ -78,13 +78,13 @@ internal fun Tabs(state: ProfileUiState, pinned: Boolean, timeline: ProfileTab, 
                     )
                 }
             }
-            if (state.tab in TIMELINE) TimelineChips(state.tab, onTab)
+            if (state.tab in TIMELINE) TimelineChips(state.tab, state.tabs.filter { it in TIMELINE }, onTab)
         }
     }
 }
 
 @Composable
-private fun TimelineChips(tab: ProfileTab, onTab: (ProfileTab) -> Unit) {
+private fun TimelineChips(tab: ProfileTab, options: List<ProfileTab>, onTab: (ProfileTab) -> Unit) {
     Row(
         Modifier
             .fillMaxWidth()
@@ -93,7 +93,7 @@ private fun TimelineChips(tab: ProfileTab, onTab: (ProfileTab) -> Unit) {
             .padding(horizontal = AlohaSpacing.m, vertical = AlohaSpacing.xs),
         horizontalArrangement = Arrangement.spacedBy(AlohaSpacing.s),
     ) {
-        listOf(ProfileTab.Posts, ProfileTab.Replies, ProfileTab.Media).forEach { option ->
+        options.forEach { option ->
             FilterChip(
                 selected = option == tab,
                 onClick = { onTab(option) },

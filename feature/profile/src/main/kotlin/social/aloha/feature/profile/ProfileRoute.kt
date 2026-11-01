@@ -58,7 +58,7 @@ public fun ProfileRoute(key: AccountKey, navigation: ProfileNavigation, modifier
             navigation = { nav },
             onCopied = { scope.launch { snackbars.showSnackbar(copied) } },
             onDeleteAsked = { deleting = it },
-            albums = { ProfileTab.Collections in state.tabs },
+            albums = { state.albums },
         ) {
             override fun onBoost(row: StatusRowUi) = viewModel.onToggle(row.statusId, Toggle.Boost)
 
