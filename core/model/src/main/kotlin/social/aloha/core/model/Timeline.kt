@@ -152,7 +152,8 @@ public data class TimelineKey(val mode: FeedMode, val source: TimelineSource) {
 
 /**
  * The narrowings Nextcloud Social accepts beyond Mastodon's parameters. Of the first three the narrowest
- * set wins, since every short is a video and every video is media.
+ * set wins, since every short is a video and every video is media; [mediaType] (`image`, `visual`)
+ * narrows media to that kind instead of [onlyMedia].
  */
 @Serializable
 public data class TimelineFilters(
@@ -160,18 +161,45 @@ public data class TimelineFilters(
     val onlyVideo: Boolean = false,
     val onlyNews: Boolean = false,
     val onlyShort: Boolean = false,
+    val mediaType: String? = null,
 ) {
-    val isEmpty: Boolean get() = !onlyMedia && !onlyVideo && !onlyNews && !onlyShort
+    val isEmpty: Boolean get() = !onlyMedia && !onlyVideo && !onlyNews && !onlyShort && mediaType == null
 
     public companion object {
         public val None: TimelineFilters = TimelineFilters()
+        public const val IMAGE: String = "image"
+
+        /** Photos, videos and animated images, not audio or documents. */
+        public const val VISUAL: String = "visual"
+
+        /**
+         * [forMode], but an account's media ([TimelineSource.Account.onlyMedia]) is its photos, videos and
+         * animated images alone where the server can narrow to them, and another server's timeline
+         * ([TimelineSource.Remote]) is asked without `media_type`, which only the reader's server is known
+         * to take.
+         */
+        public fun forKey(key: TimelineKey, capabilities: ServerCapabilities): TimelineFilters {
+            val source = key.source
+            val visual = source is TimelineSource.Account && source.onlyMedia && capabilities.mediaTypeFilter
+            return when {
+                visual -> TimelineFilters(mediaType = VISUAL)
+                source is TimelineSource.Remote -> forMode(key.mode, capabilities, mediaTypes = false)
+                else -> forMode(key.mode, capabilities)
+            }
+        }
 
         /**
          * What to ask the server for, given the mode and what the server supports. An absent capability
          * yields no parameter; the caller then filters on the device and over-fetches.
          */
-        public fun forMode(mode: FeedMode, capabilities: ServerCapabilities): TimelineFilters = when (mode) {
+        public fun forMode(
+            mode: FeedMode,
+            capabilities: ServerCapabilities,
+            mediaTypes: Boolean = capabilities.mediaTypeFilter,
+        ): TimelineFilters = when (mode) {
             FeedMode.Home -> None
+
+            FeedMode.Photos if mediaTypes -> TimelineFilters(mediaType = IMAGE)
 
             FeedMode.Photos, FeedMode.Audio -> TimelineFilters(onlyMedia = capabilities.onlyMediaFilter)
 

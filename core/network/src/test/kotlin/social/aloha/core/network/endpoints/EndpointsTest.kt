@@ -224,6 +224,17 @@ class EndpointsTest {
     }
 
     @Test
+    fun `a media type is asked for in place of only_media, on timelines and an account's posts alike`() {
+        val photos = TimelineEndpoints.timeline(TimelineSource.Home, TimelineFilters(mediaType = "image")).endpoint
+        assertEquals("image", photos.queryValue("media_type"))
+        assertNull(photos.queryValue("only_media"))
+        val source = TimelineSource.Account("7", includeReplies = false, onlyMedia = true)
+        val media = TimelineEndpoints.timeline(source, TimelineFilters(mediaType = "visual")).endpoint
+        assertEquals("visual", media.queryValue("media_type"))
+        assertNull(media.queryValue("only_media"))
+    }
+
+    @Test
     fun `an account timeline excludes replies unless asked`() {
         val source = TimelineSource.Account("7", includeReplies = false, onlyMedia = true)
         val endpoint = TimelineEndpoints.timeline(source).endpoint

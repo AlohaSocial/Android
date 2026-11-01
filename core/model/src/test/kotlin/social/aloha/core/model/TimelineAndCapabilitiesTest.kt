@@ -37,6 +37,24 @@ class TimelineAndCapabilitiesTest {
     }
 
     @Test
+    fun `photos ask for images and an account's media for visual media from Nextcloud Social 0_26_279`() {
+        fun social(version: String) =
+            capabilities(nextcloud = true).copy(softwareName = "nextcloud-social", softwareVersion = version)
+        val current = social("0.26.279")
+        val older = social("0.26.278")
+        assertEquals(TimelineFilters(mediaType = "image"), TimelineFilters.forMode(FeedMode.Photos, current))
+        assertEquals(TimelineFilters(onlyMedia = true), TimelineFilters.forMode(FeedMode.Photos, older))
+        assertEquals(TimelineFilters(onlyMedia = true), TimelineFilters.forMode(FeedMode.Audio, current))
+        val media = TimelineKey.home(TimelineSource.Account("7", includeReplies = false, onlyMedia = true))
+        assertEquals(TimelineFilters(mediaType = "visual"), TimelineFilters.forKey(media, current))
+        assertTrue(TimelineFilters.forKey(media, older).isEmpty)
+        val posts = TimelineKey.home(TimelineSource.Account("7", includeReplies = false, onlyMedia = false))
+        assertTrue(TimelineFilters.forKey(posts, current).isEmpty)
+        val elsewhere = TimelineKey(FeedMode.Photos, TimelineSource.Remote("mastodon.example"))
+        assertEquals(TimelineFilters(onlyMedia = true), TimelineFilters.forKey(elsewhere, current))
+    }
+
+    @Test
     fun `without server narrowing Shorts over-fetches hardest`() {
         val filters = TimelineFilters.forMode(FeedMode.Shorts, capabilities(nextcloud = false))
         assertTrue(filters.isEmpty)

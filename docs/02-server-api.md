@@ -83,7 +83,8 @@ capability flag (§4).
 
 | Parameter | Meaning |
 |---|---|
-| `only_media` | Posts carrying any attachment. **Powers Photos mode.** |
+| `only_media` | Posts carrying any attachment. **Powers Photos mode before 0.26.279, and Audio.** |
+| `media_type` | From 0.26.279 (`1b652977e`, read from source): `image`, `video`, `audio`, or `visual` for photos, videos and animated images together, PeerTube `Video` objects included; implies `only_media` and narrows before paging. `video` is `only_video`. On every timeline route and an account's statuses. **Powers Photos mode (`image`) and a profile's Media chip (`visual`, so audio and documents stay out); never sent to another server's timeline.** |
 | `only_video` | Posts carrying a `video` attachment, *or* that arrived as a PeerTube `Video`. Narrower than `only_media` and wins when both are sent. **Powers Video mode, and Shorts before 0.26.222.** |
 | `only_short` | Posts whose only attachment is a `video` of at most `limits.short_max_duration` seconds (180) and no wider than `limits.short_max_aspect_ratio` (1.0), both from `/api/v2/config`; a video whose length or shape the server has not measured is not one. Narrower than `only_video` and wins over it. From 0.26.222, announced by `/api/v2/config` `features.shorts`. **Powers Shorts mode.** |
 | `only_news` | Posts that arrived as an ActivityPub `Article`/`Page`, or whose text links outward. Not a subset of `only_media`. **Powers News mode.** |
