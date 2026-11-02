@@ -41,6 +41,7 @@ internal data class InterestsStateDto(
 internal data class InterestSettingsDto(
     @Serializable(with = OptionalBoolSerializer::class) val learning: Boolean? = null,
     @Serializable(with = LenientBoolSerializer::class) val paused: Boolean = false,
+    @Serializable(with = LenientBoolSerializer::class) val instancePaused: Boolean = false,
     @Serializable(with = LossyListSerializer::class) val languages: List<String> = emptyList(),
 )
 
@@ -57,7 +58,9 @@ internal data class InterestTagDto(
 )
 
 internal fun InterestsStateDto.toDomain(): InterestsState = InterestsState(
-    settings = settings?.let { InterestSettings(it.learning ?: true, it.paused, it.languages) } ?: InterestSettings(),
+    settings =
+        settings?.let { InterestSettings(it.learning ?: true, it.paused, it.languages, it.instancePaused) }
+            ?: InterestSettings(),
     interests = interests.map { it.toDomain() },
     candidates = candidates.map { it.toDomain() },
     thin = thin,

@@ -20,11 +20,13 @@ public data class InterestsState(
     val thin: Boolean = false,
 )
 
+/** @property instancePaused the administrator has paused learning for everyone on the server. */
 @Serializable
 public data class InterestSettings(
     val learning: Boolean = true,
     val paused: Boolean = false,
     val languages: List<String> = emptyList(),
+    val instancePaused: Boolean = false,
 )
 
 /** One hashtag the server ranks, with how strongly. */

@@ -132,6 +132,8 @@
     <string name="interests_paused">Pause learning</string>
     <!-- Explains the pause switch -->
     <string name="interests_paused_summary">Keeps what was learnt, and learns nothing new until you resume.</string>
+    <!-- Note above the learning switches: the server's administrator has paused learning for everyone; the switches still keep the reader's choices for when it resumes -->
+    <string name="interests_instance_paused">Your administrator has paused learning on this server. Nothing new is learnt until they resume it; your choices below apply then.</string>
     <!-- Heading of the reader's interests -->
     <string name="interests_yours">Your interests</string>
     <!-- Shown while the server has too little to go on -->
