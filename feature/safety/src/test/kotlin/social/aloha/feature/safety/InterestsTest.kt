@@ -35,6 +35,7 @@ import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import social.aloha.core.data.interests.Interests
 import social.aloha.core.designsystem.AlohaTheme
+import social.aloha.core.model.InterestSettings
 import social.aloha.core.model.InterestTag
 import social.aloha.core.model.InterestsState
 import social.aloha.core.testing.MainDispatcherRule
@@ -92,6 +93,18 @@ class InterestsTest {
         compose.onNodeWithText("Forget all interests").performClick()
         compose.onNodeWithText("Forget all interests?").assertExists()
         assertEquals(listOf("paused:true"), asked)
+    }
+
+    @Test
+    fun `learning the administrator paused says so, keeps the reader's switches and claims no learning`() {
+        val settings = InterestSettings(paused = true, instancePaused = true)
+        val paused = state.copy(interests = state.interests?.copy(settings = settings, thin = true))
+        compose.setContent { AlohaTheme { InterestsScreen(paused, actions, {}) } }
+        compose.onRoot().captureRoboImage("src/test/screenshots/interests_instance_paused.png")
+        compose.onNodeWithText("Your administrator has paused learning", substring = true).assertExists()
+        compose.onNodeWithText("Learn from what I read").assertExists()
+        compose.onNodeWithText("Pause learning").assertExists()
+        compose.onNodeWithText("Still learning", substring = true).assertDoesNotExist()
     }
 
     @Test

@@ -125,6 +125,9 @@ internal fun InterestsScreen(
 }
 
 private fun LazyListScope.interestsContent(state: InterestsState, actions: InterestsActions, onReset: () -> Unit) {
+    if (state.settings.instancePaused) {
+        item(key = "instancePaused") { Note(stringResource(R.string.interests_instance_paused)) }
+    }
     item(key = "learning") {
         SwitchRow(
             stringResource(R.string.interests_learning),
@@ -144,7 +147,11 @@ private fun LazyListScope.interestsContent(state: InterestsState, actions: Inter
         }
     }
     heading(R.string.interests_yours)
-    if (state.thin) item(key = "thin") { Note(stringResource(R.string.interests_thin)) }
+    if (state.thin &&
+        !state.settings.instancePaused
+    ) {
+        item(key = "thin") { Note(stringResource(R.string.interests_thin)) }
+    }
     tags(state.interests, "i")
     if (state.candidates.isNotEmpty()) {
         heading(R.string.interests_candidates)

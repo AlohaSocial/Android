@@ -197,9 +197,13 @@ class ExtensionDecodingTest {
             """{"interests": [{"name": "Photography", "score": "0.5"}], "thin": 1}""",
         )
         assertTrue(state.settings.learning)
+        assertFalse(state.settings.instancePaused)
         assertEquals("photography", state.interests.single().id)
         assertEquals(0.5, state.interests.single().score)
         assertTrue(state.thin)
+        assertTrue(
+            InterestEndpoints.state().value("""{"settings": {"instancePaused": true}}""").settings.instancePaused,
+        )
     }
 
     @Test
