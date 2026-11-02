@@ -31,6 +31,7 @@ import social.aloha.core.data.AccountRepository
 import social.aloha.core.data.Answer
 import social.aloha.core.data.Trouble
 import social.aloha.core.data.thread.ReplyNudges
+import social.aloha.core.data.thread.ThreadOrder
 import social.aloha.core.data.thread.ThreadRepository
 import social.aloha.core.data.timeline.StatusInteractions
 import social.aloha.core.data.timeline.Toggle
@@ -76,6 +77,7 @@ internal class ThreadViewModel @AssistedInject constructor(
         val card: Card? = null,
         val reactions: List<Reaction>? = null,
         val reactionEmoji: List<CustomEmoji>? = null,
+        val threadOrder: ThreadOrder? = null,
         val history: List<EditVersion>? = null,
         val actionFailed: Boolean = false,
         val archived: Boolean = false,
@@ -234,6 +236,8 @@ internal class ThreadViewModel @AssistedInject constructor(
                 it.copy(loading = false, gone = answer.error == ApiError.NotFound, trouble = answer.error.trouble)
             }
         }
+        // how the server ordered the replies, asked once per account (see ThreadRepository.threadOrder)
+        threads.threadOrder(account)?.let { order -> control.update { it.copy(threadOrder = order) } }
         // the server's own emoji to react with, asked again on a refresh until the server has answered;
         // ponytail: asked again on every thread opened; share the composer's daily cache if it shows
         if (!account.capabilities.customEmojiReactions || control.value.reactionEmoji != null) return
@@ -308,6 +312,7 @@ internal class ThreadViewModel @AssistedInject constructor(
             edited = focused?.displayed?.isEdited == true,
             canReact = account.capabilities.let { it.emojiReactions || it.isNextcloudSocial },
             reactionEmoji = control.reactionEmoji.orEmpty(),
+            threadOrder = control.threadOrder?.takeUnless { it == ThreadOrder.Oldest },
             albums = account.capabilities.collections,
             archive = account.capabilities.isNextcloudSocial,
             archived = control.archived,

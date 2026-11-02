@@ -54,6 +54,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
 import social.aloha.core.data.Trouble
+import social.aloha.core.data.thread.ThreadOrder
 import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.navigation.StatusListKind
@@ -184,7 +185,10 @@ private fun Posts(
                             canReact = item.focused && state.canReact,
                             focused = item.focused,
                         )
-                        if (item.focused) Footer(state, actions)
+                        if (item.focused) {
+                            Footer(state, actions)
+                            OrderLine(state)
+                        }
                     }
 
                     is ThreadItem.More -> TextButton(
@@ -229,6 +233,25 @@ private fun Footer(state: ThreadUiState, actions: ThreadScreenActions) {
 }
 
 private val LIST_AVATAR = 24.dp
+
+/** Above the replies, which order the server put them in, where it is not oldest first. */
+@Composable
+private fun OrderLine(state: ThreadUiState) {
+    val order = state.threadOrder ?: return
+    if (state.items.none { it is ThreadItem.Post && it.depth > 0 }) return
+    val text = when (order) {
+        ThreadOrder.Newest -> R.string.thread_order_newest
+        ThreadOrder.MostLikes -> R.string.thread_order_most_likes
+        ThreadOrder.Random -> R.string.thread_order_random
+        ThreadOrder.Oldest -> return
+    }
+    Text(
+        stringResource(text),
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(horizontal = AlohaSpacing.m, vertical = AlohaSpacing.xs),
+    )
+}
 
 /** [plural] with [count], or [plain] while the reader hides the numbers. */
 @Composable

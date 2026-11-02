@@ -8,6 +8,12 @@
     <string name="thread_title">Post</string>
     <!-- Button that goes back from a screen -->
     <string name="thread_back">Back</string>
+    <!-- Line above a thread's replies: the server put the newest first, as the reader's thread setting in a Bluesky app asks -->
+    <string name="thread_order_newest">Newest replies first, as your Bluesky thread setting asks</string>
+    <!-- Line above a thread's replies: the server put the most-liked first, as the reader's thread setting in a Bluesky app asks -->
+    <string name="thread_order_most_likes">Most-liked replies first, as your Bluesky thread setting asks</string>
+    <!-- Line above a thread's replies: the server shuffles them on every load, as the reader's thread setting in a Bluesky app asks -->
+    <string name="thread_order_random">Replies in random order, as your Bluesky thread setting asks</string>
     <!-- Row under a reply chain too deep to indent further; opens it as its own conversation. %d is how many replies -->
     <plurals name="thread_more_replies">
         <item quantity="one">Show %d more reply</item>
