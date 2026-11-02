@@ -396,7 +396,6 @@ internal class ProfileViewModel @AssistedInject constructor(
             is PageOutcome.Loaded -> {
                 if (last == null) cursors[tab] = outcome.nextCursor
                 if (last == null && outcome.reachedEnd) control.update { it.copy(reachedEnd = it.reachedEnd + tab) }
-                control.update { it.copy(profileSync = outcome.profileSync) }
                 viewModelScope.launch { timelines.refill(reader, key, plan, outcome) }
                 if (outcome.profileSync == ProfileSync.Pending) {
                     syncPolls.getOrPut(key) {
@@ -406,6 +405,8 @@ internal class ProfileViewModel @AssistedInject constructor(
                             .launchIn(viewModelScope)
                     }
                 }
+                // after the poll is kept, so paging on what this shows can stop it
+                control.update { it.copy(profileSync = outcome.profileSync) }
             }
 
             is PageOutcome.Failed -> control.update { it.copy(trouble = outcome.error.trouble) }
