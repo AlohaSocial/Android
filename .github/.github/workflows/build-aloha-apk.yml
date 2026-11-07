@@ -1,0 +1,65 @@
+name: Build Aloha Android App
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    # Large projects require higher timeout limits
+    timeout-minutes: 360
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # 1. Expand GitHub Actions runner disk space (Crucial for large source trees)
+      - name: Free Up Disk Space
+        uses: jlumbroso/free-disk-space@v1
+        with:
+          tool-cache: true
+          android: false
+          dotnet: true
+          haskell: true
+          large-packages: true
+          docker-images: true
+          swap-storage: false
+
+      # 2. Set up Java Development Kit (JDK) for Android
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'gradle'
+
+      # 3. Set up Python (often required for Chromium/GN build scripts)
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # 4. Build execution step 
+      # (Replace or append with your specific build scripts, e.g., GN/Ninja or Gradle)
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+        continue-on-error: true
+
+      - name: Build with Gradle (Example)
+        run: |
+          ./gradlew assembleDebug
+        continue-on-error: true
+
+      # 5. Upload build artifacts (APK)
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug-artifact
+          path: |
+            **/output/**/*.apk
+            **/build/outputs/apk/**/*.apk
