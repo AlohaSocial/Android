@@ -8,9 +8,6 @@ import social.aloha.core.model.Account
 import social.aloha.core.model.AccountField
 import social.aloha.core.model.AuthorizedApp
 import social.aloha.core.model.FeaturedTag
-import social.aloha.core.model.MediaCollection
-import social.aloha.core.model.PortfolioPage
-import social.aloha.core.model.PortfolioSettings
 import social.aloha.core.model.Visibility
 import social.aloha.core.network.ApiRequest
 import social.aloha.core.network.Authentication
@@ -21,15 +18,10 @@ import social.aloha.core.network.Part
 import social.aloha.core.network.QueryItem
 import social.aloha.core.network.dto.AccountDto
 import social.aloha.core.network.dto.AuthorizedAppDto
-import social.aloha.core.network.dto.CollectionDto
 import social.aloha.core.network.dto.FeaturedTagDto
 import social.aloha.core.network.dto.NamesSerializer
-import social.aloha.core.network.dto.PortfolioDto
 import social.aloha.core.network.dto.toDomain
-import social.aloha.core.network.dto.toPage
-import social.aloha.core.network.dto.toSettings
 import social.aloha.core.network.listRequest
-import social.aloha.core.network.queryOf
 import social.aloha.core.network.request
 import social.aloha.core.network.unitRequest
 
@@ -160,38 +152,4 @@ public object AuthorizedAppEndpoints {
     public fun revoke(id: String): ApiRequest<Unit> = unitRequest(
         Endpoint("api/v1/authorized_apps/$id", HttpMethod.DELETE, authentication = Authentication.SessionOrBearer),
     )
-}
-
-/** Pixelfed's portfolio page, served by Nextcloud Social. */
-public object PortfolioEndpoints {
-    public fun own(): ApiRequest<PortfolioSettings> =
-        request(Endpoint("api/v1.1/portfolio"), PortfolioDto.serializer()) { it.toSettings() }
-
-    public fun save(settings: PortfolioSettings): ApiRequest<PortfolioSettings> {
-        val fields = listOf(
-            QueryItem("active", settings.active.asFlag()),
-            QueryItem("title", settings.title),
-            QueryItem("intro", settings.intro),
-            QueryItem("layout", settings.layout.wire),
-            QueryItem("source", settings.source.wire),
-            QueryItem("show_captions", settings.showCaptions.asFlag()),
-            QueryItem("show_places", settings.showPlaces.asFlag()),
-            QueryItem("show_dates", settings.showDates.asFlag()),
-            QueryItem("show_avatar", settings.showAvatar.asFlag()),
-        ) + queryOf("collection_id", settings.collectionId)
-        return request(
-            Endpoint("api/v1.1/portfolio", HttpMethod.POST, body = Body.Form(fields)),
-            PortfolioDto.serializer(),
-        ) {
-            it.toSettings()
-        }
-    }
-
-    /** The published page; anybody with the address may read it. */
-    public fun page(handle: String): ApiRequest<PortfolioPage> =
-        request(Endpoint("api/v1.1/portfolio/$handle"), PortfolioDto.serializer()) { it.toPage() }
-
-    /** The reader's own albums, for the picture-source picker. */
-    public fun ownCollections(): ApiRequest<List<MediaCollection>> =
-        listRequest(Endpoint("api/v1.1/collections/self"), CollectionDto.serializer()) { it.toDomain() }
 }
