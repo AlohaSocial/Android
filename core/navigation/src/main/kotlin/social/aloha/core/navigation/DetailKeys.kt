@@ -144,17 +144,18 @@ public data class NotificationPolicyKey(val readerId: String) : NavKey
 @Serializable
 public data class NotificationRequestsKey(val readerId: String) : NavKey
 
-/** The albums of account [ownerId] as [readerId] sees them, or the reader's own without one. */
+/** The collections of account [ownerId] as [readerId] sees them, or the reader's own without one. */
 @Serializable
-public data class AlbumsKey(val readerId: String, val ownerId: String? = null) : NavKey
+public data class CollectionsKey(val readerId: String, val ownerId: String? = null) : NavKey
 
-/** One album's posts, as [readerId] sees them; [own] albums can be changed. */
+/** One collection's posts, as [readerId] sees them; [own] collections can be changed. */
 @Serializable
-public data class AlbumKey(val readerId: String, val albumId: String, val title: String, val own: Boolean) : NavKey
+public data class CollectionKey(val readerId: String, val collectionId: String, val title: String, val own: Boolean) :
+    NavKey
 
-/** Picks which of [readerId]'s albums the reader's post [statusId] goes into. */
+/** Picks which of [readerId]'s collections the reader's post [statusId] goes into. */
 @Serializable
-public data class AddToAlbumKey(val readerId: String, val statusId: String) : NavKey
+public data class AddToCollectionKey(val readerId: String, val statusId: String) : NavKey
 
 /** Photos' Explore: what is trending with pictures, hashtags and people, as [readerId] sees them. */
 @Serializable

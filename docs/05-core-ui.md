@@ -275,7 +275,7 @@ exist undocumented.
   query, not by filtering a page), Add to list, Mention, Direct message,
   Block, Mute (with duration and "also mute notifications"), Report, Block
   domain, Add note.
-- Tabs: Posts · Posts & Replies · Media · Featured · Videos · Albums (where the
+- Tabs: Posts · Posts & Replies · Media · Featured · Videos · Collections (where the
   server has them) · Stories (where present and visible). Media is the
   account's photos, videos and animated images on Nextcloud Social 0.26.279 on
   (`media_type=visual`), every post with an attachment elsewhere. Nextcloud Social
@@ -288,7 +288,7 @@ exist undocumented.
 - An account's `profile_layout` (Nextcloud Social 0.26.279 on, read from its
   source; the app only reads it, as the route that writes it takes a session,
   not a token) chooses the tab its profile opens on, `posts`, `photos` (Media)
-  or `videos`, and leaves out the Media chip, Videos and Albums where it
+  or `videos`, and leaves out the Media chip, Videos and Collections where it
   turned `photos`, `videos` or `collections` off; `tagged` has no tab here. A
   refresh keeps the tab the reader is on, even one the layout now hides, as
   the web app does. A layout that hides Posts or opens on a tab it hides is

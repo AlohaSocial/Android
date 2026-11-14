@@ -27,13 +27,13 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import social.aloha.core.model.SignedInAccount
-import social.aloha.core.navigation.AddToAlbumKey
-import social.aloha.core.navigation.AlbumsKey
+import social.aloha.core.navigation.AddToCollectionKey
+import social.aloha.core.navigation.CollectionsKey
 import social.aloha.core.testing.MainDispatcherRule
 import social.aloha.core.testing.SignedInFixture
 
-/** Two albums of the reader's; a new one made on request; [refuse] turns every change down. */
-private class Albums : Dispatcher() {
+/** Two collections of the reader's; a new one made on request; [refuse] turns every change down. */
+private class Collections : Dispatcher() {
     @Volatile var refuse = false
 
     override fun dispatch(request: RecordedRequest): MockResponse {
@@ -53,12 +53,12 @@ private class Albums : Dispatcher() {
 // the ViewModels' scope is the main dispatcher, which a JVM test replaces
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
-class AlbumsViewModelTest {
+class CollectionsViewModelTest {
     @get:Rule
     val main = MainDispatcherRule()
 
     private val fixture = SignedInFixture(ApplicationProvider.getApplicationContext<Context>())
-    private val answers = Albums()
+    private val answers = Collections()
     private val server = MockWebServer().apply {
         dispatcher = answers
         start()
@@ -78,40 +78,47 @@ class AlbumsViewModelTest {
     }
 
     @Test
-    fun `the reader's own albums are theirs to make and delete, and a refusal is said once`() = runBlocking {
-        val albums = main.keep(AlbumsViewModel(AlbumsKey(reader.id), fixture.accounts, fixture.albums))
-        val loaded = withTimeout(10.seconds) { albums.uiState.first { !it.loading } }
+    fun `the reader's own collections are theirs to make and delete, and a refusal is said once`() = runBlocking {
+        val collections =
+            main.keep(CollectionsViewModel(CollectionsKey(reader.id), fixture.accounts, fixture.collections))
+        val loaded = withTimeout(10.seconds) { collections.uiState.first { !it.loading } }
         assertTrue(loaded.own)
-        assertEquals(listOf("1", "2"), loaded.albums.map { it.id })
-        albums.onCreate("New", "")
-        withTimeout(10.seconds) { albums.uiState.first { it.albums.size == 3 } }
-        assertEquals("3", albums.uiState.value.albums.first().id)
-        albums.onDelete("1")
-        withTimeout(10.seconds) { albums.uiState.first { it.albums.none { album -> album.id == "1" } } }
+        assertEquals(listOf("1", "2"), loaded.collections.map { it.id })
+        collections.onCreate("New", "")
+        withTimeout(10.seconds) { collections.uiState.first { it.collections.size == 3 } }
+        assertEquals("3", collections.uiState.value.collections.first().id)
+        collections.onDelete("1")
+        withTimeout(10.seconds) { collections.uiState.first { it.collections.none { item -> item.id == "1" } } }
         answers.refuse = true
-        albums.onDelete("2")
-        withTimeout(10.seconds) { albums.uiState.first { it.changeFailed } }
-        assertTrue(albums.uiState.value.albums.any { it.id == "2" })
-        albums.onChangeFailedShown()
-        assertFalse(albums.uiState.value.changeFailed)
+        collections.onDelete("2")
+        withTimeout(10.seconds) { collections.uiState.first { it.changeFailed } }
+        assertTrue(collections.uiState.value.collections.any { it.id == "2" })
+        collections.onChangeFailedShown()
+        assertFalse(collections.uiState.value.changeFailed)
     }
 
     @Test
-    fun `someone else's albums are only to look at`() = runBlocking {
-        val albums = main.keep(
-            AlbumsViewModel(AlbumsKey(reader.id, ownerId = "someone-else"), fixture.accounts, fixture.albums),
+    fun `someone else's collections are only to look at`() = runBlocking {
+        val collections = main.keep(
+            CollectionsViewModel(
+                CollectionsKey(reader.id, ownerId = "someone-else"),
+                fixture.accounts,
+                fixture.collections,
+            ),
         )
-        assertFalse(withTimeout(10.seconds) { albums.uiState.first { !it.loading } }.own)
+        assertFalse(withTimeout(10.seconds) { collections.uiState.first { !it.loading } }.own)
     }
 
     @Test
-    fun `a post goes into an album once, or into one made for it`() = runBlocking {
-        val adding = main.keep(AddToAlbumViewModel(AddToAlbumKey(reader.id, "p1"), fixture.accounts, fixture.albums))
+    fun `a post goes into a collection once, or into one made for it`() = runBlocking {
+        val adding = main.keep(
+            AddToCollectionViewModel(AddToCollectionKey(reader.id, "p1"), fixture.accounts, fixture.collections),
+        )
         val loaded = withTimeout(10.seconds) { adding.uiState.first { !it.loading } }
-        adding.onAdd(loaded.albums.first())
+        adding.onAdd(loaded.collections.first())
         withTimeout(10.seconds) { adding.uiState.first { "1" in it.added } }
         adding.onCreate("New", "")
         val made = withTimeout(10.seconds) { adding.uiState.first { "3" in it.added } }
-        assertEquals("3", made.albums.first().id)
+        assertEquals("3", made.collections.first().id)
     }
 }

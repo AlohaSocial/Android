@@ -67,7 +67,7 @@ public fun ThreadRoute(key: ThreadKey, navigation: ThreadNavigation, modifier: M
             navigation = { nav },
             onCopied = { scope.launch { snackbars.showSnackbar(copied) } },
             onDeleteAsked = { deleting = it },
-            albums = { state.albums },
+            hasCollections = { state.hasCollections },
             archive = { state.archive },
         ) {
             // the focused post is already open: a link to it shakes the list instead

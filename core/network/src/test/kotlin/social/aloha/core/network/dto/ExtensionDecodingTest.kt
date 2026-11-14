@@ -129,7 +129,7 @@ class ExtensionDecodingTest {
 
     @Test
     fun `a collection's size is its post count`() {
-        val body = """[{"id": "1", "title": "Test album", "visibility": "public", "size": 1}]"""
+        val body = """[{"id": "1", "title": "Test collection", "visibility": "public", "size": 1}]"""
         assertEquals(1, CollectionEndpoints.all().value(body).single().postCount)
     }
 

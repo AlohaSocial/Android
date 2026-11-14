@@ -59,17 +59,17 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import social.aloha.core.data.AccountRepository
 import social.aloha.core.data.Answer
-import social.aloha.core.data.photos.Albums
+import social.aloha.core.data.photos.Collections
 import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.model.MediaCollection
 import social.aloha.core.model.SignedInAccount
-import social.aloha.core.navigation.AlbumsKey
+import social.aloha.core.navigation.CollectionsKey
 import social.aloha.core.ui.ConfirmDialog
 
 @Immutable
-internal data class AlbumsUiState(
-    val albums: List<MediaCollection> = emptyList(),
-    /** The reader's own albums, which can be made, renamed and deleted. */
+internal data class CollectionsUiState(
+    val collections: List<MediaCollection> = emptyList(),
+    /** The reader's own collections, which can be made, renamed and deleted. */
     val own: Boolean = false,
     val loading: Boolean = true,
     val failed: Boolean = false,
@@ -77,20 +77,20 @@ internal data class AlbumsUiState(
     val changeFailed: Boolean = false,
 )
 
-/** An account's albums, or the reader's own, which the reader makes, renames and deletes. */
-@HiltViewModel(assistedFactory = AlbumsViewModel.Factory::class)
-internal class AlbumsViewModel @AssistedInject constructor(
-    @Assisted private val key: AlbumsKey,
+/** An account's collections, or the reader's own, which the reader makes, renames and deletes. */
+@HiltViewModel(assistedFactory = CollectionsViewModel.Factory::class)
+internal class CollectionsViewModel @AssistedInject constructor(
+    @Assisted private val key: CollectionsKey,
     private val accounts: AccountRepository,
-    private val albums: Albums,
+    private val collections: Collections,
 ) : ViewModel() {
     @AssistedFactory
     interface Factory {
-        fun create(key: AlbumsKey): AlbumsViewModel
+        fun create(key: CollectionsKey): CollectionsViewModel
     }
 
-    private val state = MutableStateFlow(AlbumsUiState())
-    val uiState: StateFlow<AlbumsUiState> = state.asStateFlow()
+    private val state = MutableStateFlow(CollectionsUiState())
+    val uiState: StateFlow<CollectionsUiState> = state.asStateFlow()
 
     init {
         onRetry()
@@ -101,10 +101,10 @@ internal class AlbumsViewModel @AssistedInject constructor(
         viewModelScope.launch {
             val reader = reader()
             val own = reader != null && (key.ownerId == null || key.ownerId == reader.serverAccountId)
-            val answer = reader?.let { if (own) albums.own(it) else albums.of(it, key.ownerId.orEmpty()) }
+            val answer = reader?.let { if (own) collections.own(it) else collections.of(it, key.ownerId.orEmpty()) }
             state.update {
                 if (answer is Answer.Got) {
-                    it.copy(albums = answer.value, own = own, loading = false)
+                    it.copy(collections = answer.value, own = own, loading = false)
                 } else {
                     it.copy(own = own, loading = false, failed = true)
                 }
@@ -113,28 +113,28 @@ internal class AlbumsViewModel @AssistedInject constructor(
     }
 
     fun onCreate(title: String, description: String) = change { reader ->
-        (albums.create(reader, title, description) as? Answer.Got)?.value?.let { listOf(it) + current }
+        (collections.create(reader, title, description) as? Answer.Got)?.value?.let { listOf(it) + current }
     }
 
-    fun onRename(album: MediaCollection, title: String) = change { reader ->
-        (albums.rename(reader, album, title) as? Answer.Got)?.value?.let { renamed ->
-            current.map { if (it.id == album.id) renamed else it }
+    fun onRename(collection: MediaCollection, title: String) = change { reader ->
+        (collections.rename(reader, collection, title) as? Answer.Got)?.value?.let { renamed ->
+            current.map { if (it.id == collection.id) renamed else it }
         }
     }
 
     fun onDelete(id: String) = change { reader ->
-        if (albums.delete(reader, id) is Answer.Got) current.filterNot { it.id == id } else null
+        if (collections.delete(reader, id) is Answer.Got) current.filterNot { it.id == id } else null
     }
 
     fun onChangeFailedShown() = state.update { it.copy(changeFailed = false) }
 
-    private val current get() = state.value.albums
+    private val current get() = state.value.collections
 
-    /** Makes a change as the reader; the albums it answers with, or null when the server would not. */
+    /** Makes a change as the reader; the collections it answers with, or null when the server would not. */
     private fun change(made: suspend (SignedInAccount) -> List<MediaCollection>?) {
         viewModelScope.launch {
             val list = reader()?.let { made(it) }
-            state.update { if (list != null) it.copy(albums = list) else it.copy(changeFailed = true) }
+            state.update { if (list != null) it.copy(collections = list) else it.copy(changeFailed = true) }
         }
     }
 
@@ -142,16 +142,18 @@ internal class AlbumsViewModel @AssistedInject constructor(
 }
 
 @Composable
-public fun AlbumsRoute(
-    key: AlbumsKey,
-    onOpen: (album: MediaCollection, own: Boolean) -> Unit,
+public fun CollectionsRoute(
+    key: CollectionsKey,
+    onOpen: (collection: MediaCollection, own: Boolean) -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val viewModel = hiltViewModel<AlbumsViewModel, AlbumsViewModel.Factory>(key = key.toString()) { it.create(key) }
+    val viewModel = hiltViewModel<CollectionsViewModel, CollectionsViewModel.Factory>(key = key.toString()) {
+        it.create(key)
+    }
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbars = remember { SnackbarHostState() }
-    val failed = stringResource(R.string.albums_change_failed)
+    val failed = stringResource(R.string.collections_change_failed)
     LaunchedEffect(state.changeFailed) {
         if (state.changeFailed) {
             snackbars.showSnackbar(failed)
@@ -161,9 +163,9 @@ public fun AlbumsRoute(
     var creating by rememberSaveable { mutableStateOf(false) }
     var renaming by rememberSaveable { mutableStateOf<String?>(null) }
     var deleting by rememberSaveable { mutableStateOf<String?>(null) }
-    AlbumsScreen(
+    CollectionsScreen(
         state,
-        AlbumsScreenActions(
+        CollectionsScreenActions(
             onOpen = { onOpen(it, state.own) },
             onCreate = { creating = true },
             onRename = { renaming = it.id },
@@ -175,38 +177,38 @@ public fun AlbumsRoute(
         modifier,
     )
     if (creating) {
-        AlbumNameDialog(
-            title = stringResource(R.string.albums_new),
+        CollectionNameDialog(
+            title = stringResource(R.string.collections_new),
             initial = "",
             askDescription = true,
-            confirm = stringResource(R.string.albums_create),
+            confirm = stringResource(R.string.collections_create),
             onDismiss = { creating = false },
         ) { title, description -> viewModel.onCreate(title, description) }
     }
     renaming?.let { id ->
-        state.albums.firstOrNull { it.id == id }?.let { album ->
-            AlbumNameDialog(
-                title = stringResource(R.string.albums_rename),
-                initial = album.title,
+        state.collections.firstOrNull { it.id == id }?.let { collection ->
+            CollectionNameDialog(
+                title = stringResource(R.string.collections_rename),
+                initial = collection.title,
                 askDescription = false,
-                confirm = stringResource(R.string.albums_rename_confirm),
+                confirm = stringResource(R.string.collections_rename_confirm),
                 onDismiss = { renaming = null },
-            ) { title, _ -> viewModel.onRename(album, title) }
+            ) { title, _ -> viewModel.onRename(collection, title) }
         }
     }
     deleting?.let { id ->
-        val name = state.albums.firstOrNull { it.id == id }?.title.orEmpty()
+        val name = state.collections.firstOrNull { it.id == id }?.title.orEmpty()
         ConfirmDialog(
-            stringResource(R.string.albums_delete_title, name),
-            stringResource(R.string.albums_delete_body),
-            stringResource(R.string.albums_delete),
+            stringResource(R.string.collections_delete_title, name),
+            stringResource(R.string.collections_delete_body),
+            stringResource(R.string.collections_delete),
             onDismiss = { deleting = null },
         ) { viewModel.onDelete(id) }
     }
 }
 
-/** What the albums screen can ask for. */
-internal class AlbumsScreenActions(
+/** What the collections screen can ask for. */
+internal class CollectionsScreenActions(
     val onOpen: (MediaCollection) -> Unit,
     val onCreate: () -> Unit,
     val onRename: (MediaCollection) -> Unit,
@@ -217,13 +219,13 @@ internal class AlbumsScreenActions(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun AlbumsScreen(
-    state: AlbumsUiState,
-    actions: AlbumsScreenActions,
+internal fun CollectionsScreen(
+    state: CollectionsUiState,
+    actions: CollectionsScreenActions,
     snackbars: SnackbarHostState,
     modifier: Modifier = Modifier,
 ) {
-    val title = stringResource(R.string.albums_title)
+    val title = stringResource(R.string.collections_title)
     Scaffold(
         modifier = modifier.semantics { paneTitle = title },
         topBar = {
@@ -240,22 +242,24 @@ internal fun AlbumsScreen(
                 ExtendedFloatingActionButton(
                     onClick = actions.onCreate,
                     icon = { Icon(AlohaIcons.Add, contentDescription = null) },
-                    text = { Text(stringResource(R.string.albums_new)) },
+                    text = { Text(stringResource(R.string.collections_new)) },
                 )
             }
         },
     ) { padding ->
         LazyColumn(Modifier.padding(padding).fillMaxSize()) {
-            items(state.albums, key = { it.id }) { album ->
-                AlbumRow(album, state.own, actions)
+            items(state.collections, key = { it.id }) { collection ->
+                CollectionRow(collection, state.own, actions)
                 HorizontalDivider()
             }
             item(key = "footer") {
                 ListFooter(
                     loading = state.loading,
                     failed = state.failed,
-                    empty = state.albums.isEmpty(),
-                    emptyText = stringResource(if (state.own) R.string.albums_none_own else R.string.albums_none),
+                    empty = state.collections.isEmpty(),
+                    emptyText = stringResource(
+                        if (state.own) R.string.collections_none_own else R.string.collections_none,
+                    ),
                     onRetry = actions.onRetry,
                 )
             }
@@ -264,22 +268,26 @@ internal fun AlbumsScreen(
 }
 
 @Composable
-private fun AlbumRow(album: MediaCollection, own: Boolean, actions: AlbumsScreenActions) {
+private fun CollectionRow(collection: MediaCollection, own: Boolean, actions: CollectionsScreenActions) {
     ListItem(
-        headlineContent = { Text(album.title.ifBlank { stringResource(R.string.albums_untitled) }) },
+        headlineContent = { Text(collection.title.ifBlank { stringResource(R.string.collections_untitled) }) },
         supportingContent = {
-            Text(pluralStringResource(R.plurals.albums_posts, album.postCount, album.postCount))
+            Text(pluralStringResource(R.plurals.collections_posts, collection.postCount, collection.postCount))
         },
         leadingContent = {
-            // an album's cover over its icon, which stays where there is no cover yet
+            // a collection's cover over its icon, which stays where there is no cover yet
             Box(
                 Modifier.size(THUMBNAIL).clip(RoundedCornerShape(CORNER))
                     .background(MaterialTheme.colorScheme.surfaceContainerHigh),
                 contentAlignment = Alignment.Center,
             ) {
-                Icon(AlohaIcons.Album, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                Icon(
+                    AlohaIcons.Collection,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
                 AsyncImage(
-                    model = album.thumbnail,
+                    model = collection.thumbnail,
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.matchParentSize(),
@@ -287,35 +295,35 @@ private fun AlbumRow(album: MediaCollection, own: Boolean, actions: AlbumsScreen
             }
         },
         trailingContent = if (own) {
-            { AlbumMenu(album, actions) }
+            { CollectionMenu(collection, actions) }
         } else {
             null
         },
-        modifier = Modifier.clickable { actions.onOpen(album) },
+        modifier = Modifier.clickable { actions.onOpen(collection) },
     )
 }
 
 @Composable
-private fun AlbumMenu(album: MediaCollection, actions: AlbumsScreenActions) {
+private fun CollectionMenu(collection: MediaCollection, actions: CollectionsScreenActions) {
     var open by remember { mutableStateOf(false) }
-    // which album the button is for, said aloud: every row has one
+    // which collection the button is for, said aloud: every row has one
     Box {
         IconButton(onClick = { open = true }) {
-            Icon(AlohaIcons.More, stringResource(R.string.albums_options, album.title))
+            Icon(AlohaIcons.More, stringResource(R.string.collections_options, collection.title))
         }
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
             DropdownMenuItem(
-                text = { Text(stringResource(R.string.albums_rename)) },
+                text = { Text(stringResource(R.string.collections_rename)) },
                 onClick = {
                     open = false
-                    actions.onRename(album)
+                    actions.onRename(collection)
                 },
             )
             DropdownMenuItem(
-                text = { Text(stringResource(R.string.albums_delete)) },
+                text = { Text(stringResource(R.string.collections_delete)) },
                 onClick = {
                     open = false
-                    actions.onDelete(album)
+                    actions.onDelete(collection)
                 },
             )
         }

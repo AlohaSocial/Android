@@ -29,17 +29,17 @@ import social.aloha.core.testing.StatusSamples
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(sdk = [36], application = Application::class, qualifiers = RobolectricDeviceQualifiers.Pixel7)
-class AlbumsScreenshotTest {
+class CollectionsScreenshotTest {
     @get:Rule
     val compose = createComposeRule()
 
-    private val albums = listOf(
+    private val collections = listOf(
         MediaCollection("1", "Beach", "Summer", postCount = 12),
         MediaCollection("2", "Mountains", postCount = 1),
         MediaCollection("3", "", postCount = 0),
     )
 
-    private val none = AlbumsScreenActions({}, {}, {}, {}, {}, {})
+    private val none = CollectionsScreenActions({}, {}, {}, {}, {}, {})
 
     private fun capture(
         name: String,
@@ -53,25 +53,25 @@ class AlbumsScreenshotTest {
     }
 
     @Test
-    fun ownAlbums() = capture("albums-own") {
-        AlbumsScreen(AlbumsUiState(albums, own = true, loading = false), none, SnackbarHostState())
+    fun ownCollections() = capture("collections-own") {
+        CollectionsScreen(CollectionsUiState(collections, own = true, loading = false), none, SnackbarHostState())
     }
 
     @Test
     @Config(fontScale = 2f)
-    fun othersAlbumsLargeFont() = capture("albums-font200", ThemeSettings(mode = ThemeMode.Dark)) {
-        AlbumsScreen(AlbumsUiState(albums, own = false, loading = false), none, SnackbarHostState())
+    fun othersCollectionsLargeFont() = capture("collections-font200", ThemeSettings(mode = ThemeMode.Dark)) {
+        CollectionsScreen(CollectionsUiState(collections, own = false, loading = false), none, SnackbarHostState())
     }
 
     @Test
-    fun noAlbums() = capture("albums-none") {
-        AlbumsScreen(AlbumsUiState(own = true, loading = false), none, SnackbarHostState())
+    fun noCollections() = capture("collections-none") {
+        CollectionsScreen(CollectionsUiState(own = true, loading = false), none, SnackbarHostState())
     }
 
     @Test
-    fun album() = capture("album") {
+    fun collection() = capture("collection") {
         val posts = listOf(StatusSamples.gallery, StatusSamples.sensitive, StatusSamples.gallery.copy(id = "g2"))
-        AlbumScreen(AlbumUiState(posts, loading = false), "Beach", {}, {}, {}, {}, SnackbarHostState())
+        CollectionScreen(CollectionUiState(posts, loading = false), "Beach", {}, {}, {}, {}, SnackbarHostState())
     }
 
     @Test
@@ -96,9 +96,9 @@ class AlbumsScreenshotTest {
     }
 
     @Test
-    fun addToAlbum() = capture("add-to-album") {
-        AddToAlbumScreen(
-            AddToAlbumUiState(albums, added = setOf("2"), loading = false),
+    fun addToCollection() = capture("add-to-collection") {
+        AddToCollectionScreen(
+            AddToCollectionUiState(collections, added = setOf("2"), loading = false),
             {},
             {},
             {},

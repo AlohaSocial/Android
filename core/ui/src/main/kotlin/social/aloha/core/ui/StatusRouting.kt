@@ -54,8 +54,8 @@ public interface StatusNavigation {
     /** A report about account [accountId], known as [handle], about its post [statusId] when given. */
     public fun report(accountId: String, handle: String, statusId: String?)
 
-    /** The reader's albums, to put their post [statusId] into; only a server with albums offers it. */
-    public fun addToAlbum(statusId: String) {}
+    /** The reader's collections, to put their post [statusId] into; only a server with collections offers it. */
+    public fun addToCollection(statusId: String) {}
 
     /**
      * The media viewer on a post's [index]th attachment; without one, the post. [accountId] names the account
@@ -66,14 +66,14 @@ public interface StatusNavigation {
     /** The watch page of a post's video; without one, the post. */
     public fun openVideo(statusId: String): Unit = openThread(statusId)
 
-    /** The reader's own albums. */
-    public fun openAlbums() {}
+    /** The reader's own collections. */
+    public fun openCollections() {}
 
     /** What is trending with pictures, and who, from Photos. */
     public fun openPhotoExplore() {}
 
-    /** Album [albumId], called [title]; the reader changes it when it is their [own]. */
-    public fun openAlbum(albumId: String, title: String, own: Boolean) {}
+    /** Collection [collectionId], called [title]; the reader changes it when it is their [own]. */
+    public fun openCollection(collectionId: String, title: String, own: Boolean) {}
 
     /**
      * Opens post `statusId`'s thread, else profile `accountId`, in a new window; null where a window of
@@ -133,7 +133,7 @@ public data class DeleteRequest(val row: StatusRowUi, val redraft: Boolean)
  * @param onCopied the link is on the clipboard, which the screen confirms.
  * @param onDeleteAsked the person asked to delete a post, or to write it again, which the screen
  *   confirms first.
- * @param albums whether the reader's server keeps albums, which the reader's own posts can go into.
+ * @param hasCollections whether the reader's server keeps collections, which the reader's own posts can go into.
  * @param archive whether the reader's server archives posts: takes them off the profile, deleting nothing.
  */
 public abstract class RoutedStatusActions(
@@ -141,7 +141,7 @@ public abstract class RoutedStatusActions(
     private val navigation: () -> StatusNavigation,
     private val onCopied: () -> Unit,
     private val onDeleteAsked: (DeleteRequest) -> Unit,
-    private val albums: () -> Boolean = { false },
+    private val hasCollections: () -> Boolean = { false },
     private val archive: () -> Boolean = { false },
 ) : StatusActions {
     override val quotes: Boolean get() = true
@@ -151,7 +151,7 @@ public abstract class RoutedStatusActions(
     override val menu: Set<StatusMenuItem>
         get() = buildSet {
             addAll(SHARED)
-            if (albums()) add(StatusMenuItem.AddToAlbum)
+            if (hasCollections()) add(StatusMenuItem.AddToCollection)
             if (archive()) add(StatusMenuItem.Archive)
             if (navigation().newWindow != null) add(StatusMenuItem.OpenInNewWindow)
         }
@@ -203,7 +203,7 @@ public abstract class RoutedStatusActions(
 
             StatusMenuItem.Report -> navigation().report(row.author.id, row.author.handle, row.statusId)
 
-            StatusMenuItem.AddToAlbum -> navigation().addToAlbum(row.statusId)
+            StatusMenuItem.AddToCollection -> navigation().addToCollection(row.statusId)
 
             StatusMenuItem.Archive -> onArchive(row)
 
