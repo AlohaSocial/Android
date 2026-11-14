@@ -146,21 +146,21 @@ private fun Cell(row: StatusRowUi, onOpen: () -> Unit) {
 }
 
 /**
- * Photos' own toolbar buttons, each where it applies: Explore, the reader's albums, and the switch
+ * Photos' own toolbar buttons, each where it applies: Explore, the reader's collections, and the switch
  * between grid and feed ([grid] is null for a timeline that is always a list).
  */
 @Composable
 internal fun PhotosButtons(
     grid: Boolean?,
     onGrid: (Boolean) -> Unit,
-    onAlbums: (() -> Unit)?,
+    onCollections: (() -> Unit)?,
     onExplore: (() -> Unit)?,
 ) {
     onExplore?.let {
         IconButton(onClick = it) { Icon(AlohaIcons.Explore, stringResource(R.string.photos_explore)) }
     }
-    onAlbums?.let {
-        IconButton(onClick = it) { Icon(AlohaIcons.Album, stringResource(R.string.photos_albums)) }
+    onCollections?.let {
+        IconButton(onClick = it) { Icon(AlohaIcons.Collection, stringResource(R.string.photos_collections)) }
     }
     grid?.let { LayoutToggle(it, onGrid) }
 }

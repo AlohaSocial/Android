@@ -79,7 +79,7 @@ class ProfileScreenshotTest {
         override fun onPeople(followers: Boolean) = Unit
         override fun onFeaturedTag(name: String) = Unit
         override fun onOpenInBrowser(url: String) = Unit
-        override fun onAlbum(album: MediaCollection) = Unit
+        override fun onCollection(collection: MediaCollection) = Unit
     }
 
     @Composable

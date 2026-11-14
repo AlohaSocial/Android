@@ -43,13 +43,13 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import social.aloha.core.data.AccountRepository
 import social.aloha.core.data.Answer
-import social.aloha.core.data.photos.Albums
+import social.aloha.core.data.photos.Collections
 import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.model.Status
-import social.aloha.core.navigation.AlbumKey
+import social.aloha.core.navigation.CollectionKey
 
 @Immutable
-internal data class AlbumUiState(
+internal data class CollectionUiState(
     val posts: List<Status> = emptyList(),
     val loading: Boolean = true,
     val failed: Boolean = false,
@@ -57,20 +57,20 @@ internal data class AlbumUiState(
     val changeFailed: Boolean = false,
 )
 
-/** One album's posts, each a square of its first picture; the reader takes their own out of it. */
-@HiltViewModel(assistedFactory = AlbumViewModel.Factory::class)
-internal class AlbumViewModel @AssistedInject constructor(
-    @Assisted private val key: AlbumKey,
+/** One collection's posts, each a square of its first picture; the reader takes their own out of it. */
+@HiltViewModel(assistedFactory = CollectionViewModel.Factory::class)
+internal class CollectionViewModel @AssistedInject constructor(
+    @Assisted private val key: CollectionKey,
     private val accounts: AccountRepository,
-    private val albums: Albums,
+    private val collections: Collections,
 ) : ViewModel() {
     @AssistedFactory
     interface Factory {
-        fun create(key: AlbumKey): AlbumViewModel
+        fun create(key: CollectionKey): CollectionViewModel
     }
 
-    private val state = MutableStateFlow(AlbumUiState())
-    val uiState: StateFlow<AlbumUiState> = state.asStateFlow()
+    private val state = MutableStateFlow(CollectionUiState())
+    val uiState: StateFlow<CollectionUiState> = state.asStateFlow()
 
     init {
         onRetry()
@@ -79,7 +79,7 @@ internal class AlbumViewModel @AssistedInject constructor(
     fun onRetry() {
         state.update { it.copy(loading = true, failed = false) }
         viewModelScope.launch {
-            val answer = accounts.byId(key.readerId)?.let { albums.posts(it, key.albumId) }
+            val answer = accounts.byId(key.readerId)?.let { collections.posts(it, key.collectionId) }
             state.update {
                 if (answer is Answer.Got) {
                     it.copy(posts = answer.value, loading = false)
@@ -92,7 +92,7 @@ internal class AlbumViewModel @AssistedInject constructor(
 
     fun onRemove(statusId: String) {
         viewModelScope.launch {
-            val removed = accounts.byId(key.readerId)?.let { albums.remove(it, key.albumId, statusId) }
+            val removed = accounts.byId(key.readerId)?.let { collections.remove(it, key.collectionId, statusId) }
             state.update { now ->
                 if (removed is Answer.Got) {
                     now.copy(posts = now.posts.filterNot { it.id == statusId })
@@ -107,23 +107,25 @@ internal class AlbumViewModel @AssistedInject constructor(
 }
 
 @Composable
-public fun AlbumRoute(
-    key: AlbumKey,
+public fun CollectionRoute(
+    key: CollectionKey,
     onOpen: (statusId: String) -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val viewModel = hiltViewModel<AlbumViewModel, AlbumViewModel.Factory>(key = key.toString()) { it.create(key) }
+    val viewModel = hiltViewModel<CollectionViewModel, CollectionViewModel.Factory>(key = key.toString()) {
+        it.create(key)
+    }
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbars = remember { SnackbarHostState() }
-    val failed = stringResource(R.string.albums_change_failed)
+    val failed = stringResource(R.string.collections_change_failed)
     LaunchedEffect(state.changeFailed) {
         if (state.changeFailed) {
             snackbars.showSnackbar(failed)
             viewModel.onChangeFailedShown()
         }
     }
-    AlbumScreen(
+    CollectionScreen(
         state,
         key.title,
         onOpen,
@@ -137,8 +139,8 @@ public fun AlbumRoute(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun AlbumScreen(
-    state: AlbumUiState,
+internal fun CollectionScreen(
+    state: CollectionUiState,
     title: String,
     onOpen: (String) -> Unit,
     onRemove: ((String) -> Unit)?,
@@ -147,7 +149,7 @@ internal fun AlbumScreen(
     snackbars: SnackbarHostState,
     modifier: Modifier = Modifier,
 ) {
-    val name = title.ifBlank { stringResource(R.string.albums_untitled) }
+    val name = title.ifBlank { stringResource(R.string.collections_untitled) }
     Scaffold(
         modifier = modifier.semantics { paneTitle = name },
         topBar = {
@@ -167,7 +169,7 @@ internal fun AlbumScreen(
                     loading = state.loading,
                     failed = state.failed,
                     empty = state.posts.isEmpty(),
-                    emptyText = stringResource(R.string.album_empty),
+                    emptyText = stringResource(R.string.collection_empty),
                     onRetry = onRetry,
                 )
             }

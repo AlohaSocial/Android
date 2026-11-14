@@ -16,21 +16,24 @@ import social.aloha.core.model.Status
 import social.aloha.core.network.endpoints.CollectionEndpoints
 
 /**
- * Albums: named sets of posts with pictures, Pixelfed's collections, which Nextcloud Social serves too.
+ * Collections: named sets of posts with pictures, Pixelfed's collections, which Nextcloud Social serves too.
  * The server holds them; nothing is kept here but the posts they show, stored like any others so a tap
  * opens them at once.
  */
 @Singleton
-public class Albums @Inject constructor(private val clients: ClientFactory, private val statuses: StatusRepository) {
-    /** [reader]'s own albums. */
+public class Collections @Inject constructor(
+    private val clients: ClientFactory,
+    private val statuses: StatusRepository,
+) {
+    /** [reader]'s own collections. */
     public suspend fun own(reader: SignedInAccount): Answer<List<MediaCollection>> =
         clients.answer(reader, CollectionEndpoints.all())
 
-    /** The albums of account [ownerId], as [reader] may see them. */
+    /** The collections of account [ownerId], as [reader] may see them. */
     public suspend fun of(reader: SignedInAccount, ownerId: String): Answer<List<MediaCollection>> =
         clients.answer(reader, CollectionEndpoints.forAccount(ownerId))
 
-    /** The posts in album [id], newest first as the server keeps them. */
+    /** The posts in collection [id], newest first as the server keeps them. */
     public suspend fun posts(reader: SignedInAccount, id: String): Answer<List<Status>> {
         val answer = clients.answer(reader, CollectionEndpoints.items(id))
         if (answer is Answer.Got) statuses.saveAll(reader.id, answer.value)
@@ -40,10 +43,14 @@ public class Albums @Inject constructor(private val clients: ClientFactory, priv
     public suspend fun create(reader: SignedInAccount, title: String, description: String): Answer<MediaCollection> =
         clients.answer(reader, CollectionEndpoints.create(CollectionDraft(title.trim(), description.trim())))
 
-    /** [album] under a new [title], its description and visibility as they were. */
-    public suspend fun rename(reader: SignedInAccount, album: MediaCollection, title: String): Answer<MediaCollection> {
-        val draft = CollectionDraft(title.trim(), album.description.orEmpty(), album.visibility ?: PUBLIC)
-        return clients.answer(reader, CollectionEndpoints.update(album.id, draft))
+    /** [collection] under a new [title], its description and visibility as they were. */
+    public suspend fun rename(
+        reader: SignedInAccount,
+        collection: MediaCollection,
+        title: String,
+    ): Answer<MediaCollection> {
+        val draft = CollectionDraft(title.trim(), collection.description.orEmpty(), collection.visibility ?: PUBLIC)
+        return clients.answer(reader, CollectionEndpoints.update(collection.id, draft))
     }
 
     public suspend fun delete(reader: SignedInAccount, id: String): Answer<Unit> =

@@ -313,7 +313,7 @@ internal class ThreadViewModel @AssistedInject constructor(
             canReact = account.capabilities.let { it.emojiReactions || it.isNextcloudSocial },
             reactionEmoji = control.reactionEmoji.orEmpty(),
             threadOrder = control.threadOrder?.takeUnless { it == ThreadOrder.Oldest },
-            albums = account.capabilities.collections,
+            hasCollections = account.capabilities.collections,
             archive = account.capabilities.isNextcloudSocial,
             archived = control.archived,
             history = control.history,

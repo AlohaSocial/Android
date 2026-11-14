@@ -85,7 +85,7 @@ public fun TimelineRoute(
             navigation = { nav },
             onCopied = { scope.launch { snackbars.showSnackbar(copied) } },
             onDeleteAsked = { deleting = it },
-            albums = { state.albums },
+            hasCollections = { state.hasCollections },
         ) {
             override fun onBoost(row: StatusRowUi) = viewModel.onToggle(row.statusId, Toggle.Boost)
 
@@ -122,7 +122,7 @@ public fun TimelineRoute(
         bar = feed !is TimelineFeed.Pinned,
         // on Home's pages the button is Home's own; the keyboard's new post is the page's
         onCompose = if (feed is TimelineFeed.Pinned) ({ nav.openComposer(null) }) else null,
-        onAlbums = if (feed.mode == FeedMode.Photos && state.albums) ({ nav.openAlbums() }) else null,
+        onCollections = if (feed.mode == FeedMode.Photos && state.hasCollections) ({ nav.openCollections() }) else null,
         onExplore = if (feed.mode == FeedMode.Photos) ({ nav.openPhotoExplore() }) else null,
         onSearch = onSearch,
         toolbar = toolbar,

@@ -115,7 +115,7 @@ internal fun TimelineScreen(
     navigationIcon: @Composable () -> Unit = {},
     showOptions: Boolean = true,
     onCompose: (() -> Unit)? = null,
-    onAlbums: (() -> Unit)? = null,
+    onCollections: (() -> Unit)? = null,
     onExplore: (() -> Unit)? = null,
     onSearch: (() -> Unit)? = null,
     toolbar: @Composable () -> Unit = {},
@@ -141,7 +141,7 @@ internal fun TimelineScreen(
                     title = { TopBarTitle(title, scrollToTop) },
                     scrollBehavior = behaviour,
                     navigationIcon = navigationIcon,
-                    actions = { BarButtons(state, actions, onSearch, toolbar, onAlbums, onExplore, showOptions) },
+                    actions = { BarButtons(state, actions, onSearch, toolbar, onCollections, onExplore, showOptions) },
                 )
             }
         },
@@ -181,13 +181,13 @@ private fun BarButtons(
     actions: TimelineScreenActions,
     onSearch: (() -> Unit)?,
     toolbar: @Composable () -> Unit,
-    onAlbums: (() -> Unit)?,
+    onCollections: (() -> Unit)?,
     onExplore: (() -> Unit)?,
     showOptions: Boolean,
 ) {
     onSearch?.let { IconButton(onClick = it) { Icon(AlohaIcons.Search, stringResource(R.string.timeline_search)) } }
     toolbar()
-    PhotosButtons(state.grid, actions::onGrid, onAlbums, onExplore)
+    PhotosButtons(state.grid, actions::onGrid, onCollections, onExplore)
     if (showOptions) ShowOptions(state.showBoosts, state.showReplies, actions::onShowBoosts, actions::onShowReplies)
 }
 

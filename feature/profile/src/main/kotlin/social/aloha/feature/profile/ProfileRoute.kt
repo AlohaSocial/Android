@@ -58,7 +58,7 @@ public fun ProfileRoute(key: AccountKey, navigation: ProfileNavigation, modifier
             navigation = { nav },
             onCopied = { scope.launch { snackbars.showSnackbar(copied) } },
             onDeleteAsked = { deleting = it },
-            albums = { state.albums },
+            hasCollections = { state.hasCollections },
         ) {
             override fun onBoost(row: StatusRowUi) = viewModel.onToggle(row.statusId, Toggle.Boost)
 
@@ -100,8 +100,8 @@ public fun ProfileRoute(key: AccountKey, navigation: ProfileNavigation, modifier
                 state.header?.author?.id?.let { nav.newWindow?.invoke(null, it) }
             }
 
-            override fun onAlbum(album: MediaCollection) =
-                nav.openAlbum(album.id, album.title, own = state.header?.isSelf == true)
+            override fun onCollection(collection: MediaCollection) =
+                nav.openCollection(collection.id, collection.title, own = state.header?.isSelf == true)
 
             override fun onEditProfile() = nav.editProfile()
 

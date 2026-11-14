@@ -115,7 +115,7 @@ public object WatchPositionRules {
 }
 
 /**
- * A Pixelfed album, read and written where the server supports it. Named so it never shadows
+ * A Pixelfed collection, read and written where the server supports it. Named so it never shadows
  * Kotlin's own `Collection`.
  *
  * @property visibility `public`, `private` or `draft`, as Pixelfed names them.

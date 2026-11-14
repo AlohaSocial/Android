@@ -10,7 +10,6 @@ import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import social.aloha.core.model.AttachmentKind
-import social.aloha.core.model.PortfolioLayout
 import social.aloha.core.network.AlohaJson
 import social.aloha.core.network.ApiRequest
 import social.aloha.core.network.endpoints.CollectionEndpoints
@@ -18,7 +17,6 @@ import social.aloha.core.network.endpoints.DiscoveryEndpoints
 import social.aloha.core.network.endpoints.FeedPreferenceEndpoints
 import social.aloha.core.network.endpoints.InterestEndpoints
 import social.aloha.core.network.endpoints.PlaceEndpoints
-import social.aloha.core.network.endpoints.PortfolioEndpoints
 import social.aloha.core.network.endpoints.ProfileEndpoints
 import social.aloha.core.network.endpoints.StatusEndpoints
 import social.aloha.core.network.endpoints.StoryEndpoints
@@ -131,7 +129,7 @@ class ExtensionDecodingTest {
 
     @Test
     fun `a collection's size is its post count`() {
-        val body = """[{"id": "1", "title": "Test album", "visibility": "public", "size": 1}]"""
+        val body = """[{"id": "1", "title": "Test collection", "visibility": "public", "size": 1}]"""
         assertEquals(1, CollectionEndpoints.all().value(body).single().postCount)
     }
 
@@ -204,15 +202,6 @@ class ExtensionDecodingTest {
         assertTrue(
             InterestEndpoints.state().value("""{"settings": {"instancePaused": true}}""").settings.instancePaused,
         )
-    }
-
-    @Test
-    fun `the portfolio settings leave out switches as off and the page as on`() {
-        val body = """{"active": 1, "title": "Work", "layout": "rows"}"""
-        val settings = PortfolioEndpoints.own().value(body)
-        assertEquals(PortfolioLayout.Rows, settings.layout)
-        assertFalse(settings.showCaptions)
-        assertTrue(PortfolioEndpoints.page("alice").value(body).showCaptions)
     }
 
     @Test

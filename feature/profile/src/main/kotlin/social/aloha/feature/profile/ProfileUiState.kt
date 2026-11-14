@@ -103,8 +103,8 @@ internal data class ProfileUiState(
     val highlights: ProfileHighlights? = null,
     val tabs: List<ProfileTab> = listOf(ProfileTab.Posts, ProfileTab.Replies, ProfileTab.Media, ProfileTab.Videos),
     val tab: ProfileTab = ProfileTab.Posts,
-    /** Whether the reader's server keeps albums, which the reader's own posts can go into. */
-    val albums: Boolean = false,
+    /** Whether the reader's server keeps collections, which the reader's own posts can go into. */
+    val hasCollections: Boolean = false,
     val items: List<ProfileItem> = emptyList(),
     val collections: List<MediaCollection>? = null,
     val stories: List<Story>? = null,
@@ -164,7 +164,7 @@ internal interface ProfileScreenActions : ProfileActions {
 
     fun onOpenInBrowser(url: String)
 
-    fun onAlbum(album: MediaCollection)
+    fun onCollection(collection: MediaCollection)
 
     fun onEditProfile()
 

@@ -110,7 +110,7 @@ public object StoryEndpoints {
         unitRequest(Endpoint(path, HttpMethod.POST, body = Body.Form(fields.toList())))
 }
 
-/** Pixelfed albums, read and written where the server supports them. */
+/** Pixelfed collections, read and written where the server supports them. */
 public object CollectionEndpoints {
     private fun collections(endpoint: Endpoint): ApiRequest<List<MediaCollection>> =
         listRequest(endpoint, CollectionDto.serializer()) { it.toDomain() }

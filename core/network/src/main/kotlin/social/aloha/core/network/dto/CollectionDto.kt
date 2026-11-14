@@ -25,7 +25,7 @@ import social.aloha.core.network.decoding.OptionalDoubleSerializer
 import social.aloha.core.network.decoding.OptionalIdSerializer
 import social.aloha.core.network.decoding.OptionalIntSerializer
 
-/** A Pixelfed album. Nextcloud Social counts its posts as `size`, Pixelfed as `post_count`. */
+/** A Pixelfed collection. Nextcloud Social counts its posts as `size`, Pixelfed as `post_count`. */
 @Serializable
 internal data class CollectionDto(
     @Serializable(with = FlexibleIdSerializer::class) val id: String,

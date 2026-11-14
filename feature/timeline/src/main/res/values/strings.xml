@@ -213,8 +213,8 @@
     <string name="modes_settings_audio">Posts with sound, which keep playing in the background</string>
     <!-- Button in the photos toolbar that opens what is trending with pictures, hashtags and people -->
     <string name="photos_explore">Explore</string>
-    <!-- Button in the photos toolbar that opens the reader's albums -->
-    <string name="photos_albums">Albums</string>
+    <!-- Button in the photos toolbar that opens the reader's collections -->
+    <string name="photos_collections">Collections</string>
     <!-- Button in the photos toolbar that shows the photos as a grid of squares -->
     <string name="photos_show_grid">Show as grid</string>
     <!-- Button in the photos toolbar that shows the photos one below the other, with their posts -->

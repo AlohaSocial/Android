@@ -198,8 +198,8 @@ public object AlohaIcons {
     public val Muted: ImageVector = Icons.AutoMirrored.Outlined.VolumeOff
     public val Unmuted: ImageVector = Icons.AutoMirrored.Outlined.VolumeUp
 
-    /** An album, Pixelfed's collection of posts with pictures. */
-    public val Album: ImageVector = Icons.Outlined.PhotoAlbum
+    /** A collection, Pixelfed's collection of posts with pictures. */
+    public val Collection: ImageVector = Icons.Outlined.PhotoAlbum
 
     /** What is trending, and who is popular. */
     public val Explore: ImageVector = Icons.Outlined.Explore

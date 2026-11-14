@@ -61,8 +61,8 @@ internal data class ThreadUiState(
     val canReact: Boolean = false,
     /** The server's own custom emoji the reader can react with, besides Unicode ones. */
     val reactionEmoji: List<CustomEmoji> = emptyList(),
-    /** Whether the reader's server keeps albums, which the reader's own posts can go into. */
-    val albums: Boolean = false,
+    /** Whether the reader's server keeps collections, which the reader's own posts can go into. */
+    val hasCollections: Boolean = false,
     /** Whether the reader's server archives posts, which the reader's own posts can then be. */
     val archive: Boolean = false,
     /** A post was just archived, which the screen confirms. */

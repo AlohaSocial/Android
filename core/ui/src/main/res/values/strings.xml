@@ -258,8 +258,8 @@
     <string name="video_sensitive">marked sensitive</string>
     <!-- Title of a video whose post says nothing at all -->
     <string name="video_untitled">Video</string>
-    <!-- Menu item on one's own post with pictures: put it into one of the reader's albums -->
-    <string name="status_menu_add_to_album">Add to album</string>
+    <!-- Menu item on one's own post with pictures: put it into one of the reader's collections -->
+    <string name="status_menu_add_to_collection">Add to collection</string>
     <!-- Takes the reader's own post off their profile without deleting it -->
     <string name="status_menu_archive">Archive</string>
     <!-- Menu item on one's own post: change it -->
