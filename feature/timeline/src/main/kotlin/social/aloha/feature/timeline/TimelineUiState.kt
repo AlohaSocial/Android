@@ -99,8 +99,8 @@ internal data class TimelineUiState(
     val grid: Boolean? = null,
     /** Video's cards, with how far the reader got in each by post; null for a timeline of rows. */
     val watched: Map<String, Double>? = null,
-    /** Whether the reader's server keeps albums. */
-    val albums: Boolean = false,
+    /** Whether the reader's server keeps collections. */
+    val hasCollections: Boolean = false,
     val showBoosts: Boolean = true,
     val showReplies: Boolean = true,
     val now: Instant = Instant.EPOCH,

@@ -47,35 +47,35 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import social.aloha.core.data.AccountRepository
 import social.aloha.core.data.Answer
-import social.aloha.core.data.photos.Albums
+import social.aloha.core.data.photos.Collections
 import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.model.MediaCollection
-import social.aloha.core.navigation.AddToAlbumKey
+import social.aloha.core.navigation.AddToCollectionKey
 
 @Immutable
-internal data class AddToAlbumUiState(
-    val albums: List<MediaCollection> = emptyList(),
-    /** The albums the post went into here. */
+internal data class AddToCollectionUiState(
+    val collections: List<MediaCollection> = emptyList(),
+    /** The collections the post went into here. */
     val added: Set<String> = emptySet(),
     val loading: Boolean = true,
     val failed: Boolean = false,
     val changeFailed: Boolean = false,
 )
 
-/** The reader's albums, to put one of their posts into: an album picked, or one made for it. */
-@HiltViewModel(assistedFactory = AddToAlbumViewModel.Factory::class)
-internal class AddToAlbumViewModel @AssistedInject constructor(
-    @Assisted private val key: AddToAlbumKey,
+/** The reader's collections, to put one of their posts into: a collection picked, or one made for it. */
+@HiltViewModel(assistedFactory = AddToCollectionViewModel.Factory::class)
+internal class AddToCollectionViewModel @AssistedInject constructor(
+    @Assisted private val key: AddToCollectionKey,
     private val accounts: AccountRepository,
-    private val albums: Albums,
+    private val collections: Collections,
 ) : ViewModel() {
     @AssistedFactory
     interface Factory {
-        fun create(key: AddToAlbumKey): AddToAlbumViewModel
+        fun create(key: AddToCollectionKey): AddToCollectionViewModel
     }
 
-    private val state = MutableStateFlow(AddToAlbumUiState())
-    val uiState: StateFlow<AddToAlbumUiState> = state.asStateFlow()
+    private val state = MutableStateFlow(AddToCollectionUiState())
+    val uiState: StateFlow<AddToCollectionUiState> = state.asStateFlow()
 
     init {
         onRetry()
@@ -84,10 +84,10 @@ internal class AddToAlbumViewModel @AssistedInject constructor(
     fun onRetry() {
         state.update { it.copy(loading = true, failed = false) }
         viewModelScope.launch {
-            val answer = accounts.byId(key.readerId)?.let { albums.own(it) }
+            val answer = accounts.byId(key.readerId)?.let { collections.own(it) }
             state.update {
                 if (answer is Answer.Got) {
-                    it.copy(albums = answer.value, loading = false)
+                    it.copy(collections = answer.value, loading = false)
                 } else {
                     it.copy(loading = false, failed = true)
                 }
@@ -95,26 +95,26 @@ internal class AddToAlbumViewModel @AssistedInject constructor(
         }
     }
 
-    fun onAdd(album: MediaCollection) {
-        if (album.id in state.value.added) return
+    fun onAdd(collection: MediaCollection) {
+        if (collection.id in state.value.added) return
         viewModelScope.launch {
             val reader = accounts.byId(key.readerId) ?: return@launch
-            val added = albums.add(reader, album.id, key.statusId) is Answer.Got
-            state.update { if (added) it.copy(added = it.added + album.id) else it.copy(changeFailed = true) }
+            val added = collections.add(reader, collection.id, key.statusId) is Answer.Got
+            state.update { if (added) it.copy(added = it.added + collection.id) else it.copy(changeFailed = true) }
         }
     }
 
-    /** A new album with the post already in it. */
+    /** A new collection with the post already in it. */
     fun onCreate(title: String, description: String) {
         viewModelScope.launch {
             val reader = accounts.byId(key.readerId) ?: return@launch
-            val made = (albums.create(reader, title, description) as? Answer.Got)?.value
-            val added = made != null && albums.add(reader, made.id, key.statusId) is Answer.Got
+            val made = (collections.create(reader, title, description) as? Answer.Got)?.value
+            val added = made != null && collections.add(reader, made.id, key.statusId) is Answer.Got
             state.update {
                 when {
                     made == null -> it.copy(changeFailed = true)
-                    added -> it.copy(albums = listOf(made) + it.albums, added = it.added + made.id)
-                    else -> it.copy(albums = listOf(made) + it.albums, changeFailed = true)
+                    added -> it.copy(collections = listOf(made) + it.collections, added = it.added + made.id)
+                    else -> it.copy(collections = listOf(made) + it.collections, changeFailed = true)
                 }
             }
         }
@@ -124,12 +124,14 @@ internal class AddToAlbumViewModel @AssistedInject constructor(
 }
 
 @Composable
-public fun AddToAlbumRoute(key: AddToAlbumKey, onBack: () -> Unit, modifier: Modifier = Modifier) {
+public fun AddToCollectionRoute(key: AddToCollectionKey, onBack: () -> Unit, modifier: Modifier = Modifier) {
     val viewModel =
-        hiltViewModel<AddToAlbumViewModel, AddToAlbumViewModel.Factory>(key = key.toString()) { it.create(key) }
+        hiltViewModel<AddToCollectionViewModel, AddToCollectionViewModel.Factory>(key = key.toString()) {
+            it.create(key)
+        }
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbars = remember { SnackbarHostState() }
-    val failed = stringResource(R.string.albums_change_failed)
+    val failed = stringResource(R.string.collections_change_failed)
     LaunchedEffect(state.changeFailed) {
         if (state.changeFailed) {
             snackbars.showSnackbar(failed)
@@ -137,13 +139,13 @@ public fun AddToAlbumRoute(key: AddToAlbumKey, onBack: () -> Unit, modifier: Mod
         }
     }
     var creating by rememberSaveable { mutableStateOf(false) }
-    AddToAlbumScreen(state, viewModel::onAdd, { creating = true }, viewModel::onRetry, onBack, snackbars, modifier)
+    AddToCollectionScreen(state, viewModel::onAdd, { creating = true }, viewModel::onRetry, onBack, snackbars, modifier)
     if (creating) {
-        AlbumNameDialog(
-            title = stringResource(R.string.albums_new),
+        CollectionNameDialog(
+            title = stringResource(R.string.collections_new),
             initial = "",
             askDescription = true,
-            confirm = stringResource(R.string.albums_create),
+            confirm = stringResource(R.string.collections_create),
             onDismiss = { creating = false },
             onConfirm = viewModel::onCreate,
         )
@@ -152,8 +154,8 @@ public fun AddToAlbumRoute(key: AddToAlbumKey, onBack: () -> Unit, modifier: Mod
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun AddToAlbumScreen(
-    state: AddToAlbumUiState,
+internal fun AddToCollectionScreen(
+    state: AddToCollectionUiState,
     onAdd: (MediaCollection) -> Unit,
     onCreate: () -> Unit,
     onRetry: () -> Unit,
@@ -161,7 +163,7 @@ internal fun AddToAlbumScreen(
     snackbars: SnackbarHostState,
     modifier: Modifier = Modifier,
 ) {
-    val title = stringResource(R.string.add_to_album_title)
+    val title = stringResource(R.string.add_to_collection_title)
     Scaffold(
         modifier = modifier.semantics { paneTitle = title },
         topBar = {
@@ -177,26 +179,29 @@ internal fun AddToAlbumScreen(
         LazyColumn(Modifier.padding(padding).fillMaxSize()) {
             item(key = "new") {
                 ListItem(
-                    headlineContent = { Text(stringResource(R.string.albums_new)) },
+                    headlineContent = { Text(stringResource(R.string.collections_new)) },
                     leadingContent = { Icon(AlohaIcons.Add, contentDescription = null) },
                     modifier = Modifier.clickable(onClick = onCreate),
                 )
                 HorizontalDivider()
             }
-            items(state.albums, key = { it.id }) { album ->
-                val added = album.id in state.added
-                val addedText = stringResource(R.string.add_to_album_added)
+            items(state.collections, key = { it.id }) { collection ->
+                val added = collection.id in state.added
+                val addedText = stringResource(R.string.add_to_collection_added)
                 ListItem(
-                    headlineContent = { Text(album.title.ifBlank { stringResource(R.string.albums_untitled) }) },
+                    headlineContent = {
+                        Text(collection.title.ifBlank { stringResource(R.string.collections_untitled) })
+                    },
                     supportingContent = {
-                        Text(pluralStringResource(R.plurals.albums_posts, album.postCount, album.postCount))
+                        val count = collection.postCount
+                        Text(pluralStringResource(R.plurals.collections_posts, count, count))
                     },
                     trailingContent = if (added) {
                         { Icon(AlohaIcons.Check, contentDescription = null) }
                     } else {
                         null
                     },
-                    modifier = Modifier.clickable(enabled = !added) { onAdd(album) }
+                    modifier = Modifier.clickable(enabled = !added) { onAdd(collection) }
                         .semantics { if (added) stateDescription = addedText },
                 )
                 HorizontalDivider()
@@ -205,8 +210,8 @@ internal fun AddToAlbumScreen(
                 ListFooter(
                     loading = state.loading,
                     failed = state.failed,
-                    empty = state.albums.isEmpty(),
-                    emptyText = stringResource(R.string.albums_none_own),
+                    empty = state.collections.isEmpty(),
+                    emptyText = stringResource(R.string.collections_none_own),
                     onRetry = onRetry,
                 )
             }

@@ -50,11 +50,11 @@ import social.aloha.core.ui.MediaImage
 import social.aloha.core.ui.rememberBlurHashPainter
 
 /**
- * Asks for an album's name, and for a new one what it holds too. [confirm] stays off until there is a
- * name, which is the one thing an album needs.
+ * Asks for a collection's name, and for a new one what it holds too. [confirm] stays off until there is a
+ * name, which is the one thing a collection needs.
  */
 @Composable
-internal fun AlbumNameDialog(
+internal fun CollectionNameDialog(
     title: String,
     initial: String,
     askDescription: Boolean,
@@ -72,14 +72,14 @@ internal fun AlbumNameDialog(
                 OutlinedTextField(
                     name,
                     onValueChange = { name = it.take(MAXIMUM_TITLE) },
-                    label = { Text(stringResource(R.string.albums_name)) },
+                    label = { Text(stringResource(R.string.collections_name)) },
                     singleLine = true,
                 )
                 if (askDescription) {
                     OutlinedTextField(
                         description,
                         onValueChange = { description = it.take(MAXIMUM_DESCRIPTION) },
-                        label = { Text(stringResource(R.string.albums_description)) },
+                        label = { Text(stringResource(R.string.collections_description)) },
                     )
                 }
             }
@@ -93,7 +93,7 @@ internal fun AlbumNameDialog(
                 enabled = name.isNotBlank(),
             ) { Text(confirm) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.albums_cancel)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.collections_cancel)) } },
     )
 }
 
@@ -106,8 +106,8 @@ internal fun ListFooter(loading: Boolean, failed: Boolean, empty: Boolean, empty
             verticalArrangement = Arrangement.spacedBy(AlohaSpacing.s),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Text(stringResource(R.string.albums_failed), style = MaterialTheme.typography.bodyLarge)
-            Button(onClick = onRetry) { Text(stringResource(R.string.albums_retry)) }
+            Text(stringResource(R.string.collections_failed), style = MaterialTheme.typography.bodyLarge)
+            Button(onClick = onRetry) { Text(stringResource(R.string.collections_retry)) }
         }
 
         loading -> ListProgress()
@@ -118,13 +118,13 @@ internal fun ListFooter(loading: Boolean, failed: Boolean, empty: Boolean, empty
     }
 }
 
-// Pixelfed's limits on an album's title and description
+// Pixelfed's limits on a collection's title and description
 private const val MAXIMUM_TITLE = 50
 private const val MAXIMUM_DESCRIPTION = 500
 
 /**
  * A post as a square of its first picture, or of its blur alone where it is marked sensitive. A tap
- * opens it; with [onRemove], a long press or the screen reader's action takes it out of the album it is in.
+ * opens it; with [onRemove], a long press or the screen reader's action takes it out of the collection it is in.
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -133,12 +133,12 @@ internal fun PhotoSquare(post: Status, onOpen: (String) -> Unit, onRemove: ((Str
     val first = shown.mediaAttachments.firstOrNull()
     var menu by remember { mutableStateOf(false) }
     val label = listOfNotNull(
-        stringResource(R.string.album_post, shown.account.bestDisplayName),
-        first?.description?.takeIf { it.isNotBlank() } ?: stringResource(R.string.album_post_no_alt),
-        stringResource(R.string.album_post_sensitive).takeIf { shown.sensitive },
+        stringResource(R.string.collection_post, shown.account.bestDisplayName),
+        first?.description?.takeIf { it.isNotBlank() } ?: stringResource(R.string.collection_post_no_alt),
+        stringResource(R.string.collection_post_sensitive).takeIf { shown.sensitive },
     ).joinToString(", ")
-    val open = stringResource(R.string.album_open)
-    val remove = stringResource(R.string.album_remove)
+    val open = stringResource(R.string.collection_open)
+    val remove = stringResource(R.string.collection_remove)
     Box(
         Modifier.aspectRatio(1f).padding(GAP)
             .combinedClickable(onClick = { onOpen(post.id) }, onLongClick = onRemove?.let { { menu = true } })
@@ -185,6 +185,6 @@ internal fun PhotoSquare(post: Status, onOpen: (String) -> Unit, onRemove: ((Str
     }
 }
 
-/** The side of a square in the albums' and Explore's grids: three across on a phone. */
+/** The side of a square in the collections' and Explore's grids: three across on a phone. */
 internal val CELL = 112.dp
 private val GAP = 1.dp

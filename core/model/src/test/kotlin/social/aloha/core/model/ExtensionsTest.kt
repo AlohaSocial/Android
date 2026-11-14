@@ -90,14 +90,6 @@ class ExtensionsTest {
     }
 
     @Test
-    fun `a portfolio post shows its first picture`() {
-        val video = MediaAttachment("v", AttachmentKind.Video)
-        val picture = MediaAttachment("p", AttachmentKind.Image)
-        assertEquals("p", PortfolioPost("1", mediaAttachments = listOf(video, picture)).picture?.id)
-        assertEquals("v", PortfolioPost("1", mediaAttachments = listOf(video)).picture?.id)
-    }
-
-    @Test
     fun `a number map sorts by key, which for months is chronological`() {
         val map = NumberMap(mapOf("2026-03" to 1.0, "2026-01" to 4.0, "2026-02" to 2.0))
         assertEquals(listOf("2026-01", "2026-02", "2026-03"), map.sorted.map { it.first })

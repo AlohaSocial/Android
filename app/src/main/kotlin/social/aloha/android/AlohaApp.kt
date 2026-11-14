@@ -68,15 +68,15 @@ import social.aloha.core.model.FeedMode
 import social.aloha.core.model.ModeChoices
 import social.aloha.core.navigation.AccountExportKey
 import social.aloha.core.navigation.AccountKey
-import social.aloha.core.navigation.AddToAlbumKey
-import social.aloha.core.navigation.AlbumKey
-import social.aloha.core.navigation.AlbumsKey
+import social.aloha.core.navigation.AddToCollectionKey
 import social.aloha.core.navigation.AnnouncementsKey
 import social.aloha.core.navigation.AudioKey
 import social.aloha.core.navigation.AuthorizedAppsKey
 import social.aloha.core.navigation.BlockedKey
 import social.aloha.core.navigation.CatchUpKey
 import social.aloha.core.navigation.ChannelsKey
+import social.aloha.core.navigation.CollectionKey
+import social.aloha.core.navigation.CollectionsKey
 import social.aloha.core.navigation.ComposerKey
 import social.aloha.core.navigation.ConversationsKey
 import social.aloha.core.navigation.DraftsKey
@@ -148,9 +148,9 @@ import social.aloha.feature.moderation.rememberModerator
 import social.aloha.feature.notifications.NotificationsRoute
 import social.aloha.feature.notifications.PolicyRoute
 import social.aloha.feature.notifications.RequestsRoute
-import social.aloha.feature.photos.AddToAlbumRoute
-import social.aloha.feature.photos.AlbumRoute
-import social.aloha.feature.photos.AlbumsRoute
+import social.aloha.feature.photos.AddToCollectionRoute
+import social.aloha.feature.photos.CollectionRoute
+import social.aloha.feature.photos.CollectionsRoute
 import social.aloha.feature.photos.PhotoExploreRoute
 import social.aloha.feature.profile.EditProfileRoute
 import social.aloha.feature.profile.PeopleRoute
@@ -359,12 +359,12 @@ fun AlohaApp(
                 backStack.push(ReportKey(readerId, accountId, handle, statusId))
             }
 
-            override fun addToAlbum(statusId: String) {
-                backStack.push(AddToAlbumKey(readerId, statusId))
+            override fun addToCollection(statusId: String) {
+                backStack.push(AddToCollectionKey(readerId, statusId))
             }
 
-            override fun openAlbums() {
-                backStack.push(AlbumsKey(readerId))
+            override fun openCollections() {
+                backStack.push(CollectionsKey(readerId))
             }
 
             override fun openMedia(statusId: String, index: Int, accountId: String?) {
@@ -379,8 +379,8 @@ fun AlohaApp(
                 backStack.push(PhotoExploreKey(readerId))
             }
 
-            override fun openAlbum(albumId: String, title: String, own: Boolean) {
-                backStack.push(AlbumKey(readerId, albumId, title, own))
+            override fun openCollection(collectionId: String, title: String, own: Boolean) {
+                backStack.push(CollectionKey(readerId, collectionId, title, own))
             }
 
             override val newWindow: ((String?, String?) -> Unit)?
@@ -730,17 +730,23 @@ fun AlohaApp(
                             entry<ReportKey> { ReportRoute(it, onDone = { backStack.remove(it) }) }
                             entry<EditProfileKey> { EditProfileRoute(it, onDone = { backStack.remove(it) }) }
                             entry<ScheduledPostsKey> { ScheduledPostsRoute(it, onBack = { backStack.remove(it) }) }
-                            entry<AlbumsKey>(metadata = ListDetailSceneStrategy.detailPane()) {
-                                AlbumsRoute(
+                            entry<CollectionsKey>(metadata = ListDetailSceneStrategy.detailPane()) {
+                                CollectionsRoute(
                                     it,
-                                    onOpen = { album, own -> statusNavigation.openAlbum(album.id, album.title, own) },
+                                    onOpen = { collection, own ->
+                                        statusNavigation.openCollection(collection.id, collection.title, own)
+                                    },
                                     onBack = { backStack.remove(it) },
                                 )
                             }
-                            entry<AlbumKey>(metadata = ListDetailSceneStrategy.detailPane()) {
-                                AlbumRoute(it, onOpen = statusNavigation::openThread, onBack = { backStack.remove(it) })
+                            entry<CollectionKey>(metadata = ListDetailSceneStrategy.detailPane()) {
+                                CollectionRoute(
+                                    it,
+                                    onOpen = statusNavigation::openThread,
+                                    onBack = { backStack.remove(it) },
+                                )
                             }
-                            entry<AddToAlbumKey> { AddToAlbumRoute(it, onBack = { backStack.remove(it) }) }
+                            entry<AddToCollectionKey> { AddToCollectionRoute(it, onBack = { backStack.remove(it) }) }
                             entry<WatchKey>(metadata = ListDetailSceneStrategy.detailPane()) {
                                 WatchRoute(it, statusNavigation, onBack = { backStack.remove(it) })
                             }

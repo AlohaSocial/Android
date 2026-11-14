@@ -292,17 +292,17 @@ internal fun Highlights(highlights: ProfileHighlights) {
 @Composable
 internal fun CollectionRow(collection: MediaCollection, actions: ProfileScreenActions) {
     ListItem(
-        modifier = Modifier.clickable { actions.onAlbum(collection) },
+        modifier = Modifier.clickable { actions.onCollection(collection) },
         leadingContent = { Thumbnail(collection.thumbnail) },
         headlineContent = {
             Text(
-                collection.title.ifBlank { stringResource(R.string.profile_album_untitled) },
+                collection.title.ifBlank { stringResource(R.string.profile_collection_untitled) },
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
         },
         supportingContent = {
-            Text(pluralStringResource(R.plurals.profile_album_size, collection.postCount, collection.postCount))
+            Text(pluralStringResource(R.plurals.profile_collection_size, collection.postCount, collection.postCount))
         },
     )
 }

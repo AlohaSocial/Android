@@ -38,9 +38,9 @@ internal fun menuItems(
                 if (row.state.pinned) R.string.status_menu_unpin else R.string.status_menu_pin,
             ),
         )
-        // only the author's own posts with pictures go into their albums
+        // only the author's own posts with pictures go into their collections
         if (row.media.isNotEmpty()) {
-            add(Triple(StatusMenuItem.AddToAlbum, AlohaIcons.Album, R.string.status_menu_add_to_album))
+            add(Triple(StatusMenuItem.AddToCollection, AlohaIcons.Collection, R.string.status_menu_add_to_collection))
         }
         add(Triple(StatusMenuItem.Archive, AlohaIcons.Archived, R.string.status_menu_archive))
         add(Triple(StatusMenuItem.Edit, AlohaIcons.Edited, R.string.status_menu_edit))

@@ -184,7 +184,7 @@ internal class MergedTimelineViewModel @AssistedInject constructor(
             trouble = accounts.firstNotNullOfOrNull { paging.troubles[it.id] },
             loadingOlder = paging.loadingOlder,
             reachedEnd = paging.loadedOnce && built.behind.isEmpty(),
-            albums = accounts.first().capabilities.collections,
+            hasCollections = accounts.first().capabilities.collections,
             now = now,
             restoreTo = control.restoreTo,
             scrollToTop = control.scrollToTop,

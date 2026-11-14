@@ -27,7 +27,7 @@ import social.aloha.core.data.compose.ScheduledPosts
 import social.aloha.core.data.nextcloud.NextcloudConnection
 import social.aloha.core.data.notifications.NotificationsRepository
 import social.aloha.core.data.notifications.RaisedNotifications
-import social.aloha.core.data.photos.Albums
+import social.aloha.core.data.photos.Collections
 import social.aloha.core.data.profile.OwnProfile
 import social.aloha.core.data.sync.UnreadCounts
 import social.aloha.core.data.sync.WidgetUpdates
@@ -131,8 +131,8 @@ public class SignedInFixture(private val context: Context) : Closeable {
     public fun watchPositions(at: Clock = clock): WatchPositions =
         WatchPositions(clients, cache.value.watchPositionDao(), statuses, at)
 
-    /** The reader's albums, their posts stored in [statuses]. */
-    public val albums: Albums by lazy { Albums(clients, statuses) }
+    /** The reader's collections, their posts stored in [statuses]. */
+    public val collections: Collections by lazy { Collections(clients, statuses) }
 
     public val ownProfile: OwnProfile by lazy { OwnProfile(clients, database.accountDao()) }
 

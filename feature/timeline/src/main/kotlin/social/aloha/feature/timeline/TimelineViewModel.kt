@@ -249,7 +249,7 @@ internal class TimelineViewModel @AssistedInject constructor(
             sparse = TimelineFilters.forMode(feed.mode, account.capabilities).isEmpty && feed.mode != FeedMode.Home,
             grid = layout.first,
             watched = layout.second,
-            albums = account.capabilities.collections,
+            hasCollections = account.capabilities.collections,
             showBoosts = settings.showBoosts,
             showReplies = settings.showReplies,
             now = now,
