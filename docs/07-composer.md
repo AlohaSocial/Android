@@ -15,6 +15,7 @@ This is the Apple app's specification, carried over as the product contract for 
 | AI alt text (§5) | Not built; see [10-intelligence.md](10-intelligence.md). |
 | Server facts | `Idempotency-Key` is honoured for an hour; `scheduled_at` needs five minutes' lead; the place picker stays hidden until the server stores places. |
 | Stories | A "Share as a story" toggle where the server has stories and the post is new and alone (no thread, poll, schedule, reply or edit), with at most 500 characters, holding one picture or video, or nothing but its words drawn as a card (the card's own renderer, square). The medium goes through the composer's own preparation and upload; the text is the caption, which is also how a screen reader reads a card. A picture or a card shows for 5, 10 or 15 s, picked under the post; a clip plays to its end (30 s is sent, which the server clamps). A story never waits in the outbox. When the account already has as many stories up as the server allows, Social (0.26.276 on) refuses with the code `shorts-full` and its `limit`, and the composer says so in the reader's language with the number; any other refusal shows the server's words. Stickers are not built. |
+| Held for review | Since Social 0.20.x (read from source, `24c8ea49c`) `POST /statuses` goes through the server's review, and from 0.26.294 (`5239af594`) a scheduled post does too when it is scheduled; one a rule holds answers 422 with `held_for_review: true`, the rule as a code under `reason` (`first_post`, `links`, `mentions`, `repeat`; `video` from 0.21.0) and the held request under `held_post`. The request is kept, so it counts as sent: the composer closes and a toast says the post waits for a moderator. Nothing can answer a post that is not out, so a thread stops there; the posts after the held one stay as the draft in its place (a new thread answering nothing, without the opening post's poll, quote or time, their media kept), and the toast says so. A post written again that is held leaves its original up, since nothing replaces it yet and nothing deletes it once a moderator approves the new one; the toast and the notification tell the writer to delete it then. The outbox treats it the same, never retrying, and tells the writer in a notification whose tap opens that draft. The five rule codes are explained in a sentence of the reader's language after the message; an unknown code adds nothing, and the server's own sentence, English only, is not shown. Any other 422 is refused as before. |
 
 ---
 
@@ -250,7 +251,8 @@ mobile connection this is the difference between possible and not.
   the stored idempotency key.
 - A queued post can be edited or cancelled before it sends.
 - A send that fails with 422 surfaces the server's message and reopens the
-  composer with everything intact.
+  composer with everything intact; a 422 that holds the post for review is no
+  failure (see "Held for review" above).
 - A send that fails with 401 pauses the queue for that account and prompts
   re-authentication rather than discarding anything.
 

@@ -34,6 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draganddrop.toAndroidDragEvent
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
@@ -106,7 +107,7 @@ public fun ComposerRoute(
     LaunchedEffect(hue) { viewModel.cards.onHue(hue) }
 
     BackHandler(onBack = actions::onClose)
-    QueuedEffect(state.queued)
+    ClosingEffect(state.queued, state.held)
     LaunchedEffect(state.done) { if (state.done) done() }
     FailureSnackbar(state, snackbars, viewModel::onFailureShown)
     val drop = rememberMediaDrop(viewModel::onPicked)
@@ -375,12 +376,19 @@ private fun ComposerDialogs(
 
 /**
  * Says a queued post goes out later, and asks, once, to be allowed to say so again when it cannot go
- * out: the notification is the only word the writer gets once the composer has gone.
+ * out: the notification is the only word the writer gets once the composer has gone. Says, as it
+ * closes, that a [held] post waits for a moderator and why, that what of its thread was not posted
+ * is kept as a draft, and that the original of a post written again stays up.
  */
 @Composable
-private fun QueuedEffect(queued: Boolean) {
+private fun ClosingEffect(queued: Boolean, held: PostFailure.Held?) {
     val context = LocalContext.current
+    val words = LocalResources.current
     val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {}
+    LaunchedEffect(held) {
+        held ?: return@LaunchedEffect
+        Toast.makeText(context, held.toast(words), Toast.LENGTH_LONG).show()
+    }
     LaunchedEffect(queued) {
         if (!queued) return@LaunchedEffect
         Toast.makeText(context, R.string.composer_queued, Toast.LENGTH_LONG).show()
@@ -617,5 +625,5 @@ private fun postMessage(failure: PostFailure?): String? = when (failure) {
 
     PostFailure.CardFailed -> stringResource(R.string.composer_card_failed)
 
-    null -> null
+    is PostFailure.Held, null -> null
 }

@@ -121,10 +121,24 @@ public class Outbox @Inject constructor(private val dao: OutboxDao, private val 
         return deleted
     }
 
-    /** The post [id] is out: it goes, with the files it attached. */
-    public suspend fun sent(id: String) {
-        dao.get(id)?.let(::entry)?.post?.files?.forEach { it.delete() }
-        dao.delete(id)
+    /**
+     * The post [id] is out: it goes, with the files it attached. A [rest] that never went, the segments
+     * after one a review rule holds, stays as draft [id] with the files it attaches. The files go only
+     * once the row is written.
+     */
+    public suspend fun sent(id: String, rest: DraftPost? = null) {
+        val kept = rest?.files.orEmpty().toSet()
+        val row = dao.get(id)
+        val files = row?.let(::entry)?.post?.files.orEmpty().filter { it !in kept }
+        if (rest == null || row == null) {
+            dao.delete(id)
+        } else {
+            val content = json.encodeToString(DraftPost.serializer(), rest)
+            dao.upsert(
+                row.copy(state = OutboxState.Draft.name, content = content, error = null, updatedAt = clock.millis()),
+            )
+        }
+        files.forEach { it.delete() }
     }
 
     /** Forgets everything [accountId] had not sent, with the files it attached: it signed out. */

@@ -34,17 +34,24 @@ public fun <T> ApiResult<T>.errorOrNull(): ApiError? = (this as? ApiResult.Failu
 /**
  * A refusal's stable [code] beside its English sentence, as Nextcloud Social names it from 0.26.276 on
  * (`shorts-full`, `featured-tags-full`, …), with the [fields] its advice needs, such as `limit`, as text.
+ * A post a review rule holds, Social's 422 with `held_for_review: true` on `POST /statuses` from 0.20.x
+ * on and on scheduled posts from 0.26.294 on, is the code [HELD_FOR_REVIEW], the rule's own code
+ * (`first_post`, `links`, …) under `reason`.
  */
 public data class Refusal(val code: String, val fields: Map<String, String> = emptyMap()) {
     public fun number(field: String): Int? = fields[field]?.toIntOrNull()
 
-    internal companion object {
+    public companion object {
+        /** The post waits for a moderator: nothing was published, and the server keeps the request. */
+        public const val HELD_FOR_REVIEW: String = "held-for-review"
+
         private val MESSAGE_FIELDS = setOf("error", "error_description", "code")
 
         /** Social's `{"error": …, "code": …, "limit": …}`: the code and the plain fields beside it; `null` without. */
-        fun of(body: String): Refusal? = try {
-            val payload = AlohaJson.parseToJsonElement(body) as? JsonObject
-            val code = (payload?.get("code") as? JsonPrimitive)?.takeIf { it.isString }?.content
+        internal fun of(body: String): Refusal? = try {
+            val payload = AlohaJson.parseToJsonElement(body) as? JsonObject ?: return null
+            val code = (payload["code"] as? JsonPrimitive)?.takeIf { it.isString }?.content
+                ?: HELD_FOR_REVIEW.takeIf { (payload["held_for_review"] as? JsonPrimitive)?.content == "true" }
             code?.takeIf { it.isNotBlank() }?.let {
                 val fields = payload.filterKeys { key -> key !in MESSAGE_FIELDS }.mapNotNull { (key, value) ->
                     (value as? JsonPrimitive)?.takeUnless { it is JsonNull }?.let { key to it.content }
@@ -102,6 +109,12 @@ public sealed interface ApiError {
 
     /** The refusal's code and fields where the server named them; `null` from a server that does not. */
     public val refusal: Refusal? get() = null
+
+    /** A review rule holds the post for a moderator: it counts as sent, and sending it again finds the one held. */
+    public val heldForReview: Boolean get() = this is Unprocessable && refusal?.code == Refusal.HELD_FOR_REVIEW
+
+    /** The review rule that holds the post, as the server names it (`first_post`, `links`, …), when one does. */
+    public val heldReason: String? get() = refusal?.fields?.get("reason")?.takeIf { heldForReview }
 
     /** Whether retrying the identical request could plausibly succeed. Writes are never retried automatically. */
     public val isTransient: Boolean

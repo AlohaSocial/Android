@@ -74,9 +74,17 @@ import social.aloha.core.testing.InMemoryDataStore
 import social.aloha.core.testing.MockCredentials
 import social.aloha.core.testing.NumberedTimeline
 
+/** What [Posts] answers for a post a review rule holds: a 422 with `held_for_review`, as Social does. */
+internal const val HELD = -422
+
+private const val HELD_BODY = """{"error":"This post is waiting for a moderator to look at it.",""" +
+    """"held_for_review":true,"reason":"first_post",""" +
+    """"held_post":{"id":"7","reason":"first_post","text":"Hi","media_count":0}}"""
+
 /**
  * A server that takes posts as a script says: each `POST /statuses` answers with the next outcome
- * (a status numbered in order, a 500, or a 422), and remembers what was sent and under which key.
+ * (a status numbered in order, a 500, a 422, or a hold for review on [HELD], which a scheduled post
+ * gets too), and remembers what was sent and under which key.
  * An idempotency key it has seen answers with the post it made then, as Nextcloud Social does.
  */
 internal class Posts(private val script: MutableList<Int>) : Dispatcher() {
@@ -219,8 +227,12 @@ internal class Posts(private val script: MutableList<Int>) : Dispatcher() {
         val at = form["scheduled_at"]
         val known = key?.let { made[it] }
         return when {
-            at != null -> json("""{"id":"later","scheduled_at":"$at","params":{"text":"${form["status"]}"}}""")
+            at != null && script.firstOrNull() != HELD -> json(
+                """{"id":"later","scheduled_at":"$at","params":{"text":"${form["status"]}"}}""",
+            )
+
             known != null -> json(status(known).toString())
+
             else -> scripted(key)
         }
     }
@@ -233,6 +245,8 @@ internal class Posts(private val script: MutableList<Int>) : Dispatcher() {
         }
 
         422 -> MockResponse.Builder().code(422).body("""{"error":"a post may not be longer"}""").build()
+
+        HELD -> MockResponse.Builder().code(422).body(HELD_BODY).build()
 
         else -> MockResponse.Builder().code(500).body("{}").build()
     }

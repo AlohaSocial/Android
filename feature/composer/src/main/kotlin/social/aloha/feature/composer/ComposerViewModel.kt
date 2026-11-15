@@ -464,9 +464,9 @@ internal class ComposerViewModel @AssistedInject constructor(
                 control.update { it.copy(posting = false, queued = true, done = true) }
                 return@launch
             }
-            control.update { it.copy(posting = false, failure = failure, done = failure == null) }
-            if (failure == null) {
-                drafts.posted()
+            control.update { it.stopped(failure) }
+            if (failure.isOut) {
+                drafts.posted(account.id, (failure as? PostFailure.Held)?.rest)
                 compose.refreshHome(account)
                 compose.rememberTags(account, post.segments.flatMap { ComposerText.hashtags(it.text) })
             }
@@ -568,6 +568,17 @@ internal class ComposerViewModel @AssistedInject constructor(
 }
 
 private const val EXCERPT = 140
+
+/** Whether the post is out, every segment posted or one held for review, and the composer done with it. */
+private val PostFailure?.isOut: Boolean get() = this == null || this is PostFailure.Held
+
+/** This state once posting stopped at [failure]: done when the post is out, else saying why. */
+private fun ComposerUiState.stopped(failure: PostFailure?) = copy(
+    posting = false,
+    failure = failure.takeUnless { failure.isOut },
+    done = failure.isOut,
+    held = failure as? PostFailure.Held,
+)
 
 /** What stops a post that the outbox then sends. */
 private val OFFLINE = PostFailure.Unreached(Trouble.Offline)

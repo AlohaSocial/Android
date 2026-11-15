@@ -18,7 +18,7 @@ import social.aloha.core.network.ApiError
  * result of every game it played, for as long as it and the post stay as written: sending again
  * after a timeout carries the same key, so the server answers with the post it already made rather
  * than making a second, and a die rolled once stays rolled. Any change mints a new key and plays its
- * games afresh.
+ * games afresh. A segment held for review ends the thread there.
  */
 internal class ThreadPoster(
     private val sender: PostSender,
@@ -74,7 +74,8 @@ internal class ThreadPoster(
 
     /**
      * Sends the segments of [post] not yet out as [account]; [onPosted] hears how many are out after
-     * each one the server took. The failure that stopped it, or null when all are posted.
+     * each one the server took. The failure that stopped it, [PostFailure.Held] when a review rule
+     * holds a segment, or null when all are posted.
      */
     suspend fun send(
         account: SignedInAccount,
@@ -98,7 +99,9 @@ internal class ThreadPoster(
                 onPosted(posted)
             }
         }
-        return sent.error?.let(::failureOf)
+        return sent.error?.let {
+            if (it.heldForReview) PostFailure.Held(sent.rest, it.heldReason, post.replaces != null) else failureOf(it)
+        }
     }
 
     /** Forgets the segments from [index] on, which were removed; posted ones are never forgotten. */

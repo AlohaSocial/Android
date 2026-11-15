@@ -41,6 +41,9 @@ internal class DraftKeeper(
     var queued = false
         private set
 
+    /** What a review hold kept from going is the draft now, and its files stay for it. */
+    private var kept = false
+
     /**
      * Takes the draft back from the outbox for editing, as it was before, with why it was refused;
      * nothing when there is none, or it is another account's.
@@ -75,7 +78,7 @@ internal class DraftKeeper(
 
     /** The composer closes: [post] is kept, when there is one; whether its files must stay for it. */
     fun leave(accountId: String?, post: DraftPost?): Boolean {
-        if (queued) return true
+        if (queued || kept) return true
         if (finished || editing) return false
         if (accountId == null || post == null) return false
         finished = true
@@ -86,8 +89,16 @@ internal class DraftKeeper(
     /** The writer let the post go; its files go with the composer. */
     fun discard() = forget()
 
-    /** The post is out; the draft is no more. */
-    fun posted() = forget()
+    /**
+     * The post is out; the draft is no more, or holds [rest] of [accountId], the segments after one a
+     * review rule holds, which never went.
+     */
+    fun posted(accountId: String? = null, rest: DraftPost? = null) {
+        if (accountId == null || rest == null) return forget()
+        finished = true
+        kept = true
+        scope.launch { outbox.saveDraft(id, accountId, rest) }
+    }
 
     private fun forget() {
         finished = true
