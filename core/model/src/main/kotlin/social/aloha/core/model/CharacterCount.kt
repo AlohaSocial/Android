@@ -14,7 +14,7 @@ public enum class LengthRule {
     Mastodon,
 
     /**
-     * Nextcloud Social's: Unicode code points, everything at its full length. It advertises a URL
+     * Aloha Social's: Unicode code points, everything at its full length. It advertises a URL
      * cost too but does not apply it, so a client charging the flat rate lets through a post the
      * server refuses.
      */

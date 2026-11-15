@@ -77,7 +77,7 @@ public class OAuthClient internal constructor(private val executor: RequestExecu
 
     /**
      * Exchanges [code] for a token. No `scope` is sent: the code names the authorisation, and
-     * Nextcloud Social ignores one anyway.
+     * Aloha Social ignores one anyway.
      */
     public suspend fun exchange(
         tokenEndpoint: HttpUrl,
@@ -97,7 +97,7 @@ public class OAuthClient internal constructor(private val executor: RequestExecu
     }
 
     /**
-     * Renews a token with its [refreshToken] (`grant_type=refresh_token`). Nextcloud Social answers a new
+     * Renews a token with its [refreshToken] (`grant_type=refresh_token`). Aloha Social answers a new
      * access token and a new refresh token, and the one presented is spent: presenting it again revokes
      * the whole authorization. A refresh token it does not know (spent, expired, revoked) is a 400
      * `invalid_grant`.

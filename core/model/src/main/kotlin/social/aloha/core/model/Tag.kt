@@ -21,7 +21,7 @@ public data class Tag(
     val id: String get() = name.lowercase()
 
     /**
-     * Nextcloud Social sends a single bucket and always `accounts: "0"`, since it counts uses and not
+     * Aloha Social sends a single bucket and always `accounts: "0"`, since it counts uses and not
      * distinct accounts. A sparkline from one point misleads, so the UI shows uses only when this is true.
      */
     val hasOnlyOneBucket: Boolean get() = history.size <= 1

@@ -97,7 +97,7 @@ public object FilterEndpoints {
 }
 
 /**
- * Nextcloud Social's switch for leaving replies out of the reader's home, public and hashtag feeds,
+ * Aloha Social's switch for leaving replies out of the reader's home, public and hashtag feeds,
  * kept with the filters and under their scopes. 404 on a server without it; null when an answer does
  * not carry it.
  */

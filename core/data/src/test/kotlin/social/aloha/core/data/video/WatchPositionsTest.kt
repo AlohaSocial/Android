@@ -40,7 +40,7 @@ private class HandClock(var now: Instant = Instant.parse("2026-09-30T12:00:00Z")
 }
 
 /**
- * Nextcloud Social's watch routes, every request remembered; the videos to carry on with are two, one
+ * Aloha Social's watch routes, every request remembered; the videos to carry on with are two, one
  * of them sent without its post.
  */
 private class Watched : Dispatcher() {
@@ -49,7 +49,7 @@ private class Watched : Dispatcher() {
     @Volatile var continued = """[{"status_id":"v1","position":120,"duration":600},""" +
         """{"status_id":"v2","position":30,"duration":60,"status":$POST}]"""
 
-    // what a report of the place answers: Nextcloud Social's `[]` before it said whether it stored it
+    // what a report of the place answers: Aloha Social's `[]` before it said whether it stored it
     @Volatile var placeAnswer = "[]"
 
     override fun dispatch(request: RecordedRequest): MockResponse {

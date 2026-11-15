@@ -32,7 +32,7 @@ import social.aloha.core.network.decoding.OrNullSerializer
 import social.aloha.core.network.decoding.lossy
 
 /**
- * A story in every shape seen: Nextcloud Social's own (`account_id` and the file under `media`),
+ * A story in every shape seen: Aloha Social's own (`account_id` and the file under `media`),
  * the Mastodon-ish flat one (`account`, `url`, `type`), and a Pixelfed v1.2 carousel item (`src`,
  * `type: "photo"`, `created_at`).
  */
@@ -55,7 +55,7 @@ internal data class StoryDto(
     @SerialName("view_count") @Serializable(with = OptionalIntSerializer::class) val viewCount: Int? = null,
 )
 
-/** Nextcloud Social nests the file under `media`, as a media attachment. */
+/** Aloha Social nests the file under `media`, as a media attachment. */
 @Serializable
 internal data class StoryMediaDto(
     @Serializable(with = LenientUrlSerializer::class) val url: String? = null,
@@ -88,7 +88,7 @@ internal fun StoryDto.toDomain(poster: Account? = null, seen: Boolean? = null): 
     )
 }
 
-/** The file: flat `url`, Nextcloud Social's `media.url`, or a Pixelfed carousel item's `src`. */
+/** The file: flat `url`, Aloha Social's `media.url`, or a Pixelfed carousel item's `src`. */
 private fun StoryDto.fileUrl(): String? = url ?: media?.url ?: src
 
 /** The poster of a Pixelfed carousel node, which is not an account entity. */

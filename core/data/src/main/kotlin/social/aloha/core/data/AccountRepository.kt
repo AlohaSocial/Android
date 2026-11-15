@@ -129,7 +129,7 @@ public class AccountRepository @Inject constructor(
 
     /**
      * The server refused the token: keep the account and its cache, ask for a new sign-in. Its Web Push
-     * subscription is forgotten, since Nextcloud Social deletes it with the token it was made with.
+     * subscription is forgotten, since Aloha Social deletes it with the token it was made with.
      */
     public suspend fun markNeedsReauth(id: String) {
         Timber.tag(LogArea.Auth.name).i("Account %s needs a new sign-in", id)

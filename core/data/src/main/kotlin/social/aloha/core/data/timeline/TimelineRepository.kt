@@ -121,7 +121,7 @@ public class TimelineRepository @Inject constructor(
 
     /**
      * Forgets [account]'s home, local, federated and hashtag timelines in every mode, rows and fetch
-     * alike, so each loads afresh the next time it is shown: these are the feeds Nextcloud Social's
+     * alike, so each loads afresh the next time it is shown: these are the feeds Aloha Social's
      * reply hiding narrows, and rows stored before a change to it would otherwise stay.
      */
     public suspend fun dropFeeds(account: SignedInAccount): Unit = withContext(ioDispatcher) {
@@ -147,7 +147,7 @@ public class TimelineRepository @Inject constructor(
      * read again or the read was not made.
      *
      * It waits for a fetch of the timeline in flight rather than being lost to it. A cold page merges cold
-     * again, replacing the first read's rows: Nextcloud Social numbers a post it read from elsewhere by when
+     * again, replacing the first read's rows: Aloha Social numbers a post it read from elsewhere by when
      * it was published, so the second read's posts may sit anywhere in the page, not only above it. It is
      * read only while the rows are still the first read's alone.
      */
@@ -216,7 +216,7 @@ public class TimelineRepository @Inject constructor(
     ) {
         /**
          * The account whose posts without replies come with them, the server having ignored
-         * `exclude_replies` (Nextcloud Social before 0.26.237), so the device leaves them out.
+         * `exclude_replies` (Aloha Social before 0.26.237), so the device leaves them out.
          */
         val withoutReplies: TimelineSource.Account?
             get() = (key.source as? TimelineSource.Account)
@@ -232,7 +232,7 @@ public class TimelineRepository @Inject constructor(
 
         /**
          * Whether [kept] posts after [pages] upstream pages make a visible page: a full one, or any once
-         * the budget is spent. A page that kept nothing reads on: Nextcloud Social leaves posts out of home
+         * the budget is spent. A page that kept nothing reads on: Aloha Social leaves posts out of home
          * after choosing the page, and one that adds no rows leaves the list nothing to page on from.
          */
         fun hasEnough(pages: Int, kept: Int): Boolean =
@@ -352,7 +352,7 @@ public class TimelineRepository @Inject constructor(
     ) {
         /**
          * A page without a way further down. A short page is not the end while the server names a next one:
-         * it may have left posts out after choosing the page (Nextcloud Social's reply hiding, `hide` filters).
+         * it may have left posts out after choosing the page (Aloha Social's reply hiding, `hide` filters).
          */
         val isLastUpstream: Boolean get() = nextCursor == null
 
@@ -368,7 +368,7 @@ public class TimelineRepository @Inject constructor(
      * what survived the filter, and the cursor is the last upstream page's. A page asked for above a post
      * (`min_id`) goes on upwards, through `prev`: `next` would lead back down into the rows below it.
      * An account's posts without replies leave the replies out on the device where the server ignored
-     * `exclude_replies` (Nextcloud Social before 0.26.237), paging on for them as a media mode does.
+     * `exclude_replies` (Aloha Social before 0.26.237), paging on for them as a media mode does.
      */
     private suspend fun harvest(client: ApiClient, fetch: Fetch): ApiResult<Harvest> {
         val mode = fetch.key.mode
@@ -430,7 +430,7 @@ public class TimelineRepository @Inject constructor(
     }
 
     private companion object {
-        /** Nextcloud Social's web app reads a profile that is still filling every two seconds. */
+        /** Aloha Social's web app reads a profile that is still filling every two seconds. */
         val PROFILE_FILLING_DELAY = 2.seconds
         const val PROFILE_FILLING_READS = 2
     }
@@ -458,7 +458,7 @@ private fun isFeed(storageKey: String): Boolean = storageKey.substringAfter(':')
 /**
  * Whether [status] is what `exclude_replies` keeps of this account's posts: one that answers nobody, a
  * boost, or a reply to the account itself (a thread). A reply whose parent the server does not know
- * counts as one to another account, as on Nextcloud Social.
+ * counts as one to another account, as on Aloha Social.
  */
 internal fun TimelineSource.Account.isNoReply(status: Status): Boolean =
     status.inReplyToId == null || status.inReplyToAccountId == id

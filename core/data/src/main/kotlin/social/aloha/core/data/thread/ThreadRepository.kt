@@ -39,7 +39,7 @@ import social.aloha.core.network.endpoints.StatusExtraEndpoints
 
 /**
  * A conversation as the server sent it: the posts above the one asked for, and every reply below.
- * [countsFilling] says Nextcloud Social is still reading the focused post's counts from its origin
+ * [countsFilling] says Aloha Social is still reading the focused post's counts from its origin
  * (`X-Social-Filling`), [repliesFilling] that it is still reading the replies from where they live
  * (`X-Social-Thread-Filling`); either is read again a few seconds later.
  */
@@ -52,7 +52,7 @@ public data class Conversation(
 )
 
 /**
- * How Nextcloud Social orders a thread's replies for its reader, each among the replies to the same post:
+ * How Aloha Social orders a thread's replies for its reader, each among the replies to the same post:
  * the reader's Bluesky thread preference. [Random] differs on every read.
  */
 public enum class ThreadOrder {
@@ -129,7 +129,7 @@ public class ThreadRepository(
     }
 
     /**
-     * What Nextcloud Social was still filling in for [conversation], read once more [FOLLOW_UP] after it, as
+     * What Aloha Social was still filling in for [conversation], read once more [FOLLOW_UP] after it, as
      * its web app does. While the focused post's counts were being read, from 0.26.284 its counts and those
      * of the posts [shown] below it are read through `status_counts`, which counts no view, and stored.
      * While the replies were being read, the conversation is read again and answered; null otherwise.
@@ -156,7 +156,7 @@ public class ThreadRepository(
     public suspend fun card(account: SignedInAccount, statusId: String): Card? =
         (clients.answer(account, StatusEndpoints.card(statusId)) as? Answer.Got)?.value
 
-    /** Reactions, which Nextcloud Social serves only here: its statuses always carry an empty list. */
+    /** Reactions, which Aloha Social serves only here: its statuses always carry an empty list. */
     public suspend fun reactions(account: SignedInAccount, statusId: String): Answer<List<Reaction>> =
         clients.answer(account, StatusExtraEndpoints.reactions(statusId))
 
@@ -201,7 +201,7 @@ public class ThreadRepository(
     private val orderLocks = ConcurrentHashMap<String, Mutex>()
 
     /**
-     * How [account]'s Nextcloud Social orders thread replies for it, asked once per account and kept: it is
+     * How [account]'s Aloha Social orders thread replies for it, asked once per account and kept: it is
      * set in a Bluesky app and seldom changes. Null elsewhere, while the server has not answered, and from a
      * Social too old to say.
      */
@@ -222,7 +222,7 @@ public class ThreadRepository(
     private companion object {
         const val KNOWN = 200
 
-        /** How long after a read still being filled in it is read again, as Nextcloud Social's web app waits. */
+        /** How long after a read still being filled in it is read again, as Aloha Social's web app waits. */
         val FOLLOW_UP: Duration = 3.seconds
     }
 }

@@ -44,7 +44,7 @@ internal class ModeratorCheck @AssistedInject constructor(
 
 /**
  * True when [readerId] may moderate their server, so Settings lists the console. A server that reports no
- * role, Nextcloud Social so far, never shows it.
+ * role, Aloha Social so far, never shows it.
  */
 @Composable
 public fun rememberModerator(readerId: String): Boolean {

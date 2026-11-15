@@ -33,7 +33,7 @@ import social.aloha.core.testing.SignedInFixture
 
 /**
  * Two lists, one of them a Nextcloud group's, with one member each; the group's refuses changes as
- * Nextcloud Social does, with its reason; every request remembered.
+ * Aloha Social does, with its reason; every request remembered.
  */
 private class ListServer : Dispatcher() {
     val asked = CopyOnWriteArrayList<String>()

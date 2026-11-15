@@ -32,7 +32,7 @@ public fun <T> ApiResult<T>.valueOrNull(): T? = (this as? ApiResult.Success)?.va
 public fun <T> ApiResult<T>.errorOrNull(): ApiError? = (this as? ApiResult.Failure)?.error
 
 /**
- * A refusal's stable [code] beside its English sentence, as Nextcloud Social names it from 0.26.276 on
+ * A refusal's stable [code] beside its English sentence, as Aloha Social names it from 0.26.276 on
  * (`shorts-full`, `featured-tags-full`, …), with the [fields] its advice needs, such as `limit`, as text.
  * A post a review rule holds, Social's 422 with `held_for_review: true` on `POST /statuses` from 0.20.x
  * on and on scheduled posts from 0.26.294 on, is the code [HELD_FOR_REVIEW], the rule's own code
@@ -67,7 +67,7 @@ public data class Refusal(val code: String, val fields: Map<String, String> = em
 /** Why a request failed. The one place an HTTP response becomes a typed error is [ApiError.from]. */
 public sealed interface ApiError {
     /**
-     * 401: the token was revoked, expired or never presented (Nextcloud Social answers
+     * 401: the token was revoked, expired or never presented (Aloha Social answers
      * `{"error":"the access_token was revoked"}` for each). It is the answer only once no refresh
      * token renewed the token: the account needs a new sign-in, its cached data stays.
      */

@@ -9,7 +9,7 @@ import kotlinx.serialization.Serializable
 /**
  * The account's posting and reading preferences.
  *
- * @property expandMedia real on Nextcloud Social, with PeerTube's three NSFW policies under Mastodon's
+ * @property expandMedia real on Aloha Social, with PeerTube's three NSFW policies under Mastodon's
  *   names. A client that cannot read it guesses, and posts publicly for someone whose default is
  *   followers-only.
  */

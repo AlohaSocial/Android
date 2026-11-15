@@ -142,7 +142,7 @@ internal fun VideoDetailsDto.toDomain(): VideoDetails = VideoDetails(
     },
 )
 
-/** Nextcloud Social's `video_card`, on every video post it serves. */
+/** Aloha Social's `video_card`, on every video post it serves. */
 @Serializable
 internal data class VideoCardDto(
     @Serializable(with = LenientTextSerializer::class) val title: String? = null,
@@ -164,7 +164,7 @@ internal fun VideoCardDto.toDomain(): VideoCardInfo = VideoCardInfo(
     published = published,
 )
 
-/** Nextcloud Social's `watch_progress`, on a status from "continue watching" or read on its own. */
+/** Aloha Social's `watch_progress`, on a status from "continue watching" or read on its own. */
 @Serializable
 internal data class WatchProgressDto(
     @Serializable(with = OptionalDoubleSerializer::class) val position: Double? = null,

@@ -30,7 +30,7 @@ public data class TagGroup(val name: String, val tags: List<String>)
 
 /**
  * Hashtags: one looked up, followed and unfollowed, those followed, and those that travel with it
- * (Nextcloud Social). A name is normalised as the server stores it, so `#NextCloud` and `nextcloud`
+ * (Aloha Social). A name is normalised as the server stores it, so `#NextCloud` and `nextcloud`
  * are one tag; one that normalises to nothing is not a hashtag, said before the server is asked.
  * Tag groups are the reader's own: several hashtags whose posts are merged into one timeline here.
  */

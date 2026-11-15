@@ -53,19 +53,19 @@ public enum class CandidateKind {
     /** The `issuer` of the server's RFC 8414 authorization server metadata. */
     AuthorizationServerIssuer,
 
-    /** `https://host/`: Mastodon, or Nextcloud Social with the root rewrite rules. */
+    /** `https://host/`: Mastodon, or Aloha Social with the root rewrite rules. */
     DomainRoot,
 
-    /** `…/index.php/apps/social/`: Nextcloud Social without the rewrite rules. */
+    /** `…/index.php/apps/social/`: Aloha Social without the rewrite rules. */
     AppPath,
 
-    /** `…/apps/social/`: Nextcloud Social with pretty URLs, without the rewrite rules. */
+    /** `…/apps/social/`: Aloha Social with pretty URLs, without the rewrite rules. */
     PrettyAppPath,
 
     /** The path the person typed. */
     TypedPath,
 
-    /** Nextcloud Social in the subdirectory the person typed. */
+    /** Aloha Social in the subdirectory the person typed. */
     TypedAppPath,
 
     /** An API address the person entered by hand. */

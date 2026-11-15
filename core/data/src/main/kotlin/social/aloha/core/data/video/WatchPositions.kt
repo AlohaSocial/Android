@@ -94,7 +94,7 @@ public class WatchPositions @Inject constructor(
 
     /**
      * The videos to carry on with, as the server keeps them, each with its post: fetched where the server
-     * sent it without its author, as Nextcloud Social did up to 0.26.278, and dropped where it is gone.
+     * sent it without its author, as Aloha Social did up to 0.26.278, and dropped where it is gone.
      */
     public suspend fun continueWatching(reader: SignedInAccount): Answer<List<PartWatched>> {
         val answer = clients.answer(reader, VideoEndpoints.continueWatching())

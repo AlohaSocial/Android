@@ -10,12 +10,12 @@ import kotlinx.serialization.Serializable
  * An account on this or another server.
  *
  * @property acct `alice` for a local account, `alice@example.social` for a remote one.
- * @property avatar none when the server sends `""` or `null`, which Nextcloud Social does for an
+ * @property avatar none when the server sends `""` or `null`, which Aloha Social does for an
  *   account whose avatar it has not cached yet.
- * @property avatarSmall the same picture at most 128 px across, where the server keeps one (Nextcloud Social
+ * @property avatarSmall the same picture at most 128 px across, where the server keeps one (Aloha Social
  *   0.26.296 and later, for a remote account's cached avatar); none elsewhere.
  * @property avatarDefault the avatar is the server's stand-in, not a picture the account chose
- *   (Nextcloud Social says so; other servers do not, and it stays false there).
+ *   (Aloha Social says so; other servers do not, and it stays false there).
  * @property header none as well when it is only the server's stand-in for "no header".
  * @property source present only on the credentials routes, which answer for the account itself.
  */
@@ -52,11 +52,11 @@ public data class Account(
     val moved: Account? = null,
     /** Kept in memory of someone who died; nobody posts from it any more. */
     val memorial: Boolean = false,
-    /** How the account wants its profile shown, where its server says (Nextcloud Social); null shows it all. */
+    /** How the account wants its profile shown, where its server says (Aloha Social); null shows it all. */
     val profileLayout: ProfileLayout? = null,
     /**
      * Whether the account shows its followers and following to nobody else (`hide_collections`); null
-     * where the server does not say, which Nextcloud Social does for an account embedded in another entity.
+     * where the server does not say, which Aloha Social does for an account embedded in another entity.
      */
     val hideCollections: Boolean? = null,
 ) {
@@ -80,7 +80,7 @@ public data class Account(
 }
 
 /**
- * The tab an account's profile opens on and the tabs it offers, as Nextcloud Social names them (`posts`,
+ * The tab an account's profile opens on and the tabs it offers, as Aloha Social names them (`posts`,
  * `photos`, `videos`, `tagged`, `collections`). How the profile looks, never who may see what: a tab left
  * out is still there to anyone who asks for it.
  */

@@ -92,7 +92,7 @@ internal object ProfilePresentation {
     /**
      * The three timelines, Featured where the account features something, Videos, then what the server has;
      * Media, Videos and Collections only where the account's [layout] offers them or the reader is on them
-     * ([current]), as Nextcloud Social's web app keeps the tab open when a refreshed layout hides it.
+     * ([current]), as Aloha Social's web app keeps the tab open when a refreshed layout hides it.
      */
     fun tabs(
         capabilities: ServerCapabilities,

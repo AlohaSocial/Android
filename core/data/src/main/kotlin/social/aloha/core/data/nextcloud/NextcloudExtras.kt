@@ -23,7 +23,7 @@ import social.aloha.core.network.endpoints.MemoryEndpoints
 import social.aloha.core.network.endpoints.StatisticsEndpoints
 
 /**
- * What Nextcloud Social keeps for an account and gives only to its Nextcloud session: memories, the
+ * What Aloha Social keeps for an account and gives only to its Nextcloud session: memories, the
  * weekly recap, statistics, video channels, the apps signed in to it, and the account as an export.
  * Every call needs the Nextcloud connection; without it the answer is `ApiError.Unauthorised` before
  * anything is sent.

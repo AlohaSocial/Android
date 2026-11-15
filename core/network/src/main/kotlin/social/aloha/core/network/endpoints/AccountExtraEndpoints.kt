@@ -138,7 +138,7 @@ public object SocialAccountEndpoints {
 }
 
 /**
- * Nextcloud Social's switch for the numbers it zeroes on every post for a reader who hides them, and the
+ * Aloha Social's switch for the numbers it zeroes on every post for a reader who hides them, and the
  * numbers of several posts at once.
  */
 public object CountsEndpoints {
@@ -150,7 +150,7 @@ public object CountsEndpoints {
     )
 
     /**
-     * The counts of the first [MAXIMUM_COUNTED] of [ids] (`status_counts`, Nextcloud Social from 0.26.284):
+     * The counts of the first [MAXIMUM_COUNTED] of [ids] (`status_counts`, Aloha Social from 0.26.284):
      * no view is counted, and a post the reader may not see is left out of the answer.
      */
     public fun of(ids: List<String>): ApiRequest<List<StatusCounts>> = listRequest(

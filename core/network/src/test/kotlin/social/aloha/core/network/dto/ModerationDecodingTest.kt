@@ -148,7 +148,7 @@ class ModerationDecodingTest {
         assertTrue(admin.reports && admin.accounts && admin.trends)
         val everyone = ModerationEndpoints.role().decodeValue("""{"id":"1","role":{"permissions":"65536"}}""")
         assertFalse(everyone.any)
-        // Nextcloud Social before 0.26.108: `role` is null
+        // Aloha Social before 0.26.108: `role` is null
         assertFalse(ModerationEndpoints.role().decodeValue("""{"id":"1","role":null}""").any)
     }
 

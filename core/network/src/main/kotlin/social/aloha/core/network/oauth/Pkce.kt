@@ -7,7 +7,7 @@ import java.security.MessageDigest
 import java.security.SecureRandom
 import java.util.Base64
 
-/** An RFC 7636 proof key; S256 is the only method sent, Nextcloud Social refuses `plain` with a 400. */
+/** An RFC 7636 proof key; S256 is the only method sent, Aloha Social refuses `plain` with a 400. */
 public class Pkce(public val verifier: String) {
     public val challenge: String = base64Url(MessageDigest.getInstance("SHA-256").digest(verifier.toByteArray()))
     public val method: String = "S256"

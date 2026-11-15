@@ -36,7 +36,7 @@ private fun carousel(endpoint: Endpoint): ApiRequest<StoryCarousel> =
     request(endpoint, StoryCarouselSerializer) { it.toDomain() }
 
 /**
- * Stories, Pixelfed's feature as Nextcloud Social serves it. Past the Mastodon-ish `api/v1/stories`
+ * Stories, Pixelfed's feature as Aloha Social serves it. Past the Mastodon-ish `api/v1/stories`
  * routes, Pixelfed names a story in a `sid` parameter rather than in the path: its v1.1 and v1.2
  * routes are used verbatim, since a path-style `/api/v1/stories/{id}/…` route does not exist and 404s.
  */
@@ -46,7 +46,7 @@ public object StoryEndpoints {
     private const val MINIMUM_DURATION = 3
     private const val MAXIMUM_DURATION = 30
 
-    /** The rail, as a flat array on Nextcloud Social. */
+    /** The rail, as a flat array on Aloha Social. */
     public fun carousel(): ApiRequest<StoryCarousel> = carousel(Endpoint("api/v1/stories/carousel"))
 
     /** Pixelfed's v1.2 rail: `{self, nodes}`, one node per account. */

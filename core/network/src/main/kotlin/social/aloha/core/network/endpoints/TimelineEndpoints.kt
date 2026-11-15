@@ -29,7 +29,7 @@ import social.aloha.core.network.unitRequest
 
 public object TimelineEndpoints {
     /**
-     * A page of [source]. The [filters] are Nextcloud Social's narrowings; `only_short` wins over
+     * A page of [source]. The [filters] are Aloha Social's narrowings; `only_short` wins over
      * `only_video`, and that over `only_media`, since every short is a video and every video is media.
      * An account's posts take only its [TimelineFilters.mediaType], in place of `only_media`.
      */

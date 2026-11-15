@@ -33,7 +33,7 @@ public class SensitiveMedia @Inject constructor(private val clients: ClientFacto
     }
 
     /**
-     * Sets [policy] on [account]'s server, which only Nextcloud Social takes (`PUT /api/v1/preferences`;
+     * Sets [policy] on [account]'s server, which only Aloha Social takes (`PUT /api/v1/preferences`;
      * Mastodon changes it on its website). False when the server refused, and nothing changed.
      */
     public suspend fun choose(account: SignedInAccount, policy: SensitiveMediaPolicy): Boolean {

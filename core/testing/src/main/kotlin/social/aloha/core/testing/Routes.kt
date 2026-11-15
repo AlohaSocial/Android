@@ -165,7 +165,7 @@ internal class Routes(private val configuration: MockServerConfiguration) {
         const val MALFORMED_INDEX = 2
         const val APP_PREFIX = "/index.php/apps/social"
 
-        /** Routes that exist only on Nextcloud Social (or Pixelfed/PeerTube shapes it serves). */
+        /** Routes that exist only on Aloha Social (or Pixelfed/PeerTube shapes it serves). */
         val EXTENSION_PREFIXES = listOf(
             "/stories", "/collections", "/interests", "/videos/continue", "/watched", "/places", "/starter_packs",
             "/highlights", "/reactions", "/discover/", "/api/v1.1/", "/api/v1.2/", "/api/v2/config", "/api/v1/config",

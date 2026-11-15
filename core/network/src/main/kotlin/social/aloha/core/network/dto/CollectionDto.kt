@@ -25,7 +25,7 @@ import social.aloha.core.network.decoding.OptionalDoubleSerializer
 import social.aloha.core.network.decoding.OptionalIdSerializer
 import social.aloha.core.network.decoding.OptionalIntSerializer
 
-/** A Pixelfed collection. Nextcloud Social counts its posts as `size`, Pixelfed as `post_count`. */
+/** A Pixelfed collection. Aloha Social counts its posts as `size`, Pixelfed as `post_count`. */
 @Serializable
 internal data class CollectionDto(
     @Serializable(with = FlexibleIdSerializer::class) val id: String,
@@ -52,7 +52,7 @@ internal fun CollectionDto.toDomain(): MediaCollection = MediaCollection(
 
 /**
  * A continue-watching entry: the documented `{status_id, position, duration, status}`, or, as
- * Nextcloud Social answers, the post itself with the place in its `watch_progress`; without its
+ * Aloha Social answers, the post itself with the place in its `watch_progress`; without its
  * `account` up to 0.26.278, with it on later builds. The post is kept only when it decodes as a status.
  */
 @Serializable
@@ -70,7 +70,7 @@ internal data class ContinueWatchingItemDto(
 )
 
 /**
- * Reads an entry, and where it is the post itself with its author, as Nextcloud Social sends it, keeps
+ * Reads an entry, and where it is the post itself with its author, as Aloha Social sends it, keeps
  * that post too, so it needs no second request.
  */
 internal object ContinueWatchingEntry : KSerializer<ContinueWatchingItemDto> {
@@ -104,7 +104,7 @@ internal fun ContinueWatchingItemDto.toDomain(): ContinueWatchingItem? {
     )
 }
 
-/** Where the entry was left: the documented top-level fields, else Nextcloud Social's `watch_progress`. */
+/** Where the entry was left: the documented top-level fields, else Aloha Social's `watch_progress`. */
 private fun ContinueWatchingItemDto.place(): WatchProgress = WatchProgress(
     position = position ?: watchProgress?.position ?: 0.0,
     duration = duration ?: watchProgress?.duration ?: 0.0,

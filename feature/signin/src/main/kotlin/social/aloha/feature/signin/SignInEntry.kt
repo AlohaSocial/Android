@@ -139,5 +139,5 @@ private fun openInBrowser(context: Context, url: String) {
 /** Servers that take new accounts, kept by the Mastodon project; a Nextcloud's is its administrator's to add. */
 private const val FIND_SERVER = "https://joinmastodon.org/servers"
 
-/** The web-server rules that ship with Nextcloud Social, with notes on proxies and the Authorization header. */
+/** The web-server rules that ship with Aloha Social, with notes on proxies and the Authorization header. */
 private const val WEB_SERVER_RULES = "https://github.com/AlohaSocial/social/tree/master/contrib/webserver"

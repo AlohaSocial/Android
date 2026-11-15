@@ -80,7 +80,7 @@ data class SwitcherAccount(
     val avatarUrl: String?,
     val active: Boolean,
     val needsReauth: Boolean,
-    /** Whether its server is Nextcloud Social, whose archived posts and interests the sheet then offers. */
+    /** Whether its server is Aloha Social, whose archived posts and interests the sheet then offers. */
     val nextcloudSocial: Boolean = false,
     /** Its unread notifications, which a dot beside it tells of. */
     val unread: Int = 0,

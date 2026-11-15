@@ -17,7 +17,7 @@ public data class ClientRegistration(val clientId: String, val clientSecret: Str
 
 /**
  * A bearer token, with the [refreshToken] that renews it and the seconds it has left ([expiresIn]) where
- * the server sent them. Nextcloud Social since 0.26.299 issues both with every account token: a token
+ * the server sent them. Aloha Social since 0.26.299 issues both with every account token: a token
  * lasts 365 days from its issue, one issued by a refresh 24 hours, and every refresh replaces both
  * tokens. Servers without refresh tokens (Mastodon, older Social) send neither, and a 401 there means
  * signing in again.
@@ -33,7 +33,7 @@ public data class AccessToken(
 }
 
 /**
- * `/oauth/userinfo`: who the token belongs to. Nextcloud Social answers it even for a brand-new
+ * `/oauth/userinfo`: who the token belongs to. Aloha Social answers it even for a brand-new
  * account whose `verify_credentials` still fails with a 500 because its avatar is not cached yet.
  */
 @Serializable

@@ -151,7 +151,7 @@ public data class TimelineKey(val mode: FeedMode, val source: TimelineSource) {
 }
 
 /**
- * The narrowings Nextcloud Social accepts beyond Mastodon's parameters. Of the first three the narrowest
+ * The narrowings Aloha Social accepts beyond Mastodon's parameters. Of the first three the narrowest
  * set wins, since every short is a video and every video is media; [mediaType] (`image`, `visual`)
  * narrows media to that kind instead of [onlyMedia].
  */

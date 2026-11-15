@@ -25,7 +25,7 @@ import social.aloha.core.network.endpoints.TimelineEndpoints
 public data class PostPage(val posts: List<Status>, val next: HttpUrl?, val done: Boolean)
 
 /**
- * The posts the reader kept: bookmarked, favourited, or archived off their profile (Nextcloud Social's
+ * The posts the reader kept: bookmarked, favourited, or archived off their profile (Aloha Social's
  * archive, at Pixelfed's paths). Bookmarks and favourites are in the order they were kept, which is
  * no post's id, so they page along the server's `Link` header; the archive sends none, and pages
  * from its oldest post's id.

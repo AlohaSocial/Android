@@ -160,7 +160,7 @@ public class ProfileRepository @Inject constructor(
             },
         )
 
-    /** Nextcloud Social's twelve weeks of posting, for its own accounts; null elsewhere or when it has none. */
+    /** Aloha Social's twelve weeks of posting, for its own accounts; null elsewhere or when it has none. */
     public suspend fun highlights(reader: SignedInAccount, id: String): ProfileHighlights? {
         if (!reader.capabilities.isNextcloudSocial) return null
         return (clients.answer(reader, ProfileEndpoints.highlights(id)) as? Answer.Got)?.value?.takeIf { it.available }

@@ -72,7 +72,7 @@ internal data class ProfileLayoutDto(
 internal object ProfileLayoutOrNull : KSerializer<ProfileLayoutDto?> by OrNullSerializer(ProfileLayoutDto.serializer())
 
 /**
- * A layout that hides Posts or opens on a tab it hides is no layout, as on Nextcloud Social, which only ever
+ * A layout that hides Posts or opens on a tab it hides is no layout, as on Aloha Social, which only ever
  * sends one it has checked; a tab name the app does not know is kept, for a server that adds one.
  */
 internal fun ProfileLayoutDto.toDomain(): ProfileLayout? {
@@ -144,7 +144,7 @@ internal fun AccountDto.toDomain(): Account {
 /**
  * Whether [header] stands in for "no header", so that the profile draws its own empty banner and the
  * editor offers no removal of a picture nobody chose. Mastodon's API requires a URL, so servers send
- * a placeholder rather than none: Nextcloud Social says so with `header_default`; Mastodon does not,
+ * a placeholder rather than none: Aloha Social says so with `header_default`; Mastodon does not,
  * and its `headers/{style}/missing.png` is recognised by its address.
  */
 private fun AccountDto.isPlaceholderHeader(header: String?): Boolean {

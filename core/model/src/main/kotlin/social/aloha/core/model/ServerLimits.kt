@@ -10,9 +10,9 @@ import kotlinx.serialization.Serializable
  * the upload pre-flight all read from here; Mastodon's defaults are the last resort, used only when
  * both instance routes fail.
  *
- * @property imageSizeLimit bytes, for every file. 10 MB by default on Nextcloud Social, which reads an
+ * @property imageSizeLimit bytes, for every file. 10 MB by default on Aloha Social, which reads an
  *   image whole into memory to strip and resize it.
- * @property videoSizeLimit bytes, for video only. 2048 MB by default on Nextcloud Social, which copies a
+ * @property videoSizeLimit bytes, for video only. 2048 MB by default on Aloha Social, which copies a
  *   video a chunk at a time and never holds it, hence a [Long].
  * @property minPollExpiration seconds.
  * @property maxPollExpiration seconds.

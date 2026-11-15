@@ -11,7 +11,7 @@ import java.time.Instant
  *
  * @property needsReauth the server answered 401 (tokens have no refresh), or the vault could not be
  *   read after a restore: the account stays, its cache stays, and a new sign-in resumes it.
- * @property profilePending the server could not describe the account yet; Nextcloud Social answers
+ * @property profilePending the server could not describe the account yet; Aloha Social answers
  *   500 from `verify_credentials` for a new account until its avatar cache job has run.
  */
 public data class SignedInAccount(

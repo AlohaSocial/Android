@@ -126,7 +126,7 @@ public object TagEndpoints {
             it.toDomain()
         }
 
-    /** Tags that travel with this one on public posts (Nextcloud Social). */
+    /** Tags that travel with this one on public posts (Aloha Social). */
     public fun related(name: String, limit: Int = Paging.DEFAULT_LIMIT): ApiRequest<List<Tag>> = listRequest(
         Endpoint("api/v1/tags/${normalised(name)}/related", query = listOf(Paging.limitItem(limit, RELATED_LIMIT))),
         TagDto.serializer(),
@@ -154,7 +154,7 @@ public object ListEndpoints {
 
     /**
      * A list's members, paged by the `Link` header. No `limit` is sent: Mastodon reads `limit=0` as
-     * "all", and Nextcloud Social answers it with a 400.
+     * "all", and Aloha Social answers it with a 400.
      */
     public fun accounts(id: String): ApiRequest<List<Account>> =
         listRequest(Endpoint("api/v1/lists/$id/accounts"), AccountDto.serializer()) { it.toDomain() }

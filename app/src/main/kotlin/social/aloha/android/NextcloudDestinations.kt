@@ -37,7 +37,7 @@ private const val AUTHORIZED_APPS_ORDER = NEXTCLOUD_SECTION_ORDER + 4
 private const val EXPORT_ORDER = NEXTCLOUD_SECTION_ORDER + 5
 
 /**
- * What only the Nextcloud session reaches on Nextcloud Social, listed for every account there: a page
+ * What only the Nextcloud session reaches on Aloha Social, listed for every account there: a page
  * says itself when the Nextcloud is not connected yet.
  */
 internal fun nextcloudDestinations(readerId: String, backStack: MutableList<NavKey>) = listOf(

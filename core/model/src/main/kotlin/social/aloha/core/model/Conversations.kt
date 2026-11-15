@@ -9,7 +9,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 public data class StatusContext(val ancestors: List<Status> = emptyList(), val descendants: List<Status> = emptyList())
 
-/** The numbers under one post, as Nextcloud Social's `status_counts` answers them; [id] is the post asked for. */
+/** The numbers under one post, as Aloha Social's `status_counts` answers them; [id] is the post asked for. */
 @Serializable
 public data class StatusCounts(
     val id: String,
@@ -48,7 +48,7 @@ public data class AccountList(
     val title: String,
     val repliesPolicy: String? = null,
     val exclusive: Boolean = false,
-    /** The Nextcloud group the list follows (Nextcloud Social's own): its members are the group's, not its owner's. */
+    /** The Nextcloud group the list follows (Aloha Social's own): its members are the group's, not its owner's. */
     val group: String? = null,
 ) {
     val followsGroup: Boolean get() = !group.isNullOrEmpty()

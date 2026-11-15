@@ -70,10 +70,10 @@ public data class AnnualReportData(
 }
 
 /**
- * One year's report: Mastodon's `#Wrapstodon`, which Nextcloud Social serves at
+ * One year's report: Mastodon's `#Wrapstodon`, which Aloha Social serves at
  * `/api/v1/annual_reports` without a web page of its own.
  *
- * @property shareUrl Mastodon's public page for the report; Nextcloud Social has none and sends null.
+ * @property shareUrl Mastodon's public page for the report; Aloha Social has none and sends null.
  */
 @Serializable
 public data class AnnualReport(
@@ -100,7 +100,7 @@ public data class WrappedAnnualReports(
     public fun status(id: String?): Status? = id?.let { wanted -> statuses.firstOrNull { it.id == wanted } }
 }
 
-/** Whether a year has a report. Nextcloud Social never answers `generating`: its report is a query, not a job. */
+/** Whether a year has a report. Aloha Social never answers `generating`: its report is a query, not a job. */
 public enum class AnnualReportState(override val wire: String) : WireValue {
     Available("available"),
     Pending("pending"),

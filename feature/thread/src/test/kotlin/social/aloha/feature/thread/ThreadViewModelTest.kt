@@ -70,7 +70,7 @@ import social.aloha.core.testing.NumberedTimeline
 import social.aloha.core.ui.RichTextColors
 
 /**
- * A small conversation as Nextcloud Social serves it: one post above the focused one, a reply and a
+ * A small conversation as Aloha Social serves it: one post above the focused one, a reply and a
  * reply to that below, reactions on the focused post (which a server before 0.26.221 leaves empty) and from
  * their own route, and two versions in the edit history.
  */

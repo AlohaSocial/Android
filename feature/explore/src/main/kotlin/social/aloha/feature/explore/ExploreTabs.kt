@@ -79,7 +79,7 @@ internal fun PostsTab(posts: List<Status>, viewer: String, mapper: StatusRowMapp
 
 /**
  * Trending hashtags, each with how much it was used today and its use over the days the server keeps, as a
- * small curve. Nextcloud Social keeps one day of history and no count of people, so no curve is drawn and
+ * small curve. Aloha Social keeps one day of history and no count of people, so no curve is drawn and
  * no number of people is claimed.
  */
 @Composable

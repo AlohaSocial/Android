@@ -13,7 +13,7 @@ import social.aloha.core.model.ConversationPartner
 import social.aloha.core.model.NumberMap
 import social.aloha.core.ui.R as UiR
 
-// The keys are those Nextcloud Social sends; a number the server did not send is left out, never shown as 0.
+// The keys are those Aloha Social sends; a number the server did not send is left out, never shown as 0.
 
 @Composable
 internal fun Hero(statistics: AccountStatistics, handle: String) {

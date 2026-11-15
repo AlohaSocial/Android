@@ -9,7 +9,7 @@ import kotlinx.serialization.Serializable
 /**
  * The viewer's relationship to one account.
  *
- * @property showingReblogs honoured by Nextcloud Social as part of the timeline query, so it is real.
+ * @property showingReblogs honoured by Aloha Social as part of the timeline query, so it is real.
  *   True when the server does not say.
  * @property muteExpiresAt when a timed mute ends, where the server says.
  */

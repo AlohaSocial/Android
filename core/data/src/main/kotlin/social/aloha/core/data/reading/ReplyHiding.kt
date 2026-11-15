@@ -15,7 +15,7 @@ import social.aloha.core.model.SignedInAccount
 import social.aloha.core.network.endpoints.FeedPreferenceEndpoints
 
 /**
- * Whether each account's Nextcloud Social leaves replies out of its home, public and hashtag feeds, a
+ * Whether each account's Aloha Social leaves replies out of its home, public and hashtag feeds, a
  * switch the server keeps per account (`/api/v1/social/feed_preferences`, Social after 0.26.278) and
  * the web app turns too. Replies stay in their conversations either way.
  */
@@ -26,7 +26,7 @@ public class ReplyHiding @Inject constructor(
 ) {
     /**
      * The switch as [reader]'s server holds it; null where the server has none or did not answer. Only
-     * Nextcloud Social is asked; one from before the switch answers 404, and no version tells them apart.
+     * Aloha Social is asked; one from before the switch answers 404, and no version tells them apart.
      */
     public suspend fun hidden(reader: SignedInAccount): Boolean? {
         if (!reader.capabilities.isNextcloudSocial) return null

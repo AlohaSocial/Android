@@ -7,7 +7,7 @@ import java.time.Instant
 import kotlinx.serialization.Serializable
 
 /*
- * The account-side surfaces Nextcloud Social serves beyond Mastodon's client API: authorized apps,
+ * The account-side surfaces Aloha Social serves beyond Mastodon's client API: authorized apps,
  * migration, statistics and channels.
  */
 

@@ -46,7 +46,7 @@ import social.aloha.core.navigation.InterestsKey
 import social.aloha.core.ui.SwitchRow
 
 /**
- * The hashtags Nextcloud Social has learnt the reader cares about, and those it is still weighing,
+ * The hashtags Aloha Social has learnt the reader cares about, and those it is still weighing,
  * as the server alone decides them; whether it learns at all; and forgetting them all.
  */
 @Composable

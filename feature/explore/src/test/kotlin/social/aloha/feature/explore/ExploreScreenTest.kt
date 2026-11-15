@@ -268,7 +268,7 @@ class ExploreScreenTest {
         captureScreenRoboImage("src/test/screenshots/$name.png")
     }
 
-    // one bucket, as Nextcloud Social keeps, a week, as Mastodon does, and none
+    // one bucket, as Aloha Social keeps, a week, as Mastodon does, and none
     private val trending = listOf(
         Tag("surf", history = listOf(TagHistory("1", "12", "0"))),
         Tag("waves", history = listOf(30, 22, 25, 9, 14, 4, 6).map { TagHistory("$it", "$it", "3") }),

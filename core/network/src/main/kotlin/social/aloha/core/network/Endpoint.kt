@@ -17,7 +17,7 @@ public enum class Authentication {
 
     /**
      * The Nextcloud app password as HTTP Basic, sent with `OCS-APIRequest: true`, without which
-     * Nextcloud Social answers 401 and non-OCS writes answer 412 "CSRF check failed".
+     * Aloha Social answers 401 and non-OCS writes answer 412 "CSRF check failed".
      */
     NextcloudSession,
 
@@ -67,7 +67,7 @@ public sealed interface Part {
  * at a call site.
  *
  * @property path relative to the API base, without a leading slash.
- * @property idempotencyKey sent as `Idempotency-Key`, which Nextcloud Social honours: two posts with
+ * @property idempotencyKey sent as `Idempotency-Key`, which Aloha Social honours: two posts with
  *   the same key return the same status, so a write that timed out can be retried safely.
  */
 public data class Endpoint(

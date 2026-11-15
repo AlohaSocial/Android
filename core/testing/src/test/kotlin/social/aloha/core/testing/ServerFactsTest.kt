@@ -17,7 +17,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 /**
- * What Nextcloud Social 0.26.97 was seen to do, pinned to the captured corpus. The client is built
+ * What Aloha Social 0.26.97 was seen to do, pinned to the captured corpus. The client is built
  * around each of these; when a re-capture after a server update changes one, the matching test
  * fails and the client code that works around it is due for review.
  */

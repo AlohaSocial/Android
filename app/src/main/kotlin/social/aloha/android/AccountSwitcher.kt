@@ -317,7 +317,7 @@ private val AccountPlace.look: Pair<ImageVector, Int>
         AccountPlace.Settings -> AlohaIcons.Settings to R.string.accounts_settings
     }
 
-/** The places only Nextcloud Social keeps. */
+/** The places only Aloha Social keeps. */
 private val NEXTCLOUD_ONLY = setOf(AccountPlace.Archived, AccountPlace.Statistics, AccountPlace.Interests)
 
 private val BUTTON_AVATAR = 32.dp

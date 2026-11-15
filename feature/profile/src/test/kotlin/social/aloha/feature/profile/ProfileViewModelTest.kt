@@ -70,7 +70,7 @@ import social.aloha.core.testing.NumberedTimeline
 import social.aloha.core.ui.RichTextColors
 
 /**
- * One remote account, Bob, as a Nextcloud Social server serves him: his statuses (numbered), a
+ * One remote account, Bob, as an Aloha Social server serves him: his statuses (numbered), a
  * relationship in which he follows the reader, twelve weeks of highlights, and no `lookup` for his
  * handle, so only a resolving search finds him.
  */

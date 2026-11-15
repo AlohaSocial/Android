@@ -19,7 +19,7 @@ import social.aloha.core.network.decoding.OptionalIntSerializer
 import social.aloha.core.network.decoding.OrNullSerializer
 
 /**
- * An attachment on the wire. Without ffmpeg Nextcloud Social sends `meta.original: []` and a preview
+ * An attachment on the wire. Without ffmpeg Aloha Social sends `meta.original: []` and a preview
  * equal to the video URL; a fork may send `meta: []`. Either shape leaves the dimensions absent.
  */
 @Serializable

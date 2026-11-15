@@ -54,7 +54,7 @@ public class Explore @Inject constructor(private val clients: ClientFactory, pri
         return answer
     }
 
-    /** Trending hashtags over [period], which only Nextcloud Social reads: `1h`, `12h`, `1d`, `3d` or `10d`. */
+    /** Trending hashtags over [period], which only Aloha Social reads: `1h`, `12h`, `1d`, `3d` or `10d`. */
     public suspend fun hashtags(reader: SignedInAccount, period: String = PERIODS[2]): Answer<List<Tag>> =
         clients.answer(reader, SearchEndpoints.trendingTags(limit = TRENDS, period = period))
 

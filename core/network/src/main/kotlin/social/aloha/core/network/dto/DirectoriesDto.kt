@@ -32,7 +32,7 @@ import social.aloha.core.network.decoding.OptionalIntSerializer
 import social.aloha.core.network.decoding.decodeOrRecord
 import social.aloha.core.network.decoding.lossy
 
-/** Nextcloud Social names a pack by `id`; the documented shape by `slug`. */
+/** Aloha Social names a pack by `id`; the documented shape by `slug`. */
 @Serializable
 internal data class StarterPackDto(
     @Serializable(with = LenientTextSerializer::class) val slug: String? = null,
@@ -67,7 +67,7 @@ internal fun StarterPackDto.toDomain(): StarterPack? {
         size = size?.takeIf { it > 0 } ?: maxOf(handles.size, accounts.size),
         accounts = accounts.map { it.toDomain() },
         source = source.orEmpty(),
-        // Nextcloud Social sends a Bluesky curator's bare DID where its handle is missing or invalid
+        // Aloha Social sends a Bluesky curator's bare DID where its handle is missing or invalid
         curator = curator?.removePrefix("@")?.takeUnless { it.startsWith("did:") },
         url = url?.takeIf { it.startsWith("https://") },
         topic = topic?.removePrefix("#"),

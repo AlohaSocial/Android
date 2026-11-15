@@ -132,7 +132,7 @@ class WatchViewModelTest {
     fun open() = runBlocking {
         reader = fixture.signIn(
             server.url("/"),
-            // a Nextcloud Social whose statuses say whose dislike they carry
+            // an Aloha Social whose statuses say whose dislike they carry
             ServerCapabilities.minimal(server.url("/").toString())
                 .copy(watchPositions = true, softwareName = "nextcloud-social", softwareVersion = "0.26.279"),
         )

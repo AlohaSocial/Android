@@ -42,7 +42,7 @@ public object AccountEndpoints {
     private const val SEARCH_LIMIT = 8
 
     /**
-     * The signed-in account. On Nextcloud Social this answers 500 for an account whose avatar has not
+     * The signed-in account. On Aloha Social this answers 500 for an account whose avatar has not
      * been cached yet; the caller falls back to `/oauth/userinfo` and retries later.
      */
     public fun verifyCredentials(): ApiRequest<Account> =
@@ -62,7 +62,7 @@ public object AccountEndpoints {
     ) { it.toDomain() }
 
     /**
-     * What a composer calls to complete a `@handle`; Nextcloud Social serves it for exactly that. With
+     * What a composer calls to complete a `@handle`; Aloha Social serves it for exactly that. With
      * [following], only the accounts the reader follows, as a list's members must be.
      */
     public fun search(

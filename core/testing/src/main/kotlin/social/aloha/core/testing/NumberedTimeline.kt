@@ -18,13 +18,13 @@ import mockwebserver3.RecordedRequest
 import okhttp3.HttpUrl
 
 /**
- * A timeline of numbered statuses, paged the way Mastodon and Nextcloud Social page it (checked against
+ * A timeline of numbered statuses, paged the way Mastodon and Aloha Social page it (checked against
  * the dev instance): `max_id` answers what lies below, `min_id` the posts immediately above, `since_id`
  * the newest above. New posts are added by raising [newest]. Favouriting, boosting and bookmarking answer
  * as the server would, or with a server error while [failActions] is set; filters and markers answer empty.
  * [media] gives a status its attachments; with [narrows] set the server honours `only_media`,
- * `only_video` and `only_short` as Nextcloud Social does, leaving out what does not match before it pages.
- * What is [hidden] is left out after paging, as Nextcloud Social's home leaves out what the reader's Bluesky
+ * `only_video` and `only_short` as Aloha Social does, leaving out what does not match before it pages.
+ * What is [hidden] is left out after paging, as Aloha Social's home leaves out what the reader's Bluesky
  * preferences hide: a page can come back short, or empty, and still name the next one.
  */
 public class NumberedTimeline(template: JsonObject = homeTemplate()) : Dispatcher() {
@@ -156,7 +156,7 @@ public class NumberedTimeline(template: JsonObject = homeTemplate()) : Dispatche
             ),
         )
 
-        /** Nextcloud Social's rule for `only_short`: a video no longer than 180 seconds, no wider than square. */
+        /** Aloha Social's rule for `only_short`: a video no longer than 180 seconds, no wider than square. */
         private fun isShort(attachment: JsonObject): Boolean {
             val original = attachment["meta"]?.jsonObject?.get("original")?.jsonObject ?: return false
             fun number(key: String) = original[key]?.jsonPrimitive?.doubleOrNull ?: 0.0
@@ -173,7 +173,7 @@ public class NumberedTimeline(template: JsonObject = homeTemplate()) : Dispatche
         private const val OK = 200
         private const val SERVER_ERROR = 500
 
-        /** The first status of the recorded Nextcloud Social home timeline, as every numbered status's shape. */
+        /** The first status of the recorded Aloha Social home timeline, as every numbered status's shape. */
         public fun homeTemplate(): JsonObject {
             val fixture = checkNotNull(
                 NumberedTimeline::class.java.getResource("/fixtures/nextcloud-social-0.26.97/api/timeline-home.json"),
