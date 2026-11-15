@@ -32,8 +32,9 @@ import social.aloha.core.network.repeatedQuery
  * @property mediaAttributes the descriptions and focal points of media already attached, sent with an
  *   edit: once attached, a medium cannot be changed on its own.
  * @property keepsMedia an edit that leaves the post's media as they were, so [mediaIds] is not sent:
- *   Nextcloud Social 0.26.279 serves media an edit named without their ids, and a later edit naming
- *   them by those empty ids is refused.
+ *   Nextcloud Social 0.26.279 to 0.26.298 serve media an edit named without their ids, and a later edit
+ *   naming them by those empty ids is refused. 0.26.299 keeps the ids of media an edit names but does
+ *   not restore those lost before, so an edit of such a post keeps its media.
  */
 public data class StatusPost(
     val text: String,

@@ -117,7 +117,9 @@ public data class ServerCapabilities(
 
     /**
      * Whether an edit changes the post's media, as `media_ids` says: every server but Nextcloud Social
-     * before 0.26.279, which ignored the list and kept the media as posted.
+     * before 0.26.279, which ignored the list and kept the media as posted. From 0.26.279 to 0.26.298 an
+     * edit that named media left them without their ids; 0.26.299 no longer does, but a post damaged so
+     * before stays so, and its media cannot be changed by an edit either.
      */
     val editsMedia: Boolean get() = !isNextcloudSocial || atLeast(softwareVersion, EDITS_MEDIA)
 

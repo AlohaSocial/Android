@@ -39,15 +39,20 @@ public data class DraftPost(
     val postedIds: List<String> = emptyList(),
     /** The writer's own post this one writes again, deleted only once this one is out. */
     val replaces: String? = null,
-    /** The media the post carried as it was, by id and in order, which an edit that keeps them leaves alone. */
+    /**
+     * The media the post carried as it was, by id and in order, which an edit that keeps them leaves alone,
+     * as it does those [damagedByEdit].
+     */
     val mediaAsPosted: List<String>? = null,
 ) {
     /**
      * Segment [index] as the server takes it, answering [inReplyToId]; the poll and time go with the
-     * first. An edit carries the media's descriptions with it, as attached media cannot be changed alone.
+     * first. An edit carries the media's descriptions with it, as attached media cannot be changed alone,
+     * unless the media were [damagedByEdit]: then it sends nothing of them.
      */
     public fun statusPost(index: Int, inReplyToId: String?, editing: Boolean = false): StatusPost {
         val segment = segments[index]
+        val damaged = editing && mediaAsPosted.damagedByEdit()
         val mediaIds = segment.media.mapNotNull(DraftMedia::mediaId)
         val poll = poll.takeIf { index == 0 }
         return StatusPost(
@@ -67,8 +72,8 @@ public data class DraftPost(
             idempotencyKey = requireNotNull(segment.key) { "a segment is keyed before it is sent" },
             quotePolicy = quotePolicy.takeIf { index == 0 },
             quotedId = quotedId.takeIf { index == 0 },
-            mediaAttributes = if (editing) segment.media.mapNotNull(DraftMedia::attribute) else emptyList(),
-            keepsMedia = editing && mediaIds == mediaAsPosted,
+            mediaAttributes = if (editing && !damaged) segment.media.mapNotNull(DraftMedia::attribute) else emptyList(),
+            keepsMedia = damaged || (editing && mediaIds == mediaAsPosted),
         )
     }
 
@@ -153,6 +158,13 @@ public fun draftOf(status: Status, text: String, spoiler: String): DraftPost = D
         DraftPoll(poll.options.map { it.title }, lasted ?: DAY_SECONDS, poll.multiple)
     },
 )
+
+/**
+ * Whether media a post carries, by id, lost their ids to an edit: Nextcloud Social 0.26.279 to 0.26.298
+ * stored an edited post's media with an empty id, which 0.26.299 no longer does but leaves as it is. An
+ * edit naming such media is refused, so the post's media stay as they are.
+ */
+public fun List<String>?.damagedByEdit(): Boolean = orEmpty().any(String::isBlank)
 
 /** What kind of file the server made [media] from, as far as its type tells. */
 public fun mimeTypeOf(media: MediaAttachment): String = when (media.type) {

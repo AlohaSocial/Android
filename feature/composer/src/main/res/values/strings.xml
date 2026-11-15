@@ -140,6 +140,10 @@
     <string name="composer_edit_note">Followers will see that this post was edited, and what it said before.</string>
     <!-- Shown under the edit note while editing a post on a server that keeps its pictures and videos as posted -->
     <string name="composer_edit_media_locked">This server can’t change the pictures and videos of a post that’s out. Their descriptions can still be changed.</string>
+    <!-- Shown under the edit note while editing a post whose pictures and videos an earlier edit on an older server left without the ids they are changed by -->
+    <string name="composer_edit_media_damaged">The pictures and videos of this post, and their descriptions, can’t be changed anymore.</string>
+    <!-- Shown above the text when a post is deleted and redrafted but some of its pictures or videos could not be taken into the new post -->
+    <string name="composer_redraft_media_left_out">Some pictures and videos of this post couldn’t be taken over. Attach them again to keep them in the new post.</string>
     <!-- Post button label when editing a post that is out already -->
     <string name="composer_save">Save</string>
     <!-- Button that keeps the post as a draft and leaves the composer -->

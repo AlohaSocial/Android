@@ -15,6 +15,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.getOrNull
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.assertIsNotFocused
 import androidx.compose.ui.test.hasSetTextAction
@@ -245,6 +248,33 @@ class ComposerScreenshotTest {
         val picture = Attachment("beach", File("beach.jpg"), "beach.jpg", "image/jpeg", UploadState.Done("1", null))
         state = fresh.copy(attachments = listOf(listOf(picture)))
         compose.onNodeWithText("Add to thread").assertExists()
+    }
+
+    @Test
+    fun `media an older edit left without ids cannot be described either, and the composer says so`() {
+        val picture = Attachment("beach", File("beach.jpg"), "beach.jpg", "image/jpeg", UploadState.Done("", null))
+        val damaged = fresh.copy(editing = true, attachments = listOf(listOf(picture)), mediaAsPosted = listOf(""))
+        var state by mutableStateOf(damaged)
+        compose.setContent { AlohaTheme { NewPost(state) } }
+        val describable = SemanticsMatcher("describable") {
+            it.config.getOrNull(SemanticsActions.OnClick)?.label ==
+                "Describe"
+        }
+        compose.onNodeWithText(
+            "The pictures and videos of this post, and their descriptions",
+            substring = true,
+        ).assertExists()
+        compose.onNode(describable).assertDoesNotExist()
+        // a server that keeps an edit's media still takes their descriptions
+        state = damaged.copy(mediaAsPosted = listOf("1"), editsMedia = false)
+        compose.onNodeWithText("Their descriptions can still be changed", substring = true).assertExists()
+        compose.onNode(describable).assertExists()
+    }
+
+    @Test
+    fun `a redraft that could not take some media over says so`() {
+        compose.setContent { AlohaTheme { NewPost(fresh.copy(mediaLeftOut = true)) } }
+        compose.onNodeWithText("couldn’t be taken over", substring = true).assertExists()
     }
 
     @Test

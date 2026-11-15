@@ -267,10 +267,18 @@ mobile connection this is the difference between possible and not.
   media are locked while editing: nothing can be attached, taken off or moved,
   only described, and a line under the edit note says so. Otherwise a picture
   the writer took off would stay published.
+- A post edited on Nextcloud Social 0.26.279 to 0.26.298 may serve its media
+  with an empty `id`, which 0.26.299 no longer makes but does not repair (read
+  from source, `1531f1147`). An edit naming such media is refused with 422, so
+  the composer locks the media of such a post on every server as above, their
+  descriptions too, says so in a line of its own, and the edit sends neither
+  `media_ids` nor `media_attributes`.
 - The composer in edit mode fetches `/api/v1/statuses/{id}/source` for the
   original plain text and spoiler — never the rendered HTML.
 - Editing shows a note that followers will see the post was edited, and the
   edit appears in `/history`.
 - **Delete & Redraft** is a distinct action: it fetches `/source`, opens a fresh
   composer prefilled, and deletes the original only after the new one posts
-  successfully.
+  successfully. Media with an empty `id` (see above) cannot be named in the new
+  post: they are left out, and a line above the text asks the writer to attach
+  them again.

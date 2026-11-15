@@ -509,7 +509,9 @@ internal class ComposerViewModel @AssistedInject constructor(
             poster.adopt(draft)
             // an edit's media, and those a redraft takes over, are the original post's: described already
             attachments.restore(draft, attached = editing != null || draft.replaces != null)
-            control.update { it.restored(draft, opened.entry, editing != null) }
+            control.update {
+                it.restored(draft, opened.entry, editing != null).copy(mediaLeftOut = opened.mediaLeftOut)
+            }
         } else {
             parent?.let { status ->
                 segments[0] = prefilled(status, account)
