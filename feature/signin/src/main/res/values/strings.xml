@@ -11,7 +11,7 @@
     <!-- Label of the text field where a person types their server, e.g. cloud.example.com -->
     <string name="signin_server_label">Your server</string>
     <!-- Hint under the server field -->
-    <string name="signin_server_supporting">A Nextcloud with Social, or any Mastodon server</string>
+    <string name="signin_server_supporting">A Nextcloud with Aloha Social, or any Mastodon server</string>
     <!-- Error under the server field when the text cannot be a server address -->
     <string name="signin_server_invalid">That doesn\'t look like a server address. Try something like cloud.example.com.</string>
     <!-- Shown under the server field when the address starts with http://; the app only connects over https -->
