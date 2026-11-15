@@ -18,6 +18,6 @@ internal object FlavorModule {
     fun phoneAccounts(): PhoneAccounts = object : PhoneAccounts {
         override suspend fun reachable(): Boolean = false
 
-        override suspend fun account(): HandedOverAccount? = null
+        override suspend fun account(refused: String?): HandedOverAccount? = null
     }
 }

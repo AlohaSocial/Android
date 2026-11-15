@@ -13,6 +13,9 @@ interface PhoneAccounts {
     /** Whether a phone with the app on it is in reach. */
     suspend fun reachable(): Boolean
 
-    /** The phone's account, or null: nobody signed in there, or no answer in time. */
-    suspend fun account(): HandedOverAccount?
+    /**
+     * The phone's account, or null: nobody signed in there, or no answer in time. With the token the server
+     * [refused], the phone renews the account holding it first and answers with that one.
+     */
+    suspend fun account(refused: String? = null): HandedOverAccount?
 }

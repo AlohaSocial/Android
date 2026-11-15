@@ -66,6 +66,17 @@ class WatchAccounts @Inject constructor(private val vault: TokenVault) {
 
     suspend fun forget(): Unit = changing.withLock { remove() }
 
+    /**
+     * Puts the phone's [new] token in place of [old] in an account handed over from the phone, only while it
+     * still holds [old]: an account signed in or renewed since then stays as it is.
+     */
+    suspend fun renew(old: String, new: String): Unit = changing.withLock {
+        val current = current()?.takeIf { it.shared && it.token == old } ?: return@withLock
+        val renewed = current.copy(token = new)
+        vault.put(VaultKey.WatchAccount, json.encodeToString(WatchAccount.serializer(), renewed))
+        changes.value = renewed
+    }
+
     /** Forgets the account only while it still holds [token]: one signed in since then stays. */
     suspend fun forget(token: String): Unit = changing.withLock {
         if (current()?.token == token) remove()

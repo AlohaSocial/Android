@@ -33,7 +33,7 @@ import social.aloha.wear.auth.WatchAccounts
 class DataLayerPhoneAccounts @Inject constructor(@ApplicationContext private val context: Context) : PhoneAccounts {
     override suspend fun reachable(): Boolean = phone() != null
 
-    override suspend fun account(): HandedOverAccount? {
+    override suspend fun account(refused: String?): HandedOverAccount? {
         val phone = phone() ?: return null
         val messages = Wearable.getMessageClient(context)
         val answer = CompletableDeferred<ByteArray>()
@@ -42,7 +42,8 @@ class DataLayerPhoneAccounts @Inject constructor(@ApplicationContext private val
         }
         return try {
             messages.addListener(listener).await()
-            messages.sendMessage(phone, WatchHandover.REQUEST, ByteArray(0)).await()
+            val digest = refused?.let(WatchHandover::digest).orEmpty()
+            messages.sendMessage(phone, WatchHandover.REQUEST, digest.encodeToByteArray()).await()
             withTimeoutOrNull(ANSWER_MILLIS) { answer.await() }?.takeIf { it.isNotEmpty() }?.let(::decode)
         } catch (_: ApiException) {
             null
@@ -65,8 +66,9 @@ class DataLayerPhoneAccounts @Inject constructor(@ApplicationContext private val
 }
 
 /**
- * The phone signed an account out: the watch forgets it at once where it holds that very session, by its token's
- * digest, so a notice that arrives late or comes from another phone never ends a newer handover.
+ * The phone signed an account out, or renewed its token: the watch forgets the account, or takes the new
+ * token, at once where it holds that very session, by its token's digest, so a notice that arrives late or
+ * comes from another phone never ends or changes a newer handover.
  */
 @AndroidEntryPoint
 class PhoneSignOutService : WearableListenerService() {
@@ -77,12 +79,14 @@ class PhoneSignOutService : WearableListenerService() {
     lateinit var scope: CoroutineScope
 
     override fun onMessageReceived(event: MessageEvent) {
-        if (event.path != WatchHandover.SIGNED_OUT) return
-        val gone = decode(event.data) ?: return
+        if (event.path != WatchHandover.SIGNED_OUT && event.path != WatchHandover.RENEWED) return
+        val notice = decode(event.data) ?: return
         scope.launch {
             val current = accounts.current()
-            if (current?.shared == true && WatchHandover.digest(current.token) == gone.tokenDigest) {
-                accounts.forget(current.token)
+            if (current?.shared != true || WatchHandover.digest(current.token) != notice.tokenDigest) return@launch
+            when {
+                event.path == WatchHandover.SIGNED_OUT -> accounts.forget(current.token)
+                notice.token.isNotEmpty() -> accounts.renew(current.token, notice.token)
             }
         }
     }

@@ -63,6 +63,8 @@ public data class AccountSettings(
     val notificationsFrom: NotificationsFrom = NotificationsFrom.Anyone,
     /** Whether this account's server last took the numbers as hidden; null until it took either. */
     val countsHidden: Boolean? = null,
+    /** Whether this phone handed the account to a watch with its token, so the watch hears of each renewed one. */
+    val handedToWatch: Boolean = false,
 )
 
 /**
