@@ -64,10 +64,12 @@ public class SignedInFixture(private val context: Context) : Closeable {
 
     public val vault: TokenVault = TokenVault(InMemoryDataStore(ByteArray(0)), FakeSecretCipher(), Dispatchers.IO)
 
+    public val preferences: AppPreferences = AppPreferences(InMemoryDataStore(emptyPreferences()))
+
     public val accounts: AccountRepository = AccountRepository(
         database.accountDao(),
         vault,
-        AppPreferences(InMemoryDataStore(emptyPreferences())),
+        preferences,
         clock,
         scope,
     )

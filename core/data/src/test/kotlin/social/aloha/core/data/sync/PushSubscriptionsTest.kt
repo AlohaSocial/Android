@@ -19,8 +19,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import social.aloha.core.datastore.AccountSettingsStore
-import social.aloha.core.datastore.AppPreferences
 import social.aloha.core.datastore.PushRefusals
+import social.aloha.core.model.NotificationsFrom
 import social.aloha.core.testing.InMemoryDataStore
 import social.aloha.core.testing.SignedInFixture
 
@@ -31,7 +31,7 @@ class PushSubscriptionsTest {
     private val server = MockWebServer().apply { start() }
     private val push = PushSubscriptions(
         fixture.clients,
-        AppPreferences(InMemoryDataStore(emptyPreferences())),
+        fixture.preferences,
         AccountSettingsStore(InMemoryDataStore(emptyMap())),
         PushRefusals(InMemoryDataStore(emptyPreferences())),
     )
@@ -86,6 +86,55 @@ class PushSubscriptionsTest {
         push.unsubscribe(account)
         assertFalse(push.subscribed(account.id, account.id, endpoint))
     }
+
+    @Test
+    fun `a token the server refused takes its subscription along, so signing in again subscribes again`() =
+        runBlocking {
+            val account = fixture.signIn(server.url("/"))
+            val endpoint = "https://ntfy.example/up123"
+            ok()
+            push.subscribe(account, endpoint, "pub-key", "auth-secret")
+            push.rememberEndpoint(account.id, endpoint)
+            server.takeRequest(1, TimeUnit.SECONDS)
+            server.enqueue(MockResponse.Builder().code(401).body("""{"error":"invalid_token"}""").build())
+            push.setPolicy(account, NotificationsFrom.Following)
+            server.takeRequest(1, TimeUnit.SECONDS)
+            assertTrue(checkNotNull(fixture.accounts.byId(account.id)).needsReauth)
+            assertFalse(push.isActive(account.id))
+            val again = fixture.signIn(server.url("/"))
+            assertFalse(push.subscribed(again.id, again.id, endpoint))
+            ok()
+            assertNull(push.subscribe(again, endpoint, "pub-key", "auth-secret"))
+            val sent = checkNotNull(server.takeRequest(1, TimeUnit.SECONDS))
+            assertEquals("POST /api/v1/push/subscription", "${sent.method} ${sent.url.encodedPath}")
+            push.rememberEndpoint(again.id, endpoint)
+            assertTrue(push.subscribed(again.id, again.id, endpoint))
+        }
+
+    @Test
+    fun `push through the Nextcloud outlives a token the server refused`() = runBlocking {
+        val account = fixture.signIn(server.url("/"))
+        val instance = "nextcloud:${account.id}"
+        val endpoint = "https://ntfy.example/up123"
+        push.rememberEndpoint(instance, endpoint)
+        push.markActive(account.id)
+        fixture.accounts.markNeedsReauth(account.id)
+        assertTrue(push.subscribed(account.id, instance, endpoint))
+    }
+
+    @Test
+    fun `a server subscription still being removed leaves push through the Nextcloud to a refused token`() =
+        runBlocking {
+            val account = fixture.signIn(server.url("/"))
+            val instance = "nextcloud:${account.id}"
+            val endpoint = "https://ntfy.example/up123"
+            push.rememberEndpoint(account.id, "https://ntfy.example/old")
+            push.rememberEndpoint(instance, endpoint)
+            push.markActive(account.id)
+            fixture.accounts.markNeedsReauth(account.id)
+            assertTrue(push.subscribed(account.id, instance, endpoint))
+            assertNull(push.endpoint(account.id))
+        }
 
     @Test
     fun `a refused subscription leaves the account polled, and is not asked for again until forgotten`() = runBlocking {

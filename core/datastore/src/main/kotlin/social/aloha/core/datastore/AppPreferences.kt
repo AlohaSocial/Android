@@ -69,9 +69,18 @@ public class AppPreferences(private val store: DataStore<Preferences>) {
         it[stringPreferencesKey(ENDPOINT + instance)]
     }
 
-    public suspend fun setPushEndpoint(instance: String, endpoint: String?) {
+    /**
+     * Records [endpoint] for registration [instance], or none. With [stopsPush], an endpoint that was
+     * recorded also takes [instance], an account's own registration, off the accounts pushed to; one
+     * with an endpoint recorded for its Nextcloud is left as it is.
+     */
+    public suspend fun setPushEndpoint(instance: String, endpoint: String?, stopsPush: Boolean = false) {
         val key = stringPreferencesKey(ENDPOINT + instance)
-        store.edit { if (endpoint == null) it.remove(key) else it[key] = endpoint }
+        val nextcloud = stringPreferencesKey(ENDPOINT + NEXTCLOUD + instance)
+        store.edit {
+            if (stopsPush && key in it && nextcloud !in it) it[PUSH_ACCOUNTS] = it[PUSH_ACCOUNTS].orEmpty() - instance
+            if (endpoint == null) it.remove(key) else it[key] = endpoint
+        }
     }
 
     /** Whether the person was asked to allow notifications; a second ask goes to the system settings. */
@@ -193,6 +202,7 @@ public class AppPreferences(private val store: DataStore<Preferences>) {
         val THEME_CUSTOM_ACCENT = intPreferencesKey("theme_custom_accent")
         val THEME_ACCENT_PER_ACCOUNT = booleanPreferencesKey("theme_accent_per_account")
         const val ENDPOINT = "push_endpoint:"
+        const val NEXTCLOUD = "nextcloud:"
 
         inline fun <reified T : Enum<T>> choice(stored: String?, default: T): T =
             enumValues<T>().firstOrNull { it.name == stored } ?: default

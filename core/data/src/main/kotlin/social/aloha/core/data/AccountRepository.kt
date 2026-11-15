@@ -122,10 +122,14 @@ public class AccountRepository @Inject constructor(
         if (dao.get(id) != null) preferences.setActiveAccountId(id)
     }
 
-    /** The server refused the token: keep the account and its cache, ask for a new sign-in. */
+    /**
+     * The server refused the token: keep the account and its cache, ask for a new sign-in. Its Web Push
+     * subscription is forgotten, since Nextcloud Social deletes it with the token it was made with.
+     */
     public suspend fun markNeedsReauth(id: String) {
         Timber.tag(LogArea.Auth.name).i("Account %s needs a new sign-in", id)
         dao.setNeedsReauth(id, needsReauth = true)
+        preferences.setPushEndpoint(id, null, stopsPush = true)
     }
 
     /** Stores freshly detected capabilities; their API base becomes the account's, which a re-probe may have moved. */
