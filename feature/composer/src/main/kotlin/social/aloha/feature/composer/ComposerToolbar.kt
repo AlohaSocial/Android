@@ -99,7 +99,7 @@ internal fun Toolbar(
 
 /**
  * Attaching pictures, videos or files, while the post has room for them, and marking them sensitive; or
- * a poll instead, on an opening post without media.
+ * a poll instead, on an opening post without media, or an event where the server takes one.
  */
 @Composable
 private fun MediaButtons(state: ComposerUiState, actions: ComposerActions) {
@@ -107,6 +107,7 @@ private fun MediaButtons(state: ComposerUiState, actions: ComposerActions) {
     AttachButton(state, actions)
     ShareAs(state, actions)
     PollToggle(state, actions)
+    EventToggle(state, actions)
     if (attached > 0) {
         OutlinedIconToggleButton(checked = state.mediaSensitive, onCheckedChange = actions::onSensitive) {
             Icon(AlohaIcons.Sensitive, stringResource(R.string.composer_media_sensitive))

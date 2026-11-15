@@ -142,6 +142,18 @@ public data class ServerCapabilities(
     val statusCounts: Boolean get() = isNextcloudSocial && atLeast(softwareVersion, STATUS_COUNTS)
 
     /**
+     * Whether a new post can be an event, with a title, a start, and an end and venue where given (`event` on
+     * `POST /statuses`): Nextcloud Social from 0.26.279 on. Nothing announces it, so the version decides.
+     */
+    val postsEvents: Boolean get() = isNextcloudSocial && atLeast(softwareVersion, EVENTS)
+
+    /**
+     * Whether a new event post keeps what the organiser says of it, such as cancelled (`event[status]` on
+     * `POST /statuses`): Nextcloud Social from 0.26.280 on, read from source. Before, the server drops it.
+     */
+    val postsEventStatus: Boolean get() = isNextcloudSocial && atLeast(softwareVersion, EVENT_STATUS)
+
+    /**
      * The `types[]` a notifications request names to have every kind this app shows. Nextcloud Social leaves
      * its own kinds out of a page asked for with a token unless they are named, so there it names them all;
      * elsewhere none, which means every kind.
@@ -196,6 +208,8 @@ public data class ServerCapabilities(
         private val CUSTOM_EMOJI_REACTIONS = listOf(0, 26, 280)
         private val MEDIA_TYPE = listOf(0, 26, 279)
         private val STATUS_COUNTS = listOf(0, 26, 284)
+        private val EVENTS = listOf(0, 26, 279)
+        private val EVENT_STATUS = listOf(0, 26, 280)
 
         /** Raised whenever detection learns a new field: 1 added the live feeds, 2 the Shorts narrowing. */
         public const val CURRENT_FORMAT: Int = 2

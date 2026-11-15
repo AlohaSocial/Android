@@ -52,6 +52,26 @@ class ReactionsOnStatusTest {
     }
 
     @Test
+    fun `a post can be an event from 0,26,279 on, and only on Nextcloud Social`() {
+        fun events(name: String, version: String) =
+            ServerCapabilities.minimal("https://x.test/").copy(softwareName = name, softwareVersion = version)
+                .postsEvents
+        assertEquals(false, events("nextcloud-social", "0.26.278"))
+        assertEquals(true, events("nextcloud-social", "0.26.279"))
+        assertEquals(false, events("mastodon", "4.5.0"))
+    }
+
+    @Test
+    fun `an event post keeps its status from 0,26,280 on, and only on Nextcloud Social`() {
+        fun statuses(name: String, version: String) =
+            ServerCapabilities.minimal("https://x.test/").copy(softwareName = name, softwareVersion = version)
+                .postsEventStatus
+        assertEquals(false, statuses("nextcloud-social", "0.26.279"))
+        assertEquals(true, statuses("nextcloud-social", "0.26.280"))
+        assertEquals(false, statuses("mastodon", "4.5.0"))
+    }
+
+    @Test
     fun `a dislike is offered on Nextcloud Social after 0,26,278 alone`() {
         fun dislikes(name: String, version: String) =
             ServerCapabilities.minimal("https://x.test/").copy(softwareName = name, softwareVersion = version).dislikes

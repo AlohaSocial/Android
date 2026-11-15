@@ -6,6 +6,7 @@ package social.aloha.feature.composer
 import androidx.compose.ui.text.input.TextFieldValue
 import java.time.Instant
 import social.aloha.core.model.CustomEmoji
+import social.aloha.core.model.StatusEvent
 import social.aloha.core.model.Visibility
 
 /** What the composer's controls do; the screen itself decides nothing. */
@@ -14,7 +15,8 @@ internal interface ComposerActions :
     AssistActions,
     LaterActions,
     QuoteActions,
-    TypingActions {
+    TypingActions,
+    EventActions {
     fun onClose()
 
     fun onPost()
@@ -62,6 +64,12 @@ internal interface TypingActions {
     fun onFindPeople(query: String)
 
     fun onEmoji(emoji: CustomEmoji)
+}
+
+/** What the event controls do. */
+internal interface EventActions {
+    /** Sets what makes the opening post an event, which takes the place of its poll; null removes it. */
+    fun onEvent(event: StatusEvent?)
 }
 
 /** What the controls for later do: scheduling, and the posts kept for later. */

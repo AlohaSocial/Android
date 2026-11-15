@@ -4,6 +4,7 @@
 package social.aloha.core.network.endpoints
 
 import java.time.Instant
+import java.time.temporal.ChronoUnit
 import java.util.Locale
 import java.util.UUID
 import kotlinx.serialization.json.JsonObject
@@ -14,6 +15,7 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 import kotlinx.serialization.json.putJsonObject
+import social.aloha.core.model.StatusEvent
 import social.aloha.core.model.Visibility
 import social.aloha.core.network.QueryItem
 import social.aloha.core.network.queryOf
@@ -35,6 +37,8 @@ import social.aloha.core.network.repeatedQuery
  *   Nextcloud Social 0.26.279 to 0.26.298 serve media an edit named without their ids, and a later edit
  *   naming them by those empty ids is refused. 0.26.299 keeps the ids of media an edit names but does
  *   not restore those lost before, so an edit of such a post keeps its media.
+ * @property event what makes the post an event, Nextcloud Social's own `event`: sent with a new post only.
+ *   An edit leaves it out, which keeps the event the post has (0.26.279, read from source).
  */
 public data class StatusPost(
     val text: String,
@@ -64,6 +68,7 @@ public data class StatusPost(
     val contentType: String? = null,
     val mediaAttributes: List<MediaAttribute> = emptyList(),
     val keepsMedia: Boolean = false,
+    val event: StatusEvent? = null,
 ) {
     internal fun formItems(): List<QueryItem> = listOf(
         QueryItem("status", text),
@@ -72,7 +77,7 @@ public data class StatusPost(
     ) + queryOf("spoiler_text", spoilerText) + queryOf("language", language) +
         queryOf("in_reply_to_id", inReplyToId) +
         repeatedQuery("media_ids", mediaIds) + pollItems() + queryOf("scheduled_at", scheduledAt?.toString()) +
-        mediaAttributes.flatMap(MediaAttribute::items) + extras()
+        mediaAttributes.flatMap(MediaAttribute::items) + extras() + eventItems()
 
     /**
      * The post as an edit sends it. JSON, as a form cannot say an empty list: `media_ids` is the post's
@@ -128,6 +133,19 @@ public data class StatusPost(
             placeItems() +
             queryOf("post_as", postAs) + queryOf("video_title", videoTitle) + queryOf("video_category", videoCategory) +
             queryOf("video_licence", videoLicence) + queryOf("content_type", contentType)
+
+    /**
+     * The event, its times in UTC to the second, which is all the server keeps of an ISO 8601 time, and its
+     * status in lower case, which Nextcloud Social reads from 0.26.280 on (read from source).
+     */
+    private fun eventItems(): List<QueryItem> {
+        val event = event ?: return emptyList()
+        return listOf(QueryItem("event[name]", event.name.trim())) +
+            queryOf("event[start_time]", event.startsAt?.truncatedTo(ChronoUnit.SECONDS)?.toString()) +
+            queryOf("event[end_time]", event.endsAt?.truncatedTo(ChronoUnit.SECONDS)?.toString()) +
+            queryOf("event[location]", event.location.trim().ifEmpty { null }) +
+            queryOf("event[status]", event.status?.name?.lowercase(Locale.ROOT))
+    }
 
     private fun placeItems(): List<QueryItem> = when {
         placeId != null -> listOf(QueryItem("place_id", placeId))

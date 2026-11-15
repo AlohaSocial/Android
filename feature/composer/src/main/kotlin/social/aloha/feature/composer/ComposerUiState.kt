@@ -4,12 +4,14 @@
 package social.aloha.feature.composer
 
 import android.content.res.Resources
+import androidx.annotation.StringRes
 import androidx.compose.runtime.Immutable
 import java.time.Instant
 import social.aloha.core.data.Trouble
 import social.aloha.core.data.compose.DraftPost
 import social.aloha.core.data.compose.damagedByEdit
 import social.aloha.core.model.CustomEmoji
+import social.aloha.core.model.StatusEvent
 import social.aloha.core.model.Visibility
 import social.aloha.core.sync.UploadState
 import social.aloha.core.sync.heldMessage
@@ -103,6 +105,13 @@ internal sealed interface PostFailure {
     }
 }
 
+/** What keeps an event from going out, as the server would refuse it. */
+internal enum class EventProblem(@StringRes val message: Int) {
+    NoTitle(R.string.composer_event_no_title),
+    NoStart(R.string.composer_event_no_start),
+    EndBeforeStart(R.string.composer_event_end_before_start),
+}
+
 /** A poll as the writer builds it; it goes out with the opening post, never together with media. */
 @Immutable
 internal data class PollUi(
@@ -172,6 +181,14 @@ internal data class ComposerUiState(
     val maxPollOptions: Int = 4,
     val maxPollOptionCharacters: Int = 50,
     val pollDurations: List<Long> = listOf(PollUi.DAY_SECONDS),
+    /** Whether the server takes a new post as an event. */
+    val events: Boolean = false,
+    /** Whether the server keeps an event's status, such as cancelled. */
+    val eventStatuses: Boolean = false,
+    /** What makes the opening post an event, when it is one; it has no poll then. */
+    val event: StatusEvent? = null,
+    /** A cancelled event was left out, as this server would post it as going ahead. */
+    val eventLeftOut: Boolean = false,
     /** When the post goes out, if not now; a thread cannot be scheduled. */
     val scheduledAt: Instant? = null,
     /** Whether the server has a GIF library of its own to attach from. */
@@ -227,7 +244,7 @@ internal data class ComposerUiState(
 ) {
     val canPost: Boolean
         get() = ready && author != null && !posting && !empty && remaining.all { it >= 0 } && (uploaded || canWait) &&
-            poll?.ready(maxPollOptionCharacters) != false
+            poll?.ready(maxPollOptionCharacters) != false && event?.problem == null && (poll == null || event == null)
 
     /** An edit of a post whose media lost their ids to an earlier edit: they and their descriptions stay. */
     val mediaDamaged: Boolean get() = editing && mediaAsPosted.damagedByEdit()

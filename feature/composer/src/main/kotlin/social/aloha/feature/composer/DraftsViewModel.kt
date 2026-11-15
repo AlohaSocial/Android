@@ -174,6 +174,7 @@ private fun DraftRow(entry: OutboxEntry, actions: DraftsActions) {
                     .takeIf { post.segments.size > 1 },
                 pluralStringResource(R.plurals.composer_media_count, media, media).takeIf { media > 0 },
                 stringResource(R.string.drafts_poll).takeIf { post.poll != null },
+                stringResource(R.string.drafts_event).takeIf { post.event != null },
                 post.scheduledAt?.let { stringResource(R.string.composer_scheduled_for, fullDate(it)) },
             )
             if (extras.isNotEmpty()) {

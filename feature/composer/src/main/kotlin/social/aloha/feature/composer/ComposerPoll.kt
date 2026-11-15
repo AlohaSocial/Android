@@ -292,10 +292,10 @@ private fun durationLabel(seconds: Long): String {
     }
 }
 
-/** A poll, on an opening post without media or a card; removing it is always allowed. */
+/** A poll, on an opening post without media, a card or an event; removing it is always allowed. */
 @Composable
 internal fun PollToggle(state: ComposerUiState, actions: MediaActions) {
-    val pollable = state.attachments.first().isEmpty() && !state.card.on
+    val pollable = state.attachments.first().isEmpty() && !state.card.on && state.event == null
     OutlinedIconToggleButton(
         checked = state.poll != null,
         onCheckedChange = { actions.onPoll(if (it) PollUi(seconds = state.pollDurations.defaultLength()) else null) },

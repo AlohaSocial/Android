@@ -144,6 +144,8 @@
     <string name="composer_edit_media_damaged">The pictures and videos of this post, and their descriptions, can’t be changed anymore.</string>
     <!-- Shown above the text when a post is deleted and redrafted but some of its pictures or videos could not be taken into the new post -->
     <string name="composer_redraft_media_left_out">Some pictures and videos of this post couldn’t be taken over. Attach them again to keep them in the new post.</string>
+    <!-- Shown above the text when a post about a cancelled event is redrafted for a server too old to post an event as cancelled, so the event was taken off the new post -->
+    <string name="composer_event_cancelled_left_out">This event is cancelled, and your server can’t post it as cancelled, so the new post isn’t an event.</string>
     <!-- Post button label when editing a post that is out already -->
     <string name="composer_save">Save</string>
     <!-- Button that keeps the post as a draft and leaves the composer -->
@@ -332,6 +334,34 @@
     <string name="composer_poll_multiple">Several answers allowed</string>
     <!-- Checkbox: the counts stay hidden until the poll ends -->
     <string name="composer_poll_hide_totals">Hide the results until it ends</string>
+    <!-- Toolbar toggle that makes the post an event, with a title and a time, or an ordinary post again -->
+    <string name="composer_event_add_toggle">Event</string>
+    <!-- Heading of the event editor under the post -->
+    <string name="composer_event">Event</string>
+    <!-- Button that removes the event, leaving an ordinary post -->
+    <string name="composer_event_remove">Remove the event</string>
+    <!-- Label of the field for the event's title -->
+    <string name="composer_event_title">Title</string>
+    <!-- Label of the field for where the event takes place; it may be left empty -->
+    <string name="composer_event_location">Place (optional)</string>
+    <!-- Button that opens the day and time picker for when the event starts, before one is picked -->
+    <string name="composer_event_pick_start">When does it start?</string>
+    <!-- Button showing when the event starts; a tap changes it. The placeholder is a date and time -->
+    <string name="composer_event_starts">Starts %1$s</string>
+    <!-- Button that opens the day and time picker for when the event ends, which may be left out -->
+    <string name="composer_event_pick_end">Add an end (optional)</string>
+    <!-- Button showing when the event ends; a tap changes it. The placeholder is a date and time -->
+    <string name="composer_event_ends">Ends %1$s</string>
+    <!-- Button next to the event's end that removes it -->
+    <string name="composer_event_end_clear">Remove the end</string>
+    <!-- Button in the time picker that takes the time for the event's start or end -->
+    <string name="composer_event_time_confirm">Done</string>
+    <!-- Shown under the event editor while its title is empty; the post cannot go out until it has one -->
+    <string name="composer_event_no_title">An event needs a title.</string>
+    <!-- Shown under the event editor while no start is picked; the post cannot go out until it has one -->
+    <string name="composer_event_no_start">An event needs a start.</string>
+    <!-- Shown under the event editor when its end is not after its start -->
+    <string name="composer_event_end_before_start">The end has to come after the start.</string>
     <!-- A poll's length in minutes -->
     <plurals name="composer_poll_minutes">
         <item quantity="one">%1$d minute</item>
@@ -438,6 +468,8 @@
     <string name="drafts_resume">Send</string>
     <!-- Shown for a draft with a poll -->
     <string name="drafts_poll">Poll</string>
+    <!-- Shown for a draft that is an event -->
+    <string name="drafts_event">Event</string>
     <!-- Spoken label of a draft's delete button; the placeholder is the start of its text -->
     <string name="drafts_delete_one">Delete the draft \u201c%1$s\u201d</string>
     <!-- Button that deletes a draft, and the confirm button of the dialog asking -->

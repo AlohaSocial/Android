@@ -11,6 +11,7 @@ import social.aloha.core.model.AttachmentKind
 import social.aloha.core.model.InstantSerializer
 import social.aloha.core.model.MediaAttachment
 import social.aloha.core.model.Status
+import social.aloha.core.model.StatusEvent
 import social.aloha.core.model.Visibility
 import social.aloha.core.network.endpoints.MediaAttribute
 import social.aloha.core.network.endpoints.StatusPost
@@ -44,10 +45,12 @@ public data class DraftPost(
      * as it does those [damagedByEdit].
      */
     val mediaAsPosted: List<String>? = null,
+    /** What makes the opening post an event; it goes with a new post, an edit keeps the one it has. */
+    val event: StatusEvent? = null,
 ) {
     /**
-     * Segment [index] as the server takes it, answering [inReplyToId]; the poll and time go with the
-     * first. An edit carries the media's descriptions with it, as attached media cannot be changed alone,
+     * Segment [index] as the server takes it, answering [inReplyToId]; the poll, event and time go with
+     * the first. An edit carries the media's descriptions with it, as attached media cannot be changed alone,
      * unless the media were [damagedByEdit]: then it sends nothing of them.
      */
     public fun statusPost(index: Int, inReplyToId: String?, editing: Boolean = false): StatusPost {
@@ -74,6 +77,7 @@ public data class DraftPost(
             quotedId = quotedId.takeIf { index == 0 },
             mediaAttributes = if (editing && !damaged) segment.media.mapNotNull(DraftMedia::attribute) else emptyList(),
             keepsMedia = damaged || (editing && mediaIds == mediaAsPosted),
+            event = event.takeIf { index == 0 },
         )
     }
 

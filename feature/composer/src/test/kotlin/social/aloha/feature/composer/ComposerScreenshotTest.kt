@@ -61,6 +61,7 @@ import social.aloha.core.model.MediaAttachment
 import social.aloha.core.model.OutboxState
 import social.aloha.core.model.ScheduledStatus
 import social.aloha.core.model.ScheduledStatusParams
+import social.aloha.core.model.StatusEvent
 import social.aloha.core.model.Visibility
 import social.aloha.core.model.Writing
 import social.aloha.core.sync.UploadState
@@ -106,6 +107,8 @@ class ComposerScreenshotTest {
         override fun onPaste() = Unit
 
         override fun onPoll(poll: PollUi?) = Unit
+
+        override fun onEvent(event: StatusEvent?) = Unit
 
         override fun onPickSchedule() = Unit
 
@@ -452,6 +455,22 @@ class ComposerScreenshotTest {
                 maxPollOptionCharacters = 25,
                 pollDurations = PollUi.durations(300, 604_800),
                 scheduledAt = Instant.parse("2030-06-01T07:30:00Z"),
+            ),
+        )
+    }
+
+    // an event with a title and a start, whose end comes before it
+    @Test
+    fun event() = capture("composer-event") {
+        NewPost(
+            fresh.copy(
+                events = true,
+                event = StatusEvent(
+                    "Beach clean-up",
+                    Instant.parse("2030-06-01T07:30:00Z"),
+                    Instant.parse("2030-06-01T07:00:00Z"),
+                    location = "North shore",
+                ),
             ),
         )
     }

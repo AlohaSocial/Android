@@ -110,6 +110,9 @@ internal class Posts(private val script: MutableList<Int>) : Dispatcher() {
      */
     @Volatile var pictureId = "m1"
 
+    /** The event the reader's own post is, as Nextcloud Social 0.26.279 renders one; null for none. */
+    @Volatile var event: JsonObject? = null
+
     /** The reader's own post [id], with a described picture, and its source [text] as a delete answers. */
     fun own(id: String, text: String?): JsonObject {
         val picture = JsonObject(
@@ -123,7 +126,7 @@ internal class Posts(private val script: MutableList<Int>) : Dispatcher() {
         return JsonObject(
             status(id) + ("visibility" to JsonPrimitive("unlisted")) +
                 ("text" to (text?.let(::JsonPrimitive) ?: JsonNull)) +
-                ("media_attachments" to JsonArray(listOf(picture))),
+                ("media_attachments" to JsonArray(listOf(picture))) + ("event" to (event ?: JsonNull)),
         )
     }
 

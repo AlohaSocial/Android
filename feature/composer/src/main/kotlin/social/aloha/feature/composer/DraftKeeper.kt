@@ -130,6 +130,7 @@ internal fun ComposerUiState.draft(
     scheduledAt = scheduledAt,
     replaces = replaces,
     mediaAsPosted = mediaAsPosted,
+    event = event,
 )
 
 /**
@@ -146,7 +147,7 @@ internal fun ComposerUiState.restored(draft: DraftPost, entry: OutboxEntry?, edi
     editing = editing,
     replaces = draft.replaces,
     mediaAsPosted = draft.mediaAsPosted,
-)
+).withEvent(draft.event)
 
 /**
  * Puts back the attachments [draft] kept, each in its post: uploaded already, or uploading again;
