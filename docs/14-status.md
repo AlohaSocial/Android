@@ -1,6 +1,24 @@
-# 14 — Status
+# Aloha Social — 14 — Status
 
 What is built, what is in progress, and what is not built or deliberately different from the specification. Kept by hand: a pull request that builds one of the items below takes it off this page.
+
+## Progress
+
+Phase 21, what Nextcloud Social 0.26.279 to 0.26.299 changed (server `aloha/main` at `2eb023b11`, 2026-11-14), taken up as stacked pull requests. Legend: ⬜ not started · 🔄 in progress · ✅ done · ⚠️ blocked · 🚫 dropped.
+
+| Item | Status | Note |
+|---|---|---|
+| 21a: Push again after a forced sign-in | 🔄 | |
+| 21b: Refresh tokens | 🔄 | |
+| 21j: The watch keeps the phone's account through a refresh | 🔄 | |
+| 21c: Edits of media an older server damaged | 🔄 | |
+| 21d: Hidden followers and following | 🔄 | |
+| 21e: Interests learning off until chosen | 🔄 | |
+| 21f: Replies and counts the server is still reading | 🔄 | |
+| 21g: Posting an event | 🔄 | |
+| 21h: Posts held for review | 🔄 | |
+| 21i: Small avatars and hidden instance counts | 🔄 | |
+| Long-form titles, the badges route, For You v4 | 🚫 | Not taken up; see Phase 21 under In progress |
 
 ## Built
 
@@ -29,6 +47,7 @@ Each phase was one pull request into `main`.
 | 19a | [#34](https://github.com/AlohaSocial/Android/pull/34) | 2026-10-06 | What Nextcloud Social 0.26.126 fixed, taken up by the app: a profile save answered with a server error is a failure (Social no longer answers 500 after storing part of a save, and answers 200 with what it stored when a late step fails); a profile's posts are searchable on Social too; the edit history lists each version's pictures by description; a placeholder header is no header (Social's `header_default`, Mastodon's `missing.png`) and a stand-in avatar is not offered for removal; a new account answers at once. Uploads meet the limit PHP really enforces, which Social now advertises |
 | 19b (in part) | [#35](https://github.com/AlohaSocial/Android/pull/35) | 2026-10-10 | What the Nextcloud connection opens on Nextcloud Social, as pages in Settings: Looking back (the weekly recap and this day in earlier years), Statistics (also in the account sheet), Video channels (also in Video mode), Authorized apps, and Export your account, whole or a list at a time, saved where the reader picks. The Nextcloud Files browser is still open |
 | 19b (Files) | [#36](https://github.com/AlohaSocial/Android/pull/36) | 2026-10-11 | Nextcloud Files in the composer, through the Nextcloud connection: folders to browse with the server's previews, files picked up to the post's room and attached by path so their bytes stay on the server, each one the post cannot take shown with why, and a device file uploaded into the folder shown (chunked above 10 MiB, carried on after a lost connection, never overwriting) to be picked from there |
+| 20 | [#64](https://github.com/AlohaSocial/Android/pull/64)–[#70](https://github.com/AlohaSocial/Android/pull/70) | 2026-10-24 | What Nextcloud Social 0.26.222 to 0.26.278 changed, read from the server's code at `origin/master` on 2026-10-21, not from a live instance: Continue watching from `watch_progress`, video cards and counted views; a stream on Social only where its daemon answers, with conversations and merged notifications; Social's Web Push with quote alerts and the Nextcloud push where Social refuses the endpoint; refusal codes; featured hashtags as the account's own posts, the server's count setting and paging past short pages; starter-pack curators and quotes and engagement by server in Statistics |
 
 Between the phases: CI artifact retention ([#3](https://github.com/AlohaSocial/Android/pull/3)), the device benchmark and baseline profiles ([#4](https://github.com/AlohaSocial/Android/pull/4)), looking an account up by its id ([#10](https://github.com/AlohaSocial/Android/pull/10)) and who favourited and boosted a post ([#13](https://github.com/AlohaSocial/Android/pull/13)).
 
@@ -37,14 +56,18 @@ Between the phases: CI artifact retention ([#3](https://github.com/AlohaSocial/A
 | What | Notes |
 |---|---|
 | A merged timeline of every account, the default view | Like a mail client's unified inbox, with each account still selectable on its own; this was a non-goal for 1.0 in [00-overview.md](00-overview.md) §6 until 2026-10-11. The data layer ([04-data-model.md](04-data-model.md)), "All accounts" in the account sheet, and Home's Following of every account together are built ([03-auth-and-accounts.md](03-auth-and-accounts.md)); Notifications, Photos, Video, News, Shorts and Audio of every account together are built too |
-| Phase 20: what Nextcloud Social 0.26.222 to 0.26.278 and the builds after it changed | Taken up as stacked pull requests, each taking its row off this table; the server facts are in [02-server-api.md](02-server-api.md). Bluesky is left out for now |
-| 20a: Continue watching and video cards | Continue watching is empty against Social: its `videos/continue` carries the place in `watch_progress`, which the app does not read, so every entry counts as unstarted and is dropped. Read `watch_progress` there and on a single post (the place then follows the reader across devices), take views, poster and date from `video_card`, and count a view with `POST /statuses/{id}/view` after five seconds of playback |
-| 20b: Streaming on Social | Every Social from 0.26.251 announces a streaming address without a stream behind it unless its admin runs the daemon, so the app reconnects five times on each return to the front. Ask `/api/v1/streaming/health` first and stream only when it answers; take `conversation` (Direct messages) and `notifications_merged` (Notifications) from the stream too |
-| 20c: Web Push from Social | Ask for `quote` and `quoted_update` alerts, which Social pushes; when the server refuses the endpoint as not public (422), register with the Nextcloud push where the account has its Nextcloud connected and keep polling otherwise, and never keep both |
-| 20d: Refusals that say why | Carry the server's `code` and its fields in `ApiError` and say in the reader's language the one refusal the app meets today, a full story limit (`shorts-full`); the featured-tag, banner, handle and migration codes come from routes the app does not call yet and get their words with those features |
-| 20e: Profiles and counts | A featured hashtag opens the account's own posts with it (`tagged`); the Posts tab filters replies on the device below 0.26.237; Reading's *Show numbers* also sets the server's `/api/v1/social/counts`, so numbers the server zeroes come back; a page shorter than asked for is not the end while `Link` names a next one |
-| 20f: Starter packs and statistics | A pack shows its curator and a link to its source; following a pack that followed nobody is a failure; Statistics adds a quotes count beside likes, boosts and replies, and a list of the servers the reader's likes, boosts and replies came from, with their counts and the share from the reader's own server (`engagement_sources`) |
-| Not taken up from Phase 20 | `only_short` (0.26.222) is already what Shorts asks Social for. The device authorization grant (after 0.26.278) belongs with the TV sign-in. A reply-hiding preference (after 0.26.278) is the web's; the paging fix in 20e covers its short pages |
+| Phase 21: what Nextcloud Social 0.26.279 to 0.26.299 changed | Taken up as stacked pull requests, each taking its row off this table and its line in Progress to done; the server facts are in [02-server-api.md](02-server-api.md). Bluesky is left out for now |
+| 21a: Push again after a forced sign-in | Social deletes an account's Web Push subscription with the token it was made for: on a password change (0.26.299), after 90 idle days, when the token expires or the app is signed out in Authorized apps. The app keeps the account marked as subscribed, so after signing in again it never subscribes the new token and only polls. Forget the subscription when an account needs signing in again, so the new token subscribes |
+| 21b: Refresh tokens | From 0.26.299 `/oauth/token` also answers `refresh_token` and `expires_in` and takes `grant_type=refresh_token`; every refresh rotates both, and presenting a spent refresh token revokes the whole authorization. Keep the pair in the vault, refresh once per account at a time on a 401 for an expired token, write the new pair before using it, and ask for sign-in only when the refresh is refused; a token without a refresh token behaves as today |
+| 21j: The watch keeps the phone's account through a refresh | The Play build's watch can use the account the phone handed over, with the phone's access token. Once 21b refreshes that token (a year after sign-in, then every day), the watch's copy stops working and it forgets the account. The phone sends the new access token to the watches it handed the account to, and a watch asks the phone again on a 401 before forgetting it; the refresh token never leaves the phone |
+| 21c: Edits of media an older server damaged | 0.26.279 to 0.26.298 stored an edited post's attachments with an empty `id`, and 0.26.299 serves new edits whole but does not repair those rows. Editing such a post locks its media, as on servers that ignore media in an edit, instead of sending ids the server answers with 422 |
+| 21d: Hidden followers and following | From 0.26.299 (and on Mastodon) `update_credentials` takes `hide_collections`, the account reports it, and its followers and following answer `[]` to anyone else. A switch in Edit profile, and lists that say they are hidden rather than empty |
+| 21e: Interests learning off until chosen | From 0.26.285 learning from actions is off for a reader who never chose; the app's default and its "still learning" note follow the server |
+| 21f: Replies and counts the server is still reading | `/context` answers `X-Social-Thread-Filling: 1` and a post's counts `X-Social-Filling: 1` while the server reads them from the origin (thread paging from 0.26.279, `GET /api/v1/social/status_counts` from 0.26.284). Read the thread once more a few seconds later, and the counts through `status_counts`, which records no view |
+| 21g: Posting an event | From 0.26.279 `POST /statuses` takes `event {name, start_time, end_time, location}`, refuses one without a title or start or with a poll (422), and keeps it through scheduling and review; an edit that leaves `event` out keeps it. An event section in the composer on servers that serve events |
+| 21h: Posts held for review | From 0.26.294 every route goes through review, scheduled posts included; a hold answers 422 with `held_for_review: true`, `reason` and `held_post`. The composer and the outbox treat it as sent for review, never as a failure to retry |
+| 21i: Small avatars and hidden instance counts | From 0.26.296 every Account carries `avatar_small` (at most 128 px, else the avatar itself), used where an avatar is drawn small. From 0.26.288 an administrator can hide the instance's counts, which then read 0: the sign-in server card does not say "0 people" |
+| Not taken up from Phase 21 | A long-form post's `article.title` (0.26.280) stays at the top of its `content`, which the app shows. `GET /api/v1/social/badges` (0.26.299) would save requests the app makes already. For You v4 (`/api/v1/recommendations/*`) is off by default on the server and a product decision. Posting through `POST /api/v1/post` was removed in 0.26.294; the app never used it |
 
 ## Not built
 
