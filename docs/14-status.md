@@ -8,17 +8,17 @@ Phase 21, what Nextcloud Social 0.26.279 to 0.26.299 changed (server `aloha/main
 
 | Item | Status | Note |
 |---|---|---|
-| 21a: Push again after a forced sign-in | 🔄 | |
-| 21b: Refresh tokens | 🔄 | |
-| 21j: The watch keeps the phone's account through a refresh | 🔄 | |
-| 21c: Edits of media an older server damaged | 🔄 | |
-| 21d: Hidden followers and following | 🔄 | |
-| 21e: Interests learning off until chosen | 🔄 | |
-| 21f: Replies and counts the server is still reading | 🔄 | |
-| 21g: Posting an event | 🔄 | |
-| 21h: Posts held for review | 🔄 | |
-| 21i: Small avatars and hidden instance counts | 🔄 | |
-| Long-form titles, the badges route, For You v4 | 🚫 | Not taken up; see Phase 21 under In progress |
+| 21a: Push again after a forced sign-in | ✅ | [#125](https://github.com/AlohaSocial/Android/pull/125) |
+| 21b: Refresh tokens | ✅ | [#126](https://github.com/AlohaSocial/Android/pull/126) |
+| 21j: The watch keeps the phone's account through a refresh | ✅ | [#127](https://github.com/AlohaSocial/Android/pull/127) |
+| 21c: Edits of media an older server damaged | ✅ | [#132](https://github.com/AlohaSocial/Android/pull/132) |
+| 21d: Hidden followers and following | ✅ | [#130](https://github.com/AlohaSocial/Android/pull/130) |
+| 21e: Interests learning off until chosen | ✅ | [#131](https://github.com/AlohaSocial/Android/pull/131) |
+| 21f: Replies and counts the server is still reading | ✅ | [#129](https://github.com/AlohaSocial/Android/pull/129) |
+| 21g: Posting an event | ✅ | [#134](https://github.com/AlohaSocial/Android/pull/134) |
+| 21h: Posts held for review | ✅ | [#133](https://github.com/AlohaSocial/Android/pull/133) |
+| 21i: Small avatars and hidden instance counts | ✅ | [#128](https://github.com/AlohaSocial/Android/pull/128) |
+| Long-form titles, the badges route, For You v4 | 🚫 | Not taken up; see Not built |
 
 ## Built
 
@@ -48,6 +48,7 @@ Each phase was one pull request into `main`.
 | 19b (in part) | [#35](https://github.com/AlohaSocial/Android/pull/35) | 2026-10-10 | What the Nextcloud connection opens on Nextcloud Social, as pages in Settings: Looking back (the weekly recap and this day in earlier years), Statistics (also in the account sheet), Video channels (also in Video mode), Authorized apps, and Export your account, whole or a list at a time, saved where the reader picks. The Nextcloud Files browser is still open |
 | 19b (Files) | [#36](https://github.com/AlohaSocial/Android/pull/36) | 2026-10-11 | Nextcloud Files in the composer, through the Nextcloud connection: folders to browse with the server's previews, files picked up to the post's room and attached by path so their bytes stay on the server, each one the post cannot take shown with why, and a device file uploaded into the folder shown (chunked above 10 MiB, carried on after a lost connection, never overwriting) to be picked from there |
 | 20 | [#64](https://github.com/AlohaSocial/Android/pull/64)–[#70](https://github.com/AlohaSocial/Android/pull/70) | 2026-10-24 | What Nextcloud Social 0.26.222 to 0.26.278 changed, read from the server's code at `origin/master` on 2026-10-21, not from a live instance: Continue watching from `watch_progress`, video cards and counted views; a stream on Social only where its daemon answers, with conversations and merged notifications; Social's Web Push with quote alerts and the Nextcloud push where Social refuses the endpoint; refusal codes; featured hashtags as the account's own posts, the server's count setting and paging past short pages; starter-pack curators and quotes and engagement by server in Statistics |
+| 21 | [#125](https://github.com/AlohaSocial/Android/pull/125)–[#134](https://github.com/AlohaSocial/Android/pull/134) | 2026-11-15 | What Nextcloud Social 0.26.279 to 0.26.299 changed, read from the server's code at `aloha/main` `2eb023b11` on 2026-11-14, not from a live instance: refresh tokens with the watch kept in step, push subscribed again after a forced sign-in, edits of media an older server damaged, hidden followers and following, interests learning off until chosen, replies and counts the server is still reading, posting an event, posts held for review, small avatars and hidden instance counts |
 
 Between the phases: CI artifact retention ([#3](https://github.com/AlohaSocial/Android/pull/3)), the device benchmark and baseline profiles ([#4](https://github.com/AlohaSocial/Android/pull/4)), looking an account up by its id ([#10](https://github.com/AlohaSocial/Android/pull/10)) and who favourited and boosted a post ([#13](https://github.com/AlohaSocial/Android/pull/13)).
 
@@ -56,18 +57,6 @@ Between the phases: CI artifact retention ([#3](https://github.com/AlohaSocial/A
 | What | Notes |
 |---|---|
 | A merged timeline of every account, the default view | Like a mail client's unified inbox, with each account still selectable on its own; this was a non-goal for 1.0 in [00-overview.md](00-overview.md) §6 until 2026-10-11. The data layer ([04-data-model.md](04-data-model.md)), "All accounts" in the account sheet, and Home's Following of every account together are built ([03-auth-and-accounts.md](03-auth-and-accounts.md)); Notifications, Photos, Video, News, Shorts and Audio of every account together are built too |
-| Phase 21: what Nextcloud Social 0.26.279 to 0.26.299 changed | Taken up as stacked pull requests, each taking its row off this table and its line in Progress to done; the server facts are in [02-server-api.md](02-server-api.md). Bluesky is left out for now |
-| 21a: Push again after a forced sign-in | Social deletes an account's Web Push subscription with the token it was made for: on a password change (0.26.299), after 90 idle days, when the token expires or the app is signed out in Authorized apps. The app keeps the account marked as subscribed, so after signing in again it never subscribes the new token and only polls. Forget the subscription when an account needs signing in again, so the new token subscribes |
-| 21b: Refresh tokens | From 0.26.299 `/oauth/token` also answers `refresh_token` and `expires_in` and takes `grant_type=refresh_token`; every refresh rotates both, and presenting a spent refresh token revokes the whole authorization. Keep the pair in the vault, refresh once per account at a time on a 401 for an expired token, write the new pair before using it, and ask for sign-in only when the refresh is refused; a token without a refresh token behaves as today |
-| 21j: The watch keeps the phone's account through a refresh | The Play build's watch can use the account the phone handed over, with the phone's access token. Once 21b refreshes that token (a year after sign-in, then every day), the watch's copy stops working and it forgets the account. The phone sends the new access token to the watches it handed the account to, and a watch asks the phone again on a 401 before forgetting it; the refresh token never leaves the phone |
-| 21c: Edits of media an older server damaged | 0.26.279 to 0.26.298 stored an edited post's attachments with an empty `id`, and 0.26.299 serves new edits whole but does not repair those rows. Editing such a post locks its media, as on servers that ignore media in an edit, instead of sending ids the server answers with 422 |
-| 21d: Hidden followers and following | From 0.26.299 (and on Mastodon) `update_credentials` takes `hide_collections`, the account reports it, and its followers and following answer `[]` to anyone else. A switch in Edit profile, and lists that say they are hidden rather than empty |
-| 21e: Interests learning off until chosen | From 0.26.285 learning from actions is off for a reader who never chose; the app's default and its "still learning" note follow the server |
-| 21f: Replies and counts the server is still reading | `/context` answers `X-Social-Thread-Filling: 1` and a post's counts `X-Social-Filling: 1` while the server reads them from the origin (thread paging from 0.26.279, `GET /api/v1/social/status_counts` from 0.26.284). Read the thread once more a few seconds later, and the counts through `status_counts`, which records no view |
-| 21g: Posting an event | From 0.26.279 `POST /statuses` takes `event {name, start_time, end_time, location}`, refuses one without a title or start or with a poll (422), and keeps it through scheduling and review; an edit that leaves `event` out keeps it. An event section in the composer on servers that serve events |
-| 21h: Posts held for review | From 0.26.294 every route goes through review, scheduled posts included; a hold answers 422 with `held_for_review: true`, `reason` and `held_post`. The composer and the outbox treat it as sent for review, never as a failure to retry |
-| 21i: Small avatars and hidden instance counts | From 0.26.296 every Account carries `avatar_small` (at most 128 px, else the avatar itself), used where an avatar is drawn small. From 0.26.288 an administrator can hide the instance's counts, which then read 0: the sign-in server card does not say "0 people" |
-| Not taken up from Phase 21 | A long-form post's `article.title` (0.26.280) stays at the top of its `content`, which the app shows. `GET /api/v1/social/badges` (0.26.299) would save requests the app makes already. For You v4 (`/api/v1/recommendations/*`) is off by default on the server and a product decision. Posting through `POST /api/v1/post` was removed in 0.26.294; the app never used it |
 
 ## Not built
 
@@ -78,6 +67,7 @@ Between the phases: CI artifact retention ([#3](https://github.com/AlohaSocial/A
 | The story player from a profile | [06-media-modes.md](06-media-modes.md) | A profile's Stories tab lists the stories and opens each on the web; the player is reachable from Photos only |
 | Push through the Nextcloud push proxy (FCM) | [08-notifications-sync.md](08-notifications-sync.md) §2 | Push is UnifiedPush in both flavours. FCM would be `gplay` only and needs the push proxy to allow the app |
 | Encrypted direct messages bound to the app lock | [11-safety-privacy-appstore.md](11-safety-privacy-appstore.md) | The app lock guards the screen, not the data |
+| Not taken up from Phase 21 | [02-server-api.md](02-server-api.md) | A long-form post's `article.title` (0.26.280) stays at the top of its `content`, which the app shows. `GET /api/v1/social/badges` (0.26.299) would save requests the app makes already. For You v4 (`/api/v1/recommendations/*`) is off by default on the server and a product decision. Posting through `POST /api/v1/post` was removed in 0.26.294; the app never used it |
 | Handoff and Spotlight counterparts | [00-overview.md](00-overview.md) §5 | No Android equivalent is planned yet |
 | The reproducible-build check | [12-store.md](12-store.md) | Two clean builds of the first release tag, compared, when it is cut; nothing in CI checks it today |
 | Translations of the app | [12-conventions-quality.md](12-conventions-quality.md) | English only; every string is ready for translators |
