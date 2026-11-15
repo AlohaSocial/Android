@@ -33,5 +33,10 @@
       matchPackageNames: ["/^io\\.gitlab\\.arturbosch\\.detekt/"],
       allowedVersions: "<2.0.0",
     },
+    {
+      // AGP 9.5 registers a Compose Preview task per variant that needs the variant's unit tests, which release variants turn off
+      matchPackageNames: ["com.android.tools.build:gradle", "/^com\\.android\\.(application|library|test)(:.*)?$/"],
+      allowedVersions: "<9.5.0",
+    },
   ],
 }
