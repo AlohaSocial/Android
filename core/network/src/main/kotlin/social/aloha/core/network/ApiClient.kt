@@ -73,6 +73,12 @@ public class ApiClient internal constructor(
     public suspend fun <T> execute(request: ApiRequest<T>): ApiResult<T> =
         perform(request, request.endpoint.resolve(apiBase)).map { it.decoded.value }
 
+    /** [request]'s answer and whether the server said it is still reading for it (see [Filled]). */
+    public suspend fun <T> filled(request: ApiRequest<T>): ApiResult<Filled<T>> =
+        perform(request, request.endpoint.resolve(apiBase)).map {
+            Filled(it.decoded.value, it.filling, it.threadFilling)
+        }
+
     /** A page from [request]; [limit] is what the request asked for, used where the server sends no `Link`. */
     public suspend fun <T> page(request: ApiRequest<List<T>>, limit: Int): ApiResult<Paginated<T>> =
         perform(request, request.endpoint.resolve(apiBase)).map { it.toPage(limit) }

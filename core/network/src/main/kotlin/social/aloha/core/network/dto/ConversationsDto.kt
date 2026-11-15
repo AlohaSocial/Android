@@ -15,6 +15,7 @@ import social.aloha.core.model.Marker
 import social.aloha.core.model.MarkerSet
 import social.aloha.core.model.SearchResults
 import social.aloha.core.model.StatusContext
+import social.aloha.core.model.StatusCounts
 import social.aloha.core.model.Suggestion
 import social.aloha.core.model.UnreadCount
 import social.aloha.core.network.decoding.FlexibleIdSerializer
@@ -29,6 +30,15 @@ import social.aloha.core.network.decoding.OrNullSerializer
 internal data class StatusContextDto(
     @Serializable(with = LossyListSerializer::class) val ancestors: List<StatusDto> = emptyList(),
     @Serializable(with = LossyListSerializer::class) val descendants: List<StatusDto> = emptyList(),
+)
+
+@Serializable
+internal data class StatusCountsDto(
+    @Serializable(with = FlexibleIdSerializer::class) val id: String,
+    @SerialName("replies_count") @Serializable(with = LenientIntSerializer::class) val repliesCount: Int = 0,
+    @SerialName("reblogs_count") @Serializable(with = LenientIntSerializer::class) val reblogsCount: Int = 0,
+    @SerialName("favourites_count") @Serializable(with = LenientIntSerializer::class) val favouritesCount: Int = 0,
+    @SerialName("dislikes_count") @Serializable(with = LenientIntSerializer::class) val dislikesCount: Int = 0,
 )
 
 @Serializable
@@ -104,6 +114,9 @@ internal object MarkerOrNull : KSerializer<MarkerDto?> by OrNullSerializer(Marke
 
 internal fun StatusContextDto.toDomain(): StatusContext =
     StatusContext(ancestors.map { it.toDomain() }, descendants.map { it.toDomain() })
+
+internal fun StatusCountsDto.toDomain(): StatusCounts =
+    StatusCounts(id, repliesCount, reblogsCount, favouritesCount, dislikesCount)
 
 internal fun ConversationDto.toDomain(): Conversation =
     Conversation(id, accounts.map { it.toDomain() }, unread, lastStatus?.toDomain())

@@ -63,6 +63,17 @@ public data class LinkHeader(val next: HttpUrl? = null, val previous: HttpUrl? =
 }
 
 /**
+ * An answer that is not a page, and whether the server is still reading for it in the background, so the
+ * same request made again a few seconds later brings more.
+ *
+ * @property filling a post's counts are still being read from its origin (Nextcloud Social's
+ *   `X-Social-Filling: 1`).
+ * @property threadFilling a conversation's replies are still being read from where they live (Nextcloud
+ *   Social's `X-Social-Thread-Filling: 1`, on `/context`).
+ */
+public data class Filled<T>(val value: T, val filling: Boolean = false, val threadFilling: Boolean = false)
+
+/**
  * A decoded page and its cursors.
  *
  * @property rawCount how many rows the server sent before lossy decoding dropped any, which is what

@@ -13,6 +13,7 @@ import java.time.Clock
 import java.time.Instant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -30,6 +31,7 @@ import kotlinx.coroutines.withContext
 import social.aloha.core.data.AccountRepository
 import social.aloha.core.data.Answer
 import social.aloha.core.data.Trouble
+import social.aloha.core.data.thread.Conversation
 import social.aloha.core.data.thread.ReplyNudges
 import social.aloha.core.data.thread.ThreadOrder
 import social.aloha.core.data.thread.ThreadRepository
@@ -85,7 +87,18 @@ internal class ThreadViewModel @AssistedInject constructor(
         /** The replies the reader has seen, null before the first load; [held] the others. */
         val known: Set<String>? = null,
         val held: Set<String> = emptySet(),
-    )
+    ) {
+        /** [conversation] read: the replies of the first read known, those a later read finds held. */
+        fun read(conversation: Conversation, readerId: String): Control {
+            val replies = conversation.descendants.filter { it.account.id != readerId }.map { it.id }
+            return copy(
+                loading = false,
+                trouble = null,
+                known = known ?: replies.toSet(),
+                held = if (known == null) emptySet() else held + (replies - known),
+            )
+        }
+    }
 
     private val colors = MutableStateFlow<RichTextColors?>(null)
     private val lines = MutableStateFlow<List<ThreadLine>>(listOf(ThreadLine.Focused(key.statusId)))
@@ -95,6 +108,12 @@ internal class ThreadViewModel @AssistedInject constructor(
     @Volatile private var stored: Map<String, Status> = emptyMap()
 
     private val extras = ThreadPresentation.Extras()
+
+    /** Whether this open's first read has had its one follow-up (see [ThreadRepository.followUp]). */
+    private var followedUp = false
+
+    /** The follow-up while it waits or reads; a later load cancels it. */
+    private var followUp: Job? = null
 
     private val account: StateFlow<SignedInAccount?> = accounts.accounts
         .map { all -> all.firstOrNull { it.id == key.readerId } }
@@ -214,20 +233,22 @@ internal class ThreadViewModel @AssistedInject constructor(
     }
 
     private suspend fun load(account: SignedInAccount) {
+        followUp?.cancel()
         control.update { it.copy(loading = true) }
         when (val answer = threads.load(account, key.statusId)) {
             is Answer.Got -> {
                 val conversation = answer.value
                 lines.value = ThreadShape.of(conversation.focused.id, conversation.ancestors, conversation.descendants)
-                val replies = conversation.descendants.filter { it.account.id != account.serverAccountId }.map { it.id }
-                control.update {
-                    val known = it.known
-                    it.copy(
-                        loading = false,
-                        trouble = null,
-                        known = known ?: replies.toSet(),
-                        held = if (known == null) emptySet() else it.held + (replies - known),
-                    )
+                control.update { it.read(conversation, account.serverAccountId) }
+                if (!followedUp) {
+                    followedUp = true
+                    followUp = viewModelScope.launch {
+                        val shown = { ThreadShape.without(lines.value, control.value.held).mapNotNull { it.statusId } }
+                        threads.followUp(account, conversation, shown)?.let { again ->
+                            lines.value = ThreadShape.of(again.focused.id, again.ancestors, again.descendants)
+                            control.update { it.read(again, account.serverAccountId) }
+                        }
+                    }
                 }
                 loadExtras(account, conversation.focused)
             }

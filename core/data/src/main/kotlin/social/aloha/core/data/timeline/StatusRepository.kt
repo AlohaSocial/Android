@@ -24,6 +24,7 @@ import social.aloha.core.model.ContentClassifier
 import social.aloha.core.model.ContentKind
 import social.aloha.core.model.MediaDimensions
 import social.aloha.core.model.Status
+import social.aloha.core.model.StatusCounts
 
 /**
  * One status, one truth: every status an account has seen is stored once, and every timeline points
@@ -71,6 +72,17 @@ public class StatusRepository @Inject constructor(private val dao: StatusDao, pr
                 entities(accountId, byId.values + boosts)
             }
             dao.upsertAll(rows)
+        }
+    }
+
+    /**
+     * The numbers of each stored post [counts] names set to them, on what a boost boosts where the post is
+     * one, each stored as [save] stores it: a recent toggle of the reader's keeps its own. A post not
+     * stored is left alone.
+     */
+    public suspend fun saveCounts(accountId: String, counts: List<StatusCounts>) {
+        saves.withLock {
+            counts.forEach { counted -> get(accountId, counted.id)?.let { save(accountId, it.counted(counted)) } }
         }
     }
 
@@ -230,6 +242,14 @@ private class Toggles(private val clock: Clock) {
         return if (boosted != null) own.copy(reblog = boosted) else own
     }
 }
+
+/** [this] with [counts]' numbers, or what it boosts with them. */
+private fun Status.counted(counts: StatusCounts): Status = reblog?.let { copy(reblog = it.counted(counts)) } ?: copy(
+    repliesCount = counts.replies,
+    reblogsCount = counts.reblogs,
+    favouritesCount = counts.favourites,
+    dislikesCount = counts.dislikes,
+)
 
 /** [this] with the interaction state of [toggled]: what the reader set, and the counts that came with it. */
 private fun Status.keeping(toggled: Status): Status = copy(

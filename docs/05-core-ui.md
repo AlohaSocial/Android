@@ -252,6 +252,17 @@ exist undocumented.
 
 - Reads the post with `force_counts=true`, so Nextcloud Social asks its origin
   for current counts even right after a timeline did.
+- Reads once more, once per open and three seconds later as Social's web app
+  does, what Nextcloud Social says it is still filling in (read from source,
+  aloha/main 0.26.299): `X-Social-Thread-Filling: 1` on `/context` (the replies,
+  read from where they live; from 0.26.279 it pages through remote reply
+  collections) has the conversation read again, merged as a refresh is, so new
+  replies wait behind "Show" and the list stays where it is.
+  `X-Social-Filling: 1` on the post (its counts) has, from 0.26.284, the counts
+  of the post and of the replies shown below it, at most 20, asked of
+  `GET /api/v1/social/status_counts?ids[]=…`, which counts no view, and set on
+  the stored posts; a count the reader just changed keeps the reader's value.
+  Before 0.26.284 and on other servers nothing more is asked.
 - Fetches `/api/v1/statuses/{id}/context` and renders ancestors above, the
   focused status enlarged in the middle, and descendants below as an indented
   tree, in the order the server sent them and never re-sorted. From 0.26.279

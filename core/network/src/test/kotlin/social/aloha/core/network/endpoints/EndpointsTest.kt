@@ -95,6 +95,15 @@ class EndpointsTest {
     }
 
     @Test
+    fun `the counts of posts on screen name each id, at most twenty`() {
+        val few = CountsEndpoints.of(listOf("1", "2")).endpoint
+        assertEquals("api/v1/social/status_counts", few.path)
+        assertEquals(listOf(QueryItem("ids[]", "1"), QueryItem("ids[]", "2")), few.query)
+        val many = CountsEndpoints.of((1..25).map(Int::toString)).endpoint
+        assertEquals((1..20).map { QueryItem("ids[]", "$it") }, many.query)
+    }
+
+    @Test
     fun `a status's link preview is a detail-screen request`() {
         assertEquals("api/v1/statuses/42/card", StatusEndpoints.card("42").endpoint.path)
     }
