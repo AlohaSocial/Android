@@ -132,6 +132,12 @@ class ExtensionEndpointsTest {
     }
 
     @Test
+    fun `hiding followers and following is sent as hide_collections`() {
+        val endpoint = CredentialEndpoints.update(CredentialsUpdate(hideCollections = true)).endpoint
+        assertEquals("true", endpoint.formValue("hide_collections"))
+    }
+
+    @Test
     fun `discover posts name the media kind the server knows`() {
         assertEquals("image", DiscoveryEndpoints.discoverPosts(DiscoverMedia.Images).endpoint.queryValue("media"))
     }

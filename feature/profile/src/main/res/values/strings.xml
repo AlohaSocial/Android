@@ -128,6 +128,10 @@
     <string name="profile_following_title">Following</string>
     <!-- Shown when a list of accounts could not be loaded -->
     <string name="profile_people_error">Couldn\'t load this list.</string>
+    <!-- Shown instead of an empty followers list when the account keeps its followers to itself -->
+    <string name="profile_followers_hidden">This account hides who follows it.</string>
+    <!-- Shown instead of an empty following list when the account keeps whom it follows to itself -->
+    <string name="profile_following_hidden">This account hides who it follows.</string>
     <!-- Button that loads a list again after it failed -->
     <string name="profile_retry">Try again</string>
     <!-- Menu item, checked when the followed account's boosts show in the reader's home -->
@@ -224,6 +228,8 @@
     <string name="profile_edit_discoverable">Suggest my profile to others</string>
     <!-- Switch: search engines may include one's public posts -->
     <string name="profile_edit_indexable">Let search engines include my public posts</string>
+    <!-- Switch: nobody else sees the lists of one's followers and followed accounts -->
+    <string name="profile_edit_hide_collections">Hide who I follow and who follows me</string>
     <!-- Switch: media start out marked sensitive -->
     <string name="profile_edit_sensitive">Mark my media sensitive by default</string>
     <!-- Button showing who new posts reach by default; the placeholder is one of the three below -->

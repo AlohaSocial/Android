@@ -57,6 +57,8 @@ internal data class ProfileForm(
     val indexable: Boolean = true,
     val privacy: Visibility = Visibility.Public,
     val sensitive: Boolean = false,
+    /** Whether others may not see the reader's followers and following; null where the server has no such setting. */
+    val hideCollections: Boolean? = null,
     val avatar: Picture = Picture.Kept(null),
     val header: Picture = Picture.Kept(null),
 ) {
@@ -78,6 +80,7 @@ internal data class ProfileForm(
                 indexable = account.indexable,
                 privacy = source?.privacy ?: Visibility.Public,
                 sensitive = source?.sensitive == true,
+                hideCollections = source?.hideCollections ?: account.hideCollections,
                 avatar = Picture.Kept(account.avatar, chosen = !account.avatarDefault),
                 header = Picture.Kept(account.header),
             )
@@ -211,6 +214,7 @@ internal fun changes(
         bot = changed { it.bot },
         privacy = changed { it.privacy },
         sensitive = changed { it.sensitive },
+        hideCollections = changed { it.hideCollections },
     )
 }
 

@@ -323,9 +323,16 @@ exist undocumented.
   `url` and draws its blurhash.
 - Followers: Nextcloud Social before 0.26.241 sends 0 followers to a reader who
   hides the numbers, so there a 0 shows as "Followers" without a number.
+- An account that hides its followers and following (`hide_collections: true`
+  on the account fetched by id; Nextcloud Social 0.26.299 on, read from
+  source, and Mastodon) answers an empty list to anyone else, the counts
+  staying. Its empty Followers or Following list says the account hides it
+  rather than "Nothing here yet"; the reader's own lists are never hidden.
 - Own profile additionally: Edit profile (`PATCH /accounts/update_credentials`
   — name, avatar, header, note, fields, bot, locked, discoverable, and
-  `source[privacy]`). **A Nextcloud with an external identity backend (LDAP,
+  `source[privacy]`, and `hide_collections` where the credentials report it,
+  in `source` or at the top: a server that never sends it gets no switch).
+  **A Nextcloud with an external identity backend (LDAP,
   SAML) answers 422 for name and avatar**; the UI must show that as "Your
   server manages your name and picture" rather than as a failure.
 

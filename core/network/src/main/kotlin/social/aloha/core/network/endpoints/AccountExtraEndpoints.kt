@@ -50,6 +50,7 @@ public data class CredentialsUpdate(
     val privacy: Visibility? = null,
     val sensitive: Boolean? = null,
     val language: String? = null,
+    val hideCollections: Boolean? = null,
 ) {
     val isEmpty: Boolean get() = parts().isEmpty()
 
@@ -73,6 +74,7 @@ public data class CredentialsUpdate(
         "indexable" to indexable,
         "bot" to bot,
         "source[sensitive]" to sensitive,
+        "hide_collections" to hideCollections,
     )
 }
 

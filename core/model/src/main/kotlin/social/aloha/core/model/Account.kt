@@ -54,6 +54,11 @@ public data class Account(
     val memorial: Boolean = false,
     /** How the account wants its profile shown, where its server says (Nextcloud Social); null shows it all. */
     val profileLayout: ProfileLayout? = null,
+    /**
+     * Whether the account shows its followers and following to nobody else (`hide_collections`); null
+     * where the server does not say, which Nextcloud Social does for an account embedded in another entity.
+     */
+    val hideCollections: Boolean? = null,
 ) {
     /** What a person reads; never empty, it falls back through the handle. */
     val bestDisplayName: String
@@ -109,4 +114,6 @@ public data class AccountSource(
     val sensitive: Boolean = false,
     val language: String? = null,
     val followRequestsCount: Int = 0,
+    /** Whether the account hides its followers and following; null from a server without the setting. */
+    val hideCollections: Boolean? = null,
 )

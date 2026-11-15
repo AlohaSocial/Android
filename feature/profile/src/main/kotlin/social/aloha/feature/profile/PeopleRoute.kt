@@ -53,6 +53,7 @@ import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.html.RichTextCache
 import social.aloha.core.model.Account
 import social.aloha.core.model.CustomEmoji
+import social.aloha.core.model.SignedInAccount
 import social.aloha.core.navigation.PeopleKey
 import social.aloha.core.navigation.PeopleKind
 import social.aloha.core.ui.AccountRow
@@ -68,6 +69,8 @@ internal data class PeopleUiState(
     val loading: Boolean = true,
     val failed: Boolean = false,
     val reachedEnd: Boolean = false,
+    /** The list is empty because the account shows it to nobody else, not because it has nobody. */
+    val hidden: Boolean = false,
 ) {
     @Immutable
     data class Person(val author: StatusRowUi.AuthorUi, val emojis: List<CustomEmoji>)
@@ -138,12 +141,27 @@ internal class PeopleViewModel @AssistedInject constructor(
                     else -> current.copy(loading = false, failed = true)
                 }
             }
+            if (reader != null && answer is Answer.Got) markHidden(reader)
         }
+    }
+
+    /** Marks a list that came back empty as hidden when the account keeps it from the reader. */
+    private suspend fun markHidden(reader: SignedInAccount) {
+        if (!state.value.let { it.people.isEmpty() && it.reachedEnd }) return
+        val account = (profiles.resolve(reader, key.accountId, null) as? Answer.Got)?.value ?: return
+        if (hidesPeople(account, reader.serverAccountId)) state.update { it.copy(hidden = true) }
     }
 
     private fun person(account: Account, mapper: StatusRowMapper) =
         PeopleUiState.Person(mapper.author(account), account.emojis)
 }
+
+/**
+ * Whether [account]'s followers and following are kept from the reader whose own account is
+ * [readerAccountId]: Nextcloud Social (from 0.26.299) and Mastodon answer an empty list to anyone else.
+ */
+internal fun hidesPeople(account: Account, readerAccountId: String): Boolean =
+    account.hideCollections == true && account.id != readerAccountId
 
 @Composable
 public fun PeopleRoute(key: PeopleKey, navigation: ProfileNavigation, modifier: Modifier = Modifier) {
@@ -217,10 +235,16 @@ internal fun PeopleScreen(
                         Modifier.fillMaxWidth().padding(AlohaSpacing.l),
                         contentAlignment = Alignment.Center,
                     ) {
-                        Text(stringResource(R.string.profile_empty), style = MaterialTheme.typography.bodyLarge)
+                        Text(stringResource(emptyText(kind, state.hidden)), style = MaterialTheme.typography.bodyLarge)
                     }
                 }
             }
         }
     }
+}
+
+private fun emptyText(kind: PeopleKind, hidden: Boolean): Int = when {
+    !hidden -> R.string.profile_empty
+    kind == PeopleKind.Followers -> R.string.profile_followers_hidden
+    else -> R.string.profile_following_hidden
 }
