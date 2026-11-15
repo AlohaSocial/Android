@@ -4,21 +4,12 @@ What is built, what is in progress, and what is not built or deliberately differ
 
 ## Progress
 
-Phase 21, what Nextcloud Social 0.26.279 to 0.26.299 changed (server `aloha/main` at `2eb023b11`, 2026-11-14), taken up as stacked pull requests. Legend: ⬜ not started · 🔄 in progress · ✅ done · ⚠️ blocked · 🚫 dropped.
+Phase 22, what Aloha Social changed after 0.26.299 (server `aloha/main` at `6fb80deee`, 2026-11-15, not yet released), taken up as pull requests. Legend: ⬜ not started · 🔄 in progress · ✅ done · ⚠️ blocked · 🚫 dropped.
 
 | Item | Status | Note |
 |---|---|---|
-| 21a: Push again after a forced sign-in | ✅ | [#125](https://github.com/AlohaSocial/Android/pull/125) |
-| 21b: Refresh tokens | ✅ | [#126](https://github.com/AlohaSocial/Android/pull/126) |
-| 21j: The watch keeps the phone's account through a refresh | ✅ | [#127](https://github.com/AlohaSocial/Android/pull/127) |
-| 21c: Edits of media an older server damaged | ✅ | [#132](https://github.com/AlohaSocial/Android/pull/132) |
-| 21d: Hidden followers and following | ✅ | [#130](https://github.com/AlohaSocial/Android/pull/130) |
-| 21e: Interests learning off until chosen | ✅ | [#131](https://github.com/AlohaSocial/Android/pull/131) |
-| 21f: Replies and counts the server is still reading | ✅ | [#129](https://github.com/AlohaSocial/Android/pull/129) |
-| 21g: Posting an event | ✅ | [#134](https://github.com/AlohaSocial/Android/pull/134) |
-| 21h: Posts held for review | ✅ | [#133](https://github.com/AlohaSocial/Android/pull/133) |
-| 21i: Small avatars and hidden instance counts | ✅ | [#128](https://github.com/AlohaSocial/Android/pull/128) |
-| Long-form titles, the badges route, For You v4 | 🚫 | Not taken up; see Not built |
+| 22a: Create an account from sign-in, and come back signed in | ⬜ | |
+| The web app's post polish, Photos and Shorts layouts, recap and search fixes | 🚫 | Web only; see Not built |
 
 ## Built
 
@@ -57,6 +48,8 @@ Between the phases: CI artifact retention ([#3](https://github.com/AlohaSocial/A
 | What | Notes |
 |---|---|
 | A merged timeline of every account, the default view | Like a mail client's unified inbox, with each account still selectable on its own; this was a non-goal for 1.0 in [00-overview.md](00-overview.md) §6 until 2026-10-11. The data layer ([04-data-model.md](04-data-model.md)), "All accounts" in the account sheet, and Home's Following of every account together are built ([03-auth-and-accounts.md](03-auth-and-accounts.md)); Notifications, Photos, Video, News, Shorts and Audio of every account together are built too |
+| Phase 22: what Aloha Social changed after 0.26.299 | Taken up as pull requests, each taking its row off this table and its line in Progress to done; the server facts are in [02-server-api.md](02-server-api.md). Bluesky is left out for now |
+| 22a: Create an account from sign-in, and come back signed in | After 0.26.299 `/api/v1/instance` and `/api/v2/instance` report the sign-up as it stands (they said closed before), v2 names the sign-up page as `registrations.url`, and `/signup` takes `return`, the app's own authorization request, and signs the new account in and continues it. The server card offers Create an account while the sign-up is open: it starts the authorization as Sign in does, keeping the pending authorization in the vault, and opens `registrations.url` with `return` (and `invite`, from an invite link the sign-in screen picked up) in the same sign-in tab, so the redirect back to the app finishes the sign-in. With `approval_required` the card says an administrator approves new accounts first, and the welcome email's Log in continues the same authorization later. A server that names no sign-up page, Mastodon included, gets its page opened without `return`, and sign-in stays as it is |
 
 ## Not built
 
@@ -68,6 +61,7 @@ Between the phases: CI artifact retention ([#3](https://github.com/AlohaSocial/A
 | Push through the Nextcloud push proxy (FCM) | [08-notifications-sync.md](08-notifications-sync.md) §2 | Push is UnifiedPush in both flavours. FCM would be `gplay` only and needs the push proxy to allow the app |
 | Encrypted direct messages bound to the app lock | [11-safety-privacy-appstore.md](11-safety-privacy-appstore.md) | The app lock guards the screen, not the data |
 | Not taken up from Phase 21 | [02-server-api.md](02-server-api.md) | A long-form post's `article.title` (0.26.280) stays at the top of its `content`, which the app shows. `GET /api/v1/social/badges` (0.26.299) would save requests the app makes already. For You v4 (`/api/v1/recommendations/*`) is off by default on the server and a product decision. Posting through `POST /api/v1/post` was removed in 0.26.294; the app never used it |
+| Not taken up from Phase 22 | [02-server-api.md](02-server-api.md) | The rest changed only Aloha Social's web app: a post of one to three emoji drawn large, one frame for link previews, quoted posts and events, a quieter action row on touch screens, sharper pictures, Shorts, Photos, Videos and Discover without a visible title, posting from the sidebar only, the weekly recap naming the instance, and search results kept readable while asked again. Drawing a post of only emoji large is a design choice the app can make on its own |
 | Handoff and Spotlight counterparts | [00-overview.md](00-overview.md) §5 | No Android equivalent is planned yet |
 | The reproducible-build check | [12-store.md](12-store.md) | Two clean builds of the first release tag, compared, when it is cut; nothing in CI checks it today |
 | Translations of the app | [12-conventions-quality.md](12-conventions-quality.md) | English only; every string is ready for translators |
