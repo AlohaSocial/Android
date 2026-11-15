@@ -54,7 +54,7 @@ import social.aloha.core.ui.reorderItem
 /**
  * The attachments of one post, a card each, which opens its description and focal point; a long press drags
  * a card to another place, and a screen reader moves it with the card's actions. [locked] media keep their
- * place and cannot be taken off, only described.
+ * place and cannot be taken off, only described, and not even that unless [describable].
  */
 @Composable
 internal fun MediaStrip(
@@ -62,6 +62,7 @@ internal fun MediaStrip(
     actions: ComposerActions,
     drafts: Boolean = false,
     locked: Boolean = false,
+    describable: Boolean = true,
 ) {
     val reordering = rememberReordering(attachments, key = { it.id }, gap = AlohaSpacing.s) { order ->
         actions.onOrderMedia(order.map { it.id })
@@ -72,11 +73,12 @@ internal fun MediaStrip(
                 MediaCard(
                     attachment,
                     actions,
-                    drafts && attachment.isPicture && attachment.source != null,
+                    drafts && describable && attachment.isPicture && attachment.source != null,
                     if (locked) emptyList() else reordering.moves(index),
                     Modifier.reorderItem(reordering, attachment)
                         .let { if (locked) it else it.longPressDrag(reordering, attachment) },
                     removable = !locked,
+                    describable = describable,
                 )
             }
         }
@@ -96,6 +98,7 @@ private fun MediaCard(
     moves: List<CustomAccessibilityAction>,
     modifier: Modifier,
     removable: Boolean,
+    describable: Boolean,
 ) {
     val colors = MaterialTheme.colorScheme
     val failed = attachment.upload is UploadState.Refused ||
@@ -115,24 +118,27 @@ private fun MediaCard(
     ).joinToString(", ")
     val couldNot = status.takeIf { attachment.upload == UploadState.Cancelled }
         ?: stringResource(R.string.composer_media_failed)
+    val describe = stringResource(R.string.composer_media_edit)
     Surface(color = container, contentColor = content, shape = MaterialTheme.shapes.medium, modifier = modifier) {
         Column(
             Modifier
                 .fillMaxWidth()
-                .clickable(onClickLabel = stringResource(R.string.composer_media_edit), role = Role.Button) {
-                    actions.onEditMedia(attachment.id)
-                }
+                .describing(describable, describe) { actions.onEditMedia(attachment.id) }
                 .semantics(mergeDescendants = true) {
                     contentDescription = summary
                     customActions = moves
                 }
                 .padding(AlohaSpacing.s),
         ) {
-            CardRow(attachment, if (failed) couldNot else status, failed, draftable, removable, actions, described)
+            CardRow(attachment, if (failed) couldNot else status, failed, draftable, removable, actions, describable)
             if (failed) Failure(status.takeIf { it != couldNot }) { actions.onRetryMedia(attachment.id) }
         }
     }
 }
+
+/** Opens the description of a card that can be [describable], read out as [label]. */
+private fun Modifier.describing(describable: Boolean, label: String, onClick: () -> Unit): Modifier =
+    if (describable) clickable(onClickLabel = label, role = Role.Button, onClick = onClick) else this
 
 /** The card's line: the picture, how it stands, and what can be done with it from here. */
 @Composable
@@ -143,11 +149,12 @@ private fun CardRow(
     draftable: Boolean,
     removable: Boolean,
     actions: ComposerActions,
-    described: Boolean,
+    describable: Boolean,
 ) {
+    val described = attachment.description.isNotBlank()
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(AlohaSpacing.s)) {
         MediaThumb(attachment)
-        CardText(attachment, status, failed, Modifier.weight(1f))
+        CardText(attachment, status, failed, describable, Modifier.weight(1f))
         // where the call for a description is, a way to have one drafted
         if (draftable && !described && !failed) {
             IconButton(onClick = { actions.onDraftAlt(attachment.id) }) {
@@ -173,19 +180,32 @@ private fun Failure(reason: String?, onRetry: () -> Unit) {
     }
 }
 
-/** The card's title line, how the attachment stands, and its file's name under it. */
+/**
+ * The card's title line, how the attachment stands, and its file's name under it. Media not [describable]
+ * call for no description.
+ */
 @Composable
-private fun CardText(attachment: Attachment, status: String?, failed: Boolean, modifier: Modifier) {
+private fun CardText(
+    attachment: Attachment,
+    status: String?,
+    failed: Boolean,
+    describable: Boolean,
+    modifier: Modifier,
+) {
     val colors = MaterialTheme.colorScheme
     val described = attachment.description.isNotBlank()
+    val calls = status == null && !described && describable
+    val title = status ?: attachment.description.takeIf { described }
     Column(modifier) {
-        Text(
-            status ?: attachment.description.takeIf { described } ?: stringResource(R.string.composer_media_add_alt),
-            style = MaterialTheme.typography.titleSmall,
-            color = if (status == null && !described && !failed) colors.error else LocalContentColor.current,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-        )
+        (title ?: stringResource(R.string.composer_media_add_alt).takeIf { calls })?.let {
+            Text(
+                it,
+                style = MaterialTheme.typography.titleSmall,
+                color = if (calls && !failed) colors.error else LocalContentColor.current,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
         Text(
             attachment.fileName,
             style = MaterialTheme.typography.bodySmall,

@@ -96,11 +96,17 @@ internal class Posts(private val script: MutableList<Int>) : Dispatcher() {
                 ("mentions" to JsonArray(mentions.map { (mid, acct) -> mention(mid, acct) })),
         )
 
+    /**
+     * The id the reader's own post serves its picture by; empty as Nextcloud Social 0.26.279 to 0.26.298
+     * left it after an edit.
+     */
+    @Volatile var pictureId = "m1"
+
     /** The reader's own post [id], with a described picture, and its source [text] as a delete answers. */
     fun own(id: String, text: String?): JsonObject {
         val picture = JsonObject(
             mapOf(
-                "id" to JsonPrimitive("m1"),
+                "id" to JsonPrimitive(pictureId),
                 "type" to JsonPrimitive("image"),
                 "url" to JsonPrimitive("https://example.test/beach.jpg"),
                 "description" to JsonPrimitive("Old words"),
@@ -292,17 +298,14 @@ internal abstract class ComposerTestSetup {
         writing: Writing = Writing(),
         key: (String) -> ComposerKey = { ComposerKey(it) },
         software: String = "nextcloud-social",
+        version: String = "",
     ): ComposerViewModel {
         Dispatchers.setMain(Dispatchers.Unconfined)
         val choices = IntelligencePreferences(InMemoryDataStore(emptyPreferences()))
         choices.update { it.copy(altText = true, rewrite = true, summary = true) }
         WorkManagerTestInitHelper.initializeTestWorkManager(context)
         val apiBase = server.url("/")
-        val capabilities = ServerCapabilities.minimal(apiBase.toString()).copy(
-            softwareName = software,
-            limits = ServerLimits.MastodonDefaults.copy(maxStatusCharacters = 5000),
-            stories = true,
-        )
+        val capabilities = capabilities(apiBase.toString(), software, version)
         val account = accounts.signedIn(
             NewAccount(apiBase.host, "6", "alice", "Alice", null, null, capabilities, profilePending = false),
             AccessToken(MockCredentials.ACCESS_TOKEN, ""),
@@ -332,6 +335,14 @@ internal abstract class ComposerTestSetup {
             choices,
         ).also(opened::add)
     }
+
+    private fun capabilities(apiBase: String, software: String, version: String) =
+        ServerCapabilities.minimal(apiBase).copy(
+            softwareName = software,
+            softwareVersion = version,
+            limits = ServerLimits.MastodonDefaults.copy(maxStatusCharacters = 5000),
+            stories = true,
+        )
 
     protected suspend fun ComposerViewModel.await(predicate: (ComposerUiState) -> Boolean): ComposerUiState =
         withTimeout(10.seconds) { uiState.first(predicate) }

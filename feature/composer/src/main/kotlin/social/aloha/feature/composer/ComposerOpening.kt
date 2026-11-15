@@ -19,9 +19,15 @@ import social.aloha.core.navigation.ComposerKey
 internal sealed interface Opened {
     /**
      * A post to write: a new one when [post] is null, else one carried on with, from the outbox
-     * ([entry]), or a post of the writer's own being [editing] or written again.
+     * ([entry]), or a post of the writer's own being [editing] or written again; [mediaLeftOut] when
+     * some of its media could not be taken over.
      */
-    data class Writing(val post: DraftPost?, val entry: OutboxEntry? = null, val editing: String? = null) : Opened
+    data class Writing(
+        val post: DraftPost?,
+        val entry: OutboxEntry? = null,
+        val editing: String? = null,
+        val mediaLeftOut: Boolean = false,
+    ) : Opened
 
     /** The post is going out right now and cannot be changed. */
     data object Sending : Opened
@@ -64,13 +70,17 @@ internal class PostOpener(
     /**
      * The post written again: its source and media, as a new post that replaces it. The original is
      * deleted only once the new one is out, so a writer who gives up, or a post that fails, loses
-     * nothing.
+     * nothing. Media an older edit left without an id cannot be named and are left out.
      */
     private suspend fun redraft(account: SignedInAccount, id: String): Opened {
-        val status = (compose.status(account, id) as? Answer.Got)?.value ?: return Opened.Gone
+        val found = (compose.status(account, id) as? Answer.Got)?.value ?: return Opened.Gone
+        val status = found.copy(mediaAttachments = found.mediaAttachments.filter { it.id.isNotBlank() })
         val source = (interactions.source(account, id) as? Answer.Got)?.value
         val text = source?.text ?: status.text ?: StatusHtmlParser.plainText(status.content)
-        return Opened.Writing(draftOf(status, text, source?.spoilerText ?: status.spoilerText).copy(replaces = id))
+        return Opened.Writing(
+            draftOf(status, text, source?.spoilerText ?: status.spoilerText).copy(replaces = id),
+            mediaLeftOut = status.mediaAttachments.size < found.mediaAttachments.size,
+        )
     }
 
     private companion object {

@@ -6,6 +6,7 @@ package social.aloha.feature.composer
 import androidx.compose.runtime.Immutable
 import java.time.Instant
 import social.aloha.core.data.Trouble
+import social.aloha.core.data.compose.damagedByEdit
 import social.aloha.core.model.CustomEmoji
 import social.aloha.core.model.Visibility
 import social.aloha.core.sync.UploadState
@@ -196,13 +197,18 @@ internal data class ComposerUiState(
     val replaces: String? = null,
     /** The media of the post being edited as it was, by id, which an edit that keeps them does not send. */
     val mediaAsPosted: List<String>? = null,
+    /** Some media of the post written again could not be taken over, and are attached again by hand. */
+    val mediaLeftOut: Boolean = false,
 ) {
     val canPost: Boolean
         get() = ready && author != null && !posting && !empty && remaining.all { it >= 0 } && (uploaded || canWait) &&
             poll?.ready(maxPollOptionCharacters) != false
 
-    /** The post's media stay as posted: an edit, on a server that keeps them whatever it is sent. */
-    val mediaLocked: Boolean get() = editing && !editsMedia
+    /** An edit of a post whose media lost their ids to an earlier edit: they and their descriptions stay. */
+    val mediaDamaged: Boolean get() = editing && mediaAsPosted.damagedByEdit()
+
+    /** The post's media stay as posted: an edit, on a server that keeps them whatever it is sent, or [mediaDamaged]. */
+    val mediaLocked: Boolean get() = (editing && !editsMedia) || mediaDamaged
 
     /** Another post can join the thread: an edit changes one post, and a scheduled one cannot be answered yet. */
     val threadable: Boolean get() = !posting && scheduledAt == null && !editing

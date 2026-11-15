@@ -3,6 +3,7 @@
 
 package social.aloha.feature.composer
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -126,19 +127,11 @@ internal fun ComposerScreen(
 private fun Writing(state: ComposerUiState, segments: List<TextFieldValue>, spoiler: String, actions: ComposerActions) {
     state.resume?.let { ResumeCard(it, segments, spoiler, actions::onResume) }
     state.reply?.let { ReplyLine(it) }
-    if (state.editing) {
-        Text(
-            stringResource(R.string.composer_edit_note),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-    }
-    if (state.mediaLocked) {
-        Text(
-            stringResource(R.string.composer_edit_media_locked),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+    if (state.editing) Note(R.string.composer_edit_note)
+    when {
+        state.mediaDamaged -> Note(R.string.composer_edit_media_damaged)
+        state.mediaLocked -> Note(R.string.composer_edit_media_locked)
+        state.mediaLeftOut -> Note(R.string.composer_redraft_media_left_out)
     }
     if (state.spoilerShown) SpoilerField(spoiler) { actions.onSpoiler(true, it) }
     segments.forEachIndexed { index, value ->
@@ -148,6 +141,16 @@ private fun Writing(state: ComposerUiState, segments: List<TextFieldValue>, spoi
     GamesHint(state.games)
     state.scheduledAt?.let { ScheduleLine(it, actions::onPickSchedule) { actions.onSchedule(null) } }
     AddToThread(state, segments, actions::onAddSegment)
+}
+
+/** A quiet line about the post being written. */
+@Composable
+private fun Note(@StringRes text: Int) {
+    Text(
+        stringResource(text),
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
 }
 
 /**

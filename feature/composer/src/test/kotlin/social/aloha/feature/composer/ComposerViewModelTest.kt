@@ -400,6 +400,7 @@ internal class ComposerViewModelTest : ComposerTestSetup() {
         assertEquals("As I wrote it", viewModel.segments.single().text)
         assertEquals("m1", state.attachments.first().single().mediaId)
         assertEquals("Old words", state.attachments.first().single().description)
+        assertFalse(state.mediaLeftOut)
         assertEquals(emptyList<String>(), posts.deleted)
         viewModel.await { it.canPost }
         viewModel.onPost()
