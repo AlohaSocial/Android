@@ -9,7 +9,11 @@ Phase 22, what Aloha Social changed after 0.26.299 (server `aloha/main` at `6fb8
 | Item | Status | Note |
 |---|---|---|
 | 22a: Create an account from sign-in, and come back signed in | ⬜ | |
-| The web app's post polish, Photos and Shorts layouts, recap and search fixes | 🚫 | Web only; see Not built |
+| 22b: Sharp pictures on dense screens | Aloha Social scales a picture's preview to at most 800 px a side, and the web app now draws the original where the screen needs more. A picture drawn wider than its preview, in pixels, loads `url` instead of `preview_url` where `meta.original` gives both widths, the original is the wider one and at most 2560 px wide; a GIF keeps its still preview. Elsewhere, and on Mastodon, which serves a preview wide enough, nothing changes |
+| 22c: A post of one to three emoji drawn large | A post whose text is nothing but one to three emoji (flags, keycaps, skin tones, ZWJ and tag sequences, and the post's own custom emoji) is drawn at 2.5 times the text size in the timeline, as Aloha Social's web app and messengers draw a lone emoji. Done on the client, for posts from every server |
+| 22b: Sharp pictures on dense screens | ⬜ | |
+| 22c: A post of one to three emoji drawn large | ⬜ | |
+| The web app's post frames and action row, Photos and Shorts layouts, recap and search fixes | 🚫 | Web only; see Not built |
 
 ## Built
 
@@ -61,7 +65,7 @@ Between the phases: CI artifact retention ([#3](https://github.com/AlohaSocial/A
 | Push through the Nextcloud push proxy (FCM) | [08-notifications-sync.md](08-notifications-sync.md) §2 | Push is UnifiedPush in both flavours. FCM would be `gplay` only and needs the push proxy to allow the app |
 | Encrypted direct messages bound to the app lock | [11-safety-privacy-appstore.md](11-safety-privacy-appstore.md) | The app lock guards the screen, not the data |
 | Not taken up from Phase 21 | [02-server-api.md](02-server-api.md) | A long-form post's `article.title` (0.26.280) stays at the top of its `content`, which the app shows. `GET /api/v1/social/badges` (0.26.299) would save requests the app makes already. For You v4 (`/api/v1/recommendations/*`) is off by default on the server and a product decision. Posting through `POST /api/v1/post` was removed in 0.26.294; the app never used it |
-| Not taken up from Phase 22 | [02-server-api.md](02-server-api.md) | The rest changed only Aloha Social's web app: a post of one to three emoji drawn large, one frame for link previews, quoted posts and events, a quieter action row on touch screens, sharper pictures, Shorts, Photos, Videos and Discover without a visible title, posting from the sidebar only, the weekly recap naming the instance, and search results kept readable while asked again. Drawing a post of only emoji large is a design choice the app can make on its own |
+| Not taken up from Phase 22 | [02-server-api.md](02-server-api.md) | The rest changed only Aloha Social's web app: one frame for link previews, quoted posts and events, a quieter action row on touch screens, Shorts, Photos, Videos and Discover without a visible title, posting from the sidebar only, the weekly recap naming the instance (the app's text says "your server" already), and search results kept readable while asked again (the app does not dim them). A link preview's image already keeps its shape before it loads |
 | Handoff and Spotlight counterparts | [00-overview.md](00-overview.md) §5 | No Android equivalent is planned yet |
 | The reproducible-build check | [12-store.md](12-store.md) | Two clean builds of the first release tag, compared, when it is cut; nothing in CI checks it today |
 | Translations of the app | [12-conventions-quality.md](12-conventions-quality.md) | English only; every string is ready for translators |
