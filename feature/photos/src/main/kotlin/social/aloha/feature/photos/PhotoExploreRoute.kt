@@ -210,7 +210,7 @@ private fun Person(account: Account, onPerson: (Account) -> Unit) {
         supportingContent = { Text("@${account.acct}") },
         leadingContent = {
             AsyncImage(
-                model = account.avatar,
+                model = account.smallAvatar,
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.size(

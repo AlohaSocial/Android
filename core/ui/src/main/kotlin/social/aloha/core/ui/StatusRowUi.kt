@@ -175,7 +175,7 @@ public class StatusRowMapper(private val cache: RichTextCache, private val color
         return when {
             status.booster != null -> StatusRowUi.ContextLine.BoostedBy(
                 status.account.bestDisplayName,
-                status.account.avatar,
+                status.account.smallAvatar,
                 status.createdAt,
                 replyOf(shown),
             )
@@ -199,7 +199,7 @@ public class StatusRowMapper(private val cache: RichTextCache, private val color
         name = StatusHtmlParser.parseText(account.bestDisplayName, account.emojis).toAnnotatedString(colors),
         plainName = account.bestDisplayName,
         handle = account.qualifiedHandle,
-        avatarUrl = account.avatar,
+        avatarUrl = account.smallAvatar,
         bot = account.bot,
     )
 

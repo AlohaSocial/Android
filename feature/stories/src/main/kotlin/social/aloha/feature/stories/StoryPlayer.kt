@@ -275,7 +275,7 @@ private fun Header(reel: StoryReel, onProfile: (String) -> Unit, onClose: () -> 
     Row(Modifier.fillMaxWidth().padding(top = AlohaSpacing.xs), verticalAlignment = Alignment.CenterVertically) {
         TextButton(onClick = { onProfile(reel.account.id) }, modifier = Modifier.weight(1f)) {
             AsyncImage(
-                model = reel.account.avatar,
+                model = reel.account.smallAvatar,
                 contentDescription = null,
                 modifier = Modifier.size(AVATAR).clip(CircleShape).background(Color.White.copy(alpha = TRACK)),
             )

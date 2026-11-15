@@ -205,6 +205,11 @@ Rules:
   immediately; no layout shift when the real image arrives (aspect ratio comes
   from `meta.original.aspect`, or from the blurhash's own dimensions, or a
   4:3 default).
+- An avatar drawn at 48 dp or less (rows, notifications, lists of people,
+  completions) is the Account's `avatar_small`, where the server sends one
+  (Nextcloud Social from 0.26.296, read from source: a thumbnail of at most
+  128 px of a remote account's cached avatar, else the same URL as `avatar`);
+  the profile header draws `avatar`. Either is cached by its URL.
 - Prefetch the next 10 rows' media; cancel on scroll direction change.
 - Target: 120 Hz sustained on ProMotion devices, no frame over 8 ms.
 

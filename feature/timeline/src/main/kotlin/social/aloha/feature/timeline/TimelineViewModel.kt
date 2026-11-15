@@ -200,7 +200,7 @@ internal class TimelineViewModel @AssistedInject constructor(
                     .map { it.status.displayed.account }
                     .distinctBy { it.id }
                     .take(PILL_AVATARS)
-                    .map { it.avatar }
+                    .map { it.smallAvatar }
                 val built = caughtUp(rows.build(account, key.source, stored, shape), shaping.caughtUpAt)
                     .let { if (carousel) foldBoosts(it, shaping.expandedBoosts) else it }
                 Shown(built, held.size, avatars, shaping.scrollToTop)

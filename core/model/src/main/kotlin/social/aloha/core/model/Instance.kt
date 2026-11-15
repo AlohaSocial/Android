@@ -13,6 +13,8 @@ import kotlinx.serialization.Serializable
  * @property streamingUrl null when there is no streaming. Nextcloud Social before 0.26.251 says so with an empty
  *   `urls`; later ones announce it whether or not their stream daemon runs, which capability detection asks.
  * @property vapidKey `""` where the server offers no Web Push, as Nextcloud Social did up to 0.26.278.
+ * @property userCount null where unknown, which a server that hides its counts sends as 0 (Nextcloud Social from
+ *   0.26.288, where an administrator can hide them).
  * @property apiVersions `{"mastodon": 3}` on a 4.3-compatible server, read instead of a version string
  *   that says nothing on a fork.
  */

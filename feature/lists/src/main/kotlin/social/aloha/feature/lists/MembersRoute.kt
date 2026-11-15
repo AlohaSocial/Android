@@ -150,7 +150,7 @@ private fun Members(state: MembersUiState, actions: MembersActions) {
 @Composable
 private fun Person(person: Account, onProfile: (String) -> Unit, trailing: @Composable () -> Unit) {
     ListItem(
-        leadingContent = { Avatar(person.avatar, AVATAR) },
+        leadingContent = { Avatar(person.smallAvatar, AVATAR) },
         headlineContent = { Text(person.bestDisplayName) },
         supportingContent = { Text(person.qualifiedHandle) },
         trailingContent = trailing,

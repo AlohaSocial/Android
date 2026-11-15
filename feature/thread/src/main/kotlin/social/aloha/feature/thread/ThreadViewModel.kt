@@ -263,7 +263,7 @@ internal class ThreadViewModel @AssistedInject constructor(
                         control.update {
                             it.copy(
                                 people =
-                                    it.people + (kind to people.map { p -> p.avatar }),
+                                    it.people + (kind to people.map { p -> p.smallAvatar }),
                             )
                         }
                     }

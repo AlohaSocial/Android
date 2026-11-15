@@ -97,7 +97,7 @@ internal fun NewMessageScreen(
             items(state.shown, key = { it.id }) { person ->
                 ListItem(
                     modifier = Modifier.clickable { onPick(person) },
-                    leadingContent = { Avatar(person.avatar, AVATAR) },
+                    leadingContent = { Avatar(person.smallAvatar, AVATAR) },
                     headlineContent = { Text(person.bestDisplayName, maxLines = 1, overflow = TextOverflow.Ellipsis) },
                     supportingContent = {
                         Text(person.qualifiedHandle, maxLines = 1, overflow = TextOverflow.Ellipsis)

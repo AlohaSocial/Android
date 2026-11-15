@@ -12,6 +12,8 @@ import kotlinx.serialization.Serializable
  * @property acct `alice` for a local account, `alice@example.social` for a remote one.
  * @property avatar none when the server sends `""` or `null`, which Nextcloud Social does for an
  *   account whose avatar it has not cached yet.
+ * @property avatarSmall the same picture at most 128 px across, where the server keeps one (Nextcloud Social
+ *   0.26.296 and later, for a remote account's cached avatar); none elsewhere.
  * @property avatarDefault the avatar is the server's stand-in, not a picture the account chose
  *   (Nextcloud Social says so; other servers do not, and it stays false there).
  * @property header none as well when it is only the server's stand-in for "no header".
@@ -28,6 +30,7 @@ public data class Account(
     val uri: String? = null,
     val avatar: String? = null,
     val avatarStatic: String? = null,
+    val avatarSmall: String? = null,
     val avatarDefault: Boolean = false,
     val header: String? = null,
     val headerStatic: String? = null,
@@ -55,6 +58,9 @@ public data class Account(
     /** What a person reads; never empty, it falls back through the handle. */
     val bestDisplayName: String
         get() = displayName.ifEmpty { username.ifEmpty { acct } }
+
+    /** The picture to draw at 48 dp and less: [avatarSmall] where the server sent one, else [avatar]. */
+    val smallAvatar: String? get() = avatarSmall ?: avatar
 
     /** The handle as a person writes it, with a leading `@`. */
     val qualifiedHandle: String get() = "@$acct"

@@ -120,7 +120,7 @@ internal class BlockedViewModel @AssistedInject constructor(
     }
 
     private fun kept(account: Account) =
-        Kept(account.id, account.bestDisplayName, account.qualifiedHandle, account.avatar)
+        Kept(account.id, account.bestDisplayName, account.qualifiedHandle, account.smallAvatar)
 }
 
 /** One of the three lists, to take a row out of and put it back in. */

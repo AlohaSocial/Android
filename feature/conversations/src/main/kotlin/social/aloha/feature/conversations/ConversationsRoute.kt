@@ -208,7 +208,7 @@ private fun ConversationRow(
     ListItem(
         modifier = Modifier.clickable { onOpen(conversation) }
             .semantics { if (conversation.unread) stateDescription = unread },
-        leadingContent = { Avatar(conversation.accounts.firstOrNull()?.avatar, AVATAR) },
+        leadingContent = { Avatar(conversation.accounts.firstOrNull()?.smallAvatar, AVATAR) },
         overlineContent = last?.let {
             { PostTime(it.createdAt, now, LocalTextStyle.current, LocalContentColor.current) }
         },

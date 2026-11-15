@@ -179,8 +179,8 @@ internal class MergedTimelineViewModel @AssistedInject constructor(
             loadedOnce = paging.loadedOnce,
             refreshing = paging.refreshing,
             pending = built.held.size,
-            pendingAvatars = built.held.map { it.displayed.account }.distinctBy { it.avatar }.take(PILL_AVATARS)
-                .map { it.avatar },
+            pendingAvatars = built.held.map { it.displayed.account }.distinctBy { it.smallAvatar }.take(PILL_AVATARS)
+                .map { it.smallAvatar },
             trouble = accounts.firstNotNullOfOrNull { paging.troubles[it.id] },
             loadingOlder = paging.loadingOlder,
             reachedEnd = paging.loadedOnce && built.behind.isEmpty(),

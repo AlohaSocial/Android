@@ -17,6 +17,7 @@ import social.aloha.core.model.ProfileLayout
 import social.aloha.core.model.ServerCapabilities
 import social.aloha.core.testing.StatusSamples
 import social.aloha.core.ui.RichTextColors
+import social.aloha.core.ui.StatusRowMapper
 
 @RunWith(RobolectricTestRunner::class)
 class ProfilePresentationTest {
@@ -45,6 +46,17 @@ class ProfilePresentationTest {
         assertNull(followers(0, real = false))
         assertEquals(12, followers(12, real = false))
         assertEquals(0, followers(0, real = true))
+    }
+
+    @Test
+    fun `the profile header draws the whole avatar, a row of people the small one`() {
+        val bob = StatusSamples.bob.copy(
+            avatar = "https://cloud.example/a.jpeg",
+            avatarSmall = "https://cloud.example/a.webp",
+        )
+        val header = ProfilePresentation.header(bob, RichTextCache(), colors, isSelf = false)
+        assertEquals("https://cloud.example/a.jpeg", header.author.avatarUrl)
+        assertEquals("https://cloud.example/a.webp", StatusRowMapper(RichTextCache(), colors).author(bob).avatarUrl)
     }
 
     @Test

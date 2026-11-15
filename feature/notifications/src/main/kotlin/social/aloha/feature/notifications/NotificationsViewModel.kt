@@ -530,7 +530,7 @@ private fun OwnedNotification.toRow(accounts: List<SignedInAccount>, marker: Str
         kind = item.kind,
         name = people.firstOrNull()?.bestDisplayName,
         others = item.others,
-        people = people.map { NotificationRowUi.Person(it.id, it.bestDisplayName, it.avatar) },
+        people = people.map { NotificationRowUi.Person(it.id, it.bestDisplayName, it.smallAvatar) },
         preview = item.preview(),
         statusId = item.status?.id?.takeUnless { foreign },
         accountId = people.firstOrNull()?.id,
