@@ -4,6 +4,7 @@
 package social.aloha.buildlogic
 
 import org.gradle.api.Project
+import org.gradle.api.provider.Provider
 
 /**
  * `alohaUnitTests` runs the debug unit tests of this module, whatever its variants are called: the
@@ -14,7 +15,7 @@ internal fun Project.registerUnitTestAggregate() {
     tasks.register("alohaUnitTests") {
         group = "verification"
         description = "Runs this module's debug unit tests."
-        dependsOn(tasks.matching { it.name == "test" || (it.name.startsWith("test") && it.name.endsWith("DebugUnitTest")) })
+        dependsOn(taskNames { it == "test" || (it.startsWith("test") && it.endsWith("DebugUnitTest")) })
     }
 }
 
@@ -23,6 +24,14 @@ internal fun Project.registerScreenshotAggregate() {
     tasks.register("alohaScreenshotTests") {
         group = "verification"
         description = "Verifies this module's screenshots."
-        dependsOn(tasks.matching { it.name.startsWith("verifyRoborazzi") && it.name.endsWith("Debug") })
+        dependsOn(taskNames { it.startsWith("verifyRoborazzi") && it.endsWith("Debug") })
     }
 }
+
+/**
+ * The names of this module's tasks that match [predicate], read without realizing any task, so a
+ * task whose configuration fails, such as AGP's `generate<Variant>ComposePreviewRunfiles`, is not
+ * configured unless it runs.
+ */
+private fun Project.taskNames(predicate: (String) -> Boolean): Provider<List<String>> =
+    provider { tasks.names.filter(predicate) }

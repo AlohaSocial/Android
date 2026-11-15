@@ -13,7 +13,11 @@ class AndroidComposeConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) {
         with(target) {
             pluginManager.apply("org.jetbrains.kotlin.plugin.compose")
-            extensions.getByType(CommonExtension::class.java).buildFeatures.compose = true
+            extensions.getByType(CommonExtension::class.java).apply {
+                buildFeatures.compose = true
+                // AGP's generate<Variant>ComposePreviewRunfiles packages the unit tests' resources for Layoutlib
+                testOptions.unitTests.isIncludeAndroidResources = true
+            }
             dependencies {
                 val bom = platform(libs.library("compose-bom"))
                 add("implementation", bom)
