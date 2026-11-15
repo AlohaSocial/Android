@@ -59,6 +59,8 @@ internal data class AccountDto(
     @Serializable(with = LenientBoolSerializer::class) val memorial: Boolean = false,
     @SerialName("profile_layout") @Serializable(with = ProfileLayoutOrNull::class)
     val profileLayout: ProfileLayoutDto? = null,
+    @SerialName("hide_collections") @Serializable(with = OptionalBoolSerializer::class)
+    val hideCollections: Boolean? = null,
 )
 
 @Serializable
@@ -94,6 +96,8 @@ internal data class AccountSourceDto(
     val language: String? = null,
     @SerialName("follow_requests_count") @Serializable(with = LenientIntSerializer::class)
     val followRequestsCount: Int = 0,
+    @SerialName("hide_collections") @Serializable(with = OptionalBoolSerializer::class)
+    val hideCollections: Boolean? = null,
 )
 
 internal object AccountOrNull : KSerializer<AccountDto?> by OrNullSerializer(AccountDto.serializer())
@@ -133,6 +137,7 @@ internal fun AccountDto.toDomain(): Account {
         moved = moved?.toDomain(),
         memorial = memorial,
         profileLayout = profileLayout?.toDomain(),
+        hideCollections = hideCollections,
     )
 }
 
@@ -159,4 +164,5 @@ internal fun AccountSourceDto.toDomain(): AccountSource = AccountSource(
     sensitive = sensitive,
     language = language,
     followRequestsCount = followRequestsCount,
+    hideCollections = hideCollections,
 )

@@ -22,6 +22,7 @@ import social.aloha.core.model.Visibility
 import social.aloha.core.network.AlohaJson
 import social.aloha.core.network.ApiRequest
 import social.aloha.core.network.Decoded
+import social.aloha.core.network.endpoints.AccountEndpoints
 import social.aloha.core.network.endpoints.InstanceEndpoints
 import social.aloha.core.network.endpoints.NotificationEndpoints
 import social.aloha.core.network.endpoints.StatusEndpoints
@@ -103,6 +104,20 @@ class DtoDecodingTest {
         assertNull(layout(""""profile_layout": {"default_tab": "posts", "tabs": ["videos"]}"""))
         assertNull(layout(""""profile_layout": "posts""""))
         assertNull(layout(""""profile_layout": {"default_tab": "posts", "tabs": ["posts", 1]}"""))
+    }
+
+    @Test
+    fun `hidden followers and following are read at the top and in source, and an account without them says nothing`() {
+        val credentials = AccountEndpoints.verifyCredentials().decode(
+            """{"id": "1", "username": "alice", "hide_collections": true,
+                "source": {"privacy": "public", "hide_collections": true}}""",
+        ).value
+        assertEquals(true, credentials.hideCollections)
+        assertEquals(true, credentials.source?.hideCollections)
+        val embedded = decodeStatus(status()).account
+        assertNull(embedded.hideCollections)
+        val mastodonRemote = decodeStatus("""{"id": "1", "account": {"id": "2", "hide_collections": null}}""").account
+        assertNull(mastodonRemote.hideCollections)
     }
 
     @Test

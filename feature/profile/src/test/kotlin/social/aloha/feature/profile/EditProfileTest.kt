@@ -4,10 +4,12 @@
 package social.aloha.feature.profile
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import social.aloha.core.model.Account
 import social.aloha.core.model.AccountField
+import social.aloha.core.model.AccountSource
 import social.aloha.core.network.ApiError
 
 class EditProfileTest {
@@ -20,6 +22,26 @@ class EditProfileTest {
         val own = generated.copy(avatar = "https://x/a.png", avatarDefault = false)
         assertEquals(Picture.Kept("https://x/a.png", chosen = true), ProfileForm.of(own).avatar)
         assertEquals(Picture.Kept(null, chosen = false), ProfileForm.of(own).header)
+    }
+
+    @Test
+    fun `the hide switch is there only where the server reports the setting, and goes only when changed`() {
+        val account = Account("1", "alice", "alice")
+        assertEquals(null, ProfileForm.of(account).hideCollections)
+        val reported = account.copy(hideCollections = false, source = AccountSource(hideCollections = true))
+        val form = ProfileForm.of(reported)
+        assertEquals(true, form.hideCollections)
+        assertEquals(null, changes(form, form, avatar = null, header = null).hideCollections)
+        assertEquals(false, changes(form, form.copy(hideCollections = false), null, null).hideCollections)
+    }
+
+    @Test
+    fun `another account's empty list is hidden when it hides it, the reader's own never is`() {
+        val hiding = Account("7", "bob", "bob", hideCollections = true)
+        assertTrue(hidesPeople(hiding, readerAccountId = "1"))
+        assertFalse(hidesPeople(hiding, readerAccountId = "7"))
+        assertFalse(hidesPeople(hiding.copy(hideCollections = null), readerAccountId = "1"))
+        assertFalse(hidesPeople(hiding.copy(hideCollections = false), readerAccountId = "1"))
     }
 
     @Test

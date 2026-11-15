@@ -235,6 +235,13 @@ private fun Options(form: ProfileForm, onForm: (ProfileForm) -> Unit) {
         { onForm(form.copy(discoverable = it)) },
     )
     SwitchRow(stringResource(R.string.profile_edit_indexable), form.indexable, { onForm(form.copy(indexable = it)) })
+    form.hideCollections?.let { hides ->
+        SwitchRow(
+            stringResource(R.string.profile_edit_hide_collections),
+            hides,
+            { onForm(form.copy(hideCollections = it)) },
+        )
+    }
     SwitchRow(stringResource(R.string.profile_edit_sensitive), form.sensitive, { onForm(form.copy(sensitive = it)) })
     PrivacyMenu(form.privacy) { onForm(form.copy(privacy = it)) }
 }
