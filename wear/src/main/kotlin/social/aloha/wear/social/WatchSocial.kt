@@ -19,6 +19,7 @@ import social.aloha.core.network.ApiClient
 import social.aloha.core.network.ApiRequest
 import social.aloha.core.network.Credentials
 import social.aloha.core.network.RateLimiter
+import social.aloha.core.network.TokenRenewal
 import social.aloha.core.network.di.IoDispatcher
 import social.aloha.core.network.endpoints.ComposeEndpoints
 import social.aloha.core.network.endpoints.NotificationEndpoints
@@ -27,6 +28,8 @@ import social.aloha.core.network.endpoints.StatusEndpoints
 import social.aloha.core.network.endpoints.StatusPost
 import social.aloha.core.network.endpoints.TimelineEndpoints
 import social.aloha.core.network.valueOrNull
+import social.aloha.wear.auth.PhoneAccounts
+import social.aloha.wear.auth.WatchAccount
 import social.aloha.wear.auth.WatchAccounts
 
 /** A post as the watch shows it: who wrote it, its text without markup, and the reader's own marks on it. */
@@ -50,11 +53,13 @@ data class WatchNotice(val id: String, val kind: NotificationKind, val who: Stri
 
 /**
  * The server as the watch reaches it, with the account it is signed in to. A token the server refuses has
- * been revoked, by the person or by the phone signing out, so the watch forgets the account and signs out.
+ * been revoked, by the person or by the phone signing out, so the watch forgets the account and signs out;
+ * an account handed over from the phone first asks the phone for its token, which a refresh there replaced.
  */
 @Singleton
 class WatchSocial @Inject constructor(
     private val accounts: WatchAccounts,
+    private val phone: PhoneAccounts,
     private val http: OkHttpClient,
     private val rateLimiter: RateLimiter,
     @IoDispatcher private val io: CoroutineDispatcher,
@@ -103,11 +108,37 @@ class WatchSocial @Inject constructor(
     private suspend fun <T> call(request: ApiRequest<T>): T? {
         val account = accounts.current() ?: return null
         val base = account.apiBase.toHttpUrlOrNull() ?: return null
-        val credentials = Credentials(account.token)
-        // a refused token was revoked; forgetting it leaves an account signed in since then alone
-        val forget: suspend () -> Unit = { accounts.forget(account.token) }
-        val client = ApiClient(base, { credentials }, http, rateLimiter, io, onUnauthorised = forget)
+        var token = account.token
+        val client = ApiClient(
+            base,
+            { Credentials(token) },
+            http,
+            rateLimiter,
+            io,
+            // forgetting only the token refused leaves an account signed in or renewed since then alone
+            onUnauthorised = { accounts.forget(token) },
+            renew = { rejected ->
+                fromPhone(account, rejected)?.let {
+                    token = it
+                    TokenRenewal.Renewed
+                } ?: TokenRenewal.Refused
+            },
+        )
         return client.execute(request).valueOrNull()
+    }
+
+    /**
+     * The token that replaced [rejected] in an account handed over from the phone, asked of the phone; null
+     * for the watch's own account, and where the phone is out of reach or holds no newer token for it.
+     */
+    private suspend fun fromPhone(account: WatchAccount, rejected: String): String? {
+        if (!account.shared) return null
+        phone.account(rejected)
+            ?.takeIf { it.apiBase == account.apiBase && it.handle == account.handle && it.token.isNotEmpty() }
+            ?.let { accounts.renew(rejected, it.token) }
+        return accounts.current()
+            ?.takeIf { it.shared && it.apiBase == account.apiBase && it.handle == account.handle }
+            ?.token?.takeIf { it != rejected }
     }
 
     private fun post(status: Status): WatchPost {

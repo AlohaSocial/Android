@@ -15,6 +15,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import social.aloha.core.datastore.TokenVault
+import social.aloha.core.datastore.VaultKey
 import social.aloha.core.model.HandedOverAccount
 import social.aloha.core.network.RateLimiter
 import social.aloha.core.network.oauth.OAuthClient
@@ -51,7 +52,7 @@ class WatchSignInTest {
     private class PhoneApp(private val held: HandedOverAccount?) : PhoneAccounts {
         override suspend fun reachable() = held != null
 
-        override suspend fun account() = held
+        override suspend fun account(refused: String?) = held
     }
 
     private fun signIn(browser: PhoneBrowser, phoneApp: PhoneAccounts = PhoneApp(null)) = WatchSignIn(
@@ -122,6 +123,16 @@ class WatchSignInTest {
     fun `a phone with nobody signed in hands over nothing`() = runBlocking {
         assertNull(signIn(ConsentingPhone(), PhoneApp(HandedOverAccount("https://x.test/", "a"))).fromPhone())
         assertNull(accounts.current())
+    }
+
+    @Test
+    fun `an account kept with a refresh token by an earlier build still reads`() = runBlocking {
+        vault.put(
+            VaultKey.WatchAccount,
+            """{"apiBase":"https://x.test/","handle":"alice","token":"t","refreshToken":"r"}""",
+        )
+
+        assertEquals(WatchAccount("https://x.test/", "alice", "t"), accounts.current())
     }
 
     private companion object {

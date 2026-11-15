@@ -16,10 +16,12 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import social.aloha.core.datastore.TokenVault
+import social.aloha.core.model.HandedOverAccount
 import social.aloha.core.network.RateLimiter
 import social.aloha.core.testing.FakeSecretCipher
 import social.aloha.core.testing.InMemoryDataStore
 import social.aloha.core.testing.NumberedTimeline
+import social.aloha.wear.auth.PhoneAccounts
 import social.aloha.wear.auth.WatchAccount
 import social.aloha.wear.auth.WatchAccounts
 
@@ -31,8 +33,20 @@ class WatchSocialTest {
     }
     private val accounts =
         WatchAccounts(TokenVault(InMemoryDataStore(ByteArray(0)), FakeSecretCipher(), Dispatchers.IO))
-    private val social =
-        WatchSocial(accounts, OkHttpClient(), RateLimiter(nowMillis = Clock.systemUTC()::millis), Dispatchers.IO)
+    private var onPhone: HandedOverAccount? = null
+    private val refusedAsked = mutableListOf<String?>()
+    private val phone = object : PhoneAccounts {
+        override suspend fun reachable(): Boolean = onPhone != null
+
+        override suspend fun account(refused: String?): HandedOverAccount? = onPhone.also { refusedAsked += refused }
+    }
+    private val social = WatchSocial(
+        accounts,
+        phone,
+        OkHttpClient(),
+        RateLimiter(nowMillis = Clock.systemUTC()::millis),
+        Dispatchers.IO,
+    )
 
     private fun signIn(base: String = server.url("/").toString()) = runBlocking {
         accounts.keep(WatchAccount(base, "alice", "watch-token"))
@@ -99,6 +113,44 @@ class WatchSocialTest {
 
         assertNull(social.home())
         assertNull(accounts.current())
+        refusing.close()
+    }
+
+    @Test
+    fun `a refused token of an account from the phone takes the phone's newer token and stays signed in`() =
+        runBlocking {
+            val refusing = MockWebServer().apply {
+                enqueue(MockResponse.Builder().code(401).body("""{"error":"the access_token was revoked"}""").build())
+                enqueue(MockResponse.Builder().body("[]").build())
+                start()
+            }
+            val base = refusing.url("/").toString()
+            accounts.keep(WatchAccount(base, "alice", "phone-old", shared = true))
+            onPhone = HandedOverAccount(base, "alice", "phone-new")
+
+            assertEquals(emptyList<WatchPost>(), social.home())
+
+            assertEquals("phone-new", accounts.current()?.token)
+            assertEquals(listOf<String?>("phone-old"), refusedAsked)
+            refusing.takeRequest()
+            assertEquals("Bearer phone-new", refusing.takeRequest().headers["Authorization"])
+            refusing.close()
+        }
+
+    @Test
+    fun `a refused token of an account from the phone is forgotten when the phone could not renew it`() = runBlocking {
+        val refusing = MockWebServer().apply {
+            enqueue(MockResponse.Builder().code(401).body("""{"error":"the access_token was revoked"}""").build())
+            start()
+        }
+        val base = refusing.url("/").toString()
+        accounts.keep(WatchAccount(base, "alice", "phone-old", shared = true))
+        onPhone = HandedOverAccount(base, "alice", "phone-old")
+
+        assertNull(social.home())
+
+        assertNull(accounts.current())
+        assertEquals(1, refusing.requestCount)
         refusing.close()
     }
 
