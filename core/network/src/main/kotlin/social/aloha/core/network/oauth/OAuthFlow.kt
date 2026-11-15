@@ -18,7 +18,7 @@ public object OAuthIdentity {
     public const val CLIENT_NAME: String = "Aloha Social"
     public const val WEBSITE: String = "https://aloha.social"
 
-    /** Coarse grants covering every granular scope Nextcloud Social checks; `push` is needed where Web Push exists. */
+    /** Coarse grants covering every granular scope Aloha Social checks; `push` is needed where Web Push exists. */
     public const val SCOPES: String = "read write follow push"
 
     /**
@@ -37,7 +37,7 @@ public object OAuthIdentity {
     /** No redirect: the server shows the code on its page, for the person to type into a device without a browser. */
     public const val OUT_OF_BAND_REDIRECT: String = "urn:ietf:wg:oauth:2.0:oob"
 
-    /** Both are registered, one per line; Nextcloud Social splits `redirect_uris` on newlines. */
+    /** Both are registered, one per line; Aloha Social splits `redirect_uris` on newlines. */
     public const val REGISTERED_REDIRECTS: String = "$APP_LINK_REDIRECT\n$SCHEME_REDIRECT"
 }
 

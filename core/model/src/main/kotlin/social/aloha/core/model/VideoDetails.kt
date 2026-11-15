@@ -8,7 +8,7 @@ import java.util.Locale
 import kotlinx.serialization.Serializable
 
 /**
- * What Nextcloud Social knows about a video beyond the attachment: the PeerTube-shaped facts it
+ * What Aloha Social knows about a video beyond the attachment: the PeerTube-shaped facts it
  * carries on a status as `video`.
  *
  * @property support the author's "support me" text, where they wrote one.
@@ -35,7 +35,7 @@ public data class VideoDetails(
 )
 
 /**
- * The facts Nextcloud Social gives about every video it serves (`video_card`), whether or not the post
+ * The facts Aloha Social gives about every video it serves (`video_card`), whether or not the post
  * carries a `video` block: what a grid of videos draws. A fact nobody sent is null.
  *
  * @property duration seconds.

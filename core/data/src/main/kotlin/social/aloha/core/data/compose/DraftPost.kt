@@ -164,7 +164,7 @@ public fun draftOf(status: Status, text: String, spoiler: String): DraftPost = D
 )
 
 /**
- * Whether media a post carries, by id, lost their ids to an edit: Nextcloud Social 0.26.279 to 0.26.298
+ * Whether media a post carries, by id, lost their ids to an edit: Aloha Social 0.26.279 to 0.26.298
  * stored an edited post's media with an empty id, which 0.26.299 no longer does but leaves as it is. An
  * edit naming such media is refused, so the post's media stay as they are.
  */

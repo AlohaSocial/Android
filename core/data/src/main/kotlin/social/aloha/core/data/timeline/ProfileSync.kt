@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.flow
 import social.aloha.core.model.SignedInAccount
 import social.aloha.core.model.TimelineKey
 
-/** Where reading an account's posts from its own server stands, as Nextcloud Social reports it. */
+/** Where reading an account's posts from its own server stands, as Aloha Social reports it. */
 public enum class ProfileSync { Pending, Failed }
 
 private const val PROFILE_SYNC_READS = 10

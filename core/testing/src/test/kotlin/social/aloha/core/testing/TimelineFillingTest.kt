@@ -58,7 +58,7 @@ import social.aloha.core.model.TimelineSource
 import social.aloha.core.network.RateLimiter
 
 /**
- * Nextcloud Social's `X-Social-Filling` and `X-Social-Profile-Filling`: a page the server is still filling
+ * Aloha Social's `X-Social-Filling` and `X-Social-Profile-Filling`: a page the server is still filling
  * in is read once more, and an account's posts still being read from elsewhere are not yet their end.
  */
 @RunWith(RobolectricTestRunner::class)
@@ -94,7 +94,7 @@ class TimelineFillingTest {
         servers.forEach { it.close() }
     }
 
-    /** Signed in at [apiBase], a Nextcloud Social that pages an account's posts as it is asked to. */
+    /** Signed in at [apiBase], an Aloha Social that pages an account's posts as it is asked to. */
     private suspend fun signedInAt(apiBase: HttpUrl): SignedInAccount = accounts.signedIn(
         NewAccount(
             apiBase.host,
@@ -117,7 +117,7 @@ class TimelineFillingTest {
         start()
     }.also { servers += it }
 
-    /** A page as Nextcloud Social answers it while it reads on in the background: no posts, no cursor. */
+    /** A page as Aloha Social answers it while it reads on in the background: no posts, no cursor. */
     private fun stillFilling(profile: Boolean) = MockResponse.Builder().code(200).body("[]")
         .addHeader("content-type", "application/json")
         .addHeader("X-Social-Filling", "1")
@@ -158,7 +158,7 @@ class TimelineFillingTest {
     }
 
     /**
-     * A hashtag's page as Nextcloud Social reads its posts from elsewhere: [first], still filling, then [later],
+     * A hashtag's page as Aloha Social reads its posts from elsewhere: [first], still filling, then [later],
      * where a post read meanwhile sits by when it was published, its nid made from that time. Further down
      * there is [older].
      */

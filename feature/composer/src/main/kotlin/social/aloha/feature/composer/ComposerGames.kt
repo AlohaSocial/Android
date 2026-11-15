@@ -4,7 +4,7 @@
 package social.aloha.feature.composer
 
 /**
- * The three games a post can play, the same ones Nextcloud Social's web composer offers, so a post
+ * The three games a post can play, the same ones Aloha Social's web composer offers, so a post
  * says the same thing whichever app wrote it: `/dice` (or `/roll`, with an optional number of sides),
  * `/flip`, and `/pick` followed by its options. Each is replaced by its result just before the post
  * is sent, so what travels is plain text and a reader on any server sees what a reader here sees;

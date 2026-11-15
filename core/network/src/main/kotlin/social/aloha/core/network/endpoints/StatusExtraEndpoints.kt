@@ -32,7 +32,7 @@ private fun statusList(endpoint: Endpoint): ApiRequest<List<Status>> =
     listRequest(endpoint, StatusDto.serializer()) { it.toDomain() }
 
 /**
- * Nextcloud Social's per-status extras: archive, delivery and quotes. A stock Mastodon
+ * Aloha Social's per-status extras: archive, delivery and quotes. A stock Mastodon
  * answers 404 to all of them, so each sits behind a capability.
  */
 public object StatusExtraEndpoints {
@@ -50,7 +50,7 @@ public object StatusExtraEndpoints {
         statusList(Endpoint("api/pixelfed/v1/archive/list", query = Paging.pageItems(limit, anchor)))
 
     /**
-     * The reactions to a status. Nextcloud Social stores and returns them here only; the status
+     * The reactions to a status. Aloha Social stores and returns them here only; the status
      * entity always carries an empty `reactions` list, for every viewer.
      */
     public fun reactions(id: String): ApiRequest<List<Reaction>> =

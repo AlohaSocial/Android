@@ -159,7 +159,7 @@ internal fun ApplicationSummaryDto.toDomain(): ApplicationSummary = ApplicationS
 
 internal fun QuotedStatusDto.toDomain(): QuotedStatus = QuotedStatus(state, quotedStatus?.toDomain())
 
-/** Nextcloud Social spells the longitude `long` in place search and `lon` on a status; both are read. */
+/** Aloha Social spells the longitude `long` in place search and `lon` on a status; both are read. */
 internal fun StatusEventDto.toDomain(): StatusEvent = StatusEvent(
     name,
     startTime,

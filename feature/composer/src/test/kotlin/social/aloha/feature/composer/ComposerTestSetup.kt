@@ -85,7 +85,7 @@ private const val HELD_BODY = """{"error":"This post is waiting for a moderator 
  * A server that takes posts as a script says: each `POST /statuses` answers with the next outcome
  * (a status numbered in order, a 500, a 422, or a hold for review on [HELD], which a scheduled post
  * gets too), and remembers what was sent and under which key.
- * An idempotency key it has seen answers with the post it made then, as Nextcloud Social does.
+ * An idempotency key it has seen answers with the post it made then, as Aloha Social does.
  */
 internal class Posts(private val script: MutableList<Int>) : Dispatcher() {
     val sent = CopyOnWriteArrayList<Pair<String?, Map<String, String>>>()
@@ -105,12 +105,12 @@ internal class Posts(private val script: MutableList<Int>) : Dispatcher() {
         )
 
     /**
-     * The id the reader's own post serves its picture by; empty as Nextcloud Social 0.26.279 to 0.26.298
+     * The id the reader's own post serves its picture by; empty as Aloha Social 0.26.279 to 0.26.298
      * left it after an edit.
      */
     @Volatile var pictureId = "m1"
 
-    /** The event the reader's own post is, as Nextcloud Social 0.26.279 renders one; null for none. */
+    /** The event the reader's own post is, as Aloha Social 0.26.279 renders one; null for none. */
     @Volatile var event: JsonObject? = null
 
     /** The reader's own post [id], with a described picture, and its source [text] as a delete answers. */

@@ -34,7 +34,7 @@ import social.aloha.core.network.unitRequest
 
 private fun Boolean.asFlag(): String = if (this) "1" else "0"
 
-/** The reader's hashtag interests on Nextcloud Social. Every change answers with the new state. */
+/** The reader's hashtag interests on Aloha Social. Every change answers with the new state. */
 public object InterestEndpoints {
     private fun state(endpoint: Endpoint): ApiRequest<InterestsState> =
         request(endpoint, InterestsStateDto.serializer()) { it.toDomain() }

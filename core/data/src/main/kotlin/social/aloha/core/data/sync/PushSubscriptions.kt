@@ -44,7 +44,7 @@ public class PushSubscriptions @Inject constructor(
             }
 
             is Answer.Missed -> answer.error.also {
-                // Nextcloud Social refuses an endpoint not on the public internet, such as a self-hosted ntfy, and
+                // Aloha Social refuses an endpoint not on the public internet, such as a self-hosted ntfy, and
                 // a twenty-first subscription of one account; asking again would be refused the same way. Its
                 // other 422s here are about the keys. Older builds said which by the message alone
                 if (it.refusal?.code in REFUSING || (it is ApiError.Unprocessable && it.message == ENDPOINT_REFUSED)) {

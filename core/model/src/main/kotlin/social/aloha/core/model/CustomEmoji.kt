@@ -8,7 +8,7 @@ import kotlinx.serialization.Serializable
 /**
  * A server's custom emoji.
  *
- * @property staticUrl the still frame. Nextcloud Social serves the same file as [url], since no
+ * @property staticUrl the still frame. Aloha Social serves the same file as [url], since no
  *   separate still rendering of an upload exists.
  * @property category omitted rather than null when there is none; the picker groups by it.
  */

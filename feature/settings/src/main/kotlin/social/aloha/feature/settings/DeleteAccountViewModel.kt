@@ -22,10 +22,10 @@ import social.aloha.core.sync.AccountSignOut
 
 /** How the account in use can be deleted from here. */
 internal enum class DeletionMode {
-    /** In the app: a Nextcloud Social account connected to its Nextcloud, whose app password asks. */
+    /** In the app: an Aloha Social account connected to its Nextcloud, whose app password asks. */
     InApp,
 
-    /** On Nextcloud Social, once connected to the Nextcloud, which the section above does. */
+    /** On Aloha Social, once connected to the Nextcloud, which the section above does. */
     NeedsNextcloud,
 
     /** Anywhere else, on the server's own website. */

@@ -18,7 +18,7 @@ import social.aloha.core.network.endpoints.StatusEndpoints
 public class TranslationRepository @Inject constructor(private val clients: ClientFactory) {
     /**
      * Status [statusId] in language [into]. A server without a translation service answers 503 with
-     * a sentence saying so (Nextcloud Social: "no translation provider is configured").
+     * a sentence saying so (Aloha Social: "no translation provider is configured").
      */
     public suspend fun translate(account: SignedInAccount, statusId: String, into: String): Answer<Translation> =
         clients.answer(account, StatusEndpoints.translate(statusId, into))

@@ -7,7 +7,7 @@ import java.time.Instant
 import kotlinx.serialization.Serializable
 
 /**
- * Nextcloud Social's twelve-week posting rhythm for a local account. Remote accounts answer
+ * Aloha Social's twelve-week posting rhythm for a local account. Remote accounts answer
  * `available: false`, and the profile draws nothing.
  *
  * @property since when the account was created.

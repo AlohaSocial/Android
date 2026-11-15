@@ -30,7 +30,7 @@ import social.aloha.core.network.request
 import social.aloha.core.network.unitRequest
 
 /**
- * What a profile shows beyond the account entity: Nextcloud Social's highlights, featured tags,
+ * What a profile shows beyond the account entity: Aloha Social's highlights, featured tags,
  * pinned posts, mutual followers, private notes and Pixelfed's tagged photos. Endorsing and removing
  * a follower are `AccountEndpoints.action`.
  */

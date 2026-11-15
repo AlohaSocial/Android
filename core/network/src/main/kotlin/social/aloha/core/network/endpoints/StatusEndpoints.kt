@@ -44,13 +44,13 @@ public enum class StatusAction(public val wire: String) {
     Mute("mute"),
     Unmute("unmute"),
 
-    /** PeerTube's thumbs-down on a video post, which Nextcloud Social takes; a 422 on any other post. */
+    /** PeerTube's thumbs-down on a video post, which Aloha Social takes; a 422 on any other post. */
     Dislike("dislike"),
     Undislike("undislike"),
 }
 
 /**
- * What Nextcloud Social (after 0.26.278) does about a status's counts when it is read on its own; other
+ * What Aloha Social (after 0.26.278) does about a status's counts when it is read on its own; other
  * servers ignore both parameters.
  */
 public enum class CountRefresh(internal val query: List<QueryItem>) {
@@ -120,7 +120,7 @@ public object StatusEndpoints {
     ) { it.toDomain() }
 
     /**
-     * An emoji reaction. Nextcloud Social takes Unicode emoji only, and reads it from `emoji`: a
+     * An emoji reaction. Aloha Social takes Unicode emoji only, and reads it from `emoji`: a
      * `name` answers 422 "not an emoji this app can draw".
      */
     public fun react(id: String, emoji: String): ApiRequest<Unit> = unitRequest(

@@ -31,7 +31,7 @@ internal object LenientTextSerializer : KSerializer<String?> {
 }
 
 /**
- * PeerTube's `{id, label}` for a video's category, language and licence, which Nextcloud Social may pass
+ * PeerTube's `{id, label}` for a video's category, language and licence, which Aloha Social may pass
  * on as that object or as the bare label. Both read as the label.
  */
 internal object LabelledTextSerializer : KSerializer<String?> {
@@ -63,7 +63,7 @@ internal object ChapterStartSerializer : KSerializer<Double?> {
 }
 
 /**
- * An object that a server sends as `[]` when it has nothing to say: Nextcloud Social without ffmpeg
+ * An object that a server sends as `[]` when it has nothing to say: Aloha Social without ffmpeg
  * sends `meta.original: []` for every video. `null` and an empty array are quietly absent; any other
  * wrong shape is absent and recorded.
  */

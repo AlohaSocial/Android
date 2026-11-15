@@ -43,7 +43,7 @@ internal interface InterestsActions {
     fun onChangeFailureShown()
 }
 
-/** The reader's interests on Nextcloud Social; every change answers with the whole state, which is shown. */
+/** The reader's interests on Aloha Social; every change answers with the whole state, which is shown. */
 @HiltViewModel(assistedFactory = InterestsViewModel.Factory::class)
 internal class InterestsViewModel @AssistedInject constructor(
     @Assisted private val readerId: String,

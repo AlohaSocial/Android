@@ -7,7 +7,7 @@ import java.time.Instant
 import kotlinx.serialization.Serializable
 
 /**
- * The reader's hashtag interests on Nextcloud Social: what the server has learned, what it is
+ * The reader's hashtag interests on Aloha Social: what the server has learned, what it is
  * still weighing, and the switches that govern the learning.
  *
  * @property thin true when the server has too little to go on yet.

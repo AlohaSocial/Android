@@ -54,7 +54,7 @@ import social.aloha.core.testing.SignedInFixture
 
 /**
  * A Social server at `/index.php/apps/social/` whose `api/v1/markers` accepts only the tokens in [accepted],
- * answering any other as Nextcloud Social answers an expired or revoked one, and whose token endpoint
+ * answering any other as Aloha Social answers an expired or revoked one, and whose token endpoint
  * answers [refreshAnswer], accepting the refreshed token from then on. [onAccepted] sees each accepted
  * request; refusals wait for [refusalsHeld], and the token endpoint for [refreshHeld]. [revoked] keeps
  * what each revocation sent.

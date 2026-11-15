@@ -27,7 +27,7 @@ internal fun <T> Json.lossy(element: KSerializer<T>, array: JsonElement?): List<
 
 /**
  * A list sent either bare or wrapped in an object under [member] (`{"reactions": […]}`,
- * `{"channels": […]}`). Nextcloud Social's own routes wrap; Pixelfed's and some forks' do not.
+ * `{"channels": […]}`). Aloha Social's own routes wrap; Pixelfed's and some forks' do not.
  * Anything else is empty.
  */
 internal class ListOrMemberSerializer<T>(private val element: KSerializer<T>, private val member: String) :

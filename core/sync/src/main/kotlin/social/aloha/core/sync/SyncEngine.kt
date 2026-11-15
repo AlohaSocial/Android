@@ -50,7 +50,7 @@ import timber.log.Timber
 
 /**
  * Asks every signed-in account's server what is new while the app is open, at the pace [PollScheduler]
- * sets. Nextcloud Social streams only where its administrator runs the stream daemon, and has no push of
+ * sets. Aloha Social streams only where its administrator runs the stream daemon, and has no push of
  * its own, so polling is the normal case here, not a fallback.
  *
  * Each poll asks for the unread count first, the cheapest call there is. A timeline on screen is then

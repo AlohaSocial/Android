@@ -130,7 +130,7 @@ public class StatusInteractions @Inject constructor(
     public suspend fun delete(account: SignedInAccount, status: Status): ApiError? =
         (deleted(account, status.id) as? Answer.Missed)?.error
 
-    /** Takes the reader's own [status] off their profile (Nextcloud Social's archive); nothing is deleted. */
+    /** Takes the reader's own [status] off their profile (Aloha Social's archive); nothing is deleted. */
     public suspend fun archive(account: SignedInAccount, status: Status): ApiError? =
         (clients.answer(account, StatusExtraEndpoints.archive(status.id)) as? Answer.Missed)?.error
 

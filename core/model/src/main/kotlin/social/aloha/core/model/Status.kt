@@ -14,17 +14,17 @@ import kotlinx.serialization.Transient
  * @property createdAt [Instant.EPOCH] when the server did not say.
  * @property visibility [Visibility.Unknown] when the server sent nothing or a value this app does not
  *   know, which is treated as the most restrictive, never as public.
- * @property poll present-or-null on Nextcloud Social; other servers omit it.
- * @property reactions emoji reactions where the server supports them. Nextcloud Social before 0.26.221
+ * @property poll present-or-null on Aloha Social; other servers omit it.
+ * @property reactions emoji reactions where the server supports them. Aloha Social before 0.26.221
  *   sends an empty list here and serves the real reactions only from `/statuses/{id}/reactions`.
  * @property quoteApprovalPolicy who may quote this post (`public`, `followers`, `nobody`), where the
  *   server says.
  * @property quoteApproval what quoting this post comes to for the reader (`automatic`, `manual`, `denied`,
  *   `unknown`), where the server answers for them, as Mastodon's `quote_approval.current_user`.
  * @property archived off the profile, not deleted; null when the server does not say.
- * @property video the PeerTube-shaped facts Nextcloud Social carries on a video post.
- * @property videoCard the facts Nextcloud Social carries on every video post, `video_card`.
- * @property event when and where, on a post for an event; Nextcloud Social sends it on those alone.
+ * @property video the PeerTube-shaped facts Aloha Social carries on a video post.
+ * @property videoCard the facts Aloha Social carries on every video post, `video_card`.
+ * @property event when and where, on a post for an event; Aloha Social sends it on those alone.
  * @property watchProgress where the reader got to in the video, as the server sent it with this read;
  *   never cached, since it is stale as soon as the reader plays on.
  */

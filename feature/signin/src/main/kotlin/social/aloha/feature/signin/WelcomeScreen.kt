@@ -33,7 +33,7 @@ import social.aloha.core.designsystem.AlohaSpacing
 
 /**
  * The first screen after the terms, before the first account: what the app is, what the fediverse is,
- * and Nextcloud Social first among the servers it reaches. Someone adding a further account skips it.
+ * and Aloha Social first among the servers it reaches. Someone adding a further account skips it.
  */
 @Composable
 internal fun WelcomeScreen(onAddAccount: () -> Unit, onFindServer: () -> Unit, modifier: Modifier = Modifier) {

@@ -14,7 +14,7 @@ import social.aloha.core.network.dto.toDomain
 import social.aloha.core.network.request
 import social.aloha.core.network.unitRequest
 
-/** "Your year": Mastodon's `#Wrapstodon`, which Nextcloud Social serves over the API only. */
+/** "Your year": Mastodon's `#Wrapstodon`, which Aloha Social serves over the API only. */
 public object AnnualReportEndpoints {
     /** Every year this account has a report for, newest first. */
     public fun all(): ApiRequest<WrappedAnnualReports> = wrapped(Endpoint("api/v1/annual_reports"))
@@ -26,7 +26,7 @@ public object AnnualReportEndpoints {
         request(Endpoint("api/v1/annual_reports/$year/state"), AnnualReportStateDto.serializer()) { it.toDomain() }
 
     /**
-     * Asks for a report to be generated. Nextcloud Social answers at once with nothing to wait for; the
+     * Asks for a report to be generated. Aloha Social answers at once with nothing to wait for; the
      * request is still sent before a read, because a server that needs it acts on it.
      */
     public fun generate(year: Int): ApiRequest<Unit> =

@@ -22,7 +22,7 @@ import social.aloha.core.network.queryOf
 import social.aloha.core.network.repeatedQuery
 
 /**
- * What the composer sends. The Nextcloud Social extras are optional and a stock server ignores them.
+ * What the composer sends. The Aloha Social extras are optional and a stock server ignores them.
  *
  * @property idempotencyKey generated when the composer opened and regenerated only when the content
  *   changes; what makes a retry after a timeout safe.
@@ -34,10 +34,10 @@ import social.aloha.core.network.repeatedQuery
  * @property mediaAttributes the descriptions and focal points of media already attached, sent with an
  *   edit: once attached, a medium cannot be changed on its own.
  * @property keepsMedia an edit that leaves the post's media as they were, so [mediaIds] is not sent:
- *   Nextcloud Social 0.26.279 to 0.26.298 serve media an edit named without their ids, and a later edit
+ *   Aloha Social 0.26.279 to 0.26.298 serve media an edit named without their ids, and a later edit
  *   naming them by those empty ids is refused. 0.26.299 keeps the ids of media an edit names but does
  *   not restore those lost before, so an edit of such a post keeps its media.
- * @property event what makes the post an event, Nextcloud Social's own `event`: sent with a new post only.
+ * @property event what makes the post an event, Aloha Social's own `event`: sent with a new post only.
  *   An edit leaves it out, which keeps the event the post has (0.26.279, read from source).
  */
 public data class StatusPost(
@@ -81,7 +81,7 @@ public data class StatusPost(
 
     /**
      * The post as an edit sends it. JSON, as a form cannot say an empty list: `media_ids` is the post's
-     * whole attachment list in order, and present but empty takes every attachment off (Nextcloud Social
+     * whole attachment list in order, and present but empty takes every attachment off (Aloha Social
      * 0.26.279, Mastodon); left out, unless the media changed, it keeps them. A warning left out is kept
      * as it was, so an edit without one sends it empty.
      */
@@ -125,7 +125,7 @@ public data class StatusPost(
     }
 
     /**
-     * Nextcloud Social's extras. The web composer names the quote `quote_id` and the controller reads
+     * Aloha Social's extras. The web composer names the quote `quote_id` and the controller reads
      * `quoted_id`, so both go; a server that knows neither ignores both.
      */
     private fun extras(): List<QueryItem> =
@@ -136,7 +136,7 @@ public data class StatusPost(
 
     /**
      * The event, its times in UTC to the second, which is all the server keeps of an ISO 8601 time, and its
-     * status in lower case, which Nextcloud Social reads from 0.26.280 on (read from source).
+     * status in lower case, which Aloha Social reads from 0.26.280 on (read from source).
      */
     private fun eventItems(): List<QueryItem> {
         val event = event ?: return emptyList()

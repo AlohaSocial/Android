@@ -76,7 +76,7 @@ internal data class ExploreUiState(
     val posts: Load<List<Status>> = Load.Waiting,
     val hashtags: Load<List<Tag>> = Load.Waiting,
     val period: String = Explore.PERIODS[2],
-    /** Whether the server measures trending hashtags over a period the reader picks: Nextcloud Social. */
+    /** Whether the server measures trending hashtags over a period the reader picks: Aloha Social. */
     val periods: Boolean = false,
     val news: Load<List<Card>> = Load.Waiting,
     val people: Load<People> = Load.Waiting,

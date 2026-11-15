@@ -33,7 +33,7 @@ public fun interface TokenRenewalListener {
 }
 
 /**
- * Renews an account's refused access token with its refresh token. Nextcloud Social rotates both tokens
+ * Renews an account's refused access token with its refresh token. Aloha Social rotates both tokens
  * on every refresh and revokes the whole authorization when a spent refresh token is presented again, so
  * one renewal runs per account at a time, a request refused meanwhile uses the token it stored, and the
  * new pair replaces the old in the vault before anything uses it. Once asked, a refresh and the storing of

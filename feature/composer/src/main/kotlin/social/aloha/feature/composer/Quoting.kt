@@ -113,7 +113,7 @@ internal class Quoting(
         scope.launch { preferences.setWriting(change(preferences.writing.first())) }
     }
 
-    /** Whether [status]'s server takes quotes of it: it says who may quote, or it is Nextcloud Social. */
+    /** Whether [status]'s server takes quotes of it: it says who may quote, or it is Aloha Social. */
     private fun quotes(status: Status, account: SignedInAccount): Boolean =
         status.quoteApproval != null || status.quoteApprovalPolicy != null || account.capabilities.isNextcloudSocial
 }

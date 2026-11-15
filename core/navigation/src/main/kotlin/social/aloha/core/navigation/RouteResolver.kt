@@ -22,7 +22,7 @@ public sealed interface LinkTarget {
 }
 
 /**
- * Turns an address into what it points at, from its shape alone: the paths Mastodon, Nextcloud Social,
+ * Turns an address into what it points at, from its shape alone: the paths Mastodon, Aloha Social,
  * Pleroma, Misskey and Pixelfed give posts, profiles and hashtags, the fediverse's `web+ap://` scheme and the
  * app's own `alohasocial://open?url=`. Anything else, and anything that is not http(s), is [LinkTarget.Web],
  * so an ordinary link never leaves the browser's hands and is never sent to a server to look up.
@@ -38,7 +38,7 @@ public object RouteResolver {
     // Pleroma's and Akkoma's objects are UUIDs
     private val objectId = Regex("[A-Za-z0-9-]+")
 
-    // Nextcloud Social serves its pages under the app's path unless the admin added the root rewrite
+    // Aloha Social serves its pages under the app's path unless the admin added the root rewrite
     private val nextcloudSocial = listOf(listOf("index.php", "apps", "social"), listOf("apps", "social"))
 
     public fun parse(address: String): LinkTarget {

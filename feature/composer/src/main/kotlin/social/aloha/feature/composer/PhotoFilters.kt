@@ -93,7 +93,7 @@ internal sealed interface FilterStep {
 }
 
 /**
- * The adjustments a picture can take, the same eight as Nextcloud Social's web composer with the
+ * The adjustments a picture can take, the same eight as Aloha Social's web composer with the
  * same steps, so a picture filtered here looks as one filtered there. Deliberately mild: once
  * uploaded, a filter cannot be taken back without uploading again.
  */

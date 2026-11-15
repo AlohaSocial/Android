@@ -32,7 +32,7 @@ internal data class PreferencesDto(
 )
 
 /**
- * Nextcloud Social's own feed preferences; an answer without the switch says nothing about it. [threadSort]
+ * Aloha Social's own feed preferences; an answer without the switch says nothing about it. [threadSort]
  * is how it orders a thread's replies for the reader, read-only (0.26.279 on).
  */
 @Serializable

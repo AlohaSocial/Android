@@ -37,7 +37,7 @@ import social.aloha.core.ui.SettingsSection
 import social.aloha.core.ui.openInBrowser
 
 /**
- * Deleting the account in use, for good. On Nextcloud Social it happens here, once the Nextcloud is
+ * Deleting the account in use, for good. On Aloha Social it happens here, once the Nextcloud is
  * connected, after the handle is typed; elsewhere the server's own website does it.
  */
 internal object DeleteAccountSection : SettingsSection {

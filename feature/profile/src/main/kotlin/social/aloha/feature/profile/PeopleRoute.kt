@@ -158,7 +158,7 @@ internal class PeopleViewModel @AssistedInject constructor(
 
 /**
  * Whether [account]'s followers and following are kept from the reader whose own account is
- * [readerAccountId]: Nextcloud Social (from 0.26.299) and Mastodon answer an empty list to anyone else.
+ * [readerAccountId]: Aloha Social (from 0.26.299) and Mastodon answer an empty list to anyone else.
  */
 internal fun hidesPeople(account: Account, readerAccountId: String): Boolean =
     account.hideCollections == true && account.id != readerAccountId

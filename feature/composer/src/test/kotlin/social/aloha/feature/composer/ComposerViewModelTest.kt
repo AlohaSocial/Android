@@ -355,7 +355,7 @@ internal class ComposerViewModelTest : ComposerTestSetup() {
 
     @Test
     fun `an edit locks the media where the server keeps them as posted`() = runBlocking {
-        // the test server names no version: a Nextcloud Social from before edits changed media
+        // the test server names no version: an Aloha Social from before edits changed media
         val viewModel = open(key = { ComposerKey(it, editId = "mine") })
         assertEquals(true, viewModel.await { it.ready && it.attachments.first().isNotEmpty() }.mediaLocked)
         // a picture dropped in from another app is turned away like one picked

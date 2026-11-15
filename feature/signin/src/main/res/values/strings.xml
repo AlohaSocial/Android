@@ -11,7 +11,7 @@
     <!-- Label of the text field where a person types their server, e.g. cloud.example.com -->
     <string name="signin_server_label">Your server</string>
     <!-- Hint under the server field -->
-    <string name="signin_server_supporting">A Nextcloud with Social, or any Mastodon server</string>
+    <string name="signin_server_supporting">A Nextcloud with Aloha Social, or any Mastodon server</string>
     <!-- Error under the server field when the text cannot be a server address -->
     <string name="signin_server_invalid">That doesn\'t look like a server address. Try something like cloud.example.com.</string>
     <!-- Shown under the server field when the address starts with http://; the app only connects over https -->
@@ -27,8 +27,8 @@
         <item quantity="one">%s person</item>
         <item quantity="other">%s people</item>
     </plurals>
-    <!-- Label shown on the server card for a Nextcloud Social server -->
-    <string name="signin_nextcloud_social">Nextcloud Social</string>
+    <!-- Label shown on the server card for an Aloha Social server -->
+    <string name="signin_aloha_social">Aloha Social</string>
     <!-- Button that opens the server\'s sign-in page in the browser -->
     <string name="signin_sign_in">Sign in</string>
     <!-- Button that goes back to typing another server -->
@@ -59,14 +59,14 @@
     <string name="signin_attempt_discovery">named by the server</string>
     <!-- Reason an address was tried: the root of the domain -->
     <string name="signin_attempt_domain_root">the domain root</string>
-    <!-- Reason an address was tried: Nextcloud Social without the web-server rules -->
-    <string name="signin_attempt_app_path">Nextcloud Social without the web-server rules</string>
-    <!-- Reason an address was tried: Nextcloud Social with pretty URLs -->
-    <string name="signin_attempt_pretty_app_path">Nextcloud Social with pretty URLs</string>
+    <!-- Reason an address was tried: Aloha Social without the web-server rules -->
+    <string name="signin_attempt_app_path">Aloha Social without the web-server rules</string>
+    <!-- Reason an address was tried: Aloha Social with pretty URLs -->
+    <string name="signin_attempt_pretty_app_path">Aloha Social with pretty URLs</string>
     <!-- Reason an address was tried: the path the person typed -->
     <string name="signin_attempt_typed_path">the address you typed</string>
-    <!-- Reason an address was tried: Nextcloud Social in the folder the person typed -->
-    <string name="signin_attempt_typed_app_path">Nextcloud Social in that folder</string>
+    <!-- Reason an address was tried: Aloha Social in the folder the person typed -->
+    <string name="signin_attempt_typed_app_path">Aloha Social in that folder</string>
     <!-- Reason an address was tried: the API address the person entered by hand -->
     <string name="signin_attempt_manual">the API address you entered</string>
     <!-- Button that tries the sign-in again -->
@@ -76,7 +76,7 @@
     <!-- Confirmation after the instructions were copied; announced by screen readers -->
     <string name="signin_copied">Instructions copied</string>
     <!-- Text copied to the clipboard for a server administrator; %1$s is the server, %2$s a link to the rule files -->
-    <string name="signin_admin_instructions">The Aloha Social app could not find the Mastodon client API of Nextcloud Social on %1$s. Mastodon apps expect it at the root of the domain (/api/v1/…), which on Nextcloud needs the web-server rules that come with Nextcloud Social. The rules for Apache and nginx, with notes on proxies and the Authorization header, are here: %2$s</string>
+    <string name="signin_admin_instructions">The Aloha Social app could not find the Mastodon client API of Aloha Social on %1$s. Mastodon apps expect it at the root of the domain (/api/v1/…), which on Nextcloud needs the web-server rules that come with Aloha Social. The rules for Apache and nginx, with notes on proxies and the Authorization header, are here: %2$s</string>
     <!-- Heading of the section where a person types the API address by hand -->
     <string name="signin_advanced">Advanced</string>
     <!-- Spoken state of the Advanced section when its content is shown -->
@@ -121,14 +121,14 @@
     <string name="welcome_fediverse_title">What is the fediverse?</string>
     <!-- Welcome screen: what the fediverse is -->
     <string name="welcome_fediverse_body">Many independent servers, run by people and organisations, that talk to each other. Your account lives on one of them, and you follow people on any of the others.</string>
-    <!-- Welcome screen: Nextcloud Social, named first -->
-    <string name="welcome_nextcloud">Nextcloud Social puts such a server into a Nextcloud. If yours has it, you sign in with your Nextcloud account; if it has not, its administrator can add it.</string>
+    <!-- Welcome screen: Aloha Social, named first -->
+    <string name="welcome_nextcloud">Aloha Social puts such a server into a Nextcloud. If yours has it, you sign in with your Nextcloud account; if it has not, its administrator can add it.</string>
     <!-- Welcome screen: the button that starts adding the first account -->
     <string name="welcome_add_account">Add your account</string>
     <!-- Welcome screen: link to a list of servers that take new accounts -->
     <string name="welcome_find_server">No account yet? Find a server</string>
     <!-- Welcome screen footnote: the servers the app works with -->
-    <string name="welcome_footnote">Works with Nextcloud Social, Mastodon, and anything else that speaks the Mastodon API.</string>
+    <string name="welcome_footnote">Works with Aloha Social, Mastodon, and anything else that speaks the Mastodon API.</string>
     <!-- Card under the server field while the server typed is looked up; %1$s is its address -->
     <string name="signin_preview_loading">Looking up %1$s…</string>
     <!-- On a server’s card: the languages it says it speaks; %1$s is their names, joined -->

@@ -16,7 +16,7 @@ public data class RefreshPlan(val anchor: PageAnchor, val direction: TimelineMer
     public companion object {
         /**
          * How long after a page that is still filling ([PageOutcome.Loaded.filling]) it is read again, once:
-         * Nextcloud Social's web app asks again after the same.
+         * Aloha Social's web app asks again after the same.
          */
         public val FILLING_DELAY: Duration = 2.seconds
 

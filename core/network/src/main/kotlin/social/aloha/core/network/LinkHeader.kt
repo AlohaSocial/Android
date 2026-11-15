@@ -9,7 +9,7 @@ import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 /**
  * The `Link` header, the only cursor the app reads. Every filter of the original request survives
  * into both links, so a page is fetched by following the URL verbatim, never by rebuilding it.
- * Nextcloud Social points the links at the app path even when the request came in through the root
+ * Aloha Social points the links at the app path even when the request came in through the root
  * rules.
  */
 public data class LinkHeader(val next: HttpUrl? = null, val previous: HttpUrl? = null) {
@@ -66,7 +66,7 @@ public data class LinkHeader(val next: HttpUrl? = null, val previous: HttpUrl? =
  * An answer that is not a page, and whether the server is still reading for it in the background, so the
  * same request made again a few seconds later brings more.
  *
- * @property filling a post's counts are still being read from its origin (Nextcloud Social's
+ * @property filling a post's counts are still being read from its origin (Aloha Social's
  *   `X-Social-Filling: 1`).
  * @property threadFilling a conversation's replies are still being read from where they live (Nextcloud
  *   Social's `X-Social-Thread-Filling: 1`, on `/context`).
@@ -79,11 +79,11 @@ public data class Filled<T>(val value: T, val filling: Boolean = false, val thre
  * @property rawCount how many rows the server sent before lossy decoding dropped any, which is what
  *   decides "a page shorter than the limit is the last one" on routes that send no `Link` header.
  * @property filling the server is still reading for this page in the background, counts or posts, and the
- *   same page read again a little later brings them (Nextcloud Social's `X-Social-Filling: 1`).
+ *   same page read again a little later brings them (Aloha Social's `X-Social-Filling: 1`).
  * @property profileFilling an account's older posts are still being read from its server, so a short page
- *   is not yet the end (Nextcloud Social's `X-Social-Profile-Filling: 1`).
+ *   is not yet the end (Aloha Social's `X-Social-Profile-Filling: 1`).
  * @property profileSyncFailed reading an account's posts from its server failed, so the page holds only what
- *   the reader's server had (Nextcloud Social's `X-Social-Profile-Sync-State: failed`).
+ *   the reader's server had (Aloha Social's `X-Social-Profile-Sync-State: failed`).
  */
 public data class Paginated<T>(
     val items: List<T>,

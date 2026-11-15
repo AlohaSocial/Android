@@ -176,7 +176,7 @@ public data class ConversationsKey(val readerId: String) : NavKey
 @Serializable
 public data class NewMessageKey(val readerId: String) : NavKey
 
-/** The hashtags [readerId]'s Nextcloud Social server has learnt they care about. */
+/** The hashtags [readerId]'s Aloha Social server has learnt they care about. */
 @Serializable
 public data class InterestsKey(val readerId: String) : NavKey
 

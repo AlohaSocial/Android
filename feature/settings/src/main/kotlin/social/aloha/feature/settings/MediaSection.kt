@@ -72,7 +72,7 @@ internal class MediaSettingsViewModel @Inject constructor(
     val state: StateFlow<MediaState> = accounts.activeAccount.flatMapLatest { reader ->
         if (reader == null) return@flatMapLatest flowOf(MediaState())
         combine(sensitive.policy(reader.id), refused) { policy, no ->
-            // only Nextcloud Social takes the choice from an app; Mastodon keeps it on its website
+            // only Aloha Social takes the choice from an app; Mastodon keeps it on its website
             MediaState(policy, reader.capabilities.isNextcloudSocial, no)
         }
     }.combine(

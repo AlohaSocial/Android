@@ -50,7 +50,7 @@ public class ApiClient internal constructor(
      * @param onUnauthorised told when the server answers 401 to a request that carried this account's
      *   token and [renew] did not renew it: the account needs a new sign-in. A 401 to the Nextcloud app
      *   password says nothing about the sign-in and is not told.
-     * @param renew asked to renew the token a 401 refused, which Nextcloud Social answers alike for an
+     * @param renew asked to renew the token a 401 refused, which Aloha Social answers alike for an
      *   expired and a revoked one (`the access_token was revoked`); by default nothing renews it.
      */
     public constructor(

@@ -22,7 +22,7 @@ import social.aloha.core.data.Answer
 import social.aloha.core.model.MediaCollection
 import social.aloha.core.testing.SignedInFixture
 
-/** Answers the collection routes as Nextcloud Social does, and remembers every request with its body. */
+/** Answers the collection routes as Aloha Social does, and remembers every request with its body. */
 private class CollectionServer : Dispatcher() {
     val asked = CopyOnWriteArrayList<String>()
 

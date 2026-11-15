@@ -43,7 +43,7 @@ public enum class DiscoverMedia(public val wire: String) {
 
 /**
  * Starter packs, other servers' directories, the follow graph and Pixelfed's discover surface, all
- * Nextcloud Social's own.
+ * Aloha Social's own.
  */
 public object DiscoveryEndpoints {
     private const val MAXIMUM_DIRECTORY = 40

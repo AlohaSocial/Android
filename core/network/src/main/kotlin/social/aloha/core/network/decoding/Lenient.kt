@@ -31,7 +31,7 @@ import kotlinx.serialization.json.longOrNull
  */
 
 /**
- * A server id, always a string: Nextcloud Social sends numeric `nid`s where Mastodon sends snowflake
+ * A server id, always a string: Aloha Social sends numeric `nid`s where Mastodon sends snowflake
  * strings, and ids beyond 2^53 must never pass through a number type.
  */
 internal object FlexibleIdSerializer : KSerializer<String> {
@@ -60,7 +60,7 @@ internal object OptionalIdSerializer : KSerializer<String?> {
 }
 
 /**
- * A URL that may be `null`, absent, `""` or whitespace, all meaning "none": Nextcloud Social sends
+ * A URL that may be `null`, absent, `""` or whitespace, all meaning "none": Aloha Social sends
  * `"avatar": ""` for a local account and `null` from `verify_credentials`.
  */
 internal object LenientUrlSerializer : KSerializer<String?> {

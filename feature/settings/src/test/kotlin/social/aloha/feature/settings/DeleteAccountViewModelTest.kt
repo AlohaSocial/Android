@@ -49,7 +49,7 @@ import social.aloha.core.testing.InMemoryDataStore
 import social.aloha.core.testing.MainDispatcherRule
 import social.aloha.core.testing.SignedInFixture
 
-/** Nextcloud Social's self-service deletion: 200 for the right handle, 422 naming it for anything else. */
+/** Aloha Social's self-service deletion: 200 for the right handle, 422 naming it for anything else. */
 private class Deleting : Dispatcher() {
     val deletions = CopyOnWriteArrayList<RecordedRequest>()
 

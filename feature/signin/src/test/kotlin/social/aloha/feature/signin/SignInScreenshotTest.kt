@@ -34,7 +34,7 @@ class SignInScreenshotTest {
     val compose = createComposeRule()
 
     private val card = InstanceCard(
-        title = "Nextcloud Social",
+        title = "Aloha Social",
         domain = "cloud.example",
         description = "a safe home for your data",
         userCount = 10_188,

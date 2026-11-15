@@ -46,7 +46,7 @@ class TranslationRepositoryTest {
 
     @Test
     fun `a server without a translation service says so in its own words`() = runBlocking {
-        // Nextcloud Social's answer on an instance with no provider, verified on the dev instance
+        // Aloha Social's answer on an instance with no provider, verified on the dev instance
         server.enqueue(json(503, """{"error":"no translation provider is configured"}"""))
         val reader = fixture.signIn(server.url("/"))
         val answer = TranslationRepository(fixture.clients).translate(reader, "7", "en") as Answer.Missed

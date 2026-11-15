@@ -40,7 +40,7 @@ public data class Distributor(val packageName: String, val label: String)
 /**
  * Push through UnifiedPush: the person picks a distributor, such as ntfy, and each account connected to
  * its Nextcloud registers with the Nextcloud's notifications app, where that pushes. Any other account
- * whose server offers Web Push (a `vapid_key`) and takes the distributor's endpoint (Nextcloud Social
+ * whose server offers Web Push (a `vapid_key`) and takes the distributor's endpoint (Aloha Social
  * takes only public HTTPS ones) registers with its server; an account is never pushed to by both. Each
  * registration is named after its account, so a push says whose it is.
  * An account without push is polled as before.
@@ -93,7 +93,7 @@ public class PushRegistrar @Inject constructor(
     /**
      * With its Nextcloud where that pushes, else with its server where that pushes and takes the
      * distributor's endpoints. The Nextcloud comes first: it pushes while the notification is raised,
-     * Nextcloud Social only from a background job, which waits for the next cron run.
+     * Aloha Social only from a background job, which waits for the next cron run.
      */
     internal suspend fun register(account: SignedInAccount) {
         val lookup = if (account.nextcloudConnected) nextcloud.webPushVapid(account) else Answer.Got(null)

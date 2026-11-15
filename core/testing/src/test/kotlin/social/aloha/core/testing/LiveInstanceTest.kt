@@ -53,7 +53,7 @@ import social.aloha.core.network.probe.ServerAddress
 import social.aloha.core.network.probe.ServerProbe
 
 /**
- * Sign-in against a real Nextcloud Social, end to end, with the real client code. Runs only when
+ * Sign-in against a real Aloha Social, end to end, with the real client code. Runs only when
  * `ALOHA_LIVE_SERVER` names the server (e.g. `http://nextcloud.local`) and `ALOHA_LIVE_USER` and
  * `ALOHA_LIVE_PASSWORD` a person on it; CI never sets them. The browser's consent step is replaced
  * by the same form posted with the person's app password and `OCS-APIRequest: true`, which a dev

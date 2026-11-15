@@ -6,7 +6,7 @@ package social.aloha.core.model
 import kotlinx.serialization.Serializable
 
 /*
- * Nextcloud Social's discovery surfaces: starter packs, other servers' directories, the follow
+ * Aloha Social's discovery surfaces: starter packs, other servers' directories, the follow
  * graph and Pixelfed's discover categories. All optional, and the routes most likely to change shape
  * between server versions.
  */

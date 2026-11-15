@@ -25,7 +25,7 @@ import social.aloha.core.datastore.ReadingPreferences
 import social.aloha.core.network.endpoints.CountsEndpoints
 
 /**
- * Reading's *Show numbers* told to every Nextcloud Social account's server, which zeroes the like, boost
+ * Reading's *Show numbers* told to every Aloha Social account's server, which zeroes the like, boost
  * and reply numbers for a reader who hides them, and hides them unless told otherwise. It is told when
  * the switch changes, and whenever the accounts change (one signed in, its capabilities detected again)
  * to each account whose server has not taken the value stored then; a failure is told again next time.

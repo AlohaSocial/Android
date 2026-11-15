@@ -152,7 +152,7 @@ public class SignInCoordinator @Inject constructor(
 
     /**
      * `verify_credentials`, or `/oauth/userinfo` when the server cannot describe a brand-new account
-     * yet: Nextcloud Social before 0.26.104 answered 500 until its avatar cache job had run.
+     * yet: Aloha Social before 0.26.104 answered 500 until its avatar cache job had run.
      */
     private suspend fun describe(pending: PendingAuthorization, base: HttpUrl, token: AccessToken): SignInResult {
         val client = clients.create(base) { Credentials(token.value) }

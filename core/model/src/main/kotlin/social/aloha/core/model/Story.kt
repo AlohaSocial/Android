@@ -8,12 +8,12 @@ import java.time.Instant
 import kotlinx.serialization.Serializable
 
 /**
- * One picture or video that stops existing after a day (Pixelfed's stories, as Nextcloud Social
+ * One picture or video that stops existing after a day (Pixelfed's stories, as Aloha Social
  * serves them). A story has no timeline row: it is not a post.
  *
- * @property account the poster where the server embeds them. Nextcloud Social's own story routes
+ * @property account the poster where the server embeds them. Aloha Social's own story routes
  *   name the poster by [accountUri] only, so this is null there and the caller resolves the account.
- * @property accountUri the poster's ActivityPub id, which is what Nextcloud Social sends as `account_id`.
+ * @property accountUri the poster's ActivityPub id, which is what Aloha Social sends as `account_id`.
  * @property duration seconds on screen; the server clamps it to 3–30.
  * @property viewCount how many accounts watched, told to the poster only.
  */
@@ -73,7 +73,7 @@ public data class StoryReaction(
  * One entry of `/api/v1/videos/continue`: where the reader got to in a video. Never federated,
  * never shown to anybody else.
  *
- * @property status the post where the server sent it whole. Nextcloud Social sends posts without
+ * @property status the post where the server sent it whole. Aloha Social sends posts without
  *   their `account`, which a status cannot be built from, so the caller fetches it by [statusId].
  */
 @Serializable
@@ -104,7 +104,7 @@ public object WatchPositionRules {
     /** How often a playing video reports; the server allows 600 reports a minute. */
     public const val REPORT_INTERVAL_SECONDS: Double = 10.0
 
-    /** A view is counted once this many seconds have played, as Nextcloud Social's `VideoViewService` asks. */
+    /** A view is counted once this many seconds have played, as Aloha Social's `VideoViewService` asks. */
     public const val VIEW_AFTER_SECONDS: Int = 5
 
     public fun shouldReport(position: Double, duration: Double): Boolean =

@@ -44,7 +44,7 @@ internal data class TimelinesAccessDto(
 internal data class FeedAccessDto(val local: String? = null, val remote: String? = null)
 
 /**
- * `urls`, an empty object on Nextcloud Social, which is the signal that there is no streaming. v1 spells
+ * `urls`, an empty object on Aloha Social, which is the signal that there is no streaming. v1 spells
  * the key `streaming_api` and Mastodon 4.x's v2 `configuration.urls` spells it `streaming`; both are read.
  */
 @Serializable

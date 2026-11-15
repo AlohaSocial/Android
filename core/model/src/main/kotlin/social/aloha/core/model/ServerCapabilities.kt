@@ -69,7 +69,7 @@ public data class ServerCapabilities(
 
     /**
      * Whether a post this server serves carries its reactions, so the single post needs no second request
-     * for them: Nextcloud Social from 0.26.221 on. Before, it sent an empty list on every post and served the
+     * for them: Aloha Social from 0.26.221 on. Before, it sent an empty list on every post and served the
      * real ones only from `/statuses/{id}/reactions`; an empty list there cannot tell the two apart, so the
      * version decides.
      */
@@ -77,13 +77,13 @@ public data class ServerCapabilities(
 
     /**
      * Whether the account's own pages (memories, statistics, video channels, the exports and the authorized
-     * apps) take the sign-in token, so they need no Nextcloud connection: Nextcloud Social from 0.26.220 on.
+     * apps) take the sign-in token, so they need no Nextcloud connection: Aloha Social from 0.26.220 on.
      * Before, a token answers 401 there, which says nothing a probe could tell from a revoked token.
      */
     val accountPagesWithToken: Boolean get() = isNextcloudSocial && atLeast(softwareVersion, ACCOUNT_PAGES_WITH_TOKEN)
 
     /**
-     * Whether the server counts a view a player reports (`POST /statuses/{id}/view`): Nextcloud Social
+     * Whether the server counts a view a player reports (`POST /statuses/{id}/view`): Aloha Social
      * from 0.26.278 on. Nothing announces the route, so the version decides.
      */
     val videoViews: Boolean get() = isNextcloudSocial && atLeast(softwareVersion, VIDEO_VIEWS)
@@ -95,28 +95,28 @@ public data class ServerCapabilities(
     val accountPostsNarrowed: Boolean get() = !isNextcloudSocial || atLeast(softwareVersion, ACCOUNT_POSTS_NARROWED)
 
     /**
-     * Whether an account's `followers_count` is real for every reader: every server but Nextcloud Social
+     * Whether an account's `followers_count` is real for every reader: every server but Aloha Social
      * before 0.26.241, which sent 0 to a reader who hides the numbers (`/api/v1/social/counts`).
      */
     val realFollowerCounts: Boolean get() = !isNextcloudSocial || atLeast(softwareVersion, REAL_FOLLOWER_COUNTS)
 
     /**
      * Whether the unread count is asked of v2, which counts groups: where the server groups notifications, but
-     * not on Nextcloud Social before 0.26.276, whose v2 count grouped the newest 50 and ignored the marker. v1
+     * not on Aloha Social before 0.26.276, whose v2 count grouped the newest 50 and ignored the marker. v1
      * counts past the marker everywhere.
      */
     val groupedUnreadCount: Boolean
         get() = groupedNotifications && (!isNextcloudSocial || atLeast(softwareVersion, GROUPED_UNREAD_COUNT))
 
     /**
-     * Whether the reader can dislike a video post and take it back: Nextcloud Social after 0.26.278, where a
+     * Whether the reader can dislike a video post and take it back: Aloha Social after 0.26.278, where a
      * status's `disliked` is the reader's own; before, it read false on every status, so a dislike could
      * not be undone after the next read.
      */
     val dislikes: Boolean get() = isNextcloudSocial && atLeast(softwareVersion, DISLIKE_STATE)
 
     /**
-     * Whether an edit changes the post's media, as `media_ids` says: every server but Nextcloud Social
+     * Whether an edit changes the post's media, as `media_ids` says: every server but Aloha Social
      * before 0.26.279, which ignored the list and kept the media as posted. From 0.26.279 to 0.26.298 an
      * edit that named media left them without their ids; 0.26.299 no longer does, but a post damaged so
      * before stays so, and its media cannot be changed by an edit either.
@@ -125,36 +125,36 @@ public data class ServerCapabilities(
 
     /**
      * Whether timelines narrow to one kind of media before paging, `media_type=image`, or to photos, videos
-     * and animated images together, `visual`: Nextcloud Social from 0.26.279 on.
+     * and animated images together, `visual`: Aloha Social from 0.26.279 on.
      */
     val mediaTypeFilter: Boolean get() = isNextcloudSocial && atLeast(softwareVersion, MEDIA_TYPE)
 
     /**
-     * Whether a reaction can be one of the server's own custom emoji, sent as `:shortcode:`: Nextcloud Social
+     * Whether a reaction can be one of the server's own custom emoji, sent as `:shortcode:`: Aloha Social
      * from 0.26.280 on. Before, it took Unicode emoji alone.
      */
     val customEmojiReactions: Boolean get() = isNextcloudSocial && atLeast(softwareVersion, CUSTOM_EMOJI_REACTIONS)
 
     /**
      * Whether the counts of several posts can be read at once, without counting a view
-     * (`GET /api/v1/social/status_counts`): Nextcloud Social from 0.26.284 on.
+     * (`GET /api/v1/social/status_counts`): Aloha Social from 0.26.284 on.
      */
     val statusCounts: Boolean get() = isNextcloudSocial && atLeast(softwareVersion, STATUS_COUNTS)
 
     /**
      * Whether a new post can be an event, with a title, a start, and an end and venue where given (`event` on
-     * `POST /statuses`): Nextcloud Social from 0.26.279 on. Nothing announces it, so the version decides.
+     * `POST /statuses`): Aloha Social from 0.26.279 on. Nothing announces it, so the version decides.
      */
     val postsEvents: Boolean get() = isNextcloudSocial && atLeast(softwareVersion, EVENTS)
 
     /**
      * Whether a new event post keeps what the organiser says of it, such as cancelled (`event[status]` on
-     * `POST /statuses`): Nextcloud Social from 0.26.280 on, read from source. Before, the server drops it.
+     * `POST /statuses`): Aloha Social from 0.26.280 on, read from source. Before, the server drops it.
      */
     val postsEventStatus: Boolean get() = isNextcloudSocial && atLeast(softwareVersion, EVENT_STATUS)
 
     /**
-     * The `types[]` a notifications request names to have every kind this app shows. Nextcloud Social leaves
+     * The `types[]` a notifications request names to have every kind this app shows. Aloha Social leaves
      * its own kinds out of a page asked for with a token unless they are named, so there it names them all;
      * elsewhere none, which means every kind.
      */

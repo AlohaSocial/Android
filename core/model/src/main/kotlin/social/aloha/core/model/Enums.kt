@@ -61,7 +61,7 @@ public enum class AttachmentKind(override val wire: String) : WireValue {
 }
 
 /**
- * The notification types Nextcloud Social serves, plus the rest of Mastodon's. [StarterPackJoined] is Nextcloud
+ * The notification types Aloha Social serves, plus the rest of Mastodon's. [StarterPackJoined] is Nextcloud
  * Social's own: someone joined Bluesky with the reader's starter pack.
  */
 @Serializable
@@ -126,7 +126,7 @@ public enum class FilterContext(override val wire: String) : WireValue {
 }
 
 /**
- * How sensitive media is shown. Nextcloud Social serves PeerTube's three NSFW policies under the
+ * How sensitive media is shown. Aloha Social serves PeerTube's three NSFW policies under the
  * names Mastodon already has for the same states.
  */
 @Serializable

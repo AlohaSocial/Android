@@ -157,10 +157,10 @@ public object MediaEndpoints {
         request(endpoint, MediaAttachmentDto.serializer()) { it.toDomain() }
 }
 
-/** Nextcloud Social's watch positions: never federated, never shown to anybody else. */
+/** Aloha Social's watch positions: never federated, never shown to anybody else. */
 public object VideoEndpoints {
     /**
-     * Whether the server holds the place now: Nextcloud Social says `stored: false` where it could not write
+     * Whether the server holds the place now: Aloha Social says `stored: false` where it could not write
      * it, and answered `[]` before it said either.
      */
     public fun reportWatched(statusId: String, positionSeconds: Double, durationSeconds: Double): ApiRequest<Boolean> =
@@ -181,7 +181,7 @@ public object VideoEndpoints {
     public fun forgetWatched(statusId: String): ApiRequest<Unit> =
         unitRequest(Endpoint("api/v1/statuses/$statusId/watched", HttpMethod.DELETE))
 
-    /** Counts a view of [statusId], once the reader has played a few seconds of it; Nextcloud Social's own. */
+    /** Counts a view of [statusId], once the reader has played a few seconds of it; Aloha Social's own. */
     public fun countView(statusId: String): ApiRequest<Unit> =
         unitRequest(Endpoint("api/v1/statuses/$statusId/view", HttpMethod.POST))
 

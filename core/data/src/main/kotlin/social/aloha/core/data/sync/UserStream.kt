@@ -44,7 +44,7 @@ import timber.log.Timber
  * online: posts arriving mark Home due, a few seconds' worth at a time; edits and deletions reach the cache
  * at once; a notification, or notifications let in from requests, asks for the count now; changed filters
  * are fetched again; a changed direct conversation is told to the list of them. Only where the server
- * advertises streaming: Mastodon, and Nextcloud Social whose administrator runs its stream daemon, which
+ * advertises streaming: Mastodon, and Aloha Social whose administrator runs its stream daemon, which
  * capability detection asks. Five failures in a row, a socket
  * that drops within half a minute counting as one, and it gives up until the app comes back to the front,
  * the network comes back or the account changes; polling carries on meanwhile.

@@ -54,7 +54,7 @@ public class DavServer : Dispatcher() {
         /** The app password the tests connect with, alice's. */
         public const val BASIC: String = "Basic YWxpY2U6YXBwLXBhc3N3b3Jk"
 
-        /** Alice, signed in to the Nextcloud Social on [server] at its usual app path. */
+        /** Alice, signed in to the Aloha Social on [server] at its usual app path. */
         public fun account(server: MockWebServer): SignedInAccount {
             val apiBase = server.url("/index.php/apps/social/").toString()
             return SignedInAccount(

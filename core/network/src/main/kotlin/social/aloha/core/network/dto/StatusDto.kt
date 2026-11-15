@@ -21,7 +21,7 @@ import social.aloha.core.network.decoding.OptionalIdSerializer
 import social.aloha.core.network.decoding.OrNullSerializer
 
 /**
- * A status on the wire. Nextcloud Social always sends `reblog: null` (a boost is not visible as a boost),
+ * A status on the wire. Aloha Social always sends `reblog: null` (a boost is not visible as a boost),
  * and before 0.26.221 `reactions: []` whatever was reacted and `place: null` whatever was sent.
  */
 @Serializable

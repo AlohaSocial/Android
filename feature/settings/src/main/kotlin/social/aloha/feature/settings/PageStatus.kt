@@ -59,7 +59,7 @@ internal suspend fun AccountRepository.nextcloudReader(
 }
 
 /**
- * The frame of a page Nextcloud Social shows only to the Nextcloud session: its title and back, and in
+ * The frame of a page Aloha Social shows only to the Nextcloud session: its title and back, and in
  * place of [content] the wait, the call to connect the Nextcloud first, or a failure with a retry.
  */
 @OptIn(ExperimentalMaterial3Api::class)

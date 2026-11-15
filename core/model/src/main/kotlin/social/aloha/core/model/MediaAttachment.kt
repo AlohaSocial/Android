@@ -10,7 +10,7 @@ import kotlinx.serialization.Serializable
  *
  * @property previewUrl for a video, its poster frame served as an image.
  * @property description the alt text.
- * @property hlsUrl the master playlist of a local video's transcoding ladder on Nextcloud Social, where
+ * @property hlsUrl the master playlist of a local video's transcoding ladder on Aloha Social, where
  *   the administrator enabled it. Never a replacement for [url]: the whole file is always there too.
  */
 @Serializable

@@ -21,7 +21,7 @@ import social.aloha.core.model.SignedInAccount
 import social.aloha.core.model.TimelineKey
 
 /**
- * Home as Nextcloud Social serves it since it leaves posts out after choosing the page: a page can come
+ * Home as Aloha Social serves it since it leaves posts out after choosing the page: a page can come
  * back short or empty and still name the next one.
  */
 @RunWith(RobolectricTestRunner::class)

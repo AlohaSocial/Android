@@ -20,7 +20,7 @@ public object AlohaHttp {
 
     /**
      * @param cacheDirectory the HTTP cache, which revalidates by itself where a server sends validators, as
-     *   Nextcloud Social does on the routes a client polls.
+     *   Aloha Social does on the routes a client polls.
      * @param keyManager presents a client certificate where the person chose one.
      */
     public fun client(

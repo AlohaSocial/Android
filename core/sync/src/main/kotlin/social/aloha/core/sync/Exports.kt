@@ -22,7 +22,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import social.aloha.core.model.MigrationListKind
 
-/** What an export takes away from Nextcloud Social. */
+/** What an export takes away from Aloha Social. */
 public sealed interface ExportJob {
     /** The whole account: posts, media and follows. */
     public data object Archive : ExportJob

@@ -4,7 +4,7 @@
 package social.aloha.core.model
 
 /**
- * Orders server ids. Ids are decimal strings that exceed 2^53 (Nextcloud Social's are
+ * Orders server ids. Ids are decimal strings that exceed 2^53 (Aloha Social's are
  * `unix_ms × 10^6 + 6 random digits`), so they are compared by length and then lexically, and never
  * parsed into a number. Non-numeric ids compare the same way, which keeps the order total.
  */

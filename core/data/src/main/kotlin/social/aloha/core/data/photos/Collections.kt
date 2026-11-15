@@ -16,7 +16,7 @@ import social.aloha.core.model.Status
 import social.aloha.core.network.endpoints.CollectionEndpoints
 
 /**
- * Collections: named sets of posts with pictures, Pixelfed's collections, which Nextcloud Social serves too.
+ * Collections: named sets of posts with pictures, Pixelfed's collections, which Aloha Social serves too.
  * The server holds them; nothing is kept here but the posts they show, stored like any others so a tap
  * opens them at once.
  */

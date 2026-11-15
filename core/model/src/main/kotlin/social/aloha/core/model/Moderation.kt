@@ -7,7 +7,7 @@ import java.time.Instant
 import kotlinx.serialization.Serializable
 
 /**
- * An account as a moderator sees it: Mastodon's `Admin::Account`, served by Nextcloud Social at
+ * An account as a moderator sees it: Mastodon's `Admin::Account`, served by Aloha Social at
  * `/api/v1/admin/accounts`. An account there is a Nextcloud user or a cached remote actor, so the
  * login fields Mastodon has (email, IP, locale, role) come back empty and are not modelled.
  *
@@ -47,7 +47,7 @@ public enum class AdminStanding { Active, Silenced, Suspended, Sensitized }
 
 /**
  * What the signed-in person may moderate: the `permissions` bitmask of the `role` Mastodon puts on
- * `verify_credentials`. A server that reports no role (Nextcloud Social so far) grants nothing here, so
+ * `verify_credentials`. A server that reports no role (Aloha Social so far) grants nothing here, so
  * the moderation console stays hidden there; the admin API itself still decides on every call.
  */
 @Serializable
@@ -73,7 +73,7 @@ public data class ModeratorRole(val permissions: Long = 0) {
 
 /**
  * A hashtag as a moderator reviews it: Mastodon's `Admin::Tag`. Its [id] is the one the review routes
- * take; Nextcloud Social names a tag by itself, so there the id falls back to the name.
+ * take; Aloha Social names a tag by itself, so there the id falls back to the name.
  */
 @Serializable
 public data class AdminTag(
@@ -87,7 +87,7 @@ public data class AdminTag(
 
 /**
  * A link as a moderator reviews it among the trends: Mastodon's admin trend link, a preview card with the
- * [id] its review routes take. Nextcloud Social names a link by its address, so there the id falls back
+ * [id] its review routes take. Aloha Social names a link by its address, so there the id falls back
  * to the [url].
  */
 @Serializable
@@ -101,7 +101,7 @@ public data class AdminLink(
 
 /**
  * What a moderator can do to an account: the `type` of `POST /api/v1/admin/accounts/{id}/action`.
- * Nextcloud Social acts on these three.
+ * Aloha Social acts on these three.
  */
 public enum class AdminAccountAction(override val wire: String) : WireValue {
     /** Records the decision and changes nothing. */
@@ -138,7 +138,7 @@ public data class AdminReport(
 
 /**
  * One week of `/api/v1/instance/activity`. Every value arrives as a string. `logins` and
- * `registrations` are always zero on Nextcloud Social: an account there is a Nextcloud user, so no
+ * `registrations` are always zero on Aloha Social: an account there is a Nextcloud user, so no
  * registration exists to count.
  *
  * @property week Unix seconds at the Monday the week began.

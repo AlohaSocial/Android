@@ -6,7 +6,7 @@ package social.aloha.core.model
 import kotlinx.serialization.Serializable
 
 /**
- * NodeInfo 2.x, which names the server software. Nextcloud Social serves it at the domain root
+ * NodeInfo 2.x, which names the server software. Aloha Social serves it at the domain root
  * whether or not the client-API rewrite rules are installed, which makes it the cross-check for
  * API-base discovery.
  */
@@ -24,7 +24,7 @@ public data class NodeInfo(
 }
 
 /**
- * Whether a NodeInfo software name is Nextcloud Social's: `aloha-social` from 0.26.280, `nextcloud-social`
+ * Whether a NodeInfo software name is Aloha Social's: `aloha-social` from 0.26.280, `nextcloud-social`
  * before, and `Nextcloud Social` on older releases.
  */
 internal fun isSocialName(name: String): Boolean = name.lowercase().let {

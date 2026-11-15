@@ -121,7 +121,7 @@
     <string name="policy_filter">Filter</string>
     <!-- Choice: never show the notification -->
     <string name="policy_drop">Ignore</string>
-    <!-- Footnote on a Nextcloud Social server, which keeps ignored notifications as filtered -->
+    <!-- Footnote on an Aloha Social server, which keeps ignored notifications as filtered -->
     <string name="policy_drop_filters">On your server, Ignore works like Filter: those notifications wait under filtered senders rather than going away.</string>
     <!-- The rules could not be loaded -->
     <string name="policy_error">The filtering rules could not be loaded.</string>

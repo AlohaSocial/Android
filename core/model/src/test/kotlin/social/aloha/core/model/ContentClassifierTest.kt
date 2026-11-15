@@ -114,7 +114,7 @@ class ContentClassifierTest {
 
     @Test
     fun `missing meta defers the decision`() {
-        // Nextcloud Social without ffmpeg sends empty meta for every video
+        // Aloha Social without ffmpeg sends empty meta for every video
         assertEquals(
             ContentKind.Undetermined,
             ContentClassifier.classify(status(listOf(attachment(AttachmentKind.Video)))),

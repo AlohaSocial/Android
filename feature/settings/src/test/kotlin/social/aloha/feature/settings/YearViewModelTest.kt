@@ -33,7 +33,7 @@ import social.aloha.core.model.AnnualArchetype
 import social.aloha.core.testing.MainDispatcherRule
 import social.aloha.core.testing.SignedInFixture
 
-/** 2025 and 2026, the newer with its most favourited post, as Nextcloud Social sends them; or nothing. */
+/** 2025 and 2026, the newer with its most favourited post, as Aloha Social sends them; or nothing. */
 private class Years(private val reports: Boolean) : Dispatcher() {
     val read = mutableListOf<String>()
 

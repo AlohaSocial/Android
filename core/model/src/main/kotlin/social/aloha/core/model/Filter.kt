@@ -7,7 +7,7 @@ import java.time.Instant
 import kotlinx.serialization.Serializable
 
 /**
- * A Mastodon 4.x v2 filter. Nextcloud Social applies filters on the server; the app applies them
+ * A Mastodon 4.x v2 filter. Aloha Social applies filters on the server; the app applies them
  * again locally, so a filter takes effect over cached content at once and stops when it expires.
  */
 @Serializable

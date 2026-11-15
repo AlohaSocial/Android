@@ -48,7 +48,7 @@ public class AccountRemoval @Inject constructor(
     private val removalListeners: Set<@JvmSuppressWildcards AccountRemovalListener> = emptySet(),
 ) {
     /**
-     * Deletes [account] on its Nextcloud Social server, for good: its posts, its follows, and a `Delete`
+     * Deletes [account] on its Aloha Social server, for good: its posts, its follows, and a `Delete`
      * to every server that knew it; the Nextcloud account stays. The server takes the handle [typed] as
      * the confirmation, never a password, and the request goes with the Nextcloud app password, so only
      * a connected account can. Null once deleted; else the server's refusal (a 422 names the handle to

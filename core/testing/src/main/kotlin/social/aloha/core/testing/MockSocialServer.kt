@@ -12,13 +12,13 @@ import okhttp3.HttpUrl
 
 /** The server shapes the app has to cope with; sign-in has to succeed against all but the refusing ones. */
 public enum class MockServerConfiguration {
-    /** Nextcloud Social with the administrator's root rewrite rules: the API answers at `/` too. */
+    /** Aloha Social with the administrator's root rewrite rules: the API answers at `/` too. */
     NextcloudWithRewrite,
 
-    /** Nextcloud Social without them: the API answers only under `/index.php/apps/social/`. */
+    /** Aloha Social without them: the API answers only under `/index.php/apps/social/`. */
     NextcloudWithoutRewrite,
 
-    /** Nextcloud Social whose optional Nextcloud connection is available (Login Flow v2, OCS capabilities). */
+    /** Aloha Social whose optional Nextcloud connection is available (Login Flow v2, OCS capabilities). */
     NextcloudConnected,
 
     /** Stock Mastodon: discovery documents captured from mastodon.social, no Nextcloud extension. */
@@ -28,12 +28,12 @@ public enum class MockServerConfiguration {
     CoreOnly,
 
     /**
-     * Answers the first read of every path with 429 and `Retry-After: 1`, then as Nextcloud Social
+     * Answers the first read of every path with 429 and `Retry-After: 1`, then as Aloha Social
      * with the rewrite rules.
      */
     RateLimited,
 
-    /** Nextcloud Social whose timelines carry one malformed entity in third place. */
+    /** Aloha Social whose timelines carry one malformed entity in third place. */
     MalformedEntities,
 }
 

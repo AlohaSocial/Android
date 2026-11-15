@@ -39,11 +39,11 @@ import social.aloha.core.network.unitRequest
  * determined is absent: every probe tolerates failure, and failure means false.
  *
  * A route counts as present when it answers 2xx, 401 or 403 (it exists, the token lacks a scope) and
- * as absent on 404. `only_video` and `only_news` are Nextcloud Social's own and are trusted only
- * when NodeInfo names Nextcloud Social: Mastodon ignores unknown parameters, so their acceptance
- * proves nothing there. Pixelfed's `/api/v2/config` `features`, which Nextcloud Social serves
- * publicly, is taken at its word where it speaks; its `shorts`, Nextcloud Social's own from 0.26.222,
- * is the only word on `only_short`. Nextcloud Social announces its streaming address whether or not
+ * as absent on 404. `only_video` and `only_news` are Aloha Social's own and are trusted only
+ * when NodeInfo names Aloha Social: Mastodon ignores unknown parameters, so their acceptance
+ * proves nothing there. Pixelfed's `/api/v2/config` `features`, which Aloha Social serves
+ * publicly, is taken at its word where it speaks; its `shorts`, Aloha Social's own from 0.26.222,
+ * is the only word on `only_short`. Aloha Social announces its streaming address whether or not
  * the administrator runs the stream daemon, so there the stream counts only when the daemon answers
  * its health route. `hls_url`, reactions and quotes have nothing announcing them and are latched later,
  * on first sighting in an entity.
@@ -194,7 +194,7 @@ private class Probes(private val executor: RequestExecutor, private val apiBase:
         }
     }
 
-    /** Nextcloud Social answers 422 to a narrowing it does not accept; 2xx means it was taken. */
+    /** Aloha Social answers 422 to a narrowing it does not accept; 2xx means it was taken. */
     suspend fun acceptsNarrowing(parameter: String): Boolean {
         val request = unitRequest(
             Endpoint("api/v1/timelines/public", query = listOf(QueryItem("limit", "1"), QueryItem(parameter, "true"))),

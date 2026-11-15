@@ -104,7 +104,7 @@ internal data class NotificationsUiState(
     val notice: Int? = null,
     /**
      * Where "Learn more" leads: the reader's server, whose web pages explain cut follows and warnings;
-     * null on Nextcloud Social, which has no such pages.
+     * null on Aloha Social, which has no such pages.
      */
     val origin: String? = null,
     /** Until when no notification is raised; null, or a time gone by, while they come as they arrive. */
