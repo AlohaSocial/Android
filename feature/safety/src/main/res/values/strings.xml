@@ -136,7 +136,7 @@
     <string name="interests_instance_paused">Your administrator has paused learning on this server. Nothing new is learnt until they resume it; your choices below apply then.</string>
     <!-- Heading of the reader's interests -->
     <string name="interests_yours">Your interests</string>
-    <!-- Shown while the server has too little to go on -->
+    <!-- Shown while the server learns and has too little to go on -->
     <string name="interests_thin">Still learning: there is little to go on yet.</string>
     <!-- Heading of hashtags the server is still weighing -->
     <string name="interests_candidates">Maybe interesting</string>

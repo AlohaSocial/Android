@@ -39,6 +39,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaSpacing
+import social.aloha.core.model.InterestSettings
 import social.aloha.core.model.InterestTag
 import social.aloha.core.model.InterestsState
 import social.aloha.core.navigation.InterestsKey
@@ -147,9 +148,7 @@ private fun LazyListScope.interestsContent(state: InterestsState, actions: Inter
         }
     }
     heading(R.string.interests_yours)
-    if (state.thin &&
-        !state.settings.instancePaused
-    ) {
+    if (state.thin && state.settings.learningNow) {
         item(key = "thin") { Note(stringResource(R.string.interests_thin)) }
     }
     tags(state.interests, "i")
@@ -163,6 +162,10 @@ private fun LazyListScope.interestsContent(state: InterestsState, actions: Inter
         }
     }
 }
+
+/** Whether the server learns from the reader's reading now: on, and paused by neither of them. */
+private val InterestSettings.learningNow: Boolean
+    get() = learning && !paused && !instancePaused
 
 private fun LazyListScope.tags(tags: List<InterestTag>, section: String) {
     items(tags, key = { "$section:${it.id}" }) { tag -> ListItem(headlineContent = { Text("#${tag.tag}") }) }

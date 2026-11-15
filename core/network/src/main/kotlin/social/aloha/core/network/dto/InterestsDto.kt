@@ -36,7 +36,7 @@ internal data class InterestsStateDto(
     @Serializable(with = LenientBoolSerializer::class) val thin: Boolean = false,
 )
 
-/** Learning is on unless the server says otherwise. */
+/** Learning is off where the server does not say. */
 @Serializable
 internal data class InterestSettingsDto(
     @Serializable(with = OptionalBoolSerializer::class) val learning: Boolean? = null,
@@ -59,7 +59,7 @@ internal data class InterestTagDto(
 
 internal fun InterestsStateDto.toDomain(): InterestsState = InterestsState(
     settings =
-        settings?.let { InterestSettings(it.learning ?: true, it.paused, it.languages, it.instancePaused) }
+        settings?.let { InterestSettings(it.learning ?: false, it.paused, it.languages, it.instancePaused) }
             ?: InterestSettings(),
     interests = interests.map { it.toDomain() },
     candidates = candidates.map { it.toDomain() },
