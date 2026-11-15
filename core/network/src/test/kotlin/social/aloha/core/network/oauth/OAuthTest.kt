@@ -174,6 +174,37 @@ class OAuthTest {
     }
 
     @Test
+    fun `a token with a refresh token and a lifetime decodes both`() = runTest {
+        respond(
+            """{"access_token":"t","token_type":"Bearer","scope":"read","created_at":1,""" +
+                """"expires_in":31536000,"refresh_token":"r"}""",
+        )
+        val result = client.exchange(OAuthEndpoints.conventional(base).token, registration, pending("v"), "code-1")
+        assertEquals(ApiResult.Success(AccessToken("t", "read", refreshToken = "r", expiresIn = 31_536_000)), result)
+    }
+
+    @Test
+    fun `a refresh posts the refresh token with the client credentials and no redirect`() = runTest {
+        respond(
+            """{"access_token":"t2","token_type":"Bearer","scope":"read","expires_in":86400,"refresh_token":"r2"}""",
+        )
+        val result = client.refresh(OAuthEndpoints.conventional(base).token, registration, "r1")
+        assertEquals(ApiResult.Success(AccessToken("t2", "read", refreshToken = "r2", expiresIn = 86_400)), result)
+        val recorded = server.takeRequest(1, TimeUnit.SECONDS)
+        assertEquals("/index.php/apps/social/oauth/token", recorded?.url?.encodedPath)
+        val form = formOf(recorded?.body?.utf8())
+        assertEquals(
+            mapOf(
+                "grant_type" to "refresh_token",
+                "refresh_token" to "r1",
+                "client_id" to "client-1",
+                "client_secret" to "secret-1",
+            ),
+            form,
+        )
+    }
+
+    @Test
     fun `a spent code is an unauthorised answer, never retried`() = runTest {
         respond("""{"error":"unknown client_id"}""", code = 401)
         val pending = pending(verifier = "v")

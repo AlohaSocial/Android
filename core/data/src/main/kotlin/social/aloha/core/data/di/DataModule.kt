@@ -14,6 +14,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import social.aloha.core.data.AccountRemovalListener
+import social.aloha.core.data.TokenRenewalListener
 import social.aloha.core.html.RichTextCache
 
 /** A scope that lives as long as the process, for state shared across screens. */
@@ -41,4 +42,8 @@ internal interface DataBindings {
     /** Whoever has to hear that an account left the device joins this set; signing out needs none. */
     @Multibinds
     fun removalListeners(): Set<AccountRemovalListener>
+
+    /** Whoever holds a copy of an account's token joins this set, to hear of the token that replaced it. */
+    @Multibinds
+    fun renewalListeners(): Set<TokenRenewalListener>
 }

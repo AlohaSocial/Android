@@ -4,6 +4,7 @@
 package social.aloha.core.network
 
 import java.io.ByteArrayOutputStream
+import java.io.IOException
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.runTest
@@ -110,6 +111,73 @@ class ApiClientTest {
         assertEquals(0, told)
         respond("""{"error":"invalid"}""", code = 401)
         client.execute(emojis())
+        assertEquals(1, told)
+    }
+
+    @Test
+    fun `a renewed token sends the refused request once more with the new token`() = runTest {
+        var token = "old-token"
+        var told = 0
+        val client = ApiClient(
+            base,
+            { Credentials(token) },
+            OkHttpClient(),
+            rateLimiter,
+            Dispatchers.IO,
+            onUnauthorised = { told++ },
+            renew = { rejected ->
+                assertEquals("old-token", rejected)
+                token = "new-token"
+                TokenRenewal.Renewed
+            },
+        )
+        respond("""{"error":"the access_token was revoked"}""", code = 401)
+        respond("[]")
+
+        assertEquals(ApiResult.Success(emptyList<CustomEmoji>()), client.execute(emojis()))
+
+        assertEquals("Bearer old-token", server.takeRequest(1, TimeUnit.SECONDS)?.headers?.get("Authorization"))
+        assertEquals("Bearer new-token", server.takeRequest(1, TimeUnit.SECONDS)?.headers?.get("Authorization"))
+        assertEquals(0, told)
+    }
+
+    @Test
+    fun `a renewal that could not be asked answers its failure and asks for no sign-in`() = runTest {
+        var told = 0
+        val failure = ApiError.Transport(IOException("offline"))
+        val client = ApiClient(
+            base,
+            { Credentials("old-token") },
+            OkHttpClient(),
+            rateLimiter,
+            Dispatchers.IO,
+            onUnauthorised = { told++ },
+            renew = { TokenRenewal.Failed(failure) },
+        )
+        respond("""{"error":"the access_token was revoked"}""", code = 401)
+
+        assertEquals(ApiResult.Failure(failure), client.execute(emojis()))
+        assertEquals(1, server.requestCount)
+        assertEquals(0, told)
+    }
+
+    @Test
+    fun `a renewed token refused again asks for a new sign-in and is not sent a third time`() = runTest {
+        var told = 0
+        val client = ApiClient(
+            base,
+            { Credentials("token") },
+            OkHttpClient(),
+            rateLimiter,
+            Dispatchers.IO,
+            onUnauthorised = { told++ },
+            renew = { TokenRenewal.Renewed },
+        )
+        respond("""{"error":"the access_token was revoked"}""", code = 401)
+        respond("""{"error":"the access_token was revoked"}""", code = 401)
+
+        assertInstanceOf(ApiError.Unauthorised::class.java, client.execute(emojis()).errorOrNull())
+        assertEquals(2, server.requestCount)
         assertEquals(1, told)
     }
 
@@ -229,6 +297,31 @@ class ApiClientTest {
             assertInstanceOf(ApiError.Forbidden::class.java, client().download(export, refused).errorOrNull())
             assertEquals(0, refused.size())
         }
+
+    @Test
+    fun `a download refused for its token is renewed and asked once more`() = runTest {
+        var token = "old-token"
+        val client = ApiClient(
+            base,
+            { Credentials(token) },
+            OkHttpClient(),
+            rateLimiter,
+            Dispatchers.IO,
+            renew = {
+                token = "new-token"
+                TokenRenewal.Renewed
+            },
+        )
+        respond("""{"error":"the access_token was revoked"}""", code = 401)
+        respond("acct,posts\nalice,19\n")
+        val written = ByteArrayOutputStream()
+
+        assertNull(client.download(Endpoint("api/v1/statistics/export"), written).errorOrNull())
+
+        assertEquals("acct,posts\nalice,19\n", written.toString(Charsets.UTF_8))
+        assertEquals("Bearer old-token", server.takeRequest(1, TimeUnit.SECONDS)?.headers?.get("Authorization"))
+        assertEquals("Bearer new-token", server.takeRequest(1, TimeUnit.SECONDS)?.headers?.get("Authorization"))
+    }
 
     @Test
     fun `a 429 blocks the host for Retry-After`() = runTest {

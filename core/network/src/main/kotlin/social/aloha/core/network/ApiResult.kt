@@ -60,9 +60,9 @@ public data class Refusal(val code: String, val fields: Map<String, String> = em
 /** Why a request failed. The one place an HTTP response becomes a typed error is [ApiError.from]. */
 public sealed interface ApiError {
     /**
-     * 401: the token was revoked or never presented (Nextcloud Social answers
-     * `{"error":"the access_token was revoked"}`). There is no refresh token: the account needs a
-     * new sign-in, its cached data stays.
+     * 401: the token was revoked, expired or never presented (Nextcloud Social answers
+     * `{"error":"the access_token was revoked"}` for each). It is the answer only once no refresh
+     * token renewed the token: the account needs a new sign-in, its cached data stays.
      */
     public data class Unauthorised(val message: String?) : ApiError
 

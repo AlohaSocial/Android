@@ -30,7 +30,8 @@ public fun interface AccountRemovalListener {
  * there too, and so is the Nextcloud app password when it had one; then its secrets, its cache, its
  * settings and the posts it had not sent go. Other
  * devices stay signed in. A server that cannot be reached (offline, gone) does not keep the account
- * here: the token is still deleted from the device, and only that server keeps a record of it.
+ * here: the token is still deleted from the device, and only that server keeps a record of it. A renewal
+ * of the token in flight ends first, so the token revoked and told is the one the server holds.
  */
 @Singleton
 public class AccountRemoval @Inject constructor(
@@ -43,6 +44,7 @@ public class AccountRemoval @Inject constructor(
     private val widgets: WidgetUpdates,
     private val raised: RaisedNotifications,
     private val clients: ClientFactory,
+    private val tokens: TokenRefresh,
     private val removalListeners: Set<@JvmSuppressWildcards AccountRemovalListener> = emptySet(),
 ) {
     /**
@@ -57,10 +59,9 @@ public class AccountRemoval @Inject constructor(
 
     public suspend fun signOut(account: SignedInAccount) {
         // the device forgets first, so a slow or unreachable server can never leave the account behind
-        val token = accounts.token(account.id)
         val registration = accounts.registration(account.host, account.id)
         val appPassword = accounts.credentials(account.id).nextcloudBasic
-        accounts.remove(account.id)
+        val token = tokens.locked(account.id) { accounts.token(account.id).also { accounts.remove(account.id) } }
         sweeper.forget(account.id)
         settings.forget(account.id)
         outbox.forget(account.id)
