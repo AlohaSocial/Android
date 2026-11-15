@@ -80,10 +80,14 @@ public enum class ThreadOrder {
  * boosted a post are kept in memory, so the post opened again shows them at once.
  */
 @Singleton
-public class ThreadRepository @Inject constructor(
+public class ThreadRepository(
     private val statuses: StatusRepository,
     private val clients: ClientFactory,
+    private val followUpPause: suspend () -> Unit,
 ) {
+    @Inject public constructor(statuses: StatusRepository, clients: ClientFactory) :
+        this(statuses, clients, { delay(FOLLOW_UP) })
+
     public fun observe(account: SignedInAccount, statusIds: List<String>): Flow<Map<String, Status>> =
         statuses.observe(account.id, statusIds)
 
@@ -137,7 +141,7 @@ public class ThreadRepository @Inject constructor(
     ): Conversation? {
         val counts = conversation.countsFilling && account.capabilities.statusCounts
         if (!counts && !conversation.repliesFilling) return null
-        delay(FOLLOW_UP)
+        followUpPause()
         if (counts) {
             val focused = conversation.focused.id
             val below = shown().dropWhile { it != focused }.drop(1)
