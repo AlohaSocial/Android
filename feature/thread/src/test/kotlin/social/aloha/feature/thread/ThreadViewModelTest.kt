@@ -12,6 +12,7 @@ import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -236,7 +237,12 @@ class ThreadViewModelTest {
         server.close()
     }
 
-    private suspend fun open(statusId: String, history: Boolean = false, version: String = ""): ThreadViewModel {
+    private suspend fun open(
+        statusId: String,
+        history: Boolean = false,
+        version: String = "",
+        followUpPause: (suspend () -> Unit)? = null,
+    ): ThreadViewModel {
         val apiBase = server.url("/")
         val capabilities = ServerCapabilities.minimal(apiBase.toString())
             .copy(softwareName = "nextcloud-social", softwareVersion = version)
@@ -248,7 +254,7 @@ class ThreadViewModelTest {
             ThreadViewModel(
                 ThreadKey(account.id, statusId, history),
                 accounts,
-                ThreadRepository(statuses, clients),
+                followUpPause?.let { ThreadRepository(statuses, clients, it) } ?: ThreadRepository(statuses, clients),
                 StatusInteractions(statuses, clients),
                 RichTextCache(),
                 clock,
@@ -435,14 +441,16 @@ class ThreadViewModelTest {
     @Test
     fun `a refresh while replies are still being read keeps what it read, and the read once more is dropped`() =
         runBlocking {
+            val pause = CompletableDeferred<Unit>()
             conversation.threadFilling = true
-            val viewModel = open("f")
+            val viewModel = open("f", followUpPause = { pause.await() })
             viewModel.await { !it.loading && it.posts().size == 4 }
             conversation.threadFilling = false
             conversation.grown = true
             viewModel.onRefresh()
             viewModel.await { !it.loading && it.pendingReplies == 1 }
-            delay(4.seconds)
+            pause.complete(Unit)
+            delay(1.seconds)
             val state = viewModel.uiState.value
             assertEquals(1, state.pendingReplies)
             assertEquals(listOf("a1", "f", "r1", "r2"), state.posts().map { it.row.statusId })
