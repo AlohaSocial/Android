@@ -122,7 +122,7 @@ internal fun ComposerScreen(
     }
 }
 
-/** The post as written: what it answers, its warning, each segment of the thread, its poll and time. */
+/** The post as written: what it answers, its warning, each segment of the thread, its poll or event and time. */
 @Composable
 private fun Writing(state: ComposerUiState, segments: List<TextFieldValue>, spoiler: String, actions: ComposerActions) {
     state.resume?.let { ResumeCard(it, segments, spoiler, actions::onResume) }
@@ -133,14 +133,22 @@ private fun Writing(state: ComposerUiState, segments: List<TextFieldValue>, spoi
         state.mediaLocked -> Note(R.string.composer_edit_media_locked)
         state.mediaLeftOut -> Note(R.string.composer_redraft_media_left_out)
     }
+    if (state.eventLeftOut) Note(R.string.composer_event_cancelled_left_out)
     if (state.spoilerShown) SpoilerField(spoiler) { actions.onSpoiler(true, it) }
     segments.forEachIndexed { index, value ->
         SegmentField(index, segments.size, value, state, actions)
-        if (index == 0) state.poll?.let { PollEditor(state, it, actions::onPoll) }
+        if (index == 0) PollOrEvent(state, actions)
     }
     GamesHint(state.games)
     state.scheduledAt?.let { ScheduleLine(it, actions::onPickSchedule) { actions.onSchedule(null) } }
     AddToThread(state, segments, actions::onAddSegment)
+}
+
+/** The opening post's poll, or what makes it an event, where it has either. */
+@Composable
+private fun PollOrEvent(state: ComposerUiState, actions: ComposerActions) {
+    state.poll?.let { PollEditor(state, it, actions::onPoll) }
+    state.event?.let { EventEditor(it, actions::onEvent) }
 }
 
 /** A quiet line about the post being written. */

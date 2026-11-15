@@ -3,6 +3,7 @@
 
 package social.aloha.feature.composer
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -60,12 +61,20 @@ internal fun ScheduleLine(at: Instant, onChange: () -> Unit, onClear: () -> Unit
 }
 
 /**
- * A day, then a time of day, in the phone's time zone; a time less than five minutes ahead cannot be
- * picked, as no server would take it.
+ * A day, then a time of day, in the phone's time zone; a time less than [floor] ahead, five minutes unless
+ * said otherwise, cannot be picked, as no server would schedule it. A null [floor] takes any time of the day.
+ * [confirm] names the button that takes the time.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun ScheduleDialog(initial: Instant?, now: () -> Instant, onPick: (Instant) -> Unit, onDismiss: () -> Unit) {
+internal fun ScheduleDialog(
+    initial: Instant?,
+    now: () -> Instant,
+    onPick: (Instant) -> Unit,
+    onDismiss: () -> Unit,
+    floor: Duration? = SCHEDULE_FLOOR,
+    @StringRes confirm: Int = R.string.composer_schedule_confirm,
+) {
     val zone = ZoneId.systemDefault()
     val start = initial ?: now().plus(Duration.ofHours(1))
     var day by rememberSaveable { mutableStateOf<Long?>(null) }
@@ -95,7 +104,8 @@ internal fun ScheduleDialog(initial: Instant?, now: () -> Instant, onPick: (Inst
             dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.composer_cancel)) } },
         ) { DatePicker(dates) }
     } else {
-        TimeDialog(LocalDate.ofEpochDay(chosen / MILLIS_PER_DAY), start.atZone(zone).toLocalTime(), now, onPick) {
+        val date = LocalDate.ofEpochDay(chosen / MILLIS_PER_DAY)
+        TimeDialog(date, start.atZone(zone).toLocalTime(), { floor?.let { now().plus(it) } }, confirm, onPick) {
             day = null
         }
     }
@@ -106,7 +116,8 @@ internal fun ScheduleDialog(initial: Instant?, now: () -> Instant, onPick: (Inst
 private fun TimeDialog(
     date: LocalDate,
     initial: LocalTime,
-    now: () -> Instant,
+    earliest: () -> Instant?,
+    @StringRes confirm: Int,
     onPick: (Instant) -> Unit,
     onBack: () -> Unit,
 ) {
@@ -118,7 +129,7 @@ private fun TimeDialog(
         is24Hour = android.text.format.DateFormat.is24HourFormat(context),
     )
     val at = date.atTime(time.hour, time.minute).atZone(zone).toInstant()
-    val tooSoon = at.isBefore(now().plus(SCHEDULE_FLOOR))
+    val tooSoon = earliest()?.let(at::isBefore) == true
     AlertDialog(
         onDismissRequest = onBack,
         title = { Text(stringResource(R.string.composer_schedule_time)) },
@@ -137,7 +148,7 @@ private fun TimeDialog(
         },
         confirmButton = {
             TextButton(onClick = { onPick(at) }, enabled = !tooSoon) {
-                Text(stringResource(R.string.composer_schedule_confirm))
+                Text(stringResource(confirm))
             }
         },
         dismissButton = { TextButton(onClick = onBack) { Text(stringResource(R.string.composer_schedule_back)) } },

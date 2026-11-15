@@ -3,6 +3,7 @@
 
 package social.aloha.core.network.endpoints
 
+import java.time.Instant
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.boolean
 import kotlinx.serialization.json.jsonArray
@@ -16,6 +17,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import social.aloha.core.model.FilterAction
 import social.aloha.core.model.FilterContext
+import social.aloha.core.model.StatusEvent
 import social.aloha.core.model.TimelineFilters
 import social.aloha.core.model.TimelineSource
 import social.aloha.core.network.Authentication
@@ -333,6 +335,26 @@ class EndpointsTest {
         val poll = StatusPost(text = "x", pollOptions = listOf("a", "b")).formItems()
         assertEquals(listOf("a", "b"), poll.filter { it.name == "poll[options][]" }.map { it.value })
         assertEquals("86400", poll.first { it.name == "poll[expires_in]" }.value)
+    }
+
+    @Test
+    fun `an event goes out as nested fields, its times to the second in UTC, and never with an edit`() {
+        val event = StatusEvent(" Beach clean-up ", Instant.parse("2030-06-01T07:30:00.250Z"), location = " ")
+        val items = StatusPost(text = "x", event = event).formItems().filter { it.name.startsWith("event") }
+        assertEquals(
+            listOf(QueryItem("event[name]", "Beach clean-up"), QueryItem("event[start_time]", "2030-06-01T07:30:00Z")),
+            items,
+        )
+        val ending = event.copy(
+            endsAt = Instant.parse("2030-06-01T10:00:00Z"),
+            location = "North shore",
+            status = StatusEvent.Status.Cancelled,
+        )
+        val full = StatusPost(text = "x", event = ending).formItems()
+        assertEquals("2030-06-01T10:00:00Z", full.first { it.name == "event[end_time]" }.value)
+        assertEquals("North shore", full.first { it.name == "event[location]" }.value)
+        assertEquals("cancelled", full.first { it.name == "event[status]" }.value)
+        assertNull(edited(StatusPost(text = "x", event = ending))["event"])
     }
 
     @Test

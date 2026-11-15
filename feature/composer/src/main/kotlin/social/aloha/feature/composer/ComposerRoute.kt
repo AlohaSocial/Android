@@ -45,6 +45,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import java.time.Instant
 import social.aloha.core.model.CustomEmoji
 import social.aloha.core.model.LogArea
+import social.aloha.core.model.StatusEvent
 import social.aloha.core.model.Visibility
 import social.aloha.core.navigation.ComposerKey
 import timber.log.Timber
@@ -211,6 +212,10 @@ private fun rememberActions(
 
             override fun onPoll(poll: PollUi?) {
                 viewModel.poll.value = poll
+            }
+
+            override fun onEvent(event: StatusEvent?) {
+                viewModel.event = event
             }
 
             override fun onPickMedia() =

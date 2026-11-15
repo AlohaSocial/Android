@@ -63,6 +63,7 @@ import social.aloha.core.model.ReplyPrefix
 import social.aloha.core.model.ServerLimits
 import social.aloha.core.model.SignedInAccount
 import social.aloha.core.model.Status
+import social.aloha.core.model.StatusEvent
 import social.aloha.core.model.Visibility
 import social.aloha.core.model.Writing
 import social.aloha.core.navigation.ComposerKey
@@ -164,6 +165,11 @@ internal class ComposerViewModel @AssistedInject constructor(
 
     /** When the post goes out, if not at once. */
     val scheduledAt = MutableStateFlow<Instant?>(null)
+
+    /** What makes the opening post an event, which takes the place of its poll; null for an ordinary post. */
+    var event: StatusEvent?
+        get() = control.value.event
+        set(value) = control.update { it.copy(event = value) }
     private var reader: SignedInAccount? = null
 
     /** The account writing, once it is known; the writer can change it. */
@@ -265,7 +271,7 @@ internal class ComposerViewModel @AssistedInject constructor(
                 StoryShare.fits(
                     text.segments,
                     attached.flatten(),
-                    alone = state.fresh && poll == null && at == null,
+                    alone = state.fresh && poll == null && state.event == null && at == null,
                     card = card.on && cardFits,
                 ),
             asStory = extras.asStory,
@@ -554,7 +560,9 @@ internal class ComposerViewModel @AssistedInject constructor(
                 nextcloudFiles = account.capabilities.mediaFromNextcloudFiles,
                 nextcloudConnected = account.nextcloudConnected,
                 editsMedia = account.capabilities.editsMedia,
-            )
+                events = account.capabilities.postsEvents,
+                eventStatuses = account.capabilities.postsEventStatus,
+            ).withEvent(state.event)
         }
         emojiList = compose.emojis(account)
         control.update { it.copy(emojis = emojiList.filter(CustomEmoji::visibleInPicker)) }

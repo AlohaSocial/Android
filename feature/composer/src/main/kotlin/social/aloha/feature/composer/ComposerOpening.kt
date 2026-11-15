@@ -68,9 +68,10 @@ internal class PostOpener(
     }
 
     /**
-     * The post written again: its source and media, as a new post that replaces it. The original is
-     * deleted only once the new one is out, so a writer who gives up, or a post that fails, loses
-     * nothing. Media an older edit left without an id cannot be named and are left out.
+     * The post written again: its source, media and event, as a new post that replaces it. The original
+     * is deleted only once the new one is out, so a writer who gives up, or a post that fails, loses
+     * nothing. Media an older edit left without an id cannot be named and are left out. The event keeps
+     * its times as posted, past or not, as the server decides on them, and its status.
      */
     private suspend fun redraft(account: SignedInAccount, id: String): Opened {
         val found = (compose.status(account, id) as? Answer.Got)?.value ?: return Opened.Gone
@@ -78,7 +79,10 @@ internal class PostOpener(
         val source = (interactions.source(account, id) as? Answer.Got)?.value
         val text = source?.text ?: status.text ?: StatusHtmlParser.plainText(status.content)
         return Opened.Writing(
-            draftOf(status, text, source?.spoilerText ?: status.spoilerText).copy(replaces = id),
+            draftOf(status, text, source?.spoilerText ?: status.spoilerText).copy(
+                replaces = id,
+                event = status.event?.copy(participationUrl = null),
+            ),
             mediaLeftOut = status.mediaAttachments.size < found.mediaAttachments.size,
         )
     }

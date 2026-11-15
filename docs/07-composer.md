@@ -45,7 +45,7 @@ scribble, emoji, canned responses).
 └─────────────────────────────────────────────┘
 ```
 
-Toolbar, left to right: add media · record video · poll · content warning ·
+Toolbar, left to right: add media · record video · poll · event · content warning ·
 visibility · emoji · Intelligence · attach from Nextcloud. Right: thread
 position, character counter.
 
@@ -199,6 +199,25 @@ media sweep to collect.
   `max_characters_per_option` enforced, multiple choice toggle, hide-totals
   toggle, expiry picker bounded by `min_expiration`/`max_expiration`.
   A poll and media are mutually exclusive, as Mastodon requires.
+- **Events**: on Nextcloud Social from 0.26.279 (read from source, `7bf0facf4`;
+  nothing announces it, so the version decides), a calendar toggle beside the
+  poll makes the opening post an event: a title and a start (both required), an
+  optional end after the start and an optional place, picked with the schedule
+  picker's day and time dialogs without its five-minute floor. A post is an
+  event or has a poll, never both, as the server answers 422 to both. The post
+  is held until the title and start are set and the end comes after the start,
+  with the reason under the section. It goes out as the form fields
+  `event[name]`, `event[start_time]`, `event[end_time]` and
+  `event[location]`, times in UTC to the second (the server reads ISO 8601 with
+  fractional seconds and an offset, and keeps it in UTC to the second), and
+  stays with the draft, the outbox and a scheduled post. An edit sends
+  no `event`, which keeps the one the post has; the editor does not load an
+  event to change it, and offers none while editing. Delete & Redraft carries the
+  event over, its times as posted even when past: the server decides on them.
+  Its status (confirmed, tentative, cancelled) goes as `event[status]` from
+  0.26.280 (read from source, `f4b4cfdd6`); before, the server drops it, so a
+  cancelled event is left out of the redraft, with a note saying so, rather
+  than posted as going ahead.
 - **Threads**: a segmented composer. Each segment is its own text area with its
   own media, CW and poll. Posting chains them: the first `POST /api/v1/statuses`
   returns an id, each subsequent post sends `in_reply_to_id` of the previous.
