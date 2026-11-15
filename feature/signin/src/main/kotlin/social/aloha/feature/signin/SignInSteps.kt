@@ -97,7 +97,7 @@ internal fun InstanceFacts(card: InstanceCard) {
         style = MaterialTheme.typography.labelLarge,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
-    val software = stringResource(R.string.signin_nextcloud_social)
+    val software = stringResource(R.string.signin_aloha_social)
     // the software is named only where the server's own title does not already say it
     if (card.isNextcloudSocial && !card.title.contains(software, ignoreCase = true)) {
         Text(software, style = MaterialTheme.typography.labelMedium)

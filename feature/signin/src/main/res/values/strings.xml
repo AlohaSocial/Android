@@ -27,8 +27,8 @@
         <item quantity="one">%s person</item>
         <item quantity="other">%s people</item>
     </plurals>
-    <!-- Label shown on the server card for a Nextcloud Social server -->
-    <string name="signin_nextcloud_social">Aloha Social</string>
+    <!-- Label shown on the server card for an Aloha Social server -->
+    <string name="signin_aloha_social">Aloha Social</string>
     <!-- Button that opens the server\'s sign-in page in the browser -->
     <string name="signin_sign_in">Sign in</string>
     <!-- Button that goes back to typing another server -->
@@ -59,13 +59,13 @@
     <string name="signin_attempt_discovery">named by the server</string>
     <!-- Reason an address was tried: the root of the domain -->
     <string name="signin_attempt_domain_root">the domain root</string>
-    <!-- Reason an address was tried: Nextcloud Social without the web-server rules -->
+    <!-- Reason an address was tried: Aloha Social without the web-server rules -->
     <string name="signin_attempt_app_path">Aloha Social without the web-server rules</string>
-    <!-- Reason an address was tried: Nextcloud Social with pretty URLs -->
+    <!-- Reason an address was tried: Aloha Social with pretty URLs -->
     <string name="signin_attempt_pretty_app_path">Aloha Social with pretty URLs</string>
     <!-- Reason an address was tried: the path the person typed -->
     <string name="signin_attempt_typed_path">the address you typed</string>
-    <!-- Reason an address was tried: Nextcloud Social in the folder the person typed -->
+    <!-- Reason an address was tried: Aloha Social in the folder the person typed -->
     <string name="signin_attempt_typed_app_path">Aloha Social in that folder</string>
     <!-- Reason an address was tried: the API address the person entered by hand -->
     <string name="signin_attempt_manual">the API address you entered</string>
@@ -121,7 +121,7 @@
     <string name="welcome_fediverse_title">What is the fediverse?</string>
     <!-- Welcome screen: what the fediverse is -->
     <string name="welcome_fediverse_body">Many independent servers, run by people and organisations, that talk to each other. Your account lives on one of them, and you follow people on any of the others.</string>
-    <!-- Welcome screen: Nextcloud Social, named first -->
+    <!-- Welcome screen: Aloha Social, named first -->
     <string name="welcome_nextcloud">Aloha Social puts such a server into a Nextcloud. If yours has it, you sign in with your Nextcloud account; if it has not, its administrator can add it.</string>
     <!-- Welcome screen: the button that starts adding the first account -->
     <string name="welcome_add_account">Add your account</string>

@@ -46,13 +46,13 @@
     <string name="settings_nextcloud_push_polled">Notifications are checked every few minutes: your Nextcloud does not push them yet.</string>
     <!-- Settings section that deletes the account in use, for good -->
     <string name="settings_delete">Delete account</string>
-    <!-- What deleting does, on Nextcloud Social; %s is the handle, like @alice@example.social -->
+    <!-- What deleting does, on Aloha Social; %s is the handle, like @alice@example.social -->
     <string name="settings_delete_about">Deleting %s removes its posts and follows on every server that knew it. It cannot be undone. Your Nextcloud account stays.</string>
     <!-- Button that opens the confirmation to delete the account -->
     <string name="settings_delete_start">Delete this account…</string>
-    <!-- On Nextcloud Social without the Nextcloud connected -->
+    <!-- On Aloha Social without the Nextcloud connected -->
     <string name="settings_delete_needs_nextcloud">To delete this account from here, connect your Nextcloud above first.</string>
-    <!-- On any server other than Nextcloud Social -->
+    <!-- On any server other than Aloha Social -->
     <string name="settings_delete_on_web">Your server deletes accounts on its website, after you sign in there.</string>
     <!-- Button that opens the server's page for deleting the account -->
     <string name="settings_delete_open_web">Delete on the website</string>
