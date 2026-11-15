@@ -3,6 +3,10 @@
 
 package social.aloha.core.sync
 
+import android.Manifest
+import android.app.Application
+import android.app.Notification
+import android.app.NotificationManager
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.work.ListenableWorker
@@ -27,6 +31,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows.shadowOf
 import social.aloha.core.data.compose.DraftMedia
 import social.aloha.core.data.compose.DraftPost
 import social.aloha.core.data.compose.DraftSegment
@@ -36,9 +41,16 @@ import social.aloha.core.model.SignedInAccount
 import social.aloha.core.testing.NumberedTimeline
 import social.aloha.core.testing.SignedInFixture
 
+/** What [Server] answers for a post a review rule holds: a 422 with `held_for_review`, as Social does. */
+private const val HELD = -422
+
+private const val HELD_BODY = """{"error":"This post is waiting for a moderator to look at it.",""" +
+    """"held_for_review":true,"reason":"links",""" +
+    """"held_post":{"id":"9","reason":"links","text":"Two","media_count":0}}"""
+
 /**
- * A server that answers `POST /statuses` with the next code of [posts] (a status on 200), media by
- * [media], and remembers what was asked, with the idempotency key of each post.
+ * A server that answers `POST /statuses` with the next code of [posts] (a status on 200, a hold on
+ * [HELD]), media by [media], and remembers what was asked, with the idempotency key of each post.
  */
 private class Server(private val posts: MutableList<Int>, private val media: MutableList<Int>) : Dispatcher() {
     val asked = CopyOnWriteArrayList<String>()
@@ -55,6 +67,7 @@ private class Server(private val posts: MutableList<Int>, private val media: Mut
                 when (val code = posts.removeFirstOrNull() ?: 200) {
                     200 -> json(200, JsonObject(template + ("id" to JsonPrimitive("s${++next}"))).toString())
                     422 -> json(422, """{"error":"Text character limit of 500 exceeded"}""")
+                    HELD -> json(422, HELD_BODY)
                     else -> json(code, "{}")
                 }
             }
@@ -165,6 +178,63 @@ class OutboxWorkerTest {
         assertEquals("long", refused.id)
         assertEquals(OutboxState.Failed, refused.state)
         assertEquals("Text character limit of 500 exceeded", refused.error)
+    }
+
+    @Test
+    fun `a post held for review counts as sent, the rest of its thread is a draft, and the queue goes on`() =
+        runBlocking {
+            val account = fixture.signIn(server.url("/"))
+            val file = File(context.filesDir, "three.jpg").apply { writeBytes(ByteArray(16)) }
+            val three = DraftMedia("three.jpg", "image/jpeg", file.absolutePath, mediaId = "m3")
+            val thread = post("One", "Two", "Three").let {
+                it.copy(segments = it.segments.toMutableList().apply { this[2] = this[2].copy(media = listOf(three)) })
+            }
+            fixture.outbox.queue("thread", account.id, thread)
+            fixture.outbox.queue("next", account.id, post("Next"))
+            posts += listOf(200, HELD, 200)
+            assertTrue(run(account) is ListenableWorker.Result.Success)
+            // the third segment of the thread never went, and waits as a draft with its picture; the next post went
+            val rest = left(account).single()
+            assertEquals("thread", rest.id)
+            assertEquals(OutboxState.Draft, rest.state)
+            assertEquals(listOf(DraftSegment("Three", listOf(three))), rest.post.segments)
+            assertTrue("the draft keeps its picture", file.exists())
+            assertEquals(listOf("key-0", "key-1", "key-0"), answers.keys)
+        }
+
+    @Test
+    fun `a single post held for review leaves nothing behind`() = runBlocking {
+        val account = fixture.signIn(server.url("/"))
+        fixture.outbox.queue("one", account.id, post("One"))
+        posts += HELD
+        assertTrue(run(account) is ListenableWorker.Result.Success)
+        assertEquals(emptyList<Any>(), left(account))
+        assertEquals(1, answers.keys.size)
+    }
+
+    @Test
+    fun `a post written again and held for review deletes nothing, and the writer hears the original stays`() =
+        runBlocking {
+            shadowOf(context as Application).grantPermissions(Manifest.permission.POST_NOTIFICATIONS)
+            val account = fixture.signIn(server.url("/"))
+            fixture.outbox.queue("again", account.id, post("Again").copy(replaces = "original"))
+            posts += HELD
+            assertTrue(run(account) is ListenableWorker.Result.Success)
+            assertEquals(emptyList<String>(), answers.asked.filter { it.startsWith("DELETE") })
+            val shown = shadowOf(context.getSystemService(NotificationManager::class.java)).allNotifications.single()
+            val original = context.getString(R.string.held_keeps_original, "")
+            assertTrue(shown.extras.getString(Notification.EXTRA_TEXT).orEmpty().contains(original.trim()))
+        }
+
+    @Test
+    fun `a known review rule is explained after the message, an unknown one is left out`() {
+        val words = context.resources
+        val links = context.getString(R.string.held_reason_links)
+        val original = context.getString(R.string.held_keeps_original, "Held.")
+        assertEquals("Held. $links", heldMessage(words, "Held.", "links", replaces = false))
+        assertEquals("$original $links", heldMessage(words, "Held.", "links", replaces = true))
+        assertEquals("Held.", heldMessage(words, "Held.", "spam_score", replaces = false))
+        assertEquals("Held.", heldMessage(words, "Held.", null, replaces = false))
     }
 
     @Test

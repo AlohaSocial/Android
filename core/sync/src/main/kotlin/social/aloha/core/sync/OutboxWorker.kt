@@ -14,10 +14,12 @@ import java.io.File
 import social.aloha.core.data.AccountRepository
 import social.aloha.core.data.Answer
 import social.aloha.core.data.compose.DraftMedia
+import social.aloha.core.data.compose.DraftPost
 import social.aloha.core.data.compose.MediaRepository
 import social.aloha.core.data.compose.Outbox
 import social.aloha.core.data.compose.OutboxEntry
 import social.aloha.core.data.compose.PostSender
+import social.aloha.core.data.compose.Sent
 import social.aloha.core.data.compose.UploadFile
 import social.aloha.core.data.map
 import social.aloha.core.model.LogArea
@@ -34,7 +36,9 @@ import timber.log.Timber
  * lost is not made twice.
  *
  * No answer or a busy server puts the post back and tries again later; a refusal sets it aside for
- * the writer, with the server's reason, and the queue goes on; a revoked sign-in pauses the queue.
+ * the writer, with the server's reason, and the queue goes on; a revoked sign-in pauses the queue. A
+ * post a review rule holds counts as sent, and the writer hears that it waits for a moderator, and
+ * why; a thread stops there, the segments after it kept as a draft in its place.
  */
 @HiltWorker
 internal class OutboxWorker @AssistedInject constructor(
@@ -60,15 +64,35 @@ internal class OutboxWorker @AssistedInject constructor(
                 tryForeground()
                 foreground = true
             }
-            outcome = if (entry == null) Result.success() else settle(account, entry, send(account, entry))
+            outcome = if (entry == null) {
+                Result.success()
+            } else {
+                val sent = send(account, entry)
+                settle(account, entry, sent.error, sent.rest)
+            }
         }
         return outcome
     }
 
-    /** Where [entry] goes after sending stopped at [error]; the result the work ends with, or null to go on. */
-    private suspend fun settle(account: SignedInAccount, entry: OutboxEntry, error: ApiError?): Result? = when {
+    /**
+     * Where [entry] goes after sending stopped at [error], [rest] the segments after it not sent; the
+     * result the work ends with, or null to go on.
+     */
+    private suspend fun settle(
+        account: SignedInAccount,
+        entry: OutboxEntry,
+        error: ApiError?,
+        rest: DraftPost?,
+    ): Result? = when {
         error == null -> {
             outbox.sent(entry.id)
+            null
+        }
+
+        error.heldForReview -> {
+            Timber.tag(LogArea.Compose.name).i("Post %s held for review", entry.id)
+            outbox.sent(entry.id, rest)
+            notifications.held(account.id, entry, rest?.segments?.size ?: 0, error.heldReason)
             null
         }
 
@@ -82,28 +106,32 @@ internal class OutboxWorker @AssistedInject constructor(
 
         // worth another try, a few times: one post that never goes must not hold the queue for ever
         error.isWorthRetrying && runAttemptCount < MAX_ATTEMPTS -> {
-            Timber.tag(LogArea.Compose.name).i("Post %s not sent, retried: %s", entry.id, error.javaClass.simpleName)
+            Timber.tag(
+                LogArea.Compose.name,
+            ).i("Post %s not sent, retried: %s", entry.id, error.javaClass.simpleName)
             outbox.settle(entry.id)
             Result.retry()
         }
 
         else -> {
             val message = (error as? ApiError.Unprocessable)?.message
-            Timber.tag(LogArea.Compose.name).w("Post %s not sent, given up: %s", entry.id, error.javaClass.simpleName)
+            Timber.tag(
+                LogArea.Compose.name,
+            ).w("Post %s not sent, given up: %s", entry.id, error.javaClass.simpleName)
             outbox.settle(entry.id, OutboxState.Failed, message)
             notifications.refused(account.id, entry.id, message)
             null
         }
     }
 
-    /** Uploads what [entry] needs and sends it; the error that stopped it, or null once it is out. */
-    private suspend fun send(account: SignedInAccount, entry: OutboxEntry): ApiError? {
+    /** Uploads what [entry] needs and sends it; how far it got, and the error that stopped it. */
+    private suspend fun send(account: SignedInAccount, entry: OutboxEntry): Sent {
         var post = entry.post
         for (index in post.postedIds.size..post.segments.lastIndex) {
             val uploaded = post.segments[index].media.map { item ->
                 when (val made = uploaded(account, item)) {
                     is Answer.Got -> made.value
-                    is Answer.Missed -> return made.error
+                    is Answer.Missed -> return Sent(post, made.error)
                 }
             }
             if (uploaded != post.segments[index].media) {
@@ -117,7 +145,7 @@ internal class OutboxWorker @AssistedInject constructor(
                 outbox.progress(entry.id, post)
             }
         }
-        return sender.send(account, post) { outbox.progress(entry.id, it) }.error
+        return sender.send(account, post) { outbox.progress(entry.id, it) }
     }
 
     /**

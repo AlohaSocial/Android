@@ -30,6 +30,29 @@
     <string name="outbox_refused">A post couldn\'t be sent</string>
     <!-- Body of that notification when the server gave no reason -->
     <string name="outbox_refused_unknown">The server refused it. Tap to fix it.</string>
+    <!-- Title of the notification when the server holds a queued post until a moderator has looked at it -->
+    <string name="outbox_held">A post waits for a moderator</string>
+    <!-- Body of that notification -->
+    <string name="outbox_held_body">It goes out once a moderator approves it. There is no need to send it again.</string>
+    <!-- Body of that notification when the held post was part of a thread; the placeholder is how many posts of the thread after it were kept as a draft, unsent -->
+    <plurals name="outbox_held_thread">
+        <item quantity="one">It goes out once a moderator approves it. The %1$d post after it in the thread was kept as a draft.</item>
+        <item quantity="other">It goes out once a moderator approves it. The %1$d posts after it in the thread were kept as a draft.</item>
+    </plurals>
+    <!-- A message that a post waits for a moderator, with why the server holds it: %1$s is that message, %2$s one of the reasons below -->
+    <string name="held_with_reason">%1$s %2$s</string>
+    <!-- A message that a post waits for a moderator, when that post was written to replace one of the writer's own posts, which is not deleted: %1$s is that message -->
+    <string name="held_keeps_original">%1$s Your original post stays up; delete it yourself once the new one is approved.</string>
+    <!-- Why the server holds a post: the account has published nothing on this server yet -->
+    <string name="held_reason_first_post">A new account\'s first post is always looked at first.</string>
+    <!-- Why the server holds a post: it carries more links than usual -->
+    <string name="held_reason_links">It carries more links than posts here usually do.</string>
+    <!-- Why the server holds a post: it mentions accounts that have nothing to do with the writer -->
+    <string name="held_reason_mentions">It mentions accounts you have no connection with.</string>
+    <!-- Why the server holds a post: the same text was already held once -->
+    <string name="held_reason_repeat">The same text is already waiting for a moderator.</string>
+    <!-- Why the server holds a post: this server has a moderator look at every video first -->
+    <string name="held_reason_video">Videos on this server are looked at before they go out.</string>
     <!-- Title of the notification when an account must sign in again before its queued posts go out -->
     <string name="outbox_paused">Posts waiting for you to sign in</string>
     <!-- Body of that notification; the placeholder is the account, like @alice@example.social -->

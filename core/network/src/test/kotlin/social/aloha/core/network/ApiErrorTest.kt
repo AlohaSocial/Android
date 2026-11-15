@@ -45,6 +45,19 @@ class ApiErrorTest {
     }
 
     @Test
+    fun `a post held for review is its own refusal, the rule's code beside it`() {
+        val body = """{"error":"This post is waiting for a moderator to look at it.","held_for_review":true,""" +
+            """"reason":"first_post","held_post":{"id":"7","reason":"first_post","text":"Hello","media_count":0}}"""
+        val error = from(422, body)
+        assertTrue(error?.heldForReview == true)
+        assertEquals("first_post", error?.heldReason)
+        assertFalse(error?.isTransient == true)
+        assertFalse(from(422, """{"error":"x","held_for_review":false}""")?.heldForReview == true)
+        assertFalse(from(422, """{"error":"Validation failed"}""")?.heldForReview == true)
+        assertFalse(from(500, body)?.heldForReview == true)
+    }
+
+    @Test
     fun `a refusal on another status keeps its code and text fields`() {
         val body = """{"error":"request failed","code":"banner-too-large","limit":"10 MB","extra":null,"list":[1]}"""
         assertEquals(Refusal("banner-too-large", mapOf("limit" to "10 MB")), from(400, body)?.refusal)

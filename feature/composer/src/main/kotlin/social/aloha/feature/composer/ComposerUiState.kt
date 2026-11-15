@@ -3,13 +3,16 @@
 
 package social.aloha.feature.composer
 
+import android.content.res.Resources
 import androidx.compose.runtime.Immutable
 import java.time.Instant
 import social.aloha.core.data.Trouble
+import social.aloha.core.data.compose.DraftPost
 import social.aloha.core.data.compose.damagedByEdit
 import social.aloha.core.model.CustomEmoji
 import social.aloha.core.model.Visibility
 import social.aloha.core.sync.UploadState
+import social.aloha.core.sync.heldMessage
 
 /** One account the post can go out as, for the picker at the top. */
 @Immutable
@@ -78,6 +81,26 @@ internal sealed interface PostFailure {
 
     /** The card could not be drawn or uploaded; nothing was posted rather than plain text instead. */
     data object CardFailed : PostFailure
+
+    /**
+     * A review rule holds the post for a moderator, the one [reason] names: it counts as sent, nothing
+     * is to be tried again, and [rest], the segments of the thread after it, stays as a draft. A post
+     * that [replaces] another leaves the original up.
+     */
+    data class Held(val rest: DraftPost?, val reason: String?, val replaces: Boolean = false) : PostFailure {
+        /** How many segments are kept as a draft. */
+        val kept: Int get() = rest?.segments?.size ?: 0
+
+        /** What the toast says: that the post waits, what of its thread was kept, the original, and why. */
+        fun toast(words: Resources): String {
+            val message = if (kept > 0) {
+                words.getQuantityString(R.plurals.composer_held_thread, kept, kept)
+            } else {
+                words.getString(R.string.composer_held)
+            }
+            return heldMessage(words, message, reason, replaces)
+        }
+    }
 }
 
 /** A poll as the writer builds it; it goes out with the opening post, never together with media. */
@@ -191,6 +214,8 @@ internal data class ComposerUiState(
     val done: Boolean = false,
     /** The post went to the outbox, to go out with a network. */
     val queued: Boolean = false,
+    /** The post waits for a moderator, as [PostFailure.Held] says. */
+    val held: PostFailure.Held? = null,
     /** The writer's own post, out already, is being edited: one post, same visibility, same author. */
     val editing: Boolean = false,
     /** The writer's own post this one writes again, deleted once this one is out. */
