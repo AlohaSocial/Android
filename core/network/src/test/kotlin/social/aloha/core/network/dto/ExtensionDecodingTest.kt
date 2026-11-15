@@ -190,11 +190,13 @@ class ExtensionDecodingTest {
     }
 
     @Test
-    fun `interests tolerate absent settings and a string score`() {
+    fun `interests tolerate absent settings and a string score, and learn only when told`() {
         val state = InterestEndpoints.state().value(
             """{"interests": [{"name": "Photography", "score": "0.5"}], "thin": 1}""",
         )
-        assertTrue(state.settings.learning)
+        assertFalse(state.settings.learning)
+        assertFalse(InterestEndpoints.state().value("""{"settings": {"paused": false}}""").settings.learning)
+        assertTrue(InterestEndpoints.state().value("""{"settings": {"learning": true}}""").settings.learning)
         assertFalse(state.settings.instancePaused)
         assertEquals("photography", state.interests.single().id)
         assertEquals(0.5, state.interests.single().score)

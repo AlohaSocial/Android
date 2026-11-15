@@ -5,6 +5,7 @@ package social.aloha.feature.safety
 
 import android.app.Application
 import android.content.Context
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.test.junit4.accessibility.enableAccessibilityChecks
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
@@ -72,6 +73,7 @@ class InterestsTest {
 
     private val state = InterestsUiState(
         InterestsState(
+            settings = InterestSettings(learning = true),
             interests = listOf(InterestTag("surf"), InterestTag("nextcloud")),
             candidates = listOf(InterestTag("reef")),
         ),
@@ -97,13 +99,30 @@ class InterestsTest {
 
     @Test
     fun `learning the administrator paused says so, keeps the reader's switches and claims no learning`() {
-        val settings = InterestSettings(paused = true, instancePaused = true)
+        val settings = InterestSettings(learning = true, paused = true, instancePaused = true)
         val paused = state.copy(interests = state.interests?.copy(settings = settings, thin = true))
         compose.setContent { AlohaTheme { InterestsScreen(paused, actions, {}) } }
         compose.onRoot().captureRoboImage("src/test/screenshots/interests_instance_paused.png")
         compose.onNodeWithText("Your administrator has paused learning", substring = true).assertExists()
         compose.onNodeWithText("Learn from what I read").assertExists()
         compose.onNodeWithText("Pause learning").assertExists()
+        compose.onNodeWithText("Still learning", substring = true).assertDoesNotExist()
+    }
+
+    @Test
+    fun `little to go on is still learning only while learning is on`() {
+        val learning = mutableStateOf(InterestSettings())
+        compose.setContent {
+            val thin = state.interests?.copy(settings = learning.value, thin = true)
+            AlohaTheme { InterestsScreen(state.copy(interests = thin), actions, {}) }
+        }
+        compose.onNodeWithText("Still learning", substring = true).assertDoesNotExist()
+        compose.onNodeWithText("Pause learning").assertDoesNotExist()
+        compose.onNodeWithText("Learn from what I read").performClick()
+        assertEquals(listOf("learning:true"), asked)
+        learning.value = InterestSettings(learning = true)
+        compose.onNodeWithText("Still learning", substring = true).assertExists()
+        learning.value = InterestSettings(learning = true, paused = true)
         compose.onNodeWithText("Still learning", substring = true).assertDoesNotExist()
     }
 
