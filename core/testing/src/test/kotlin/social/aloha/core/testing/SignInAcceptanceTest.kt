@@ -34,6 +34,7 @@ import social.aloha.core.data.ClientFactory
 import social.aloha.core.data.RedirectUriProvider
 import social.aloha.core.data.SignInCoordinator
 import social.aloha.core.data.SignInResult
+import social.aloha.core.data.TokenRefresh
 import social.aloha.core.data.compose.Outbox
 import social.aloha.core.data.nextcloud.NextcloudConnection
 import social.aloha.core.data.notifications.RaisedNotifications
@@ -108,6 +109,7 @@ class SignInAcceptanceTest(private val configuration: MockServerConfiguration) {
         WidgetUpdates(ApplicationProvider.getApplicationContext(), WidgetFeedStore(InMemoryDataStore(emptyMap()))),
         RaisedNotifications(database.raisedDao()),
         clients,
+        TokenRefresh(accounts, vault, OAuthClient(http, limiter, Dispatchers.IO)),
         // whoever has to hear of a sign-out, the watch among them, before the server hears of it
         setOf(AccountRemovalListener { account, _ -> toldOfRemoval += "${account.id}:${mock.requests.size}" }),
     )

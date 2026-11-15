@@ -21,6 +21,9 @@ import timber.log.Timber
 public sealed class VaultKey(internal val name: String) {
     public class AccessToken(accountId: String) : VaultKey("token:$accountId")
 
+    /** The refresh token issued with the account's access token, where its server issues them. */
+    public class RefreshToken(accountId: String) : VaultKey("refresh-token:$accountId")
+
     public class AppPassword(accountId: String) : VaultKey("app-password:$accountId")
 
     public class ClientSecret(host: String) : VaultKey("client-secret:${host.lowercase()}")
@@ -78,6 +81,22 @@ public class TokenVault(
     public suspend fun remove(key: VaultKey) {
         mutex.withLock { write(read() - key.name) }
     }
+
+    /** Writes every entry of [values] at once, a null value removing its key. */
+    public suspend fun putAll(values: Map<VaultKey, String?>) {
+        mutex.withLock { write(read().with(values)) }
+    }
+
+    /** [putAll], only while [key] still holds [expected]; whether it wrote. */
+    public suspend fun putAllIf(key: VaultKey, expected: String, values: Map<VaultKey, String?>): Boolean =
+        mutex.withLock {
+            val current = read()
+            (current[key.name] == expected).also { if (it) write(current.with(values)) }
+        }
+
+    private fun Map<String, String>.with(values: Map<VaultKey, String?>): Map<String, String> =
+        this - values.filterValues { it == null }.keys.map { it.name }.toSet() +
+            values.mapNotNull { (key, value) -> value?.let { key.name to it } }
 
     /** True once after the vault had to start again because its contents could not be read. */
     public suspend fun wasLost(): Boolean = mutex.withLock {

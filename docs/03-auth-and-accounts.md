@@ -40,7 +40,7 @@ Sign-in never asks for `admin:read admin:write`, so nobody who cannot moderate s
 
 ## Where the credentials live
 
-`TokenVault` (`core/datastore`) is a single encrypted map in `files/vault/secrets.bin`. It holds every secret and nothing else: each account's access token and Nextcloud app password, the client secret per host, the client each token was issued to, and the sign-in in flight. Room rows never hold a secret.
+`TokenVault` (`core/datastore`) is a single encrypted map in `files/vault/secrets.bin`. It holds every secret and nothing else: each account's access token, its refresh token where the server issued one, and its Nextcloud app password, the client secret per host, the client each token was issued to, and the sign-in in flight. Room rows never hold a secret.
 
 `KeystoreCipher` encrypts it with AES-256-GCM under the Android Keystore key `aloha-vault`, in StrongBox where the device has one. The key needs no user authentication, so background work can read tokens; the app lock guards the screen, not the vault. The vault is decrypted once per process and kept in memory.
 
@@ -59,7 +59,11 @@ The vault is excluded from backups and device transfers. When it cannot be decry
 
 ## Signing in again
 
-Any 401 on an account's requests marks it as needing to sign in again (`ClientFactory` reports it, `AccountRepository.markNeedsReauth`). Its polling stops, its cache and unsent posts stay, and a banner offers "Sign in again". The banner, or the same row in Settings, raises `ReauthRequest`; the sign-in flow runs for the same server, and the account row it writes is the same one, which clears the mark and resumes the outbox.
+Nextcloud Social since 0.26.299 (read from source) answers every account token with a `refresh_token` and an `expires_in`, and accepts `grant_type=refresh_token` with the client's id and secret. A token lasts 365 days from its issue, and once the app has refreshed it, every later token 24 hours. Each refresh replaces both tokens, and presenting a spent refresh token again revokes the whole authorization, the current pair included. The server answers an expired token and a revoked one with the same 401 `the access_token was revoked`, so the app cannot tell them apart.
+
+A 401 on an account's request first tries to renew the token (`TokenRefresh`, `core/data`), where the account has a refresh token: one renewal per account at a time, under a lock; a request refused meanwhile waits for it and is sent with the token it stored. The new pair replaces the old in one vault write, and only while the refused token is still the account's, before the request that was refused is sent once more. A refresh the server refuses (400 `invalid_grant`, 401) leaves the account needing to sign in again; one that could not be asked (offline, a server error) keeps the pair, fails the request as a network failure, and is tried again on the next 401. Once asked, the refresh and the vault write finish even when the request that needed them is cancelled; an answer lost after the server rotated the pair (a broken connection) leaves the spent pair stored, and the server revokes the authorization when it is next presented. Downloads (exports) renew the same way. Signing out takes the same lock, so the token it revokes is the one a refresh in flight stored. Servers without refresh tokens (Mastodon, Social before 0.26.299), and accounts signed in before the server issued them, behave as before.
+
+A 401 nothing renews marks the account as needing to sign in again (`ClientFactory` reports it, `AccountRepository.markNeedsReauth`). Its polling stops, its cache and unsent posts stay, and a banner offers "Sign in again". The banner, or the same row in Settings, raises `ReauthRequest`; the sign-in flow runs for the same server, and the account row it writes is the same one, which clears the mark and resumes the outbox.
 
 ## The Nextcloud underneath
 

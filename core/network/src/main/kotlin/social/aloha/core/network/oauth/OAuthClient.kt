@@ -93,6 +93,30 @@ public class OAuthClient internal constructor(private val executor: RequestExecu
             QueryItem("redirect_uri", pending.redirectUri),
             QueryItem("code_verifier", pending.verifier),
         )
+        return token(tokenEndpoint, fields)
+    }
+
+    /**
+     * Renews a token with its [refreshToken] (`grant_type=refresh_token`). Nextcloud Social answers a new
+     * access token and a new refresh token, and the one presented is spent: presenting it again revokes
+     * the whole authorization. A refresh token it does not know (spent, expired, revoked) is a 400
+     * `invalid_grant`.
+     */
+    public suspend fun refresh(
+        tokenEndpoint: HttpUrl,
+        registration: ClientRegistration,
+        refreshToken: String,
+    ): ApiResult<AccessToken> = token(
+        tokenEndpoint,
+        listOf(
+            QueryItem("grant_type", "refresh_token"),
+            QueryItem("refresh_token", refreshToken),
+            QueryItem("client_id", registration.clientId),
+            QueryItem("client_secret", registration.clientSecret),
+        ),
+    )
+
+    private suspend fun token(tokenEndpoint: HttpUrl, fields: List<QueryItem>): ApiResult<AccessToken> {
         val endpoint =
             Endpoint(
                 tokenEndpoint.pathOf(),
@@ -161,9 +185,11 @@ internal data class TokenDto(
     @SerialName("access_token") val accessToken: String,
     @SerialName("token_type") val tokenType: String = "Bearer",
     val scope: String = "",
+    @SerialName("refresh_token") val refreshToken: String? = null,
+    @SerialName("expires_in") val expiresIn: Long? = null,
 )
 
-internal fun TokenDto.toDomain() = AccessToken(accessToken, scope)
+internal fun TokenDto.toDomain() = AccessToken(accessToken, scope, refreshToken?.ifEmpty { null }, expiresIn)
 
 @Serializable
 internal data class UserInfoDto(

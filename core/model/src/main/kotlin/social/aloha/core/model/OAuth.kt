@@ -16,11 +16,19 @@ public data class ClientRegistration(val clientId: String, val clientSecret: Str
 }
 
 /**
- * A bearer token. There is no refresh token: a token lives about a year from its last use, and a 401
- * means signing in again.
+ * A bearer token, with the [refreshToken] that renews it and the seconds it has left ([expiresIn]) where
+ * the server sent them. Nextcloud Social since 0.26.299 issues both with every account token: a token
+ * lasts 365 days from its issue, one issued by a refresh 24 hours, and every refresh replaces both
+ * tokens. Servers without refresh tokens (Mastodon, older Social) send neither, and a 401 there means
+ * signing in again.
  */
 @Serializable
-public data class AccessToken(val value: String, val scope: String) {
+public data class AccessToken(
+    val value: String,
+    val scope: String,
+    val refreshToken: String? = null,
+    val expiresIn: Long? = null,
+) {
     override fun toString(): String = "AccessToken(scope=$scope)"
 }
 

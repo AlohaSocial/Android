@@ -20,6 +20,7 @@ import social.aloha.core.data.AccountRepository
 import social.aloha.core.data.ClientFactory
 import social.aloha.core.data.NewAccount
 import social.aloha.core.data.SignInCoordinator
+import social.aloha.core.data.TokenRefresh
 import social.aloha.core.data.compose.ComposeRepository
 import social.aloha.core.data.compose.Outbox
 import social.aloha.core.data.compose.PostSender
@@ -76,8 +77,16 @@ public class SignedInFixture(private val context: Context) : Closeable {
 
     public val order: AccountOrder = AccountOrder(database.accountOrderDao())
 
+    /** Renews the tokens of these accounts that have a refresh token. */
+    public val tokens: TokenRefresh =
+        TokenRefresh(
+            accounts,
+            vault,
+            OAuthClient(OkHttpClient(), RateLimiter(nowMillis = clock::millis), Dispatchers.IO),
+        )
+
     public val clients: ClientFactory =
-        ClientFactory(OkHttpClient(), RateLimiter(nowMillis = clock::millis), Dispatchers.IO, accounts)
+        ClientFactory(OkHttpClient(), RateLimiter(nowMillis = clock::millis), Dispatchers.IO, accounts, tokens)
 
     /** Sign-in and a moderator's second authorisation, over the same accounts and vault. */
     public val coordinator: SignInCoordinator by lazy {
@@ -167,6 +176,7 @@ public class SignedInFixture(private val context: Context) : Closeable {
             widgets,
             raised,
             clients,
+            tokens,
         )
     }
 

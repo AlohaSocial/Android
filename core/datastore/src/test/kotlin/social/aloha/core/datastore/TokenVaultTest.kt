@@ -77,6 +77,19 @@ class TokenVaultTest {
     }
 
     @Test
+    fun `a pair is written only while the token it replaces is still there`() = runTest {
+        val vault = vault(FakeCipher())
+        vault.putAll(mapOf(VaultKey.AccessToken("a1") to "old", VaultKey.RefreshToken("a1") to "old-refresh"))
+        val pair = mapOf(VaultKey.AccessToken("a1") to "new", VaultKey.RefreshToken("a1") to null)
+
+        assertFalse(vault.putAllIf(VaultKey.AccessToken("a1"), "other", pair))
+        assertEquals("old-refresh", vault.get(VaultKey.RefreshToken("a1")))
+        assertTrue(vault.putAllIf(VaultKey.AccessToken("a1"), "old", pair))
+        assertEquals("new", vault.get(VaultKey.AccessToken("a1")))
+        assertNull(vault.get(VaultKey.RefreshToken("a1")))
+    }
+
+    @Test
     fun `a lost key empties the vault once, reports it once, and the vault keeps working`() = runTest {
         val cipher = FakeCipher()
         val vault = vault(cipher)

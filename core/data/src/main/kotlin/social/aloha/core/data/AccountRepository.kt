@@ -93,9 +93,14 @@ public class AccountRepository @Inject constructor(
     public suspend fun signedIn(account: NewAccount, token: AccessToken): SignedInAccount {
         val existing = dao.find(account.host, account.serverAccountId)
         val id = existing?.id ?: UUID.randomUUID().toString()
-        vault.put(VaultKey.AccessToken(id), token.value)
         // the new token comes from the server's registration as it is now
-        vault.remove(VaultKey.TokenClient(id))
+        vault.putAll(
+            mapOf(
+                VaultKey.AccessToken(id) to token.value,
+                VaultKey.RefreshToken(id) to token.refreshToken,
+                VaultKey.TokenClient(id) to null,
+            ),
+        )
         val entity = AccountEntity(
             id = id,
             instanceHost = account.host,
@@ -146,6 +151,7 @@ public class AccountRepository @Inject constructor(
     /** Removes the account and its secrets; another account becomes active. Revocation is the caller's. */
     public suspend fun remove(id: String) {
         vault.remove(VaultKey.AccessToken(id))
+        vault.remove(VaultKey.RefreshToken(id))
         vault.remove(VaultKey.AppPassword(id))
         vault.remove(VaultKey.TokenClient(id))
         dao.delete(id)
