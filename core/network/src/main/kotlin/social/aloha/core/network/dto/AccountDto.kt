@@ -33,6 +33,7 @@ internal data class AccountDto(
     @Serializable(with = LenientUrlSerializer::class) val uri: String? = null,
     @Serializable(with = LenientUrlSerializer::class) val avatar: String? = null,
     @SerialName("avatar_static") @Serializable(with = LenientUrlSerializer::class) val avatarStatic: String? = null,
+    @SerialName("avatar_small") @Serializable(with = LenientUrlSerializer::class) val avatarSmall: String? = null,
     @Serializable(with = LenientUrlSerializer::class) val header: String? = null,
     @SerialName("header_static") @Serializable(with = LenientUrlSerializer::class) val headerStatic: String? = null,
     @SerialName("avatar_default") @Serializable(with = OptionalBoolSerializer::class)
@@ -111,6 +112,7 @@ internal fun AccountDto.toDomain(): Account {
         uri = uri,
         avatar = avatar,
         avatarStatic = avatarStatic,
+        avatarSmall = avatarSmall,
         avatarDefault = avatarDefault == true,
         header = header.takeUnless(::isPlaceholderHeader),
         headerStatic = headerStatic.takeUnless(::isPlaceholderHeader),

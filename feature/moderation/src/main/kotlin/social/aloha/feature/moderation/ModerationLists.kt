@@ -77,7 +77,7 @@ private fun Report(
     val target = report.targetAccount
     val handle = target?.qualifiedHandle.orEmpty()
     ListItem(
-        leadingContent = { Avatar(target?.avatar, AVATAR) },
+        leadingContent = { Avatar(target?.smallAvatar, AVATAR) },
         headlineContent = { Text(target?.bestDisplayName?.ifBlank { handle } ?: handle) },
         supportingContent = { ReportDetails(report, handle) },
     )
@@ -147,7 +147,7 @@ internal fun Accounts(
         rows(state.accounts, state.failed, R.string.moderation_accounts_none) { account ->
             val handle = account.handle
             ListItem(
-                leadingContent = { Avatar(account.account?.avatar, AVATAR) },
+                leadingContent = { Avatar(account.account?.smallAvatar, AVATAR) },
                 headlineContent = { Text(account.account?.bestDisplayName?.ifBlank { handle } ?: handle) },
                 supportingContent = { Text(handle) },
             )

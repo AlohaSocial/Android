@@ -72,7 +72,7 @@ internal class Completions(private val compose: ComposeRepository, private val s
     private suspend fun accounts(reader: SignedInAccount, query: String): List<Suggestion>? =
         (compose.accounts(reader, query) as? Answer.Got)?.value?.map { account ->
             val name = account.displayName.ifBlank { account.username }
-            Suggestion("@${account.acct}", "$name · @${account.acct}", account.avatar)
+            Suggestion("@${account.acct}", "$name · @${account.acct}", account.smallAvatar)
         }
 
     private suspend fun hashtags(reader: SignedInAccount, query: String): List<Suggestion>? {

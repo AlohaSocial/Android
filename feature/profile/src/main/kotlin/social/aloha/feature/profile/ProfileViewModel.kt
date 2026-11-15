@@ -447,7 +447,7 @@ internal class ProfileViewModel @AssistedInject constructor(
             now = now,
             actionFailed = control.actionFailed,
             lists = control.lists,
-            familiar = control.familiar.map { Familiar(it.id, it.bestDisplayName, it.avatar) },
+            familiar = control.familiar.map { Familiar(it.id, it.bestDisplayName, it.smallAvatar) },
             knownHandle = key.acct?.let { if (it.startsWith('@')) it else "@$it" },
             featured = featured,
         )

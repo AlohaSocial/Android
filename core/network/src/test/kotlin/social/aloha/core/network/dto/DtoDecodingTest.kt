@@ -78,6 +78,21 @@ class DtoDecodingTest {
     }
 
     @Test
+    fun `a small avatar is drawn where the server sends one, the avatar where it does not`() {
+        fun account(json: String) = decodeStatus("""{"id": "1", "account": {"id": "2", "username": "alice", $json}}""")
+            .account
+        val original = "https://cloud.example/index.php/apps/social/media/1b2c.jpeg"
+        val thumbnail = "https://cloud.example/index.php/apps/social/media/1b2c-resized.webp"
+        val social = account(""""avatar": "$original", "avatar_static": "$original", "avatar_small": "$thumbnail"""")
+        assertEquals(original, social.avatar)
+        assertEquals(thumbnail, social.smallAvatar)
+        val mastodon = account(""""avatar": "https://mastodon.example/a.png"""")
+        assertNull(mastodon.avatarSmall)
+        assertEquals("https://mastodon.example/a.png", mastodon.smallAvatar)
+        assertNull(account(""""avatar": "", "avatar_small": """"").smallAvatar)
+    }
+
+    @Test
     fun `an account's profile layout is read as Nextcloud Social reads it, and a broken one shows it all`() {
         fun layout(json: String) =
             decodeStatus("""{"id": "1", "account": {"id": "2", "username": "alice", $json}}""").account.profileLayout
@@ -270,6 +285,18 @@ class DtoDecodingTest {
         assertEquals(10L * 1024 * 1024, v2.limits.imageSizeLimit)
         assertEquals(2048L * 1024 * 1024, v2.limits.sizeLimit("video/mp4"))
         assertEquals(5000, v2.limits.maxStatusCharacters)
+    }
+
+    @Test
+    fun `a user count of 0, which a server hiding its counts sends, is no count`() {
+        val v1 = InstanceEndpoints.v1()
+        val hidden = """{"uri":"x","stats":{"user_count":0,"status_count":0,"domain_count":3}}"""
+        assertNull(v1.decode(hidden).value.userCount)
+        assertEquals(12, v1.decode("""{"uri":"x","stats":{"user_count":12}}""").value.userCount)
+        val v2 = InstanceEndpoints.v2()
+        assertNull(v2.decode("""{"domain":"x","usage":{"users":{"active_month":0}}}""").value.userCount)
+        assertEquals(7, v2.decode("""{"domain":"x","usage":{"users":{"active_month":7}}}""").value.userCount)
+        assertNull(v2.decode("""{"domain":"x"}""").value.userCount)
     }
 
     @Test

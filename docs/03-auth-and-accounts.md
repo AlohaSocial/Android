@@ -18,7 +18,7 @@ A candidate qualifies when `api/v2/instance`, or `api/v1/instance`, answers with
 
 A hand-typed API address is probed on its own, keeping only scheme, host, port and path: credentials, a query or a fragment typed into it would otherwise be shown back and sent with every request. When no candidate gets any HTTP answer (the name does not resolve, the connection fails or times out), the server is reported unreachable, not as missing its API, so a typo never reads as a missing web-server rule. An untrusted certificate stops the probe with the chain, for the person to decide. A base that stopped answering is probed for anew at most once an hour per host (`ReprobeGate`).
 
-`ServerFinder` (`core/data`) is what the sign-in screen calls: it takes a host, a URL, a path or a handle, and answers `Found`, `NothingAnswered`, `Unreachable`, `UntrustedCertificate`, `InvalidAddress` or `InsecureAddress`. Release builds refuse `http://`; debug builds allow it for the development hosts only.
+`ServerFinder` (`core/data`) is what the sign-in screen calls: it takes a host, a URL, a path or a handle, and answers `Found`, `NothingAnswered`, `Unreachable`, `UntrustedCertificate`, `InvalidAddress` or `InsecureAddress`. Release builds refuse `http://`; debug builds allow it for the development hosts only. The server it found is shown with its title, domain, languages and how many people use it, the count left out where the instance answers 0: from Nextcloud Social 0.26.288 (read from source) an administrator can hide the counts, which the client API then sends as 0. The app reads no count from NodeInfo, where hidden counts are `"users": {}`.
 
 ## Signing in
 

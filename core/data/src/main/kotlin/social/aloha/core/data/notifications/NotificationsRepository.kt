@@ -107,7 +107,7 @@ public class NotificationsRepository @Inject constructor(
                 MentionSnippet(
                     statusId = it.id,
                     name = item.newest?.bestDisplayName.orEmpty(),
-                    avatar = item.newest?.avatar,
+                    avatar = item.newest?.smallAvatar,
                     text = item.preview().orEmpty(),
                     at = item.latestAt,
                 )

@@ -64,7 +64,7 @@ internal object ProfilePresentation {
     ): ProfileHeader {
         val mapper = StatusRowMapper(cache, colors)
         return ProfileHeader(
-            author = mapper.author(account),
+            author = mapper.author(account).copy(avatarUrl = account.avatar),
             emojis = account.emojis,
             headerUrl = account.header,
             note = StatusHtmlParser.parse(account.note, emojis = account.emojis).toAnnotatedString(colors),

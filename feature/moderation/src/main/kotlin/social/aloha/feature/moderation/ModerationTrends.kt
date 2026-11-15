@@ -113,7 +113,7 @@ private fun Link(link: AdminLink, onReview: (Boolean) -> Unit) {
 @Composable
 private fun Post(post: Status, onReview: (Boolean) -> Unit) {
     ListItem(
-        leadingContent = { Avatar(post.account.avatar, AVATAR) },
+        leadingContent = { Avatar(post.account.smallAvatar, AVATAR) },
         headlineContent = { Text(post.account.qualifiedHandle) },
         supportingContent = {
             Text(StatusHtmlParser.plainText(post.content), maxLines = COMMENT_LINES, overflow = TextOverflow.Ellipsis)
