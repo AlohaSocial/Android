@@ -9,6 +9,16 @@ import kotlinx.serialization.Serializable
 @Serializable
 public data class StatusContext(val ancestors: List<Status> = emptyList(), val descendants: List<Status> = emptyList())
 
+/** The numbers under one post, as Nextcloud Social's `status_counts` answers them; [id] is the post asked for. */
+@Serializable
+public data class StatusCounts(
+    val id: String,
+    val replies: Int = 0,
+    val reblogs: Int = 0,
+    val favourites: Int = 0,
+    val dislikes: Int = 0,
+)
+
 @Serializable
 public data class Conversation(
     val id: String,

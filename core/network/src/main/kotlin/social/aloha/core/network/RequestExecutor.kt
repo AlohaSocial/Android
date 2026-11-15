@@ -30,6 +30,7 @@ internal class Answer<T>(
     val filling: Boolean = false,
     val profileFilling: Boolean = false,
     val profileSyncFailed: Boolean = false,
+    val threadFilling: Boolean = false,
 )
 
 /**
@@ -114,6 +115,7 @@ internal class RequestExecutor(
                 response.flag("X-Social-Filling"),
                 response.flag("X-Social-Profile-Filling"),
                 response.header("X-Social-Profile-Sync-State")?.trim() == "failed",
+                response.flag("X-Social-Thread-Filling"),
             )
         }
     }

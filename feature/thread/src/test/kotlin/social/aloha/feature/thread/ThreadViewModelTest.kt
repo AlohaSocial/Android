@@ -92,6 +92,15 @@ private class Conversation : Dispatcher() {
     /** The reader's thread order as the server reports it, `thread_sort`; none sent when null. */
     @Volatile var threadSort: String? = null
 
+    /** Whether the focused post's counts are still being read, `X-Social-Filling: 1`. */
+    @Volatile var countsFilling = false
+
+    /** Whether the replies are still being read, `X-Social-Thread-Filling: 1` on `/context`. */
+    @Volatile var threadFilling = false
+
+    /** The `ids[]` of each `status_counts` request, in order. */
+    val counted = CopyOnWriteArrayList<List<String?>>()
+
     private val template = JsonObject(NumberedTimeline.homeTemplate() + ("reblog" to JsonNull))
 
     private fun status(id: String, replyTo: String?, vararg extra: Pair<String, JsonPrimitive>) = JsonObject(
@@ -101,9 +110,17 @@ private class Conversation : Dispatcher() {
 
     override fun dispatch(request: RecordedRequest): MockResponse {
         val path = request.url.encodedPath.also(asked::add)
-        return body(path)?.let {
-            MockResponse.Builder().code(200).body(it).addHeader("content-type", "application/json").build()
-        } ?: MockResponse.Builder().code(404).body("{}").build()
+        if (path.endsWith("/social/status_counts")) counted += request.url.queryParameterValues("ids[]")
+        val body = body(path) ?: return MockResponse.Builder().code(404).body("{}").build()
+        val answer = MockResponse.Builder().code(200).body(body).addHeader("content-type", "application/json")
+        filling(path)?.let { answer.addHeader(it, "1") }
+        return answer.build()
+    }
+
+    private fun filling(path: String): String? = when {
+        path.endsWith("/statuses/f") && countsFilling -> "X-Social-Filling"
+        path.endsWith("/context") && threadFilling -> "X-Social-Thread-Filling"
+        else -> null
     }
 
     private fun body(path: String): String? = when {
@@ -143,6 +160,8 @@ private class Conversation : Dispatcher() {
 
         path.endsWith("/react") -> "{}"
 
+        path.endsWith("/social/status_counts") -> COUNTS
+
         path.endsWith("/custom_emojis") && emojiFailures.getAndDecrement() <= 0 ->
             """[{"shortcode":"blobwave","url":"https://x.test/e/blobwave.png","visible_in_picker":true},""" +
                 """{"shortcode":"stillwave","static_url":"https://x.test/e/still.png","visible_in_picker":true},""" +
@@ -157,6 +176,10 @@ private class Conversation : Dispatcher() {
     }
 
     private companion object {
+        const val COUNTS =
+            """[{"id":"f","replies_count":2,"reblogs_count":3,"favourites_count":7,"quotes_count":1,""" +
+                """"dislikes_count":0},{"id":"r1","replies_count":1,"reblogs_count":0,"favourites_count":4,""" +
+                """"quotes_count":0,"dislikes_count":0}]"""
         const val ON_STATUS = """[{"name":"🌊","count":1,"me":false}]"""
     }
 
@@ -395,6 +418,58 @@ class ThreadViewModelTest {
         viewModel.onShowReplies()
         val shown = viewModel.await { it.pendingReplies == 0 && it.posts().size == 5 }
         assertTrue("r3" in shown.posts().map { it.row.statusId })
+    }
+
+    @Test
+    fun `replies the server is still reading are read once more, and wait behind Show`() = runBlocking {
+        conversation.threadFilling = true
+        val viewModel = open("f")
+        viewModel.await { !it.loading && it.posts().size == 4 }
+        conversation.grown = true
+        val held = viewModel.await { it.pendingReplies == 1 }
+        assertEquals(listOf("a1", "f", "r1", "r2"), held.posts().map { it.row.statusId })
+        assertEquals(2, conversation.asked.count { it.endsWith("/context") })
+        assertTrue(conversation.asked.none { it.endsWith("/social/status_counts") })
+    }
+
+    @Test
+    fun `a refresh while replies are still being read keeps what it read, and the read once more is dropped`() =
+        runBlocking {
+            conversation.threadFilling = true
+            val viewModel = open("f")
+            viewModel.await { !it.loading && it.posts().size == 4 }
+            conversation.threadFilling = false
+            conversation.grown = true
+            viewModel.onRefresh()
+            viewModel.await { !it.loading && it.pendingReplies == 1 }
+            delay(4.seconds)
+            val state = viewModel.uiState.value
+            assertEquals(1, state.pendingReplies)
+            assertEquals(listOf("a1", "f", "r1", "r2"), state.posts().map { it.row.statusId })
+            assertEquals(2, conversation.asked.count { it.endsWith("/context") })
+        }
+
+    @Test
+    fun `from Social 0,26,284 counts still being read come again for the post and its replies, once`() = runBlocking {
+        conversation.countsFilling = true
+        val viewModel = open("f", version = "0.26.284")
+        val state = viewModel.await { s -> s.posts().count { it.row.counts.favourites in setOf(4, 7) } == 2 }
+        assertEquals(listOf(listOf<String?>("f", "r1", "r2")), conversation.counted.toList())
+        val counts = state.posts().associate { it.row.statusId to it.row.counts }
+        assertEquals(listOf(2, 3, 7), counts.getValue("f").let { listOf(it.replies, it.boosts, it.favourites) })
+        assertEquals(4, counts.getValue("r1").favourites)
+        assertEquals(1, conversation.asked.count { it.endsWith("/context") })
+    }
+
+    @Test
+    fun `before Social 0,26,284 counts still being read are not asked for together`() = runBlocking {
+        conversation.countsFilling = true
+        conversation.threadFilling = true
+        val viewModel = open("f", version = "0.26.283")
+        viewModel.await { !it.loading && it.posts().size == 4 }
+        conversation.grown = true
+        viewModel.await { it.pendingReplies == 1 }
+        assertTrue(conversation.asked.none { it.endsWith("/social/status_counts") })
     }
 
     @Test

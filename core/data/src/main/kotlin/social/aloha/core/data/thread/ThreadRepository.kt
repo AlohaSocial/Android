@@ -7,6 +7,9 @@ import android.util.LruCache
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.sync.Mutex
@@ -15,6 +18,7 @@ import social.aloha.core.data.Answer
 import social.aloha.core.data.ClientFactory
 import social.aloha.core.data.answer
 import social.aloha.core.data.timeline.StatusRepository
+import social.aloha.core.data.toAnswer
 import social.aloha.core.model.Account
 import social.aloha.core.model.Card
 import social.aloha.core.model.CustomEmoji
@@ -26,14 +30,26 @@ import social.aloha.core.network.ApiError
 import social.aloha.core.network.ApiRequest
 import social.aloha.core.network.ApiResult
 import social.aloha.core.network.endpoints.CountRefresh
+import social.aloha.core.network.endpoints.CountsEndpoints
 import social.aloha.core.network.endpoints.FeedPreferenceEndpoints
 import social.aloha.core.network.endpoints.InstanceEndpoints
 import social.aloha.core.network.endpoints.Paging
 import social.aloha.core.network.endpoints.StatusEndpoints
 import social.aloha.core.network.endpoints.StatusExtraEndpoints
 
-/** A conversation as the server sent it: the posts above the one asked for, and every reply below. */
-public data class Conversation(val focused: Status, val ancestors: List<Status>, val descendants: List<Status>)
+/**
+ * A conversation as the server sent it: the posts above the one asked for, and every reply below.
+ * [countsFilling] says Nextcloud Social is still reading the focused post's counts from its origin
+ * (`X-Social-Filling`), [repliesFilling] that it is still reading the replies from where they live
+ * (`X-Social-Thread-Filling`); either is read again a few seconds later.
+ */
+public data class Conversation(
+    val focused: Status,
+    val ancestors: List<Status>,
+    val descendants: List<Status>,
+    val countsFilling: Boolean = false,
+    val repliesFilling: Boolean = false,
+)
 
 /**
  * How Nextcloud Social orders a thread's replies for its reader, each among the replies to the same post:
@@ -74,22 +90,62 @@ public class ThreadRepository @Inject constructor(
     public suspend fun load(account: SignedInAccount, statusId: String): Answer<Conversation> {
         // the person opened it: its counts are asked of where it lives now, however recently they were
         val opened = StatusEndpoints.status(statusId, CountRefresh.Forced)
-        val focused = when (val answer = clients.answer(account, opened)) {
+        val focused = when (val answer = clients.forAccount(account)?.filled(opened).toAnswer()) {
             is Answer.Got -> answer.value
 
             is Answer.Missed -> return answer.also {
                 if (it.error == ApiError.NotFound) statuses.delete(account.id, statusId)
             }
         }
-        return when (val context = clients.answer(account, StatusEndpoints.context(statusId))) {
+        statuses.saveAll(account.id, listOf(focused.value))
+        return when (val conversation = context(account, focused.value)) {
+            is Answer.Got -> Answer.Got(conversation.value.copy(countsFilling = focused.filling))
+            is Answer.Missed -> conversation
+        }
+    }
+
+    /** The conversation around [focused], its posts stored; [focused] is taken as it is and not stored. */
+    public suspend fun context(account: SignedInAccount, focused: Status): Answer<Conversation> {
+        val read = clients.forAccount(account)?.filled(StatusEndpoints.context(focused.id)).toAnswer()
+        return when (read) {
             is Answer.Got -> {
-                val conversation = Conversation(focused, context.value.ancestors, context.value.descendants)
-                statuses.saveAll(account.id, listOf(focused) + conversation.ancestors + conversation.descendants)
+                val context = read.value.value
+                val conversation = Conversation(
+                    focused,
+                    context.ancestors,
+                    context.descendants,
+                    repliesFilling = read.value.threadFilling,
+                )
+                statuses.saveAll(account.id, conversation.ancestors + conversation.descendants)
                 Answer.Got(conversation)
             }
 
-            is Answer.Missed -> context
+            is Answer.Missed -> read
         }
+    }
+
+    /**
+     * What Nextcloud Social was still filling in for [conversation], read once more [FOLLOW_UP] after it, as
+     * its web app does. While the focused post's counts were being read, from 0.26.284 its counts and those
+     * of the posts [shown] below it are read through `status_counts`, which counts no view, and stored.
+     * While the replies were being read, the conversation is read again and answered; null otherwise.
+     */
+    public suspend fun followUp(
+        account: SignedInAccount,
+        conversation: Conversation,
+        shown: () -> List<String>,
+    ): Conversation? {
+        val counts = conversation.countsFilling && account.capabilities.statusCounts
+        if (!counts && !conversation.repliesFilling) return null
+        delay(FOLLOW_UP)
+        if (counts) {
+            val focused = conversation.focused.id
+            val below = shown().dropWhile { it != focused }.drop(1)
+            (clients.answer(account, CountsEndpoints.of(listOf(focused) + below)) as? Answer.Got)?.let {
+                statuses.saveCounts(account.id, it.value)
+            }
+        }
+        return if (conversation.repliesFilling) (context(account, conversation.focused) as? Answer.Got)?.value else null
     }
 
     /** The link card, which timelines never ask for: one request per row would be a request storm. */
@@ -161,5 +217,8 @@ public class ThreadRepository @Inject constructor(
 
     private companion object {
         const val KNOWN = 200
+
+        /** How long after a read still being filled in it is read again, as Nextcloud Social's web app waits. */
+        val FOLLOW_UP: Duration = 3.seconds
     }
 }

@@ -13,6 +13,7 @@ import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -23,6 +24,7 @@ import social.aloha.core.model.ContentKind
 import social.aloha.core.model.MediaAttachment
 import social.aloha.core.model.MediaDimensions
 import social.aloha.core.model.Status
+import social.aloha.core.model.StatusCounts
 import social.aloha.core.model.VideoDetails
 import social.aloha.core.testing.StatusSamples
 
@@ -63,6 +65,36 @@ class StatusRepositoryTest {
         assertEquals(2, kept.dislikesCount)
         assertEquals(2, kept.video?.dislikes)
         assertEquals(12, kept.video?.views)
+    }
+
+    @Test
+    fun `counts asked for a boost land on the post it boosts, and a post not stored stays unstored`() = runBlocking {
+        statuses.save("a", StatusSamples.boost)
+        statuses.saveCounts(
+            "a",
+            listOf(StatusCounts("20", replies = 3, reblogs = 4, favourites = 30, dislikes = 1), StatusCounts("99")),
+        )
+        val boosted = checkNotNull(checkNotNull(statuses.get("a", "20")).reblog)
+        val numbers = with(boosted) { listOf(repliesCount, reblogsCount, favouritesCount, dislikesCount) }
+        assertEquals(listOf(3, 4, 30, 1), numbers)
+        assertNull(statuses.get("a", "99"))
+    }
+
+    @Test
+    fun `counts read around a toggle keep the reader's own, until the toggle is old`() = runBlocking {
+        val clock = SteppedClock()
+        val store = StatusRepository(database.statusDao(), clock)
+        val post = StatusSamples.post()
+        store.saveToggled("a", post.copy(favourited = true, favouritesCount = post.favouritesCount + 1))
+        val counts = StatusCounts(post.id, replies = 9, reblogs = 5, favourites = 40)
+        store.saveCounts("a", listOf(counts))
+        val kept = checkNotNull(store.get("a", post.id))
+        assertTrue(kept.favourited)
+        assertEquals(post.favouritesCount + 1, kept.favouritesCount)
+        assertEquals(9, kept.repliesCount)
+        clock.now += StatusRepository.TOGGLE_HOLD
+        store.saveCounts("a", listOf(counts))
+        assertEquals(40, checkNotNull(store.get("a", post.id)).favouritesCount)
     }
 
     @Test

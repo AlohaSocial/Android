@@ -134,6 +134,12 @@ public data class ServerCapabilities(
     val customEmojiReactions: Boolean get() = isNextcloudSocial && atLeast(softwareVersion, CUSTOM_EMOJI_REACTIONS)
 
     /**
+     * Whether the counts of several posts can be read at once, without counting a view
+     * (`GET /api/v1/social/status_counts`): Nextcloud Social from 0.26.284 on.
+     */
+    val statusCounts: Boolean get() = isNextcloudSocial && atLeast(softwareVersion, STATUS_COUNTS)
+
+    /**
      * The `types[]` a notifications request names to have every kind this app shows. Nextcloud Social leaves
      * its own kinds out of a page asked for with a token unless they are named, so there it names them all;
      * elsewhere none, which means every kind.
@@ -187,6 +193,7 @@ public data class ServerCapabilities(
         private val EDITS_MEDIA = listOf(0, 26, 279)
         private val CUSTOM_EMOJI_REACTIONS = listOf(0, 26, 280)
         private val MEDIA_TYPE = listOf(0, 26, 279)
+        private val STATUS_COUNTS = listOf(0, 26, 284)
 
         /** Raised whenever detection learns a new field: 1 added the live feeds, 2 the Shorts narrowing. */
         public const val CURRENT_FORMAT: Int = 2

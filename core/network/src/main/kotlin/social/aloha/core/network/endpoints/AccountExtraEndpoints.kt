@@ -8,6 +8,7 @@ import social.aloha.core.model.Account
 import social.aloha.core.model.AccountField
 import social.aloha.core.model.AuthorizedApp
 import social.aloha.core.model.FeaturedTag
+import social.aloha.core.model.StatusCounts
 import social.aloha.core.model.Visibility
 import social.aloha.core.network.ApiRequest
 import social.aloha.core.network.Authentication
@@ -20,8 +21,10 @@ import social.aloha.core.network.dto.AccountDto
 import social.aloha.core.network.dto.AuthorizedAppDto
 import social.aloha.core.network.dto.FeaturedTagDto
 import social.aloha.core.network.dto.NamesSerializer
+import social.aloha.core.network.dto.StatusCountsDto
 import social.aloha.core.network.dto.toDomain
 import social.aloha.core.network.listRequest
+import social.aloha.core.network.repeatedQuery
 import social.aloha.core.network.request
 import social.aloha.core.network.unitRequest
 
@@ -132,11 +135,26 @@ public object SocialAccountEndpoints {
     )
 }
 
-/** Nextcloud Social's switch for the numbers it zeroes on every post for a reader who hides them. */
+/**
+ * Nextcloud Social's switch for the numbers it zeroes on every post for a reader who hides them, and the
+ * numbers of several posts at once.
+ */
 public object CountsEndpoints {
+    /** How many posts one [of] request names: the most the server reads. */
+    public const val MAXIMUM_COUNTED: Int = 20
+
     public fun hide(hide: Boolean): ApiRequest<Unit> = unitRequest(
         Endpoint("api/v1/social/counts", HttpMethod.PATCH, body = Body.Form(listOf(QueryItem("hide", hide.asFlag())))),
     )
+
+    /**
+     * The counts of the first [MAXIMUM_COUNTED] of [ids] (`status_counts`, Nextcloud Social from 0.26.284):
+     * no view is counted, and a post the reader may not see is left out of the answer.
+     */
+    public fun of(ids: List<String>): ApiRequest<List<StatusCounts>> = listRequest(
+        Endpoint("api/v1/social/status_counts", query = repeatedQuery("ids", ids.take(MAXIMUM_COUNTED))),
+        StatusCountsDto.serializer(),
+    ) { it.toDomain() }
 }
 
 /**
