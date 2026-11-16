@@ -12,8 +12,8 @@ Phase 22, what Aloha Social changed after 0.26.299 (server `aloha/main` at `6fb8
 | 22b: Sharp pictures on dense screens | ✅ | [#141](https://github.com/AlohaSocial/Android/pull/141) |
 | 22c: A post of one to three emoji drawn large | ✅ | [#141](https://github.com/AlohaSocial/Android/pull/141) |
 | 21k: Long-form titles | ✅ | [#142](https://github.com/AlohaSocial/Android/pull/142) |
-| 21l: One request for the badges | ⬜ | Stacked on 21k |
-| 21m: For You v4 | ⬜ | Stacked on 21l |
+| 21l: One request for the badges | 🚫 | Saves the app no request; see Not built |
+| 21m: For You v4, the activity-learning consent | ✅ | [#146](https://github.com/AlohaSocial/Android/pull/146) |
 | The web app's post frames and action row, Photos and Shorts layouts, recap and search fixes | 🚫 | Web only; see Not built |
 
 ## Built
@@ -58,8 +58,6 @@ Between the phases: CI artifact retention ([#3](https://github.com/AlohaSocial/A
 | 22b: Sharp pictures on dense screens | Aloha Social scales a picture's preview to at most 800 px a side, and the web app now draws the original where the screen needs more. A picture drawn wider than its preview, in pixels, loads `url` instead of `preview_url` where `meta.original` gives both widths, the original is the wider one and at most 2560 px wide; a GIF keeps its still preview. Elsewhere, and on Mastodon, which serves a preview wide enough, nothing changes |
 | 22c: A post of one to three emoji drawn large | A post whose text is nothing but one to three emoji (flags, keycaps, skin tones, ZWJ and tag sequences, and the post's own custom emoji) is drawn at 2.5 times the text size in the timeline, as Aloha Social's web app and messengers draw a lone emoji. Done on the client, for posts from every server |
 | 21k: Long-form titles | From 0.26.280 a status for an imported ActivityStreams `Article` or `Page` with a name carries `article: {title, type}`, the title plain text of at most 500 characters, which also stays at the top of `content` for clients that do not read the field. Show the title as the post's heading and leave the copy at the top of the content out |
-| 21l: One request for the badges | From 0.26.299 `GET /api/v1/social/badges` answers the unread notifications, the pending follow requests and their notice, and the unread conversations in one request, each counted as its own route counts it, with one `ETag` and `304`. Where the server serves it, the unread poll asks it instead of the three routes |
-| 21m: For You v4 | Where an administrator turned on `rec_v4_enabled` (the `/api/v1/recommendations/*` routes answer 404 while it is off), For You reads `/api/v1/recommendations/timeline` with its cursor instead of the interests timeline, the learning switch is the per-account consent of `PUT /api/v1/recommendations/learning` (with its revision; 409 answers the current state), a post's menu offers hiding it and more or less like it through `POST /api/v1/recommendations/feedback` with its ten-minute Undo, and while learning is on the app sends its reading signals to `/api/v1/recommendations/signals` instead of `/api/v1/interests/signals` |
 
 ## Not built
 
@@ -71,6 +69,8 @@ Between the phases: CI artifact retention ([#3](https://github.com/AlohaSocial/A
 | Push through the Nextcloud push proxy (FCM) | [08-notifications-sync.md](08-notifications-sync.md) §2 | Push is UnifiedPush in both flavours. FCM would be `gplay` only and needs the push proxy to allow the app |
 | Encrypted direct messages bound to the app lock | [11-safety-privacy-appstore.md](11-safety-privacy-appstore.md) | The app lock guards the screen, not the data |
 | Not taken up from Phase 21 | [02-server-api.md](02-server-api.md) | Posting through `POST /api/v1/post` was removed in 0.26.294; the app never used it |
+| The badges route | [02-server-api.md](02-server-api.md) | `GET /api/v1/social/badges` (0.26.299) counts unread notifications like v1, the pending follow requests and their notice, and unread conversations in one request. The app's poll asks one count, v2's grouped unread count on servers that group notifications, which the route cannot replace, and nothing in the app keeps a conversations or follow-requests badge; it would swap one request for another. Worth taking up with such badges |
+| For You v4 beyond the consent | [02-server-api.md](02-server-api.md) | The app has no For You feed: the ranked timeline (`/api/v1/recommendations/timeline`), its feedback with Undo, reading signals, reset and export have nothing to attach to. A For You feed is a product decision of its own. The consent the server keeps is built ([#146](https://github.com/AlohaSocial/Android/pull/146)) |
 | Not taken up from Phase 22 | [02-server-api.md](02-server-api.md) | The rest changed only Aloha Social's web app: one frame for link previews, quoted posts and events, a quieter action row on touch screens, Shorts, Photos, Videos and Discover without a visible title, posting from the sidebar only, the weekly recap naming the instance (the app's text says "your server" already), and search results kept readable while asked again (the app does not dim them). A link preview's image already keeps its shape before it loads |
 | Handoff and Spotlight counterparts | [00-overview.md](00-overview.md) §5 | No Android equivalent is planned yet |
 | The reproducible-build check | [12-store.md](12-store.md) | Two clean builds of the first release tag, compared, when it is cut; nothing in CI checks it today |

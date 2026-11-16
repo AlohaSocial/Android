@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import social.aloha.core.model.ActivityLearning
 import social.aloha.core.model.AttachmentKind
 import social.aloha.core.network.AlohaJson
 import social.aloha.core.network.ApiRequest
@@ -18,6 +19,7 @@ import social.aloha.core.network.endpoints.FeedPreferenceEndpoints
 import social.aloha.core.network.endpoints.InterestEndpoints
 import social.aloha.core.network.endpoints.PlaceEndpoints
 import social.aloha.core.network.endpoints.ProfileEndpoints
+import social.aloha.core.network.endpoints.RecommendationEndpoints
 import social.aloha.core.network.endpoints.StatusEndpoints
 import social.aloha.core.network.endpoints.StoryEndpoints
 import social.aloha.core.network.endpoints.VideoEndpoints
@@ -204,6 +206,19 @@ class ExtensionDecodingTest {
         assertTrue(
             InterestEndpoints.state().value("""{"settings": {"instancePaused": true}}""").settings.instancePaused,
         )
+    }
+
+    @Test
+    fun `activity learning is on only for on, and a paused or unknown mode reads as off`() {
+        val on = RecommendationEndpoints.preferences().value(
+            """{"revision": 7, "generation": 2, "learning_mode": "on", "learning": true, "learning_active": false}""",
+        )
+        assertEquals(ActivityLearning(7, true), on)
+        assertEquals(
+            ActivityLearning(3, false),
+            RecommendationEndpoints.preferences().value("""{"revision": "3", "learning_mode": "paused"}"""),
+        )
+        assertEquals(ActivityLearning(0, false), RecommendationEndpoints.learning(0, true).value("{}"))
     }
 
     @Test

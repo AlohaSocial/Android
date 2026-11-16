@@ -4,6 +4,7 @@
 package social.aloha.core.network.endpoints
 
 import java.io.File
+import social.aloha.core.model.ActivityLearning
 import social.aloha.core.model.HeldPostsPage
 import social.aloha.core.model.InterestsState
 import social.aloha.core.model.Status
@@ -18,6 +19,7 @@ import social.aloha.core.network.HttpMethod
 import social.aloha.core.network.Part
 import social.aloha.core.network.QueryItem
 import social.aloha.core.network.decoding.ListOrMemberSerializer
+import social.aloha.core.network.dto.ActivityLearningDto
 import social.aloha.core.network.dto.HeldPostsPageDto
 import social.aloha.core.network.dto.InterestsStateDto
 import social.aloha.core.network.dto.StatusDto
@@ -83,6 +85,30 @@ public object InterestEndpoints {
     ) {
         it.toDomain()
     }
+}
+
+/**
+ * The For You activity-learning consent of Aloha Social's newer recommendations. Every route answers 404
+ * while the administrator has them off (`rec_v4_enabled`, off by default).
+ */
+public object RecommendationEndpoints {
+    public fun preferences(): ApiRequest<ActivityLearning> =
+        request(Endpoint("api/v1/recommendations/preferences"), ActivityLearningDto.serializer()) { it.toDomain() }
+
+    /** Turns learning on or off as of [ifRevision]; a stale revision answers 409 and changes nothing. */
+    public fun learning(ifRevision: Int, learning: Boolean): ApiRequest<ActivityLearning> = request(
+        Endpoint(
+            "api/v1/recommendations/learning",
+            HttpMethod.PUT,
+            body = Body.Form(
+                listOf(
+                    QueryItem("if_revision", ifRevision.toString()),
+                    QueryItem("mode", if (learning) "on" else "off"),
+                ),
+            ),
+        ),
+        ActivityLearningDto.serializer(),
+    ) { it.toDomain() }
 }
 
 /** Feeds outside the fediverse that the server reads for the viewer; entries link out. */

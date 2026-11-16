@@ -78,6 +78,16 @@ class ExtensionEndpointsTest {
     }
 
     @Test
+    fun `activity learning changes name the revision they were made against`() {
+        assertEquals("api/v1/recommendations/preferences", RecommendationEndpoints.preferences().endpoint.path)
+        val change = RecommendationEndpoints.learning(ifRevision = 5, learning = false).endpoint
+        assertEquals("api/v1/recommendations/learning", change.path)
+        assertEquals(HttpMethod.PUT, change.method)
+        assertEquals(listOf(QueryItem("if_revision", "5"), QueryItem("mode", "off")), change.form())
+        assertEquals("on", RecommendationEndpoints.learning(5, true).endpoint.formValue("mode"))
+    }
+
+    @Test
     fun `an empty language list still goes out, and untouched settings do not`() {
         val endpoint = InterestEndpoints.settings(languages = emptyList()).endpoint
         assertEquals(listOf(QueryItem("languages", "")), endpoint.form())
