@@ -90,6 +90,16 @@ class SignInScreenshotTest {
     fun instanceCard() = capture("signin-card", SignInUiState(step = SignInStep.Instance(card)))
 
     @Test
+    fun instanceCardSignUp() = capture(
+        "signin-card-sign-up",
+        SignInUiState(
+            step = SignInStep.Instance(
+                card.copy(signUp = SignUp("https://cloud.example/apps/social/signup", true, approvalRequired = true)),
+            ),
+        ),
+    )
+
+    @Test
     fun instanceCardDark() =
         capture("signin-card-dark", SignInUiState(step = SignInStep.Instance(card)), ThemeMode.Dark)
 
@@ -190,7 +200,7 @@ class SignInScreenshotTest {
 
         override fun onContinue() = Unit
 
-        override fun onSignIn() = Unit
+        override fun onSignIn(newAccount: Boolean) = Unit
 
         override fun onOtherServer() = Unit
 

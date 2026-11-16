@@ -91,6 +91,7 @@ internal data class RegistrationsDto(
     @Serializable(with = LenientBoolSerializer::class) val enabled: Boolean = false,
     @SerialName("approval_required") @Serializable(with = LenientBoolSerializer::class)
     val approvalRequired: Boolean = false,
+    @Serializable(with = LenientUrlSerializer::class) val url: String? = null,
 )
 
 @Serializable
@@ -137,6 +138,7 @@ internal fun InstanceV2Dto.toDomain(): InstanceDescription = InstanceDescription
     contactEmail = contact?.email,
     registrationsEnabled = registrations?.enabled ?: false,
     approvalRequired = registrations?.approvalRequired ?: false,
+    registrationsUrl = registrations?.url,
     userCount = usage?.users?.activeMonth?.takeIf { it > 0 },
     streamingUrl = configuration?.urls?.resolved,
     vapidKey = configuration?.vapid?.publicKey,

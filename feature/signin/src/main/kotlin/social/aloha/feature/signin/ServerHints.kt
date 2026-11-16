@@ -105,10 +105,20 @@ private fun looksLikeLink(description: ClipDescription): Boolean = Build.VERSION
     description.classificationStatus == ClipDescription.CLASSIFICATION_COMPLETE &&
     description.getConfidenceScore(TextClassifier.TYPE_URL) >= LINK_CONFIDENCE
 
-/** [text] when it is a Mastodon invite link, `https://server/invite/code`; else null. */
+/**
+ * [text] when it is an invite link: Mastodon's `https://server/invite/code` or Aloha Social's
+ * `https://server/…/signup?invite=token`; else null.
+ */
 internal fun inviteOf(text: String): String? = text.trim().takeIf { INVITE.matches(it) }
 
-private val INVITE = Regex("""^https://[^/\s]+\.[^/\s]+/invite/[A-Za-z0-9_-]+/?$""")
+/** The token of [invite] where it invites to [host]; else null. */
+internal fun inviteToken(invite: String, host: String): String? {
+    val url = invite.toHttpUrlOrNull()?.takeIf { it.host == host } ?: return null
+    return url.queryParameter("invite") ?: url.pathSegments.lastOrNull { it.isNotEmpty() }
+}
+
+private val INVITE =
+    Regex("""^https://[^/\s]+\.[^/\s]+(/invite/[A-Za-z0-9_-]+/?|(/[^?#\s]*)?/signup\?invite=[A-Za-z0-9]+)$""")
 private const val LINK_CONFIDENCE = 0.5f
 private const val DESCRIPTION_LINES = 3
 private val SPINNER = 20.dp

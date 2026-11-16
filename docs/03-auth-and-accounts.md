@@ -34,6 +34,14 @@ OAuth 2 with PKCE: `OAuthFlow` builds the requests and parses the callback, `OAu
 - A new account that `verify_credentials` answers 500 for is created from `/oauth/userinfo` with its profile pending.
 - After the exchange the server's capabilities are detected ([02-server-api.md](02-server-api.md)) and the account is stored.
 
+### Creating an account
+
+The server card offers Create an account under Sign in while the instance says its sign-up is open (`registrations` in v1, `registrations.enabled` in v2) and v2 names a sign-up page (`registrations.url`) over https, or over plain http on its own host where the server itself is reached over plain http, as only a debug build allows. A closed sign-up, or one that names no page, offers nothing: Mastodon's own sign-up page is not linked, and mastodon.social sends `url: null`.
+
+- On Aloha Social (NodeInfo), after 0.26.299 (read from source, `SignupReturn`): the sign-in starts exactly as Sign in starts it (`SignInCoordinator.beginAuthorization`, the attempt kept in the vault), then the sign-up page opens in the same Custom Tab with `return`, the absolute authorisation URL, and `invite`, the token of an invite link the sign-in screen picked up for that host (`…/signup?invite=…`, or the code of a Mastodon `/invite/…` link). Once the account exists the page logs it in and continues the authorisation, and its redirect finishes the sign-in through the ordinary callback. The screen waits as it does for Sign in, and Open the browser again opens the authorisation page.
+- With `approval_required` the card says an administrator approves new accounts first and that Log in in the welcome email finishes the sign-in. The attempt stays in the vault until a callback for it arrives or the person picks another server; closing the tab clears nothing, so the email's Log in, days later, still finishes it.
+- Elsewhere the page the server names opens in the browser without `return`, and the person signs in afterwards.
+
 ### The admin scopes
 
 Sign-in never asks for `admin:read admin:write`, so nobody who cannot moderate sees moderation permissions on the consent page. Whether an account may moderate comes from the `role` in `verify_credentials`. When the moderation console's first call answers 403 for lack of the scope, the console offers to allow moderation: a second authorisation of the same account with the admin scopes added (`SignInCoordinator.beginModeration`). A server refuses an authorisation for more than the app registered with, so the app first registers again with the admin scopes when the stored registration lacks them. Each account keeps the client its token was issued to, so signing out still revokes the token with the right client. The console itself is described in [11-safety-privacy-appstore.md](11-safety-privacy-appstore.md) §7.

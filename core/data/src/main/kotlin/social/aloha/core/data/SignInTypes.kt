@@ -52,6 +52,11 @@ public class DiscoveredServer internal constructor(internal val outcome: ProbeOu
     public val rules: List<String> get() = outcome.instance.rules.map { it.text.trim() }
     public val languages: List<String> get() = outcome.instance.languages
     public val isNextcloudSocial: Boolean get() = outcome.nodeInfo?.isNextcloudSocial == true
+    public val registrationsEnabled: Boolean get() = outcome.instance.registrationsEnabled
+    public val approvalRequired: Boolean get() = outcome.instance.approvalRequired
+
+    /** The sign-up page the server names; null where it names none. */
+    public val registrationsUrl: String? get() = outcome.instance.registrationsUrl
 }
 
 /** One address the lookup tried, and why. */

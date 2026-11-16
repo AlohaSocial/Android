@@ -15,6 +15,8 @@ import kotlinx.serialization.Serializable
  * @property vapidKey `""` where the server offers no Web Push, as Aloha Social did up to 0.26.278.
  * @property userCount null where unknown, which a server that hides its counts sends as 0 (Aloha Social from
  *   0.26.288, where an administrator can hide them).
+ * @property registrationsUrl the sign-up page v2 names as `registrations.url`; null where it names none, and
+ *   always from v1. Aloha Social after 0.26.299 names its `/signup` while the sign-up is open.
  * @property apiVersions `{"mastodon": 3}` on a 4.3-compatible server, read instead of a version string
  *   that says nothing on a fork.
  */
@@ -33,6 +35,7 @@ public data class InstanceDescription(
     val contactEmail: String? = null,
     val registrationsEnabled: Boolean = false,
     val approvalRequired: Boolean = false,
+    val registrationsUrl: String? = null,
     val userCount: Int? = null,
     val statusCount: Int? = null,
     val domainCount: Int? = null,

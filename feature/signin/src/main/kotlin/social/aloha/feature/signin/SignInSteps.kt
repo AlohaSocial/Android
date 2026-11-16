@@ -76,11 +76,28 @@ internal fun InstanceCardContent(card: InstanceCard, actions: SignInActions) {
             }
         }
     }
-    Button(onClick = actions::onSignIn, modifier = Modifier.fillMaxWidth()) {
+    Button(onClick = { actions.onSignIn(newAccount = false) }, modifier = Modifier.fillMaxWidth()) {
         Text(stringResource(R.string.signin_sign_in))
     }
+    card.signUp?.let { SignUpOffer(it, actions) }
     TextButton(onClick = actions::onOtherServer, modifier = Modifier.fillMaxWidth()) {
         Text(stringResource(R.string.signin_other_server))
+    }
+}
+
+/** Create an account, with what follows it where an administrator approves new accounts. */
+@Composable
+private fun SignUpOffer(signUp: SignUp, actions: SignInActions) {
+    OutlinedButton(onClick = { actions.onSignIn(newAccount = true) }, modifier = Modifier.fillMaxWidth()) {
+        Text(stringResource(R.string.signin_create_account))
+    }
+    if (signUp.approvalRequired) {
+        Text(
+            stringResource(
+                if (signUp.continuesSignIn) R.string.signin_approval_then_email else R.string.signin_approval,
+            ),
+            style = MaterialTheme.typography.bodyMedium,
+        )
     }
 }
 

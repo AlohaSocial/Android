@@ -315,6 +315,31 @@ class DtoDecodingTest {
     }
 
     @Test
+    fun `the sign-up is read from both versions, and only v2 names its page`() {
+        val v1 = InstanceEndpoints.v1().decode("""{"uri":"x","registrations":true,"approval_required":true}""").value
+        assertTrue(v1.registrationsEnabled)
+        assertTrue(v1.approvalRequired)
+        assertNull(v1.registrationsUrl)
+        assertFalse(InstanceEndpoints.v1().decode("""{"uri":"x"}""").value.registrationsEnabled)
+        val v2 = InstanceEndpoints.v2()
+        val open = """{"domain":"x","registrations":{"enabled":true,"approval_required":false,""" +
+            """"url":"https://x/apps/social/signup"}}"""
+        v2.decode(open).value.let {
+            assertTrue(it.registrationsEnabled)
+            assertFalse(it.approvalRequired)
+            assertEquals("https://x/apps/social/signup", it.registrationsUrl)
+        }
+        val closed = """{"domain":"x","registrations":{"enabled":false,"approval_required":true,"url":null}}"""
+        v2.decode(closed).value.let {
+            assertFalse(it.registrationsEnabled)
+            assertTrue(it.approvalRequired)
+            assertNull(it.registrationsUrl)
+        }
+        assertNull(v2.decode("""{"domain":"x","registrations":{"enabled":true}}""").value.registrationsUrl)
+        assertNull(v2.decode("""{"domain":"x"}""").value.registrationsUrl)
+    }
+
+    @Test
     fun `one odd configuration block leaves only its own limits at the defaults`() {
         val body = """{"domain":"x","configuration":{"statuses":[],"polls":{"max_options":8}}}"""
         val instance = InstanceEndpoints.v2().decode(body).value
