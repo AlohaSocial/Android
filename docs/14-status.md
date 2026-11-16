@@ -11,7 +11,7 @@ Phase 22, what Aloha Social changed after 0.26.299 (server `aloha/main` at `6fb8
 | 22a: Create an account from sign-in, and come back signed in | ✅ | [#141](https://github.com/AlohaSocial/Android/pull/141) |
 | 22b: Sharp pictures on dense screens | ✅ | [#141](https://github.com/AlohaSocial/Android/pull/141) |
 | 22c: A post of one to three emoji drawn large | ✅ | [#141](https://github.com/AlohaSocial/Android/pull/141) |
-| 21k: Long-form titles | ⬜ | Stacked on Phase 22 |
+| 21k: Long-form titles | ✅ | [#142](https://github.com/AlohaSocial/Android/pull/142) |
 | 21l: One request for the badges | ⬜ | Stacked on 21k |
 | 21m: For You v4 | ⬜ | Stacked on 21l |
 | The web app's post frames and action row, Photos and Shorts layouts, recap and search fixes | 🚫 | Web only; see Not built |
