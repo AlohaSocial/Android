@@ -145,7 +145,7 @@ class EntitiesTest {
     fun `a status survives persistence as json`() {
         val s = status(
             listOf(attachment(AttachmentKind.Video, duration = 3.0, width = 1, height = 2)),
-        ).copy(createdAt = Instant.parse("2026-09-29T10:00:00Z"))
+        ).copy(createdAt = Instant.parse("2026-09-29T10:00:00Z"), article = StatusArticle("On tides", "Page"))
         assertEquals(s, Json.decodeFromString(Status.serializer(), Json.encodeToString(Status.serializer(), s)))
     }
 }

@@ -71,6 +71,7 @@ internal data class StatusDto(
     @Serializable(with = OptionalBoolSerializer::class) val archived: Boolean? = null,
     @Serializable(with = StatusPlaceOrNull::class) val place: StatusPlaceDto? = null,
     @Serializable(with = StatusEventOrNull::class) val event: StatusEventDto? = null,
+    @Serializable(with = StatusArticleOrNull::class) val article: StatusArticleDto? = null,
     @Serializable(with = VideoDetailsOrNull::class) val video: VideoDetailsDto? = null,
     @SerialName("video_card") @Serializable(with = VideoCardOrNull::class) val videoCard: VideoCardDto? = null,
     @SerialName("watch_progress") @Serializable(with = WatchProgressOrNull::class)
@@ -123,6 +124,7 @@ internal fun StatusDto.toDomain(): Status = Status(
     archived = archived,
     place = place?.toDomain(),
     event = event?.toDomain(),
+    article = article?.toDomain(),
     video = video?.toDomain(),
     videoCard = videoCard?.toDomain(),
     watchProgress = watchProgress?.toDomain(),

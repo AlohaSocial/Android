@@ -60,6 +60,8 @@ public data class StatusRowUi(
     val videoCard: VideoCardInfo? = null,
     /** When and where, on a post for an event. */
     val event: StatusEvent? = null,
+    /** The heading of a long-form post, drawn above [body], which then leaves out the server's copy of it. */
+    val articleTitle: String? = null,
     /** What a quote of this post comes to: one, a request, nothing, or a link where quotes are unknown. */
     val quoteAccess: QuoteAccess = QuoteAccess.Link,
     /** The words a filter matched, painted once the reader shows the filtered post anyway. */
@@ -146,9 +148,9 @@ public class StatusRowMapper(private val cache: RichTextCache, private val color
             edited = shown.isEdited,
             visibility = shown.visibility,
             spoiler = cache.spoiler(status).takeUnless { it.isEmpty }?.toAnnotatedString(colors),
-            body = cache.richText(status).toAnnotatedString(colors),
-            plainText = cache.plainText(status),
-            largeEmoji = cache.richText(status).isFewEmoji(),
+            body = cache.articleBody(status).toAnnotatedString(colors),
+            plainText = cache.articleBody(status).plainText,
+            largeEmoji = cache.articleBody(status).isFewEmoji(),
             emojis = shown.emojis + shown.account.emojis,
             media = shown.mediaAttachments,
             sensitive = shown.sensitive,
@@ -168,6 +170,7 @@ public class StatusRowMapper(private val cache: RichTextCache, private val color
             video = shown.video,
             videoCard = shown.videoCard,
             event = shown.event,
+            articleTitle = shown.article?.title,
             filterMatches = filterMatches,
             quoteAccess = quoteAccess(shown, viewerAccountId != null && shown.account.id == viewerAccountId),
         )

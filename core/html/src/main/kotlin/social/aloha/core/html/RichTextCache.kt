@@ -31,6 +31,16 @@ public class RichTextCache(private val capacity: Int = DEFAULT_CAPACITY) {
         return cached(Key(shown.content, shown.mentions, shown.tags, shown.emojis))
     }
 
+    /**
+     * The body of what [status] shows without the copy of its long-form title at the top of the content,
+     * which a row draws as a heading of its own; the same as [richText] for any other post.
+     */
+    public fun articleBody(status: Status): RichText {
+        val shown = status.displayed
+        val content = shown.article?.let { withoutArticleTitle(shown.content, it.title) } ?: shown.content
+        return cached(Key(content, shown.mentions, shown.tags, shown.emojis))
+    }
+
     /** The content warning, plain text on the wire but able to carry custom emoji. */
     public fun spoiler(status: Status): RichText =
         status.displayed.let { StatusHtmlParser.parseText(it.spoilerText, it.emojis) }
