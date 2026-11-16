@@ -134,6 +134,10 @@
     <string name="interests_paused_summary">Keeps what was learnt, and learns nothing new until you resume.</string>
     <!-- Note above the learning switches: the server's administrator has paused learning for everyone; the switches still keep the reader's choices for when it resumes -->
     <string name="interests_instance_paused">Your administrator has paused learning on this server. Nothing new is learnt until they resume it; your choices below apply then.</string>
+    <!-- Switch: the server's For You feed also learns from what the reader does, apart from the hashtags they read -->
+    <string name="interests_activity">Learn from what I do</string>
+    <!-- Explains the activity learning switch -->
+    <string name="interests_activity_summary">Likes, saves, replies, opened posts and watched videos refine For You. Reply text is never read, and nothing leaves your server.</string>
     <!-- Heading of the reader's interests -->
     <string name="interests_yours">Your interests</string>
     <!-- Shown while the server learns and has too little to go on -->

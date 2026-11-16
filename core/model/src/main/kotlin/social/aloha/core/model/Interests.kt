@@ -32,6 +32,16 @@ public data class InterestSettings(
     val instancePaused: Boolean = false,
 )
 
+/**
+ * The reader's consent to For You learning from what they do (likes, saves, opened posts, watched
+ * videos), apart from the hashtag interests. Only Aloha Social with its newer recommendations on keeps it.
+ *
+ * @property revision the state a change is made against; a change made elsewhere meanwhile refuses it.
+ * @property learning whether it is on; off and paused both read as off.
+ */
+@Serializable
+public data class ActivityLearning(val revision: Int, val learning: Boolean)
+
 /** One hashtag the server ranks, with how strongly. */
 @Serializable
 public data class InterestTag(val tag: String, val score: Double = 0.0) {

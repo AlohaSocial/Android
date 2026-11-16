@@ -7,6 +7,7 @@ import java.time.Instant
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import social.aloha.core.model.ActivityLearning
 import social.aloha.core.model.HeldPost
 import social.aloha.core.model.HeldPostsPage
 import social.aloha.core.model.InterestSettings
@@ -67,6 +68,15 @@ internal fun InterestsStateDto.toDomain(): InterestsState = InterestsState(
 )
 
 internal fun InterestTagDto.toDomain(): InterestTag = InterestTag(tag ?: name.orEmpty(), score ?: 0.0)
+
+/** `GET /api/v1/recommendations/preferences`, and every change to it; learning is on only for `on`. */
+@Serializable
+internal data class ActivityLearningDto(
+    @Serializable(with = LenientIntSerializer::class) val revision: Int = 0,
+    @SerialName("learning_mode") @Serializable(with = LenientTextSerializer::class) val learningMode: String? = null,
+)
+
+internal fun ActivityLearningDto.toDomain(): ActivityLearning = ActivityLearning(revision, learningMode == "on")
 
 /** A feed's home page arrives as `site_url` or `link`, its count as `entry_count` or `entries`. */
 @Serializable

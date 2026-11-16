@@ -18,6 +18,7 @@ import kotlinx.coroutines.launch
 import social.aloha.core.data.AccountRepository
 import social.aloha.core.data.Answer
 import social.aloha.core.data.interests.Interests
+import social.aloha.core.model.ActivityLearning
 import social.aloha.core.model.InterestsState
 import social.aloha.core.model.SignedInAccount
 import social.aloha.core.network.ApiError
@@ -25,6 +26,8 @@ import social.aloha.core.network.ApiError
 @Immutable
 internal data class InterestsUiState(
     val interests: InterestsState? = null,
+    /** The For You activity-learning consent; null where the server keeps none. */
+    val activity: ActivityLearning? = null,
     val loading: Boolean = true,
     /** The server keeps no interests: there is nothing to show. */
     val unavailable: Boolean = false,
@@ -37,6 +40,8 @@ internal interface InterestsActions {
     fun onLearning(learning: Boolean)
 
     fun onPaused(paused: Boolean)
+
+    fun onActivityLearning(learning: Boolean)
 
     fun onReset()
 
@@ -66,7 +71,10 @@ internal class InterestsViewModel @AssistedInject constructor(
             val account = accounts.byId(readerId) ?: return@launch
             reader = account
             when (val answer = interests.state(account)) {
-                is Answer.Got -> state.update { it.copy(interests = answer.value, loading = false) }
+                is Answer.Got -> {
+                    state.update { it.copy(interests = answer.value, loading = false) }
+                    readActivity(account)
+                }
 
                 is Answer.Missed -> state.update {
                     it.copy(loading = false, unavailable = answer.error == ApiError.NotFound, failed = true)
@@ -81,7 +89,32 @@ internal class InterestsViewModel @AssistedInject constructor(
 
     override fun onReset() = change { interests.reset(it) }
 
+    /** A refusal, a 409 for a change made elsewhere among them, shows the consent as the server has it now. */
+    override fun onActivityLearning(learning: Boolean) {
+        val account = reader ?: return
+        val current = state.value.activity ?: return
+        viewModelScope.launch {
+            when (val answer = interests.learnActivity(account, current, learning)) {
+                is Answer.Got -> adopt(answer.value)
+
+                is Answer.Missed -> {
+                    state.update { it.copy(changeFailed = true) }
+                    readActivity(account)
+                }
+            }
+        }
+    }
+
     override fun onChangeFailureShown() = state.update { it.copy(changeFailed = false) }
+
+    private suspend fun readActivity(account: SignedInAccount) {
+        (interests.activityLearning(account) as? Answer.Got)?.let { adopt(it.value) }
+    }
+
+    /** Takes the server's consent unless a later revision is shown already. */
+    private fun adopt(activity: ActivityLearning) = state.update {
+        if ((it.activity?.revision ?: -1) > activity.revision) it else it.copy(activity = activity)
+    }
 
     private fun change(ask: suspend (SignedInAccount) -> Answer<InterestsState>) {
         val account = reader ?: return

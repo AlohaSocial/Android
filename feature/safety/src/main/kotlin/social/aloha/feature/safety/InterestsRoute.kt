@@ -39,6 +39,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaSpacing
+import social.aloha.core.model.ActivityLearning
 import social.aloha.core.model.InterestSettings
 import social.aloha.core.model.InterestTag
 import social.aloha.core.model.InterestsState
@@ -102,7 +103,7 @@ internal fun InterestsScreen(
                 )
 
                 else -> LazyColumn(Modifier.fillMaxSize()) {
-                    interestsContent(interests, actions) { resetting = true }
+                    interestsContent(interests, state.activity, actions) { resetting = true }
                 }
             }
         }
@@ -125,28 +126,13 @@ internal fun InterestsScreen(
     }
 }
 
-private fun LazyListScope.interestsContent(state: InterestsState, actions: InterestsActions, onReset: () -> Unit) {
-    if (state.settings.instancePaused) {
-        item(key = "instancePaused") { Note(stringResource(R.string.interests_instance_paused)) }
-    }
-    item(key = "learning") {
-        SwitchRow(
-            stringResource(R.string.interests_learning),
-            state.settings.learning,
-            actions::onLearning,
-            summary = stringResource(R.string.interests_learning_summary),
-        )
-    }
-    if (state.settings.learning) {
-        item(key = "paused") {
-            SwitchRow(
-                stringResource(R.string.interests_paused),
-                state.settings.paused,
-                actions::onPaused,
-                summary = stringResource(R.string.interests_paused_summary),
-            )
-        }
-    }
+private fun LazyListScope.interestsContent(
+    state: InterestsState,
+    activity: ActivityLearning?,
+    actions: InterestsActions,
+    onReset: () -> Unit,
+) {
+    switches(state.settings, activity, actions)
     heading(R.string.interests_yours)
     if (state.thin && state.settings.learningNow) {
         item(key = "thin") { Note(stringResource(R.string.interests_thin)) }
@@ -159,6 +145,41 @@ private fun LazyListScope.interestsContent(state: InterestsState, actions: Inter
     item(key = "reset") {
         TextButton(onClick = onReset, modifier = Modifier.padding(AlohaSpacing.s)) {
             Text(stringResource(R.string.interests_reset))
+        }
+    }
+}
+
+/** The learning switches, the administrator's pause above them and the activity consent where there is one. */
+private fun LazyListScope.switches(settings: InterestSettings, activity: ActivityLearning?, actions: InterestsActions) {
+    if (settings.instancePaused) {
+        item(key = "instancePaused") { Note(stringResource(R.string.interests_instance_paused)) }
+    }
+    item(key = "learning") {
+        SwitchRow(
+            stringResource(R.string.interests_learning),
+            settings.learning,
+            actions::onLearning,
+            summary = stringResource(R.string.interests_learning_summary),
+        )
+    }
+    if (settings.learning) {
+        item(key = "paused") {
+            SwitchRow(
+                stringResource(R.string.interests_paused),
+                settings.paused,
+                actions::onPaused,
+                summary = stringResource(R.string.interests_paused_summary),
+            )
+        }
+    }
+    activity?.let { consent ->
+        item(key = "activity") {
+            SwitchRow(
+                stringResource(R.string.interests_activity),
+                consent.learning,
+                actions::onActivityLearning,
+                summary = stringResource(R.string.interests_activity_summary),
+            )
         }
     }
 }
