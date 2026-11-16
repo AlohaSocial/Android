@@ -47,6 +47,14 @@ class StatusRowMapperTest {
     }
 
     @Test
+    fun `a post of a lone emoji is drawn large, a boost of one too, and a sentence is not`() {
+        val party = StatusSamples.post("<p>🎉</p>")
+        assertTrue(mapper.map(party, null).largeEmoji)
+        assertTrue(mapper.map(StatusSamples.boost.copy(reblog = party), null).largeEmoji)
+        assertFalse(mapper.map(StatusSamples.post(), null).largeEmoji)
+    }
+
+    @Test
     fun `a thread asks for no context line at all`() {
         assertNull(mapper.map(StatusSamples.boost, null, showContext = false).context)
     }

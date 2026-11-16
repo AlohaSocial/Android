@@ -64,6 +64,8 @@ public data class StatusRowUi(
     val quoteAccess: QuoteAccess = QuoteAccess.Link,
     /** The words a filter matched, painted once the reader shows the filtered post anyway. */
     val filterMatches: List<String> = emptyList(),
+    /** The body is nothing but one to three emoji, drawn at [LARGE_EMOJI_SCALE] times the text size. */
+    val largeEmoji: Boolean = false,
 ) {
     @Immutable
     public data class AuthorUi(
@@ -146,6 +148,7 @@ public class StatusRowMapper(private val cache: RichTextCache, private val color
             spoiler = cache.spoiler(status).takeUnless { it.isEmpty }?.toAnnotatedString(colors),
             body = cache.richText(status).toAnnotatedString(colors),
             plainText = cache.plainText(status),
+            largeEmoji = cache.richText(status).isFewEmoji(),
             emojis = shown.emojis + shown.account.emojis,
             media = shown.mediaAttachments,
             sensitive = shown.sensitive,

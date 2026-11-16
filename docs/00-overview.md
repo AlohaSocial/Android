@@ -117,9 +117,12 @@ Full treatment in [06-media-modes.md](06-media-modes.md).
 
 ## 6. Explicit non-goals for 1.0
 
-- **No account creation.** Nextcloud Social's client API cannot create an
-  account (`registrations: false` always) and Mastodon sign-up flows differ per
-  server. Onboarding links out to the server's own sign-up page.
+- **No account creation in the app.** Aloha Social's client API cannot create
+  an account (`POST /api/v1/accounts` answers 403) and Mastodon sign-up flows
+  differ per server. Sign-in opens the server's own sign-up page
+  where the server reports one open; on Aloha Social after 0.26.299 (read from
+  source) the person comes back signed in
+  ([02-server-api.md](02-server-api.md), Sign-up).
 - **No instance administration console.** Nextcloud Social serves a full admin
   API; its *moderation* half — the reports queue, silencing and suspending an
   account, and what may trend — is in scope and described in

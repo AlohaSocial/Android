@@ -15,7 +15,8 @@ internal interface SignInActions {
 
     fun onContinue()
 
-    fun onSignIn()
+    /** Starts the sign-in; with [newAccount], through the server's sign-up page, continued into it where it can be. */
+    fun onSignIn(newAccount: Boolean)
 
     fun onOtherServer()
 

@@ -75,7 +75,19 @@ internal data class InstanceCard(
     val isNextcloudSocial: Boolean,
     /** The languages the server says it speaks, as codes. */
     val languages: List<String> = emptyList(),
+    /** Where Create an account leads; null while the server takes no new accounts or names no page. */
+    val signUp: SignUp? = null,
 )
+
+/**
+ * A server's sign-up page.
+ *
+ * @property continuesSignIn Aloha Social's `/signup` takes the app's authorization request as `return` and
+ *   signs the new account in; elsewhere the page opens plainly.
+ * @property approvalRequired an administrator approves each new account first.
+ */
+@Immutable
+internal data class SignUp(val page: String, val continuesSignIn: Boolean, val approvalRequired: Boolean)
 
 @Immutable
 internal sealed interface SignInFailure {

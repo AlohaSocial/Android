@@ -26,6 +26,7 @@ import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -131,8 +132,9 @@ class SignInViewModelTest {
         val card = awaitStep { it is SignInStep.Instance } as SignInStep.Instance
         assertEquals("nextcloud.local", card.card.domain)
         assertTrue(card.card.isNextcloudSocial)
+        assertNull(card.card.signUp)
 
-        viewModel.onSignIn()
+        viewModel.onSignIn(newAccount = false)
         val url = withTimeout(15.seconds) { viewModel.pendingBrowserUrl.filterNotNull().first() }.toHttpUrl()
         viewModel.onBrowserOpened()
         assertEquals(SignInStep.WaitingForBrowser, awaitStep { it == SignInStep.WaitingForBrowser })
@@ -149,6 +151,71 @@ class SignInViewModelTest {
         val account = withTimeout(15.seconds) { accounts.activeAccount.filterNotNull().first() }
         assertEquals(mock.origin.host, account.host)
         withTimeout(15.seconds) { inbox.callback.first { it == null } }
+    }
+
+    @Test
+    fun `Create an account on Aloha Social opens its sign-up page continuing the sign-in, with the invite`() =
+        runBlocking<Unit> {
+            val signup = mock.origin.resolve("/index.php/apps/social/signup").toString()
+            mock.pin(
+                "GET",
+                "/api/v2/instance",
+                200,
+                """{"domain":"nextcloud.local","registrations":""" +
+                    """{"enabled":true,"approval_required":true,"url":"$signup"}}""",
+            )
+            viewModel.onInviteFound("https://${mock.origin.host}/apps/social/signup?invite=Tok123")
+            viewModel.onServerChange(mock.origin.toString())
+            viewModel.onContinue()
+            val card = awaitStep { it is SignInStep.Instance } as SignInStep.Instance
+            assertEquals(SignUp(signup, continuesSignIn = true, approvalRequired = true), card.card.signUp)
+
+            viewModel.onSignIn(newAccount = true)
+            val opened = withTimeout(15.seconds) { viewModel.pendingBrowserUrl.filterNotNull().first() }.toHttpUrl()
+            viewModel.onBrowserOpened()
+            assertEquals(SignInStep.WaitingForBrowser, awaitStep { it == SignInStep.WaitingForBrowser })
+            assertEquals("/index.php/apps/social/signup", opened.encodedPath)
+            assertEquals("Tok123", opened.queryParameter("invite"))
+            val authorization = checkNotNull(opened.queryParameter("return"))
+            viewModel.onOpenBrowserAgain()
+            assertEquals(authorization, withTimeout(15.seconds) { viewModel.pendingBrowserUrl.filterNotNull().first() })
+            viewModel.onBrowserOpened()
+
+            val state = authorization.toHttpUrl().queryParameter("state")
+            inbox.deliver("alohasocial://oauth-callback/?code=c&state=$state")
+            val account = withTimeout(15.seconds) { accounts.activeAccount.filterNotNull().first() }
+            assertEquals(mock.origin.host, account.host)
+        }
+
+    @Test
+    fun `a closed sign-up offers no account to create, even where it names a page`() = runBlocking<Unit> {
+        val signup = mock.origin.resolve("/index.php/apps/social/signup").toString()
+        mock.pin(
+            "GET",
+            "/api/v2/instance",
+            200,
+            """{"domain":"nextcloud.local","registrations":{"enabled":false,"url":"$signup"}}""",
+        )
+        viewModel.onServerChange(mock.origin.toString())
+        viewModel.onContinue()
+        val card = awaitStep { it is SignInStep.Instance } as SignInStep.Instance
+        assertNull(card.card.signUp)
+        viewModel.onSignIn(newAccount = true)
+        assertNull(viewModel.pendingBrowserUrl.value)
+        assertEquals(card, viewModel.uiState.value.step)
+    }
+
+    @Test
+    fun `a server whose sign-up names no page offers no account to create`() = runBlocking<Unit> {
+        MockSocialServer(MockServerConfiguration.Mastodon).start().use { mastodon ->
+            viewModel.onServerChange(mastodon.origin.toString())
+            viewModel.onContinue()
+            val card = awaitStep { it is SignInStep.Instance } as SignInStep.Instance
+            assertNull(card.card.signUp)
+            viewModel.onSignIn(newAccount = true)
+            assertNull(viewModel.pendingBrowserUrl.value)
+            assertEquals(card, viewModel.uiState.value.step)
+        }
     }
 
     @Test

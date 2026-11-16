@@ -92,13 +92,17 @@ internal class SignInViewModel @Inject constructor(
         // offered once: put away, it stays away, a turned screen too
         if (savedState.get<Boolean>(INVITE_OFFERED) == true || state.value.server.isNotBlank()) return
         savedState[INVITE_OFFERED] = true
+        savedState[INVITE] = url
         state.update { it.copy(invite = url) }
     }
 
     override fun onInvite(use: Boolean) {
         val invite = state.value.invite ?: return
         state.update { it.copy(invite = null) }
-        if (!use) return
+        if (!use) {
+            savedState.remove<String>(INVITE)
+            return
+        }
         onServerChange(invite.toHttpUrl().host)
         browser.value = invite
     }
@@ -126,19 +130,35 @@ internal class SignInViewModel @Inject constructor(
 
     override fun onUseManualApiAddress() = look { finder.findAt(state.value.manualApiAddress) }
 
-    override fun onSignIn() {
+    /**
+     * Starts the sign-in. With [newAccount] the server's sign-up page opens instead: on Aloha Social once the
+     * sign-in has started, carrying it as `return`, so the callback finishes it as it finishes a sign-in;
+     * elsewhere plainly.
+     */
+    override fun onSignIn(newAccount: Boolean) {
         val server = discovered ?: return
-        start {
-            when (val begun = coordinator.beginAuthorization(server)) {
-                is Authorization.Started -> {
-                    browser.value = begun.url
-                    show(SignInStep.WaitingForBrowser)
-                }
-
-                is Authorization.Failed -> fail(begun.problem)
-            }
+        val signUp = server.toCard().signUp.takeIf { newAccount }
+        when {
+            newAccount && signUp == null -> Unit
+            signUp != null && !signUp.continuesSignIn -> browser.value = signUp.page
+            else -> start { authorize(server, signUp) }
         }
     }
+
+    private suspend fun authorize(server: DiscoveredServer, signUp: SignUp?) {
+        when (val begun = coordinator.beginAuthorization(server)) {
+            is Authorization.Started -> {
+                browser.value = signUp?.let { signUpUrl(it.page, begun.url, inviteFor(it.page)) } ?: begun.url
+                show(SignInStep.WaitingForBrowser)
+            }
+
+            is Authorization.Failed -> fail(begun.problem)
+        }
+    }
+
+    /** The token of the invite link this screen picked up, where it invites to [page]'s server. */
+    private fun inviteFor(page: String): String? =
+        savedState.get<String>(INVITE)?.let { inviteToken(it, page.toHttpUrl().host) }
 
     override fun onOpenBrowserAgain() {
         viewModelScope.launch { browser.value = coordinator.pendingAuthorizationUrl() }
@@ -243,5 +263,6 @@ internal class SignInViewModel @Inject constructor(
         const val PREVIEW_MILLIS = 500L
         const val SERVER = "server"
         const val INVITE_OFFERED = "invite_offered"
+        const val INVITE = "invite"
     }
 }

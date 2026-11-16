@@ -31,6 +31,12 @@
     <string name="signin_aloha_social">Aloha Social</string>
     <!-- Button that opens the server\'s sign-in page in the browser -->
     <string name="signin_sign_in">Sign in</string>
+    <!-- Button under Sign in that opens the server\'s page for creating an account in the browser -->
+    <string name="signin_create_account">Create an account</string>
+    <!-- Note under Create an account where the server\'s administrator approves every new account -->
+    <string name="signin_approval">An administrator approves new accounts first.</string>
+    <!-- Note under Create an account on an Aloha Social server whose administrator approves every new account; "Log in" is the button in the welcome email -->
+    <string name="signin_approval_then_email">An administrator approves new accounts first. The Log in button in the welcome email then finishes signing in here.</string>
     <!-- Button that goes back to typing another server -->
     <string name="signin_other_server">Use another server</string>
     <!-- Status while the browser is open for signing in; announced by screen readers -->
