@@ -93,6 +93,7 @@ internal fun translated(row: StatusRowUi, state: TranslationUi?): StatusRowUi {
         row.copy(
             body = body.toAnnotatedString(colors),
             plainText = body.plainText,
+            largeEmoji = body.isFewEmoji(),
             spoiler = done.spoiler?.takeIf { row.spoiler != null && it.isNotBlank() }
                 ?.let { StatusHtmlParser.parseText(it, row.emojis).toAnnotatedString(colors) }
                 ?: row.spoiler,

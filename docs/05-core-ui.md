@@ -176,6 +176,10 @@ marker to the newest.
 
 Rules:
 
+- **A post of one to three emoji**, whitespace aside and nothing else in it
+  (flags, keycaps, skin tones, ZWJ and tag sequences, and the post's own
+  custom emoji, which scale with the text), is drawn at 2.5 times the body
+  size, in the timeline and in threads, for posts from every server.
 - **A picture drawn wider than its preview**, in pixels, loads the original
   `url` where `meta.original` and `meta.small` give both widths, the original
   is the wider one and at most 2560 px wide, and it is neither a GIF nor a

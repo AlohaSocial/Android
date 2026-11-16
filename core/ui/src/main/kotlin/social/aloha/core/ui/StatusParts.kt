@@ -35,6 +35,7 @@ import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.isSpecified
 import coil3.compose.AsyncImage
 import java.time.Instant
 import social.aloha.core.designsystem.AlohaIcons
@@ -105,7 +106,9 @@ private fun BodyText(row: StatusRowUi, animateEmoji: Boolean, focused: Boolean, 
     } else {
         MaterialTheme.typography.bodyLarge
     }
-    val read = style.asRead(LocalReadingStyle.current).contentDirection()
+    val read = style.asRead(LocalReadingStyle.current).contentDirection().let {
+        if (row.largeEmoji) it.enlarged() else it
+    }
     val emoji = rememberEmojiContent(row.emojis, animateEmoji)
     if (caption) return Caption(row, read, emoji)
     val text = @Composable { Text(row.body, inlineContent = emoji, style = read) }
@@ -116,6 +119,12 @@ private fun BodyText(row: StatusRowUi, animateEmoji: Boolean, focused: Boolean, 
         }
     }
 }
+
+/** [this] at [LARGE_EMOJI_SCALE] times its size, its line height with it. */
+private fun TextStyle.enlarged(): TextStyle = copy(
+    fontSize = if (fontSize.isSpecified) fontSize * LARGE_EMOJI_SCALE else fontSize,
+    lineHeight = if (lineHeight.isSpecified) lineHeight * LARGE_EMOJI_SCALE else lineHeight,
+)
 
 /** The content warning, with the button that shows what it hides or hides it again. */
 @Composable
