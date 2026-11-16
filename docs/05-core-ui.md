@@ -176,6 +176,11 @@ marker to the newest.
 
 Rules:
 
+- **A picture drawn wider than its preview**, in pixels, loads the original
+  `url` where `meta.original` and `meta.small` give both widths, the original
+  is the wider one and at most 2560 px wide, and it is neither a GIF nor a
+  gifv; Aloha Social 0.26.299 scales previews to at most 800 px a side (read
+  from source, `CacheDocumentService::RESIZED_WIDTH`). The media viewer is unchanged.
 - **The context line** carries boost attribution, reply attribution ("Replying
   to @bob"), pin markers, and filter warnings. One line, never two.
 - **Handles show the host** when it differs from the reading account's host.

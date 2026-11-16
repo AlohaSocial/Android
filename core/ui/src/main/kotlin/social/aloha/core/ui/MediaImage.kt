@@ -5,7 +5,7 @@ package social.aloha.core.ui
 
 import android.graphics.Bitmap
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -21,13 +21,15 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import coil3.compose.AsyncImage
 import social.aloha.core.media.BlurHash
+import social.aloha.core.model.AttachmentKind
 import social.aloha.core.model.MediaAttachment
 import social.aloha.core.model.MediaFocus
 
 /**
  * An attachment's still image: the blurhash painted at once in a box already the image's shape, so the
- * row never shifts, then the preview cropped around the focal point the author set. [contentDescription]
- * is the author's alt text; a missing one is null here, and the row says the image has none.
+ * row never shifts, then the preview cropped around the focal point the author set, or the original where
+ * the box needs more pixels than the preview has ([stillUrl]). [contentDescription] is the author's alt
+ * text; a missing one is null here, and the row says the image has none.
  */
 @Composable
 public fun MediaImage(
@@ -38,9 +40,9 @@ public fun MediaImage(
 ) {
     val placeholder = rememberBlurHashPainter(attachment.blurhash)
     val box = if (fitToAspect) modifier.aspectRatio(attachment.displayAspectRatio.toFloat()) else modifier
-    Box(box.background(MaterialTheme.colorScheme.surfaceContainerHigh)) {
+    BoxWithConstraints(box.background(MaterialTheme.colorScheme.surfaceContainerHigh)) {
         AsyncImage(
-            model = attachment.previewUrl ?: attachment.url,
+            model = stillUrl(attachment, if (constraints.hasBoundedWidth) constraints.maxWidth else 0),
             contentDescription = contentDescription,
             placeholder = placeholder,
             error = placeholder,
@@ -49,6 +51,23 @@ public fun MediaImage(
             modifier = Modifier.matchParentSize(),
         )
     }
+}
+
+/**
+ * Where to draw [attachment]'s still image from when it is [drawnWidth] pixels wide: the original where the
+ * preview is narrower than that, both widths are known, and the original is wider than the preview and at
+ * most [MAX_ORIGINAL_WIDTH] pixels wide; the preview otherwise. Aloha Social scales previews to at most
+ * 800 pixels a side. A video, a GIF or a gifv keeps its still preview.
+ */
+internal fun stillUrl(attachment: MediaAttachment, drawnWidth: Int): String? {
+    val preview = attachment.previewUrl ?: return attachment.url
+    val original = attachment.url ?: return preview
+    val previewWidth = attachment.meta?.small?.width ?: return preview
+    val originalWidth = attachment.meta?.original?.width ?: return preview
+    val still = attachment.type == AttachmentKind.Image &&
+        !original.substringBefore('?').endsWith(".gif", ignoreCase = true)
+    val sharper = drawnWidth > previewWidth && originalWidth in (previewWidth + 1)..MAX_ORIGINAL_WIDTH
+    return if (still && sharper) original else preview
 }
 
 /**
@@ -73,3 +92,4 @@ public fun rememberBlurHashPainter(hash: String?): Painter? = remember(hash) {
 }
 
 private const val PLACEHOLDER_SIZE = 32
+private const val MAX_ORIGINAL_WIDTH = 2560
