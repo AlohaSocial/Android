@@ -5,6 +5,8 @@ package social.aloha.core.data
 
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import okhttp3.HttpUrl
@@ -48,6 +50,7 @@ public class SignInCoordinator @Inject constructor(
     private val clients: ClientFactory,
 ) {
     private val json = Json { ignoreUnknownKeys = true }
+    private val claiming = Mutex()
 
     /** Registers where needed and returns the page to open in the browser. */
     public suspend fun beginAuthorization(server: DiscoveredServer): Authorization {
@@ -63,7 +66,9 @@ public class SignInCoordinator @Inject constructor(
         val (url, started) =
             authorizationUrl(OAuthEndpoints.from(metadata, base), base, registration.clientId, redirects.redirectUri())
         val pending = started.copy(nodeInfo = outcome.nodeInfo)
-        vault.put(VaultKey.PendingAuthorization, json.encodeToString(PendingAuthorization.serializer(), pending))
+        claiming.withLock {
+            vault.put(VaultKey.PendingAuthorization, json.encodeToString(PendingAuthorization.serializer(), pending))
+        }
         return Authorization.Started(url.toString())
     }
 
@@ -91,7 +96,9 @@ public class SignInCoordinator @Inject constructor(
             redirects.redirectUri(),
             scope = OAuthIdentity.MODERATOR_SCOPES,
         )
-        vault.put(VaultKey.PendingAuthorization, json.encodeToString(PendingAuthorization.serializer(), pending))
+        claiming.withLock {
+            vault.put(VaultKey.PendingAuthorization, json.encodeToString(PendingAuthorization.serializer(), pending))
+        }
         return Authorization.Started(url.toString())
     }
 
@@ -111,9 +118,12 @@ public class SignInCoordinator @Inject constructor(
      * the screen that took it went away mid-way, finds nothing to finish.
      */
     public suspend fun complete(callbackUri: String): SignInResult {
-        val pending = pending() ?: return SignInResult.NotForUs
-        val callback = OAuthCallback.parse(callbackUri, pending.state)
-        if (callback != OAuthCallback.StateMismatch) cancel()
+        val (pending, callback) = claiming.withLock {
+            val pending = pending() ?: return SignInResult.NotForUs
+            val callback = OAuthCallback.parse(callbackUri, pending.state)
+            if (callback != OAuthCallback.StateMismatch) cancel()
+            pending to callback
+        }
         return when (callback) {
             OAuthCallback.StateMismatch -> SignInResult.NotForUs
             is OAuthCallback.Denied -> refused(callback.reason)
@@ -128,10 +138,10 @@ public class SignInCoordinator @Inject constructor(
      * as [complete] is: a code the server refuses means starting over.
      */
     public suspend fun completeWithCode(code: String): SignInResult {
-        val pending = pending() ?: return SignInResult.NotForUs
-        val typed = code.trim().ifEmpty { return refused(null) }
-        cancel()
-        return exchange(pending, typed)
+        val typed = code.trim()
+        val pending = claiming.withLock { pending()?.also { if (typed.isNotEmpty()) cancel() } }
+            ?: return SignInResult.NotForUs
+        return if (typed.isEmpty()) refused(null) else exchange(pending, typed)
     }
 
     private fun refused(reason: String?) = SignInResult.Failed(SignInProblem.Refused(reason))

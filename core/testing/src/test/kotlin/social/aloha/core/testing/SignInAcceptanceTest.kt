@@ -11,6 +11,8 @@ import java.util.concurrent.CopyOnWriteArrayList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
@@ -176,6 +178,17 @@ class SignInAcceptanceTest(private val configuration: MockServerConfiguration) {
         val exchange = mock.requests.single { it.url.encodedPath.endsWith("/oauth/token") }.body?.utf8().orEmpty()
         assertTrue(exchange, Regex("(^|&)code=${MockCredentials.AUTHORIZATION_CODE}(&|$)").containsMatchIn(exchange))
         assertTrue(exchange, "urn%3Aietf%3Awg%3Aoauth%3A2.0%3Aoob" in exchange)
+    }
+
+    @Test
+    fun `two callbacks at once finish one sign-in, with one exchange`() = runBlocking {
+        val server = finder.found(mock.origin.toString())
+        val authorize = (coordinator.beginAuthorization(server) as Authorization.Started).url.toHttpUrl()
+        val callback = "alohasocial://oauth-callback/?code=mock-code&state=${authorize.queryParameter("state")}"
+        val results = (1..2).map { async(Dispatchers.Default) { coordinator.complete(callback) } }.awaitAll()
+        assertEquals(1, results.count { it is SignInResult.SignedIn })
+        assertEquals(1, results.count { it == SignInResult.NotForUs })
+        assertEquals(1, mock.requests.count { it.url.encodedPath.endsWith("/oauth/token") })
     }
 
     @Test
