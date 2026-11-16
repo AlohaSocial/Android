@@ -40,6 +40,7 @@ import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
@@ -187,7 +188,12 @@ public fun StatusCard(
         Column(
             modifier = modifier
                 .fillMaxWidth()
-                .opens(label, customActions, onOpen = { actions.onOpen(row.statusId) }.takeUnless { focused })
+                .opens(
+                    label,
+                    customActions,
+                    heading = row.articleTitle != null,
+                    onOpen = { actions.onOpen(row.statusId) }.takeUnless { focused },
+                )
                 .padding(horizontal = AlohaSpacing.m, vertical = if (compact) AlohaSpacing.xs else AlohaSpacing.s),
             verticalArrangement = Arrangement.spacedBy(AlohaSpacing.xxs),
         ) {
@@ -250,15 +256,21 @@ private fun CardLayout(
 }
 
 /**
- * The card as one element for a screen reader, read as [label] with [actions] as its custom actions, and
- * opened by a tap through [onOpen]; the focused post passes none, since it is the one open.
+ * The card as one element for a screen reader, read as [label] with [actions] as its custom actions, a
+ * [heading] to jump between where it is a long-form post, and opened by a tap through [onOpen]; the
+ * focused post passes none, since it is the one open.
  */
-private fun Modifier.opens(label: String, actions: List<CustomAccessibilityAction>, onOpen: (() -> Unit)?): Modifier =
-    (if (onOpen != null) clickable(onClick = onOpen) else this).clearAndSetSemantics {
-        contentDescription = label
-        customActions = actions
-        if (onOpen != null) onClick { onOpen().let { true } }
-    }
+private fun Modifier.opens(
+    label: String,
+    actions: List<CustomAccessibilityAction>,
+    heading: Boolean,
+    onOpen: (() -> Unit)?,
+): Modifier = (if (onOpen != null) clickable(onClick = onOpen) else this).clearAndSetSemantics {
+    contentDescription = label
+    customActions = actions
+    if (heading) heading()
+    if (onOpen != null) onClick { onOpen().let { true } }
+}
 
 /** How a card is drawn, beyond the row it draws. */
 private data class Flags(

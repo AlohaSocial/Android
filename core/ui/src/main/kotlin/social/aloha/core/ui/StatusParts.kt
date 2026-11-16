@@ -56,6 +56,7 @@ internal fun StatusBody(
     underPictures: (@Composable () -> Unit)? = null,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(AlohaSpacing.s)) {
+        row.articleTitle?.let { ArticleTitle(it, focused) }
         if (underPictures != null) {
             // a picture shown first, what comes under it, and its words as a caption, closed up as in a photo app
             Column {
@@ -78,6 +79,13 @@ internal fun StatusBody(
         row.event?.let { EventCard(it, row.url, now, actions) }
         StatusExtras(row, canReact, actions)
     }
+}
+
+/** A long-form post's heading, larger when [focused], as the body it heads is; the card reads as a heading. */
+@Composable
+private fun ArticleTitle(title: String, focused: Boolean) {
+    val style = if (focused) MaterialTheme.typography.headlineSmall else MaterialTheme.typography.titleMedium
+    Text(title, style = style.asRead(LocalReadingStyle.current).contentDirection())
 }
 
 /** The post's pictures; [edgeToEdge], they run through the card's margin to the screen's edges, unrounded. */

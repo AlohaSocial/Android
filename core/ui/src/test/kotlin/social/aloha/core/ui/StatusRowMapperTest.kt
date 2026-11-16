@@ -14,6 +14,7 @@ import social.aloha.core.html.RichTextCache
 import social.aloha.core.model.Card
 import social.aloha.core.model.CustomEmoji
 import social.aloha.core.model.QuotedStatus
+import social.aloha.core.model.StatusArticle
 import social.aloha.core.testing.StatusSamples
 import social.aloha.core.testing.StatusSamples.NOW
 import social.aloha.core.ui.StatusRowUi.ContextLine
@@ -52,6 +53,25 @@ class StatusRowMapperTest {
         assertTrue(mapper.map(party, null).largeEmoji)
         assertTrue(mapper.map(StatusSamples.boost.copy(reblog = party), null).largeEmoji)
         assertFalse(mapper.map(StatusSamples.post(), null).largeEmoji)
+    }
+
+    @Test
+    fun `a long-form post heads its row with the title, without the copy at the top of its text`() {
+        val article = StatusSamples.post("<h2>On tides</h2><p>Body</p>").copy(article = StatusArticle("On tides"))
+        val row = mapper.map(StatusSamples.boost.copy(reblog = article), null)
+        assertEquals("On tides", row.articleTitle)
+        assertEquals("Body", row.plainText)
+        assertEquals("Body", row.body.text)
+        val plain = mapper.map(StatusSamples.post("<h2>On tides</h2><p>Body</p>"), null)
+        assertNull(plain.articleTitle)
+        assertTrue(plain.plainText.startsWith("On tides"))
+    }
+
+    @Test
+    fun `a quoted long-form post keeps its whole text in the excerpt`() {
+        val article = StatusSamples.post("<h2>On tides</h2><p>Body</p>").copy(article = StatusArticle("On tides"))
+        val row = mapper.map(StatusSamples.post().copy(quote = QuotedStatus("accepted", article)), null)
+        assertTrue(checkNotNull(row.quote).excerpt.text.startsWith("On tides"))
     }
 
     @Test

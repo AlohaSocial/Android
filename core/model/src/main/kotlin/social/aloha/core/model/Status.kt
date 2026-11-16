@@ -25,6 +25,8 @@ import kotlinx.serialization.Transient
  * @property video the PeerTube-shaped facts Aloha Social carries on a video post.
  * @property videoCard the facts Aloha Social carries on every video post, `video_card`.
  * @property event when and where, on a post for an event; Aloha Social sends it on those alone.
+ * @property article the heading of a long-form post (an ActivityStreams `Article` or `Page`), where Aloha Social
+ *   sends one; it also stands at the top of [content] for clients that do not read this field.
  * @property watchProgress where the reader got to in the video, as the server sent it with this read;
  *   never cached, since it is stale as soon as the reader plays on.
  */
@@ -73,6 +75,7 @@ public data class Status(
     val video: VideoDetails? = null,
     val videoCard: VideoCardInfo? = null,
     val event: StatusEvent? = null,
+    val article: StatusArticle? = null,
     @Transient val watchProgress: WatchProgress? = null,
     /** Whether the post was made on the reader's server; null where the server did not say. */
     val local: Boolean? = null,
@@ -169,6 +172,15 @@ public data class StatusEvent(
     @Serializable
     public enum class Status { Confirmed, Tentative, Cancelled }
 }
+
+/**
+ * The heading of a long-form post.
+ *
+ * @property title plain text, at most 500 characters, never blank.
+ * @property type `Article` or `Page`, the ActivityStreams type the post arrived as.
+ */
+@Serializable
+public data class StatusArticle(val title: String, val type: String = "Article")
 
 /** A place a post was tagged with. */
 @Serializable

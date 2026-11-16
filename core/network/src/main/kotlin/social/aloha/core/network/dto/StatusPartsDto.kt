@@ -21,6 +21,7 @@ import social.aloha.core.model.FilterResult
 import social.aloha.core.model.Mention
 import social.aloha.core.model.QuotedStatus
 import social.aloha.core.model.Reaction
+import social.aloha.core.model.StatusArticle
 import social.aloha.core.model.StatusEvent
 import social.aloha.core.model.StatusPlace
 import social.aloha.core.model.StatusTag
@@ -28,6 +29,7 @@ import social.aloha.core.network.decoding.FlexibleIdSerializer
 import social.aloha.core.network.decoding.LenientBoolSerializer
 import social.aloha.core.network.decoding.LenientInstantSerializer
 import social.aloha.core.network.decoding.LenientIntSerializer
+import social.aloha.core.network.decoding.LenientTextSerializer
 import social.aloha.core.network.decoding.LenientUrlSerializer
 import social.aloha.core.network.decoding.LossyListSerializer
 import social.aloha.core.network.decoding.OptionalDoubleSerializer
@@ -95,6 +97,12 @@ internal data class StatusEventDto(
     val participationUrl: String? = null,
 )
 
+@Serializable
+internal data class StatusArticleDto(
+    @Serializable(with = LenientTextSerializer::class) val title: String? = null,
+    @Serializable(with = LenientTextSerializer::class) val type: String? = null,
+)
+
 /** Who may quote a post, and what quoting it comes to for the reader. */
 @Serializable
 internal data class QuoteApprovalDto(@SerialName("current_user") val currentUser: String? = null)
@@ -112,6 +120,8 @@ internal object ApplicationOrNull : KSerializer<ApplicationSummaryDto?> by OrNul
 internal object StatusPlaceOrNull : KSerializer<StatusPlaceDto?> by OrNullSerializer(StatusPlaceDto.serializer())
 
 internal object StatusEventOrNull : KSerializer<StatusEventDto?> by OrNullSerializer(StatusEventDto.serializer())
+
+internal object StatusArticleOrNull : KSerializer<StatusArticleDto?> by OrNullSerializer(StatusArticleDto.serializer())
 
 internal object VideoDetailsOrNull : KSerializer<VideoDetailsDto?> by OrNullSerializer(VideoDetailsDto.serializer())
 
@@ -169,5 +179,9 @@ internal fun StatusEventDto.toDomain(): StatusEvent = StatusEvent(
     StatusEvent.Status.entries.firstOrNull { it.name.equals(status, ignoreCase = true) },
     participationUrl,
 )
+
+/** Null where there is no title to show. */
+internal fun StatusArticleDto.toDomain(): StatusArticle? =
+    title?.trim()?.takeIf { it.isNotEmpty() }?.let { StatusArticle(it, type?.takeIf(String::isNotBlank) ?: "Article") }
 
 internal fun StatusPlaceDto.toDomain(): StatusPlace = StatusPlace(id, name, country, latitude, longitude ?: long)

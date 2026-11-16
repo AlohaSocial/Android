@@ -8,7 +8,9 @@ import android.content.Intent
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.test.core.app.ApplicationProvider
 import java.time.Instant
@@ -24,6 +26,7 @@ import social.aloha.core.designsystem.AlohaTheme
 import social.aloha.core.html.RichTextCache
 import social.aloha.core.model.SensitiveMediaPolicy
 import social.aloha.core.model.Status
+import social.aloha.core.model.StatusArticle
 import social.aloha.core.model.StatusEvent
 import social.aloha.core.testing.StatusSamples
 
@@ -91,6 +94,33 @@ class StatusCardAccessibilityTest {
         perform("Show post")
         assertTrue(labels().contains("Hide post"))
         compose.onNodeWithContentDescription("Aloha from the", substring = true).assertExists()
+    }
+
+    @Test
+    fun `a long-form post is a heading read with its title`() {
+        show(StatusSamples.post("<h2>On tides</h2><p>Body</p>").copy(article = StatusArticle("On tides")))
+        val node = card().fetchSemanticsNode()
+        assertTrue(SemanticsProperties.Heading in node.config)
+        val said = node.config[SemanticsProperties.ContentDescription].single()
+        assertTrue(said, said.contains("On tides. Body"))
+        compose.onAllNodesWithText("On tides", useUnmergedTree = true).assertCountEquals(1)
+    }
+
+    @Test
+    fun `a long-form title stays behind its content warning until it is opened`() {
+        show(
+            StatusSamples.post("<h2>On tides</h2><p>Body</p>")
+                .copy(article = StatusArticle("On tides"), spoilerText = "Sea"),
+        )
+        compose.onAllNodesWithText("On tides", useUnmergedTree = true).assertCountEquals(0)
+        perform("Show post")
+        compose.onAllNodesWithText("On tides", useUnmergedTree = true).assertCountEquals(1)
+    }
+
+    @Test
+    fun `a post with no title is no heading`() {
+        show(StatusSamples.post())
+        assertTrue(SemanticsProperties.Heading !in card().fetchSemanticsNode().config)
     }
 
     @Test

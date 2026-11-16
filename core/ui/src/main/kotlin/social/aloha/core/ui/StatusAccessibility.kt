@@ -74,6 +74,7 @@ internal fun accessibilityLabel(row: StatusRowUi, now: Instant, bodyShown: Boole
     return listOfNotNull(
         context,
         stringResource(R.string.status_accessibility_header, row.author.plainName, age),
+        row.articleTitle,
         row.plainText.takeIf {
             it.isNotBlank()
         },

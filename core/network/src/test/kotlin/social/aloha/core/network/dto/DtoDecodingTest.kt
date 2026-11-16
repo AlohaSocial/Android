@@ -16,6 +16,7 @@ import social.aloha.core.model.NotificationKind
 import social.aloha.core.model.ProfileLayout
 import social.aloha.core.model.SeveranceEvent
 import social.aloha.core.model.Status
+import social.aloha.core.model.StatusArticle
 import social.aloha.core.model.StatusEvent
 import social.aloha.core.model.TimelineSource
 import social.aloha.core.model.Visibility
@@ -133,6 +134,18 @@ class DtoDecodingTest {
         assertNull(s.reblog)
         assertEquals(emptyList<Any>(), s.reactions)
         assertNull(s.place)
+    }
+
+    @Test
+    fun `a long-form post carries its title, and a blank or malformed one is absent`() {
+        val s = decodeStatus(status(""", "article": {"title": "On tides", "type": "Page"}"""))
+        assertEquals(StatusArticle("On tides", "Page"), s.article)
+        assertNull(decodeStatus(status()).article)
+        assertNull(decodeStatus(status(""", "article": null""")).article)
+        assertNull(decodeStatus(status(""", "article": {"title": "", "type": "Article"}""")).article)
+        assertNull(decodeStatus(status(""", "article": {"title": "  ", "type": "Article"}""")).article)
+        assertNull(decodeStatus(status(""", "article": "On tides"""")).article)
+        assertEquals(StatusArticle("On tides"), decodeStatus(status(""", "article": {"title": "On tides"}""")).article)
     }
 
     @Test
