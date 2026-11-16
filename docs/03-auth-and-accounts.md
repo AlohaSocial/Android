@@ -31,6 +31,7 @@ OAuth 2 with PKCE: `OAuthFlow` builds the requests and parses the callback, `OAu
 - The authorisation, token and userinfo endpoints come from the server's metadata only when they are on the API base's origin, and are fixed when the attempt begins; the exchange never fetches metadata again. OAuth requests never follow a redirect, which would carry the code, the secret or the verifier to wherever it points.
 - The attempt in flight (state, verifier, endpoints, NodeInfo) is kept in the encrypted vault, not in saved state, so it survives the process dying while the browser tab is open and never reaches a Bundle.
 - A callback is matched by its `state` before anything else in it is read: one for another attempt, a denial included, is dropped, and the sign-in on screen keeps waiting.
+- The attempt is read and claimed in one step before its code is exchanged (`SignInCoordinator`), so callbacks or typed codes that arrive together, or again, finish it once. The sign-in screen removes a callback from its inbox only after the claim, so a callback the screen did not live to finish is still there when it comes back.
 - A new account that `verify_credentials` answers 500 for is created from `/oauth/userinfo` with its profile pending.
 - After the exchange the server's capabilities are detected ([02-server-api.md](02-server-api.md)) and the account is stored.
 

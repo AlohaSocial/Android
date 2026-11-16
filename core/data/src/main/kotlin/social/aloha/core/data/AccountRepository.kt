@@ -119,7 +119,7 @@ public class AccountRepository @Inject constructor(
         )
         dao.upsert(entity)
         preferences.setActiveAccountId(id)
-        completed.tryEmit(id)
+        completed.emit(id)
         return entity.toDomain()
     }
 
