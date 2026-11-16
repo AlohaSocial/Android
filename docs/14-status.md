@@ -4,15 +4,16 @@ What is built, what is in progress, and what is not built or deliberately differ
 
 ## Progress
 
-Phase 22, what Aloha Social changed after 0.26.299 (server `aloha/main` at `6fb80deee`, 2026-11-15, not yet released), taken up as pull requests. Legend: ⬜ not started · 🔄 in progress · ✅ done · ⚠️ blocked · 🚫 dropped.
+Phase 22, what Aloha Social changed after 0.26.299 (server `aloha/main` at `6fb80deee`, 2026-11-15, not yet released; read from its code and `docs/API.md`, not from a live instance), taken up in one pull request, with what Phase 21 left out (21k to 21m) stacked on it. Legend: ⬜ not started · 🔄 in progress · ✅ done · ⚠️ blocked · 🚫 dropped.
 
 | Item | Status | Note |
 |---|---|---|
-| 22a: Create an account from sign-in, and come back signed in | ⬜ | |
-| 22b: Sharp pictures on dense screens | Aloha Social scales a picture's preview to at most 800 px a side, and the web app now draws the original where the screen needs more. A picture drawn wider than its preview, in pixels, loads `url` instead of `preview_url` where `meta.original` gives both widths, the original is the wider one and at most 2560 px wide; a GIF keeps its still preview. Elsewhere, and on Mastodon, which serves a preview wide enough, nothing changes |
-| 22c: A post of one to three emoji drawn large | A post whose text is nothing but one to three emoji (flags, keycaps, skin tones, ZWJ and tag sequences, and the post's own custom emoji) is drawn at 2.5 times the text size in the timeline, as Aloha Social's web app and messengers draw a lone emoji. Done on the client, for posts from every server |
-| 22b: Sharp pictures on dense screens | ⬜ | |
-| 22c: A post of one to three emoji drawn large | ⬜ | |
+| 22a: Create an account from sign-in, and come back signed in | 🔄 | |
+| 22b: Sharp pictures on dense screens | 🔄 | |
+| 22c: A post of one to three emoji drawn large | 🔄 | |
+| 21k: Long-form titles | ⬜ | Stacked on Phase 22 |
+| 21l: One request for the badges | ⬜ | Stacked on 21k |
+| 21m: For You v4 | ⬜ | Stacked on 21l |
 | The web app's post frames and action row, Photos and Shorts layouts, recap and search fixes | 🚫 | Web only; see Not built |
 
 ## Built
@@ -54,6 +55,11 @@ Between the phases: CI artifact retention ([#3](https://github.com/AlohaSocial/A
 | A merged timeline of every account, the default view | Like a mail client's unified inbox, with each account still selectable on its own; this was a non-goal for 1.0 in [00-overview.md](00-overview.md) §6 until 2026-10-11. The data layer ([04-data-model.md](04-data-model.md)), "All accounts" in the account sheet, and Home's Following of every account together are built ([03-auth-and-accounts.md](03-auth-and-accounts.md)); Notifications, Photos, Video, News, Shorts and Audio of every account together are built too |
 | Phase 22: what Aloha Social changed after 0.26.299 | Taken up as pull requests, each taking its row off this table and its line in Progress to done; the server facts are in [02-server-api.md](02-server-api.md). Bluesky is left out for now |
 | 22a: Create an account from sign-in, and come back signed in | After 0.26.299 `/api/v1/instance` and `/api/v2/instance` report the sign-up as it stands (they said closed before), v2 names the sign-up page as `registrations.url`, and `/signup` takes `return`, the app's own authorization request, and signs the new account in and continues it. The server card offers Create an account while the sign-up is open: it starts the authorization as Sign in does, keeping the pending authorization in the vault, and opens `registrations.url` with `return` (and `invite`, from an invite link the sign-in screen picked up) in the same sign-in tab, so the redirect back to the app finishes the sign-in. With `approval_required` the card says an administrator approves new accounts first, and the welcome email's Log in continues the same authorization later. `return` goes only to Aloha Social, told apart by NodeInfo's software name: Mastodon and any other server that names a sign-up page get it opened without `return`, and the person signs in afterwards; a server that names none offers nothing |
+| 22b: Sharp pictures on dense screens | Aloha Social scales a picture's preview to at most 800 px a side, and the web app now draws the original where the screen needs more. A picture drawn wider than its preview, in pixels, loads `url` instead of `preview_url` where `meta.original` gives both widths, the original is the wider one and at most 2560 px wide; a GIF keeps its still preview. Elsewhere, and on Mastodon, which serves a preview wide enough, nothing changes |
+| 22c: A post of one to three emoji drawn large | A post whose text is nothing but one to three emoji (flags, keycaps, skin tones, ZWJ and tag sequences, and the post's own custom emoji) is drawn at 2.5 times the text size in the timeline, as Aloha Social's web app and messengers draw a lone emoji. Done on the client, for posts from every server |
+| 21k: Long-form titles | From 0.26.280 a status for an imported ActivityStreams `Article` or `Page` with a name carries `article: {title, type}`, the title plain text of at most 500 characters, which also stays at the top of `content` for clients that do not read the field. Show the title as the post's heading and leave the copy at the top of the content out |
+| 21l: One request for the badges | From 0.26.299 `GET /api/v1/social/badges` answers the unread notifications, the pending follow requests and their notice, and the unread conversations in one request, each counted as its own route counts it, with one `ETag` and `304`. Where the server serves it, the unread poll asks it instead of the three routes |
+| 21m: For You v4 | Where an administrator turned on `rec_v4_enabled` (the `/api/v1/recommendations/*` routes answer 404 while it is off), For You reads `/api/v1/recommendations/timeline` with its cursor instead of the interests timeline, the learning switch is the per-account consent of `PUT /api/v1/recommendations/learning` (with its revision; 409 answers the current state), a post's menu offers hiding it and more or less like it through `POST /api/v1/recommendations/feedback` with its ten-minute Undo, and while learning is on the app sends its reading signals to `/api/v1/recommendations/signals` instead of `/api/v1/interests/signals` |
 
 ## Not built
 
@@ -64,7 +70,7 @@ Between the phases: CI artifact retention ([#3](https://github.com/AlohaSocial/A
 | The story player from a profile | [06-media-modes.md](06-media-modes.md) | A profile's Stories tab lists the stories and opens each on the web; the player is reachable from Photos only |
 | Push through the Nextcloud push proxy (FCM) | [08-notifications-sync.md](08-notifications-sync.md) §2 | Push is UnifiedPush in both flavours. FCM would be `gplay` only and needs the push proxy to allow the app |
 | Encrypted direct messages bound to the app lock | [11-safety-privacy-appstore.md](11-safety-privacy-appstore.md) | The app lock guards the screen, not the data |
-| Not taken up from Phase 21 | [02-server-api.md](02-server-api.md) | A long-form post's `article.title` (0.26.280) stays at the top of its `content`, which the app shows. `GET /api/v1/social/badges` (0.26.299) would save requests the app makes already. For You v4 (`/api/v1/recommendations/*`) is off by default on the server and a product decision. Posting through `POST /api/v1/post` was removed in 0.26.294; the app never used it |
+| Not taken up from Phase 21 | [02-server-api.md](02-server-api.md) | Posting through `POST /api/v1/post` was removed in 0.26.294; the app never used it |
 | Not taken up from Phase 22 | [02-server-api.md](02-server-api.md) | The rest changed only Aloha Social's web app: one frame for link previews, quoted posts and events, a quieter action row on touch screens, Shorts, Photos, Videos and Discover without a visible title, posting from the sidebar only, the weekly recap naming the instance (the app's text says "your server" already), and search results kept readable while asked again (the app does not dim them). A link preview's image already keeps its shape before it loads |
 | Handoff and Spotlight counterparts | [00-overview.md](00-overview.md) §5 | No Android equivalent is planned yet |
 | The reproducible-build check | [12-store.md](12-store.md) | Two clean builds of the first release tag, compared, when it is cut; nothing in CI checks it today |
