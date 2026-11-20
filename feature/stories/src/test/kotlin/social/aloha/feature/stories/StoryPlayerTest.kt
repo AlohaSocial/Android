@@ -63,7 +63,7 @@ class StoryPlayerTest {
         }
     }
 
-    private fun story(): SemanticsNodeInteraction = compose.onNodeWithContentDescription("Story by", substring = true)
+    private fun story(): SemanticsNodeInteraction = compose.onNodeWithContentDescription("Short by", substring = true)
 
     private fun SemanticsNodeInteraction.act(label: String) {
         val action = fetchSemanticsNode().config[SemanticsActions.CustomActions].first { it.label == label }
@@ -78,12 +78,12 @@ class StoryPlayerTest {
     fun `a screen reader goes forward and back as taps do, and past the last story the player closes`() {
         compose.mainClock.autoAdvance = false
         play(start = 0)
-        compose.onNodeWithContentDescription("Story by Alice Example. Sunset").assertIsDisplayed()
-        story().act("Next story")
-        compose.onNodeWithContentDescription("Story by Bob").assertIsDisplayed()
-        story().act("Previous story")
-        compose.onNodeWithContentDescription("Story by Alice Example. Sunset").assertIsDisplayed()
-        repeat(3) { story().act("Next story") }
+        compose.onNodeWithContentDescription("Short by Alice Example. Sunset").assertIsDisplayed()
+        story().act("Next short")
+        compose.onNodeWithContentDescription("Short by Bob").assertIsDisplayed()
+        story().act("Previous short")
+        compose.onNodeWithContentDescription("Short by Alice Example. Sunset").assertIsDisplayed()
+        repeat(3) { story().act("Next short") }
         assertTrue(closed)
         // the reader's own are never marked; anybody else's each time they show, which the rail's
         // model makes once

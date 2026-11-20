@@ -264,7 +264,7 @@ class ComposerScreenshotTest {
                 "Describe"
         }
         compose.onNodeWithText(
-            "The pictures and videos of this post, and their descriptions",
+            "The photos and videos of this post, and their descriptions",
             substring = true,
         ).assertExists()
         compose.onNode(describable).assertDoesNotExist()

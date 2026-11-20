@@ -165,7 +165,7 @@ class NotificationRaiserTest {
         page.favouritesNewest = 130
         raiser.onUnreadChanged(account, count = 3)
         val favourites = raised().single { it.channelId.endsWith(":favourites") }
-        assertEquals("Alice and 2 others favourited your post", favourites.extras.getString(Notification.EXTRA_TITLE))
+        assertEquals("Alice and 2 others favorited your post", favourites.extras.getString(Notification.EXTRA_TITLE))
         assertEquals(2, raised().size)
     }
 
@@ -181,7 +181,7 @@ class NotificationRaiserTest {
         }
         assertTrue(checkNotNull(actions.first().remoteInputs).isNotEmpty())
         // a mention's third button mutes the thread rather than boosting it
-        assertEquals(listOf("Reply", "Favourite", "Mute conversation"), actions.map { it.title.toString() })
+        assertEquals(listOf("Reply", "Favorite", "Mute conversation"), actions.map { it.title.toString() })
         // nothing is done from a locked phone
         assertTrue(actions.all { it.isAuthenticationRequired })
         // a favourite notice is about the person's own post: nothing to favourite or answer there
@@ -258,7 +258,7 @@ class NotificationRaiserTest {
         val digest = raised().single { it.channelId.endsWith(":digest") }
         // the follow at 90 is below the read marker at 100, so the two favourites are all that waited
         assertEquals("2 new notifications", digest.extras.getString(Notification.EXTRA_TITLE))
-        assertEquals("2 favourites", digest.extras.getString(Notification.EXTRA_TEXT))
+        assertEquals("2 favorites", digest.extras.getString(Notification.EXTRA_TEXT))
         // the digest said it: a second one, and the next poll, add nothing
         raiser.digest()
         raiser.onUnreadChanged(account, count = 3)

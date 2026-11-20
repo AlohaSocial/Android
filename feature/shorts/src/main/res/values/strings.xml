@@ -15,9 +15,9 @@
     <!-- Screen reader action that shows and plays a sensitive short, as a tap does -->
     <string name="shorts_show">Show and play</string>
     <!-- Favourites the short -->
-    <string name="shorts_favourite">Favourite</string>
+    <string name="shorts_favourite">Favorite</string>
     <!-- Takes the favourite back -->
-    <string name="shorts_unfavourite">Remove favourite</string>
+    <string name="shorts_unfavourite">Remove favorite</string>
     <!-- Boosts the short -->
     <string name="shorts_boost">Boost</string>
     <!-- Takes the boost back -->

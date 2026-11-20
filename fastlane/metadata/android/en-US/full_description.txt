@@ -1,4 +1,4 @@
-Aloha Social brings the fediverse to your phone and tablet: posts, photos, video, shorts, stories, news and audio, from Aloha Social servers first and from Mastodon and every server that speaks its API.
+Aloha Social brings the fediverse to your phone and tablet: posts, photos, video, shorts, news and audio, from Aloha Social servers first and from Mastodon and every server that speaks its API.
 
 <b>Made for Aloha Social</b>
 Sign in with your Nextcloud account, wear your Nextcloud’s colour, attach files from your Nextcloud, and get notifications through your Nextcloud. Everything Aloha Social adds is used where your server offers it; every other server works too.
@@ -11,7 +11,7 @@ Sign in with your Nextcloud account, wear your Nextcloud’s colour, attach file
 
 <b>Write</b>
 • Posts and threads, polls, content warnings, scheduled posts and drafts
-• Pictures and videos with descriptions, focal points and edits
+• Photos and videos with descriptions, focal points and edits
 • Posts that wait in an outbox when you are offline
 
 <b>Stay safe</b>

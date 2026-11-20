@@ -11,7 +11,7 @@
     <!-- Name of the notification channel for uploads, shown in the system's notification settings -->
     <string name="upload_channel">Uploads</string>
     <!-- Description of the uploads notification channel in the system's notification settings -->
-    <string name="upload_channel_description">Progress of pictures and videos being uploaded for a post</string>
+    <string name="upload_channel_description">Progress of photos and videos being uploaded for a post</string>
     <!-- Title of the notification shown while an export of the account is being saved to a file -->
     <string name="export_running">Exporting from your Nextcloud</string>
     <!-- Action on the notification of an export that stops it -->
@@ -75,7 +75,7 @@
     <!-- %s is who did it, one name or "Alice and 3 others" -->
     <string name="notifications_reblog">%s boosted your post</string>
     <!-- %s is who did it, one name or "Alice and 3 others" -->
-    <string name="notifications_favourite">%s favourited your post</string>
+    <string name="notifications_favourite">%s favorited your post</string>
     <!-- %s is who did it, one name or "Alice and 3 others" -->
     <string name="notifications_follow">%s followed you</string>
     <!-- %s is who joined Bluesky through a Bluesky starter pack the person made (a shared list of accounts to follow) -->
@@ -105,7 +105,7 @@
     <!-- Name of the notification channel for new followers and follow requests -->
     <string name="notification_channel_follows">Follows</string>
     <!-- Name of the notification channel for favourites of the person's posts -->
-    <string name="notification_channel_favourites">Favourites</string>
+    <string name="notification_channel_favourites">Favorites</string>
     <!-- Name of the notification channel for boosts of the person's posts -->
     <string name="notification_channel_boosts">Boosts</string>
     <!-- Name of the notification channel for ended polls -->
@@ -142,8 +142,8 @@
     </plurals>
     <!-- One part of a digest; %d is how many favourites of the person's posts -->
     <plurals name="notification_digest_favourites">
-        <item quantity="one">%d favourite</item>
-        <item quantity="other">%d favourites</item>
+        <item quantity="one">%d favorite</item>
+        <item quantity="other">%d favorites</item>
     </plurals>
     <!-- One part of a digest; %d is how many polls ended -->
     <plurals name="notification_digest_polls">
@@ -165,7 +165,7 @@
     <!-- Hint in the reply field of a notification -->
     <string name="notification_reply_hint">Your reply</string>
     <!-- Notification action that favourites the post -->
-    <string name="notification_favourite">Favourite</string>
+    <string name="notification_favourite">Favorite</string>
     <!-- Notification action that boosts the post -->
     <string name="notification_boost">Boost</string>
     <!-- Notification action on a mention that mutes its conversation: no more notifications from that thread -->

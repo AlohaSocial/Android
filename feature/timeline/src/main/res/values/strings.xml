@@ -66,7 +66,7 @@
     <!-- Name of the pinned feed of the reader's bookmarks -->
     <string name="timeline_feed_bookmarks">Bookmarks</string>
     <!-- Name of the pinned feed of the reader's favourites -->
-    <string name="timeline_feed_favourites">Favourites</string>
+    <string name="timeline_feed_favourites">Favorites</string>
     <!-- Action label of Home's feed name: lists the pinned feeds to switch to -->
     <string name="timeline_feeds_choose">Choose a feed</string>
     <!-- Action label of Home's feed name where a tap moves to the next pinned feed -->
@@ -83,8 +83,8 @@
     <string name="timeline_feed_about_notified">Posts by the people whose bell you rang on their profile, as they arrive.</string>
     <!-- First visit of the Bookmarks feed: what it holds -->
     <string name="timeline_feed_about_bookmarks">The posts you bookmarked, the latest first.</string>
-    <!-- First visit of the Favourites feed: what it holds -->
-    <string name="timeline_feed_about_favourites">The posts you favourited, the latest first.</string>
+    <!-- First visit of the Favorites feed: what it holds -->
+    <string name="timeline_feed_about_favourites">The posts you favorited, the latest first.</string>
     <!-- First visit of a list's feed: what it holds -->
     <string name="timeline_feed_about_list">The posts of the people in this list, and only theirs.</string>
     <!-- First visit of a hashtag's feed: what it holds -->
@@ -174,7 +174,7 @@
     <!-- Under the field above -->
     <string name="feeds_server_hint">Its address, such as mastodon.social</string>
     <!-- First visit of another server's feed: what it holds, and that acting on a post finds it on the reader's own server -->
-    <string name="timeline_feed_about_remote">Public posts by the people on this server, read from it directly. Replying, boosting or favouriting finds the post on your own server first.</string>
+    <string name="timeline_feed_about_remote">Public posts by the people on this server, read from it directly. Replying, boosting or favoriting finds the post on your own server first.</string>
     <!-- Said by a screen reader on the compose button while a draft waits -->
     <string name="timeline_compose_draft">A draft is waiting</string>
     <!-- Strip over the timeline when the server cannot be reached; the cached posts stay -->
@@ -235,7 +235,7 @@
     <!-- Read aloud while the first page of the timeline loads -->
     <string name="timeline_loading">Loading posts</string>
     <!-- Swipe action on a post, read aloud: favourite it -->
-    <string name="timeline_swipe_favourite">Favourite</string>
+    <string name="timeline_swipe_favourite">Favorite</string>
     <!-- Swipe action on a post, read aloud: boost it -->
     <string name="timeline_swipe_boost">Boost</string>
     <!-- Button that goes back from a hashtag's timeline -->

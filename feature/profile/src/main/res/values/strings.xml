@@ -83,7 +83,7 @@
     <!-- Profile tab with the account's collections, named sets of posts with pictures -->
     <string name="profile_tab_collections">Collections</string>
     <!-- Tab with the account's current stories -->
-    <string name="profile_tab_stories">Stories</string>
+    <string name="profile_tab_stories">Shorts</string>
     <!-- Heading of the strip showing twelve weeks of posting -->
     <string name="profile_highlights">Last 12 weeks</string>
     <!-- How much the account posted in the last twelve weeks; %d is the number -->
@@ -179,7 +179,7 @@
     <!-- Mute length: a week -->
     <string name="profile_mute_week">For a week</string>
     <!-- Checkbox in the mute dialog: their notifications go quiet too -->
-    <string name="profile_mute_notifications">Hide their notifications too</string>
+    <string name="profile_mute_notifications">Hide them from Activities too</string>
     <!-- Menu item that blocks the account's whole server -->
     <string name="profile_block_domain">Block their server</string>
     <!-- Menu item that unblocks the account's whole server -->

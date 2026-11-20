@@ -111,7 +111,7 @@ class MediaViewerTest {
                 MediaViewer(pictures, 0, { emptyList() }, actions, status = StatusSamples.post())
             }
         }
-        compose.onNodeWithContentDescription("Favourite").performClick()
+        compose.onNodeWithContentDescription("Favorite").performClick()
         compose.onNodeWithContentDescription("Reply").performClick()
         assertEquals(listOf("Favourite", "reply"), asked)
     }

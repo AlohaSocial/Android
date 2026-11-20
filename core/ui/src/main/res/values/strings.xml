@@ -65,7 +65,7 @@
     <!-- Label on a media row, in the mode that lists media instead of showing it: the media is marked sensitive -->
     <string name="status_media_sensitive">Sensitive</string>
     <!-- Kind of a media row in the mode that lists media instead of showing it -->
-    <string name="status_media_picture">Picture</string>
+    <string name="status_media_picture">Photo</string>
     <!-- Kind of a media row in the mode that lists media instead of showing it -->
     <string name="status_media_audio">Audio</string>
     <!-- Kind of a media row in the mode that lists media instead of showing it: a file the app cannot show -->
@@ -155,7 +155,7 @@
     <!-- Title of the account sheet a long press on reply opens: replies from another of the reader's accounts -->
     <string name="status_reply_as">Reply as</string>
     <!-- Title of the account sheet a long press on favourite opens -->
-    <string name="status_favourite_as">Favourite as</string>
+    <string name="status_favourite_as">Favorite as</string>
     <!-- Title of the account sheet a long press on bookmark opens -->
     <string name="status_bookmark_as">Bookmark as</string>
     <!-- Heading of a boost's long-press menu: whom the boost is seen by -->
@@ -175,11 +175,11 @@
     <!-- Screen reader action on a post: opens the accounts to reply as -->
     <string name="status_reply_as_other">Reply as another account</string>
     <!-- Screen reader action on a post: opens the accounts to favourite it as -->
-    <string name="status_favourite_as_other">Favourite as another account</string>
+    <string name="status_favourite_as_other">Favorite as another account</string>
     <!-- Screen reader action on a post: opens the accounts to bookmark it as -->
     <string name="status_bookmark_as_other">Bookmark as another account</string>
     <!-- Read aloud for an account with unread notifications in an account sheet -->
-    <string name="accounts_unread">Unread notifications</string>
+    <string name="accounts_unread">Unread activities</string>
     <!-- Post action: writes a post of one's own with this one quoted under it -->
     <string name="status_action_quote">Quote</string>
     <!-- Post action where the author approves each quote: asks them to allow it -->
@@ -189,9 +189,9 @@
     <!-- Action: undo a boost -->
     <string name="status_action_unboost">Undo boost</string>
     <!-- Action: favourite a post -->
-    <string name="status_action_favourite">Favourite</string>
+    <string name="status_action_favourite">Favorite</string>
     <!-- Action: undo a favourite -->
-    <string name="status_action_unfavourite">Remove favourite</string>
+    <string name="status_action_unfavourite">Remove favorite</string>
     <!-- Action: bookmark a post -->
     <string name="status_action_bookmark">Bookmark</string>
     <!-- Action: remove a bookmark -->
@@ -285,7 +285,7 @@
     <!-- Title of the dialog confirming that one's own post is deleted to be written again -->
     <string name="status_redraft_title">Delete and write again?</string>
     <!-- Body of that dialog: the post comes back as a new one, and goes with its likes, boosts and replies once that is out -->
-    <string name="status_redraft_body">The post opens as a new one to change. Once that is posted, the original is deleted, with its favourites, boosts and replies.</string>
+    <string name="status_redraft_body">The post opens as a new one to change. Once that is posted, the original is deleted, with its favorites, boosts and replies.</string>
     <!-- Button that confirms deleting a post to write it again -->
     <string name="status_redraft_confirm">Delete and redraft</string>
     <!-- Button that confirms deleting a post -->

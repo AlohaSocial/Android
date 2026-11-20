@@ -7,7 +7,7 @@
     <!-- Title of the posts the reader bookmarked -->
     <string name="saved_bookmarks">Bookmarks</string>
     <!-- Title of the posts the reader favourited -->
-    <string name="saved_favourites">Favourites</string>
+    <string name="saved_favourites">Favorites</string>
     <!-- Title of the reader's own posts taken off their profile without deleting them -->
     <string name="saved_archived">Archived posts</string>
     <!-- Leaves a list of kept posts -->
@@ -15,7 +15,7 @@
     <!-- Shown when the reader has bookmarked nothing -->
     <string name="saved_bookmarks_none">Nothing bookmarked yet. A post’s bookmark keeps it here, for you alone.</string>
     <!-- Shown when the reader has favourited nothing -->
-    <string name="saved_favourites_none">Nothing favourited yet.</string>
+    <string name="saved_favourites_none">Nothing favorited yet.</string>
     <!-- Shown when the reader has archived nothing -->
     <string name="saved_archived_none">Nothing archived. An archived post is off your profile but not deleted, and can be put back from here.</string>
     <!-- Shown when the posts could not be loaded -->

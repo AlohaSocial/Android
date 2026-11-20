@@ -9,7 +9,7 @@
     <!-- In the account sheet: opens the posts the reader bookmarked -->
     <string name="accounts_bookmarks">Bookmarks</string>
     <!-- In the account sheet: opens the posts the reader favourited -->
-    <string name="accounts_favourites">Favourites</string>
+    <string name="accounts_favourites">Favorites</string>
     <!-- In the account sheet: opens the reader's own posts taken off their profile without deleting them -->
     <string name="accounts_archived">Archived posts</string>
     <!-- In the account sheet: opens the reader's statistics, counted by their Aloha Social server -->
@@ -46,8 +46,8 @@
     <string name="destination_news">News</string>
     <!-- Navigation item: the audio mode, posts with sound, once turned on. Keep it short. -->
     <string name="destination_audio">Audio</string>
-    <!-- Navigation item: mentions, favourites, boosts and follows. -->
-    <string name="destination_notifications">Notifications</string>
+    <!-- Navigation item: Activities, the mentions, favorites, boosts and follows. -->
+    <string name="destination_notifications">Activities</string>
     <!-- Banner when the server no longer accepts this account's sign-in; %s is the account's handle -->
     <string name="reauth_banner">%s needs to sign in again. Nothing was lost.</string>
     <!-- Button on that banner that starts a new sign-in -->
@@ -105,7 +105,7 @@
     <!-- Keyboard shortcut O (or Enter): opens the selected post's thread -->
     <string name="keys_open">Open post</string>
     <!-- Keyboard shortcuts F and L: favourite the selected post -->
-    <string name="keys_favourite">Favourite</string>
+    <string name="keys_favourite">Favorite</string>
     <!-- Keyboard shortcut B: boosts the selected post -->
     <string name="keys_boost">Boost</string>
     <!-- Keyboard shortcut R: replies to the selected post -->
