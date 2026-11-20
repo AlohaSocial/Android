@@ -97,15 +97,11 @@ public object FilterEndpoints {
 }
 
 /**
- * Aloha Social's switch for leaving replies out of the reader's home, public and hashtag feeds,
- * kept with the filters and under their scopes. 404 on a server without it; null when an answer does
- * not carry it.
+ * Aloha Social's feed preferences for the reader, kept with the filters and under their scopes. 404 on a
+ * server without them.
  */
 public object FeedPreferenceEndpoints {
     private const val PATH = "api/v1/social/feed_preferences"
-
-    public fun hideReplies(): ApiRequest<Boolean?> =
-        request(Endpoint(PATH), FeedPreferencesDto.serializer()) { it.hideReplies }
 
     /**
      * How the server orders a thread's replies for the reader (`oldest`, `newest`, `most-likes`, `random`),
@@ -113,10 +109,4 @@ public object FeedPreferenceEndpoints {
      */
     public fun threadSort(): ApiRequest<String?> =
         request(Endpoint(PATH), FeedPreferencesDto.serializer()) { it.threadSort }
-
-    /** Turns the switch; the server answers with the state it then holds, and 422 for anything not a boolean. */
-    public fun setHideReplies(hide: Boolean): ApiRequest<Boolean?> = request(
-        Endpoint(PATH, HttpMethod.PATCH, body = Body.Form(listOf(QueryItem("hide_replies", "$hide")))),
-        FeedPreferencesDto.serializer(),
-    ) { it.hideReplies }
 }

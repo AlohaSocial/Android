@@ -32,14 +32,11 @@ internal data class PreferencesDto(
 )
 
 /**
- * Aloha Social's own feed preferences; an answer without the switch says nothing about it. [threadSort]
- * is how it orders a thread's replies for the reader, read-only (0.26.279 on).
+ * Aloha Social's own feed preferences. [threadSort] is how it orders a thread's replies for the reader,
+ * read-only (0.26.279 on).
  */
 @Serializable
-internal data class FeedPreferencesDto(
-    @SerialName("hide_replies") val hideReplies: Boolean? = null,
-    @SerialName("thread_sort") val threadSort: String? = null,
-)
+internal data class FeedPreferencesDto(@SerialName("thread_sort") val threadSort: String? = null)
 
 @Serializable
 internal data class NotificationPolicyDto(
