@@ -37,7 +37,7 @@
     <!-- Title of the watch's home timeline -->
     <string name="wear_home">Home</string>
     <!-- Button and title of the notifications list -->
-    <string name="wear_notifications">Notifications</string>
+    <string name="wear_notifications">Activities</string>
     <!-- Button that opens the account the watch is signed in to, where it can sign out -->
     <string name="wear_account">Account</string>
     <!-- Shown when a list or a post could not be loaded -->
@@ -53,7 +53,7 @@
     <!-- Button that shows a post hidden behind its content warning -->
     <string name="wear_show_post">Show post</string>
     <!-- Switch that favourites a post or takes the favourite back -->
-    <string name="wear_favourite">Favourite</string>
+    <string name="wear_favourite">Like</string>
     <!-- Switch that boosts a post or takes the boost back -->
     <string name="wear_boost">Boost</string>
     <!-- Switch that bookmarks a post or removes the bookmark -->
@@ -65,7 +65,7 @@
     <!-- Shown when a favourite, boost, bookmark or reply did not go through -->
     <string name="wear_action_failed">That didn’t go through. Try again.</string>
     <!-- Notification: %1$s is who favourited the reader's post -->
-    <string name="wear_notice_favourite">%1$s favourited your post</string>
+    <string name="wear_notice_favourite">%1$s liked your post</string>
     <!-- Notification: %1$s is who boosted the reader's post -->
     <string name="wear_notice_boost">%1$s boosted your post</string>
     <!-- Notification: %1$s is who mentioned the reader -->
@@ -101,10 +101,10 @@
     <!-- The tile while the watch is not signed in -->
     <string name="wear_tile_signed_out">Open Aloha Social to sign in.</string>
     <!-- Name of the unread-count complication in the watch face's picker -->
-    <string name="wear_complication_label">Unread notifications</string>
+    <string name="wear_complication_label">Unread activities</string>
     <!-- Spoken description of the unread count on the watch face -->
     <plurals name="wear_unread">
-        <item quantity="one">%d unread notification</item>
-        <item quantity="other">%d unread notifications</item>
+        <item quantity="one">%d unread activity</item>
+        <item quantity="other">%d unread activities</item>
     </plurals>
 </resources>

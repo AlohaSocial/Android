@@ -4,16 +4,16 @@
   ~ SPDX-License-Identifier: MIT
 -->
 <resources>
-    <!-- Title of the notifications screen -->
-    <string name="notifications_title">Notifications</string>
+    <!-- Title of the Activities screen: mentions, boosts, favorites, follows and the rest the server has for the reader -->
+    <string name="notifications_title">Activities</string>
     <!-- Filter chip that shows every kind of notification -->
     <string name="notifications_filter_all">All</string>
     <!-- Filter chip that shows only mentions -->
     <string name="notifications_filter_mentions">Mentions</string>
     <!-- Filter chip that shows only boosts of the person's posts -->
     <string name="notifications_filter_boosts">Boosts</string>
-    <!-- Filter chip that shows only favourites of the person's posts -->
-    <string name="notifications_filter_favourites">Favourites</string>
+    <!-- Filter chip that shows only favorites of the person's posts -->
+    <string name="notifications_filter_favourites">Favorites</string>
     <!-- Filter chip that shows only new followers and follow requests -->
     <string name="notifications_filter_follows">Follows</string>
     <!-- Filter chip that shows only ended polls -->
@@ -40,15 +40,15 @@
     <!-- Heading shown when there are no notifications yet -->
     <string name="notifications_empty">Nothing yet</string>
     <!-- Under the heading above: what will show here -->
-    <string name="notifications_empty_body">Mentions, boosts, favourites and follows land here.</string>
+    <string name="notifications_empty_body">Mentions, boosts, likes and follows land here.</string>
     <!-- Shown when the chosen filters match no notification -->
-    <string name="notifications_empty_filtered">No notifications of this kind.</string>
+    <string name="notifications_empty_filtered">No activities of this kind.</string>
     <!-- The notifications could not be loaded without a network -->
     <string name="notifications_offline">You are offline. What loaded before stays here.</string>
     <!-- The server asked the app to slow down -->
-    <string name="notifications_rate_limited">Your server asked to slow down. Notifications refresh again shortly.</string>
+    <string name="notifications_rate_limited">Your server asked to slow down. Activities refresh again shortly.</string>
     <!-- The notifications could not be loaded -->
-    <string name="notifications_error">Notifications could not be loaded. Pull to try again.</string>
+    <string name="notifications_error">Activities could not be loaded. Pull to try again.</string>
     <!-- Top bar action opening the notification requests; %d is how many senders wait there -->
     <plurals name="notifications_requests_action">
         <item quantity="one">%d filtered sender</item>
@@ -59,19 +59,19 @@
     <!-- Top bar action opening the rules that filter notifications -->
     <string name="notifications_policy_action">Filtering rules</string>
     <!-- Title of the sheet listing everyone in a grouped notification -->
-    <string name="notifications_group_title">Everyone in this notification</string>
+    <string name="notifications_group_title">Everyone in this activity</string>
     <!-- The list of everyone in a grouped notification could not be loaded -->
     <string name="notifications_group_error">They could not be loaded.</string>
     <!-- Top bar action that loads the newest notifications, for anyone who cannot pull the list down -->
     <string name="notifications_refresh">Refresh</string>
     <!-- Top bar button on a phone: opens the menu holding mark all as read, refresh, requests and the policy -->
     <string name="notifications_more">More options</string>
-    <!-- Toolbar button on Notifications: everything shown counts as read -->
+    <!-- Toolbar button on Activities: everything shown counts as read -->
     <string name="notifications_mark_all_read">Mark all as read</string>
     <!-- Description of a face in a notification; %s is the person's name -->
     <string name="notifications_profile_of">Profile of %s</string>
-    <!-- First row of Notifications while notifications from people the reader may not know wait to be reviewed -->
-    <string name="notifications_filtered_row">Filtered notifications</string>
+    <!-- First row of Activities while notifications from people the reader may not know wait to be reviewed -->
+    <string name="notifications_filtered_row">Filtered activities</string>
     <!-- On a notice card: opens the server's page about it -->
     <string name="notifications_learn_more">Learn more</string>
     <!-- A moderator's warning to the reader, before the moderator's own words if any -->
@@ -95,16 +95,16 @@
     <!-- Brief notice when the server did not take the answer to a follow request -->
     <string name="notifications_request_failed">That didn’t go through. Try again.</string>
     <!-- Button letting one sender's notifications through, as read aloud: %s is the sender -->
-    <string name="requests_accept_from">Let notifications from %s through</string>
+    <string name="requests_accept_from">Let activities from %s through</string>
     <!-- Button dropping one sender's held notifications, as read aloud: %s is the sender -->
-    <string name="requests_dismiss_from">Dismiss notifications from %s</string>
+    <string name="requests_dismiss_from">Dismiss activities from %s</string>
     <!-- Button that goes back from a notifications screen -->
     <string name="notifications_back">Back</string>
 
     <!-- Title of the screen with the rules that filter notifications -->
     <string name="policy_title">Filtering rules</string>
     <!-- Explains the rules at the top of the screen -->
-    <string name="policy_intro">Decide what happens to notifications from people you may not know. Filtered ones wait under filtered senders.</string>
+    <string name="policy_intro">Decide what happens to activities from people you may not know. Filtered ones wait under filtered senders.</string>
     <!-- A rule: notifications from accounts the person does not follow -->
     <string name="policy_not_following">From people you don\'t follow</string>
     <!-- A rule: notifications from accounts that do not follow the person -->
@@ -122,7 +122,7 @@
     <!-- Choice: never show the notification -->
     <string name="policy_drop">Ignore</string>
     <!-- Footnote on an Aloha Social server, which keeps ignored notifications as filtered -->
-    <string name="policy_drop_filters">On your server, Ignore works like Filter: those notifications wait under filtered senders rather than going away.</string>
+    <string name="policy_drop_filters">On your server, Ignore works like Filter: those activities wait under filtered senders rather than going away.</string>
     <!-- The rules could not be loaded -->
     <string name="policy_error">The filtering rules could not be loaded.</string>
     <!-- A change of a rule was not saved -->
@@ -132,8 +132,8 @@
     <string name="requests_title">Filtered senders</string>
     <!-- How many notifications one filtered sender has waiting -->
     <plurals name="requests_count">
-        <item quantity="one">%d notification</item>
-        <item quantity="other">%d notifications</item>
+        <item quantity="one">%d activity</item>
+        <item quantity="other">%d activities</item>
     </plurals>
     <!-- Button letting one sender's notifications through -->
     <string name="requests_accept">Let through</string>
@@ -223,7 +223,7 @@
     <!-- Row opening the system settings, where each kind of notification of each account can be turned off -->
     <string name="settings_notification_kinds">Kinds of notifications</string>
     <!-- Explains that row -->
-    <string name="settings_notification_kinds_summary">Mentions, follows, favourites and more, for each account, in your phone\'s settings.</string>
+    <string name="settings_notification_kinds_summary">Mentions, follows, likes and more, for each account, in your phone\'s settings.</string>
     <!-- Heading of the choice of the app that delivers notifications the moment they happen -->
     <string name="settings_push">Instant notifications</string>
     <!-- Choice: no push distributor, the app checks on its own -->

@@ -413,7 +413,7 @@ class SettingsScreenshotTest {
     private companion object {
         // a build's own paragraph, as the generic build words it
         const val NOTICE = "Drafting alt text runs on this device with open software, only once you turn it on " +
-            "and tap it: your pictures are not sent anywhere, and the software reports to no one."
+            "and tap it: your photos are not sent anywhere, and the software reports to no one."
     }
 }
 

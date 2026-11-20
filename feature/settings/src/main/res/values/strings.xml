@@ -89,7 +89,7 @@
     <!-- Privacy statement, first paragraph -->
     <string name="privacy_nothing">Aloha Social collects nothing about you and sends nothing to its developers: no analytics, no crash reports, no advertising.</string>
     <!-- Privacy statement, second paragraph -->
-    <string name="privacy_servers">It talks to the servers you sign in to, and loads the pictures, videos and link previews their posts point at from where they are kept. Your sign-in stays on this device, encrypted.</string>
+    <string name="privacy_servers">It talks to the servers you sign in to, and loads the photos, videos and link previews their posts point at from where they are kept. Your sign-in stays on this device, encrypted.</string>
     <!-- Privacy statement, third paragraph -->
     <string name="privacy_notifications">Notifications come through the push app you choose, which learns that a notification is waiting but not what it says, or from asking your server now and then. Translate sends a post\'s text to your server, which hands it to its translation service; where this device translates, the text stays on it.</string>
     <!-- Privacy statement, fourth paragraph -->
@@ -225,7 +225,7 @@
     <!-- Settings section: what the app keeps on the device -->
     <string name="storage_title">Storage</string>
     <!-- Storage: the pictures and server answers kept to be quick -->
-    <string name="storage_cache">Pictures and answers kept to be quick</string>
+    <string name="storage_cache">Images and answers kept to be quick</string>
     <!-- Storage: the cache's size. %1$s: a size, such as 120 MB -->
     <string name="storage_cache_size">%1$s, fetched again whenever needed</string>
     <!-- Storage, after clearing. %1$s: what is left, such as 0 B -->
@@ -257,7 +257,7 @@
     <!-- Reading switch: every popularity number in the app -->
     <string name="reading_counts">Show numbers</string>
     <!-- Summary of the Show numbers switch -->
-    <string name="reading_counts_summary">How many replied, boosted, favourited or follow, on posts, profiles and notifications. Off, the people stay and the numbers go.</string>
+    <string name="reading_counts_summary">How many replied, boosted, liked or follow, on posts, profiles and activities. Off, the people stay and the numbers go.</string>
     <!-- Reading switch: a thin line between one post and the next in every list of posts -->
     <string name="reading_lines">Lines between posts</string>
     <!-- Reading switch: no animation anywhere in the app -->
@@ -279,7 +279,7 @@
     <!-- Reading switch: pictures and videos in posts listed as text rows instead of shown -->
     <string name="reading_previewless">List media instead of showing it</string>
     <!-- Summary of the switch above -->
-    <string name="reading_previewless_summary">Each picture or video becomes a row with its kind and description, for less data and a calmer timeline. A tap still opens it.</string>
+    <string name="reading_previewless_summary">Each photo or video becomes a row with its kind and description, for less data and a calmer timeline. A tap still opens it.</string>
     <!-- Reading heading: what happens to other posts in a thread when the reader opens a content warning -->
     <string name="reading_reveal_title">Opening a content warning in a thread</string>
     <!-- Choice under the heading above: every warning stays closed until opened -->
@@ -288,22 +288,22 @@
     <string name="reading_reveal_author">Also opens the same warning by the same person</string>
     <!-- Choice under the heading above -->
     <string name="reading_reveal_everyone">Also opens the same warning by anyone</string>
-    <!-- Reading switch: the number on Notifications in the navigation -->
-    <string name="reading_badge">Unread count on Notifications</string>
+    <!-- Reading switch: the number on Activities in the navigation -->
+    <string name="reading_badge">Unread count on Activities</string>
     <!-- Settings section: haptic feedback and notification sounds -->
     <string name="sound_title">Sound and haptics</string>
     <!-- Switch: a light vibration as a post is boosted, favourited or bookmarked -->
     <string name="sound_haptics">Haptic feedback</string>
     <!-- Summary of the Haptic feedback switch -->
-    <string name="sound_haptics_summary">A light tick as you boost, favourite or bookmark</string>
+    <string name="sound_haptics_summary">A light tick as you boost, like or bookmark</string>
     <!-- Opens Android's settings for this app's notifications -->
     <string name="sound_notifications">Notification sounds</string>
     <!-- Summary of the row above -->
     <string name="sound_notifications_summary">Each kind of notification sounds as Android\'s settings say</string>
     <!-- Media switch: the picture viewer loads full-size pictures on mobile data too -->
-    <string name="media_full_pictures">Full-size pictures on mobile data</string>
+    <string name="media_full_pictures">Full-size photos on mobile data</string>
     <!-- Summary of the switch above -->
-    <string name="media_full_pictures_summary">Off, a picture opens at the size a list shows it, on mobile data only</string>
+    <string name="media_full_pictures_summary">Off, a photo opens at the size a list shows it, on mobile data only</string>
     <!-- Title of the year in review screen, and its entry in Settings -->
     <string name="year_title">Your year</string>
     <!-- Heading of one year in review. %1$d: the year, such as 2026 -->
@@ -327,7 +327,7 @@
     <!-- Above a top post: the most replied to -->
     <string name="year_top_replies">Most replies</string>
     <!-- Above a top post: the most favourited -->
-    <string name="year_top_favourites">Favourited most</string>
+    <string name="year_top_favourites">Liked most</string>
     <!-- A top post with no text, only media -->
     <string name="year_post_no_text">A post without text</string>
     <!-- Archetype: wrote almost nothing -->
@@ -413,7 +413,7 @@
     <!-- Intelligence settings: switch for alt text drafted on the device -->
     <string name="settings_intelligence_alt_text">Draft alt text</string>
     <!-- Intelligence settings: what drafting alt text does -->
-    <string name="settings_intelligence_alt_text_summary">From what this device recognises in a picture, marked as AI generated, for you to check before posting</string>
+    <string name="settings_intelligence_alt_text_summary">From what this device recognises in a photo, marked as AI generated, for you to check before posting</string>
     <!-- Intelligence settings: switch for rewriting and proofreading a draft on the device -->
     <string name="settings_intelligence_rewrite">Rewrite and proofread</string>
     <!-- Intelligence settings: what rewriting does -->
@@ -429,7 +429,7 @@
     <!-- Intelligence settings: heading of the line naming the models the features use -->
     <string name="settings_intelligence_models">Models</string>
     <!-- Intelligence settings, under Models: what reads pictures for alt-text drafts, in every build -->
-    <string name="settings_intelligence_model_pictures">Pictures: EfficientNet-Lite0 on LiteRT, open source, and Android’s face detector</string>
+    <string name="settings_intelligence_model_pictures">Photos: EfficientNet-Lite0 on LiteRT, open source, and Android’s face detector</string>
     <!-- Intelligence settings, under Models: the language model for rewriting and summaries, before the device was asked which one it runs -->
     <string name="settings_intelligence_model">Rewriting and summaries: Gemini Nano, run by Android’s AICore</string>
     <!-- Intelligence settings, under Models: the language model for rewriting and summaries, with the name the device gives it (%1$s) -->
@@ -522,7 +522,7 @@
     <!-- The whole account as one file -->
     <string name="export_archive">Everything, as an archive</string>
     <!-- What the account archive holds -->
-    <string name="export_archive_about">Your profile, posts, pictures and videos, and the lists below. Never your private key.</string>
+    <string name="export_archive_about">Your profile, posts, photos and videos, and the lists below. Never your private key.</string>
     <!-- What a list export is -->
     <string name="export_list_about">A CSV file, as Mastodon and others import it</string>
     <!-- The accounts the reader follows, as a file -->
@@ -613,7 +613,7 @@
     <!-- Statistics section: how people responded -->
     <string name="statistics_engagement">Engagement</string>
     <!-- Statistics number: favourites received -->
-    <string name="statistics_favourites">Favourites</string>
+    <string name="statistics_favourites">Likes</string>
     <!-- Statistics number: boosts received -->
     <string name="statistics_boosts">Boosts</string>
     <!-- Statistics number: replies received -->
@@ -680,9 +680,9 @@
         <item quantity="other">%d replies</item>
     </plurals>
     <!-- Statistics section: pictures posted -->
-    <string name="statistics_pictures">Pictures</string>
+    <string name="statistics_pictures">Photos</string>
     <!-- Statistics number: posts with pictures -->
-    <string name="statistics_with_pictures">Posts with pictures</string>
+    <string name="statistics_with_pictures">Posts with photos</string>
     <!-- Statistics number: pictures with a description -->
     <string name="statistics_described">With a description</string>
     <!-- Statistics number: the share of pictures with a description -->

@@ -38,7 +38,7 @@
     <!-- Button with a collection's rename and delete, read aloud: %s is the collection's name -->
     <string name="collections_options">Options for %s</string>
     <!-- Shown when the reader has no collections -->
-    <string name="collections_none_own">No collections yet. Make one, then add your posts with pictures to it.</string>
+    <string name="collections_none_own">No collections yet. Make one, then add your posts with photos to it.</string>
     <!-- Shown when another account has no collections -->
     <string name="collections_none">No collections.</string>
     <!-- Shown when collections or their posts could not be loaded -->

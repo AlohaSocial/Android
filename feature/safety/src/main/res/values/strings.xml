@@ -38,7 +38,7 @@
     <!-- Where a filter applies: the home timeline and lists -->
     <string name="filters_context_home">Home and lists</string>
     <!-- Where a filter applies: notifications -->
-    <string name="filters_context_notifications">Notifications</string>
+    <string name="filters_context_notifications">Activities</string>
     <!-- Where a filter applies: the public timelines -->
     <string name="filters_context_public">Public timelines</string>
     <!-- Where a filter applies: conversations under a post -->
@@ -64,7 +64,7 @@
     <!-- Shown when the filter to edit could not be loaded -->
     <string name="filters_load_failed">This filter couldn’t be loaded.</string>
     <!-- A filter's action: pictures and videos are blurred, the text still shown -->
-    <string name="filters_action_blur">Blur pictures and videos</string>
+    <string name="filters_action_blur">Blur photos and videos</string>
     <!-- How long a filter applies: it ran out on this date, and stays run out; %1$s is the date and time -->
     <string name="filters_expired_on">Keep it run out (since %1$s)</string>
     <!-- Label of the field naming a filter -->

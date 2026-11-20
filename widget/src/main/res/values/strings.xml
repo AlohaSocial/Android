@@ -5,9 +5,9 @@
 -->
 <resources>
     <!-- Name of the widget with the unread notification count, in the widget picker -->
-    <string name="widget_unread_name">Unread notifications</string>
+    <string name="widget_unread_name">Unread activities</string>
     <!-- Description of that widget in the widget picker -->
-    <string name="widget_unread_description">How many notifications you have not read yet</string>
+    <string name="widget_unread_description">How many activities you have not read yet</string>
     <!-- Name of the widget with the newest mentions -->
     <string name="widget_mentions_name">Mentions</string>
     <!-- Description of that widget in the widget picker -->
@@ -22,13 +22,13 @@
     <string name="widget_compose_description">Write a new post in one tap</string>
     <!-- Under the unread count in its widget, which shows the number above it -->
     <plurals name="widget_unread">
-        <item quantity="one">unread notification</item>
-        <item quantity="other">unread notifications</item>
+        <item quantity="one">unread activity</item>
+        <item quantity="other">unread activities</item>
     </plurals>
     <!-- The unread count as read aloud: %d is how many -->
     <plurals name="widget_unread_spoken">
-        <item quantity="one">%d unread notification</item>
-        <item quantity="other">%d unread notifications</item>
+        <item quantity="one">%d unread activity</item>
+        <item quantity="other">%d unread activities</item>
     </plurals>
     <!-- Title in the mentions widget -->
     <string name="widget_mentions_title">Mentions</string>
@@ -58,6 +58,6 @@
     <string name="widget_source_federated">Everyone</string>
     <!-- In a widget while the app lock is on: posts are not shown on the home screen -->
     <string name="widget_locked">Locked. Open Aloha Social to see posts.</string>
-    <!-- What a screen reader says for a widget: %1$s is what it shows or does (“3 unread notifications”, “New post”), %2$s the account it is for (@alice@example.social) -->
+    <!-- What a screen reader says for a widget: %1$s is what it shows or does (“3 unread activities”, “New post”), %2$s the account it is for (@alice@example.social) -->
     <string name="widget_for_account">%1$s, %2$s</string>
 </resources>

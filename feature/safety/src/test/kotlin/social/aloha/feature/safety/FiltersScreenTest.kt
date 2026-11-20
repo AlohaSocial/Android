@@ -145,7 +145,7 @@ class FiltersScreenTest {
         compose.onRoot().captureRoboImage("src/test/screenshots/filter-edit.png")
         compose.onNodeWithText("Keyword or phrase").performTextInput("twist")
         compose.onNodeWithText("Add").performClick()
-        compose.onNodeWithText("Notifications").performClick()
+        compose.onNodeWithText("Activities").performClick()
         compose.onNodeWithText("Save").performClick()
         assertEquals(listOf("add:twist:true", "context:notifications:true", "save"), asked)
     }

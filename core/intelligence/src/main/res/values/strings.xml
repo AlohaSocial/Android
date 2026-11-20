@@ -16,7 +16,7 @@
     <!-- Alt text drafted on the device: the people found (%1$s, e.g. "2 people") with the things found (%2$s, e.g. "beach, sky") -->
     <string name="intelligence_with">%1$s with %2$s</string>
     <!-- Alt text drafted on the device when nothing in the picture was recognised -->
-    <string name="intelligence_picture">A picture</string>
+    <string name="intelligence_picture">A photo</string>
     <!-- Rewrite action: fix spelling, grammar and punctuation only -->
     <string name="intelligence_proofread">Proofread</string>
     <!-- Rewrite action: make the draft fit the characters left -->
