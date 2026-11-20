@@ -126,7 +126,7 @@ class ShortsScreenTest {
     fun `every gesture has an equivalent on the rail, in the menu and among the screen reader's actions`() {
         show()
         // the double tap's favourite and the edge swipe's profile are on the rail
-        compose.onNodeWithContentDescription("Favorite").performClick()
+        compose.onNodeWithContentDescription("Like").performClick()
         compose.onNodeWithContentDescription("View Alice Example's profile").performClick()
         // the long press's pause, and the profile again, are in the menu
         compose.onNodeWithContentDescription("More").performClick()
@@ -135,7 +135,7 @@ class ShortsScreenTest {
         // and all three are actions a screen reader offers on the short itself
         val labels = compose.onNodeWithContentDescription("Short by Alice Example", substring = true)
             .fetchSemanticsNode().config[SemanticsActions.CustomActions].map { it.label }.toSet()
-        assertEquals(setOf("Favorite", "Pause", "View Alice Example's profile"), labels)
+        assertEquals(setOf("Like", "Pause", "View Alice Example's profile"), labels)
         assertEquals(listOf("favourite", "profile"), asked)
     }
 

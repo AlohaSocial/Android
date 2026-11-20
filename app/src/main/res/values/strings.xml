@@ -105,7 +105,7 @@
     <!-- Keyboard shortcut O (or Enter): opens the selected post's thread -->
     <string name="keys_open">Open post</string>
     <!-- Keyboard shortcuts F and L: favourite the selected post -->
-    <string name="keys_favourite">Favorite</string>
+    <string name="keys_favourite">Like</string>
     <!-- Keyboard shortcut B: boosts the selected post -->
     <string name="keys_boost">Boost</string>
     <!-- Keyboard shortcut R: replies to the selected post -->

@@ -41,9 +41,9 @@
     <!-- Viewer button, on a post the reader boosted -->
     <string name="viewer_unboost">Undo boost</string>
     <!-- Viewer button -->
-    <string name="viewer_favourite">Favorite</string>
+    <string name="viewer_favourite">Like</string>
     <!-- Viewer button, on a post the reader favourited -->
-    <string name="viewer_unfavourite">Undo favorite</string>
+    <string name="viewer_unfavourite">Unlike</string>
     <!-- Viewer button -->
     <string name="viewer_bookmark">Bookmark</string>
     <!-- Viewer button, on a post the reader bookmarked -->

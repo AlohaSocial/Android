@@ -257,7 +257,7 @@
     <!-- Reading switch: every popularity number in the app -->
     <string name="reading_counts">Show numbers</string>
     <!-- Summary of the Show numbers switch -->
-    <string name="reading_counts_summary">How many replied, boosted, favorited or follow, on posts, profiles and activities. Off, the people stay and the numbers go.</string>
+    <string name="reading_counts_summary">How many replied, boosted, liked or follow, on posts, profiles and activities. Off, the people stay and the numbers go.</string>
     <!-- Reading switch: a thin line between one post and the next in every list of posts -->
     <string name="reading_lines">Lines between posts</string>
     <!-- Reading switch: no animation anywhere in the app -->
@@ -295,7 +295,7 @@
     <!-- Switch: a light vibration as a post is boosted, favourited or bookmarked -->
     <string name="sound_haptics">Haptic feedback</string>
     <!-- Summary of the Haptic feedback switch -->
-    <string name="sound_haptics_summary">A light tick as you boost, favorite or bookmark</string>
+    <string name="sound_haptics_summary">A light tick as you boost, like or bookmark</string>
     <!-- Opens Android's settings for this app's notifications -->
     <string name="sound_notifications">Notification sounds</string>
     <!-- Summary of the row above -->
@@ -327,7 +327,7 @@
     <!-- Above a top post: the most replied to -->
     <string name="year_top_replies">Most replies</string>
     <!-- Above a top post: the most favourited -->
-    <string name="year_top_favourites">Favorited most</string>
+    <string name="year_top_favourites">Liked most</string>
     <!-- A top post with no text, only media -->
     <string name="year_post_no_text">A post without text</string>
     <!-- Archetype: wrote almost nothing -->
@@ -613,7 +613,7 @@
     <!-- Statistics section: how people responded -->
     <string name="statistics_engagement">Engagement</string>
     <!-- Statistics number: favourites received -->
-    <string name="statistics_favourites">Favorites</string>
+    <string name="statistics_favourites">Likes</string>
     <!-- Statistics number: boosts received -->
     <string name="statistics_boosts">Boosts</string>
     <!-- Statistics number: replies received -->

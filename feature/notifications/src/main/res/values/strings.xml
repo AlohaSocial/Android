@@ -40,7 +40,7 @@
     <!-- Heading shown when there are no notifications yet -->
     <string name="notifications_empty">Nothing yet</string>
     <!-- Under the heading above: what will show here -->
-    <string name="notifications_empty_body">Mentions, boosts, favorites and follows land here.</string>
+    <string name="notifications_empty_body">Mentions, boosts, likes and follows land here.</string>
     <!-- Shown when the chosen filters match no notification -->
     <string name="notifications_empty_filtered">No activities of this kind.</string>
     <!-- The notifications could not be loaded without a network -->
@@ -223,7 +223,7 @@
     <!-- Row opening the system settings, where each kind of notification of each account can be turned off -->
     <string name="settings_notification_kinds">Kinds of notifications</string>
     <!-- Explains that row -->
-    <string name="settings_notification_kinds_summary">Mentions, follows, favorites and more, for each account, in your phone\'s settings.</string>
+    <string name="settings_notification_kinds_summary">Mentions, follows, likes and more, for each account, in your phone\'s settings.</string>
     <!-- Heading of the choice of the app that delivers notifications the moment they happen -->
     <string name="settings_push">Instant notifications</string>
     <!-- Choice: no push distributor, the app checks on its own -->
