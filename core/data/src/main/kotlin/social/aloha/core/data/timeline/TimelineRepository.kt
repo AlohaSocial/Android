@@ -119,23 +119,6 @@ public class TimelineRepository @Inject constructor(
         }
     }.flowOn(ioDispatcher)
 
-    /**
-     * Forgets [account]'s home, local, federated and hashtag timelines in every mode, rows and fetch
-     * alike, so each loads afresh the next time it is shown: these are the feeds Aloha Social's
-     * reply hiding narrows, and rows stored before a change to it would otherwise stay.
-     */
-    public suspend fun dropFeeds(account: SignedInAccount): Unit = withContext(ioDispatcher) {
-        val prefix = "${account.id}|"
-        val fetching = inFlight.keys.filter { it.startsWith(prefix) }.map { it.removePrefix(prefix) }
-        (dao.keys(account.id) + fetching).filter(::isFeed).toSet().forEach { storageKey ->
-            // a fetch begun before the change would otherwise merge what it read after the rows are gone
-            inFlight.getOrPut(prefix + storageKey) { Mutex() }.withLock {
-                fetchedAt.remove(prefix + storageKey)
-                dao.clear(account.id, storageKey)
-            }
-        }
-    }
-
     /** The head of the timeline, or what is newer than its top row, as [plan] says. */
     public suspend fun refresh(account: SignedInAccount, key: TimelineKey, plan: RefreshPlan): PageOutcome =
         fetchAndMerge(Fetch(account, key, plan.anchor, cursor = null, plan.direction))
@@ -436,24 +419,10 @@ public class TimelineRepository @Inject constructor(
     }
 }
 
-private val FEED_SOURCES = setOf(
-    TimelineSource.Home.storageKey,
-    TimelineSource.Local.storageKey,
-    TimelineSource.Federated.storageKey,
-)
-
-// every hashtag source's storage key, whatever tags it adds or leaves out
-private const val HASHTAG_PREFIX = "tag:"
-
 private fun lockKey(account: SignedInAccount, key: TimelineKey) = "${account.id}|${key.storageKey}"
 
 private fun gapKey(account: SignedInAccount, key: TimelineKey, gap: TimelineMerge.Direction.FillingGap) =
     "${lockKey(account, key)}|${gap.id}|${gap.fromBelow}"
-
-/** Whether a [TimelineKey.storageKey], `mode:source`, names a feed reply hiding narrows. */
-private fun isFeed(storageKey: String): Boolean = storageKey.substringAfter(':').let {
-    it in FEED_SOURCES || it.startsWith(HASHTAG_PREFIX)
-}
 
 /**
  * Whether [status] is what `exclude_replies` keeps of this account's posts: one that answers nobody, a

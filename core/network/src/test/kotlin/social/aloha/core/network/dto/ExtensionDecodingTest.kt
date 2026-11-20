@@ -222,9 +222,9 @@ class ExtensionDecodingTest {
     }
 
     @Test
-    fun `the feed preferences carry the reply switch, and an answer without it says nothing`() {
-        assertEquals(true, FeedPreferenceEndpoints.hideReplies().value("""{"hide_replies": true}"""))
-        assertEquals(false, FeedPreferenceEndpoints.setHideReplies(false).value("""{"hide_replies": false}"""))
-        assertNull(FeedPreferenceEndpoints.hideReplies().value("{}"))
+    fun `the feed preferences carry the thread order, and an answer without it says nothing`() {
+        val answer = """{"hide_replies": true, "thread_sort": "newest"}"""
+        assertEquals("newest", FeedPreferenceEndpoints.threadSort().value(answer))
+        assertNull(FeedPreferenceEndpoints.threadSort().value("""{"hide_replies": true}"""))
     }
 }
