@@ -221,19 +221,19 @@
     <!-- Button that removes the profile picture -->
     <string name="profile_edit_remove_avatar">Remove picture</string>
     <!-- Switch: follow requests are approved by hand -->
-    <string name="profile_edit_locked">Approve followers by hand</string>
+    <string name="profile_edit_locked">Approve who follows you</string>
     <!-- Switch: the account is marked as a bot -->
-    <string name="profile_edit_bot">This account is a bot</string>
+    <string name="profile_edit_bot">This is an automated account</string>
     <!-- Switch: the profile may be suggested to others -->
-    <string name="profile_edit_discoverable">Suggest my profile to others</string>
-    <!-- Switch: search engines may include one's public posts -->
-    <string name="profile_edit_indexable">Let search engines include my public posts</string>
+    <string name="profile_edit_discoverable">Suggest this account to others</string>
+    <!-- Switch: anyone may find one’s public posts through the server’s search -->
+    <string name="profile_edit_indexable">Let search find your public posts</string>
     <!-- Switch: nobody else sees the lists of one's followers and followed accounts -->
-    <string name="profile_edit_hide_collections">Hide who I follow and who follows me</string>
+    <string name="profile_edit_hide_collections">Hide my followers and following</string>
     <!-- Switch: media start out marked sensitive -->
     <string name="profile_edit_sensitive">Mark my media sensitive by default</string>
     <!-- Button showing who new posts reach by default; the placeholder is one of the three below -->
-    <string name="profile_edit_privacy">New posts: %1$s</string>
+    <string name="profile_edit_privacy">Who sees new posts: %1$s</string>
     <!-- Default reach of new posts: everyone -->
     <string name="profile_edit_privacy_public">Public</string>
     <!-- Default reach of new posts: everyone, kept off public timelines -->

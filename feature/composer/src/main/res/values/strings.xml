@@ -538,7 +538,7 @@
     <!-- Choice under that heading -->
     <string name="composer_settings_reply_prefix_never">Never</string>
     <!-- Writing setting: heading over the default visibility of new posts -->
-    <string name="composer_settings_visibility">New posts are seen by</string>
+    <string name="composer_settings_visibility">Who sees new posts</string>
     <!-- Default visibility choice: as the reader's server says -->
     <string name="composer_settings_visibility_server">As my server says</string>
     <!-- Writing setting: heading over the default language of new posts -->

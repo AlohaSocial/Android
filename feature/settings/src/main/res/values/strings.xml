@@ -149,7 +149,7 @@
     <!-- Name of an accent colour swatch -->
     <string name="appearance_accent_brown">Brown</string>
     <!-- Settings list: opens the reader's filters, which hide or warn about posts by keyword -->
-    <string name="settings_filters">Filters</string>
+    <string name="settings_filters">Filtered words</string>
     <!-- Settings section: the signed-in accounts -->
     <string name="settings_accounts_title">Accounts</string>
     <!-- Under an account in Settings: it is the one in use. %1$s: its handle -->
@@ -173,7 +173,7 @@
     <!-- Settings section: pictures, video and sound -->
     <string name="media_title">Media</string>
     <!-- Media: heading over how media marked sensitive shows -->
-    <string name="media_sensitive">Media marked sensitive</string>
+    <string name="media_sensitive">Sensitive media</string>
     <!-- Sensitive media choice: covered, one press away -->
     <string name="media_sensitive_blur">Covered, shown when pressed</string>
     <!-- Sensitive media choice: always shown -->
@@ -249,7 +249,7 @@
     <!-- Reading switch: avatars as rounded squares instead of circles -->
     <string name="reading_rounded">Rounded square avatars</string>
     <!-- Reading switch: every popularity number in the app -->
-    <string name="reading_counts">Show numbers</string>
+    <string name="reading_counts">Show the numbers</string>
     <!-- Summary of the Show numbers switch -->
     <string name="reading_counts_summary">How many replied, boosted, liked or follow, on posts, profiles and activities. Off, the people stay and the numbers go.</string>
     <!-- Reading switch: a thin line between one post and the next in every list of posts -->
@@ -510,7 +510,7 @@
     <!-- Shown when turning the weekly recap on or off did not work -->
     <string name="looking_back_change_failed">Couldn’t change the weekly recap.</string>
     <!-- Title of the page that saves a copy of the account -->
-    <string name="export_title">Export your account</string>
+    <string name="export_title">Export your data</string>
     <!-- Explains the export page -->
     <string name="export_about">Take a copy to keep, or to move to another server. Each part is saved where you choose.</string>
     <!-- The whole account as one file -->

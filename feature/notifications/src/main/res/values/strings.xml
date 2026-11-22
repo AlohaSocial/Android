@@ -19,7 +19,7 @@
     <!-- Filter chip that shows only ended polls -->
     <string name="notifications_filter_polls">Polls</string>
     <!-- Filter chip that shows only edits of posts the person interacted with -->
-    <string name="notifications_filter_updates">Updates</string>
+    <string name="notifications_filter_updates">Edits</string>
     <!-- Button in a grouped notification that lists everyone in it; %d is how many others -->
     <plurals name="notifications_others">
         <item quantity="one">Show %d other</item>

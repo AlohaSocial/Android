@@ -15,7 +15,7 @@
     <!-- In the account sheet: opens the reader's statistics, counted by their Aloha Social server -->
     <string name="accounts_statistics">Statistics</string>
     <!-- In the account sheet: opens the reader's filters, which hide or warn about posts by keyword -->
-    <string name="accounts_filters">Filters</string>
+    <string name="accounts_filters">Filtered words</string>
     <!-- In the account sheet: opens what the reader's server announces to everyone on it -->
     <string name="accounts_announcements">Announcements</string>
     <!-- In the account sheet: opens the hashtags the reader's Aloha Social server learnt they care about -->
@@ -69,7 +69,7 @@
     <!-- Marks an account whose server refused its sign-in -->
     <string name="accounts_needs_reauth">Needs a new sign-in</string>
     <!-- Opens the profile of the account in use -->
-    <string name="accounts_profile">Your profile</string>
+    <string name="accounts_profile">My profile</string>
     <!-- Opens the settings -->
     <string name="accounts_settings">Settings</string>
     <!-- Starts signing in to one more account -->
