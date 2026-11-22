@@ -31,11 +31,11 @@
     <!-- Screen reader action on an edited post: opens the list of its earlier versions -->
     <string name="status_action_history">Edit history</string>
     <!-- Badge on a post only followers can see -->
-    <string name="status_visibility_private">Followers only</string>
+    <string name="status_visibility_private">Followers</string>
     <!-- Badge on a direct message -->
     <string name="status_visibility_direct">Direct message</string>
     <!-- Badge on a post that is public but kept out of public timelines -->
-    <string name="status_visibility_unlisted">Quiet public</string>
+    <string name="status_visibility_unlisted">Unlisted</string>
     <!-- Button text that shows a post hidden behind a content warning -->
     <string name="status_spoiler_show">Show post</string>
     <!-- Button text that hides a post again behind its content warning -->
@@ -163,15 +163,15 @@
     <!-- In a boost's long-press menu: everyone, in public timelines too -->
     <string name="status_boost_public">Public</string>
     <!-- In a boost's long-press menu: everyone, kept out of public timelines -->
-    <string name="status_boost_unlisted">Quiet public</string>
+    <string name="status_boost_unlisted">Unlisted</string>
     <!-- In a boost's long-press menu: the reader's followers only -->
     <string name="status_boost_private">Followers</string>
     <!-- In a boost's long-press menu, and the title of its account sheet: boosts from another account -->
     <string name="status_boost_as">Boost as another account</string>
     <!-- Screen reader action on a post: boosts it for everyone, kept out of public timelines -->
-    <string name="status_boost_for_unlisted">Boost for quiet public</string>
+    <string name="status_boost_for_unlisted">Boost as unlisted</string>
     <!-- Screen reader action on a post: boosts it for the reader’s followers only -->
-    <string name="status_boost_for_followers">Boost for followers only</string>
+    <string name="status_boost_for_followers">Boost for followers</string>
     <!-- Screen reader action on a post: opens the accounts to reply as -->
     <string name="status_reply_as_other">Reply as another account</string>
     <!-- Screen reader action on a post: opens the accounts to favourite it as -->

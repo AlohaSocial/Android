@@ -237,9 +237,9 @@
     <!-- Default reach of new posts: everyone -->
     <string name="profile_edit_privacy_public">Public</string>
     <!-- Default reach of new posts: everyone, kept off public timelines -->
-    <string name="profile_edit_privacy_unlisted">Quiet public</string>
+    <string name="profile_edit_privacy_unlisted">Unlisted</string>
     <!-- Default reach of new posts: followers only -->
-    <string name="profile_edit_privacy_private">Followers only</string>
+    <string name="profile_edit_privacy_private">Followers</string>
     <!-- Snackbar when the server keeps the name and picture itself, for a person signed in through a directory -->
     <string name="profile_edit_managed">Your server manages your name and picture.</string>
     <!-- Snackbar when the server refused the changes without saying why -->
