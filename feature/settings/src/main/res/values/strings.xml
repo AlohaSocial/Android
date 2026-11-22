@@ -265,7 +265,7 @@
     <!-- Reading switch: consecutive boosts on Home fold into one horizontal row -->
     <string name="reading_boost_carousel">Fold boosts in a row</string>
     <!-- Summary of the switch above -->
-    <string name="reading_boost_carousel_summary">Three or more boosts in a row on Home become one row of posts to swipe through.</string>
+    <string name="reading_boost_carousel_summary">Three or more boosts in a row on My Feed become one row of posts to swipe through.</string>
     <!-- Reading switch: a long post shows its first lines and an Expand button -->
     <string name="reading_collapse">Shorten long posts</string>
     <!-- Reading switch: media posted without a description carries a "no ALT" badge -->

@@ -121,7 +121,7 @@ class HomeScreenTest {
     @Test
     fun switcherOpen() {
         compose.setContent { AlohaTheme { Home(HomeFeedsState(feeds, unread = setOf(feeds[2].id))) } }
-        compose.onNodeWithText("Following").performClick()
+        compose.onNodeWithText("My Feed").performClick()
         compose.waitForIdle()
         captureScreenRoboImage("src/test/screenshots/home-feeds-switcher.png")
     }
@@ -132,7 +132,7 @@ class HomeScreenTest {
         compose.setContent { AlohaTheme { Home(state) } }
         state = HomeFeedsState(feeds)
         compose.waitForIdle()
-        compose.onNodeWithText("Following").performClick()
+        compose.onNodeWithText("My Feed").performClick()
         compose.onNodeWithText("Surf report").performClick()
         compose.waitForIdle()
         compose.onNodeWithText("Surf report").assertExists()
@@ -141,19 +141,19 @@ class HomeScreenTest {
     @Test
     fun `the feed name lists the feeds, with news marked, and a pick moves there`() {
         compose.setContent { AlohaTheme { Home(HomeFeedsState(feeds, unread = setOf(feeds[2].id))) } }
-        compose.onNodeWithText("Following").performClick()
+        compose.onNodeWithText("My Feed").performClick()
         assertEquals(listOf("listed"), asked)
         compose.onNodeWithText("Surf report").performClick()
         compose.waitForIdle()
         compose.onNodeWithText("Surf report").assertExists()
-        compose.onNodeWithText("Following").assertDoesNotExist()
+        compose.onNodeWithText("My Feed").assertDoesNotExist()
     }
 
     @Test
     fun `where the reader chose it, a tap on the feed name moves to the next feed`() {
         compose.setContent { AlohaTheme { Home(HomeFeedsState(feeds, titleNext = true)) } }
-        compose.onNodeWithText("Following").performClick()
+        compose.onNodeWithText("My Feed").performClick()
         compose.waitForIdle()
-        compose.onNodeWithText("This server").assertExists()
+        compose.onNodeWithText("Local").assertExists()
     }
 }

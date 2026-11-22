@@ -57,7 +57,7 @@ class AudioScreenTest {
         compose.onNodeWithContentDescription("Pause Night swim").performClick()
         compose.onNodeWithContentDescription("Play Waves at the point").performClick()
         compose.onNodeWithText("Bob").performClick()
-        compose.onNodeWithText("This server").performClick()
+        compose.onNodeWithText("Local").performClick()
         assertEquals(listOf("play:1", "play:2", "open:2", "source:Local"), asked)
     }
 

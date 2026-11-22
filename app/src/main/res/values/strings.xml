@@ -33,11 +33,11 @@
     <!-- The short name under the launcher icon and in the recent-apps switcher, where the full one is cut off. A brand name, not translated. -->
     <string name="launcher_name" translatable="false">Aloha</string>
     <!-- Navigation item: the home timeline of the signed-in account. -->
-    <string name="destination_home">Home</string>
+    <string name="destination_home">My Feed</string>
     <!-- Navigation item: the photo mode, a grid of posts with pictures. -->
     <string name="destination_photos">Photos</string>
     <!-- Navigation item: the video mode, long videos. -->
-    <string name="destination_video">Video</string>
+    <string name="destination_video">Videos</string>
     <!-- Button in the video mode that opens the reader’s own video channels -->
     <string name="video_your_channels">Your channels</string>
     <!-- Navigation item: the shorts mode, short vertical videos. Keep it short, it sits under an icon. -->

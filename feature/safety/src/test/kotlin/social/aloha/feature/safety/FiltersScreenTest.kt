@@ -104,7 +104,7 @@ class FiltersScreenTest {
             }
         }
         compose.onRoot().tryPerformAccessibilityChecks()
-        compose.onNodeWithText("Hides · Home and lists, Public timelines · 2 keywords").assertExists()
+        compose.onNodeWithText("Hides · My Feed and lists, Public timelines · 2 keywords").assertExists()
         compose.onNodeWithText("Expired").assertExists()
         compose.onRoot().captureRoboImage("src/test/screenshots/filters.png")
         compose.onNodeWithText("Spoilers").performClick()
@@ -128,7 +128,7 @@ class FiltersScreenTest {
             }
         }
         compose.onRoot().tryPerformAccessibilityChecks()
-        compose.onNodeWithText("Hides · Home and lists, Public timelines · 2 keywords").assertExists()
+        compose.onNodeWithText("Hides · My Feed and lists, Public timelines · 2 keywords").assertExists()
         compose.onNodeWithText("Expired").assertExists()
         compose.onRoot().captureRoboImage("src/test/screenshots/filters-font200.png")
         compose.onNodeWithText("Spoilers").performClick()

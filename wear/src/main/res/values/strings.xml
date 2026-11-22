@@ -35,7 +35,7 @@
     <!-- The phone app had no account to hand over, or did not answer in time -->
     <string name="wear_problem_nothing_on_phone">Your phone didn’t hand over an account. Sign in to Aloha Social there first, or enter your server.</string>
     <!-- Title of the watch's home timeline -->
-    <string name="wear_home">Home</string>
+    <string name="wear_home">My Feed</string>
     <!-- Button and title of the notifications list -->
     <string name="wear_notifications">Activities</string>
     <!-- Button that opens the account the watch is signed in to, where it can sign out -->

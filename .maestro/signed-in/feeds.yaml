@@ -5,11 +5,14 @@
 # Back returns to Home.
 appId: social.aloha.android
 ---
-- tapOn: "Following"
+# the feed name is also the navigation item's, so the first match, the top bar's title, is meant
+- tapOn:
+    text: "My Feed"
+    index: 0
 - assertVisible: "Edit feeds"
 - tapOn: "Edit feeds"
 - assertVisible: "Add a feed"
 - back
 - extendedWaitUntil:
-    visible: "Following"
+    visible: "My Feed"
     timeout: 10000

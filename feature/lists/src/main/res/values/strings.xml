@@ -35,7 +35,7 @@
     <!-- A list shows no replies -->
     <string name="lists_replies_none">Nobody</string>
     <!-- A switch: the people in a list leave the home timeline -->
-    <string name="lists_exclusive">Hide these people from Home</string>
+    <string name="lists_exclusive">Hide these people from My Feed</string>
     <!-- Leaves a lists screen -->
     <string name="lists_back">Back</string>
     <!-- A lists screen could not load -->

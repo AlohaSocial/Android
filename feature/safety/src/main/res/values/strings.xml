@@ -19,7 +19,7 @@
     <!-- Switch: the local and federated timelines show only accounts the reader follows -->
     <string name="filters_hide_strangers">Only people I follow in public timelines</string>
     <!-- Explains the switch hiding everyone the reader doesn't follow in public timelines -->
-    <string name="filters_hide_strangers_summary">Hides everything from accounts you don’t follow in the local and federated timelines, on this device.</string>
+    <string name="filters_hide_strangers_summary">Hides everything from accounts you don’t follow in Local and Global, on this device.</string>
     <!-- Names a filter without a name -->
     <string name="filters_untitled">Unnamed filter</string>
     <!-- What a filter does: hides posts -->
@@ -36,7 +36,7 @@
     <!-- Until when a filter applies; %1$s is the date and time -->
     <string name="filters_until">Until %1$s</string>
     <!-- Where a filter applies: the home timeline and lists -->
-    <string name="filters_context_home">Home and lists</string>
+    <string name="filters_context_home">My Feed and lists</string>
     <!-- Where a filter applies: notifications -->
     <string name="filters_context_notifications">Activities</string>
     <!-- Where a filter applies: the public timelines -->

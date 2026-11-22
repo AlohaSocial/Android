@@ -17,11 +17,11 @@
     <!-- Floating button on the home timeline that opens the composer for a new post -->
     <string name="timeline_compose">New post</string>
     <!-- Title of the home timeline screen -->
-    <string name="timeline_title">Home</string>
+    <string name="timeline_title">My Feed</string>
     <!-- Title of the timeline of posts with photos -->
     <string name="timeline_title_photos">Photos</string>
     <!-- Title of the timeline of posts with videos -->
-    <string name="timeline_title_video">Video</string>
+    <string name="timeline_title_video">Videos</string>
     <!-- Title of the timeline of short vertical videos -->
     <string name="timeline_title_shorts">Shorts</string>
     <!-- Title of the timeline of posts that share a link to an article -->
@@ -31,11 +31,11 @@
     <!-- Title of one account's posts with a hashtag, opened from the hashtags it features on its profile. %1$s is the hashtag without its #, %2$s the account's handle with its @, such as @bob@example.social -->
     <string name="timeline_title_account_tag">#%1$s by %2$s</string>
     <!-- Source switch: the people the reader follows -->
-    <string name="timeline_source_home">Following</string>
+    <string name="timeline_source_home">My Feed</string>
     <!-- Source switch: everyone on the reader's own server -->
-    <string name="timeline_source_local">This server</string>
+    <string name="timeline_source_local">Local</string>
     <!-- Source switch: everyone the reader's server knows of -->
-    <string name="timeline_source_federated">Everywhere</string>
+    <string name="timeline_source_federated">Global</string>
     <!-- Menu of timeline options -->
     <string name="timeline_options">Timeline options</string>
     <!-- Timeline option: show boosts of other people's posts -->
@@ -202,7 +202,7 @@
     <!-- Title of the sheet offering the optional modes once, after the first account -->
     <string name="modes_offer_title">Make it yours</string>
     <!-- Body of the sheet offering the optional modes -->
-    <string name="modes_offer_body">Photos, Video and Shorts are always there. More can join them; you can change this later in Settings, under Modes.</string>
+    <string name="modes_offer_body">Photos, Videos and Shorts are always there. More can join them; you can change this later in Settings, under Modes.</string>
     <!-- Button that closes the sheet offering the optional modes -->
     <string name="modes_offer_done">Done</string>
     <!-- Heading of the choice of which mode an optional mode replaces in a phone's navigation bar, which holds three -->

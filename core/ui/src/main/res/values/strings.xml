@@ -111,11 +111,11 @@
     <!-- Screen-reader action that opens the post a post quotes -->
     <string name="status_action_open_quote">Open quoted post</string>
     <!-- A mode's posts from the people the reader follows, on its tabs or chips -->
-    <string name="source_home">Following</string>
+    <string name="source_home">My Feed</string>
     <!-- A mode's posts from everyone on the reader's own server -->
-    <string name="source_local">This server</string>
+    <string name="source_local">Local</string>
     <!-- A mode's posts from every server the reader's server knows of -->
-    <string name="source_federated">Everywhere</string>
+    <string name="source_federated">Global</string>
     <!-- Screen-reader action that opens a post's link preview; %s is the link's title or address -->
     <string name="status_action_open_card">Open link: %s</string>
     <!-- Screen reader action on a post's video link card, which plays it in its own app: %s is its title -->

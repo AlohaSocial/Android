@@ -1,13 +1,13 @@
 # SPDX-FileCopyrightText: 2026 Aloha Social contributors
 # SPDX-License-Identifier: MIT
 #
-# The Video tab, then a video's watch page, loaded; scripts/ui-flows.sh folds the device around it.
+# The Videos tab, then a video's watch page, loaded; scripts/ui-flows.sh folds the device around it.
 appId: social.aloha.android
 ---
 - launchApp
 - runFlow: system-ui.yaml
 - tapOn:
-    text: "Video"
+    text: "Videos"
     index: 0
 - tapOn: "Aloha test video.*"
 - extendedWaitUntil:
