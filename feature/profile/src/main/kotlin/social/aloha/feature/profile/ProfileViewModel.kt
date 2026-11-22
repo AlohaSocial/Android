@@ -66,6 +66,7 @@ import social.aloha.core.model.Status
 import social.aloha.core.model.Story
 import social.aloha.core.model.TimelineKey
 import social.aloha.core.navigation.AccountKey
+import social.aloha.core.navigation.OwnProfilePlace
 import social.aloha.core.network.ApiError
 import social.aloha.core.ui.RichTextColors
 import social.aloha.core.ui.StatusRowCache
@@ -336,9 +337,11 @@ internal class ProfileViewModel @AssistedInject constructor(
         when (val answer = profiles.resolve(reader, key.id, key.acct)) {
             is Answer.Got -> {
                 val account = answer.value
-                // the tab the account chose to open on, once and before it draws: a refresh keeps the reader's
+                // the tab the account chose to open on, or the reader's own tab the profile was opened on, once
+                // and before it draws: a refresh keeps the reader's
                 if (target.value == null) {
-                    control.update { it.copy(tab = ProfilePresentation.firstTab(account.profileLayout)) }
+                    val open = key.open.takeIf { account.id == reader.serverAccountId }
+                    control.update { it.copy(tab = ProfilePresentation.firstTab(account.profileLayout, open)) }
                 }
                 target.value = account
                 control.update { it.copy(loading = false, trouble = null) }
@@ -430,7 +433,7 @@ internal class ProfileViewModel @AssistedInject constructor(
             header = account?.let { headerOf(it, inputs.colors, reader) },
             relation = control.relationship?.let(ProfilePresentation::relation),
             highlights = control.highlights,
-            tabs = ProfilePresentation.tabs(reader.capabilities, featured != null, account?.profileLayout, control.tab),
+            tabs = ProfilePresentation.allTabs(reader, account, featured != null, control.tab),
             tab = control.tab,
             hasCollections = reader.capabilities.collections,
             items = ProfilePresentation.items(stored, decide, { status, warning ->
@@ -450,6 +453,7 @@ internal class ProfileViewModel @AssistedInject constructor(
             familiar = control.familiar.map { Familiar(it.id, it.bestDisplayName, it.smallAvatar) },
             knownHandle = key.acct?.let { if (it.startsWith('@')) it else "@$it" },
             featured = featured,
+            savedBookmarks = key.open == OwnProfilePlace.Bookmarks,
         )
     }
 

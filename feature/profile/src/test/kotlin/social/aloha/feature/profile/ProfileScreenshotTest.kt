@@ -133,6 +133,19 @@ class ProfileScreenshotTest {
     @Test
     fun followsYou() = capture("profile-follows-you") { ProfileScreen(profile(), NoActions, NoActions) }
 
+    // the reader's own profile, its own tabs after the others, on Drafts, which another feature draws
+    @Test
+    fun ownDrafts() = capture("profile-own-drafts") {
+        val shown = profile()
+        val own = shown.copy(
+            header = ProfilePresentation.header(StatusSamples.bob, cache, RichTextColors.fromTheme(), isSelf = true),
+            relation = null,
+            tabs = shown.tabs + OWN_TABS,
+            tab = ProfileTab.Drafts,
+        )
+        ProfileScreen(own, NoActions, NoActions, ownTabs = FakeOwnTabs())
+    }
+
     @Test
     fun tabsPinned() = capture("profile-tabs-pinned") {
         val shown = profile()

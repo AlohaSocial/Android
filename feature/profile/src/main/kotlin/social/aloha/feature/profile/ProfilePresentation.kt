@@ -16,9 +16,11 @@ import social.aloha.core.model.FilterContext
 import social.aloha.core.model.ProfileLayout
 import social.aloha.core.model.Relationship
 import social.aloha.core.model.ServerCapabilities
+import social.aloha.core.model.SignedInAccount
 import social.aloha.core.model.Status
 import social.aloha.core.model.TimelineKey
 import social.aloha.core.model.TimelineSource
+import social.aloha.core.navigation.OwnProfilePlace
 import social.aloha.core.ui.RichTextColors
 import social.aloha.core.ui.StatusRowMapper
 import social.aloha.core.ui.StatusRowUi
@@ -48,7 +50,9 @@ internal object ProfilePresentation {
             TimelineSource.Account(accountId, includeReplies = false, onlyMedia = true),
         )
 
-        ProfileTab.Featured, ProfileTab.Collections, ProfileTab.Stories -> null
+        ProfileTab.Featured, ProfileTab.Collections, ProfileTab.Stories,
+        ProfileTab.Saved, ProfileTab.Drafts, ProfileTab.Statistics,
+        -> null
     }
 
     /**
@@ -111,11 +115,36 @@ internal object ProfilePresentation {
         if (capabilities.stories) add(ProfileTab.Stories)
     }
 
-    /** The tab the account's profile opens on: its photos are the Media timeline. */
-    fun firstTab(layout: ProfileLayout?): ProfileTab = when (layout?.defaultTab) {
-        ProfileLayout.PHOTOS -> ProfileTab.Media
-        ProfileLayout.VIDEOS -> ProfileTab.Videos
-        else -> ProfileTab.Posts
+    /**
+     * The tabs the reader's own profile adds after the others, as the web app does: Saved and Drafts, and
+     * Statistics where Aloha Social counts them.
+     */
+    fun ownTabs(capabilities: ServerCapabilities): List<ProfileTab> =
+        listOf(ProfileTab.Saved, ProfileTab.Drafts) + listOf(ProfileTab.Statistics).filter {
+            capabilities.isNextcloudSocial
+        }
+
+    /** [tabs], and on the reader's own profile ([reader]'s account is [account]) [ownTabs] after them. */
+    fun allTabs(reader: SignedInAccount, account: Account?, featured: Boolean, current: ProfileTab): List<ProfileTab> =
+        tabs(reader.capabilities, featured, account?.profileLayout, current) +
+            ownTabs(reader.capabilities).takeIf { account?.id == reader.serverAccountId }.orEmpty()
+
+    /**
+     * The tab the account's profile opens on: the one of the reader's own tabs it was opened on ([open]),
+     * else the one the account chose; its photos are the Media timeline.
+     */
+    fun firstTab(layout: ProfileLayout?, open: OwnProfilePlace? = null): ProfileTab = when (open) {
+        OwnProfilePlace.Favorites, OwnProfilePlace.Bookmarks -> ProfileTab.Saved
+
+        OwnProfilePlace.Drafts -> ProfileTab.Drafts
+
+        OwnProfilePlace.Statistics -> ProfileTab.Statistics
+
+        null -> when (layout?.defaultTab) {
+            ProfileLayout.PHOTOS -> ProfileTab.Media
+            ProfileLayout.VIDEOS -> ProfileTab.Videos
+            else -> ProfileTab.Posts
+        }
     }
 
     /**

@@ -31,8 +31,17 @@ import social.aloha.core.ui.RoutedStatusActions
 import social.aloha.core.ui.StatusRowUi
 import social.aloha.core.ui.openInBrowser
 
+/**
+ * The profile [key] names, leading where [navigation] says; the reader's own profile adds the tabs
+ * [ownTabs] draws.
+ */
 @Composable
-public fun ProfileRoute(key: AccountKey, navigation: ProfileNavigation, modifier: Modifier = Modifier) {
+public fun ProfileRoute(
+    key: AccountKey,
+    navigation: ProfileNavigation,
+    modifier: Modifier = Modifier,
+    ownTabs: OwnProfileTabs? = null,
+) {
     val viewModel = hiltViewModel<ProfileViewModel, ProfileViewModel.Factory>(key = key.toString()) { it.create(key) }
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -125,6 +134,7 @@ public fun ProfileRoute(key: AccountKey, navigation: ProfileNavigation, modifier
         modifier,
         snackbars,
         search = PostSearch(searching, viewModel::onSearchPosts),
+        ownTabs = ownTabs,
     )
 
     deleting?.let { request ->

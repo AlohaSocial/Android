@@ -17,8 +17,25 @@ import social.aloha.core.model.ProfileHighlights
 import social.aloha.core.model.Story
 import social.aloha.core.ui.StatusRowUi
 
-/** The profile's tabs; Featured only where the account features something, the last two where the server has them. */
-internal enum class ProfileTab { Posts, Replies, Media, Featured, Videos, Collections, Stories }
+/**
+ * The profile's tabs; Featured only where the account features something, Collections and Stories where the
+ * server has them, and the last three on the reader's own profile only.
+ */
+internal enum class ProfileTab {
+    Posts,
+    Replies,
+    Media,
+    Featured,
+    Videos,
+    Collections,
+    Stories,
+    Saved,
+    Drafts,
+    Statistics,
+}
+
+/** The tabs only the reader's own profile has, drawn by the features that keep what they show. */
+internal val OWN_TABS = setOf(ProfileTab.Saved, ProfileTab.Drafts, ProfileTab.Statistics)
 
 /**
  * What an account features at the top of its profile: pinned posts and hashtags. [byAccount] where a
@@ -124,6 +141,8 @@ internal data class ProfileUiState(
     /** The handle the profile was opened by, shown while the account loads. */
     val knownHandle: String? = null,
     val featured: FeaturedUi? = null,
+    /** Whether the Saved tab opens on the bookmarks rather than the liked posts. */
+    val savedBookmarks: Boolean = false,
 )
 
 /** What changes the profile: its tabs and pages, and how the reader relates to the account. */

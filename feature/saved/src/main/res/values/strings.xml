@@ -4,14 +4,14 @@
   ~ SPDX-License-Identifier: MIT
 -->
 <resources>
-    <!-- Title of the posts the reader bookmarked -->
+    <!-- Saved tab of the reader's own profile: choice that shows the posts they bookmarked -->
     <string name="saved_bookmarks">Bookmarks</string>
-    <!-- Title of the posts the reader favourited -->
+    <!-- Saved tab of the reader's own profile: choice that shows the posts they liked -->
     <string name="saved_favourites">Favorites</string>
-    <!-- Title of the reader's own posts taken off their profile without deleting them -->
+    <!-- Drafts tab of the reader's own profile: heading over their posts taken off the profile without deleting them -->
     <string name="saved_archived">Archived posts</string>
-    <!-- Leaves a list of kept posts -->
-    <string name="saved_back">Back</string>
+    <!-- Spoken for the choice between liked and bookmarked posts on the Saved tab of the reader's own profile -->
+    <string name="saved_which">Which saved posts to show</string>
     <!-- Shown when the reader has bookmarked nothing -->
     <string name="saved_bookmarks_none">Nothing bookmarked yet. A post’s bookmark keeps it here, for you alone.</string>
     <!-- Shown when the reader has favourited nothing -->

@@ -84,6 +84,12 @@
     <string name="profile_tab_collections">Collections</string>
     <!-- Tab with the account's current stories -->
     <string name="profile_tab_stories">Shorts</string>
+    <!-- Tab on the reader's own profile only: the posts they liked and the ones they bookmarked -->
+    <string name="profile_tab_saved">Saved</string>
+    <!-- Tab on the reader's own profile only: their drafts, scheduled posts and archived posts -->
+    <string name="profile_tab_drafts">Drafts</string>
+    <!-- Tab on the reader's own profile only: how their posts are doing, counted by their server -->
+    <string name="profile_tab_statistics">Statistics</string>
     <!-- Heading of the strip showing twelve weeks of posting -->
     <string name="profile_highlights">Last 12 weeks</string>
     <!-- How much the account posted in the last twelve weeks; %d is the number -->

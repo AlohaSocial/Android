@@ -105,14 +105,10 @@ import social.aloha.core.navigation.PhotosKey
 import social.aloha.core.navigation.ProfileKey
 import social.aloha.core.navigation.ReportKey
 import social.aloha.core.navigation.RouteResolver
-import social.aloha.core.navigation.SavedKind
-import social.aloha.core.navigation.SavedPostsKey
-import social.aloha.core.navigation.ScheduledPostsKey
 import social.aloha.core.navigation.SearchKey
 import social.aloha.core.navigation.SettingsKey
 import social.aloha.core.navigation.SettingsSectionKey
 import social.aloha.core.navigation.ShortsKey
-import social.aloha.core.navigation.StatisticsKey
 import social.aloha.core.navigation.StatusListKey
 import social.aloha.core.navigation.StatusListKind
 import social.aloha.core.navigation.TagGroupKey
@@ -132,8 +128,6 @@ import social.aloha.core.ui.openLink
 import social.aloha.feature.audio.AudioRoute
 import social.aloha.feature.audio.MiniPlayer
 import social.aloha.feature.composer.ComposerRoute
-import social.aloha.feature.composer.DraftsRoute
-import social.aloha.feature.composer.ScheduledPostsRoute
 import social.aloha.feature.conversations.ConversationsRoute
 import social.aloha.feature.conversations.NewMessageRoute
 import social.aloha.feature.explore.ExploreRoute
@@ -164,7 +158,6 @@ import social.aloha.feature.safety.FilterEditRoute
 import social.aloha.feature.safety.FiltersRoute
 import social.aloha.feature.safety.InterestsRoute
 import social.aloha.feature.safety.R as SafetyR
-import social.aloha.feature.saved.SavedPostsRoute
 import social.aloha.feature.search.SearchRoute
 import social.aloha.feature.settings.AccountExportRoute
 import social.aloha.feature.settings.AuthorizedAppsRoute
@@ -175,7 +168,6 @@ import social.aloha.feature.settings.SettingsDestination
 import social.aloha.feature.settings.SettingsPlaceholder
 import social.aloha.feature.settings.SettingsRoute
 import social.aloha.feature.settings.SettingsSectionRoute
-import social.aloha.feature.settings.StatisticsRoute
 import social.aloha.feature.settings.YearRoute
 import social.aloha.feature.shorts.ShortsRoute
 import social.aloha.feature.stories.StoriesRail
@@ -399,6 +391,16 @@ fun AlohaApp(
             }
         }
     }
+    // Saved, Drafts and Statistics: tabs of the reader's own profile, as on the web
+    val ownTabs = remember(backStack, readerId, nextcloudSocial, statusNavigation) {
+        AppOwnProfileTabs(
+            readerId,
+            archive = nextcloudSocial,
+            navigation = statusNavigation,
+            onDraft = { backStack.openDraft(readerId, it) },
+            onConnect = { backStack.push(SettingsSectionKey(NEXTCLOUD_SECTION)) },
+        )
+    }
     PushWhenAsked(pendingDestination, onPendingDestinationTaken) { backStack.push(it) }
     LaunchedEffect(pendingLink) {
         pendingLink?.let {
@@ -580,13 +582,6 @@ fun AlohaApp(
                                     onBack = { backStack.remove(key) },
                                 )
                             }
-                            entry<StatisticsKey> { key ->
-                                StatisticsRoute(
-                                    key,
-                                    onConnect = { backStack.push(SettingsSectionKey(NEXTCLOUD_SECTION)) },
-                                    onBack = { backStack.remove(key) },
-                                )
-                            }
                             entry<AuthorizedAppsKey> { key ->
                                 AuthorizedAppsRoute(
                                     key,
@@ -605,9 +600,6 @@ fun AlohaApp(
                                 )
                             }
                             entry<FilterEditKey> { key -> FilterEditRoute(key, onDone = { backStack.remove(key) }) }
-                            entry<SavedPostsKey> { key ->
-                                SavedPostsRoute(key, statusNavigation, onBack = { backStack.remove(key) })
-                            }
                             entry<ConversationsKey> { key ->
                                 ConversationsRoute(
                                     key,
@@ -696,7 +688,7 @@ fun AlohaApp(
                                 SettingsSectionRoute(it.section, onBack = { backStack.removeLastOrNull() })
                             }
                             entry<ProfileKey> {
-                                ProfileRoute(AccountKey(readerId, id = serverAccountId), statusNavigation)
+                                ProfileRoute(ownProfile(readerId, serverAccountId), statusNavigation, ownTabs = ownTabs)
                             }
                             // a screen that closes itself takes its own entry away, so a second tap never closes
                             // what is under it
@@ -704,7 +696,6 @@ fun AlohaApp(
                                 ComposerRoute(
                                     it,
                                     onDone = { backStack.remove(it) },
-                                    onScheduledPosts = { backStack.push(ScheduledPostsKey(it.readerId)) },
                                     onDrafts = { backStack.push(DraftsKey(it.readerId)) },
                                     onSearch = { query -> backStack.push(SearchKey(it.readerId, query)) },
                                     onConnectNextcloud = { backStack.push(SettingsSectionKey(NEXTCLOUD_SECTION)) },
@@ -714,22 +705,12 @@ fun AlohaApp(
                                     },
                                 )
                             }
+                            // the drafts a notification or shortcut asks for are on the reader's own profile
                             entry<DraftsKey> { drafts ->
-                                DraftsRoute(
-                                    drafts,
-                                    onBack = { backStack.remove(drafts) },
-                                    onOpen = { id ->
-                                        // the draft opens in place of the list, and of the composer the list was
-                                        // opened from
-                                        backStack.remove(drafts)
-                                        if (backStack.lastOrNull() is ComposerKey) backStack.removeLastOrNull()
-                                        backStack.push(ComposerKey(drafts.readerId, draftId = id))
-                                    },
-                                )
+                                ProfileRoute(drafts.asOwnProfile(serverAccountId), statusNavigation, ownTabs = ownTabs)
                             }
                             entry<ReportKey> { ReportRoute(it, onDone = { backStack.remove(it) }) }
                             entry<EditProfileKey> { EditProfileRoute(it, onDone = { backStack.remove(it) }) }
-                            entry<ScheduledPostsKey> { ScheduledPostsRoute(it, onBack = { backStack.remove(it) }) }
                             entry<CollectionsKey>(metadata = ListDetailSceneStrategy.detailPane()) {
                                 CollectionsRoute(
                                     it,
@@ -760,7 +741,7 @@ fun AlohaApp(
                                 StatusListRoute(it, statusNavigation)
                             }
                             entry<AccountKey>(metadata = ListDetailSceneStrategy.detailPane()) {
-                                ProfileRoute(it, statusNavigation)
+                                ProfileRoute(it, statusNavigation, ownTabs = ownTabs)
                             }
                             entry<PeopleKey>(metadata = ListDetailSceneStrategy.detailPane()) {
                                 PeopleRoute(it, statusNavigation)
@@ -901,14 +882,10 @@ data class HomeLinks(
 /** Where the account button's sheet leads, one [AccountPlace] at a time. */
 data class AccountLinks(val open: (AccountPlace) -> Unit = {})
 
-/** Where the account sheet leads. */
+/** Where the account sheet leads; what the reader saved, drafted and counted is on their profile. */
 enum class AccountPlace {
     Profile,
     Messages,
-    Bookmarks,
-    Favourites,
-    Archived,
-    Statistics,
     Lists,
     Hashtags,
     Interests,
@@ -918,12 +895,8 @@ enum class AccountPlace {
 }
 
 private fun AccountPlace.key(readerId: String, serverAccountId: String): NavKey = when (this) {
-    AccountPlace.Profile -> AccountKey(readerId, id = serverAccountId)
+    AccountPlace.Profile -> ownProfile(readerId, serverAccountId)
     AccountPlace.Messages -> ConversationsKey(readerId)
-    AccountPlace.Bookmarks -> SavedPostsKey(readerId, SavedKind.Bookmarks)
-    AccountPlace.Favourites -> SavedPostsKey(readerId, SavedKind.Favourites)
-    AccountPlace.Archived -> SavedPostsKey(readerId, SavedKind.Archived)
-    AccountPlace.Statistics -> StatisticsKey(readerId)
     AccountPlace.Lists -> ListsKey(readerId)
     AccountPlace.Hashtags -> HashtagsKey(readerId)
     AccountPlace.Interests -> InterestsKey(readerId)

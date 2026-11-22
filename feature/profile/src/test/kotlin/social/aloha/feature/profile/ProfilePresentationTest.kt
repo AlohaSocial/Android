@@ -4,6 +4,7 @@
 package social.aloha.feature.profile
 
 import androidx.compose.ui.graphics.Color
+import java.time.Instant
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -15,6 +16,8 @@ import social.aloha.core.html.RichTextCache
 import social.aloha.core.model.FeaturedTag
 import social.aloha.core.model.ProfileLayout
 import social.aloha.core.model.ServerCapabilities
+import social.aloha.core.model.SignedInAccount
+import social.aloha.core.navigation.OwnProfilePlace
 import social.aloha.core.testing.StatusSamples
 import social.aloha.core.ui.RichTextColors
 import social.aloha.core.ui.StatusRowMapper
@@ -86,6 +89,55 @@ class ProfilePresentationTest {
         assertEquals(ProfileTab.Posts, ProfilePresentation.firstTab(null))
         assertEquals(ProfileTab.Media, ProfilePresentation.firstTab(ProfileLayout(defaultTab = "photos")))
         assertEquals(ProfileTab.Videos, ProfilePresentation.firstTab(ProfileLayout(defaultTab = "videos")))
+    }
+
+    /** Bob signed in on a server with [capabilities], as the account [StatusSamples.bob] is there. */
+    private fun bobReading(capabilities: ServerCapabilities) = SignedInAccount(
+        id = "1",
+        host = "cloud.example",
+        apiBase = capabilities.apiBase,
+        serverAccountId = StatusSamples.bob.id,
+        handle = "bob",
+        displayName = "Bob",
+        avatarUrl = null,
+        headerUrl = null,
+        capabilities = capabilities,
+        needsReauth = false,
+        profilePending = false,
+        addedAt = Instant.EPOCH,
+        nextcloudConnected = true,
+    )
+
+    @Test
+    fun `the reader's own profile adds Saved and Drafts after its tabs, and Statistics on Aloha Social`() {
+        val mastodon = ServerCapabilities.minimal("https://mastodon.example/")
+        val own = ProfilePresentation.allTabs(bobReading(mastodon), StatusSamples.bob, false, ProfileTab.Posts)
+        assertEquals(
+            listOf(ProfileTab.Posts, ProfileTab.Replies, ProfileTab.Media, ProfileTab.Videos) +
+                listOf(ProfileTab.Saved, ProfileTab.Drafts),
+            own,
+        )
+        val aloha = bobReading(social("0.26.250"))
+        val onSocial = ProfilePresentation.allTabs(aloha, StatusSamples.bob, false, ProfileTab.Posts)
+        assertEquals(listOf(ProfileTab.Saved, ProfileTab.Drafts, ProfileTab.Statistics), onSocial.takeLast(3))
+    }
+
+    @Test
+    fun `someone else's profile has none of the reader's own tabs`() {
+        val reader = bobReading(social("0.26.250")).copy(serverAccountId = "someone else")
+        val tabs = ProfilePresentation.allTabs(reader, StatusSamples.bob, false, ProfileTab.Posts)
+        assertTrue(tabs.none { it in OWN_TABS })
+    }
+
+    @Test
+    fun `a profile opened on one of the reader's own places opens on its tab`() {
+        assertEquals(ProfileTab.Saved, ProfilePresentation.firstTab(null, OwnProfilePlace.Favorites))
+        assertEquals(ProfileTab.Saved, ProfilePresentation.firstTab(null, OwnProfilePlace.Bookmarks))
+        assertEquals(ProfileTab.Drafts, ProfilePresentation.firstTab(null, OwnProfilePlace.Drafts))
+        assertEquals(
+            ProfileTab.Statistics,
+            ProfilePresentation.firstTab(ProfileLayout(defaultTab = "photos"), OwnProfilePlace.Statistics),
+        )
     }
 
     @Test

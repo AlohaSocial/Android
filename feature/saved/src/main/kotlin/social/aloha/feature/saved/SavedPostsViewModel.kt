@@ -22,10 +22,11 @@ import social.aloha.core.data.saved.SavedPosts
 import social.aloha.core.html.RichTextCache
 import social.aloha.core.model.SignedInAccount
 import social.aloha.core.model.Status
-import social.aloha.core.navigation.SavedKind
-import social.aloha.core.navigation.SavedPostsKey
 import social.aloha.core.ui.RichTextColors
 import social.aloha.core.ui.StatusRowMapper
+
+/** The posts a reader kept: favorited, bookmarked, or archived off their profile. */
+internal enum class SavedKind { Favourites, Bookmarks, Archived }
 
 @Immutable
 internal data class SavedPostsUiState(
@@ -38,17 +39,18 @@ internal data class SavedPostsUiState(
     val unarchiveFailed: Boolean = false,
 )
 
-/** The reader's bookmarked, favourited or archived posts, in the server's order, a page at a time. */
+/** [readerId]'s [kind] posts, in the server's order, a page at a time. */
 @HiltViewModel(assistedFactory = SavedPostsViewModel.Factory::class)
 internal class SavedPostsViewModel @AssistedInject constructor(
-    @Assisted private val key: SavedPostsKey,
+    @Assisted private val readerId: String,
+    @Assisted private val kind: SavedKind,
     private val accounts: AccountRepository,
     private val saved: SavedPosts,
     private val cache: RichTextCache,
 ) : ViewModel() {
     @AssistedFactory
     interface Factory {
-        fun create(key: SavedPostsKey): SavedPostsViewModel
+        fun create(readerId: String, kind: SavedKind): SavedPostsViewModel
     }
 
     private val state = MutableStateFlow(SavedPostsUiState())
@@ -59,7 +61,7 @@ internal class SavedPostsViewModel @AssistedInject constructor(
 
     init {
         viewModelScope.launch {
-            val account = accounts.byId(key.readerId) ?: return@launch
+            val account = accounts.byId(readerId) ?: return@launch
             reader = account
             state.update { it.copy(viewer = account.serverAccountId) }
             more()
@@ -102,7 +104,7 @@ internal class SavedPostsViewModel @AssistedInject constructor(
         if (state.value.done) return
         state.update { it.copy(loading = true, failed = false) }
         val after = last
-        val answer = when (key.kind) {
+        val answer = when (kind) {
             SavedKind.Bookmarks -> saved.bookmarks(account, after)
             SavedKind.Favourites -> saved.favourites(account, after)
             SavedKind.Archived -> saved.archived(account, after)

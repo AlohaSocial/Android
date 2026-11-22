@@ -186,6 +186,9 @@ internal val ProfileTab.label: Int
         ProfileTab.Videos -> R.string.profile_tab_videos
         ProfileTab.Collections -> R.string.profile_tab_collections
         ProfileTab.Stories -> R.string.profile_tab_stories
+        ProfileTab.Saved -> R.string.profile_tab_saved
+        ProfileTab.Drafts -> R.string.profile_tab_drafts
+        ProfileTab.Statistics -> R.string.profile_tab_statistics
     }
 
 private const val SHOWN = 3

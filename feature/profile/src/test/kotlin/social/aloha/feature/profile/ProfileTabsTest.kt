@@ -158,6 +158,56 @@ class ProfileTabsTest {
         assertEquals(0, list.firstVisibleItemIndex)
     }
 
+    /** The reader's own profile on [tab], with its own tabs after the others; [savedBookmarks] as it opened. */
+    @Composable
+    private fun own(tab: ProfileTab, savedBookmarks: Boolean = false): ProfileUiState {
+        val cache = RichTextCache()
+        return profile(tab).copy(
+            header = ProfilePresentation.header(StatusSamples.bob, cache, RichTextColors.fromTheme(), isSelf = true),
+            relation = null,
+            tabs = ProfileUiState().tabs + OWN_TABS,
+            savedBookmarks = savedBookmarks,
+        )
+    }
+
+    @Test
+    fun `the reader's own profile has Saved, Drafts and Statistics, each drawn in its list under the tabs`() {
+        val tabs = FakeOwnTabs()
+        compose.setContent {
+            AlohaTheme { ProfileScreen(own(ProfileTab.Drafts), actions, actions, listState = list, ownTabs = tabs) }
+        }
+        runBlocking { list.scrollToItem(TABS_AT) }
+        compose.waitForIdle()
+        compose.onNodeWithText("Saved").assertExists()
+        compose.onNodeWithText("Statistics").assertExists()
+        compose.onNodeWithText("A draft about the surf").assertIsDisplayed()
+        compose.onNodeWithText("Statistics").performClick()
+        assertEquals(listOf(ProfileTab.Statistics), chosen)
+        assertEquals(listOf("drafts"), tabs.asked.distinct())
+    }
+
+    @Test
+    fun `the Saved tab opens on the list the profile was opened for`() {
+        val tabs = FakeOwnTabs()
+        compose.setContent {
+            AlohaTheme {
+                ProfileScreen(own(ProfileTab.Saved, true), actions, actions, listState = list, ownTabs = tabs)
+            }
+        }
+        runBlocking { list.scrollToItem(TABS_AT) }
+        compose.waitForIdle()
+        compose.onNodeWithText("The bookmarks").assertIsDisplayed()
+        assertEquals(listOf("saved:true"), tabs.asked.distinct())
+    }
+
+    @Test
+    fun `with nothing to draw them, the reader's own tabs are left out`() {
+        compose.setContent { AlohaTheme { ProfileScreen(own(ProfileTab.Posts), actions, actions) } }
+        compose.onNodeWithText("Posts & replies").assertExists()
+        compose.onNodeWithText("Saved").assertDoesNotExist()
+        compose.onNodeWithText("Drafts").assertDoesNotExist()
+    }
+
     private companion object {
         const val POSTS = 30
 

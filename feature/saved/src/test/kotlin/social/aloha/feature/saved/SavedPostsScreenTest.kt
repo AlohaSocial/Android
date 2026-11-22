@@ -4,7 +4,12 @@
 package social.aloha.feature.saved
 
 import android.app.Application
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.Surface
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.junit4.accessibility.enableAccessibilityChecks
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
@@ -22,7 +27,6 @@ import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import social.aloha.core.designsystem.AlohaTheme
 import social.aloha.core.html.RichTextCache
-import social.aloha.core.navigation.SavedKind
 import social.aloha.core.testing.StatusSamples
 import social.aloha.core.ui.RichLinkTarget
 import social.aloha.core.ui.RichTextColors
@@ -45,27 +49,31 @@ class SavedPostsScreenTest {
     private val state = SavedPostsUiState(posts = listOf(StatusSamples.post()), loading = false, done = true)
 
     private fun actions(archive: Boolean) = SavedActions(
+        Inert,
         onMore = {},
         onUnarchive = if (archive) ({ asked += "unarchive:$it" }) else null,
-        onUnarchiveFailureShown = {},
-        onBack = {},
     )
+
+    /** [kind]'s rows as the reader's own profile lists them, under the Saved switch on that tab. */
+    private fun show(kind: SavedKind, shown: SavedPostsUiState = state) {
+        val rows = shown.posts.map { mapper.map(it, shown.viewer) }
+        val listActions = actions(archive = kind == SavedKind.Archived)
+        compose.setContent {
+            AlohaTheme {
+                Surface(Modifier.fillMaxSize()) {
+                    LazyColumn {
+                        if (kind != SavedKind.Archived) item { SavedSwitch(kind) { asked += "switch:$it" } }
+                        savedRows(SavedPage(kind, shown, rows, StatusSamples.NOW), listActions)
+                    }
+                }
+            }
+        }
+    }
 
     @Test
     fun `an archived post is put back on the profile from the archive`() {
         compose.enableAccessibilityChecks()
-        compose.setContent {
-            AlohaTheme {
-                SavedPostsScreen(
-                    SavedKind.Archived,
-                    state,
-                    mapper,
-                    Inert,
-                    actions(archive = true),
-                    now = StatusSamples.NOW,
-                )
-            }
-        }
+        show(SavedKind.Archived)
         compose.onRoot().tryPerformAccessibilityChecks()
         compose.onRoot().captureRoboImage("src/test/screenshots/saved-archived.png")
         compose.onNodeWithText("Put back on profile").performClick()
@@ -76,18 +84,7 @@ class SavedPostsScreenTest {
     @Config(fontScale = 2f)
     fun `an archived post is put back on the profile from the archive, at twice the font size`() {
         compose.enableAccessibilityChecks()
-        compose.setContent {
-            AlohaTheme {
-                SavedPostsScreen(
-                    SavedKind.Archived,
-                    state,
-                    mapper,
-                    Inert,
-                    actions(archive = true),
-                    now = StatusSamples.NOW,
-                )
-            }
-        }
+        show(SavedKind.Archived)
         compose.onRoot().tryPerformAccessibilityChecks()
         compose.onRoot().captureRoboImage("src/test/screenshots/saved-archived-font200.png")
         compose.onNodeWithText("Put back on profile").performClick()
@@ -96,12 +93,20 @@ class SavedPostsScreenTest {
 
     @Test
     fun `bookmarks offer nothing to put back, and say when there are none`() {
-        val none = state.copy(posts = emptyList())
-        compose.setContent {
-            AlohaTheme { SavedPostsScreen(SavedKind.Bookmarks, none, mapper, Inert, actions(archive = false)) }
-        }
+        show(SavedKind.Bookmarks, state.copy(posts = emptyList()))
         compose.onNodeWithText("Put back on profile").assertDoesNotExist()
         compose.onNodeWithText("Nothing bookmarked yet.", substring = true).assertExists()
+    }
+
+    @Test
+    fun `the Saved tab switches between the liked posts and the bookmarks`() {
+        compose.enableAccessibilityChecks()
+        show(SavedKind.Favourites)
+        compose.onRoot().tryPerformAccessibilityChecks()
+        compose.onRoot().captureRoboImage("src/test/screenshots/saved-favorites.png")
+        compose.onNodeWithText("Favorites").assertIsSelected()
+        compose.onNodeWithText("Bookmarks").performClick()
+        assertEquals(listOf("switch:${SavedKind.Bookmarks}"), asked)
     }
 }
 

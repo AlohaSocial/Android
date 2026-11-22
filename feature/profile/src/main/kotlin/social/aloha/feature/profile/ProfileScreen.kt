@@ -57,6 +57,7 @@ import social.aloha.core.model.MediaCollection
 import social.aloha.core.model.Story
 import social.aloha.core.ui.EmptyState
 import social.aloha.core.ui.ListProgress
+import social.aloha.core.ui.ListSection
 import social.aloha.core.ui.LocalReadingStyle
 import social.aloha.core.ui.LocalSensitiveMediaPolicy
 import social.aloha.core.ui.NearEndEffect
@@ -74,14 +75,17 @@ import social.aloha.core.ui.swipeTabs
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun ProfileScreen(
-    state: ProfileUiState,
+    uiState: ProfileUiState,
     actions: ProfileScreenActions,
     rowActions: StatusActions,
     modifier: Modifier = Modifier,
     snackbars: SnackbarHostState = remember { SnackbarHostState() },
     listState: LazyListState = rememberLazyListState(),
     search: PostSearch? = null,
+    ownTabs: OwnProfileTabs? = null,
 ) {
+    // the reader's own tabs show only where something draws them
+    val state = uiState.drawing(ownTabs)
     val title = state.header?.author?.plainName.orEmpty()
     var asking by rememberSaveable { mutableStateOf<Asking?>(null) }
     val bar = TopAppBarDefaults.pinnedScrollBehavior()
@@ -119,7 +123,7 @@ internal fun ProfileScreen(
                 when {
                     state.gone -> EmptyState(stringResource(R.string.profile_gone))
                     state.header == null -> ProfileSkeleton(state.knownHandle)
-                    else -> Content(state, state.header, actions, rowActions, listState, search)
+                    else -> Content(state, state.header, actions, rowActions, listState, search, ownTabs, snackbars)
                 }
             }
         }
@@ -140,7 +144,11 @@ private fun Content(
     rowActions: StatusActions,
     listState: LazyListState,
     search: PostSearch?,
+    ownTabs: OwnProfileTabs?,
+    snackbars: SnackbarHostState,
 ) {
+    // one of the reader's own tabs, drawn by the feature that keeps it, in this list under the tabs
+    val own = ownSection(state.tab, ownTabs, state.savedBookmarks, snackbars)
     // on a wide window the profile keeps a reading width, centred, rather than stretching banner and text
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
         val shown = shownTabs(state.tabs)
@@ -187,13 +195,18 @@ private fun Content(
                 item(key = "highlights", contentType = "highlights") { Highlights(highlights) }
             }
             stickyHeader(key = "tabs", contentType = "tabs") { Tabs(state, pinned, timeline, choose) }
-            tabContent(state, actions, rowActions, search)
+            ownOr(own) { tabContent(state, actions, rowActions, search) }
         }
     }
 }
 
 /** A search through the account's posts, as it stands, and what typing in it does. */
 internal data class PostSearch(val state: PostSearchUi, val onQuery: (String) -> Unit)
+
+/** One of the reader's own tabs where [own] draws it, else the profile's own [content]. */
+private fun LazyListScope.ownOr(own: ListSection?, content: LazyListScope.() -> Unit) {
+    if (own != null) own.addTo(this) else content()
+}
 
 private fun LazyListScope.tabContent(
     state: ProfileUiState,

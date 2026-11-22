@@ -71,15 +71,14 @@ private class Dialogs(
 private enum class Picker { Gifs, NextcloudFile, NextcloudPath, Schedule }
 
 /**
- * The composer for [key]; [onDone] leaves it, once posted, discarded or kept as a draft;
- * [onScheduledPosts] and [onDrafts] open those lists, [onSearch] search for who a mention could not find,
- * [onDraft] a draft in place of an empty post.
+ * The composer for [key]; [onDone] leaves it, once posted, discarded or kept as a draft; [onDrafts]
+ * opens the drafts, [onSearch] searches for who a mention could not find, [onDraft] opens a draft in place
+ * of an empty post.
  */
 @Composable
 public fun ComposerRoute(
     key: ComposerKey,
     onDone: () -> Unit,
-    onScheduledPosts: () -> Unit,
     onDrafts: () -> Unit,
     modifier: Modifier = Modifier,
     onSearch: (String) -> Unit = {},
@@ -98,11 +97,10 @@ public fun ComposerRoute(
         rememberSaveable { mutableStateOf(null) },
         rememberSaveable { mutableStateOf(false) },
     )
-    val scheduled by rememberUpdatedState(onScheduledPosts)
     val drafts by rememberUpdatedState(onDrafts)
     val search by rememberUpdatedState(onSearch)
     val draft by rememberUpdatedState(onDraft)
-    val elsewhere = Elsewhere({ scheduled() }, { drafts() }, { search(it) }) { draft(it) }
+    val elsewhere = Elsewhere({ drafts() }, { search(it) }) { draft(it) }
     val actions = rememberActions(viewModel, state, dialogs, elsewhere) { done() }
     val hue = MaterialTheme.colorScheme.primary.toArgb()
     LaunchedEffect(hue) { viewModel.cards.onHue(hue) }
@@ -128,12 +126,7 @@ public fun ComposerRoute(
 }
 
 /** The lists the composer opens, search, and a draft in its place. */
-private class Elsewhere(
-    val scheduledPosts: () -> Unit,
-    val drafts: () -> Unit,
-    val search: (String) -> Unit,
-    val draft: (String) -> Unit,
-)
+private class Elsewhere(val drafts: () -> Unit, val search: (String) -> Unit, val draft: (String) -> Unit)
 
 /**
  * The composer's actions, made once; what they decide on (the state, what the pickers accept) is
@@ -205,8 +198,6 @@ private fun rememberActions(
             override fun onSchedule(at: Instant?) {
                 viewModel.scheduledAt.value = at
             }
-
-            override fun onScheduledPosts() = elsewhere.scheduledPosts()
 
             override fun onDrafts() = elsewhere.drafts()
 
