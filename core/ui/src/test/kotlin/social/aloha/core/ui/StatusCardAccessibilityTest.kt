@@ -154,7 +154,7 @@ class StatusCardAccessibilityTest {
             StatusEvent.Status.Cancelled,
         )
         show(StatusSamples.post().copy(url = "https://events.example/e/1", event = event))
-        compose.onNodeWithContentDescription("Harbour clean-up, Cancelled", substring = true).assertExists()
+        compose.onNodeWithContentDescription("Harbour clean-up, Canceled", substring = true).assertExists()
         assertTrue("Add to calendar" !in labels())
         assertTrue("Open event page" in labels())
     }

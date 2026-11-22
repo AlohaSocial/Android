@@ -39,7 +39,7 @@ With Rewrite on and the model ready, the composer's toolbar offers, while there 
 
 ## Summaries
 
-With Summarise on, the thread's menu offers "Summarise this thread" (`SummaryViewModel`). The model reads the posts as shown, in order, each with its author's handle; a post behind a content warning is read as its warning alone, and one the reader's filters fold away is left out. A thread longer than 6,000 characters is summarised from its start, and the sheet says how many of its posts it covers. The summary appears in a sheet labelled as generated, with "Read the full thread"; it is never kept and never shown in the thread.
+With Summarize threads on, the thread's menu offers "Summarize this thread" (`SummaryViewModel`). The model reads the posts as shown, in order, each with its author's handle; a post behind a content warning is read as its warning alone, and one the reader's filters fold away is left out. A thread longer than 6,000 characters is summarised from its start, and the sheet says how many of its posts it covers. The summary appears in a sheet labelled as generated, with "Read the full thread"; it is never kept and never shown in the thread.
 
 ## Translation
 

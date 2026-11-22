@@ -76,8 +76,8 @@
     <string name="settings_terms">Terms of use</string>
     <!-- Settings, About: opens what the app does with the reader's data -->
     <string name="settings_privacy">Privacy</string>
-    <!-- Settings, About: opens the open-source libraries the app is built from and their licences -->
-    <string name="settings_licences">Open-source licences</string>
+    <!-- Settings, About: opens the open-source libraries the app is built from and their licenses -->
+    <string name="settings_licences">Open-source licenses</string>
     <!-- Settings, About: opens the project's issue tracker, to report a problem -->
     <string name="settings_issues">Report a problem</string>
     <!-- Settings, About: opens a plain-text report of the app’s version, the device and the app’s recent log, to read and then share with a bug report; also the title of that page -->
@@ -116,20 +116,20 @@
     <string name="appearance_contrast_standard">Standard</string>
     <!-- Contrast choice -->
     <string name="appearance_contrast_high">High</string>
-    <!-- Appearance: heading over where the app's colours come from -->
-    <string name="appearance_colours">Colours</string>
-    <!-- Colours choice: the colour the reader's Nextcloud is themed with -->
-    <string name="appearance_colours_server">Your Nextcloud\'s colour</string>
-    <!-- Colours choice, while the reader's server wears no colour: it then shows the app's own -->
-    <string name="appearance_colours_no_server">Your server\'s colour, where it has one</string>
-    <!-- Colours choice: from the phone's wallpaper (Android 12 and later) -->
+    <!-- Appearance: heading over where the app's colors come from -->
+    <string name="appearance_colours">Colors</string>
+    <!-- Colors choice: the color the reader's Nextcloud is themed with -->
+    <string name="appearance_colours_server">Your Nextcloud\'s color</string>
+    <!-- Colors choice, while the reader's server wears no color: it then shows the app's own -->
+    <string name="appearance_colours_no_server">Your server\'s color, where it has one</string>
+    <!-- Colors choice: from the phone's wallpaper (Android 12 and later) -->
     <string name="appearance_colours_wallpaper">From the wallpaper</string>
-    <!-- Colours choice: the app's own coral -->
+    <!-- Colors choice: the app's own coral -->
     <string name="appearance_colours_app">Aloha\'s own</string>
-    <!-- Colours choice: an accent the reader picks -->
+    <!-- Colors choice: an accent the reader picks -->
     <string name="appearance_colours_custom">An accent of your choice</string>
     <!-- Appearance switch under the accent swatches: each signed-in account keeps its own accent -->
-    <string name="appearance_accent_per_account">Colour per account</string>
+    <string name="appearance_accent_per_account">Color per account</string>
     <!-- Summary of the switch above -->
     <string name="appearance_accent_per_account_summary">Each account keeps the accent you choose while it is in use, so switching shows whose timeline it is.</string>
     <!-- Name of an accent colour swatch, read by a screen reader -->
@@ -407,13 +407,13 @@
     <!-- Intelligence settings: switch for alt text drafted on the device -->
     <string name="settings_intelligence_alt_text">Draft alt text</string>
     <!-- Intelligence settings: what drafting alt text does -->
-    <string name="settings_intelligence_alt_text_summary">From what this device recognises in a photo, marked as AI generated, for you to check before posting</string>
+    <string name="settings_intelligence_alt_text_summary">From what this device recognizes in a photo, marked as AI generated, for you to check before posting</string>
     <!-- Intelligence settings: switch for rewriting and proofreading a draft on the device -->
     <string name="settings_intelligence_rewrite">Rewrite and proofread</string>
     <!-- Intelligence settings: what rewriting does -->
     <string name="settings_intelligence_rewrite_summary">Another wording of your draft, which you take or leave</string>
     <!-- Intelligence settings: switch for summarising a thread on the device -->
-    <string name="settings_intelligence_summary">Summarise threads</string>
+    <string name="settings_intelligence_summary">Summarize threads</string>
     <!-- Intelligence settings: what summarising does -->
     <string name="settings_intelligence_summary_summary">A few sentences on a thread, shown in a sheet and never kept</string>
     <!-- Intelligence settings: under a switch's summary while the device fetches its language model -->

@@ -145,7 +145,7 @@
     <!-- Shown above the text when a post is deleted and redrafted but some of its pictures or videos could not be taken into the new post -->
     <string name="composer_redraft_media_left_out">Some photos and videos of this post couldn’t be taken over. Attach them again to keep them in the new post.</string>
     <!-- Shown above the text when a post about a cancelled event is redrafted for a server too old to post an event as cancelled, so the event was taken off the new post -->
-    <string name="composer_event_cancelled_left_out">This event is cancelled, and your server can’t post it as cancelled, so the new post isn’t an event.</string>
+    <string name="composer_event_cancelled_left_out">This event is canceled, and your server can’t post it as canceled, so the new post isn’t an event.</string>
     <!-- Post button label when editing a post that is out already -->
     <string name="composer_save">Save</string>
     <!-- Button that keeps the post as a draft and leaves the composer -->
@@ -211,7 +211,7 @@
     <!-- An attachment could not be uploaded -->
     <string name="composer_media_failed">Couldn\'t upload</string>
     <!-- An attachment's upload was cancelled from its notification -->
-    <string name="composer_media_cancelled">Upload cancelled</string>
+    <string name="composer_media_cancelled">Upload canceled</string>
     <!-- Title of the full-screen page describing an attachment for people who cannot see it -->
     <string name="composer_media_editor_title">Alt text</string>
     <!-- Label of the description field of an attachment -->

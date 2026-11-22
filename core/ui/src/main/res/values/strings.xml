@@ -137,7 +137,7 @@
     <!-- Screen reader action on an event post that opens the event's own page -->
     <string name="status_event_open_page">Open event page</string>
     <!-- On an event its organiser called off; the post stays, the event will not happen -->
-    <string name="status_event_cancelled">Cancelled</string>
+    <string name="status_event_cancelled">Canceled</string>
     <!-- On an event its organiser has not confirmed yet -->
     <string name="status_event_tentative">Tentative</string>
     <!-- On an event that has started and not ended yet -->
@@ -305,7 +305,7 @@
     <!-- Body of the terms screen -->
     <string name="app_terms_body">Aloha Social connects you to a server someone else runs. That server\'s own rules apply to what you post there, and its administrator can see what you share with it. The app itself collects nothing about you.</string>
     <!-- Second paragraph of the terms screen: what may not be posted, which the person agrees to -->
-    <string name="app_terms_conduct">There is no tolerance for objectionable content or abusive behaviour. By continuing you agree not to post anything illegal, hateful, harassing or threatening, nor sexual content involving minors, and not to abuse other people.</string>
+    <string name="app_terms_conduct">There is no tolerance for objectionable content or abusive behavior. By continuing you agree not to post anything illegal, hateful, harassing or threatening, nor sexual content involving minors, and not to abuse other people.</string>
     <!-- Third paragraph of the terms screen: the tools against what breaks the terms -->
     <string name="app_terms_tools">Every post and every account can be reported to the server\'s moderators, who can remove posts and close accounts, and anyone can be muted or blocked. The terms are in Settings, About, whenever you need them.</string>
 </resources>

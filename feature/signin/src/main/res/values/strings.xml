@@ -126,7 +126,7 @@
     <!-- Welcome screen: heading of the short explanation of the fediverse -->
     <string name="welcome_fediverse_title">What is the fediverse?</string>
     <!-- Welcome screen: what the fediverse is -->
-    <string name="welcome_fediverse_body">Many independent servers, run by people and organisations, that talk to each other. Your account lives on one of them, and you follow people on any of the others.</string>
+    <string name="welcome_fediverse_body">Many independent servers, run by people and organizations, that talk to each other. Your account lives on one of them, and you follow people on any of the others.</string>
     <!-- Welcome screen: Aloha Social, named first -->
     <string name="welcome_nextcloud">Aloha Social puts such a server into a Nextcloud. If yours has it, you sign in with your Nextcloud account; if it has not, its administrator can add it.</string>
     <!-- Welcome screen: the button that starts adding the first account -->

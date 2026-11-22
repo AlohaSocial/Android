@@ -131,9 +131,9 @@
     <!-- Switch: learning stops for now, keeping what was learnt -->
     <string name="interests_paused">Pause learning</string>
     <!-- Explains the pause switch -->
-    <string name="interests_paused_summary">Keeps what was learnt, and learns nothing new until you resume.</string>
+    <string name="interests_paused_summary">Keeps what was learned, and learns nothing new until you resume.</string>
     <!-- Note above the learning switches: the server's administrator has paused learning for everyone; the switches still keep the reader's choices for when it resumes -->
-    <string name="interests_instance_paused">Your administrator has paused learning on this server. Nothing new is learnt until they resume it; your choices below apply then.</string>
+    <string name="interests_instance_paused">Your administrator has paused learning on this server. Nothing new is learned until they resume it; your choices below apply then.</string>
     <!-- Switch: the server's For You feed also learns from what the reader does, apart from the hashtags they read -->
     <string name="interests_activity">Learn from what I do</string>
     <!-- Explains the activity learning switch -->
@@ -149,7 +149,7 @@
     <!-- Title of the dialog asking before all interests are forgotten -->
     <string name="interests_reset_title">Forget all interests?</string>
     <!-- Body of the dialog asking before all interests are forgotten -->
-    <string name="interests_reset_body">Everything your server learnt from your reading goes. Hashtags you follow stay among your interests.</string>
+    <string name="interests_reset_body">Everything your server learned from your reading goes. Hashtags you follow stay among your interests.</string>
     <!-- Title of the screen listing who the reader blocked and muted, and its entry in Settings -->
     <string name="blocked_title">Muted and blocked</string>
     <!-- Content description of the back button -->
