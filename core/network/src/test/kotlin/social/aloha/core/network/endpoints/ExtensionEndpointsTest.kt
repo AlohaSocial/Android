@@ -167,14 +167,10 @@ class ExtensionEndpointsTest {
     }
 
     @Test
-    fun `the reply switch is read and patched on the viewer's token`() {
-        val read = FeedPreferenceEndpoints.hideReplies().endpoint
+    fun `the thread order is read on the viewer's token`() {
+        val read = FeedPreferenceEndpoints.threadSort().endpoint
         assertEquals("api/v1/social/feed_preferences", read.path)
         assertEquals(HttpMethod.GET, read.method)
         assertEquals(Authentication.Bearer, read.authentication)
-        val write = FeedPreferenceEndpoints.setHideReplies(true).endpoint
-        assertEquals("api/v1/social/feed_preferences", write.path)
-        assertEquals(HttpMethod.PATCH, write.method)
-        assertEquals(listOf(QueryItem("hide_replies", "true")), write.form())
     }
 }
