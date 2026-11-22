@@ -3,18 +3,19 @@
 
 package social.aloha.feature.profile
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.Surface
@@ -36,25 +37,26 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import java.time.Instant
 import social.aloha.core.designsystem.AlohaSpacing
+import social.aloha.core.model.FeaturedTag
 import social.aloha.core.ui.LocalReadingStyle
 import social.aloha.core.ui.LocalSensitiveMediaPolicy
 import social.aloha.core.ui.PostDivider
 import social.aloha.core.ui.StatusActions
 import social.aloha.core.ui.StatusCard
 
-/** Posts, Posts & replies and Media: one Timeline tab, told apart by chips under the tabs. */
-internal val TIMELINE = setOf(ProfileTab.Posts, ProfileTab.Replies, ProfileTab.Media)
+/** Posts and Posts & replies: one Posts tab, told apart by chips under the tabs. */
+internal val TIMELINE = setOf(ProfileTab.Posts, ProfileTab.Replies)
 
-/** The tabs as drawn: the three timelines folded into the first of them. */
+/** The tabs as drawn: the two timelines folded into the first of them. */
 internal fun shownTabs(tabs: List<ProfileTab>): List<ProfileTab> = tabs.filter { it !in TIMELINE - ProfileTab.Posts }
 
-/** The tab drawn as chosen for [tab]: any of the timelines is the Timeline tab. */
+/** The tab drawn as chosen for [tab]: either timeline is the Posts tab. */
 internal fun shownTab(tab: ProfileTab): ProfileTab = if (tab in TIMELINE) ProfileTab.Posts else tab
 
 /**
- * The tab row, and under it the Timeline's chips while a timeline shows. [pinned] takes the top bar's
- * tint and lift, as the row does once it sticks under the bar. [timeline] is the timeline the Timeline
- * tab goes back to.
+ * The tab row, and under it the Posts tab's chips while a timeline shows. [pinned] takes the top bar's
+ * tint and lift, as the row does once it sticks under the bar. [timeline] is the timeline the Posts tab
+ * goes back to.
  */
 @Composable
 internal fun Tabs(state: ProfileUiState, pinned: Boolean, timeline: ProfileTab, onTab: (ProfileTab) -> Unit) {
@@ -71,10 +73,7 @@ internal fun Tabs(state: ProfileUiState, pinned: Boolean, timeline: ProfileTab, 
                     Tab(
                         selected = tab == shownTab(state.tab),
                         onClick = { onTab(if (tab == ProfileTab.Posts) timeline else tab) },
-                        text = {
-                            val label = if (tab == ProfileTab.Posts) R.string.profile_tab_timeline else tab.label
-                            Text(stringResource(label))
-                        },
+                        text = { Text(stringResource(tab.label)) },
                     )
                 }
             }
@@ -104,50 +103,48 @@ private fun TimelineChips(tab: ProfileTab, options: List<ProfileTab>, onTab: (Pr
     }
 }
 
-/**
- * What the account features: its pinned posts and its hashtags, a few of each until "View all". A hashtag
- * goes to [onTag].
- */
-internal fun LazyListScope.featured(
-    featured: FeaturedUi,
-    now: Instant,
-    rowActions: StatusActions,
-    onTag: (String) -> Unit,
-) {
-    if (featured.posts.isNotEmpty()) {
-        item(key = "pinned-title") { SectionTitle(R.string.profile_featured_pinned) }
-        item(key = "pinned") {
-            ViewAll(featured.posts, SHOWN) { posts ->
-                posts.forEach { row ->
-                    StatusCard(row, now, LocalSensitiveMediaPolicy.current, rowActions)
-                    PostDivider()
-                }
+/** The posts the account pinned, above its Posts tab's timeline as on the web: a few until "View all". */
+internal fun LazyListScope.pinnedPosts(featured: FeaturedUi, now: Instant, rowActions: StatusActions) {
+    if (featured.posts.isEmpty()) return
+    item(key = "pinned-title") { SectionTitle(R.string.profile_featured_pinned) }
+    item(key = "pinned") {
+        ViewAll(featured.posts, SHOWN) { posts ->
+            posts.forEach { row ->
+                StatusCard(row, now, LocalSensitiveMediaPolicy.current, rowActions)
+                PostDivider()
             }
         }
     }
-    if (featured.tags.isNotEmpty()) {
-        item(key = "tags-title") { SectionTitle(R.string.profile_featured_tags) }
-        item(key = "tags") {
-            ViewAll(featured.tags, SHOWN) { tags ->
-                tags.forEach { tag ->
-                    ListItem(
-                        modifier = Modifier.clickable { onTag(tag.name) },
-                        headlineContent = { Text("#${tag.name}") },
-                        supportingContent = if (LocalReadingStyle.current.showCounts) {
-                            {
-                                Text(
-                                    pluralStringResource(
-                                        R.plurals.profile_featured_tag_posts,
-                                        tag.statusesCount,
-                                        tag.statusesCount,
-                                    ),
-                                )
-                            }
-                        } else {
-                            null
-                        },
-                    )
-                }
+}
+
+/**
+ * The hashtags the account features, in its header as on the web, each opening the account's posts with
+ * it ([onTag]); with their counts where numbers show.
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+internal fun FeaturedTags(tags: List<FeaturedTag>, onTag: (String) -> Unit) {
+    if (tags.isEmpty()) return
+    val counts = LocalReadingStyle.current.showCounts
+    Column(verticalArrangement = Arrangement.spacedBy(AlohaSpacing.xs)) {
+        Text(
+            stringResource(R.string.profile_featured_tags),
+            style = MaterialTheme.typography.titleSmall,
+            modifier = Modifier.semantics { heading() },
+        )
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(AlohaSpacing.s)) {
+            tags.forEach { tag ->
+                AssistChip(
+                    onClick = { onTag(tag.name) },
+                    label = {
+                        val uses = pluralStringResource(
+                            R.plurals.profile_featured_tag_posts,
+                            tag.statusesCount,
+                            tag.statusesCount,
+                        )
+                        Text(if (counts) "#${tag.name} · $uses" else "#${tag.name}", maxLines = 1)
+                    },
+                )
             }
         }
     }
@@ -181,11 +178,10 @@ internal val ProfileTab.label: Int
     get() = when (this) {
         ProfileTab.Posts -> R.string.profile_tab_posts
         ProfileTab.Replies -> R.string.profile_tab_replies
-        ProfileTab.Media -> R.string.profile_tab_media
-        ProfileTab.Featured -> R.string.profile_tab_featured
+        ProfileTab.Photos -> R.string.profile_tab_photos
         ProfileTab.Videos -> R.string.profile_tab_videos
+        ProfileTab.Tagged -> R.string.profile_tab_tagged
         ProfileTab.Collections -> R.string.profile_tab_collections
-        ProfileTab.Stories -> R.string.profile_tab_stories
         ProfileTab.Saved -> R.string.profile_tab_saved
         ProfileTab.Drafts -> R.string.profile_tab_drafts
         ProfileTab.Statistics -> R.string.profile_tab_statistics

@@ -9,6 +9,8 @@ import okhttp3.HttpUrl
 import social.aloha.core.data.Answer
 import social.aloha.core.data.ClientFactory
 import social.aloha.core.data.answer
+import social.aloha.core.data.saved.PostPage
+import social.aloha.core.data.saved.PostPager
 import social.aloha.core.data.timeline.StatusRepository
 import social.aloha.core.model.Account
 import social.aloha.core.model.AccountList
@@ -69,6 +71,8 @@ public class ProfileRepository @Inject constructor(
     private val statuses: StatusRepository,
     private val followed: FollowedAuthors,
 ) {
+    private val pager = PostPager(clients, statuses)
+
     /**
      * The account by its id on the reader's server, or by its handle. A handle the server has not met
      * (a remote account nobody there follows) is looked up with a resolving search, which fetches it.
@@ -171,6 +175,18 @@ public class ProfileRepository @Inject constructor(
 
     public suspend fun collections(reader: SignedInAccount, id: String): Answer<List<MediaCollection>> =
         clients.answer(reader, CollectionEndpoints.forAccount(id))
+
+    /**
+     * The photos others tagged account [id] in (Pixelfed's `tagged`, which Aloha Social serves at
+     * `api/v1.1`, newest first), the page after [after]; it pages on from the oldest post read, as the web
+     * app does with `max_id`.
+     */
+    public suspend fun tagged(reader: SignedInAccount, id: String, after: PostPage? = null): Answer<PostPage> =
+        pager.page(reader, after, byPostId = true) { ProfileEndpoints.tagged(id, anchor = it) }
+
+    /** Takes the reader's own name off post [statusId], a photo someone tagged them in. */
+    public suspend fun untagMe(reader: SignedInAccount, statusId: String): Answer<Unit> =
+        clients.answer(reader, ProfileEndpoints.untagMe(statusId))
 
     /** Followers or following, a page at a time along the server's `Link` header. */
     public suspend fun people(

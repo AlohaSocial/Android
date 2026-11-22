@@ -127,13 +127,13 @@ class ProfileTabsTest {
     @Config(qualifiers = "w411dp-h891dp")
     fun `a swipe across moves from the timeline to the next tab, and back to the timeline last shown`() {
         showFollowing()
-        compose.onNodeWithText("Media").performClick()
+        compose.onNodeWithText("Photos").performClick()
         compose.waitForIdle()
         compose.onRoot().performTouchInput { swipeLeft() }
         compose.waitForIdle()
         compose.onRoot().performTouchInput { swipeRight() }
         compose.waitForIdle()
-        assertEquals(listOf(ProfileTab.Media, ProfileTab.Videos, ProfileTab.Media), chosen)
+        assertEquals(listOf(ProfileTab.Photos, ProfileTab.Videos, ProfileTab.Photos), chosen)
     }
 
     @Test
@@ -143,9 +143,9 @@ class ProfileTabsTest {
         compose.waitForIdle()
         compose.onRoot().performTouchInput { swipeLeft() }
         compose.waitForIdle()
-        assertEquals(listOf(ProfileTab.Videos), chosen)
+        assertEquals(listOf(ProfileTab.Photos), chosen)
         assertEquals(TABS_AT, list.firstVisibleItemIndex)
-        compose.onNodeWithText("Videos").assertIsDisplayed()
+        compose.onNodeWithText("Photos").assertIsDisplayed()
     }
 
     @Test
@@ -153,7 +153,7 @@ class ProfileTabsTest {
     @Config(qualifiers = "w411dp-h891dp")
     fun `a tab chosen with the header in view leaves the list where it is`() {
         showFollowing()
-        compose.onNodeWithText("Media").performClick()
+        compose.onNodeWithText("Photos").performClick()
         compose.waitForIdle()
         assertEquals(0, list.firstVisibleItemIndex)
     }

@@ -9,26 +9,26 @@ import java.time.Instant
 import social.aloha.core.data.Trouble
 import social.aloha.core.data.profile.ListChoice
 import social.aloha.core.data.profile.RelationshipChange
+import social.aloha.core.data.stories.StoryReel
 import social.aloha.core.data.timeline.ProfileSync
 import social.aloha.core.model.CustomEmoji
 import social.aloha.core.model.FeaturedTag
 import social.aloha.core.model.MediaCollection
 import social.aloha.core.model.ProfileHighlights
-import social.aloha.core.model.Story
 import social.aloha.core.ui.StatusRowUi
 
 /**
- * The profile's tabs; Featured only where the account features something, Collections and Stories where the
- * server has them, and the last three on the reader's own profile only.
+ * The profile's tabs, as the web app has them: Posts (with or without replies), Photos, Videos, Tagged
+ * where Aloha Social keeps it, Collections where the server has them, and the last three on the reader's
+ * own profile only.
  */
 internal enum class ProfileTab {
     Posts,
     Replies,
-    Media,
-    Featured,
+    Photos,
     Videos,
+    Tagged,
     Collections,
-    Stories,
     Saved,
     Drafts,
     Statistics,
@@ -118,13 +118,14 @@ internal data class ProfileUiState(
     val header: ProfileHeader? = null,
     val relation: Relation? = null,
     val highlights: ProfileHighlights? = null,
-    val tabs: List<ProfileTab> = listOf(ProfileTab.Posts, ProfileTab.Replies, ProfileTab.Media, ProfileTab.Videos),
+    val tabs: List<ProfileTab> = listOf(ProfileTab.Posts, ProfileTab.Replies, ProfileTab.Photos, ProfileTab.Videos),
     val tab: ProfileTab = ProfileTab.Posts,
     /** Whether the reader's server keeps collections, which the reader's own posts can go into. */
     val hasCollections: Boolean = false,
     val items: List<ProfileItem> = emptyList(),
     val collections: List<MediaCollection>? = null,
-    val stories: List<Story>? = null,
+    /** The account's shorts that last a day and are still up, which its avatar plays; null with none. */
+    val stories: StoryReel? = null,
     val loading: Boolean = true,
     val loadingOlder: Boolean = false,
     val changing: Boolean = false,
@@ -165,6 +166,15 @@ internal interface ProfileActions {
     fun onLists()
 
     fun onListed(listId: String, add: Boolean)
+
+    /** The Tagged tab's next page, or its first again after a failure. */
+    fun onMoreTagged() {}
+
+    /** Takes the reader's own name off photo [statusId] on their Tagged tab. */
+    fun onUntag(statusId: String) {}
+
+    /** Said how taking a name off a photo went. */
+    fun onUntagShown() {}
 }
 
 /** What the profile screen asks for: [ProfileActions], and the places it leads. */

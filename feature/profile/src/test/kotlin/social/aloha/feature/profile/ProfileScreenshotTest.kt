@@ -22,6 +22,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import social.aloha.core.data.profile.RelationshipChange
+import social.aloha.core.data.stories.StoryReel
 import social.aloha.core.designsystem.AlohaTheme
 import social.aloha.core.designsystem.ThemeMode
 import social.aloha.core.designsystem.ThemeSettings
@@ -32,6 +33,7 @@ import social.aloha.core.model.InstanceRule
 import social.aloha.core.model.MediaCollection
 import social.aloha.core.model.ProfileHighlights
 import social.aloha.core.model.ReadingStyle
+import social.aloha.core.model.Story
 import social.aloha.core.navigation.PeopleKind
 import social.aloha.core.testing.StatusSamples
 import social.aloha.core.ui.LocalReadingStyle
@@ -214,6 +216,7 @@ class ProfileScreenshotTest {
         )
     }
 
+    // featured hashtags in the header, and an avatar ringed for the shorts it plays, as on the web and Apple
     @Test
     fun featured() = capture("profile-featured") {
         val shown = profile(highlights = false)
@@ -223,14 +226,51 @@ class ProfileScreenshotTest {
         }
         ProfileScreen(
             shown.copy(
-                tabs = shown.tabs.toMutableList().apply { add(indexOf(ProfileTab.Videos), ProfileTab.Featured) },
-                tab = ProfileTab.Featured,
                 featured = FeaturedUi(posts, tags),
+                stories = StoryReel(StatusSamples.bob, listOf(Story("s1")), own = false),
             ),
+            NoActions,
+            NoActions,
+            stories = NoStories,
+        )
+    }
+
+    // the pinned posts above the Posts tab's timeline
+    @Test
+    fun pinned() = capture("profile-pinned") {
+        val shown = profile(highlights = false)
+        val posts = shown.items.filterIsInstance<ProfileItem.Post>().map { it.row }
+        ProfileScreen(
+            shown.copy(featured = FeaturedUi(posts, emptyList())),
             NoActions,
             NoActions,
             listState = LazyListState(firstVisibleItemIndex = 1),
         )
+    }
+
+    // the photos others tagged the reader in, each with Remove me
+    @Test
+    fun tagged() = capture("profile-tagged") {
+        val shown = profile(highlights = false)
+        val rows = shown.items.filterIsInstance<ProfileItem.Post>().map { it.row }
+        val self = ProfilePresentation.header(StatusSamples.bob, cache, RichTextColors.fromTheme(), isSelf = true)
+        ProfileScreen(
+            shown.copy(
+                header = self,
+                relation = null,
+                tabs = shown.tabs + ProfileTab.Tagged,
+                tab = ProfileTab.Tagged,
+            ),
+            NoActions,
+            NoActions,
+            listState = LazyListState(firstVisibleItemIndex = 1),
+            tagged = TaggedPosts(TaggedUi(rows, done = true, own = true), onMore = {}, onUntag = {}),
+        )
+    }
+
+    private object NoStories : StoriesPlayer {
+        @Composable
+        override fun Play(reel: StoryReel, onProfile: (accountId: String) -> Unit, onClose: () -> Unit) = Unit
     }
 
     @Test

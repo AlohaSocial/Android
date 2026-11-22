@@ -688,7 +688,12 @@ fun AlohaApp(
                                 SettingsSectionRoute(it.section, onBack = { backStack.removeLastOrNull() })
                             }
                             entry<ProfileKey> {
-                                ProfileRoute(ownProfile(readerId, serverAccountId), statusNavigation, ownTabs = ownTabs)
+                                ProfileRoute(
+                                    ownProfile(readerId, serverAccountId),
+                                    statusNavigation,
+                                    ownTabs = ownTabs,
+                                    stories = AppStoriesPlayer,
+                                )
                             }
                             // a screen that closes itself takes its own entry away, so a second tap never closes
                             // what is under it
@@ -707,7 +712,12 @@ fun AlohaApp(
                             }
                             // the drafts a notification or shortcut asks for are on the reader's own profile
                             entry<DraftsKey> { drafts ->
-                                ProfileRoute(drafts.asOwnProfile(serverAccountId), statusNavigation, ownTabs = ownTabs)
+                                ProfileRoute(
+                                    drafts.asOwnProfile(serverAccountId),
+                                    statusNavigation,
+                                    ownTabs = ownTabs,
+                                    stories = AppStoriesPlayer,
+                                )
                             }
                             entry<ReportKey> { ReportRoute(it, onDone = { backStack.remove(it) }) }
                             entry<EditProfileKey> { EditProfileRoute(it, onDone = { backStack.remove(it) }) }
@@ -741,7 +751,7 @@ fun AlohaApp(
                                 StatusListRoute(it, statusNavigation)
                             }
                             entry<AccountKey>(metadata = ListDetailSceneStrategy.detailPane()) {
-                                ProfileRoute(it, statusNavigation, ownTabs = ownTabs)
+                                ProfileRoute(it, statusNavigation, ownTabs = ownTabs, stories = AppStoriesPlayer)
                             }
                             entry<PeopleKey>(metadata = ListDetailSceneStrategy.detailPane()) {
                                 PeopleRoute(it, statusNavigation)

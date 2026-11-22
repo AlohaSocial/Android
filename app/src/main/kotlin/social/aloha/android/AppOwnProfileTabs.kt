@@ -6,6 +6,7 @@ package social.aloha.android
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.navigation3.runtime.NavKey
+import social.aloha.core.data.stories.StoryReel
 import social.aloha.core.navigation.AccountKey
 import social.aloha.core.navigation.ComposerKey
 import social.aloha.core.navigation.DraftsKey
@@ -15,9 +16,11 @@ import social.aloha.core.ui.StatusNavigation
 import social.aloha.feature.composer.draftsSection
 import social.aloha.feature.composer.scheduledSection
 import social.aloha.feature.profile.OwnProfileTabs
+import social.aloha.feature.profile.StoriesPlayer
 import social.aloha.feature.saved.archivedSection
 import social.aloha.feature.saved.savedSection
 import social.aloha.feature.settings.statisticsSection
+import social.aloha.feature.stories.AccountStoriesPlayer
 
 /**
  * The tabs only [readerId]'s own profile has, from the features that keep them, as the web app has
@@ -50,6 +53,13 @@ internal class AppOwnProfileTabs(
     @Composable
     override fun statistics(snackbars: SnackbarHostState): ListSection =
         statisticsSection(readerId, onConnect, snackbars)
+}
+
+/** A profile's avatar plays the account's shorts as the stories rail does. */
+internal object AppStoriesPlayer : StoriesPlayer {
+    @Composable
+    override fun Play(reel: StoryReel, onProfile: (accountId: String) -> Unit, onClose: () -> Unit) =
+        AccountStoriesPlayer(reel, onProfile, onClose)
 }
 
 /** The reader's own profile, as [serverAccountId] on their server, opened on [place]. */

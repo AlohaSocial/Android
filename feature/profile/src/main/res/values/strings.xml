@@ -62,28 +62,40 @@
     <string name="profile_block_confirm">Block</string>
     <!-- Button that cancels a dialog -->
     <string name="profile_cancel">Cancel</string>
-    <!-- Tab with the account's posts, without its replies -->
+    <!-- Profile tab with the account's posts, and the chip under it that leaves out its replies -->
     <string name="profile_tab_posts">Posts</string>
-    <!-- Tab with the account's posts and replies -->
+    <!-- Chip under the Posts tab: the account's posts and its replies -->
     <string name="profile_tab_replies">Posts &amp; replies</string>
-    <!-- Tab with the account's posts carrying images or video -->
-    <string name="profile_tab_media">Media</string>
-    <!-- Tab with the account's videos -->
+    <!-- Profile tab with the account's posts with photos -->
+    <string name="profile_tab_photos">Photos</string>
+    <!-- Tab with the account's posts with videos -->
     <string name="profile_tab_videos">Videos</string>
-    <!-- Profile tab holding the account's posts, with chips for posts only, posts and replies, or media -->
-    <string name="profile_tab_timeline">Timeline</string>
-    <!-- Profile tab with the posts the account pinned and the hashtags it features -->
-    <string name="profile_tab_featured">Featured</string>
-    <!-- Heading in the Featured tab -->
+    <!-- Heading over the account's pinned posts, at the top of its Posts tab -->
     <string name="profile_featured_pinned">Pinned posts</string>
-    <!-- Heading in the Featured tab -->
+    <!-- Heading over the hashtags the account features, in its profile header -->
     <string name="profile_featured_tags">Featured hashtags</string>
-    <!-- Button under a Featured section that shows the rest of it -->
+    <!-- Button under the pinned posts that shows the rest of them -->
     <string name="profile_featured_view_all">View all</string>
+    <!-- Profile tab, on Aloha Social: the photos others tagged the account in -->
+    <string name="profile_tab_tagged">Tagged</string>
+    <!-- Tagged tab, when nobody tagged the account in a photo; the web app's words -->
+    <string name="profile_tagged_none">No photos of them. When somebody names them in a photo, it shows up here.</string>
+    <!-- Tagged tab, when the photos could not be loaded -->
+    <string name="profile_tagged_failed">These photos couldn’t be loaded.</string>
+    <!-- Tagged tab: loads the next page of photos -->
+    <string name="profile_tagged_more">Show more</string>
+    <!-- Under a photo on the reader's own Tagged tab: takes the reader's name off it; the web app's label -->
+    <string name="profile_tagged_remove_me">Remove me</string>
+    <!-- Spoken for the Remove me button under a photo; %1$s is who posted the photo -->
+    <string name="profile_tagged_remove_me_from">Remove me from %1$s’s photo</string>
+    <!-- Said once the reader's name is off a photo; the web app's words -->
+    <string name="profile_tagged_removed">Your name is off this photo.</string>
+    <!-- Said when the reader's name could not be taken off a photo; the web app's words -->
+    <string name="profile_tagged_remove_failed">Could not remove your name</string>
+    <!-- Spoken for the ringed avatar of an account with shorts up, which plays them; %1$s is the account's name -->
+    <string name="profile_play_shorts">Play %1$s’s shorts</string>
     <!-- Profile tab with the account's collections, named sets of posts with pictures -->
     <string name="profile_tab_collections">Collections</string>
-    <!-- Tab with the account's current stories -->
-    <string name="profile_tab_stories">Shorts</string>
     <!-- Tab on the reader's own profile only: the posts they liked and the ones they bookmarked -->
     <string name="profile_tab_saved">Saved</string>
     <!-- Tab on the reader's own profile only: their drafts, scheduled posts and archived posts -->

@@ -50,11 +50,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import java.text.NumberFormat
 import social.aloha.core.data.Trouble
+import social.aloha.core.data.stories.StoryReel
 import social.aloha.core.data.timeline.ProfileSync
 import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.model.MediaCollection
-import social.aloha.core.model.Story
 import social.aloha.core.ui.EmptyState
 import social.aloha.core.ui.ListProgress
 import social.aloha.core.ui.ListSection
@@ -83,6 +83,8 @@ internal fun ProfileScreen(
     listState: LazyListState = rememberLazyListState(),
     search: PostSearch? = null,
     ownTabs: OwnProfileTabs? = null,
+    tagged: TaggedPosts? = null,
+    stories: StoriesPlayer? = null,
 ) {
     // the reader's own tabs show only where something draws them
     val state = uiState.drawing(ownTabs)
@@ -90,6 +92,7 @@ internal fun ProfileScreen(
     var asking by rememberSaveable { mutableStateOf<Asking?>(null) }
     val bar = TopAppBarDefaults.pinnedScrollBehavior()
     var showingQr by rememberSaveable { mutableStateOf(false) }
+    var playing by rememberSaveable { mutableStateOf(false) }
     Scaffold(
         modifier = modifier.nestedScroll(bar.nestedScrollConnection).semantics { paneTitle = title },
         topBar = {
@@ -122,8 +125,20 @@ internal fun ProfileScreen(
             RefreshBox(refreshing = state.loading && state.header != null, onRefresh = actions::onRefresh) {
                 when {
                     state.gone -> EmptyState(stringResource(R.string.profile_gone))
+
                     state.header == null -> ProfileSkeleton(state.knownHandle)
-                    else -> Content(state, state.header, actions, rowActions, listState, search, ownTabs, snackbars)
+
+                    else -> Content(
+                        state,
+                        state.header,
+                        actions,
+                        rowActions,
+                        listState,
+                        TabExtras(search, tagged),
+                        ownTabs,
+                        snackbars,
+                        onStories = playable(stories) { playing = true },
+                    )
                 }
             }
         }
@@ -133,6 +148,16 @@ internal fun ProfileScreen(
         RelationDialog(question, header.author.handle, header.domain, state, actions) { asking = null }
     }
     NearEndEffect(listState, state.items.size, actions::onNearEnd)
+    PlayStories(stories.takeIf { playing }, state.stories, rowActions::onProfile) { playing = false }
+}
+
+/** [play] where something plays an account's shorts ([stories]), else nothing to do. */
+private fun playable(stories: StoriesPlayer?, play: () -> Unit): (() -> Unit)? = play.takeIf { stories != null }
+
+/** The account's shorts ([reel]) playing over the profile, while something plays them ([stories]). */
+@Composable
+private fun PlayStories(stories: StoriesPlayer?, reel: StoryReel?, onProfile: (String) -> Unit, onClose: () -> Unit) {
+    if (stories != null && reel != null) stories.Play(reel, onProfile, onClose)
 }
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -143,9 +168,10 @@ private fun Content(
     actions: ProfileScreenActions,
     rowActions: StatusActions,
     listState: LazyListState,
-    search: PostSearch?,
+    extras: TabExtras,
     ownTabs: OwnProfileTabs?,
     snackbars: SnackbarHostState,
+    onStories: (() -> Unit)?,
 ) {
     // one of the reader's own tabs, drawn by the feature that keeps it, in this list under the tabs
     val own = ownSection(state.tab, ownTabs, state.savedBookmarks, snackbars)
@@ -188,20 +214,23 @@ private fun Content(
                             listState.firstVisibleItemScrollOffset / 2f
                         }
                     }
-                    Header(header, state, actions, rowActions::onProfile, drift)
+                    Header(header, state, actions, rowActions::onProfile, onStories, drift)
                 }
             }
             state.highlights?.let { highlights ->
                 item(key = "highlights", contentType = "highlights") { Highlights(highlights) }
             }
             stickyHeader(key = "tabs", contentType = "tabs") { Tabs(state, pinned, timeline, choose) }
-            ownOr(own) { tabContent(state, actions, rowActions, search) }
+            ownOr(own) { tabContent(state, actions, rowActions, extras) }
         }
     }
 }
 
 /** A search through the account's posts, as it stands, and what typing in it does. */
 internal data class PostSearch(val state: PostSearchUi, val onQuery: (String) -> Unit)
+
+/** What the tabs draw beyond the account's posts: the search through them, and the photos it is tagged in. */
+internal data class TabExtras(val search: PostSearch?, val tagged: TaggedPosts?)
 
 /** One of the reader's own tabs where [own] draws it, else the profile's own [content]. */
 private fun LazyListScope.ownOr(own: ListSection?, content: LazyListScope.() -> Unit) {
@@ -212,22 +241,28 @@ private fun LazyListScope.tabContent(
     state: ProfileUiState,
     actions: ProfileScreenActions,
     rowActions: StatusActions,
-    search: PostSearch?,
+    extras: TabExtras,
 ) {
     when (state.tab) {
         ProfileTab.Collections -> listed(state.collections, MediaCollection::id) { CollectionRow(it, actions) }
-
-        ProfileTab.Stories -> listed(state.stories, Story::id) { StoryRow(it, actions) }
-
-        ProfileTab.Featured -> state.featured?.let { featured(it, state.now, rowActions, actions::onFeaturedTag) }
-
-        else -> {
-            val handle = state.header?.author?.handle.orEmpty()
-            val searched = state.tab == ProfileTab.Posts && search != null &&
-                postSearch(search, handle, state.now, rowActions)
-            if (!searched) timeline(state, actions, rowActions)
-        }
+        ProfileTab.Tagged -> extras.tagged?.let { taggedRows(it, state.now, rowActions) }
+        else -> postsTab(state, actions, rowActions, extras.search)
     }
+}
+
+/** A timeline tab: on Posts the search through it and the pinned posts first, as on the web. */
+private fun LazyListScope.postsTab(
+    state: ProfileUiState,
+    actions: ProfileScreenActions,
+    rowActions: StatusActions,
+    search: PostSearch?,
+) {
+    val handle = state.header?.author?.handle.orEmpty()
+    val searched = state.tab == ProfileTab.Posts && search != null && postSearch(search, handle, state.now, rowActions)
+    if (searched) return
+    // on Photos or Videos they would be whatever the account pinned, photos or not
+    if (state.tab in TIMELINE) state.featured?.let { pinnedPosts(it, state.now, rowActions) }
+    timeline(state, actions, rowActions)
 }
 
 /** A timeline tab's posts, with the gaps in them, and more coming at the end. */

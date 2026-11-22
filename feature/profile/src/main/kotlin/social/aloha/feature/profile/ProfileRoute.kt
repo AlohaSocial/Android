@@ -33,7 +33,7 @@ import social.aloha.core.ui.openInBrowser
 
 /**
  * The profile [key] names, leading where [navigation] says; the reader's own profile adds the tabs
- * [ownTabs] draws.
+ * [ownTabs] draws, and the avatar plays the account's shorts through [stories].
  */
 @Composable
 public fun ProfileRoute(
@@ -41,6 +41,7 @@ public fun ProfileRoute(
     navigation: ProfileNavigation,
     modifier: Modifier = Modifier,
     ownTabs: OwnProfileTabs? = null,
+    stories: StoriesPlayer? = null,
 ) {
     val viewModel = hiltViewModel<ProfileViewModel, ProfileViewModel.Factory>(key = key.toString()) { it.create(key) }
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -54,6 +55,15 @@ public fun ProfileRoute(
     val nav by rememberUpdatedState(navigation)
 
     LaunchedEffect(colors) { viewModel.onColors(colors) }
+    val tagged by viewModel.taggedPosts.collectAsStateWithLifecycle()
+    val untagged = stringResource(R.string.profile_tagged_removed)
+    val untagFailed = stringResource(R.string.profile_tagged_remove_failed)
+    LaunchedEffect(tagged.untagged) {
+        tagged.untagged?.let { off ->
+            snackbars.showSnackbar(if (off) untagged else untagFailed)
+            viewModel.onUntagShown()
+        }
+    }
     LaunchedEffect(state.actionFailed) {
         if (state.actionFailed) {
             snackbars.showSnackbar(failed)
@@ -135,6 +145,8 @@ public fun ProfileRoute(
         snackbars,
         search = PostSearch(searching, viewModel::onSearchPosts),
         ownTabs = ownTabs,
+        tagged = TaggedPosts(tagged, viewModel::onMoreTagged, viewModel::onUntag),
+        stories = stories,
     )
 
     deleting?.let { request ->

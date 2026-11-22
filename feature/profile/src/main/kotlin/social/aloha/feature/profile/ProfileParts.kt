@@ -4,6 +4,7 @@
 package social.aloha.feature.profile
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -32,11 +33,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
@@ -48,13 +51,14 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import java.text.NumberFormat
 import social.aloha.core.data.profile.RelationshipChange
+import social.aloha.core.data.stories.StoryReel
 import social.aloha.core.designsystem.AlohaIcons
 import social.aloha.core.designsystem.AlohaSpacing
 import social.aloha.core.model.MediaCollection
 import social.aloha.core.model.ProfileHighlights
-import social.aloha.core.model.Story
 import social.aloha.core.ui.Avatar
 import social.aloha.core.ui.LocalReadingStyle
+import social.aloha.core.ui.avatarShape
 import social.aloha.core.ui.contentDirection
 import social.aloha.core.ui.fullDate
 import social.aloha.core.ui.rememberEmojiContent
@@ -65,6 +69,7 @@ internal fun Header(
     state: ProfileUiState,
     actions: ProfileScreenActions,
     onProfile: (String) -> Unit,
+    onStories: (() -> Unit)? = null,
     drift: () -> Float = { 0f },
 ) {
     Column(Modifier.semantics { isTraversalGroup = true }) {
@@ -80,9 +85,10 @@ internal fun Header(
                     .background(MaterialTheme.colorScheme.surfaceContainerHigh)
                     .graphicsLayer { translationY = drift() },
             )
-            Avatar(
-                header.author.avatarUrl,
-                AVATAR,
+            StoriesAvatar(
+                header,
+                state.stories,
+                onStories,
                 Modifier.align(Alignment.BottomStart).offset(x = AlohaSpacing.m, y = AVATAR / 2),
             )
         }
@@ -123,6 +129,7 @@ internal fun Header(
                 )
             }
             header.fields.forEach { Field(it) }
+            FeaturedTags(state.featured?.tags.orEmpty(), actions::onFeaturedTag)
             header.joined?.let { Joined(it) }
             Counts(header, actions)
             FamiliarFollowers(state.familiar, onProfile)
@@ -307,21 +314,29 @@ internal fun CollectionRow(collection: MediaCollection, actions: ProfileScreenAc
     )
 }
 
+/**
+ * The avatar; ringed where the account has shorts up and something plays them ([onPlay]), as on the
+ * Apple app, and then a button that plays them, the ring muted once all are seen.
+ */
 @Composable
-internal fun StoryRow(story: Story, actions: ProfileScreenActions) {
-    ListItem(
-        modifier = Modifier.clickable(enabled = story.url != null) { story.url?.let(actions::onOpenInBrowser) },
-        leadingContent = { Thumbnail(story.previewUrl) },
-        headlineContent = {
-            Text(
-                story.caption?.takeIf {
-                    it.isNotBlank()
-                } ?: stringResource(R.string.profile_tab_stories),
-                maxLines = 2,
-            )
-        },
-        supportingContent = { story.publishedAt?.let { Text(fullDate(it)) } },
-    )
+private fun StoriesAvatar(header: ProfileHeader, reel: StoryReel?, onPlay: (() -> Unit)?, modifier: Modifier) {
+    if (reel == null || onPlay == null) {
+        Avatar(header.author.avatarUrl, AVATAR, modifier)
+        return
+    }
+    val label = stringResource(R.string.profile_play_shorts, header.author.plainName)
+    val ring = if (reel.unseen) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
+    // the ring takes the avatar's own shape, round or the rounded square the reader chose
+    val shape = avatarShape()
+    Box(
+        modifier
+            .size(RINGED)
+            .border(RING, ring, shape)
+            .clip(shape)
+            .clickable(role = Role.Button, onClickLabel = label, onClick = onPlay)
+            .semantics { contentDescription = label },
+        contentAlignment = Alignment.Center,
+    ) { Avatar(header.author.avatarUrl, AVATAR) }
 }
 
 @Composable
@@ -337,6 +352,10 @@ private fun Thumbnail(url: String?) {
 }
 
 private val AVATAR = 80.dp
+private val RING = 3.dp
+
+// the avatar, a gap and the ring around it
+private val RINGED = 92.dp
 private const val BANNER_RATIO = 3f
 private val VERIFIED = 16.dp
 private val BARS = 40.dp

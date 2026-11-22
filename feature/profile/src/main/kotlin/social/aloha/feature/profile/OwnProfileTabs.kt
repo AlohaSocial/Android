@@ -6,6 +6,7 @@ package social.aloha.feature.profile
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
+import social.aloha.core.data.stories.StoryReel
 import social.aloha.core.ui.ListSection
 
 /**
@@ -46,3 +47,14 @@ internal fun ownSection(
 /** The profile as drawn: without the reader's own tabs where nothing draws them ([tabs] null). */
 internal fun ProfileUiState.drawing(tabs: OwnProfileTabs?): ProfileUiState =
     if (tabs == null) copy(tabs = this.tabs - OWN_TABS) else this
+
+/**
+ * Plays an account's shorts that last a day, from its profile's avatar, as the feature that keeps
+ * stories plays them; the app supplies it.
+ */
+@Stable
+public interface StoriesPlayer {
+    /** Plays [reel] over the screen; [onProfile] leaves for a profile, [onClose] ends the playing. */
+    @Composable
+    public fun Play(reel: StoryReel, onProfile: (accountId: String) -> Unit, onClose: () -> Unit)
+}

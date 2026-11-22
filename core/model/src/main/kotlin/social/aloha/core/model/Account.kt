@@ -52,8 +52,6 @@ public data class Account(
     val moved: Account? = null,
     /** Kept in memory of someone who died; nobody posts from it any more. */
     val memorial: Boolean = false,
-    /** How the account wants its profile shown, where its server says (Aloha Social); null shows it all. */
-    val profileLayout: ProfileLayout? = null,
     /**
      * Whether the account shows its followers and following to nobody else (`hide_collections`); null
      * where the server does not say, which Aloha Social does for an account embedded in another entity.
@@ -77,24 +75,6 @@ public data class Account(
             if (at >= 0) return acct.substring(at + 1)
             return hostOf(url)
         }
-}
-
-/**
- * The tab an account's profile opens on and the tabs it offers, as Aloha Social names them (`posts`,
- * `photos`, `videos`, `tagged`, `collections`). How the profile looks, never who may see what: a tab left
- * out is still there to anyone who asks for it.
- */
-@Serializable
-public data class ProfileLayout(val defaultTab: String = POSTS, val tabs: List<String> = ALL) {
-    public fun shows(tab: String): Boolean = tab in tabs
-
-    public companion object {
-        public const val POSTS: String = "posts"
-        public const val PHOTOS: String = "photos"
-        public const val VIDEOS: String = "videos"
-        public const val COLLECTIONS: String = "collections"
-        public val ALL: List<String> = listOf(POSTS, PHOTOS, VIDEOS, "tagged", COLLECTIONS)
-    }
 }
 
 @Serializable

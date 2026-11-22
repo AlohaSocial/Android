@@ -188,6 +188,33 @@ internal class ProfileViewModel @AssistedInject constructor(
 
     fun onSearchPosts(query: String) = search.onQuery(reader.value, target.value?.id, query)
 
+    /** The photos others tagged the account in, a page at a time (Aloha Social's Tagged tab). */
+    private val tagged = ProfileTagged(profiles, viewModelScope)
+
+    /** The Tagged tab as shown, its rows from the profile's own row cache. */
+    val taggedPosts: StateFlow<TaggedUi> = combine(tagged.found, colors.filterNotNull()) { found, palette ->
+        rows.use(palette)
+        TaggedUi(
+            found.posts?.map { rows.rowFor(it, found.viewer, null) },
+            found.loading,
+            found.failed,
+            found.done,
+            own = found.viewer.isNotEmpty() && target.value?.id == found.viewer,
+            untagged = found.untagged,
+        )
+    }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_MILLIS), TaggedUi())
+
+    override fun onMoreTagged() {
+        val reader = reader.value ?: return
+        target.value?.let { tagged.more(reader, it.id) }
+    }
+
+    override fun onUntag(statusId: String) {
+        reader.value?.let { tagged.untag(it, statusId) }
+    }
+
+    override fun onUntagShown() = tagged.untagShown()
+
     /** Rows and the header are rendered with the theme's colours, which only the screen knows. */
     fun onColors(value: RichTextColors) {
         colors.value = value
@@ -337,11 +364,11 @@ internal class ProfileViewModel @AssistedInject constructor(
         when (val answer = profiles.resolve(reader, key.id, key.acct)) {
             is Answer.Got -> {
                 val account = answer.value
-                // the tab the account chose to open on, or the reader's own tab the profile was opened on, once
-                // and before it draws: a refresh keeps the reader's
+                // the reader's own tab the profile was opened on, once and before it draws: a refresh keeps the
+                // reader's
                 if (target.value == null) {
                     val open = key.open.takeIf { account.id == reader.serverAccountId }
-                    control.update { it.copy(tab = ProfilePresentation.firstTab(account.profileLayout, open)) }
+                    control.update { it.copy(tab = ProfilePresentation.firstTab(open)) }
                 }
                 target.value = account
                 control.update { it.copy(loading = false, trouble = null) }
@@ -362,7 +389,9 @@ internal class ProfileViewModel @AssistedInject constructor(
                 viewModelScope.launch {
                     val pinned = (featured.pinned(reader, account.id) as? Answer.Got)?.value.orEmpty()
                     val tags = (featured.tags(reader, account.id) as? Answer.Got)?.value.orEmpty()
-                    control.update { it.copy(pinned = pinned, featuredTags = tags) }
+                    val shorts = reader.capabilities.stories
+                    val stories = if (shorts) profiles.stories(reader, account.id).live(clock) else null
+                    control.update { it.copy(pinned = pinned, featuredTags = tags, stories = stories) }
                 }
                 loadTab(reader, control.value.tab, force)
             }
@@ -384,9 +413,7 @@ internal class ProfileViewModel @AssistedInject constructor(
                 control.update { it.copy(collections = answer.value) }
             }
 
-            tab == ProfileTab.Stories -> (profiles.stories(reader, account.id) as? Answer.Got)?.let { answer ->
-                control.update { it.copy(stories = answer.value.filter { story -> story.isLive(clock.instant()) }) }
-            }
+            tab == ProfileTab.Tagged -> tagged.load(reader, account.id, fresh = force)
         }
     }
 
@@ -433,14 +460,14 @@ internal class ProfileViewModel @AssistedInject constructor(
             header = account?.let { headerOf(it, inputs.colors, reader) },
             relation = control.relationship?.let(ProfilePresentation::relation),
             highlights = control.highlights,
-            tabs = ProfilePresentation.allTabs(reader, account, featured != null, control.tab),
+            tabs = ProfilePresentation.allTabs(reader, account),
             tab = control.tab,
             hasCollections = reader.capabilities.collections,
             items = ProfilePresentation.items(stored, decide, { status, warning ->
                 rows.rowFor(status, reader.serverAccountId, warning?.titles, warning?.keywords.orEmpty())
             }, control.loadingGaps),
             collections = control.collections,
-            stories = control.stories,
+            stories = account?.let { ProfilePresentation.reel(it, control.stories, reader) },
             loading = control.loading,
             loadingOlder = control.loadingOlder,
             changing = control.changing,
@@ -470,3 +497,7 @@ internal class ProfileViewModel @AssistedInject constructor(
         const val STOP_MILLIS = 5_000L
     }
 }
+
+/** The shorts still up of those answered, which the avatar plays, as the Apple app's does; null on a failure. */
+private fun Answer<List<Story>>.live(clock: Clock): List<Story>? =
+    (this as? Answer.Got)?.value?.filter { it.isLive(clock.instant()) }

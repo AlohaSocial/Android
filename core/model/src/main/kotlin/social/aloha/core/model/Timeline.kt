@@ -174,7 +174,8 @@ public data class TimelineFilters(
 
         /**
          * [forMode], but an account's media ([TimelineSource.Account.onlyMedia]) is its photos, videos and
-         * animated images alone where the server can narrow to them, and another server's timeline
+         * animated images alone where the server can narrow to them, its photos alone in Photos mode (a
+         * profile's Photos tab), and another server's timeline
          * ([TimelineSource.Remote]) is asked without `media_type`, which only the reader's server is known
          * to take.
          */
@@ -182,6 +183,7 @@ public data class TimelineFilters(
             val source = key.source
             val visual = source is TimelineSource.Account && source.onlyMedia && capabilities.mediaTypeFilter
             return when {
+                visual && key.mode == FeedMode.Photos -> TimelineFilters(mediaType = IMAGE)
                 visual -> TimelineFilters(mediaType = VISUAL)
                 source is TimelineSource.Remote -> forMode(key.mode, capabilities, mediaTypes = false)
                 else -> forMode(key.mode, capabilities)

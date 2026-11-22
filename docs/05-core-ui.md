@@ -300,24 +300,28 @@ exist undocumented.
   query, not by filtering a page), Add to list, Mention, Direct message,
   Block, Mute (with duration and "also mute notifications"), Report, Block
   domain, Add note.
-- Tabs: Posts · Posts & Replies · Media · Featured · Videos · Collections (where the
-  server has them) · Stories (where present and visible). Media is the
-  account's photos, videos and animated images on Nextcloud Social 0.26.279 on
-  (`media_type=visual`), every post with an attachment elsewhere. Nextcloud Social
-  before 0.26.237 ignores `exclude_replies`, so Posts leaves replies to other
-  accounts out on the device (a thread of the account's own stays), paging on
-  to fill the page. A featured hashtag opens the account's own posts with it
+- Tabs, as the web app has them: Posts (with chips for Posts and Posts & replies) ·
+  Photos · Videos · Tagged (Nextcloud Social) · Collections (where the server has
+  them), and on the reader's own profile Saved · Drafts · Statistics. Photos asks
+  for the account's photos (`media_type=image`, Nextcloud Social 0.26.279 on) and
+  narrows them on the device elsewhere. Nextcloud Social before 0.26.237 ignores
+  `exclude_replies`, so Posts leaves replies to other accounts out on the device
+  (a thread of the account's own stays), paging on to fill the page. Tagged lists
+  the photos others tagged the account in (`api/v1.1/accounts/{id}/tagged`,
+  paged by `max_id`); on the reader's own profile each has Remove me
+  (`api/v1.1/compose/tag/untagme`), as on the web.
+- As on the web, there is no Featured tab: the pinned posts head the Posts tab
+  (a few until View all), and the featured hashtags are chips in the header. A
+  featured hashtag opens the account's own posts with it
   (`accounts/{id}/statuses?tagged=`), titled "#tag by @handle"; on Nextcloud
   Social before 0.26.237, which ignores `tagged`, it opens the hashtag's
   timeline instead.
-- An account's `profile_layout` (Nextcloud Social 0.26.279 on, read from its
-  source; the app only reads it, as the route that writes it takes a session,
-  not a token) chooses the tab its profile opens on, `posts`, `photos` (Media)
-  or `videos`, and leaves out the Media chip, Videos and Collections where it
-  turned `photos`, `videos` or `collections` off; `tagged` has no tab here. A
-  refresh keeps the tab the reader is on, even one the layout now hides, as
-  the web app does. A layout that hides Posts or opens on a tab it hides is
-  none, as on the server, and none shows every tab.
+- There is no Stories tab either: where the account has shorts up (a server
+  with stories), its avatar is ringed and plays them, as the Apple app's does.
+  The web app shows them nowhere on a profile.
+- Every profile opens on Posts with all its tabs. An account's
+  `profile_layout`, which chose a first tab and hid others, is no longer read,
+  as the web app no longer honours it.
 - Scrolling an account's posts does not stop where Nextcloud Social is still
   reading older ones from the account's server or Bluesky
   (`X-Social-Profile-Filling`): the page is read again after two seconds, at

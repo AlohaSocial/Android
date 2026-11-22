@@ -65,7 +65,6 @@ Between the phases: CI artifact retention ([#3](https://github.com/AlohaSocial/A
 |---|---|---|
 | A first-frame poster for a video the server did not describe | [06-media-modes.md](06-media-modes.md) §4 | Without ffmpeg on the server, video `meta` is empty; the client does not draw a frame itself |
 | Story stickers | [07-composer.md](07-composer.md) | A story is a picture, a video or a text card |
-| The story player from a profile | [06-media-modes.md](06-media-modes.md) | A profile's Stories tab lists the stories and opens each on the web; the player is reachable from Photos only |
 | Push through the Nextcloud push proxy (FCM) | [08-notifications-sync.md](08-notifications-sync.md) §2 | Push is UnifiedPush in both flavours. FCM would be `gplay` only and needs the push proxy to allow the app |
 | Encrypted direct messages bound to the app lock | [11-safety-privacy-appstore.md](11-safety-privacy-appstore.md) | The app lock guards the screen, not the data |
 | Not taken up from Phase 21 | [02-server-api.md](02-server-api.md) | Posting through `POST /api/v1/post` was removed in 0.26.294; the app never used it |
