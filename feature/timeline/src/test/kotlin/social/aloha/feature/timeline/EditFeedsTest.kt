@@ -76,7 +76,7 @@ class EditFeedsTest {
     @Test
     fun `a screen reader moves a feed with the row's actions, and the order is kept`() {
         compose.setContent { AlohaTheme { EditFeedsScreen(state, actions, onBack = {}) } }
-        val row = compose.onNodeWithText("Following").fetchSemanticsNode()
+        val row = compose.onNodeWithText("My Feed").fetchSemanticsNode()
         val down = row.config[SemanticsActions.CustomActions].single { it.label == "Move down" }
         compose.runOnIdle { down.action() }
         assertEquals(listOf(local, following, surf), ordered)
@@ -97,10 +97,10 @@ class EditFeedsTest {
             }
         }
         compose.setContent { AlohaTheme { EditFeedsScreen(state.copy(feeds = feeds), stored, onBack = {}) } }
-        compose.onNodeWithText("This server").performTouchInput { swipeLeft() }
+        compose.onNodeWithText("Local").performTouchInput { swipeLeft() }
         compose.onNodeWithText("Undo").performClick()
         compose.waitForIdle()
-        compose.onNodeWithText("This server").assertExists()
+        compose.onNodeWithText("Local").assertExists()
         assertEquals(listOf(following, local, surf), feeds)
         assertEquals(1, removals)
     }
@@ -111,9 +111,9 @@ class EditFeedsTest {
         compose.setContent { AlohaTheme { EditFeedsScreen(shown, actions, onBack = {}) } }
         shown = state
         compose.waitForIdle()
-        val following = compose.onNodeWithText("Following").fetchSemanticsNode()
+        val following = compose.onNodeWithText("My Feed").fetchSemanticsNode()
         assertTrue(following.config[SemanticsActions.CustomActions].none { it.label == "Remove" })
-        val local = compose.onNodeWithText("This server").fetchSemanticsNode()
+        val local = compose.onNodeWithText("Local").fetchSemanticsNode()
         assertTrue(local.config[SemanticsActions.CustomActions].any { it.label == "Remove" })
     }
 

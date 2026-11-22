@@ -7,7 +7,7 @@
     <!-- Leaves a safety screen -->
     <string name="safety_back">Back</string>
     <!-- Title of the reader's filters -->
-    <string name="filters_title">Filters</string>
+    <string name="filters_title">Filtered words</string>
     <!-- Makes a new filter; also the title of the editor for one -->
     <string name="filters_new">New filter</string>
     <!-- Title of the editor for an existing filter -->
@@ -19,7 +19,7 @@
     <!-- Switch: the local and federated timelines show only accounts the reader follows -->
     <string name="filters_hide_strangers">Only people I follow in public timelines</string>
     <!-- Explains the switch hiding everyone the reader doesn't follow in public timelines -->
-    <string name="filters_hide_strangers_summary">Hides everything from accounts you don’t follow in the local and federated timelines, on this device.</string>
+    <string name="filters_hide_strangers_summary">Hides everything from accounts you don’t follow in Local and Global, on this device.</string>
     <!-- Names a filter without a name -->
     <string name="filters_untitled">Unnamed filter</string>
     <!-- What a filter does: hides posts -->
@@ -36,7 +36,7 @@
     <!-- Until when a filter applies; %1$s is the date and time -->
     <string name="filters_until">Until %1$s</string>
     <!-- Where a filter applies: the home timeline and lists -->
-    <string name="filters_context_home">Home and lists</string>
+    <string name="filters_context_home">My Feed and lists</string>
     <!-- Where a filter applies: notifications -->
     <string name="filters_context_notifications">Activities</string>
     <!-- Where a filter applies: the public timelines -->
@@ -131,13 +131,13 @@
     <!-- Switch: learning stops for now, keeping what was learnt -->
     <string name="interests_paused">Pause learning</string>
     <!-- Explains the pause switch -->
-    <string name="interests_paused_summary">Keeps what was learnt, and learns nothing new until you resume.</string>
+    <string name="interests_paused_summary">Keeps what was learned, and learns nothing new until you resume.</string>
     <!-- Note above the learning switches: the server's administrator has paused learning for everyone; the switches still keep the reader's choices for when it resumes -->
-    <string name="interests_instance_paused">Your administrator has paused learning on this server. Nothing new is learnt until they resume it; your choices below apply then.</string>
+    <string name="interests_instance_paused">Your administrator has paused learning on this server. Nothing new is learned until they resume it; your choices below apply then.</string>
     <!-- Switch: the server's For You feed also learns from what the reader does, apart from the hashtags they read -->
     <string name="interests_activity">Learn from what I do</string>
     <!-- Explains the activity learning switch -->
-    <string name="interests_activity_summary">Likes, saves, replies, opened posts and watched videos refine For You. Reply text is never read, and nothing leaves your server.</string>
+    <string name="interests_activity_summary">Likes, saves, replies, opened posts and watched videos refine For you. Reply text is never read, and nothing leaves your server.</string>
     <!-- Heading of the reader's interests -->
     <string name="interests_yours">Your interests</string>
     <!-- Shown while the server learns and has too little to go on -->
@@ -149,9 +149,9 @@
     <!-- Title of the dialog asking before all interests are forgotten -->
     <string name="interests_reset_title">Forget all interests?</string>
     <!-- Body of the dialog asking before all interests are forgotten -->
-    <string name="interests_reset_body">Everything your server learnt from your reading goes. Hashtags you follow stay among your interests.</string>
+    <string name="interests_reset_body">Everything your server learned from your reading goes. Hashtags you follow stay among your interests.</string>
     <!-- Title of the screen listing who the reader blocked and muted, and its entry in Settings -->
-    <string name="blocked_title">Muted and blocked</string>
+    <string name="blocked_title">Blocked and muted</string>
     <!-- Content description of the back button -->
     <string name="blocked_back">Back</string>
     <!-- Tab: blocked accounts -->

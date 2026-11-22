@@ -19,7 +19,7 @@
     <!-- Filter chip that shows only ended polls -->
     <string name="notifications_filter_polls">Polls</string>
     <!-- Filter chip that shows only edits of posts the person interacted with -->
-    <string name="notifications_filter_updates">Updates</string>
+    <string name="notifications_filter_updates">Edits</string>
     <!-- Button in a grouped notification that lists everyone in it; %d is how many others -->
     <plurals name="notifications_others">
         <item quantity="one">Show %d other</item>
@@ -150,8 +150,8 @@
     <!-- Letting through or dismissing did not reach the server -->
     <string name="requests_failed">That did not reach your server. Try again.</string>
 
-    <!-- Title of the settings section for notifications and refreshing -->
-    <string name="settings_notifications">Notifications</string>
+    <!-- Title of the settings section on when and how activities reach the reader: push, digests, quiet hours and refreshing; the web app's title for it -->
+    <string name="settings_notifications">When to tell you</string>
     <!-- Heading of the choice of how often the app checks for new activity -->
     <string name="settings_poll_frequency">Check for new activity</string>
     <!-- Choice: check twice as often as normal -->

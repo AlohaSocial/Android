@@ -61,13 +61,13 @@
     <!-- Shelf of the videos the reader stopped part way through -->
     <string name="tv_shelf_continue">Continue watching</string>
     <!-- Shelf of the videos of the people the reader follows -->
-    <string name="tv_shelf_home">From people you follow</string>
+    <string name="tv_shelf_home">My Feed</string>
     <!-- Shelf of short vertical videos of the people the reader follows -->
     <string name="tv_shelf_shorts">Shorts</string>
     <!-- Shelf of the people the reader follows, each a channel to open -->
     <string name="tv_shelf_following">Channels you follow</string>
     <!-- Shelf of the videos of everyone the server knows -->
-    <string name="tv_shelf_federated">From everyone</string>
+    <string name="tv_shelf_federated">Global</string>
     <!-- Shelf of the videos many are watching now -->
     <string name="tv_shelf_trending">Trending</string>
     <!-- Over a video marked sensitive whose picture is not shown -->

@@ -39,9 +39,9 @@ Each requirement, and where the app meets it:
 |---|---|
 | Terms that forbid objectionable content and abuse, accepted before any content shows | The terms on first launch (with Decline, which leaves the app), again in Settings, About |
 | Reporting content and users | A post’s menu, Report; a profile’s menu, Report; the report goes to the server’s moderators with the posts chosen |
-| Blocking users | A profile’s menu, Block; Settings, Muted and blocked lists them and takes a block back |
-| Blocking whole servers | A profile’s menu, block the server; Settings, Muted and blocked, Servers |
-| Filtering objectionable content | Filters (account sheet and Settings): keywords, where, warn or hide, expiry; media marked sensitive shown as the account chose |
+| Blocking users | A profile’s menu, Block; Settings, Blocked and muted lists them and takes a block back |
+| Blocking whole servers | A profile’s menu, block the server; Settings, Blocked and muted, Servers |
+| Filtering objectionable content | Filtered words (account sheet and Settings): keywords, where, warn or hide, expiry; media marked sensitive shown as the account chose |
 | Moderation of the service | The reader’s server moderates; About this server shows its rules and moderated servers |
 | Contact | Settings, About, Report a problem (the issue tracker). The developer e-mail is the Play Console account’s. |
 

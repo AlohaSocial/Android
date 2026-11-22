@@ -137,7 +137,7 @@ internal fun isEventPage(url: String): Boolean = url.startsWith("https://") || u
 /** The organiser's sign-up page, where it is a web page. */
 internal fun signUpPage(event: StatusEvent): String? = event.participationUrl?.takeIf { isEventPage(it) }
 
-/** "Cancelled", or "Tentative" and where it stands once it has begun: what the card says above the time. */
+/** "Canceled", or "Tentative" and where it stands once it has begun: what the card says above the time. */
 @Composable
 internal fun eventState(event: StatusEvent, now: Instant): String? {
     if (event.status == StatusEvent.Status.Cancelled) return stringResource(R.string.status_event_cancelled)

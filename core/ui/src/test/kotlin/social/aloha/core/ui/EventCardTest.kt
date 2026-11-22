@@ -122,7 +122,7 @@ class EventCardTest {
     @Test
     fun `a cancelled event says so and offers no calendar, its page still`() {
         show(StatusEvent("Harbour clean-up", start, end, "Pier 4", StatusEvent.Status.Cancelled))
-        compose.onNodeWithText("Cancelled").assertExists()
+        compose.onNodeWithText("Canceled").assertExists()
         compose.onNodeWithText("Add to calendar").assertDoesNotExist()
         compose.onNodeWithText("Event page").performClick()
         assertEquals(listOf<RichLinkTarget>(RichLinkTarget.Web("https://events.example/e/1")), links)

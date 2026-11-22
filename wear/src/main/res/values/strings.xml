@@ -35,7 +35,7 @@
     <!-- The phone app had no account to hand over, or did not answer in time -->
     <string name="wear_problem_nothing_on_phone">Your phone didn’t hand over an account. Sign in to Aloha Social there first, or enter your server.</string>
     <!-- Title of the watch's home timeline -->
-    <string name="wear_home">Home</string>
+    <string name="wear_home">My Feed</string>
     <!-- Button and title of the notifications list -->
     <string name="wear_notifications">Activities</string>
     <!-- Button that opens the account the watch is signed in to, where it can sign out -->
@@ -94,8 +94,8 @@
     <string name="wear_tile_title">Latest mention</string>
     <!-- The tile's mention: %1$s is who wrote it, %2$s its text -->
     <string name="wear_tile_mention">%1$s: %2$s</string>
-    <!-- The tile's mention when it is a private message, whose text the tile does not show; %1$s is who sent it -->
-    <string name="wear_tile_private">%1$s sent you a private message</string>
+    <!-- The tile's mention when it is a direct message, whose text the tile does not show; %1$s is who sent it -->
+    <string name="wear_tile_private">%1$s sent you a direct message</string>
     <!-- The tile when nobody has mentioned the reader, or the server could not be asked -->
     <string name="wear_tile_no_mention">No mentions to show.</string>
     <!-- The tile while the watch is not signed in -->

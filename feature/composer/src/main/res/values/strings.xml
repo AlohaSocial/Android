@@ -59,11 +59,11 @@
     <!-- Visibility: anyone can see it, in public timelines too -->
     <string name="composer_visibility_public">Public</string>
     <!-- Visibility: anyone can see it, but it stays out of public timelines -->
-    <string name="composer_visibility_unlisted">Quiet public</string>
+    <string name="composer_visibility_unlisted">Unlisted</string>
     <!-- Visibility: only followers can see it -->
     <string name="composer_visibility_private">Followers</string>
     <!-- Visibility: only the people mentioned can see it -->
-    <string name="composer_visibility_direct">Mentioned people only</string>
+    <string name="composer_visibility_direct">Direct message</string>
     <!-- Note under the visibility choices when replying limits them -->
     <string name="composer_visibility_clamped">A reply can\'t reach further than the post it answers.</string>
     <!-- Toolbar button that picks the language of the post; the placeholder is the language name -->
@@ -145,7 +145,7 @@
     <!-- Shown above the text when a post is deleted and redrafted but some of its pictures or videos could not be taken into the new post -->
     <string name="composer_redraft_media_left_out">Some photos and videos of this post couldn’t be taken over. Attach them again to keep them in the new post.</string>
     <!-- Shown above the text when a post about a cancelled event is redrafted for a server too old to post an event as cancelled, so the event was taken off the new post -->
-    <string name="composer_event_cancelled_left_out">This event is cancelled, and your server can’t post it as cancelled, so the new post isn’t an event.</string>
+    <string name="composer_event_cancelled_left_out">This event is canceled, and your server can’t post it as canceled, so the new post isn’t an event.</string>
     <!-- Post button label when editing a post that is out already -->
     <string name="composer_save">Save</string>
     <!-- Button that keeps the post as a draft and leaves the composer -->
@@ -211,7 +211,7 @@
     <!-- An attachment could not be uploaded -->
     <string name="composer_media_failed">Couldn\'t upload</string>
     <!-- An attachment's upload was cancelled from its notification -->
-    <string name="composer_media_cancelled">Upload cancelled</string>
+    <string name="composer_media_cancelled">Upload canceled</string>
     <!-- Title of the full-screen page describing an attachment for people who cannot see it -->
     <string name="composer_media_editor_title">Alt text</string>
     <!-- Label of the description field of an attachment -->
@@ -256,8 +256,8 @@
     <string name="composer_filter_faded">Faded</string>
     <!-- Picture filter: brown old-photograph tones -->
     <string name="composer_filter_sepia">Sepia</string>
-    <!-- Toolbar toggle that shares the one photo or video as a short, gone after a day, instead of a post -->
-    <string name="composer_story">Share as a short</string>
+    <!-- Toolbar toggle that shares the one photo or video as a short kept for 24 hours and shown to the writer’s followers, instead of a post; the web app words this choice the same way -->
+    <string name="composer_story">Only for 24 hours, for my followers</string>
     <!-- Before the choice of how long a story's picture or card shows for -->
     <string name="composer_story_length">Shows for</string>
     <!-- One of the lengths a story's picture or card shows for: %d is the number of seconds -->
@@ -526,7 +526,7 @@
     <!-- Explains that setting -->
     <string name="composer_settings_post_bottom_summary">Beside the character count, within reach of your thumb</string>
     <!-- Writing setting: replies to public posts start out quiet public -->
-    <string name="composer_settings_quiet_replies">Quiet public replies to public posts</string>
+    <string name="composer_settings_quiet_replies">Unlisted replies to public posts</string>
     <!-- Explains that setting -->
     <string name="composer_settings_quiet_replies_summary">Anyone can still see them, but they stay out of public timelines and trends</string>
     <!-- Writing setting: heading over when a reply’s content warning, taken from the post it answers, starts with “re:” -->
@@ -538,7 +538,7 @@
     <!-- Choice under that heading -->
     <string name="composer_settings_reply_prefix_never">Never</string>
     <!-- Writing setting: heading over the default visibility of new posts -->
-    <string name="composer_settings_visibility">New posts are seen by</string>
+    <string name="composer_settings_visibility">Who sees new posts</string>
     <!-- Default visibility choice: as the reader's server says -->
     <string name="composer_settings_visibility_server">As my server says</string>
     <!-- Writing setting: heading over the default language of new posts -->
@@ -552,9 +552,9 @@
     <!-- Button on the quoted post in the composer: the new post no longer quotes it -->
     <string name="composer_quote_remove">Remove the quote</string>
     <!-- Said once when quoting a quiet public post -->
-    <string name="composer_quote_unlisted">This post is quiet public: your quote shows it to your followers.</string>
+    <string name="composer_quote_unlisted">This post is unlisted: your quote shows it to your followers.</string>
     <!-- Said when the post is set to the people mentioned only, which cannot quote -->
-    <string name="composer_quote_linked">A post for the people mentioned only cannot quote, so the quoted post is linked instead.</string>
+    <string name="composer_quote_linked">A direct message cannot quote, so the quoted post is linked instead.</string>
     <!-- Puts the note above away -->
     <string name="composer_quote_got_it">Got it</string>
     <!-- Asked before quoting someone else's followers-only post -->

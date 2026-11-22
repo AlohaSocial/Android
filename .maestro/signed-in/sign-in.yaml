@@ -33,6 +33,6 @@ appId: social.aloha.android
 - tapOn: "Done"
 # Home, with the mock's timeline under it
 - extendedWaitUntil:
-    visible: "Following"
+    visible: "My Feed"
     timeout: 20000
 - assertVisible: ".*@alice.*"

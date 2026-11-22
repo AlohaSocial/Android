@@ -41,7 +41,7 @@
     <!-- Once connected: notifications arrive by push, through the Nextcloud -->
     <string name="settings_nextcloud_push_on">Notifications arrive by push through your Nextcloud.</string>
     <!-- Once connected, without a push app (a UnifiedPush distributor such as ntfy) chosen -->
-    <string name="settings_nextcloud_push_no_distributor">Notifications are checked every few minutes. Choose a push app under Notifications to get them at once.</string>
+    <string name="settings_nextcloud_push_no_distributor">Notifications are checked every few minutes. Choose a push app under When to tell you to get them at once.</string>
     <!-- Once connected, when the Nextcloud does not push (or has not confirmed yet) -->
     <string name="settings_nextcloud_push_polled">Notifications are checked every few minutes: your Nextcloud does not push them yet.</string>
     <!-- Settings section that deletes the account in use, for good -->
@@ -76,8 +76,8 @@
     <string name="settings_terms">Terms of use</string>
     <!-- Settings, About: opens what the app does with the reader's data -->
     <string name="settings_privacy">Privacy</string>
-    <!-- Settings, About: opens the open-source libraries the app is built from and their licences -->
-    <string name="settings_licences">Open-source licences</string>
+    <!-- Settings, About: opens the open-source libraries the app is built from and their licenses -->
+    <string name="settings_licences">Open-source licenses</string>
     <!-- Settings, About: opens the project's issue tracker, to report a problem -->
     <string name="settings_issues">Report a problem</string>
     <!-- Settings, About: opens a plain-text report of the app’s version, the device and the app’s recent log, to read and then share with a bug report; also the title of that page -->
@@ -116,20 +116,20 @@
     <string name="appearance_contrast_standard">Standard</string>
     <!-- Contrast choice -->
     <string name="appearance_contrast_high">High</string>
-    <!-- Appearance: heading over where the app's colours come from -->
-    <string name="appearance_colours">Colours</string>
-    <!-- Colours choice: the colour the reader's Nextcloud is themed with -->
-    <string name="appearance_colours_server">Your Nextcloud\'s colour</string>
-    <!-- Colours choice, while the reader's server wears no colour: it then shows the app's own -->
-    <string name="appearance_colours_no_server">Your server\'s colour, where it has one</string>
-    <!-- Colours choice: from the phone's wallpaper (Android 12 and later) -->
+    <!-- Appearance: heading over where the app's colors come from -->
+    <string name="appearance_colours">Colors</string>
+    <!-- Colors choice: the color the reader's Nextcloud is themed with -->
+    <string name="appearance_colours_server">Your Nextcloud\'s color</string>
+    <!-- Colors choice, while the reader's server wears no color: it then shows the app's own -->
+    <string name="appearance_colours_no_server">Your server\'s color, where it has one</string>
+    <!-- Colors choice: from the phone's wallpaper (Android 12 and later) -->
     <string name="appearance_colours_wallpaper">From the wallpaper</string>
-    <!-- Colours choice: the app's own coral -->
+    <!-- Colors choice: the app's own coral -->
     <string name="appearance_colours_app">Aloha\'s own</string>
-    <!-- Colours choice: an accent the reader picks -->
+    <!-- Colors choice: an accent the reader picks -->
     <string name="appearance_colours_custom">An accent of your choice</string>
     <!-- Appearance switch under the accent swatches: each signed-in account keeps its own accent -->
-    <string name="appearance_accent_per_account">Colour per account</string>
+    <string name="appearance_accent_per_account">Color per account</string>
     <!-- Summary of the switch above -->
     <string name="appearance_accent_per_account_summary">Each account keeps the accent you choose while it is in use, so switching shows whose timeline it is.</string>
     <!-- Name of an accent colour swatch, read by a screen reader -->
@@ -149,7 +149,7 @@
     <!-- Name of an accent colour swatch -->
     <string name="appearance_accent_brown">Brown</string>
     <!-- Settings list: opens the reader's filters, which hide or warn about posts by keyword -->
-    <string name="settings_filters">Filters</string>
+    <string name="settings_filters">Filtered words</string>
     <!-- Settings section: the signed-in accounts -->
     <string name="settings_accounts_title">Accounts</string>
     <!-- Under an account in Settings: it is the one in use. %1$s: its handle -->
@@ -173,7 +173,7 @@
     <!-- Settings section: pictures, video and sound -->
     <string name="media_title">Media</string>
     <!-- Media: heading over how media marked sensitive shows -->
-    <string name="media_sensitive">Media marked sensitive</string>
+    <string name="media_sensitive">Sensitive media</string>
     <!-- Sensitive media choice: covered, one press away -->
     <string name="media_sensitive_blur">Covered, shown when pressed</string>
     <!-- Sensitive media choice: always shown -->
@@ -249,7 +249,7 @@
     <!-- Reading switch: avatars as rounded squares instead of circles -->
     <string name="reading_rounded">Rounded square avatars</string>
     <!-- Reading switch: every popularity number in the app -->
-    <string name="reading_counts">Show numbers</string>
+    <string name="reading_counts">Show the numbers</string>
     <!-- Summary of the Show numbers switch -->
     <string name="reading_counts_summary">How many replied, boosted, liked or follow, on posts, profiles and activities. Off, the people stay and the numbers go.</string>
     <!-- Reading switch: a thin line between one post and the next in every list of posts -->
@@ -265,7 +265,7 @@
     <!-- Reading switch: consecutive boosts on Home fold into one horizontal row -->
     <string name="reading_boost_carousel">Fold boosts in a row</string>
     <!-- Summary of the switch above -->
-    <string name="reading_boost_carousel_summary">Three or more boosts in a row on Home become one row of posts to swipe through.</string>
+    <string name="reading_boost_carousel_summary">Three or more boosts in a row on My Feed become one row of posts to swipe through.</string>
     <!-- Reading switch: a long post shows its first lines and an Expand button -->
     <string name="reading_collapse">Shorten long posts</string>
     <!-- Reading switch: media posted without a description carries a "no ALT" badge -->
@@ -407,13 +407,13 @@
     <!-- Intelligence settings: switch for alt text drafted on the device -->
     <string name="settings_intelligence_alt_text">Draft alt text</string>
     <!-- Intelligence settings: what drafting alt text does -->
-    <string name="settings_intelligence_alt_text_summary">From what this device recognises in a photo, marked as AI generated, for you to check before posting</string>
+    <string name="settings_intelligence_alt_text_summary">From what this device recognizes in a photo, marked as AI generated, for you to check before posting</string>
     <!-- Intelligence settings: switch for rewriting and proofreading a draft on the device -->
     <string name="settings_intelligence_rewrite">Rewrite and proofread</string>
     <!-- Intelligence settings: what rewriting does -->
     <string name="settings_intelligence_rewrite_summary">Another wording of your draft, which you take or leave</string>
     <!-- Intelligence settings: switch for summarising a thread on the device -->
-    <string name="settings_intelligence_summary">Summarise threads</string>
+    <string name="settings_intelligence_summary">Summarize threads</string>
     <!-- Intelligence settings: what summarising does -->
     <string name="settings_intelligence_summary_summary">A few sentences on a thread, shown in a sheet and never kept</string>
     <!-- Intelligence settings: under a switch's summary while the device fetches its language model -->
@@ -510,7 +510,7 @@
     <!-- Shown when turning the weekly recap on or off did not work -->
     <string name="looking_back_change_failed">Couldn’t change the weekly recap.</string>
     <!-- Title of the page that saves a copy of the account -->
-    <string name="export_title">Export your account</string>
+    <string name="export_title">Export your data</string>
     <!-- Explains the export page -->
     <string name="export_about">Take a copy to keep, or to move to another server. Each part is saved where you choose.</string>
     <!-- The whole account as one file -->
