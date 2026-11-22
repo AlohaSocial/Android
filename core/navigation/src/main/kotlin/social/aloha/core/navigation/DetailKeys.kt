@@ -15,10 +15,19 @@ public data class ThreadKey(val readerId: String, val statusId: String, val hist
 
 /**
  * A profile as [readerId] sees it: by the account's [id] on the reader's server, or by its handle where
- * only that is known (a mention the post did not declare) and the server has to look it up.
+ * only that is known (a mention the post did not declare) and the server has to look it up. The reader's
+ * own profile opens on [open], one of the tabs only its owner has, where one is named.
  */
 @Serializable
-public data class AccountKey(val readerId: String, val id: String? = null, val acct: String? = null) : NavKey
+public data class AccountKey(
+    val readerId: String,
+    val id: String? = null,
+    val acct: String? = null,
+    val open: OwnProfilePlace? = null,
+) : NavKey
+
+/** Where in the tabs only the reader's own profile has it opens: Saved, on one of its lists, Drafts or Statistics. */
+public enum class OwnProfilePlace { Favorites, Bookmarks, Drafts, Statistics }
 
 /**
  * The public timeline of one hashtag, as [readerId] sees it; with [accountId], only that account's posts
@@ -128,13 +137,9 @@ public data class TagGroupKey(val readerId: String, val name: String) : NavKey
 @Serializable
 public data class EditProfileKey(val readerId: String) : NavKey
 
-/** The drafts of [readerId], and the posts waiting to be sent. */
+/** The drafts of [readerId] and the posts waiting to be sent: the Drafts tab of their own profile. */
 @Serializable
 public data class DraftsKey(val readerId: String) : NavKey
-
-/** The posts [readerId] has waiting on the server for their time. */
-@Serializable
-public data class ScheduledPostsKey(val readerId: String) : NavKey
 
 /** What decides which notifications [readerId]'s server holds back. */
 @Serializable
@@ -160,13 +165,6 @@ public data class AddToCollectionKey(val readerId: String, val statusId: String)
 /** Photos' Explore: what is trending with pictures, hashtags and people, as [readerId] sees them. */
 @Serializable
 public data class PhotoExploreKey(val readerId: String) : NavKey
-
-/** The posts a reader kept: bookmarked, favourited, or archived off their profile. */
-public enum class SavedKind { Bookmarks, Favourites, Archived }
-
-/** [readerId]'s [kind] posts. */
-@Serializable
-public data class SavedPostsKey(val readerId: String, val kind: SavedKind) : NavKey
 
 /** [readerId]'s direct conversations. */
 @Serializable
@@ -207,10 +205,6 @@ public data class AuthorizedAppsKey(val readerId: String) : NavKey
 /** [readerId]'s own posts from this day in other years, and the weekly recap. */
 @Serializable
 public data class LookingBackKey(val readerId: String) : NavKey
-
-/** [readerId]'s statistics, counted by the server over a chosen window. */
-@Serializable
-public data class StatisticsKey(val readerId: String) : NavKey
 
 /** [readerId]'s video channels, what a video belongs to on PeerTube. */
 @Serializable

@@ -305,10 +305,6 @@ private val AccountPlace.look: Pair<ImageVector, Int>
     get() = when (this) {
         AccountPlace.Profile -> AlohaIcons.Profile to R.string.accounts_profile
         AccountPlace.Messages -> AlohaIcons.VisibilityDirect to R.string.accounts_messages
-        AccountPlace.Bookmarks -> AlohaIcons.Bookmark to R.string.accounts_bookmarks
-        AccountPlace.Favourites -> AlohaIcons.Favourite to R.string.accounts_favourites
-        AccountPlace.Archived -> AlohaIcons.Archived to R.string.accounts_archived
-        AccountPlace.Statistics -> AlohaIcons.Statistics to R.string.accounts_statistics
         AccountPlace.Lists -> AlohaIcons.Lists to R.string.accounts_lists
         AccountPlace.Hashtags -> AlohaIcons.Hashtag to R.string.accounts_hashtags
         AccountPlace.Filters -> AlohaIcons.Filtered to R.string.accounts_filters
@@ -318,7 +314,7 @@ private val AccountPlace.look: Pair<ImageVector, Int>
     }
 
 /** The places only Aloha Social keeps. */
-private val NEXTCLOUD_ONLY = setOf(AccountPlace.Archived, AccountPlace.Statistics, AccountPlace.Interests)
+private val NEXTCLOUD_ONLY = setOf(AccountPlace.Interests)
 
 private val BUTTON_AVATAR = 32.dp
 private val LINE_AVATAR = 40.dp

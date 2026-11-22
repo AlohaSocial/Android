@@ -183,7 +183,7 @@ private fun AddToThread(state: ComposerUiState, segments: List<TextFieldValue>, 
     }
 }
 
-/** How the post will look, and what is kept apart from it: the posts waiting for their time, and the drafts. */
+/** How the post will look, and the drafts, which the web's New post dialog offers too. */
 @Composable
 private fun ComposerMenu(actions: ComposerActions, onPreview: () -> Unit) {
     var open by remember { mutableStateOf(false) }
@@ -202,13 +202,6 @@ private fun ComposerMenu(actions: ComposerActions, onPreview: () -> Unit) {
                 onClick = {
                     open = false
                     actions.onDrafts()
-                },
-            )
-            DropdownMenuItem(
-                text = { Text(stringResource(R.string.composer_scheduled_posts)) },
-                onClick = {
-                    open = false
-                    actions.onScheduledPosts()
                 },
             )
         }

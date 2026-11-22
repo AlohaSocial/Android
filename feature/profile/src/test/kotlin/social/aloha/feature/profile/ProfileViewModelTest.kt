@@ -119,6 +119,14 @@ private class Bob : Dispatcher() {
                 json(if (path.endsWith("/mute")) relationship(following) else "{}")
             }
 
+            // the photos he is tagged in, as Aloha Social serves Pixelfed's tagged
+            path.endsWith("/accounts/7/tagged") -> statuses.dispatch(request)
+
+            path.endsWith("/compose/tag/untagme") -> {
+                changes += "${request.method} $path ${request.body?.utf8().orEmpty()}"
+                json("{}")
+            }
+
             path.endsWith("/accounts/7/lists") -> json("""[{"id":"l1","title":"Surf"}]""")
 
             path.endsWith("/lists") -> json("""[{"id":"l1","title":"Surf"},{"id":"l2","title":"Friends"}]""")
@@ -281,7 +289,7 @@ class ProfileViewModelTest {
         val viewModel = open(id = "7")
         viewModel.await { it.items.isNotEmpty() && it.profileSync == ProfileSync.Pending }
         val posts = { bob.statusQueries.count { "pinned" !in it && "max_id" !in it && "only_media" !in it } }
-        viewModel.onTab(ProfileTab.Media)
+        viewModel.onTab(ProfileTab.Photos)
         val before = posts()
         delay(5.seconds)
         assertTrue(posts() > before)
@@ -295,31 +303,26 @@ class ProfileViewModelTest {
     }
 
     @Test
-    fun `a profile opens on the tab its account chose and leaves out the ones it turned off`() = runBlocking {
+    fun `a profile opens on Posts with every tab, whatever layout its account chose on the web`() = runBlocking {
         bob.profileLayout = """{"default_tab": "videos", "tabs": ["posts", "videos"]}"""
         val viewModel = open(id = "7")
         val state = viewModel.await { it.header != null }
-        assertEquals(ProfileTab.Videos, state.tab)
-        assertFalse(ProfileTab.Media in state.tabs)
-        viewModel.onTab(ProfileTab.Posts)
-        // a refresh that answers with another choice, so the state after it is told from the one before
-        bob.profileLayout = """{"default_tab": "photos", "tabs": ["posts", "photos"]}"""
-        viewModel.onRefresh()
-        val refreshed = viewModel.await { ProfileTab.Media in it.tabs }
-        assertEquals(ProfileTab.Posts, refreshed.tab)
+        assertEquals(ProfileTab.Posts, state.tab)
+        assertTrue(ProfileTab.Photos in state.tabs)
+        assertTrue(ProfileTab.Videos in state.tabs)
     }
 
     @Test
-    fun `a refresh keeps the tab the reader is on although the account now hides it`() = runBlocking {
-        bob.profileLayout = """{"default_tab": "posts", "tabs": ["posts", "videos"]}"""
+    fun `the Tagged tab reads the photos the account is tagged in, and a name taken off one leaves it`() = runBlocking {
         val viewModel = open(id = "7")
         viewModel.await { it.header != null }
-        viewModel.onTab(ProfileTab.Videos)
-        bob.profileLayout = """{"default_tab": "photos", "tabs": ["posts", "photos"]}"""
-        viewModel.onRefresh()
-        val refreshed = viewModel.await { ProfileTab.Media in it.tabs }
-        assertEquals(ProfileTab.Videos, refreshed.tab)
-        assertTrue(ProfileTab.Videos in refreshed.tabs)
+        viewModel.onTab(ProfileTab.Tagged)
+        val read = withTimeout(10.seconds) { viewModel.taggedPosts.first { !it.rows.isNullOrEmpty() } }
+        val photo = checkNotNull(read.rows).first().statusId
+        viewModel.onUntag(photo)
+        val after = withTimeout(10.seconds) { viewModel.taggedPosts.first { it.untagged == true } }
+        assertTrue(checkNotNull(after.rows).none { it.statusId == photo })
+        assertTrue(bob.changes.any { "untagme" in it && "status_id=$photo" in it })
     }
 
     @Test

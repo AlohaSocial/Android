@@ -4,6 +4,8 @@
 package social.aloha.feature.settings
 
 import android.app.Application
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.test.junit4.accessibility.enableAccessibilityChecks
 import androidx.compose.ui.test.junit4.v2.createComposeRule
@@ -260,34 +262,29 @@ class SettingsScreenshotTest {
     private fun Statistics() {
         val months = listOf("2026-05", "2026-06", "2026-07", "2026-08", "2026-09", "2026-10")
         fun series(vararg values: Int) = NumberMap(months.zip(values.map(Int::toDouble)).toMap())
-        StatisticsScreen(
-            StatisticsUiState(
-                PageStatus.Ready,
-                statistics = AccountStatistics(
-                    account = StatisticsAccount("alice", followers = 48, following = 31),
-                    window = StatisticsWindow(days = 90, counted = 19),
-                    posts = NumberMap(mapOf("total" to 19.0)),
-                    engagement = NumberMap(mapOf("likes" to 42.0, "boosts" to 11.0, "replies" to 9.0)),
-                    rates = NumberMap(mapOf("per_post" to 3.3, "per_follower" to 10.53, "silent" to 6.0)),
-                    visibility = NumberMap(mapOf("public" to 13.0, "unlisted" to 5.0, "followers" to 1.0)),
-                    byMonth = series(2, 0, 3, 5, 6, 3),
-                    activity = StatisticsActivity(
-                        series(2, 0, 2, 4, 5, 2),
-                        series(0, 0, 1, 1, 1, 1),
-                        series(1, 0, 0, 2, 0, 1),
-                    ),
-                    hashtags = listOf(NamedCount("aloha", 6), NamedCount("surf", 4)),
-                    followerServers = listOf(NamedCount("mastodon.social", 21), NamedCount("bsky.social", 9)),
-                    starterPackJoins = 3,
-                    networksReached = listOf(NamedCount("Bluesky", 12)),
+        val state = StatisticsUiState(
+            PageStatus.Ready,
+            statistics = AccountStatistics(
+                account = StatisticsAccount("alice", followers = 48, following = 31),
+                window = StatisticsWindow(days = 90, counted = 19),
+                posts = NumberMap(mapOf("total" to 19.0)),
+                engagement = NumberMap(mapOf("likes" to 42.0, "boosts" to 11.0, "replies" to 9.0)),
+                rates = NumberMap(mapOf("per_post" to 3.3, "per_follower" to 10.53, "silent" to 6.0)),
+                visibility = NumberMap(mapOf("public" to 13.0, "unlisted" to 5.0, "followers" to 1.0)),
+                byMonth = series(2, 0, 3, 5, 6, 3),
+                activity = StatisticsActivity(
+                    series(2, 0, 2, 4, 5, 2),
+                    series(0, 0, 1, 1, 1, 1),
+                    series(1, 0, 0, 2, 0, 1),
                 ),
-                handle = "alice",
+                hashtags = listOf(NamedCount("aloha", 6), NamedCount("surf", 4)),
+                followerServers = listOf(NamedCount("mastodon.social", 21), NamedCount("bsky.social", 9)),
+                starterPackJoins = 3,
+                networksReached = listOf(NamedCount("Bluesky", 12)),
             ),
-            NoStatisticsActions,
-            onSave = {},
-            onConnect = {},
-            onBack = {},
+            handle = "alice",
         )
+        Surface { LazyColumn { statisticsRows(state, NoStatisticsActions, onSave = {}, onConnect = {}) } }
     }
 
     @Test

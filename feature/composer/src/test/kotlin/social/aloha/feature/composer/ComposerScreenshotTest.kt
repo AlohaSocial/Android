@@ -5,9 +5,10 @@ package social.aloha.feature.composer
 
 import android.app.Application
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -114,9 +115,8 @@ class ComposerScreenshotTest {
 
         override fun onSchedule(at: Instant?) = Unit
 
-        override fun onScheduledPosts() = Unit
-
         override fun onDrafts() = Unit
+
         override fun onEditMedia(id: String) = Unit
         override fun onOrderMedia(ids: List<String>) = Unit
         override fun onRemoveMedia(id: String) = Unit
@@ -475,36 +475,33 @@ class ComposerScreenshotTest {
         )
     }
 
+    // the scheduled posts as the Drafts tab of the writer's profile lists them, under their heading
     @Test
     fun scheduledPosts() = capture("scheduled-posts") {
         val params = ScheduledStatusParams(text = "Sunrise paddle out, who is in? Meet at the north end of the beach.")
-        ScheduledPostsScreen(
-            ScheduledUiState(
-                posts = listOf(
-                    ScheduledStatus("1", params, Instant.parse("2030-06-01T07:30:00Z")),
-                    ScheduledStatus(
-                        "2",
-                        ScheduledStatusParams(text = "Board swap this weekend", spoilerText = "Gear talk"),
-                        Instant.parse("2030-06-02T18:00:00Z"),
-                        mediaAttachments = listOf(
-                            MediaAttachment("m", AttachmentKind.Image, "https://example.test/a.jpg"),
-                        ),
+        val state = ScheduledUiState(
+            posts = listOf(
+                ScheduledStatus("1", params, Instant.parse("2030-06-01T07:30:00Z")),
+                ScheduledStatus(
+                    "2",
+                    ScheduledStatusParams(text = "Board swap this weekend", spoilerText = "Gear talk"),
+                    Instant.parse("2030-06-02T18:00:00Z"),
+                    mediaAttachments = listOf(
+                        MediaAttachment("m", AttachmentKind.Image, "https://example.test/a.jpg"),
                     ),
                 ),
-                loading = false,
             ),
-            onBack = {},
-            onMove = {},
-            onDelete = {},
-            onRetry = {},
-            snackbars = SnackbarHostState(),
+            loading = false,
         )
+        Surface(Modifier.fillMaxSize()) {
+            LazyColumn { scheduledRows(state, onMove = {}, onDelete = {}, onRetry = {}) }
+        }
     }
 
-    // a draft of each kind, and a post in each state of the outbox
+    // a draft of each kind, and a post in each state of the outbox, as the Drafts tab lists them
     @Test
     fun drafts() = capture("drafts") {
-        DraftsScreen(sampleDrafts(), DraftsActions({}, {}, {}, {}))
+        Surface(Modifier.fillMaxSize()) { LazyColumn { draftRows(sampleDrafts(), DraftsActions({}, {}, {})) } }
     }
 
     private fun sampleDrafts(): List<OutboxEntry> {

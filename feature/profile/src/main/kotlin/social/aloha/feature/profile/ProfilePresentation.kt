@@ -4,6 +4,7 @@
 package social.aloha.feature.profile
 
 import java.time.Instant
+import social.aloha.core.data.stories.StoryReel
 import social.aloha.core.data.timeline.FilterEvaluator
 import social.aloha.core.data.timeline.TimelineRow
 import social.aloha.core.html.RichTextCache
@@ -13,12 +14,14 @@ import social.aloha.core.model.FeaturedTag
 import social.aloha.core.model.FeedMode
 import social.aloha.core.model.Filter
 import social.aloha.core.model.FilterContext
-import social.aloha.core.model.ProfileLayout
 import social.aloha.core.model.Relationship
 import social.aloha.core.model.ServerCapabilities
+import social.aloha.core.model.SignedInAccount
 import social.aloha.core.model.Status
+import social.aloha.core.model.Story
 import social.aloha.core.model.TimelineKey
 import social.aloha.core.model.TimelineSource
+import social.aloha.core.navigation.OwnProfilePlace
 import social.aloha.core.ui.RichTextColors
 import social.aloha.core.ui.StatusRowMapper
 import social.aloha.core.ui.StatusRowUi
@@ -38,8 +41,9 @@ internal object ProfilePresentation {
             TimelineSource.Account(accountId, includeReplies = true, onlyMedia = false),
         )
 
-        ProfileTab.Media -> TimelineKey(
-            FeedMode.Home,
+        // the account's photos: `media_type=image` where the server narrows to them, else narrowed here
+        ProfileTab.Photos -> TimelineKey(
+            FeedMode.Photos,
             TimelineSource.Account(accountId, includeReplies = false, onlyMedia = true),
         )
 
@@ -48,7 +52,7 @@ internal object ProfilePresentation {
             TimelineSource.Account(accountId, includeReplies = false, onlyMedia = true),
         )
 
-        ProfileTab.Featured, ProfileTab.Collections, ProfileTab.Stories -> null
+        ProfileTab.Tagged, ProfileTab.Collections, ProfileTab.Saved, ProfileTab.Drafts, ProfileTab.Statistics -> null
     }
 
     /**
@@ -90,33 +94,40 @@ internal object ProfilePresentation {
     }
 
     /**
-     * The three timelines, Featured where the account features something, Videos, then what the server has;
-     * Media, Videos and Collections only where the account's [layout] offers them or the reader is on them
-     * ([current]), as Aloha Social's web app keeps the tab open when a refreshed layout hides it.
+     * The tabs every profile has, in the web app's order: Posts (with replies or without), Photos and
+     * Videos, Tagged where Aloha Social keeps it, and Collections where the server has them. Every
+     * profile shows them all, whatever tabs the account hid on the web, as the web app now does.
      */
-    fun tabs(
-        capabilities: ServerCapabilities,
-        featured: Boolean,
-        layout: ProfileLayout?,
-        current: ProfileTab,
-    ): List<ProfileTab> = buildList {
-        fun offered(tab: ProfileTab, name: String) = tab == current || layout?.shows(name) != false
-        addAll(listOf(ProfileTab.Posts, ProfileTab.Replies))
-        if (offered(ProfileTab.Media, ProfileLayout.PHOTOS)) add(ProfileTab.Media)
-        if (featured) add(ProfileTab.Featured)
-        if (offered(ProfileTab.Videos, ProfileLayout.VIDEOS)) add(ProfileTab.Videos)
-        if (capabilities.collections && offered(ProfileTab.Collections, ProfileLayout.COLLECTIONS)) {
-            add(ProfileTab.Collections)
-        }
-        if (capabilities.stories) add(ProfileTab.Stories)
+    fun tabs(capabilities: ServerCapabilities): List<ProfileTab> = buildList {
+        addAll(listOf(ProfileTab.Posts, ProfileTab.Replies, ProfileTab.Photos, ProfileTab.Videos))
+        if (capabilities.isNextcloudSocial) add(ProfileTab.Tagged)
+        if (capabilities.collections) add(ProfileTab.Collections)
     }
 
-    /** The tab the account's profile opens on: its photos are the Media timeline. */
-    fun firstTab(layout: ProfileLayout?): ProfileTab = when (layout?.defaultTab) {
-        ProfileLayout.PHOTOS -> ProfileTab.Media
-        ProfileLayout.VIDEOS -> ProfileTab.Videos
-        else -> ProfileTab.Posts
+    /** The tab a profile opens on: the one of the reader's own tabs it was opened on ([open]), else Posts. */
+    fun firstTab(open: OwnProfilePlace? = null): ProfileTab = when (open) {
+        OwnProfilePlace.Favorites, OwnProfilePlace.Bookmarks -> ProfileTab.Saved
+        OwnProfilePlace.Drafts -> ProfileTab.Drafts
+        OwnProfilePlace.Statistics -> ProfileTab.Statistics
+        null -> ProfileTab.Posts
     }
+
+    /**
+     * The tabs the reader's own profile adds after the others, as the web app does: Saved and Drafts, and
+     * Statistics where Aloha Social counts them.
+     */
+    fun ownTabs(capabilities: ServerCapabilities): List<ProfileTab> =
+        listOf(ProfileTab.Saved, ProfileTab.Drafts) + listOf(ProfileTab.Statistics).filter {
+            capabilities.isNextcloudSocial
+        }
+
+    /** [account]'s [stories] still up, as its avatar plays them; none without any. */
+    fun reel(account: Account, stories: List<Story>?, reader: SignedInAccount): StoryReel? =
+        stories?.takeIf { it.isNotEmpty() }?.let { StoryReel(account, it, own = account.id == reader.serverAccountId) }
+
+    /** [tabs], and on the reader's own profile ([reader]'s account is [account]) [ownTabs] after them. */
+    fun allTabs(reader: SignedInAccount, account: Account?): List<ProfileTab> = tabs(reader.capabilities) +
+        ownTabs(reader.capabilities).takeIf { account?.id == reader.serverAccountId }.orEmpty()
 
     /**
      * What the account features, its posts drawn by [row]; none when it features nothing. A hashtag opens

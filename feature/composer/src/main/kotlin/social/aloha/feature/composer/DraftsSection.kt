@@ -7,21 +7,17 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -32,8 +28,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.paneTitle
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
@@ -57,6 +51,9 @@ import social.aloha.core.navigation.DraftsKey
 import social.aloha.core.sync.MediaUploads
 import social.aloha.core.sync.PostQueue
 import social.aloha.core.ui.ConfirmDialog
+import social.aloha.core.ui.ListHeading
+import social.aloha.core.ui.ListProgress
+import social.aloha.core.ui.ListSection
 import social.aloha.core.ui.fullDate
 
 /**
@@ -99,12 +96,16 @@ internal class DraftsViewModel @AssistedInject constructor(
     }
 }
 
+/**
+ * The Drafts tab's part for [readerId]'s drafts and posts waiting to go out, newest first; [onOpen]
+ * carries one on in the composer.
+ */
 @Composable
-public fun DraftsRoute(key: DraftsKey, onBack: () -> Unit, onOpen: (String) -> Unit, modifier: Modifier = Modifier) {
+public fun draftsSection(readerId: String, onOpen: (String) -> Unit): ListSection {
+    val key = DraftsKey(readerId)
     val viewModel = hiltViewModel<DraftsViewModel, DraftsViewModel.Factory>(key = key.toString()) { it.create(key) }
     val entries by viewModel.entries.collectAsStateWithLifecycle()
     var deleting by rememberSaveable { mutableStateOf<String?>(null) }
-    DraftsScreen(entries, DraftsActions(onBack, onOpen, onDelete = { deleting = it }, viewModel::onResume), modifier)
     deleting?.let { id ->
         ConfirmDialog(
             stringResource(R.string.drafts_delete_title),
@@ -113,37 +114,25 @@ public fun DraftsRoute(key: DraftsKey, onBack: () -> Unit, onOpen: (String) -> U
             onDismiss = { deleting = null },
         ) { viewModel.onDelete(id) }
     }
+    val actions = DraftsActions(onOpen, onDelete = { deleting = it }, viewModel::onResume)
+    return ListSection { draftRows(entries, actions) }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-internal fun DraftsScreen(entries: List<OutboxEntry>?, actions: DraftsActions, modifier: Modifier = Modifier) {
-    val title = stringResource(R.string.drafts_title)
-    Scaffold(
-        modifier = modifier.semantics { paneTitle = title },
-        topBar = {
-            TopAppBar(
-                title = { Text(title) },
-                navigationIcon = {
-                    IconButton(onClick = actions.onBack) {
-                        Icon(AlohaIcons.Back, stringResource(R.string.composer_back))
-                    }
-                },
-            )
-        },
-    ) { padding ->
-        LazyColumn(Modifier.padding(padding).fillMaxSize()) {
-            items(entries.orEmpty(), key = { it.id }) { entry ->
-                DraftRow(entry, actions)
-                HorizontalDivider()
+/** The drafts under their heading: each a row, or a line saying there are none. */
+internal fun LazyListScope.draftRows(entries: List<OutboxEntry>?, actions: DraftsActions) {
+    item(key = "drafts-heading", contentType = "heading") { ListHeading(stringResource(R.string.drafts_title)) }
+    when {
+        entries == null -> item(key = "drafts-loading") { ListProgress() }
+
+        entries.isEmpty() -> item(key = "drafts-empty") {
+            Box(Modifier.fillMaxWidth().padding(AlohaSpacing.l), contentAlignment = Alignment.Center) {
+                Text(stringResource(R.string.drafts_none), style = MaterialTheme.typography.bodyLarge)
             }
-            if (entries?.isEmpty() == true) {
-                item(key = "empty") {
-                    Box(Modifier.fillMaxWidth().padding(AlohaSpacing.l), contentAlignment = Alignment.Center) {
-                        Text(stringResource(R.string.drafts_none), style = MaterialTheme.typography.bodyLarge)
-                    }
-                }
-            }
+        }
+
+        else -> items(entries, key = { "draft-${it.id}" }, contentType = { "draft" }) { entry ->
+            DraftRow(entry, actions)
+            HorizontalDivider()
         }
     }
 }
@@ -197,7 +186,6 @@ private fun DraftRow(entry: OutboxEntry, actions: DraftsActions) {
 
 /** What the drafts list's controls do. */
 internal class DraftsActions(
-    val onBack: () -> Unit,
     val onOpen: (String) -> Unit,
     val onDelete: (String) -> Unit,
     /** Sends the posts that waited for a new sign-in. */

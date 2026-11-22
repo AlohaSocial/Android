@@ -48,15 +48,27 @@ public class SavedPosts @Inject constructor(
     public suspend fun unarchive(reader: SignedInAccount, id: String): Answer<Unit> =
         clients.answer(reader, StatusExtraEndpoints.unarchive(id))
 
-    /**
-     * The page after [after]. Only a list ordered by post id, the archive, can page on from its oldest
-     * post; bookmarks and favourites are ordered by when they were kept, so without the server's cursor
-     * there is no next page to ask for.
-     */
+    private val pager = PostPager(clients, statuses)
+
     private suspend fun page(
         reader: SignedInAccount,
         after: PostPage?,
         byPostId: Boolean = false,
+        request: (PageAnchor) -> ApiRequest<List<Status>>,
+    ): Answer<PostPage> = pager.page(reader, after, byPostId, request)
+}
+
+/** Lists of posts read a page at a time, each page's posts stored so a tap opens one at once. */
+internal class PostPager(private val clients: ClientFactory, private val statuses: StatusRepository) {
+    /**
+     * The page after [after]. Only a list ordered by post id ([byPostId]) can page on from its oldest
+     * post; one ordered by when it was kept, as bookmarks and favourites are, has no next page to ask for
+     * without the server's cursor.
+     */
+    suspend fun page(
+        reader: SignedInAccount,
+        after: PostPage?,
+        byPostId: Boolean,
         request: (PageAnchor) -> ApiRequest<List<Status>>,
     ): Answer<PostPage> {
         val client = clients.forAccount(reader) ?: return Answer.Missed(ApiError.NotFound)
@@ -66,7 +78,6 @@ public class SavedPosts @Inject constructor(
         return when (result) {
             is ApiResult.Success -> {
                 val page = result.value
-                // stored, so a tap opens the post at once
                 statuses.saveAll(reader.id, page.items)
                 val done = !page.mayHaveMore || (!byPostId && page.link.next == null)
                 Answer.Got(PostPage(page.items, page.link.next, done))

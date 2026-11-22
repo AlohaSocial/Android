@@ -48,6 +48,8 @@ class TimelineAndCapabilitiesTest {
         val media = TimelineKey.home(TimelineSource.Account("7", includeReplies = false, onlyMedia = true))
         assertEquals(TimelineFilters(mediaType = "visual"), TimelineFilters.forKey(media, current))
         assertTrue(TimelineFilters.forKey(media, older).isEmpty)
+        val photos = TimelineKey(FeedMode.Photos, TimelineSource.Account("7", includeReplies = false, onlyMedia = true))
+        assertEquals(TimelineFilters(mediaType = "image"), TimelineFilters.forKey(photos, current))
         val posts = TimelineKey.home(TimelineSource.Account("7", includeReplies = false, onlyMedia = false))
         assertTrue(TimelineFilters.forKey(posts, current).isEmpty)
         val elsewhere = TimelineKey(FeedMode.Photos, TimelineSource.Remote("mastodon.example"))

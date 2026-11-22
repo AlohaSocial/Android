@@ -11,7 +11,8 @@ This is the Apple app's specification, carried over as the product contract for 
 | Colour | The server's theming colour seeds a Material 3 scheme (tonal spot); Android dynamic colour is an opt-in; boost, favourite and bookmark stay fixed (`SemanticContrastTest`). |
 | Themes | Mode × contrast × Black instead of seven named themes; no Dim. |
 | Accessibility | TalkBack semantics, 48 dp targets, 200 % font with non-linear scaling. |
-| Account sheet | Where the iPad sidebar lists them, the sheet behind the account avatar leads to Direct messages, Bookmarks, Favourites, Lists, Hashtags, Filters, Announcements and Settings, and on Nextcloud Social to Archived posts and Interests too. Search is on Home's toolbar; while announcements are unread, Home says how many above its timeline. |
+| Account sheet | Where the iPad sidebar lists them, the sheet behind the account avatar leads to My profile, Direct messages, Lists, Hashtags, Filtered words, Announcements and Settings, and on Nextcloud Social to Interests too. Search is on My Feed's toolbar; while announcements are unread, My Feed says how many above its timeline. |
+| Own profile | As on the web, the reader's own profile adds the tabs Saved (Favorites and Bookmarks behind a switch), Drafts (the drafts and posts waiting to go out, the scheduled posts, and on Nextcloud Social the archived posts) and, on Nextcloud Social, Statistics, after its other tabs. Each is drawn by the feature that keeps it (`OwnProfileTabs`, `ListSection`) in the profile's one list. The composer's Drafts, and the drafts a notification or shortcut opens, are that Drafts tab; a draft opened from it after the composer takes the composer's place. The account sheet, Settings and the composer's menu no longer list the other places. The web's Waiting for review has no counterpart: the app keeps no list of posts held for a moderator. |
 | App icon | One adaptive icon, the mark from AlohaSocial/Logos on its sand, with a one-colour layer for themed icons; no icon variants. The splash screen shows the same mark on sand, or on the deep sea at night. |
 | Keyboard, windows, shortcuts | The keyboard keys, "Open in new window", drag and drop, the foldable watch page, launcher shortcuts, Direct Share and "Open in Aloha" are in [09-platform-integrations.md](09-platform-integrations.md). |
 | Translation | A post's menu offers Translate when the post names a language the reader does not read (the app's language, else the system's languages) and the server translates, from that language into the reader's first when it lists the pairs it can do. The server's translation takes the post's place in every screen until "Show original"; the line under it names the service when the server does. A server without a translation service answers 503 with a sentence of its own, shown as it is, unless the device can translate instead: from Android 12, where the system has an on-device translation service (on Pixels, Android System Intelligence), the post's text is translated on the device and sent nowhere, "Translated on this device". A language not yet downloaded is offered through the system's translation settings ("Get language"). No translation library ships in the app, in either flavor. |
@@ -299,24 +300,28 @@ exist undocumented.
   query, not by filtering a page), Add to list, Mention, Direct message,
   Block, Mute (with duration and "also mute notifications"), Report, Block
   domain, Add note.
-- Tabs: Posts · Posts & Replies · Media · Featured · Videos · Collections (where the
-  server has them) · Stories (where present and visible). Media is the
-  account's photos, videos and animated images on Nextcloud Social 0.26.279 on
-  (`media_type=visual`), every post with an attachment elsewhere. Nextcloud Social
-  before 0.26.237 ignores `exclude_replies`, so Posts leaves replies to other
-  accounts out on the device (a thread of the account's own stays), paging on
-  to fill the page. A featured hashtag opens the account's own posts with it
+- Tabs, as the web app has them: Posts (with chips for Posts and Posts & replies) ·
+  Photos · Videos · Tagged (Nextcloud Social) · Collections (where the server has
+  them), and on the reader's own profile Saved · Drafts · Statistics. Photos asks
+  for the account's photos (`media_type=image`, Nextcloud Social 0.26.279 on) and
+  narrows them on the device elsewhere. Nextcloud Social before 0.26.237 ignores
+  `exclude_replies`, so Posts leaves replies to other accounts out on the device
+  (a thread of the account's own stays), paging on to fill the page. Tagged lists
+  the photos others tagged the account in (`api/v1.1/accounts/{id}/tagged`,
+  paged by `max_id`); on the reader's own profile each has Remove me
+  (`api/v1.1/compose/tag/untagme`), as on the web.
+- As on the web, there is no Featured tab: the pinned posts head the Posts tab
+  (a few until View all), and the featured hashtags are chips in the header. A
+  featured hashtag opens the account's own posts with it
   (`accounts/{id}/statuses?tagged=`), titled "#tag by @handle"; on Nextcloud
   Social before 0.26.237, which ignores `tagged`, it opens the hashtag's
   timeline instead.
-- An account's `profile_layout` (Nextcloud Social 0.26.279 on, read from its
-  source; the app only reads it, as the route that writes it takes a session,
-  not a token) chooses the tab its profile opens on, `posts`, `photos` (Media)
-  or `videos`, and leaves out the Media chip, Videos and Collections where it
-  turned `photos`, `videos` or `collections` off; `tagged` has no tab here. A
-  refresh keeps the tab the reader is on, even one the layout now hides, as
-  the web app does. A layout that hides Posts or opens on a tab it hides is
-  none, as on the server, and none shows every tab.
+- There is no Stories tab either: where the account has shorts up (a server
+  with stories), its avatar is ringed and plays them, as the Apple app's does.
+  The web app shows them nowhere on a profile.
+- Every profile opens on Posts with all its tabs. An account's
+  `profile_layout`, which chose a first tab and hid others, is no longer read,
+  as the web app no longer honours it.
 - Scrolling an account's posts does not stop where Nextcloud Social is still
   reading older ones from the account's server or Bluesky
   (`X-Social-Profile-Filling`): the page is read again after two seconds, at

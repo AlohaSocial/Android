@@ -72,7 +72,7 @@ internal interface EventActions {
     fun onEvent(event: StatusEvent?)
 }
 
-/** What the controls for later do: scheduling, and the posts kept for later. */
+/** What the controls for later do: scheduling, and the drafts. */
 internal interface LaterActions {
     /** Opens the day and time picker for when the post goes out. */
     fun onPickSchedule()
@@ -80,10 +80,7 @@ internal interface LaterActions {
     /** Posts at [at], or at once when null. */
     fun onSchedule(at: Instant?)
 
-    /** Opens the list of posts waiting on the server for their time. */
-    fun onScheduledPosts()
-
-    /** Opens the drafts. */
+    /** Opens the drafts: the Drafts tab of the writer's own profile, with the scheduled posts. */
     fun onDrafts()
 }
 
