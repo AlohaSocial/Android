@@ -41,7 +41,7 @@
     <!-- Once connected: notifications arrive by push, through the Nextcloud -->
     <string name="settings_nextcloud_push_on">Notifications arrive by push through your Nextcloud.</string>
     <!-- Once connected, without a push app (a UnifiedPush distributor such as ntfy) chosen -->
-    <string name="settings_nextcloud_push_no_distributor">Notifications are checked every few minutes. Choose a push app under Notifications to get them at once.</string>
+    <string name="settings_nextcloud_push_no_distributor">Notifications are checked every few minutes. Choose a push app under When to tell you to get them at once.</string>
     <!-- Once connected, when the Nextcloud does not push (or has not confirmed yet) -->
     <string name="settings_nextcloud_push_polled">Notifications are checked every few minutes: your Nextcloud does not push them yet.</string>
     <!-- Settings section that deletes the account in use, for good -->

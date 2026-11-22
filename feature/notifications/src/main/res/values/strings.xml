@@ -150,8 +150,8 @@
     <!-- Letting through or dismissing did not reach the server -->
     <string name="requests_failed">That did not reach your server. Try again.</string>
 
-    <!-- Title of the settings section for notifications and refreshing -->
-    <string name="settings_notifications">Notifications</string>
+    <!-- Title of the settings section on when and how activities reach the reader: push, digests, quiet hours and refreshing; the web app's title for it -->
+    <string name="settings_notifications">When to tell you</string>
     <!-- Heading of the choice of how often the app checks for new activity -->
     <string name="settings_poll_frequency">Check for new activity</string>
     <!-- Choice: check twice as often as normal -->
